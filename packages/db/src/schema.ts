@@ -340,3 +340,20 @@ export const subscriptions = pgTable("subscriptions", {
   index("subscriptions_doctor_idx").on(table.doctorId),
   index("subscriptions_status_idx").on(table.status),
 ]);
+
+// ── Phone Masking ────────────────────────────────────────
+export const phoneProxies = pgTable("phone_proxies", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sosSessionId: uuid("sos_session_id").references(() => sosSessions.id, { onDelete: "cascade" }),
+  proxyNumber: varchar("proxy_number", { length: 30 }).notNull(),
+  patientPhone: varchar("patient_phone", { length: 30 }).notNull(),
+  doctorPhone: varchar("doctor_phone", { length: 30 }).notNull(),
+  twilioProxyServiceSid: varchar("twilio_proxy_service_sid", { length: 100 }),
+  twilioSessionSid: varchar("twilio_session_sid", { length: 100 }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("phone_proxies_session_idx").on(table.sosSessionId),
+  index("phone_proxies_active_idx").on(table.isActive),
+]);

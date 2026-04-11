@@ -4,6 +4,7 @@ import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 import { sendSMS } from "@/lib/sms";
 import { broadcastSos } from "@/lib/sos-broadcast";
+import { createPhoneProxy } from "@/lib/phone-proxy";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -35,20 +36,31 @@ export async function POST(req: Request) {
   const info = (doctorResult as unknown as any[])[0];
 
   if (info) {
+    // Create phone proxy (dev mode just returns the real number)
+    const proxy = await createPhoneProxy({
+      sosSessionId: updated.id,
+      patientPhone: info.patient_phone,
+      doctorPhone: info.phone,
+      ttlMinutes: 60,
+    });
+
+    const displayPhone = proxy.success ? proxy.proxyNumber : info.phone;
+
     try {
       await sendSMS(
         info.patient_phone,
-        `Doktori SOS: ${info.name} accepte votre demande. Tel: ${info.phone}. Adresse: ${info.address}`,
+        `Doktori SOS: ${info.name} accepte votre demande. Tel: ${displayPhone}. Adresse: ${info.address}`,
       );
     } catch (e) {
       console.error("SMS failed:", e);
     }
 
     // Notify the patient in real-time that their session was accepted
+    // Use the masked phone if a proxy was created, fall back to real phone
     await broadcastSos(`session:${sessionId}`, "session-update", {
       status: "accepted",
       doctorName: info.name,
-      doctorPhone: info.phone,
+      doctorPhone: displayPhone,
       doctorAddress: info.address,
     });
   }
