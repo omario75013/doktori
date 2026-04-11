@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { getTranslations, getLocale } from "next-intl/server";
-import { Stethoscope, Search, UserRound, Siren } from "lucide-react";
+import { Stethoscope, Search, UserRound, Siren, HelpCircle } from "lucide-react";
 import { LanguageSwitcher } from "./language-switcher";
 
 export async function Navbar() {
@@ -32,6 +32,13 @@ export async function Navbar() {
           >
             <Search className="h-4 w-4" strokeWidth={2.5} />
             {t("search")}
+          </Link>
+          <Link
+            href="/faq"
+            className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-[#5E7574] transition-colors hover:bg-[#F0FDFA] hover:text-[#0891B2] md:inline-flex"
+          >
+            <HelpCircle className="h-4 w-4" strokeWidth={2.5} />
+            {t("faq")}
           </Link>
           <Link
             href="/sos"

@@ -421,6 +421,7 @@ export default function HomePage() {
                 <li><Link href="/recherche" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerProductSearch")}</Link></li>
                 <li><Link href="/sos" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerProductSos")}</Link></li>
                 <li><Link href="/inscription" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerProductDoctors")}</Link></li>
+                <li><Link href="/faq" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerProductFaq")}</Link></li>
               </ul>
             </div>
 

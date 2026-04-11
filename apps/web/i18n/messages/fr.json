@@ -15,7 +15,8 @@
   "nav": {
     "search": "Rechercher un médecin",
     "doctorArea": "Espace médecin",
-    "sos": "SOS"
+    "sos": "SOS",
+    "faq": "Aide"
   },
   "landing": {
     "heroTitle": "Réservez votre médecin en 2 clics",
@@ -66,6 +67,7 @@
     "footerProductSearch": "Rechercher",
     "footerProductSos": "SOS Docteur",
     "footerProductDoctors": "Espace médecin",
+    "footerProductFaq": "Questions fréquentes",
     "footerLegal": "Légal",
     "footerLegalCgu": "CGU",
     "footerLegalPrivacy": "Confidentialité",

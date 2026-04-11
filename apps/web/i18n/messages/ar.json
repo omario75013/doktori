@@ -2,7 +2,8 @@
   "nav": {
     "search": "ابحث عن طبيب",
     "doctorArea": "فضاء الطبيب",
-    "sos": "استغاثة"
+    "sos": "استغاثة",
+    "faq": "مساعدة"
   },
   "landing": {
     "heroTitle": "احجز طبيبك بنقرتين",
@@ -53,6 +54,7 @@
     "footerProductSearch": "بحث",
     "footerProductSos": "استغاثة طبيب",
     "footerProductDoctors": "منطقة الطبيب",
+    "footerProductFaq": "الأسئلة الشائعة",
     "footerLegal": "قانوني",
     "footerLegalCgu": "CGU",
     "footerLegalPrivacy": "السرية",
