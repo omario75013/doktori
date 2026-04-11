@@ -40,5 +40,4 @@ export const INSURANCES = [
   { id: "comar", label: "COMAR", labelAr: "COMAR" },
   { id: "autres", label: "Autres mutuelles", labelAr: "أخرى" },
 ] as const;
-
-export type InsuranceId = (typeof INSURANCES)[number]["id"];
+// InsuranceId type is exported from ./types.ts
