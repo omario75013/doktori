@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
-import { db, doctors, doctorSchedules } from "@doktori/db";
+import { db, doctors } from "@doktori/db";
 import { eq, and, or, ilike } from "drizzle-orm";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 
@@ -27,7 +26,7 @@ Aider les patients à :
 
 ## Ton
 - Chaleureux, professionnel, concis (2-3 phrases max par réponse sauf si liste de médecins)
-- Tutoiement : NON. Utilise "vous"
+- Utilise "vous"
 - Utilise des puces pour les listes
 - Termine souvent par une question de clarification ou une suggestion d'action
 
@@ -38,7 +37,7 @@ Aider les patients à :
 ## Informations sur Doktori
 - **Gratuit** pour les patients
 - **SOS Docteur** : trouve un médecin disponible en urgence non-vitale
-- **Visite à domicile** : certains médecins se déplacent (voir leur profil)
+- **Visite à domicile** : certains médecins se déplacent
 - **Annulation** : possible jusqu'à 2h avant le rendez-vous via /mes-rdv
 - **Rappel SMS** : envoyé automatiquement la veille du rendez-vous
 - **Avis** : disponibles uniquement après une consultation terminée
@@ -46,51 +45,64 @@ Aider les patients à :
 - **Paiement** : consultation payée directement au cabinet (espèces, carte, CNAM)
 
 ## Spécialités disponibles
-Généraliste, Dermatologue, Ophtalmologue, Gynécologue, Pédiatre, Dentiste, ORL, Cardiologue, Orthopédiste, Gastro-entérologue.
-
-Démarre toujours par un accueil court si c'est le début de la conversation.`;
+Généraliste, Dermatologue, Ophtalmologue, Gynécologue, Pédiatre, Dentiste, ORL, Cardiologue, Orthopédiste, Gastro-entérologue.`;
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Tool definitions
+// OpenAI-compatible tool definitions (for OpenRouter)
 // ──────────────────────────────────────────────────────────────────────────────
-const TOOLS: Anthropic.Tool[] = [
+interface OpenAITool {
+  type: "function";
+  function: {
+    name: string;
+    description: string;
+    parameters: Record<string, unknown>;
+  };
+}
+
+const TOOLS: OpenAITool[] = [
   {
-    name: "search_doctors",
-    description:
-      "Recherche les médecins par spécialité et/ou ville. Retourne jusqu'à 5 médecins avec leur nom, spécialité, ville, adresse et slug (pour construire le lien vers leur profil).",
-    input_schema: {
-      type: "object",
-      properties: {
-        specialty: {
-          type: "string",
-          description:
-            "ID de la spécialité. Valeurs : generaliste, dermatologue, ophtalmologue, gynecologue, pediatre, dentiste, orl, cardiologue, orthopediste, gastrologue",
-        },
-        city: {
-          type: "string",
-          description:
-            "ID de la ville. Valeurs : tunis, la-marsa, lac-1, lac-2, ariana, la-soukra, raoued, manouba",
-        },
-        query: {
-          type: "string",
-          description: "Mot-clé de recherche libre (nom, mot dans bio)",
+    type: "function",
+    function: {
+      name: "search_doctors",
+      description:
+        "Recherche les médecins par spécialité et/ou ville. Retourne jusqu'à 5 médecins avec leur nom, spécialité, ville, adresse et URLs (profil + booking).",
+      parameters: {
+        type: "object",
+        properties: {
+          specialty: {
+            type: "string",
+            description:
+              "ID de la spécialité. Valeurs : generaliste, dermatologue, ophtalmologue, gynecologue, pediatre, dentiste, orl, cardiologue, orthopediste, gastrologue",
+          },
+          city: {
+            type: "string",
+            description:
+              "ID de la ville. Valeurs : tunis, la-marsa, lac-1, lac-2, ariana, la-soukra, raoued, manouba",
+          },
+          query: {
+            type: "string",
+            description: "Mot-clé de recherche libre (nom, mot dans bio)",
+          },
         },
       },
     },
   },
   {
-    name: "suggest_specialty",
-    description:
-      "Suggère une spécialité médicale en fonction de symptômes ou d'un domaine décrit par le patient. À utiliser uniquement pour ORIENTER, jamais pour diagnostiquer.",
-    input_schema: {
-      type: "object",
-      properties: {
-        symptoms: {
-          type: "string",
-          description: "Description courte des symptômes ou de la zone concernée",
+    type: "function",
+    function: {
+      name: "suggest_specialty",
+      description:
+        "Suggère une spécialité médicale en fonction de symptômes ou d'un domaine décrit par le patient. À utiliser uniquement pour ORIENTER, jamais pour diagnostiquer.",
+      parameters: {
+        type: "object",
+        properties: {
+          symptoms: {
+            type: "string",
+            description: "Description courte des symptômes ou de la zone concernée",
+          },
         },
+        required: ["symptoms"],
       },
-      required: ["symptoms"],
     },
   },
 ];
@@ -112,9 +124,7 @@ async function runTool(
     if (city) conditions.push(eq(doctors.city, city));
     if (query) {
       const q = `%${query}%`;
-      conditions.push(
-        or(ilike(doctors.name, q), ilike(doctors.address, q))!
-      );
+      conditions.push(or(ilike(doctors.name, q), ilike(doctors.address, q))!);
     }
 
     const results = await db
@@ -130,7 +140,11 @@ async function runTool(
       .limit(5);
 
     if (results.length === 0) {
-      return JSON.stringify({ count: 0, doctors: [], message: "Aucun médecin trouvé" });
+      return JSON.stringify({
+        count: 0,
+        doctors: [],
+        message: "Aucun médecin trouvé",
+      });
     }
 
     return JSON.stringify({
@@ -167,8 +181,7 @@ async function runTool(
     return JSON.stringify({
       specialty: suggestion.specialty,
       label: suggestion.label,
-      note:
-        "Cette suggestion est indicative. Pour un diagnostic précis, consultez un médecin.",
+      note: "Cette suggestion est indicative. Pour un diagnostic précis, consultez un médecin.",
     });
   }
 
@@ -176,10 +189,10 @@ async function runTool(
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Rate limiting (in-memory, per IP, simple)
+// Rate limiting (in-memory, per IP)
 // ──────────────────────────────────────────────────────────────────────────────
 const rateLimitMap = new Map<string, { count: number; resetAt: number }>();
-const RATE_LIMIT = 30; // messages per 5 min per IP
+const RATE_LIMIT = 30;
 
 function checkRateLimit(ip: string): boolean {
   const now = Date.now();
@@ -193,7 +206,28 @@ function checkRateLimit(ip: string): boolean {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// POST handler — streams Claude response
+// OpenRouter types
+// ──────────────────────────────────────────────────────────────────────────────
+interface ChatMessage {
+  role: "system" | "user" | "assistant" | "tool";
+  content: string | null;
+  tool_calls?: Array<{
+    id: string;
+    type: "function";
+    function: { name: string; arguments: string };
+  }>;
+  tool_call_id?: string;
+}
+
+interface OpenRouterResponse {
+  choices: Array<{
+    message: ChatMessage;
+    finish_reason: string;
+  }>;
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// POST handler — OpenRouter with Grok
 // ──────────────────────────────────────────────────────────────────────────────
 export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "unknown";
@@ -205,71 +239,100 @@ export async function POST(req: Request) {
   }
 
   const body = await req.json();
-  const messages: Anthropic.MessageParam[] = body.messages || [];
+  const userMessages: Array<{ role: string; content: string }> = body.messages || [];
 
-  if (!Array.isArray(messages) || messages.length === 0) {
+  if (!Array.isArray(userMessages) || userMessages.length === 0) {
     return NextResponse.json({ error: "messages requis" }, { status: 400 });
   }
 
-  // Dev fallback when API key is missing
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
+  const model = process.env.OPENROUTER_MODEL || "x-ai/grok-4-fast";
+
   if (!apiKey) {
-    const fakeResponse = {
-      role: "assistant" as const,
+    return NextResponse.json({
+      role: "assistant",
       content:
-        "Bonjour 👋 Je suis Dokti, l'assistant virtuel de Doktori. (Mode démo : configurez ANTHROPIC_API_KEY pour activer les réponses intelligentes.) Que puis-je faire pour vous ?",
-    };
-    return NextResponse.json(fakeResponse);
+        "Bonjour 👋 Je suis Dokti, l'assistant virtuel de Doktori. (Mode démo : configurez `OPENROUTER_API_KEY` pour activer les réponses intelligentes.) En attendant, vous pouvez rechercher un médecin via le bouton **Rechercher** en haut de la page.",
+    });
   }
 
-  const client = new Anthropic({ apiKey });
+  // Build messages array: system + user history
+  const messages: ChatMessage[] = [
+    { role: "system", content: SYSTEM_PROMPT },
+    ...userMessages.map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    })),
+  ];
+
+  const MAX_ITERATIONS = 5;
 
   try {
-    // Agentic loop: call tools until model stops
-    let currentMessages = [...messages];
-    const maxIterations = 5;
-
-    for (let i = 0; i < maxIterations; i++) {
-      const response = await client.messages.create({
-        model: "claude-haiku-4-5-20251001",
-        max_tokens: 1024,
-        system: SYSTEM_PROMPT,
-        tools: TOOLS,
-        messages: currentMessages,
+    for (let i = 0; i < MAX_ITERATIONS; i++) {
+      const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+          "HTTP-Referer": "https://doktori.tn",
+          "X-Title": "Doktori",
+        },
+        body: JSON.stringify({
+          model,
+          messages,
+          tools: TOOLS,
+          temperature: 0.3,
+          max_tokens: 1024,
+        }),
       });
 
-      // If stop_reason is "end_turn" we're done
-      if (response.stop_reason === "end_turn" || !response.content.some((c) => c.type === "tool_use")) {
-        const textContent = response.content
-          .filter((c): c is Anthropic.TextBlock => c.type === "text")
-          .map((c) => c.text)
-          .join("\n");
-        return NextResponse.json({ role: "assistant", content: textContent });
+      if (!res.ok) {
+        const err = await res.text();
+        console.error("OpenRouter error:", res.status, err);
+        return NextResponse.json(
+          { error: "Erreur de l'assistant. Réessayez." },
+          { status: 500 }
+        );
       }
 
-      // Tool use: execute all tools and feed back
-      const assistantMsg: Anthropic.MessageParam = {
+      const data: OpenRouterResponse = await res.json();
+      const message = data.choices[0]?.message;
+      if (!message) {
+        return NextResponse.json(
+          { error: "Réponse vide de l'assistant." },
+          { status: 500 }
+        );
+      }
+
+      const toolCalls = message.tool_calls;
+
+      // No tool calls → final answer
+      if (!toolCalls || toolCalls.length === 0) {
+        return NextResponse.json({
+          role: "assistant",
+          content: message.content || "",
+        });
+      }
+
+      // Execute tool calls and append results
+      messages.push({
         role: "assistant",
-        content: response.content,
-      };
+        content: message.content,
+        tool_calls: toolCalls,
+      });
 
-      const toolResults: Anthropic.ToolResultBlockParam[] = [];
-      for (const block of response.content) {
-        if (block.type === "tool_use") {
-          const result = await runTool(block.name, block.input as Record<string, unknown>);
-          toolResults.push({
-            type: "tool_result",
-            tool_use_id: block.id,
-            content: result,
-          });
-        }
+      for (const call of toolCalls) {
+        let input: Record<string, unknown> = {};
+        try {
+          input = JSON.parse(call.function.arguments || "{}");
+        } catch {}
+        const result = await runTool(call.function.name, input);
+        messages.push({
+          role: "tool",
+          tool_call_id: call.id,
+          content: result,
+        });
       }
-
-      currentMessages = [
-        ...currentMessages,
-        assistantMsg,
-        { role: "user", content: toolResults },
-      ];
     }
 
     return NextResponse.json({
