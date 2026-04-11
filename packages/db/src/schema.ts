@@ -261,3 +261,16 @@ export const appointmentTypes = pgTable("appointment_types", {
 }, (table) => [
   index("appointment_types_doctor_idx").on(table.doctorId),
 ]);
+
+// ── Prescriptions ────────────────────────────────────────
+export const prescriptions = pgTable("prescriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  appointmentId: uuid("appointment_id").notNull().references(() => appointments.id, { onDelete: "cascade" }),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("prescriptions_appointment_idx").on(table.appointmentId),
+  index("prescriptions_patient_idx").on(table.patientId),
+]);
