@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { SPECIALTIES } from "@doktori/shared";
 import {
   Search,
@@ -50,6 +50,7 @@ export default function HomePage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const t = useTranslations("landing");
+  const locale = useLocale();
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -152,7 +153,7 @@ export default function HomePage() {
 
           {/* Right: phone mockup */}
           <div className="relative hidden lg:block">
-            <PhoneMockup />
+            <PhoneMockup locale={locale} />
           </div>
         </div>
       </section>
@@ -299,7 +300,7 @@ export default function HomePage() {
                     <Icon className="h-6 w-6" strokeWidth={2.5} />
                   </div>
                   <span className="text-xs font-bold text-[#134E4A] group-hover:text-[#0891B2] sm:text-sm">
-                    {specialty.label}
+                    {locale === "ar" ? specialty.labelAr : specialty.label}
                   </span>
                 </Link>
               );
@@ -375,7 +376,7 @@ export default function HomePage() {
           </div>
 
           <div className="relative hidden md:block">
-            <DoctorDashboardMockup />
+            <DoctorDashboardMockup locale={locale} />
           </div>
         </div>
       </section>
@@ -452,7 +453,19 @@ export default function HomePage() {
 }
 
 /* ═════════════════ Phone Mockup Component ═════════════════ */
-function PhoneMockup() {
+function PhoneMockup({ locale }: { locale: string }) {
+  const ar = locale === "ar";
+  const tr = {
+    searchPh: ar ? "طبيب أمراض جلدية..." : "Dermatologue...",
+    generaliste: ar ? "طبيب عام" : "Généraliste",
+    dermatologue: ar ? "طبيب جلد" : "Dermatologue",
+    navSearch: ar ? "بحث" : "Chercher",
+    navSos: ar ? "استغاثة" : "SOS",
+    navRdv: ar ? "مواعيدي" : "Mes RDV",
+    rdvConfirmed: ar ? "موعد مؤكد" : "RDV confirmé",
+    dateLabel: ar ? "15 أفريل · 14:30" : "15 avril · 14:30",
+    reviews: ar ? "1 247 تقييم" : "1 247 avis",
+  };
   return (
     <div className="relative mx-auto aspect-[9/19] w-full max-w-[340px]">
       {/* Phone frame */}
@@ -476,15 +489,15 @@ function PhoneMockup() {
             {/* Search input mock */}
             <div className="mt-4 flex h-11 items-center rounded-xl border border-[#E6F4F1] bg-[#F0FDFA] px-3">
               <Search className="h-4 w-4 text-[#5E7574]" />
-              <span className="ml-2 text-xs text-[#5E7574]">Dermatologue...</span>
+              <span className="ml-2 text-xs text-[#5E7574]">{tr.searchPh}</span>
             </div>
 
             {/* Doctor cards mock */}
             <div className="mt-4 space-y-2">
               {[
-                { name: "Dr. Sonia Trabelsi", spec: "Dermatologue", price: "80", color: "#0891B2" },
-                { name: "Dr. Karim Ben Ali", spec: "Généraliste", price: "40", color: "#22C55E" },
-                { name: "Dr. Leila Ben Othman", spec: "Dermatologue", price: "80", color: "#0891B2" },
+                { name: "Dr. Sonia Trabelsi", spec: tr.dermatologue, price: "80", color: "#0891B2" },
+                { name: "Dr. Karim Ben Ali", spec: tr.generaliste, price: "40", color: "#22C55E" },
+                { name: "Dr. Leila Ben Othman", spec: tr.dermatologue, price: "80", color: "#0891B2" },
               ].map((d, i) => (
                 <div
                   key={i}
@@ -514,15 +527,15 @@ function PhoneMockup() {
             <div className="mt-4 flex items-center justify-around border-t border-[#E6F4F1] pt-3">
               <div className="flex flex-col items-center gap-0.5">
                 <Search className="h-4 w-4 text-[#0891B2]" />
-                <span className="text-[8px] font-bold text-[#0891B2]">Chercher</span>
+                <span className="text-[8px] font-bold text-[#0891B2]">{tr.navSearch}</span>
               </div>
               <div className="flex flex-col items-center gap-0.5">
                 <Siren className="h-4 w-4 text-[#DC2626]" />
-                <span className="text-[8px] font-bold text-[#DC2626]">SOS</span>
+                <span className="text-[8px] font-bold text-[#DC2626]">{tr.navSos}</span>
               </div>
               <div className="flex flex-col items-center gap-0.5">
                 <CalendarCheck2 className="h-4 w-4 text-[#5E7574]" />
-                <span className="text-[8px] font-bold text-[#5E7574]">Mes RDV</span>
+                <span className="text-[8px] font-bold text-[#5E7574]">{tr.navRdv}</span>
               </div>
             </div>
           </div>
@@ -535,8 +548,8 @@ function PhoneMockup() {
             <CheckCircle2 className="h-4 w-4 text-white" strokeWidth={3} />
           </div>
           <div>
-            <p className="text-xs font-bold text-[#134E4A]">RDV confirmé</p>
-            <p className="text-[10px] text-[#5E7574]">15 avril · 14:30</p>
+            <p className="text-xs font-bold text-[#134E4A]">{tr.rdvConfirmed}</p>
+            <p className="text-[10px] text-[#5E7574]">{tr.dateLabel}</p>
           </div>
         </div>
       </div>
@@ -545,14 +558,25 @@ function PhoneMockup() {
           <Star className="h-4 w-4 fill-[#FBBF24] text-[#FBBF24]" />
           <span className="text-xs font-black text-[#134E4A]">4.8/5</span>
         </div>
-        <p className="mt-0.5 text-[9px] text-[#5E7574]">1 247 avis</p>
+        <p className="mt-0.5 text-[9px] text-[#5E7574]">{tr.reviews}</p>
       </div>
     </div>
   );
 }
 
 /* ═════════════════ Doctor Dashboard Mockup ═════════════════ */
-function DoctorDashboardMockup() {
+function DoctorDashboardMockup({ locale }: { locale: string }) {
+  const ar = locale === "ar";
+  const tr = {
+    specCity: ar ? "طبيبة جلد · تونس" : "Dermatologue · Tunis",
+    active: ar ? "نشط" : "Actif",
+    today: ar ? "اليوم" : "Aujourd'hui",
+    rdvLabel: ar ? "مواعيد" : "rendez-vous",
+    thisMonth: ar ? "هذا الشهر" : "Ce mois",
+    estimated: ar ? "دت متوقعة" : "DT estimés",
+    confirmed: ar ? "مؤكد" : "Confirmé",
+    pending: ar ? "قيد الانتظار" : "En attente",
+  };
   return (
     <div className="relative mx-auto max-w-sm">
       <div className="rotate-1 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-md">
@@ -562,26 +586,26 @@ function DoctorDashboardMockup() {
           </div>
           <div>
             <p className="font-heading text-sm font-bold text-white">Dr. Sonia Trabelsi</p>
-            <p className="text-xs text-[#A7F3D0]">Dermatologue · Tunis</p>
+            <p className="text-xs text-[#A7F3D0]">{tr.specCity}</p>
           </div>
           <div className="ml-auto">
             <div className="flex items-center gap-1 rounded-full bg-[#22C55E]/20 px-2.5 py-1 text-[10px] font-bold text-[#22C55E]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>
-              Actif
+              {tr.active}
             </div>
           </div>
         </div>
 
         <div className="mb-4 grid grid-cols-2 gap-2">
           <div className="rounded-lg bg-white/5 p-3">
-            <p className="text-[10px] uppercase tracking-wider text-[#A7F3D0]">Aujourd&apos;hui</p>
+            <p className="text-[10px] uppercase tracking-wider text-[#A7F3D0]">{tr.today}</p>
             <p className="mt-1 font-heading text-2xl font-black text-white">12</p>
-            <p className="text-[10px] text-[#A7F3D0]">rendez-vous</p>
+            <p className="text-[10px] text-[#A7F3D0]">{tr.rdvLabel}</p>
           </div>
           <div className="rounded-lg bg-white/5 p-3">
-            <p className="text-[10px] uppercase tracking-wider text-[#A7F3D0]">Ce mois</p>
+            <p className="text-[10px] uppercase tracking-wider text-[#A7F3D0]">{tr.thisMonth}</p>
             <p className="mt-1 font-heading text-2xl font-black text-white">6 200</p>
-            <p className="text-[10px] text-[#A7F3D0]">DT estimés</p>
+            <p className="text-[10px] text-[#A7F3D0]">{tr.estimated}</p>
           </div>
         </div>
 
@@ -609,7 +633,7 @@ function DoctorDashboardMockup() {
                     : "bg-yellow-400/20 text-yellow-300"
                 }`}
               >
-                {slot.status === "confirmed" ? "Confirmé" : "En attente"}
+                {slot.status === "confirmed" ? tr.confirmed : tr.pending}
               </span>
             </div>
           ))}
