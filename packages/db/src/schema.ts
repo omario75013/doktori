@@ -7,6 +7,7 @@ import {
   boolean,
   timestamp,
   time,
+  date,
   doublePrecision,
   jsonb,
   index,
@@ -92,6 +93,28 @@ export const patients = pgTable(
   (table) => [uniqueIndex("patients_phone_idx").on(table.phone)]
 );
 
+// ─── Patient Dependents ──────────────────────────────────────────────────────
+// A patient (phone-verified account holder) can book appointments on behalf of
+// dependents (children, elderly parents, spouse). Appointment.dependentId points
+// here when the beneficiary differs from the account holder.
+
+export const patientDependents = pgTable(
+  "patient_dependents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id")
+      .notNull()
+      .references(() => patients.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 255 }).notNull(),
+    dateOfBirth: date("date_of_birth"),
+    gender: varchar("gender", { length: 10 }),
+    relation: varchar("relation", { length: 30 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("patient_dependents_patient_idx").on(table.patientId)]
+);
+
 // ─── OTP Codes ────────────────────────────────────────────────────────────────
 
 export const otpCodes = pgTable("otp_codes", {
@@ -120,6 +143,7 @@ export const appointments = pgTable(
     status: varchar("status", { length: 20 }).notNull().default("pending"),
     type: varchar("type", { length: 20 }).notNull().default("cabinet"),
     appointmentTypeId: uuid("appointment_type_id"),
+    dependentId: uuid("dependent_id"),
     reason: text("reason"),
     notes: text("notes"),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),

@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { db, patients, doctors, doctorSchedules, appointmentTypes } from "@doktori/db";
+import { db, patients, doctors, doctorSchedules, appointmentTypes, patientDependents } from "@doktori/db";
 import { createAppointment, getAvailableSlots } from "@/lib/queries/appointments";
 import { bookAppointmentSchema } from "@doktori/validation";
 import { formatPhone, SPECIALTIES } from "@doktori/shared";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 import { sendSMS } from "@/lib/sms";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -98,6 +98,39 @@ export async function POST(req: Request) {
     slotDuration = schedule?.slotDuration ?? 20;
   }
 
+  // Beneficiary (dependent): find-or-create when booking for someone else
+  let dependentId: string | undefined;
+  if (
+    parsed.data.beneficiaryName &&
+    (!parsed.data.beneficiaryRelation || parsed.data.beneficiaryRelation !== "self")
+  ) {
+    const beneficiaryName = parsed.data.beneficiaryName.trim();
+    const [existing] = await db
+      .select()
+      .from(patientDependents)
+      .where(
+        and(
+          eq(patientDependents.patientId, patient.id),
+          sql`lower(${patientDependents.name}) = lower(${beneficiaryName})`,
+        ),
+      )
+      .limit(1);
+    if (existing) {
+      dependentId = existing.id;
+    } else {
+      const [created] = await db
+        .insert(patientDependents)
+        .values({
+          patientId: patient.id,
+          name: beneficiaryName,
+          dateOfBirth: parsed.data.beneficiaryDateOfBirth,
+          relation: parsed.data.beneficiaryRelation,
+        })
+        .returning();
+      dependentId = created.id;
+    }
+  }
+
   const startsAt = new Date(`${parsed.data.date}T${parsed.data.startTime}:00`);
   const endsAt = new Date(startsAt.getTime() + slotDuration * 60 * 1000);
 
@@ -109,6 +142,7 @@ export async function POST(req: Request) {
       endsAt,
       reason: parsed.data.reason,
       appointmentTypeId: parsed.data.appointmentTypeId,
+      dependentId,
     });
 
     // Send confirmation SMS (don't fail the booking on SMS error)

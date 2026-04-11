@@ -10,6 +10,13 @@ import { fr } from "date-fns/locale";
 
 type Step = "phone" | "code" | "loggedIn";
 
+const RELATION_LABELS: Record<string, string> = {
+  child: "enfant",
+  parent: "parent",
+  spouse: "conjoint(e)",
+  other: "proche",
+};
+
 interface Appointment {
   id: string;
   startsAt: string;
@@ -21,6 +28,8 @@ interface Appointment {
   doctorSpecialty: string;
   doctorAddress: string;
   doctorSlug: string;
+  beneficiaryName: string | null;
+  beneficiaryRelation: string | null;
 }
 
 export default function MesRdvPage() {
@@ -190,6 +199,14 @@ export default function MesRdvPage() {
                           {format(new Date(a.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
                         </div>
                         <div className="text-xs text-gray-400 mt-1">{a.doctorAddress}</div>
+                        {a.beneficiaryName && (
+                          <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                            Pour {a.beneficiaryName}
+                            {a.beneficiaryRelation && a.beneficiaryRelation !== "other" && (
+                              <span className="text-blue-500/70">· {RELATION_LABELS[a.beneficiaryRelation] ?? a.beneficiaryRelation}</span>
+                            )}
+                          </div>
+                        )}
                       </div>
                       <Button variant="outline" size="sm" onClick={() => cancelAppointment(a.id)}>Annuler</Button>
                     </div>

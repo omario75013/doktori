@@ -74,6 +74,7 @@ export async function createAppointment(data: {
   endsAt: Date;
   reason?: string;
   appointmentTypeId?: string;
+  dependentId?: string;
 }) {
   return await db.transaction(async (tx) => {
     const conflicts = await tx
@@ -103,6 +104,7 @@ export async function createAppointment(data: {
         endsAt: data.endsAt,
         reason: data.reason,
         appointmentTypeId: data.appointmentTypeId,
+        dependentId: data.dependentId,
         status: "confirmed",
       })
       .returning();

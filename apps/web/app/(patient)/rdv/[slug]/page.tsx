@@ -55,6 +55,10 @@ export default function RdvPage({
   const [patientName, setPatientName] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
   const [reason, setReason] = useState("");
+  const [forSelf, setForSelf] = useState(true);
+  const [beneficiaryName, setBeneficiaryName] = useState("");
+  const [beneficiaryDob, setBeneficiaryDob] = useState("");
+  const [beneficiaryRelation, setBeneficiaryRelation] = useState<"child" | "parent" | "spouse" | "other">("child");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
@@ -106,6 +110,9 @@ export default function RdvPage({
           startTime: booking.startTime,
           reason: reason || undefined,
           appointmentTypeId: selectedType?.id,
+          beneficiaryName: forSelf ? undefined : beneficiaryName.trim() || undefined,
+          beneficiaryDateOfBirth: forSelf ? undefined : beneficiaryDob || undefined,
+          beneficiaryRelation: forSelf ? "self" : beneficiaryRelation,
         }),
       });
 
@@ -330,6 +337,82 @@ export default function RdvPage({
                   onChange={(e) => setPatientPhone(e.target.value)}
                   required
                 />
+              </div>
+
+              <div className="space-y-2 rounded-2xl border border-[#E6F4F1] bg-[#F0FDFA]/40 p-4">
+                <div className="text-sm font-bold text-[#134E4A]">Pour qui est ce rendez-vous ?</div>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setForSelf(true)}
+                    className={`rounded-xl border-2 px-3 py-2 text-sm font-semibold transition ${
+                      forSelf
+                        ? "border-[#0891B2] bg-white text-[#0891B2]"
+                        : "border-[#E6F4F1] bg-white text-[#134E4A]/70"
+                    }`}
+                  >
+                    Pour moi
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setForSelf(false)}
+                    className={`rounded-xl border-2 px-3 py-2 text-sm font-semibold transition ${
+                      !forSelf
+                        ? "border-[#0891B2] bg-white text-[#0891B2]"
+                        : "border-[#E6F4F1] bg-white text-[#134E4A]/70"
+                    }`}
+                  >
+                    Pour un proche
+                  </button>
+                </div>
+
+                {!forSelf && (
+                  <div className="space-y-3 pt-1">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="b-name">Nom du bénéficiaire</Label>
+                      <Input
+                        id="b-name"
+                        placeholder="Nom complet"
+                        value={beneficiaryName}
+                        onChange={(e) => setBeneficiaryName(e.target.value)}
+                        required={!forSelf}
+                        minLength={2}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-1.5">
+                        <Label htmlFor="b-dob">Date de naissance</Label>
+                        <Input
+                          id="b-dob"
+                          type="date"
+                          value={beneficiaryDob}
+                          onChange={(e) => setBeneficiaryDob(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label htmlFor="b-relation">Lien</Label>
+                        <select
+                          id="b-relation"
+                          value={beneficiaryRelation}
+                          onChange={(e) =>
+                            setBeneficiaryRelation(
+                              e.target.value as "child" | "parent" | "spouse" | "other",
+                            )
+                          }
+                          className="w-full rounded-md border border-[#E6F4F1] bg-white px-3 py-2 text-sm text-[#134E4A]"
+                        >
+                          <option value="child">Enfant</option>
+                          <option value="parent">Parent</option>
+                          <option value="spouse">Conjoint(e)</option>
+                          <option value="other">Autre</option>
+                        </select>
+                      </div>
+                    </div>
+                    <p className="text-xs text-[#134E4A]/60">
+                      Votre numéro reste le point de contact pour les rappels SMS.
+                    </p>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-1.5">

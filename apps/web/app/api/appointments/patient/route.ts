@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, appointments, doctors } from "@doktori/db";
+import { db, appointments, doctors, patientDependents } from "@doktori/db";
 import { eq, desc } from "drizzle-orm";
 import { getPatientFromRequest } from "@/lib/patient-auth";
 
@@ -21,9 +21,12 @@ export async function GET(req: NextRequest) {
       doctorSpecialty: doctors.specialty,
       doctorAddress: doctors.address,
       doctorSlug: doctors.slug,
+      beneficiaryName: patientDependents.name,
+      beneficiaryRelation: patientDependents.relation,
     })
     .from(appointments)
     .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
+    .leftJoin(patientDependents, eq(appointments.dependentId, patientDependents.id))
     .where(eq(appointments.patientId, patientId))
     .orderBy(desc(appointments.startsAt))
     .limit(50);
