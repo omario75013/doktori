@@ -4,6 +4,18 @@ import { eq } from "drizzle-orm";
 import { meili, DOCTORS_INDEX } from "@/lib/meilisearch";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 
+// City centroids (WGS84) — used for geo-ranking when geolocation is absent
+const CITY_CENTROIDS: Record<string, { lat: number; lng: number }> = {
+  tunis: { lat: 36.8065, lng: 10.1815 },
+  "la-marsa": { lat: 36.878, lng: 10.3246 },
+  "lac-1": { lat: 36.8395, lng: 10.238 },
+  "lac-2": { lat: 36.846, lng: 10.2423 },
+  ariana: { lat: 36.862, lng: 10.196 },
+  "la-soukra": { lat: 36.887, lng: 10.255 },
+  raoued: { lat: 36.9, lng: 10.22 },
+  manouba: { lat: 36.81, lng: 10.1 },
+};
+
 export async function POST(req: Request) {
   const authHeader = req.headers.get("authorization");
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
@@ -15,10 +27,14 @@ export async function POST(req: Request) {
     .from(doctors)
     .where(eq(doctors.isActive, true));
 
-  // Build rich search document — include all aliases + denormalized fields
   const documents = allDoctors.map((d) => {
     const spec = SPECIALTIES.find((s) => s.id === d.specialty);
     const city = CITIES.find((c) => c.id === d.city);
+
+    // Use doctor's own lat/lng if available, otherwise fall back to city centroid
+    const lat = d.latitude ? Number(d.latitude) : CITY_CENTROIDS[d.city]?.lat;
+    const lng = d.longitude ? Number(d.longitude) : CITY_CENTROIDS[d.city]?.lng;
+
     return {
       id: d.id,
       name: d.name,
@@ -31,7 +47,6 @@ export async function POST(req: Request) {
       bio: d.bio,
       consultationFee: d.consultationFee,
       photoUrl: d.photoUrl,
-      // Flattened searchable content — all keywords in one field for broad matching
       searchContent: [
         d.name,
         spec?.label,
@@ -43,43 +58,45 @@ export async function POST(req: Request) {
       ]
         .filter(Boolean)
         .join(" "),
+      // Meilisearch geo attribute — enables ST_Distance-like sorting
+      _geo: lat && lng ? { lat, lng } : undefined,
     };
   });
 
   const index = meili.index(DOCTORS_INDEX);
   await index.addDocuments(documents, { primaryKey: "id" });
 
-  // ═════════════════════════ SEARCH CONFIGURATION ═════════════════════════
-
-  // Searchable attributes — order matters for ranking (first = most important)
   await index.updateSearchableAttributes([
-    "name", // Doctor name has highest priority
-    "specialtyLabel", // Then specialty
-    "cityLabel", // Then city
-    "specialty", // ID variant (e.g. "dermatologue")
-    "city", // ID variant (e.g. "la-marsa")
-    "searchContent", // Flat content fallback
+    "name",
+    "specialtyLabel",
+    "cityLabel",
+    "specialty",
+    "city",
+    "searchContent",
     "address",
     "bio",
   ]);
 
-  await index.updateFilterableAttributes(["specialty", "city"]);
-  await index.updateSortableAttributes(["name"]);
-
-  // Ranking rules — custom order for medical search
-  await index.updateRankingRules([
-    "words", // Number of matched query words (higher first)
-    "typo", // Fewer typos first
-    "proximity", // Words closer together first
-    "attribute", // Matches in higher-priority attributes first
-    "exactness", // Exact matches first
-    "sort", // User sort
+  await index.updateFilterableAttributes([
+    "specialty",
+    "city",
+    "_geo", // Enable geo filtering & sorting
   ]);
 
-  // ═════════════════════════ SYNONYMS ═════════════════════════
-  // Map common user terms to specialty names
+  await index.updateSortableAttributes(["name", "_geo"]);
+
+  // Ranking with geo priority when available
+  await index.updateRankingRules([
+    "words",
+    "typo",
+    "proximity",
+    "attribute",
+    "exactness",
+    "sort",
+  ]);
+
+  // Synonyms for specialties + cities
   await index.updateSynonyms({
-    // Specialty synonyms
     dermato: ["dermatologue"],
     dermatologie: ["dermatologue"],
     peau: ["dermatologue"],
@@ -119,32 +136,25 @@ export async function POST(req: Request) {
     generaliste: ["generaliste"],
     généraliste: ["generaliste"],
     mg: ["generaliste"],
-    docteur: ["generaliste", "dermatologue", "cardiologue"],
+    docteur: ["generaliste"],
     medecin: ["generaliste"],
     médecin: ["generaliste"],
     toubib: ["generaliste"],
     tbib: ["generaliste"],
-    // City synonyms & aliases
     lamarsa: ["la-marsa"],
     marsa: ["la-marsa"],
     "la marsa": ["la-marsa"],
     lac: ["lac-1", "lac-2"],
     "lac 1": ["lac-1"],
     "lac 2": ["lac-2"],
-    "lac1": ["lac-1"],
-    "lac2": ["lac-2"],
+    lac1: ["lac-1"],
+    lac2: ["lac-2"],
     "berges du lac": ["lac-1", "lac-2"],
-    centre: ["tunis"],
-    centreville: ["tunis"],
-    "centre ville": ["tunis"],
-    ariana: ["ariana"],
     soukra: ["la-soukra"],
     lasoukra: ["la-soukra"],
     "la soukra": ["la-soukra"],
-    manouba: ["manouba"],
   });
 
-  // ═════════════════════════ STOP WORDS ═════════════════════════
   await index.updateStopWords([
     "le", "la", "les", "un", "une", "des", "de", "du", "au", "aux",
     "et", "ou", "pour", "dans", "sur", "avec", "sans", "par",
@@ -152,21 +162,15 @@ export async function POST(req: Request) {
     "cherche", "trouve", "besoin", "voudrais", "veux",
   ]);
 
-  // ═════════════════════════ TYPO TOLERANCE ═════════════════════════
   await index.updateTypoTolerance({
     enabled: true,
     minWordSizeForTypos: {
-      oneTypo: 4, // Allow 1 typo for words ≥ 4 chars (e.g. "derm" → "derma")
-      twoTypos: 7, // Allow 2 typos for words ≥ 7 chars
+      oneTypo: 4,
+      twoTypos: 7,
     },
-    disableOnWords: [],
-    disableOnAttributes: [],
   });
 
-  // ═════════════════════════ PAGINATION ═════════════════════════
-  await index.updatePagination({
-    maxTotalHits: 500,
-  });
+  await index.updatePagination({ maxTotalHits: 500 });
 
   return NextResponse.json({
     synced: documents.length,
