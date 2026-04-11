@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 import { sendSMS } from "@/lib/sms";
+import { broadcastSos } from "@/lib/sos-broadcast";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -42,6 +43,14 @@ export async function POST(req: Request) {
     } catch (e) {
       console.error("SMS failed:", e);
     }
+
+    // Notify the patient in real-time that their session was accepted
+    await broadcastSos(`session:${sessionId}`, "session-update", {
+      status: "accepted",
+      doctorName: info.name,
+      doctorPhone: info.phone,
+      doctorAddress: info.address,
+    });
   }
 
   return NextResponse.json({ success: true });
