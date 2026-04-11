@@ -16,7 +16,7 @@ export default function HomeVisitRequestPage({ params }: { params: Promise<{ slu
   const [error, setError] = useState("");
 
   useEffect(() => {
-    fetch(`/api/doctors/${slug}`).then((r) => r.json()).then((d) => {
+    fetch(`/api/doctors/by-slug/${slug}`).then((r) => r.json()).then((d) => {
       setDoctor(d);
       // Fetch settings via separate call (settings endpoint requires auth, but we expose via doctor endpoint later — for MVP, always show form)
     });

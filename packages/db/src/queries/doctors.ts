@@ -1,6 +1,6 @@
 import { db } from "../client";
-import { doctors, doctorSchedules } from "../schema";
-import { eq } from "drizzle-orm";
+import { doctors, doctorSchedules, appointmentTypes } from "../schema";
+import { and, asc, eq } from "drizzle-orm";
 
 export async function getDoctorBySlug(slug: string) {
   const [doctor] = await db
@@ -15,6 +15,11 @@ export async function getDoctorBySlug(slug: string) {
       photoUrl: doctors.photoUrl,
       bio: doctors.bio,
       consultationFee: doctors.consultationFee,
+      educations: doctors.educations,
+      experiences: doctors.experiences,
+      languages: doctors.languages,
+      expertise: doctors.expertise,
+      yearsOfExperience: doctors.yearsOfExperience,
     })
     .from(doctors)
     .where(eq(doctors.slug, slug))
@@ -33,4 +38,19 @@ export async function getDoctorSchedule(doctorId: string) {
 
 export async function getAllDoctorSlugs() {
   return db.select({ slug: doctors.slug }).from(doctors).where(eq(doctors.isActive, true));
+}
+
+export async function getDoctorAppointmentTypes(doctorId: string) {
+  return db
+    .select({
+      id: appointmentTypes.id,
+      name: appointmentTypes.name,
+      durationMinutes: appointmentTypes.durationMinutes,
+      fee: appointmentTypes.fee,
+      color: appointmentTypes.color,
+      isDefault: appointmentTypes.isDefault,
+    })
+    .from(appointmentTypes)
+    .where(and(eq(appointmentTypes.doctorId, doctorId), eq(appointmentTypes.isActive, true)))
+    .orderBy(asc(appointmentTypes.name));
 }

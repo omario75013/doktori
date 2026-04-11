@@ -1,11 +1,14 @@
 "use client";
 
 import { use, useState, useEffect } from "react";
-import { SlotPicker } from "@/components/slot-picker";
+import { AvailabilityCalendar } from "@/components/availability-calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Calendar, Clock, ArrowLeft } from "lucide-react";
+import { format, parseISO } from "date-fns";
+import { fr } from "date-fns/locale";
 
 interface Doctor {
   id: string;
@@ -45,8 +48,20 @@ export default function RdvPage({
   const [doctorError, setDoctorError] = useState(false);
   const [doctorLoading, setDoctorLoading] = useState(true);
 
+  const [step, setStep] = useState<Step>("slots");
+  const [types, setTypes] = useState<AppointmentType[]>([]);
+  const [selectedType, setSelectedType] = useState<AppointmentType | null>(null);
+  const [booking, setBooking] = useState<BookingState | null>(null);
+  const [patientName, setPatientName] = useState("");
+  const [patientPhone, setPatientPhone] = useState("");
+  const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
+  const [appointmentId, setAppointmentId] = useState<string | null>(null);
+  const [payingNow, setPayingNow] = useState(false);
+
   useEffect(() => {
-    fetch(`/api/doctors/${slug}`)
+    fetch(`/api/doctors/by-slug/${slug}`)
       .then((r) => {
         if (!r.ok) throw new Error("not found");
         return r.json() as Promise<Doctor>;
@@ -66,18 +81,6 @@ export default function RdvPage({
         setDoctorLoading(false);
       });
   }, [slug]);
-
-  const [step, setStep] = useState<Step>("slots");
-  const [types, setTypes] = useState<AppointmentType[]>([]);
-  const [selectedType, setSelectedType] = useState<AppointmentType | null>(null);
-  const [booking, setBooking] = useState<BookingState | null>(null);
-  const [patientName, setPatientName] = useState("");
-  const [patientPhone, setPatientPhone] = useState("");
-  const [reason, setReason] = useState("");
-  const [submitting, setSubmitting] = useState(false);
-  const [formError, setFormError] = useState<string | null>(null);
-  const [appointmentId, setAppointmentId] = useState<string | null>(null);
-  const [payingNow, setPayingNow] = useState(false);
 
   function handleSlotSelect(date: string, startTime: string) {
     setBooking({ date, startTime });
@@ -117,9 +120,7 @@ export default function RdvPage({
       setAppointmentId(data.id as string);
       setStep("payment");
     } catch (err: unknown) {
-      setFormError(
-        err instanceof Error ? err.message : "Erreur inattendue"
-      );
+      setFormError(err instanceof Error ? err.message : "Erreur inattendue");
     } finally {
       setSubmitting(false);
     }
@@ -127,17 +128,17 @@ export default function RdvPage({
 
   if (doctorLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400 text-sm">Chargement...</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#F0FDFA]/40">
+        <p className="text-[#134E4A]/40 text-sm">Chargement...</p>
       </div>
     );
   }
 
   if (doctorError || !doctor) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#F0FDFA]/40">
         <div className="text-center space-y-3">
-          <p className="text-gray-600">Médecin introuvable.</p>
+          <p className="text-[#134E4A]">Médecin introuvable.</p>
           <Button onClick={() => (window.location.href = "/")}>
             Retour à l&apos;accueil
           </Button>
@@ -146,11 +147,13 @@ export default function RdvPage({
     );
   }
 
+  const slotDurationMin = selectedType?.durationMinutes ?? 20;
+
   return (
-    <div className="min-h-screen bg-gray-50 px-4 py-8">
-      <div className="mx-auto max-w-xl space-y-6">
+    <div className="min-h-screen bg-[#F0FDFA]/40 px-4 py-8">
+      <div className="mx-auto max-w-2xl space-y-6">
         {/* Doctor summary card */}
-        <div className="bg-white rounded-xl border border-gray-200 p-5 flex items-center gap-4">
+        <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 flex items-center gap-4">
           {doctor.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -159,27 +162,64 @@ export default function RdvPage({
               className="w-16 h-16 rounded-full object-cover flex-shrink-0"
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center flex-shrink-0 text-blue-600 font-bold text-xl">
+            <div className="w-16 h-16 rounded-full bg-[#F0FDFA] flex items-center justify-center flex-shrink-0 text-[#0891B2] font-black text-xl">
               {doctor.name.charAt(0)}
             </div>
           )}
-          <div>
-            <h1 className="font-semibold text-gray-900">{doctor.name}</h1>
-            <p className="text-sm text-gray-500">{doctor.specialty}</p>
-            <p className="text-sm text-gray-400">{doctor.city}</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-heading font-black text-[#134E4A]">{doctor.name}</h1>
+            <p className="text-sm text-[#0E7490]">{doctor.specialty}</p>
+            <p className="text-xs text-[#134E4A]/50">{doctor.city}</p>
             {doctor.consultationFee != null && (
-              <p className="text-sm text-blue-600 font-medium mt-0.5">
+              <p className="text-sm text-[#0891B2] font-bold mt-0.5">
                 {(doctor.consultationFee / 1000).toFixed(0)} DT
               </p>
             )}
           </div>
         </div>
 
+        {/* Sticky summary chip when slot is picked */}
+        {(step === "form" || step === "payment") && booking && (
+          <div className="rounded-2xl bg-[#0891B2] text-white shadow-md px-4 py-3 flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="h-9 w-9 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
+                <Calendar className="h-4 w-4" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-xs text-white/80 font-semibold uppercase tracking-wider">
+                  Votre rendez-vous
+                </p>
+                <p className="text-sm font-bold truncate">
+                  {format(parseISO(booking.date), "EEEE d MMMM", { locale: fr })} à{" "}
+                  {booking.startTime}
+                  <span className="text-white/70 font-normal"> · {slotDurationMin} min</span>
+                </p>
+              </div>
+            </div>
+            {step === "form" && (
+              <button
+                type="button"
+                onClick={() => setStep("slots")}
+                className="text-xs font-bold text-white/90 hover:text-white underline underline-offset-2 flex-shrink-0"
+              >
+                Changer
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Step: appointment type selection */}
         {step === "type" && types.length > 0 && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
-            <h2 className="font-semibold text-gray-800">Motif de consultation</h2>
-            <p className="text-sm text-gray-500">Sélectionnez le type de consultation. La durée et le tarif s&apos;adaptent automatiquement.</p>
+          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4">
+            <div>
+              <h2 className="font-heading font-black text-[#134E4A]">
+                Motif de consultation
+              </h2>
+              <p className="text-sm text-[#134E4A]/60 mt-1">
+                Sélectionnez le type de consultation. La durée et le tarif s&apos;adaptent
+                automatiquement.
+              </p>
+            </div>
             <div className="space-y-2">
               {types.map((t) => (
                 <button
@@ -188,7 +228,7 @@ export default function RdvPage({
                     setSelectedType(t);
                     setStep("slots");
                   }}
-                  className="w-full flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left hover:border-blue-400 hover:bg-blue-50/30 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 rounded-2xl border border-[#E6F4F1] bg-white px-4 py-3 text-left hover:border-[#0891B2] hover:bg-[#F0FDFA]/40 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <span
@@ -197,12 +237,15 @@ export default function RdvPage({
                       aria-hidden
                     />
                     <div>
-                      <div className="font-medium text-gray-900">{t.name}</div>
-                      <div className="text-xs text-gray-500">{t.durationMinutes} min</div>
+                      <div className="font-bold text-[#134E4A]">{t.name}</div>
+                      <div className="text-xs text-[#134E4A]/50 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {t.durationMinutes} min
+                      </div>
                     </div>
                   </div>
                   {t.fee != null && (
-                    <div className="text-sm font-semibold text-blue-600">
+                    <div className="text-sm font-bold text-[#0891B2]">
                       {(t.fee / 1000).toFixed(0)} DT
                     </div>
                   )}
@@ -212,43 +255,57 @@ export default function RdvPage({
           </div>
         )}
 
-        {/* Step: slot selection */}
+        {/* Step: slot selection (Doctolib-style calendar) */}
         {step === "slots" && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5">
             {selectedType && (
-              <div className="flex items-center justify-between text-sm">
-                <span className="text-gray-500">
-                  <span className="font-medium text-gray-800">{selectedType.name}</span> · {selectedType.durationMinutes} min
+              <div className="flex items-center justify-between text-sm pb-3 border-b border-[#E6F4F1]">
+                <span className="text-[#134E4A]/60 flex items-center gap-2">
+                  <span
+                    className="h-2.5 w-2.5 rounded-full"
+                    style={{ backgroundColor: selectedType.color }}
+                  />
+                  <span className="font-bold text-[#134E4A]">{selectedType.name}</span>
+                  <span className="text-[#134E4A]/40">·</span>
+                  <span className="text-[#134E4A]/60">
+                    {selectedType.durationMinutes} min
+                  </span>
                 </span>
                 <button
                   onClick={() => setStep("type")}
-                  className="text-blue-600 hover:underline"
+                  className="text-[#0891B2] font-bold hover:underline"
                 >
                   Changer
                 </button>
               </div>
             )}
-            <h2 className="font-semibold text-gray-800">Choisir un créneau</h2>
-            <SlotPicker doctorId={doctor.id} typeId={selectedType?.id} onSelect={handleSlotSelect} />
+            <h2 className="font-heading font-black text-[#134E4A] text-lg">
+              Choisir un créneau
+            </h2>
+            <AvailabilityCalendar
+              doctorSlug={doctor.slug}
+              typeId={selectedType?.id}
+              onSelect={handleSlotSelect}
+              selected={booking}
+            />
           </div>
         )}
 
         {/* Step: patient info form */}
         {step === "form" && booking && (
-          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-5">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setStep("slots")}
-                className="text-sm text-blue-600 hover:underline"
-              >
-                ← Changer de créneau
-              </button>
-              <span className="text-sm text-gray-500">
-                {booking.date} à {booking.startTime}
-              </span>
-            </div>
+          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5">
+            <button
+              type="button"
+              onClick={() => setStep("slots")}
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0891B2] hover:underline"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Changer de créneau
+            </button>
 
-            <h2 className="font-semibold text-gray-800">Vos informations</h2>
+            <h2 className="font-heading font-black text-[#134E4A]">
+              Vos informations
+            </h2>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
@@ -293,11 +350,7 @@ export default function RdvPage({
                 </p>
               )}
 
-              <Button
-                type="submit"
-                disabled={submitting}
-                className="w-full"
-              >
+              <Button type="submit" disabled={submitting} className="w-full">
                 {submitting
                   ? "Réservation en cours..."
                   : "Confirmer le rendez-vous"}
@@ -308,7 +361,7 @@ export default function RdvPage({
 
         {/* Step: optional payment prompt */}
         {step === "payment" && (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center space-y-4">
+          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-8 text-center space-y-4">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
               <svg
                 className="w-8 h-8 text-green-600"
@@ -321,8 +374,10 @@ export default function RdvPage({
               </svg>
             </div>
             <div className="space-y-1">
-              <h2 className="font-semibold text-gray-900">Rendez-vous réservé !</h2>
-              <p className="text-sm text-gray-500 mb-4">
+              <h2 className="font-heading font-black text-[#134E4A]">
+                Rendez-vous réservé !
+              </h2>
+              <p className="text-sm text-[#134E4A]/60 mb-4">
                 Voulez-vous payer votre consultation maintenant pour garantir votre place ?
               </p>
             </div>
@@ -349,13 +404,13 @@ export default function RdvPage({
                     setPayingNow(false);
                   }
                 }}
-                className="w-full bg-blue-600"
+                className="w-full bg-[#0891B2] hover:bg-[#0E7490]"
               >
                 {payingNow ? "Redirection..." : "Payer maintenant (sécurisé)"}
               </Button>
               <button
                 onClick={() => setStep("success")}
-                className="w-full text-sm text-gray-500 hover:underline py-2"
+                className="w-full text-sm text-[#134E4A]/60 hover:underline py-2"
               >
                 Payer sur place
               </button>
@@ -365,7 +420,7 @@ export default function RdvPage({
 
         {/* Step: success confirmation */}
         {step === "success" && (
-          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center space-y-4">
+          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-8 text-center space-y-4">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
               <svg
                 className="w-8 h-8 text-green-600"
@@ -382,19 +437,20 @@ export default function RdvPage({
               </svg>
             </div>
             <div className="space-y-1">
-              <h2 className="text-lg font-semibold text-gray-900">
+              <h2 className="text-lg font-heading font-black text-[#134E4A]">
                 Rendez-vous confirmé !
               </h2>
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-[#134E4A]/60">
                 Votre rendez-vous avec {doctor.name} a été enregistré avec succès.
               </p>
               {booking && (
-                <p className="text-sm font-medium text-blue-600">
-                  {booking.date} à {booking.startTime}
+                <p className="text-sm font-bold text-[#0891B2]">
+                  {format(parseISO(booking.date), "EEEE d MMMM", { locale: fr })} à{" "}
+                  {booking.startTime}
                 </p>
               )}
               {appointmentId && (
-                <p className="text-xs text-gray-400 font-mono">
+                <p className="text-xs text-[#134E4A]/40 font-mono">
                   Réf: {appointmentId}
                 </p>
               )}

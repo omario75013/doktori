@@ -3,16 +3,30 @@ export const dynamic = "force-dynamic";
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { getDoctorBySlug, getDoctorSchedule, getAllDoctorSlugs } from "@doktori/db";
+import { getLocale, getTranslations } from "next-intl/server";
+import {
+  getDoctorBySlug,
+  getDoctorSchedule,
+  getAllDoctorSlugs,
+  getDoctorAppointmentTypes,
+  db,
+  reviews,
+  patients,
+} from "@doktori/db";
+import { desc, eq, sql } from "drizzle-orm";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 import {
   ArrowRight,
   BadgeCheck,
+  Briefcase,
   Calendar,
   Clock,
+  GraduationCap,
+  Languages,
   MapPin,
   MessageSquareText,
   Phone,
+  Quote,
   ShieldCheck,
   Star,
   Stethoscope,
@@ -44,6 +58,52 @@ function getCityLabel(cityId: string): string {
   return CITIES.find((c) => c.id === cityId)?.label || cityId;
 }
 
+function anonymizeName(full: string): string {
+  const parts = full.trim().split(/\s+/);
+  const first = parts[0] ?? "";
+  const lastInitial = parts[parts.length - 1]?.[0] ?? "";
+  return `${first} ${lastInitial}.`;
+}
+
+function timeAgo(date: Date): string {
+  const now = Date.now();
+  const then = date.getTime();
+  const diffMs = Math.max(0, now - then);
+  const dayMs = 1000 * 60 * 60 * 24;
+  const days = Math.floor(diffMs / dayMs);
+  if (days <= 0) return "aujourd'hui";
+  if (days === 1) return "hier";
+  if (days < 7) return `il y a ${days} jours`;
+  if (days < 30) {
+    const weeks = Math.floor(days / 7);
+    return weeks === 1 ? "il y a 1 semaine" : `il y a ${weeks} semaines`;
+  }
+  if (days < 365) {
+    const months = Math.floor(days / 30);
+    return months === 1 ? "il y a 1 mois" : `il y a ${months} mois`;
+  }
+  const years = Math.floor(days / 365);
+  return years === 1 ? "il y a 1 an" : `il y a ${years} ans`;
+}
+
+function StarRating({ value }: { value: number }) {
+  const rounded = Math.round(value);
+  return (
+    <div className="inline-flex items-center gap-0.5" aria-label={`${value.toFixed(1)} sur 5`}>
+      {[1, 2, 3, 4, 5].map((i) => (
+        <Star
+          key={i}
+          className={
+            i <= rounded
+              ? "h-4 w-4 fill-[#F59E0B] text-[#F59E0B]"
+              : "h-4 w-4 fill-gray-200 text-gray-200"
+          }
+        />
+      ))}
+    </div>
+  );
+}
+
 export async function generateStaticParams() {
   try {
     const slugs = await getAllDoctorSlugs();
@@ -59,13 +119,15 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>;
 }): Promise<Metadata> {
   const { slug } = await params;
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: "meta" });
   const doctor = await getDoctorBySlug(slug);
-  if (!doctor) return { title: "Médecin introuvable | Doktori" };
+  if (!doctor) return { title: t("doctorNotFound") };
   const specialtyLabel = getSpecialtyLabel(doctor.specialty);
   const cityLabel = getCityLabel(doctor.city);
   return {
-    title: `${doctor.name} — ${specialtyLabel} à ${cityLabel} | Doktori`,
-    description: `Prenez rendez-vous en ligne avec ${doctor.name}, ${specialtyLabel} à ${cityLabel}. Consultez les disponibilités et réservez en 2 clics sur Doktori.`,
+    title: t("doctorTitle", { name: doctor.name, specialty: specialtyLabel, city: cityLabel }),
+    description: t("doctorDescription", { name: doctor.name, specialty: specialtyLabel, city: cityLabel }),
   };
 }
 
@@ -79,8 +141,39 @@ export default async function DoctorProfilePage({
   if (!doctor) notFound();
 
   const schedule = await getDoctorSchedule(doctor.id);
+  const appointmentTypesList = await getDoctorAppointmentTypes(doctor.id);
   const specialtyLabel = getSpecialtyLabel(doctor.specialty);
   const cityLabel = getCityLabel(doctor.city);
+
+  // Reviews — aggregate + latest 10 (joined with patient name)
+  const [aggregateRow] = await db
+    .select({
+      avg: sql<string | null>`AVG(${reviews.rating})::text`,
+      count: sql<number>`COUNT(*)::int`,
+    })
+    .from(reviews)
+    .where(eq(reviews.doctorId, doctor.id));
+
+  const reviewCount = aggregateRow?.count ?? 0;
+  const averageRating =
+    aggregateRow?.avg != null ? Number.parseFloat(aggregateRow.avg) : 0;
+
+  const latestReviews = reviewCount
+    ? await db
+        .select({
+          id: reviews.id,
+          rating: reviews.rating,
+          comment: reviews.comment,
+          verified: reviews.verified,
+          createdAt: reviews.createdAt,
+          patientName: patients.name,
+        })
+        .from(reviews)
+        .innerJoin(patients, eq(reviews.patientId, patients.id))
+        .where(eq(reviews.doctorId, doctor.id))
+        .orderBy(desc(reviews.createdAt))
+        .limit(10)
+    : [];
 
   // Group schedule rows by day
   const scheduleByDay = schedule.reduce<
@@ -101,6 +194,11 @@ export default async function DoctorProfilePage({
     slots: scheduleByDay[dayIdx] || [],
   }));
 
+  const educations = doctor.educations ?? [];
+  const experiences = doctor.experiences ?? [];
+  const languages = doctor.languages ?? [];
+  const expertise = doctor.expertise ?? [];
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Physician",
@@ -113,6 +211,29 @@ export default async function DoctorProfilePage({
       addressCountry: "TN",
     },
     url: `https://doktori.tn/medecin/${doctor.slug}`,
+    ...(reviewCount > 0 && {
+      aggregateRating: {
+        "@type": "AggregateRating",
+        ratingValue: averageRating.toFixed(1),
+        reviewCount,
+        bestRating: 5,
+        worstRating: 1,
+      },
+    }),
+    ...(appointmentTypesList.length > 0 && {
+      availableService: appointmentTypesList.map((t) => ({
+        "@type": "MedicalProcedure",
+        name: t.name,
+        procedureType: "https://schema.org/NoninvasiveProcedure",
+        ...(t.fee != null && {
+          offers: {
+            "@type": "Offer",
+            price: (t.fee / 1000).toFixed(0),
+            priceCurrency: "TND",
+          },
+        }),
+      })),
+    }),
   };
 
   return (
@@ -217,14 +338,28 @@ export default async function DoctorProfilePage({
                         <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>
                         Disponible aujourd&apos;hui
                       </div>
-                      <div className="inline-flex items-center gap-1 rounded-full bg-[#FEF3C7] px-3 py-1 text-xs font-bold text-[#92400E]">
-                        <Star className="h-3 w-3 fill-[#F59E0B] text-[#F59E0B]" />
-                        4.8 (24 avis)
-                      </div>
+                      {reviewCount > 0 ? (
+                        <div className="inline-flex items-center gap-1 rounded-full bg-[#FEF3C7] px-3 py-1 text-xs font-bold text-[#92400E]">
+                          <Star className="h-3 w-3 fill-[#F59E0B] text-[#F59E0B]" />
+                          {averageRating.toFixed(1)} ({reviewCount}{" "}
+                          {reviewCount > 1 ? "avis" : "avis"})
+                        </div>
+                      ) : (
+                        <div className="inline-flex items-center gap-1 rounded-full bg-gray-100 px-3 py-1 text-xs font-bold text-[#5E7574]">
+                          <Star className="h-3 w-3" />
+                          Aucun avis
+                        </div>
+                      )}
                       <div className="inline-flex items-center gap-1 rounded-full bg-[#F0FDFA] px-3 py-1 text-xs font-bold text-[#0E7490]">
                         <ShieldCheck className="h-3 w-3" strokeWidth={2.5} />
                         Vérifié par Doktori
                       </div>
+                      {doctor.yearsOfExperience != null && doctor.yearsOfExperience > 0 && (
+                        <div className="inline-flex items-center gap-1 rounded-full bg-[#F0FDFA] px-3 py-1 text-xs font-bold text-[#0E7490]">
+                          <Briefcase className="h-3 w-3" strokeWidth={2.5} />
+                          {doctor.yearsOfExperience} ans d&apos;expérience
+                        </div>
+                      )}
                     </div>
 
                     {/* Address */}
@@ -251,6 +386,191 @@ export default async function DoctorProfilePage({
                     `${doctor.name} est ${specialtyLabel.toLowerCase()} à ${cityLabel}. Passionné(e) par la santé de ses patients, le Dr vous accueille dans un cabinet moderne et bienveillant. Réservez votre consultation en quelques clics via Doktori.`}
                 </p>
               </div>
+
+              {/* Expertises */}
+              {expertise.length > 0 && (
+                <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
+                      <Sparkles className="h-4 w-4" strokeWidth={2.5} />
+                    </div>
+                    <h2 className="font-heading text-lg font-bold text-[#134E4A]">
+                      Expertises
+                    </h2>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {expertise.map((item) => (
+                      <span
+                        key={item}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[#E6F4F1] bg-[#F0FDFA] px-3.5 py-1.5 text-xs font-bold text-[#0E7490]"
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-[#0891B2]" />
+                        {item}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Formation */}
+              {educations.length > 0 && (
+                <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
+                      <GraduationCap className="h-4 w-4" strokeWidth={2.5} />
+                    </div>
+                    <h2 className="font-heading text-lg font-bold text-[#134E4A]">
+                      Formation
+                    </h2>
+                  </div>
+                  <ol className="mt-5 relative">
+                    {[...educations]
+                      .sort((a, b) => b.year - a.year)
+                      .map((edu, i, arr) => (
+                        <li key={`${edu.year}-${edu.degree}-${i}`} className="relative pl-8 pb-5 last:pb-0">
+                          {i < arr.length - 1 && (
+                            <span
+                              aria-hidden
+                              className="absolute left-[11px] top-5 h-full w-px bg-[#E6F4F1]"
+                            />
+                          )}
+                          <span
+                            aria-hidden
+                            className="absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#F0FDFA] ring-2 ring-white"
+                          >
+                            <span className="h-2 w-2 rounded-full bg-[#0891B2]" />
+                          </span>
+                          <div className="text-[11px] font-bold uppercase tracking-wider text-[#0E7490]">
+                            {edu.year}
+                          </div>
+                          <div className="mt-0.5 text-sm font-bold text-[#134E4A]">
+                            {edu.degree}
+                          </div>
+                          <div className="text-xs font-medium text-[#5E7574]">
+                            {edu.institution}
+                          </div>
+                        </li>
+                      ))}
+                  </ol>
+                </div>
+              )}
+
+              {/* Expérience */}
+              {experiences.length > 0 && (
+                <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
+                      <Briefcase className="h-4 w-4" strokeWidth={2.5} />
+                    </div>
+                    <h2 className="font-heading text-lg font-bold text-[#134E4A]">
+                      Expérience
+                    </h2>
+                  </div>
+                  <ol className="mt-5 relative">
+                    {[...experiences]
+                      .sort((a, b) => {
+                        const ae = a.endYear ?? 9999;
+                        const be = b.endYear ?? 9999;
+                        if (be !== ae) return be - ae;
+                        return b.startYear - a.startYear;
+                      })
+                      .map((exp, i, arr) => (
+                        <li
+                          key={`${exp.startYear}-${exp.role}-${i}`}
+                          className="relative pl-8 pb-5 last:pb-0"
+                        >
+                          {i < arr.length - 1 && (
+                            <span
+                              aria-hidden
+                              className="absolute left-[11px] top-5 h-full w-px bg-[#E6F4F1]"
+                            />
+                          )}
+                          <span
+                            aria-hidden
+                            className="absolute left-0 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-[#F0FDFA] ring-2 ring-white"
+                          >
+                            <span className="h-2 w-2 rounded-full bg-[#0891B2]" />
+                          </span>
+                          <div className="text-[11px] font-bold uppercase tracking-wider text-[#0E7490]">
+                            {exp.startYear} – {exp.endYear ?? "aujourd'hui"}
+                          </div>
+                          <div className="mt-0.5 text-sm font-bold text-[#134E4A]">
+                            {exp.role}
+                          </div>
+                          <div className="text-xs font-medium text-[#5E7574]">
+                            {exp.place}
+                          </div>
+                        </li>
+                      ))}
+                  </ol>
+                </div>
+              )}
+
+              {/* Langues parlées */}
+              {languages.length > 0 && (
+                <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
+                      <Languages className="h-4 w-4" strokeWidth={2.5} />
+                    </div>
+                    <h2 className="font-heading text-lg font-bold text-[#134E4A]">
+                      Langues parlées
+                    </h2>
+                  </div>
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {languages.map((lang) => (
+                      <span
+                        key={lang}
+                        className="inline-flex items-center gap-2 rounded-full border border-[#E6F4F1] bg-white px-3.5 py-1.5 text-xs font-bold text-[#134E4A] shadow-sm"
+                      >
+                        <Languages className="h-3 w-3 text-[#0891B2]" strokeWidth={2.5} />
+                        {lang}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Appointment types (motifs) */}
+              {appointmentTypesList.length > 0 && (
+                <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
+                      <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
+                    </div>
+                    <h2 className="font-heading text-lg font-bold text-[#134E4A]">
+                      Motifs de consultation
+                    </h2>
+                  </div>
+                  <ul className="mt-4 grid gap-2 sm:grid-cols-2">
+                    {appointmentTypesList.map((t) => (
+                      <li
+                        key={t.id}
+                        className="flex items-center justify-between gap-3 rounded-xl border border-[#E6F4F1] bg-white px-4 py-3"
+                      >
+                        <div className="flex items-center gap-3">
+                          <span
+                            className="h-2.5 w-2.5 shrink-0 rounded-full"
+                            style={{ backgroundColor: t.color }}
+                            aria-hidden
+                          />
+                          <div>
+                            <div className="text-sm font-bold text-[#134E4A]">{t.name}</div>
+                            <div className="text-xs font-medium text-[#5E7574]">
+                              {t.durationMinutes} min
+                            </div>
+                          </div>
+                        </div>
+                        {t.fee != null && (
+                          <div className="text-sm font-bold text-[#0891B2]">
+                            {(t.fee / 1000).toFixed(0)} DT
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
 
               {/* Weekly schedule */}
               <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
@@ -298,6 +618,100 @@ export default async function DoctorProfilePage({
                 </div>
               </div>
 
+              {/* Avis patients */}
+              {reviewCount > 0 && (
+                <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
+                        <Star className="h-4 w-4" strokeWidth={2.5} />
+                      </div>
+                      <h2 className="font-heading text-lg font-bold text-[#134E4A]">
+                        Avis patients
+                      </h2>
+                    </div>
+
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <div className="font-heading text-2xl font-black leading-none text-[#134E4A]">
+                          {averageRating.toFixed(1)}
+                          <span className="text-base font-bold text-[#5E7574]">/5</span>
+                        </div>
+                        <div className="mt-1 text-[11px] font-bold uppercase tracking-wider text-[#5E7574]">
+                          {reviewCount} {reviewCount > 1 ? "avis vérifiés" : "avis vérifié"}
+                        </div>
+                      </div>
+                      <StarRating value={averageRating} />
+                    </div>
+                  </div>
+
+                  <ul className="mt-6 space-y-4">
+                    {latestReviews.map((r) => {
+                      const author = anonymizeName(r.patientName);
+                      const when = timeAgo(new Date(r.createdAt));
+                      return (
+                        <li
+                          key={r.id}
+                          className="relative rounded-2xl border border-[#E6F4F1] bg-[#F0FDFA]/40 p-5"
+                        >
+                          <Quote
+                            aria-hidden
+                            className="absolute right-4 top-4 h-6 w-6 text-[#0891B2]/15"
+                            strokeWidth={2.5}
+                          />
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-3">
+                              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0891B2] text-sm font-black text-white">
+                                {author[0]?.toUpperCase() ?? "?"}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-sm font-bold text-[#134E4A]">
+                                    {author}
+                                  </span>
+                                  {r.verified && (
+                                    <span
+                                      className="inline-flex items-center gap-1 rounded-full bg-[#22C55E]/10 px-2 py-0.5 text-[10px] font-bold text-[#16A34A]"
+                                      title="Consultation vérifiée"
+                                    >
+                                      <BadgeCheck className="h-3 w-3" strokeWidth={2.5} />
+                                      Vérifié
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="mt-0.5 flex items-center gap-2">
+                                  <StarRating value={r.rating} />
+                                  <span className="text-[11px] font-medium text-[#5E7574]">
+                                    · {when}
+                                  </span>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                          {r.comment && (
+                            <p className="mt-3 text-sm leading-relaxed text-[#134E4A]/90">
+                              {r.comment}
+                            </p>
+                          )}
+                        </li>
+                      );
+                    })}
+                  </ul>
+
+                  {reviewCount > latestReviews.length && (
+                    <div className="mt-5 flex justify-center">
+                      <Link
+                        href={`/medecin/${doctor.slug}/avis`}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[#E6F4F1] bg-white px-5 py-2.5 text-sm font-bold text-[#0891B2] transition-colors hover:border-[#0891B2] hover:bg-[#F0FDFA]"
+                      >
+                        Voir tous les {reviewCount} avis
+                        <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
+                      </Link>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Practical info */}
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5">
@@ -306,7 +720,9 @@ export default async function DoctorProfilePage({
                     Langues
                   </div>
                   <p className="mt-2 text-sm font-semibold text-[#134E4A]">
-                    Français · العربية · English
+                    {languages.length > 0
+                      ? languages.join(" · ")
+                      : "Français · العربية · English"}
                   </p>
                 </div>
                 <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5">

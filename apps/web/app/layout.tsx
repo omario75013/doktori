@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NextIntlClientProvider } from "next-intl";
-import { getLocale, getMessages } from "next-intl/server";
+import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { Navbar } from "@/components/navbar";
 import { Chatbot } from "@/components/chatbot";
 
@@ -16,20 +16,45 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-export const metadata: Metadata = {
-  title: "Doktori — Réservez votre médecin en ligne en Tunisie",
-  description:
-    "Trouvez un médecin en Tunisie et prenez rendez-vous en ligne en 2 clics. Gratuit pour les patients. Doktori, le Doctolib tunisien.",
-  openGraph: {
-    title: "Doktori — Réservez votre médecin en ligne",
-    description:
-      "Le Doctolib tunisien. Trouvez un médecin, consultez ses disponibilités, réservez en 2 clics.",
-    url: "https://doktori.tn",
-    siteName: "Doktori",
-    locale: "fr_TN",
-    type: "website",
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: "meta" });
+  return {
+    title: { default: t("title"), template: t("titleTemplate") },
+    description: t("description"),
+    keywords: t("keywords").split(",").map((k) => k.trim()),
+    openGraph: {
+      title: t("ogTitle"),
+      description: t("ogDescription"),
+      url: "https://doktori.tn",
+      siteName: "Doktori",
+      locale: locale === "ar" ? "ar_TN" : "fr_TN",
+      type: "website",
+      images: [
+        {
+          url: "https://doktori.tn/og.png",
+          width: 1200,
+          height: 630,
+          alt: t("ogTitle"),
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: t("twitterTitle"),
+      description: t("twitterDescription"),
+    },
+    alternates: {
+      canonical: "https://doktori.tn",
+      languages: {
+        "fr-TN": "https://doktori.tn",
+        "ar-TN": "https://doktori.tn/ar",
+        "x-default": "https://doktori.tn",
+      },
+    },
+    robots: { index: true, follow: true },
+  };
+}
 
 export default async function RootLayout({
   children,

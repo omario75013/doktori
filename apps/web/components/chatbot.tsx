@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import {
   MessageCircle,
   X,
@@ -16,22 +17,21 @@ interface Message {
   content: string;
 }
 
-const QUICK_REPLIES = [
-  "Trouver un dermatologue",
-  "Comment annuler un RDV ?",
-  "Visite à domicile",
-  "Tarifs consultation",
-];
-
-const WELCOME_MESSAGE: Message = {
-  role: "assistant",
-  content:
-    "Bonjour 👋 Je suis **Dokti**, votre assistant Doktori.\n\nJe peux vous aider à :\n• Trouver un médecin par spécialité et quartier\n• Comprendre comment réserver\n• Répondre à vos questions sur Doktori\n\nQue puis-je faire pour vous ?",
-};
-
 export function Chatbot() {
+  const t = useTranslations("chatbot");
+  const QUICK_REPLIES = useMemo(
+    () => [
+      t("quickReply1"),
+      t("quickReply2"),
+      t("quickReply3"),
+      t("quickReply4"),
+    ],
+    [t]
+  );
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
+  const [messages, setMessages] = useState<Message[]>(() => [
+    { role: "assistant", content: t("welcome") },
+  ]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -74,7 +74,7 @@ export function Chatbot() {
           ...prev,
           {
             role: "assistant",
-            content: err.error || "Désolé, une erreur est survenue. Réessayez.",
+            content: err.error || t("errorGeneric"),
           },
         ]);
         return;
@@ -87,8 +87,7 @@ export function Chatbot() {
         ...prev,
         {
           role: "assistant",
-          content:
-            "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
+          content: t("errorNetwork"),
         },
       ]);
     } finally {
@@ -103,7 +102,7 @@ export function Chatbot() {
         <button
           onClick={() => setOpen(true)}
           className="group fixed bottom-6 right-6 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-[#0891B2] text-white shadow-xl shadow-[#0891B2]/30 transition-all hover:scale-110 hover:bg-[#0E7490] sm:bottom-8 sm:right-8"
-          aria-label="Ouvrir l'assistant Dokti"
+          aria-label={t("openAriaLabel")}
         >
           <MessageCircle className="h-7 w-7" strokeWidth={2.5} />
           <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4">
@@ -114,7 +113,7 @@ export function Chatbot() {
           </span>
           {/* Tooltip */}
           <span className="absolute right-full top-1/2 mr-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#134E4A] px-3 py-1.5 text-xs font-semibold text-white shadow-lg group-hover:block">
-            Besoin d&apos;aide ? Demandez à Dokti
+            {t("tooltip")}
             <span className="absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-[#134E4A]"></span>
           </span>
         </button>
@@ -135,16 +134,16 @@ export function Chatbot() {
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <span className="font-heading text-base font-bold text-white">Dokti</span>
+                  <span className="font-heading text-base font-bold text-white">{t("headerName")}</span>
                   <Sparkles className="h-3 w-3 text-[#A7F3D0]" strokeWidth={2.5} />
                 </div>
-                <div className="text-[11px] text-[#A7F3D0]">Assistant Doktori · En ligne</div>
+                <div className="text-[11px] text-[#A7F3D0]">{t("headerStatus")}</div>
               </div>
             </div>
             <button
               onClick={() => setOpen(false)}
               className="flex h-8 w-8 items-center justify-center rounded-lg text-white/80 transition-colors hover:bg-white/10 hover:text-white"
-              aria-label="Fermer"
+              aria-label={t("closeAriaLabel")}
             >
               <X className="h-5 w-5" strokeWidth={2.5} />
             </button>
@@ -153,10 +152,10 @@ export function Chatbot() {
           {/* Disclaimer banner */}
           <div className="flex shrink-0 items-start gap-2 border-b border-yellow-100 bg-yellow-50 px-4 py-2">
             <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-600" strokeWidth={2.5} />
-            <p className="text-[10px] leading-tight text-yellow-800">
-              Dokti n&apos;est pas un médecin. En cas d&apos;urgence vitale, composez le{" "}
-              <strong>190 (SAMU)</strong>.
-            </p>
+            <p
+              className="text-[10px] leading-tight text-yellow-800"
+              dangerouslySetInnerHTML={{ __html: t.raw("disclaimer") as string }}
+            />
           </div>
 
           {/* Messages */}
@@ -171,7 +170,7 @@ export function Chatbot() {
                     <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
                   </div>
                   <Loader2 className="h-4 w-4 animate-spin text-[#0891B2]" />
-                  <span>Dokti réfléchit...</span>
+                  <span>{t("thinking")}</span>
                 </div>
               )}
               <div ref={messagesEndRef} />
@@ -182,7 +181,7 @@ export function Chatbot() {
           {messages.length === 1 && !loading && (
             <div className="shrink-0 border-t border-[#E6F4F1] bg-white px-4 py-3">
               <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#5E7574]">
-                Suggestions
+                {t("suggestionsLabel")}
               </p>
               <div className="flex flex-wrap gap-2">
                 {QUICK_REPLIES.map((q) => (
@@ -212,7 +211,7 @@ export function Chatbot() {
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder="Posez votre question..."
+                placeholder={t("inputPlaceholder")}
                 disabled={loading}
                 className="h-12 flex-1 rounded-xl border-2 border-[#E6F4F1] bg-[#F0FDFA]/50 px-4 text-sm text-[#134E4A] placeholder:text-[#5E7574]/60 outline-none transition-colors focus:border-[#0891B2] focus:bg-white disabled:opacity-60"
               />
@@ -220,14 +219,12 @@ export function Chatbot() {
                 type="submit"
                 disabled={!input.trim() || loading}
                 className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0891B2] text-white transition-all hover:bg-[#0E7490] disabled:opacity-40"
-                aria-label="Envoyer"
+                aria-label={t("sendAriaLabel")}
               >
                 <Send className="h-5 w-5" strokeWidth={2.5} />
               </button>
             </div>
-            <p className="mt-2 text-center text-[9px] text-[#5E7574]">
-              Propulsé par Claude · Vos conversations ne sont pas sauvegardées
-            </p>
+            <p className="mt-2 text-center text-[9px] text-[#5E7574]">{t("footer")}</p>
           </form>
         </div>
       )}

@@ -38,7 +38,7 @@ export async function Navbar() {
             className="group hidden items-center gap-1.5 rounded-lg bg-[#DC2626] px-4 py-2 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#B91C1C] md:inline-flex"
           >
             <Siren className="h-4 w-4" strokeWidth={2.5} />
-            SOS
+            {t("sos")}
           </Link>
           <LanguageSwitcher currentLocale={locale} />
           <Link

@@ -8,9 +8,23 @@ import {
   timestamp,
   time,
   doublePrecision,
+  jsonb,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
+
+export type DoctorEducation = {
+  degree: string;
+  institution: string;
+  year: number;
+};
+
+export type DoctorExperience = {
+  role: string;
+  place: string;
+  startYear: number;
+  endYear: number | null;
+};
 
 // ─── Doctors ─────────────────────────────────────────────────────────────────
 
@@ -28,6 +42,11 @@ export const doctors = pgTable(
     address: text("address").notNull(),
     photoUrl: text("photo_url"),
     bio: text("bio"),
+    educations: jsonb("educations").$type<DoctorEducation[]>().notNull().default([]),
+    experiences: jsonb("experiences").$type<DoctorExperience[]>().notNull().default([]),
+    languages: jsonb("languages").$type<string[]>().notNull().default([]),
+    expertise: jsonb("expertise").$type<string[]>().notNull().default([]),
+    yearsOfExperience: integer("years_of_experience"),
     // Stored in millimes (DT × 1000), e.g. 50000 = 50 DT
     consultationFee: integer("consultation_fee"),
     latitude: varchar("latitude", { length: 30 }),

@@ -21,12 +21,20 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     .from(doctors)
     .where(eq(doctors.isActive, true));
 
-  const doctorPages: MetadataRoute.Sitemap = allDoctors.map((d) => ({
-    url: `${baseUrl}/medecin/${d.slug}`,
-    lastModified: d.updatedAt,
-    changeFrequency: "weekly",
-    priority: 0.8,
-  }));
+  const doctorPages: MetadataRoute.Sitemap = allDoctors.flatMap((d) => [
+    {
+      url: `${baseUrl}/medecin/${d.slug}`,
+      lastModified: d.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.8,
+    },
+    {
+      url: `${baseUrl}/rdv/${d.slug}`,
+      lastModified: d.updatedAt,
+      changeFrequency: "daily" as const,
+      priority: 0.7,
+    },
+  ]);
 
   // SEO listing pages (all city × specialty combinations)
   const listingPages: MetadataRoute.Sitemap = [];

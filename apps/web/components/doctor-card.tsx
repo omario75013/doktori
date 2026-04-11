@@ -1,6 +1,7 @@
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
-import { MapPin, ArrowRight, Star, Clock, BadgeCheck } from "lucide-react";
+import { MapPin, ArrowRight, Star, Clock, BadgeCheck, Navigation } from "lucide-react";
 
 interface Props {
   doctor: {
@@ -11,10 +12,18 @@ interface Props {
     address: string;
     consultationFee: number | null;
     photoUrl: string | null;
+    _geoDistance?: number; // meters from user (Meili geo sort)
   };
 }
 
+function formatDistance(meters: number): string {
+  if (meters < 1000) return `${Math.round(meters)} m`;
+  const km = meters / 1000;
+  return km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`;
+}
+
 export function DoctorCard({ doctor }: Props) {
+  const t = useTranslations("doctorCard");
   const specialty = SPECIALTIES.find((s) => s.id === doctor.specialty);
   const city = CITIES.find((c) => c.id === doctor.city);
   const initials = doctor.name
@@ -44,7 +53,7 @@ export function DoctorCard({ doctor }: Props) {
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={doctor.photoUrl}
-                alt={`Portrait du ${doctor.name}`}
+                alt={t("portraitAlt", { name: doctor.name })}
                 className="h-full w-full object-cover transition-transform group-hover:scale-105"
                 loading="lazy"
               />
@@ -70,6 +79,12 @@ export function DoctorCard({ doctor }: Props) {
               <MapPin className="h-3.5 w-3.5" strokeWidth={2.5} />
               <span className="font-medium">{city?.label}</span>
             </span>
+            {typeof doctor._geoDistance === "number" && (
+              <span className="flex items-center gap-1 rounded-full bg-[#0891B2]/10 px-2 py-0.5 font-bold text-[#0E7490]">
+                <Navigation className="h-3 w-3" strokeWidth={2.5} />
+                {formatDistance(doctor._geoDistance)}
+              </span>
+            )}
             <span className="flex items-center gap-1">
               <Star className="h-3.5 w-3.5 fill-[#FBBF24] text-[#FBBF24]" />
               <span className="font-bold text-[#134E4A]">4.8</span>
@@ -77,7 +92,7 @@ export function DoctorCard({ doctor }: Props) {
             </span>
             <span className="flex items-center gap-1 rounded-full bg-[#22C55E]/10 px-2 py-0.5">
               <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>
-              <span className="font-bold text-[#16A34A]">Dispo aujourd&apos;hui</span>
+              <span className="font-bold text-[#16A34A]">{t("availableToday")}</span>
             </span>
           </div>
         </div>
@@ -87,7 +102,7 @@ export function DoctorCard({ doctor }: Props) {
           <div className="shrink-0 text-right">
             <div className="rounded-2xl border border-[#E6F4F1] bg-[#F0FDFA] px-4 py-3">
               <div className="text-[9px] font-bold uppercase tracking-wider text-[#0E7490]">
-                Consultation
+                {t("consultationLabel")}
               </div>
               <div className="mt-0.5 flex items-baseline justify-end gap-1">
                 <span className="font-heading text-2xl font-black text-[#0891B2]">
@@ -107,7 +122,7 @@ export function DoctorCard({ doctor }: Props) {
           <span className="truncate">{doctor.address}</span>
         </span>
         <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-[#0891B2] px-3 py-1.5 text-xs font-bold text-white transition-all group-hover:bg-[#0E7490] group-hover:gap-1.5">
-          Prendre RDV
+          {t("bookCta")}
           <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
         </span>
       </div>

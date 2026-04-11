@@ -78,15 +78,15 @@ export default function HomePage() {
             {/* Accreditation badge */}
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#0891B2]/20 bg-[#F0FDFA] px-4 py-1.5 text-xs font-semibold text-[#0E7490] shadow-sm">
               <BadgeCheck className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
-              <span>Plateforme de santé tunisienne · 65+ médecins vérifiés</span>
+              <span>{t("heroBadge")}</span>
             </div>
 
             <h1 className="text-balance font-heading text-4xl font-black leading-[1.02] tracking-tight text-[#134E4A] sm:text-5xl lg:text-6xl xl:text-7xl">
-              Votre santé.{" "}
+              {t("heroTitleLine1")}{" "}
               <span className="block">
-                Un{" "}
+                {t("heroTitleLine2Prefix")}{" "}
                 <span className="relative inline-block text-[#0891B2]">
-                  rendez-vous.
+                  {t("heroTitleHighlight")}
                   <svg
                     aria-hidden
                     viewBox="0 0 300 12"
@@ -105,11 +105,10 @@ export default function HomePage() {
               </span>
             </h1>
 
-            <p className="mx-auto mt-6 max-w-xl text-balance text-lg leading-relaxed text-[#5E7574] lg:mx-0 lg:text-xl">
-              Trouvez un médecin et prenez rendez-vous en ligne en{" "}
-              <strong className="font-bold text-[#134E4A]">moins de 60 secondes</strong>.
-              Gratuit pour les patients. Disponible à Tunis, Ariana et Manouba.
-            </p>
+            <p
+              className="mx-auto mt-6 max-w-xl text-balance text-lg leading-relaxed text-[#5E7574] lg:mx-0 lg:text-xl [&_strong]:font-bold [&_strong]:text-[#134E4A]"
+              dangerouslySetInnerHTML={{ __html: t.raw("heroDescription") as string }}
+            />
 
             {/* Search bar */}
             <form onSubmit={handleSearch} className="mx-auto mt-8 max-w-xl lg:mx-0">
@@ -121,14 +120,14 @@ export default function HomePage() {
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Dermatologue, Tunis Centre..."
+                  placeholder={t("heroSearchPlaceholder")}
                   className="h-full flex-1 border-0 bg-transparent px-2 text-base text-[#134E4A] placeholder:text-[#5E7574]/60 outline-none"
                 />
                 <button
                   type="submit"
                   className="group/btn inline-flex h-full items-center gap-2 rounded-xl bg-[#0891B2] px-6 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#0E7490] active:scale-[0.98]"
                 >
-                  <span>Rechercher</span>
+                  <span>{t("searchButton")}</span>
                   <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" strokeWidth={3} />
                 </button>
               </div>
@@ -138,15 +137,15 @@ export default function HomePage() {
             <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[#5E7574] lg:justify-start">
               <div className="flex items-center gap-1.5">
                 <ShieldCheck className="h-4 w-4 text-[#22C55E]" strokeWidth={2.5} />
-                <span className="font-medium">100% sécurisé · RGPD</span>
+                <span className="font-medium">{t("trustSecure")}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Clock className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
-                <span className="font-medium">Disponible 24/7</span>
+                <span className="font-medium">{t("trustAvailable")}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Users className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
-                <span className="font-medium">+1000 patients actifs</span>
+                <span className="font-medium">{t("trustPatients")}</span>
               </div>
             </div>
           </div>
@@ -162,10 +161,10 @@ export default function HomePage() {
       <section className="border-y border-[#E6F4F1] bg-[#F0FDFA]/50 py-10">
         <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 px-6 md:grid-cols-4">
           {[
-            { value: "65+", label: "Médecins vérifiés", icon: Stethoscope },
-            { value: "10", label: "Spécialités", icon: Sparkles },
-            { value: "4", label: "Quartiers couverts", icon: MapPin },
-            { value: "4.8/5", label: "Avis patients", icon: Star },
+            { value: "65+", label: t("statsDoctorsLabel"), icon: Stethoscope },
+            { value: "10", label: t("statsSpecialtiesLabel"), icon: Sparkles },
+            { value: "4", label: t("statsZonesLabel"), icon: MapPin },
+            { value: "4.8/5", label: t("statsRatingLabel"), icon: Star },
           ].map(({ value, label, icon: Icon }) => (
             <div key={label} className="flex items-center gap-3">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-[#0891B2] ring-1 ring-[#E6F4F1]">
@@ -195,18 +194,16 @@ export default function HomePage() {
             </div>
             <div className="min-w-0">
               <h3 className="font-heading text-2xl font-bold text-white">
-                Besoin d&apos;un médecin maintenant ?
+                {t("sosTitle")}
               </h3>
-              <p className="mt-1 text-sm text-red-100">
-                SOS Docteur · Consultation urgente non-vitale · Réponse en moins de 2 minutes
-              </p>
+              <p className="mt-1 text-sm text-red-100">{t("sosSubtitle")}</p>
             </div>
             <Link
               href="/sos"
               className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#DC2626] shadow-sm transition-all hover:bg-red-50 active:scale-[0.98]"
             >
               <Zap className="h-4 w-4" strokeWidth={3} />
-              <span>Activer SOS</span>
+              <span>{t("sosCta")}</span>
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
             </Link>
           </div>
@@ -219,14 +216,12 @@ export default function HomePage() {
           <div className="mx-auto max-w-2xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full bg-[#F0FDFA] px-4 py-1 text-xs font-bold uppercase tracking-wider text-[#0E7490]">
               <TrendingUp className="h-3.5 w-3.5" />
-              3 étapes simples
+              {t("howItWorksBadge")}
             </div>
             <h2 className="mt-4 text-balance font-heading text-3xl font-black tracking-tight text-[#134E4A] sm:text-4xl">
-              Prendre rendez-vous n&apos;a jamais été aussi facile
+              {t("howItWorksTitle")}
             </h2>
-            <p className="mt-4 text-base text-[#5E7574]">
-              De la recherche à la confirmation, en moins de 60 secondes chrono.
-            </p>
+            <p className="mt-4 text-base text-[#5E7574]">{t("howItWorksSubtitle")}</p>
           </div>
 
           <div className="mt-16 grid gap-6 md:grid-cols-3">
@@ -234,20 +229,20 @@ export default function HomePage() {
               {
                 step: "01",
                 icon: Search,
-                title: "Cherchez",
-                desc: "Trouvez votre médecin par spécialité, ville ou quartier. Filtrez par disponibilité.",
+                title: t("step1Title"),
+                desc: t("step1Desc"),
               },
               {
                 step: "02",
                 icon: CalendarCheck2,
-                title: "Choisissez",
-                desc: "Consultez les créneaux disponibles en temps réel et sélectionnez celui qui vous convient.",
+                title: t("step2Title"),
+                desc: t("step2Desc"),
               },
               {
                 step: "03",
                 icon: CheckCircle2,
-                title: "Réservez",
-                desc: "Confirmez en 2 clics. Vous recevrez un SMS de rappel la veille du rendez-vous.",
+                title: t("step3Title"),
+                desc: t("step3Desc"),
               },
             ].map((s) => {
               const Icon = s.icon;
@@ -283,14 +278,12 @@ export default function HomePage() {
           <div className="mx-auto max-w-2xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1 text-xs font-bold uppercase tracking-wider text-[#0E7490] ring-1 ring-[#E6F4F1]">
               <Stethoscope className="h-3.5 w-3.5" />
-              Spécialités
+              {t("specialtiesBadge")}
             </div>
             <h2 className="mt-4 text-balance font-heading text-3xl font-black tracking-tight text-[#134E4A] sm:text-4xl">
-              Trouvez votre médecin par spécialité
+              {t("bySpecialty")}
             </h2>
-            <p className="mt-4 text-base text-[#5E7574]">
-              10 spécialités disponibles dans le Grand Tunis.
-            </p>
+            <p className="mt-4 text-base text-[#5E7574]">{t("specialtiesSubtitle")}</p>
           </div>
 
           <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -334,25 +327,23 @@ export default function HomePage() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-[#22C55E]/40 bg-[#22C55E]/10 px-4 py-1.5 text-xs font-bold text-[#22C55E]">
               <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
-              PROGRAMME FONDATEUR · PLACES LIMITÉES
+              {t("forDoctorsBadge")}
             </div>
             <h2 className="mt-6 font-heading text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl">
-              Vous êtes médecin ?{" "}
-              <span className="text-[#22D3EE]">Rejoignez-nous.</span>
+              {t("forDoctors")}{" "}
+              <span className="text-[#22D3EE]">{t("forDoctorsHighlight")}</span>
             </h2>
-            <p className="mt-6 text-lg leading-relaxed text-[#A7F3D0]">
-              Les <strong className="font-bold text-white">100 premiers médecins</strong>{" "}
-              inscrits bénéficient de{" "}
-              <strong className="font-bold text-white">6 mois gratuits</strong>. Après, à
-              partir de <strong className="font-bold text-white">49 DT/mois</strong>.
-            </p>
+            <p
+              className="mt-6 text-lg leading-relaxed text-[#A7F3D0] [&_strong]:font-bold [&_strong]:text-white"
+              dangerouslySetInnerHTML={{ __html: t.raw("forDoctorsDesc") as string }}
+            />
 
             <ul className="mt-10 space-y-4">
               {[
-                { icon: Clock, text: "Agenda en ligne disponible 24h/24, 7j/7" },
-                { icon: MessageSquareText, text: "Rappels SMS automatiques pour réduire les no-shows" },
-                { icon: Search, text: "Vitrine professionnelle référencée sur Google" },
-                { icon: ShieldCheck, text: "Support dédié WhatsApp en moins de 2 heures" },
+                { icon: Clock, text: t("benefit1") },
+                { icon: MessageSquareText, text: t("benefit2") },
+                { icon: Search, text: t("benefit3") },
+                { icon: ShieldCheck, text: t("benefit4") },
               ].map((b) => {
                 const Icon = b.icon;
                 return (
@@ -371,14 +362,14 @@ export default function HomePage() {
                 href="/inscription"
                 className="group inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-[#22C55E] px-8 font-heading text-base font-bold text-[#134E4A] shadow-lg shadow-[#22C55E]/20 transition-all hover:bg-[#4ADE80] active:scale-[0.98]"
               >
-                <span>Créer mon compte gratuit</span>
+                <span>{t("forDoctorsCta")}</span>
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
               </Link>
               <Link
                 href="/connexion"
                 className="inline-flex h-14 items-center justify-center gap-2 rounded-xl border-2 border-white/20 bg-white/5 px-8 text-base font-bold text-white backdrop-blur-sm transition-all hover:bg-white/10"
               >
-                J&apos;ai déjà un compte
+                {t("forDoctorsHaveAccount")}
               </Link>
             </div>
           </div>
@@ -403,21 +394,20 @@ export default function HomePage() {
                 </span>
               </div>
               <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#5E7574]">
-                La plateforme de prise de rendez-vous médicaux en ligne en Tunisie.
-                Conçu avec soin pour les patients et les médecins tunisiens.
+                {t("footerTagline")}
               </p>
               <div className="mt-6 flex items-center gap-2">
                 <a
                   href="#"
                   className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#E6F4F1] text-[#134E4A] transition-colors hover:border-[#0891B2] hover:text-[#0891B2]"
-                  aria-label="iOS App"
+                  aria-label={t("iosApp")}
                 >
                   <Apple className="h-4 w-4" strokeWidth={2} />
                 </a>
                 <a
                   href="#"
                   className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#E6F4F1] text-[#134E4A] transition-colors hover:border-[#0891B2] hover:text-[#0891B2]"
-                  aria-label="Android App"
+                  aria-label={t("androidApp")}
                 >
                   <Smartphone className="h-4 w-4" strokeWidth={2} />
                 </a>
@@ -425,37 +415,35 @@ export default function HomePage() {
             </div>
 
             <div>
-              <h4 className="font-heading text-sm font-bold text-[#134E4A]">Produit</h4>
+              <h4 className="font-heading text-sm font-bold text-[#134E4A]">{t("footerProduct")}</h4>
               <ul className="mt-4 space-y-2 text-sm">
-                <li><Link href="/recherche" className="text-[#5E7574] hover:text-[#0891B2]">Rechercher</Link></li>
-                <li><Link href="/sos" className="text-[#5E7574] hover:text-[#0891B2]">SOS Docteur</Link></li>
-                <li><Link href="/inscription" className="text-[#5E7574] hover:text-[#0891B2]">Espace médecin</Link></li>
+                <li><Link href="/recherche" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerProductSearch")}</Link></li>
+                <li><Link href="/sos" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerProductSos")}</Link></li>
+                <li><Link href="/inscription" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerProductDoctors")}</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-heading text-sm font-bold text-[#134E4A]">Légal</h4>
+              <h4 className="font-heading text-sm font-bold text-[#134E4A]">{t("footerLegal")}</h4>
               <ul className="mt-4 space-y-2 text-sm">
-                <li><Link href="/legal/cgu" className="text-[#5E7574] hover:text-[#0891B2]">CGU</Link></li>
-                <li><Link href="/legal/confidentialite" className="text-[#5E7574] hover:text-[#0891B2]">Confidentialité</Link></li>
-                <li><Link href="/legal/mentions" className="text-[#5E7574] hover:text-[#0891B2]">Mentions légales</Link></li>
+                <li><Link href="/legal/cgu" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerLegalCgu")}</Link></li>
+                <li><Link href="/legal/confidentialite" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerLegalPrivacy")}</Link></li>
+                <li><Link href="/legal/mentions" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerLegalMentions")}</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-heading text-sm font-bold text-[#134E4A]">Contact</h4>
+              <h4 className="font-heading text-sm font-bold text-[#134E4A]">{t("footerContact")}</h4>
               <ul className="mt-4 space-y-2 text-sm">
-                <li><a href="mailto:contact@doktori.tn" className="text-[#5E7574] hover:text-[#0891B2]">contact@doktori.tn</a></li>
-                <li><span className="text-[#5E7574]">Support WhatsApp</span></li>
-                <li><span className="text-[#5E7574]">Tunis, Tunisie</span></li>
+                <li><a href="mailto:contact@doktori.tn" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerContactEmail")}</a></li>
+                <li><span className="text-[#5E7574]">{t("footerContactSupport")}</span></li>
+                <li><span className="text-[#5E7574]">{t("footerContactLocation")}</span></li>
               </ul>
             </div>
           </div>
 
           <div className="mt-12 border-t border-[#E6F4F1] pt-8 text-center">
-            <p className="text-xs text-[#5E7574]">
-              Doktori © 2026 · Fait avec soin pour la santé des Tunisiens
-            </p>
+            <p className="text-xs text-[#5E7574]">{t("footerCopyright")}</p>
           </div>
         </div>
       </footer>
