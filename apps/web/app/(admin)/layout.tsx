@@ -1,5 +1,4 @@
-import { auth } from "@/lib/auth";
-import { isSuperAdmin } from "@/lib/admin";
+import { getAdminSession } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import {
@@ -12,10 +11,17 @@ import {
   LogOut,
 } from "lucide-react";
 
+const ROLE_LABELS: Record<string, string> = {
+  super_admin: "Super admin",
+  moderator: "Modérateur",
+  finance: "Finance",
+  support: "Support",
+  marketing: "Marketing",
+};
+
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
-  const session = await auth();
-  if (!session) redirect("/connexion");
-  if (!isSuperAdmin(session.user?.email)) redirect("/");
+  const admin = await getAdminSession();
+  if (!admin) redirect("/admin-login");
 
   const links = [
     { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
@@ -36,7 +42,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             <div>
               <p className="text-sm font-bold">Doktori Admin</p>
               <p className="text-[10px] text-slate-400 uppercase tracking-wider">
-                Super admin
+                {ROLE_LABELS[admin.role] ?? admin.role}
               </p>
             </div>
           </div>
@@ -58,7 +64,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         </nav>
         <div className="p-3 border-t border-slate-800">
           <div className="px-3 py-2 text-xs text-slate-400 truncate">
-            {session.user?.email}
+            <div className="font-semibold text-slate-200 truncate">{admin.name}</div>
+            <div className="truncate">{admin.email}</div>
           </div>
           <Link
             href="/api/auth/signout"

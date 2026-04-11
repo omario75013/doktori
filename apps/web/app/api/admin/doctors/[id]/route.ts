@@ -1,23 +1,15 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { isSuperAdmin } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin-auth";
+import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
 import { db, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
-
-async function requireAdmin() {
-  const session = await auth();
-  if (!session || !isSuperAdmin(session.user?.email)) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
-  return null;
-}
 
 export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const unauth = await requireAdmin();
-  if (unauth) return unauth;
+  const admin = await requireAdmin();
+  if (admin instanceof NextResponse) return admin;
 
   const { id } = await params;
   const body = await req.json();
@@ -28,8 +20,35 @@ export async function PATCH(
     return NextResponse.json({ error: "Aucune modification" }, { status: 400 });
   }
 
+  const [before] = await db.select().from(doctors).where(eq(doctors.id, id)).limit(1);
+  if (!before) {
+    return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
+  }
+
   updates.updatedAt = new Date();
-  await db.update(doctors).set(updates).where(eq(doctors.id, id));
+  const [after] = await db
+    .update(doctors)
+    .set(updates)
+    .where(eq(doctors.id, id))
+    .returning();
+
+  const meta = extractRequestMeta(req);
+  await logAudit({
+    actor: admin,
+    action:
+      typeof body.isActive === "boolean"
+        ? body.isActive
+          ? "doctors.activate"
+          : "doctors.deactivate"
+        : "doctors.update",
+    resourceType: "doctors",
+    resourceId: id,
+    before: { isActive: before.isActive },
+    after: { isActive: after.isActive },
+    ip: meta.ip,
+    userAgent: meta.userAgent,
+  });
+
   return NextResponse.json({ ok: true });
 }
 
@@ -37,10 +56,34 @@ export async function DELETE(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const unauth = await requireAdmin();
-  if (unauth) return unauth;
+  const admin = await requireAdmin();
+  if (admin instanceof NextResponse) return admin;
 
   const { id } = await params;
+  const [before] = await db.select().from(doctors).where(eq(doctors.id, id)).limit(1);
+  if (!before) {
+    return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
+  }
+
   await db.delete(doctors).where(eq(doctors.id, id));
+
+  const meta = extractRequestMeta(req);
+  await logAudit({
+    actor: admin,
+    action: "doctors.delete",
+    resourceType: "doctors",
+    resourceId: id,
+    before: {
+      name: before.name,
+      email: before.email,
+      specialty: before.specialty,
+      city: before.city,
+      isActive: before.isActive,
+    },
+    after: null,
+    ip: meta.ip,
+    userAgent: meta.userAgent,
+  });
+
   return NextResponse.json({ ok: true });
 }

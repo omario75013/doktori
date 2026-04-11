@@ -1,14 +1,11 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
-import { isSuperAdmin } from "@/lib/admin";
+import { requireAdmin } from "@/lib/admin-auth";
 import { db, reviews, doctors, patients } from "@doktori/db";
-import { eq, and, desc } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 
 export async function GET(req: Request) {
-  const session = await auth();
-  if (!session || !isSuperAdmin(session.user?.email)) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
+  const admin = await requireAdmin(["super_admin", "moderator"]);
+  if (admin instanceof NextResponse) return admin;
 
   const { searchParams } = new URL(req.url);
   const status = searchParams.get("status") ?? "pending";
