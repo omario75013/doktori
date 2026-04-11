@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { ChevronDown, ChevronUp } from "lucide-react";
 
 type Appointment = {
   id: string;
@@ -36,6 +37,21 @@ type MedicalProfile = {
   notes: string | null;
   updatedAt: string;
 } | null;
+
+type Icd10Entry = { code: string; label: string };
+
+type ConsultationNote = {
+  id: string;
+  appointmentId: string;
+  subjective: string | null;
+  objective: string | null;
+  assessment: string | null;
+  plan: string | null;
+  vitals: Record<string, number> | null;
+  icd10Codes: Icd10Entry[] | null;
+  startsAt: string;
+  updatedAt: string;
+};
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "À confirmer",
@@ -152,6 +168,17 @@ function NotesCell({ appointment }: { appointment: Appointment }) {
   );
 }
 
+const VITALS_LABELS: Record<string, { label: string; unit: string }> = {
+  bp_systolic: { label: "PAS", unit: "mmHg" },
+  bp_diastolic: { label: "PAD", unit: "mmHg" },
+  heart_rate: { label: "FC", unit: "bpm" },
+  temperature: { label: "Temp", unit: "°C" },
+  weight: { label: "Poids", unit: "kg" },
+  height: { label: "Taille", unit: "cm" },
+  spo2: { label: "SpO2", unit: "%" },
+  respiratory_rate: { label: "FR", unit: "/min" },
+};
+
 export default function PatientDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -160,6 +187,8 @@ export default function PatientDetailPage() {
   const [medical, setMedical] = useState<MedicalProfile>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [consultNotes, setConsultNotes] = useState<ConsultationNote[]>([]);
+  const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     const fetchPatient = async () => {
@@ -185,6 +214,33 @@ export default function PatientDetailPage() {
 
     fetchPatient();
   }, [params.id]);
+
+  useEffect(() => {
+    const fetchConsultNotes = async () => {
+      try {
+        const res = await fetch(`/api/patients/${params.id}/consultation-notes`);
+        if (res.ok) {
+          const data = await res.json();
+          setConsultNotes(data);
+        }
+      } catch {
+        // Silently ignore — consultation notes are supplementary
+      }
+    };
+
+    if (params.id) {
+      fetchConsultNotes();
+    }
+  }, [params.id]);
+
+  const toggleNote = (id: string) => {
+    setExpandedNotes((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
 
   if (loading) {
     return <p className="text-gray-400 text-sm p-6">Chargement...</p>;
@@ -289,6 +345,113 @@ export default function PatientDetailPage() {
           <MedBlock title="Autres remarques" value={medical?.notes} highlight="gray" />
         </div>
       </div>
+
+      {/* SOAP Consultation History */}
+      {consultNotes.length > 0 && (
+        <div className="bg-white rounded-xl border">
+          <div className="p-4 border-b">
+            <h2 className="font-semibold">Historique de consultations (SOAP)</h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Cliquer sur une consultation pour voir la note complète
+            </p>
+          </div>
+          <div className="divide-y">
+            {consultNotes.map((cn) => {
+              const isExpanded = expandedNotes.has(cn.id);
+              return (
+                <div key={cn.id} className="p-4">
+                  <button
+                    onClick={() => toggleNote(cn.id)}
+                    className="w-full text-left flex items-center justify-between gap-3 hover:opacity-80 transition-opacity"
+                  >
+                    <div className="flex items-center gap-3 flex-wrap">
+                      <span className="text-sm font-medium text-[#134E4A]">
+                        {format(new Date(cn.startsAt), "d MMM yyyy", { locale: fr })}
+                      </span>
+                      {cn.icd10Codes && cn.icd10Codes.length > 0 && (
+                        <div className="flex flex-wrap gap-1">
+                          {cn.icd10Codes.map((c) => (
+                            <span
+                              key={c.code}
+                              className="inline-flex items-center gap-1 bg-[#E6F4F1] text-[#0891B2] text-xs px-2 py-0.5 rounded-full font-mono font-bold"
+                            >
+                              {c.code}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    {isExpanded ? (
+                      <ChevronUp size={16} className="text-gray-400 shrink-0" />
+                    ) : (
+                      <ChevronDown size={16} className="text-gray-400 shrink-0" />
+                    )}
+                  </button>
+
+                  {isExpanded && (
+                    <div className="mt-4 space-y-3 text-sm">
+                      {cn.vitals && Object.keys(cn.vitals).length > 0 && (
+                        <div>
+                          <div className="text-xs text-gray-500 uppercase mb-1">Constantes</div>
+                          <div className="flex flex-wrap gap-2">
+                            {Object.entries(cn.vitals).map(([k, v]) => {
+                              const meta = VITALS_LABELS[k];
+                              if (!meta) return null;
+                              return (
+                                <span
+                                  key={k}
+                                  className="bg-[#F0FDFA] border border-[#E6F4F1] rounded px-2 py-1 text-xs text-[#134E4A]"
+                                >
+                                  <span className="font-medium">{meta.label}</span>{" "}
+                                  {v} {meta.unit}
+                                </span>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                      {cn.icd10Codes && cn.icd10Codes.length > 0 && (
+                        <div>
+                          <div className="text-xs text-gray-500 uppercase mb-1">Codes CIM-10</div>
+                          <div className="flex flex-wrap gap-1.5">
+                            {cn.icd10Codes.map((c) => (
+                              <span
+                                key={c.code}
+                                className="inline-flex items-center gap-1.5 bg-[#E6F4F1] text-[#134E4A] text-xs px-2 py-1 rounded-full"
+                              >
+                                <span className="font-mono font-bold text-[#0891B2]">{c.code}</span>
+                                {c.label}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {[
+                        { letter: "S", key: "subjective" as const, label: "Subjectif" },
+                        { letter: "O", key: "objective" as const, label: "Objectif" },
+                        { letter: "A", key: "assessment" as const, label: "Assessment" },
+                        { letter: "P", key: "plan" as const, label: "Plan" },
+                      ].map(({ letter, key, label }) =>
+                        cn[key] ? (
+                          <div key={key}>
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="w-5 h-5 rounded-full bg-[#0891B2] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                                {letter}
+                              </span>
+                              <span className="text-xs text-gray-500 uppercase">{label}</span>
+                            </div>
+                            <p className="text-gray-700 whitespace-pre-wrap pl-6">{cn[key]}</p>
+                          </div>
+                        ) : null
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="bg-white rounded-xl border">
         <div className="p-4 border-b">

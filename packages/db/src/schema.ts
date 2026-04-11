@@ -465,6 +465,53 @@ export const phoneProxies = pgTable("phone_proxies", {
   index("phone_proxies_active_idx").on(table.isActive),
 ]);
 
+// ── Consultation Notes (SOAP + Vitals + ICD-10) ──────────────────────────────
+
+export type ConsultationVitals = {
+  bp_systolic?: number;
+  bp_diastolic?: number;
+  heart_rate?: number;
+  temperature?: number;
+  weight?: number;
+  height?: number;
+  spo2?: number;
+  respiratory_rate?: number;
+};
+
+export type Icd10Entry = {
+  code: string;
+  label: string;
+};
+
+export const consultationNotes = pgTable(
+  "consultation_notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    appointmentId: uuid("appointment_id")
+      .notNull()
+      .references(() => appointments.id, { onDelete: "cascade" })
+      .unique(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    patientId: uuid("patient_id")
+      .notNull()
+      .references(() => patients.id, { onDelete: "cascade" }),
+    subjective: text("subjective"),
+    objective: text("objective"),
+    assessment: text("assessment"),
+    plan: text("plan"),
+    vitals: jsonb("vitals").$type<ConsultationVitals>(),
+    icd10Codes: jsonb("icd10_codes").$type<Icd10Entry[]>(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("consultation_notes_patient_idx").on(table.patientId),
+    index("consultation_notes_doctor_idx").on(table.doctorId),
+  ]
+);
+
 // ── Admin users (RBAC) ────────────────────────────────────────────────────────
 
 export type AdminRole =
