@@ -1,0 +1,9 @@
+DATABASE_URL=op://Dartank-Infra/Doktori Prod/DATABASE_URL
+NEXTAUTH_SECRET=op://Dartank-Infra/Doktori Prod/NEXTAUTH_SECRET
+NEXTAUTH_URL=https://doktori.tn
+MEILISEARCH_URL=op://Dartank-Infra/Doktori Prod/MEILISEARCH_URL
+MEILISEARCH_KEY=op://Dartank-Infra/Doktori Prod/MEILISEARCH_KEY
+TWILIO_ACCOUNT_SID=op://Dartank-Infra/Doktori Prod/TWILIO_ACCOUNT_SID
+TWILIO_AUTH_TOKEN=op://Dartank-Infra/Doktori Prod/TWILIO_AUTH_TOKEN
+TWILIO_PHONE_NUMBER=op://Dartank-Infra/Doktori Prod/TWILIO_PHONE_NUMBER
+CRON_SECRET=op://Dartank-Infra/Doktori Prod/CRON_SECRET

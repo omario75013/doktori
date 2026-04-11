@@ -1,0 +1,15 @@
+node_modules
+.next
+.expo
+.git
+.github
+.claude
+.vscode
+.env
+.env.*
+!.env.tpl
+*.md
+dist
+coverage
+.DS_Store
+apps/mobile
