@@ -3,6 +3,9 @@ import { db, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const baseUrl = "https://doktori.tn";
 
@@ -17,10 +20,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: `${baseUrl}/legal/mentions`, lastModified: new Date(), changeFrequency: "yearly", priority: 0.3 },
   ];
 
-  // Doctor profile pages (SSG)
-  const allDoctors = await db.select({ slug: doctors.slug, updatedAt: doctors.updatedAt })
-    .from(doctors)
-    .where(eq(doctors.isActive, true));
+  // Doctor profile pages (runtime-fetched; sitemap is dynamic)
+  let allDoctors: Array<{ slug: string; updatedAt: Date }> = [];
+  try {
+    allDoctors = await db
+      .select({ slug: doctors.slug, updatedAt: doctors.updatedAt })
+      .from(doctors)
+      .where(eq(doctors.isActive, true));
+  } catch {
+    // DB unreachable at build or request time — return static pages only
+  }
 
   const doctorPages: MetadataRoute.Sitemap = allDoctors.flatMap((d) => [
     {
