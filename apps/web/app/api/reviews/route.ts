@@ -1,0 +1,79 @@
+import { NextRequest, NextResponse } from "next/server";
+import { db, reviews, appointments, patients, doctors } from "@doktori/db";
+import { eq, and, desc } from "drizzle-orm";
+
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const doctorId = searchParams.get("doctorId");
+  if (!doctorId) return NextResponse.json({ error: "doctorId requis" }, { status: 400 });
+
+  const results = await db
+    .select({
+      id: reviews.id,
+      rating: reviews.rating,
+      comment: reviews.comment,
+      verified: reviews.verified,
+      createdAt: reviews.createdAt,
+      patientName: patients.name,
+    })
+    .from(reviews)
+    .innerJoin(patients, eq(reviews.patientId, patients.id))
+    .where(eq(reviews.doctorId, doctorId))
+    .orderBy(desc(reviews.createdAt))
+    .limit(50);
+
+  // Compute aggregate stats
+  const count = results.length;
+  const avg = count === 0 ? 0 : results.reduce((sum, r) => sum + r.rating, 0) / count;
+
+  return NextResponse.json({
+    reviews: results,
+    stats: { count, average: Math.round(avg * 10) / 10 },
+  });
+}
+
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const { appointmentId, rating, comment } = body;
+
+  if (!appointmentId || typeof rating !== "number" || rating < 1 || rating > 5) {
+    return NextResponse.json({ error: "appointmentId et rating (1-5) requis" }, { status: 400 });
+  }
+
+  // Verify the appointment exists and is completed
+  const [appt] = await db
+    .select()
+    .from(appointments)
+    .where(eq(appointments.id, appointmentId))
+    .limit(1);
+
+  if (!appt) return NextResponse.json({ error: "Rendez-vous introuvable" }, { status: 404 });
+  if (appt.status !== "completed") {
+    return NextResponse.json({ error: "Vous pouvez laisser un avis uniquement après une consultation terminée" }, { status: 400 });
+  }
+
+  // Check if already reviewed
+  const [existing] = await db
+    .select()
+    .from(reviews)
+    .where(eq(reviews.appointmentId, appointmentId))
+    .limit(1);
+
+  if (existing) {
+    return NextResponse.json({ error: "Vous avez déjà laissé un avis pour ce rendez-vous" }, { status: 409 });
+  }
+
+  const [review] = await db
+    .insert(reviews)
+    .values({
+      doctorId: appt.doctorId,
+      patientId: appt.patientId,
+      appointmentId,
+      rating,
+      comment: comment || null,
+      verified: true,
+    })
+    .returning();
+
+  return NextResponse.json(review, { status: 201 });
+}
