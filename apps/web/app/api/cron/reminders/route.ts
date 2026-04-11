@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, appointments, patients, doctors } from "@doktori/db";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { sendSMS } from "@/lib/sms";
+import { sendWhatsApp } from "@/lib/whatsapp";
 import { SPECIALTIES } from "@doktori/shared";
 import { format, addDays, startOfDay, endOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -46,6 +47,18 @@ export async function POST(req: Request) {
     const message = `Rappel Doktori: Vous avez RDV demain ${date} a ${time} avec ${appt.doctorName} (${specialty}), ${appt.doctorAddress}. Pour annuler: doktori.tn/mes-rdv`;
 
     await sendSMS(appt.patientPhone, message, appt.id);
+
+    try {
+      await sendWhatsApp(
+        appt.patientPhone,
+        "appointment_reminder",
+        [appt.patientName || "Patient", appt.doctorName, date, time, appt.doctorAddress],
+        appt.id,
+      );
+    } catch (e) {
+      console.error("WhatsApp reminder failed:", e);
+    }
+
     sent++;
   }
 
