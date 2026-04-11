@@ -29,3 +29,16 @@ export const APPOINTMENT_STATUSES = [
 export const APPOINTMENT_TYPES = ["cabinet", "home_visit", "sos"] as const;
 
 export const SLOT_DURATIONS = [10, 15, 20, 30, 45, 60] as const;
+
+export const INSURANCES = [
+  { id: "cnam", label: "CNAM", labelAr: "الصندوق الوطني للتأمين على المرض" },
+  { id: "cnrps", label: "CNRPS", labelAr: "الصندوق الوطني للتقاعد والحيطة الاجتماعية" },
+  { id: "star", label: "STAR", labelAr: "STAR" },
+  { id: "gat", label: "GAT", labelAr: "GAT" },
+  { id: "carte", label: "Assurances Carte", labelAr: "Carte" },
+  { id: "maghrebia", label: "Maghrebia", labelAr: "Maghrebia" },
+  { id: "comar", label: "COMAR", labelAr: "COMAR" },
+  { id: "autres", label: "Autres mutuelles", labelAr: "أخرى" },
+] as const;
+
+export type InsuranceId = (typeof INSURANCES)[number]["id"];
