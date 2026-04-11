@@ -126,3 +126,13 @@ export const smsLogs = pgTable("sms_logs", {
   }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ── Home Visit Settings ──────────────────────────────────
+export const doctorHomeVisitSettings = pgTable("doctor_home_visit_settings", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }).unique(),
+  isAvailable: boolean("is_available").default(false).notNull(),
+  radiusKm: integer("radius_km").default(5).notNull(),
+  fee: integer("fee").notNull(), // in millimes (DT × 1000)
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
