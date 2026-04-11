@@ -24,6 +24,8 @@ type Patient = {
   dateOfBirth: string | null;
   gender: string | null;
   bloodType: string | null;
+  noShowCount: number;
+  lastMinuteCancelCount: number;
   createdAt: string;
 };
 
@@ -211,8 +213,26 @@ export default function PatientDetailPage() {
         >
           ←
         </button>
-        <div>
-          <h1 className="text-2xl font-bold">{patient.name}</h1>
+        <div className="flex-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <h1 className="text-2xl font-bold">{patient.name}</h1>
+            {patient.noShowCount > 0 && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700"
+                title="Nombre de rendez-vous où ce patient ne s'est pas présenté"
+              >
+                ⚠ {patient.noShowCount} absence{patient.noShowCount > 1 ? "s" : ""}
+              </span>
+            )}
+            {patient.lastMinuteCancelCount > 0 && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-bold text-orange-700"
+                title="Annulations dans les 2h avant le rendez-vous"
+              >
+                {patient.lastMinuteCancelCount} annulation{patient.lastMinuteCancelCount > 1 ? "s" : ""} tardive{patient.lastMinuteCancelCount > 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-gray-500">
             {patient.phone}
             {patient.email ? ` · ${patient.email}` : ""}

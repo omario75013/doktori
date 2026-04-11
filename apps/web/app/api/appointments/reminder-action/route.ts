@@ -1,7 +1,9 @@
 import { NextResponse } from "next/server";
-import { db, appointments } from "@doktori/db";
-import { eq } from "drizzle-orm";
+import { db, appointments, patients } from "@doktori/db";
+import { eq, sql } from "drizzle-orm";
 import { verifyReminderToken } from "@/lib/reminder-token";
+
+const LAST_MINUTE_MS = 2 * 60 * 60 * 1000;
 
 export async function POST(req: Request) {
   const body = await req.json().catch(() => null);
@@ -51,5 +53,13 @@ export async function POST(req: Request) {
     .set({ status: "cancelled", cancelledAt: now, updatedAt: now })
     .where(eq(appointments.id, appointmentId))
     .returning();
+
+  if (updated && updated.startsAt.getTime() - now.getTime() < LAST_MINUTE_MS) {
+    await db
+      .update(patients)
+      .set({ lastMinuteCancelCount: sql`${patients.lastMinuteCancelCount} + 1` })
+      .where(eq(patients.id, updated.patientId));
+  }
+
   return NextResponse.json({ status: updated.status });
 }

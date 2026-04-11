@@ -13,6 +13,8 @@ type Appointment = {
   reason: string | null;
   patientName: string;
   patientPhone: string;
+  patientNoShowCount: number;
+  patientLastMinuteCancelCount: number;
 };
 
 const STATUS_LABELS: Record<string, string> = {
@@ -141,7 +143,27 @@ export default function RendezVousPage() {
                         locale: fr,
                       })}
                     </td>
-                    <td className="px-4 py-3">{appt.patientName}</td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span>{appt.patientName}</span>
+                        {appt.patientNoShowCount >= 2 && (
+                          <span
+                            className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700"
+                            title={`${appt.patientNoShowCount} absences enregistrées`}
+                          >
+                            ⚠ {appt.patientNoShowCount}
+                          </span>
+                        )}
+                        {appt.patientLastMinuteCancelCount >= 2 && (
+                          <span
+                            className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-700"
+                            title={`${appt.patientLastMinuteCancelCount} annulations tardives`}
+                          >
+                            {appt.patientLastMinuteCancelCount} tardives
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-4 py-3 whitespace-nowrap">{appt.patientPhone}</td>
                     <td className="px-4 py-3 text-gray-500">
                       {appt.reason ?? <span className="text-gray-300">—</span>}

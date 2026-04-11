@@ -1,5 +1,9 @@
-import { db, appointments, doctorSchedules } from "@doktori/db";
-import { eq, and, gte, lte, not, inArray } from "drizzle-orm";
+import { db, appointments, doctorSchedules, patients } from "@doktori/db";
+import { eq, and, gte, lte, not, inArray, sql } from "drizzle-orm";
+
+// A patient cancellation is flagged as "last-minute" when it lands within this
+// window before the appointment start. Bumped into patients.lastMinuteCancelCount.
+const LAST_MINUTE_MS = 2 * 60 * 60 * 1000; // 2 hours
 
 export async function getAvailableSlots(
   doctorId: string,
@@ -114,9 +118,10 @@ export async function createAppointment(data: {
 }
 
 export async function cancelAppointment(appointmentId: string, patientId: string) {
+  const now = new Date();
   const [updated] = await db
     .update(appointments)
-    .set({ status: "cancelled", updatedAt: new Date() })
+    .set({ status: "cancelled", cancelledAt: now, updatedAt: now })
     .where(
       and(
         eq(appointments.id, appointmentId),
@@ -125,6 +130,13 @@ export async function cancelAppointment(appointmentId: string, patientId: string
       )
     )
     .returning();
+
+  if (updated && updated.startsAt.getTime() - now.getTime() < LAST_MINUTE_MS) {
+    await db
+      .update(patients)
+      .set({ lastMinuteCancelCount: sql`${patients.lastMinuteCancelCount} + 1` })
+      .where(eq(patients.id, patientId));
+  }
 
   return updated ?? null;
 }

@@ -91,6 +91,8 @@ export const patients = pgTable(
     dateOfBirth: date("date_of_birth"),
     gender: varchar("gender", { length: 10 }),
     bloodType: varchar("blood_type", { length: 5 }),
+    noShowCount: integer("no_show_count").notNull().default(0),
+    lastMinuteCancelCount: integer("last_minute_cancel_count").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex("patients_phone_idx").on(table.phone)]

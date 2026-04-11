@@ -25,6 +25,8 @@ export async function GET(req: Request) {
       reason: appointments.reason,
       patientName: patients.name,
       patientPhone: patients.phone,
+      patientNoShowCount: patients.noShowCount,
+      patientLastMinuteCancelCount: patients.lastMinuteCancelCount,
     })
     .from(appointments)
     .innerJoin(patients, eq(appointments.patientId, patients.id))

@@ -16,7 +16,18 @@ export async function GET(
 
   // Fetch the patient — verify they have at least one appointment with this doctor
   const [patient] = await db
-    .select()
+    .select({
+      id: patients.id,
+      name: patients.name,
+      phone: patients.phone,
+      email: patients.email,
+      dateOfBirth: patients.dateOfBirth,
+      gender: patients.gender,
+      bloodType: patients.bloodType,
+      noShowCount: patients.noShowCount,
+      lastMinuteCancelCount: patients.lastMinuteCancelCount,
+      createdAt: patients.createdAt,
+    })
     .from(patients)
     .where(eq(patients.id, id))
     .limit(1);
