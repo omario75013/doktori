@@ -164,3 +164,17 @@ export const reviews = pgTable("reviews", {
   index("reviews_doctor_idx").on(table.doctorId),
   index("reviews_rating_idx").on(table.rating),
 ]);
+
+// ── Secretaries ──────────────────────────────────────────
+export const secretaries = pgTable("secretaries", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 255 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull(),
+  passwordHash: text("password_hash").notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("secretaries_email_idx").on(table.email),
+  index("secretaries_doctor_idx").on(table.doctorId),
+]);
