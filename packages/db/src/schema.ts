@@ -126,3 +126,16 @@ export const smsLogs = pgTable("sms_logs", {
   }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ── Waitlist ─────────────────────────────────────────────
+export const waitlist = pgTable("waitlist", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+  preferredDate: varchar("preferred_date", { length: 10 }).notNull(), // YYYY-MM-DD
+  notifiedAt: timestamp("notified_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("waitlist_doctor_date_idx").on(table.doctorId, table.preferredDate),
+  index("waitlist_patient_idx").on(table.patientId),
+]);
