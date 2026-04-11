@@ -8,6 +8,7 @@ import {
   UserCheck,
   BarChart3,
   Shield,
+  MessageSquare,
   LogOut,
 } from "lucide-react";
 
@@ -20,6 +21,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
     { href: "/admin/medecins", label: "Médecins", icon: Stethoscope },
     { href: "/admin/validation", label: "Validation", icon: UserCheck },
+    { href: "/admin/reviews", label: "Avis patients", icon: MessageSquare },
     { href: "/admin/stats", label: "Statistiques", icon: BarChart3 },
   ];
 

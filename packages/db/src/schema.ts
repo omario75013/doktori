@@ -220,6 +220,7 @@ export const waitlist = pgTable("waitlist", {
 ]);
 
 // ── Reviews ──────────────────────────────────────────────
+// status lifecycle: pending (just posted) → published (admin-approved) | rejected
 export const reviews = pgTable("reviews", {
   id: uuid("id").primaryKey().defaultRandom(),
   doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
@@ -228,10 +229,12 @@ export const reviews = pgTable("reviews", {
   rating: integer("rating").notNull(), // 1-5
   comment: text("comment"),
   verified: boolean("verified").default(true).notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("reviews_doctor_idx").on(table.doctorId),
   index("reviews_rating_idx").on(table.rating),
+  index("reviews_status_idx").on(table.status),
 ]);
 
 // ── Secretaries ──────────────────────────────────────────

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, reviews, appointments, patients, doctors } from "@doktori/db";
 import { eq, and, desc } from "drizzle-orm";
 
+// Only published reviews are exposed on public pages; pending/rejected are hidden
+// until an admin moderates them via /admin/reviews.
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const doctorId = searchParams.get("doctorId");
@@ -18,7 +21,7 @@ export async function GET(req: NextRequest) {
     })
     .from(reviews)
     .innerJoin(patients, eq(reviews.patientId, patients.id))
-    .where(eq(reviews.doctorId, doctorId))
+    .where(and(eq(reviews.doctorId, doctorId), eq(reviews.status, "published")))
     .orderBy(desc(reviews.createdAt))
     .limit(50);
 
@@ -72,6 +75,7 @@ export async function POST(req: NextRequest) {
       rating,
       comment: comment || null,
       verified: true,
+      status: "pending",
     })
     .returning();
 
