@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { db, patients, doctors, doctorSchedules } from "@doktori/db";
+import { db, patients, doctors, doctorSchedules, appointmentTypes } from "@doktori/db";
 import { createAppointment, getAvailableSlots } from "@/lib/queries/appointments";
 import { bookAppointmentSchema } from "@doktori/validation";
 import { formatPhone, SPECIALTIES } from "@doktori/shared";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { sendSMS } from "@/lib/sms";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -12,6 +12,7 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const doctorId = searchParams.get("doctorId");
   const date = searchParams.get("date");
+  const typeId = searchParams.get("typeId");
 
   if (!doctorId || !date) {
     return NextResponse.json(
@@ -20,7 +21,17 @@ export async function GET(req: Request) {
     );
   }
 
-  const slots = await getAvailableSlots(doctorId, date);
+  let duration: number | undefined;
+  if (typeId) {
+    const [type] = await db
+      .select({ durationMinutes: appointmentTypes.durationMinutes })
+      .from(appointmentTypes)
+      .where(and(eq(appointmentTypes.id, typeId), eq(appointmentTypes.doctorId, doctorId)))
+      .limit(1);
+    if (type) duration = type.durationMinutes;
+  }
+
+  const slots = await getAvailableSlots(doctorId, date, duration);
   return NextResponse.json(slots);
 }
 
@@ -59,13 +70,33 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
   }
 
-  const [schedule] = await db
-    .select()
-    .from(doctorSchedules)
-    .where(eq(doctorSchedules.doctorId, doctor.id))
-    .limit(1);
+  let slotDuration: number | undefined;
+  if (parsed.data.appointmentTypeId) {
+    const [type] = await db
+      .select()
+      .from(appointmentTypes)
+      .where(
+        and(
+          eq(appointmentTypes.id, parsed.data.appointmentTypeId),
+          eq(appointmentTypes.doctorId, doctor.id),
+          eq(appointmentTypes.isActive, true),
+        ),
+      )
+      .limit(1);
+    if (!type) {
+      return NextResponse.json({ error: "Motif introuvable" }, { status: 400 });
+    }
+    slotDuration = type.durationMinutes;
+  }
 
-  const slotDuration = schedule?.slotDuration ?? 20;
+  if (!slotDuration) {
+    const [schedule] = await db
+      .select()
+      .from(doctorSchedules)
+      .where(eq(doctorSchedules.doctorId, doctor.id))
+      .limit(1);
+    slotDuration = schedule?.slotDuration ?? 20;
+  }
 
   const startsAt = new Date(`${parsed.data.date}T${parsed.data.startTime}:00`);
   const endsAt = new Date(startsAt.getTime() + slotDuration * 60 * 1000);
@@ -77,6 +108,7 @@ export async function POST(req: Request) {
       startsAt,
       endsAt,
       reason: parsed.data.reason,
+      appointmentTypeId: parsed.data.appointmentTypeId,
     });
 
     // Send confirmation SMS (don't fail the booking on SMS error)

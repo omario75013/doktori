@@ -13,10 +13,11 @@ interface Slot {
 
 interface Props {
   doctorId: string;
+  typeId?: string;
   onSelect: (date: string, startTime: string) => void;
 }
 
-export function SlotPicker({ doctorId, onSelect }: Props) {
+export function SlotPicker({ doctorId, typeId, onSelect }: Props) {
   const [selectedDate, setSelectedDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [slots, setSlots] = useState<Slot[]>([]);
   const [loading, setLoading] = useState(false);
@@ -31,14 +32,16 @@ export function SlotPicker({ doctorId, onSelect }: Props) {
 
   useEffect(() => {
     setLoading(true);
-    fetch(`/api/appointments?doctorId=${doctorId}&date=${selectedDate}`)
+    const params = new URLSearchParams({ doctorId, date: selectedDate });
+    if (typeId) params.set("typeId", typeId);
+    fetch(`/api/appointments?${params.toString()}`)
       .then((r) => r.json())
       .then((data: Slot[]) => {
         setSlots(data);
         setLoading(false);
       })
       .catch(() => setLoading(false));
-  }, [doctorId, selectedDate]);
+  }, [doctorId, selectedDate, typeId]);
 
   const availableSlots = slots.filter((s) => s.available);
 

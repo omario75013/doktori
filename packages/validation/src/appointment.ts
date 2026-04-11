@@ -7,6 +7,7 @@ export const bookAppointmentSchema = z.object({
   date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "Date invalide"),
   startTime: z.string().regex(/^\d{2}:\d{2}$/, "Heure invalide"),
   reason: z.string().max(200).optional(),
+  appointmentTypeId: z.string().uuid().optional(),
 });
 
 export const cancelAppointmentSchema = z.object({

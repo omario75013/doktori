@@ -19,11 +19,19 @@ interface Doctor {
   consultationFee: number | null;
 }
 
-type Step = "slots" | "form" | "payment" | "success";
+type Step = "type" | "slots" | "form" | "payment" | "success";
 
 interface BookingState {
   date: string;
   startTime: string;
+}
+
+interface AppointmentType {
+  id: string;
+  name: string;
+  durationMinutes: number;
+  fee: number | null;
+  color: string;
 }
 
 export default function RdvPage({
@@ -43,8 +51,14 @@ export default function RdvPage({
         if (!r.ok) throw new Error("not found");
         return r.json() as Promise<Doctor>;
       })
-      .then((d) => {
+      .then(async (d) => {
         setDoctor(d);
+        const typesRes = await fetch(`/api/appointment-types?doctorId=${d.id}`);
+        if (typesRes.ok) {
+          const list = (await typesRes.json()) as AppointmentType[];
+          setTypes(list);
+          if (list.length > 0) setStep("type");
+        }
         setDoctorLoading(false);
       })
       .catch(() => {
@@ -54,6 +68,8 @@ export default function RdvPage({
   }, [slug]);
 
   const [step, setStep] = useState<Step>("slots");
+  const [types, setTypes] = useState<AppointmentType[]>([]);
+  const [selectedType, setSelectedType] = useState<AppointmentType | null>(null);
   const [booking, setBooking] = useState<BookingState | null>(null);
   const [patientName, setPatientName] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
@@ -86,6 +102,7 @@ export default function RdvPage({
           date: booking.date,
           startTime: booking.startTime,
           reason: reason || undefined,
+          appointmentTypeId: selectedType?.id,
         }),
       });
 
@@ -158,11 +175,61 @@ export default function RdvPage({
           </div>
         </div>
 
+        {/* Step: appointment type selection */}
+        {step === "type" && types.length > 0 && (
+          <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+            <h2 className="font-semibold text-gray-800">Motif de consultation</h2>
+            <p className="text-sm text-gray-500">Sélectionnez le type de consultation. La durée et le tarif s&apos;adaptent automatiquement.</p>
+            <div className="space-y-2">
+              {types.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    setSelectedType(t);
+                    setStep("slots");
+                  }}
+                  className="w-full flex items-center justify-between gap-3 rounded-xl border border-gray-200 bg-white px-4 py-3 text-left hover:border-blue-400 hover:bg-blue-50/30 transition-colors"
+                >
+                  <div className="flex items-center gap-3">
+                    <span
+                      className="h-3 w-3 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: t.color }}
+                      aria-hidden
+                    />
+                    <div>
+                      <div className="font-medium text-gray-900">{t.name}</div>
+                      <div className="text-xs text-gray-500">{t.durationMinutes} min</div>
+                    </div>
+                  </div>
+                  {t.fee != null && (
+                    <div className="text-sm font-semibold text-blue-600">
+                      {(t.fee / 1000).toFixed(0)} DT
+                    </div>
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Step: slot selection */}
         {step === "slots" && (
           <div className="bg-white rounded-xl border border-gray-200 p-5 space-y-4">
+            {selectedType && (
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-gray-500">
+                  <span className="font-medium text-gray-800">{selectedType.name}</span> · {selectedType.durationMinutes} min
+                </span>
+                <button
+                  onClick={() => setStep("type")}
+                  className="text-blue-600 hover:underline"
+                >
+                  Changer
+                </button>
+              </div>
+            )}
             <h2 className="font-semibold text-gray-800">Choisir un créneau</h2>
-            <SlotPicker doctorId={doctor.id} onSelect={handleSlotSelect} />
+            <SlotPicker doctorId={doctor.id} typeId={selectedType?.id} onSelect={handleSlotSelect} />
           </div>
         )}
 

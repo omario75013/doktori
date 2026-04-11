@@ -100,6 +100,7 @@ export const appointments = pgTable(
     endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
     status: varchar("status", { length: 20 }).notNull().default("pending"),
     type: varchar("type", { length: 20 }).notNull().default("cabinet"),
+    appointmentTypeId: uuid("appointment_type_id"),
     reason: text("reason"),
     notes: text("notes"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),

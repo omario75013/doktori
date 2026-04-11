@@ -1,7 +1,11 @@
 import { db, appointments, doctorSchedules } from "@doktori/db";
 import { eq, and, gte, lte, not, inArray } from "drizzle-orm";
 
-export async function getAvailableSlots(doctorId: string, date: string) {
+export async function getAvailableSlots(
+  doctorId: string,
+  date: string,
+  durationOverride?: number,
+) {
   const dayOfWeek = new Date(date).getDay();
 
   const schedules = await db
@@ -37,7 +41,7 @@ export async function getAvailableSlots(doctorId: string, date: string) {
   for (const sched of schedules) {
     const [startH, startM] = sched.startTime.split(":").map(Number);
     const endParts = sched.endTime.split(":").map(Number);
-    const duration = sched.slotDuration;
+    const duration = durationOverride ?? sched.slotDuration;
 
     let current = startH * 60 + startM;
     const end = endParts[0] * 60 + endParts[1];
@@ -69,6 +73,7 @@ export async function createAppointment(data: {
   startsAt: Date;
   endsAt: Date;
   reason?: string;
+  appointmentTypeId?: string;
 }) {
   return await db.transaction(async (tx) => {
     const conflicts = await tx
@@ -97,6 +102,7 @@ export async function createAppointment(data: {
         startsAt: data.startsAt,
         endsAt: data.endsAt,
         reason: data.reason,
+        appointmentTypeId: data.appointmentTypeId,
         status: "confirmed",
       })
       .returning();
