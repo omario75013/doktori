@@ -7,6 +7,7 @@ import {
   boolean,
   timestamp,
   time,
+  doublePrecision,
   index,
   uniqueIndex,
 } from "drizzle-orm/pg-core";
@@ -296,4 +297,26 @@ export const prescriptions = pgTable("prescriptions", {
 }, (table) => [
   index("prescriptions_appointment_idx").on(table.appointmentId),
   index("prescriptions_patient_idx").on(table.patientId),
+]);
+
+// ── SOS Sessions ─────────────────────────────────────────
+export const sosSessions = pgTable("sos_sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+  patientLat: doublePrecision("patient_lat").notNull(),
+  patientLng: doublePrecision("patient_lng").notNull(),
+  // patient_location GEOGRAPHY is handled at the SQL level; Drizzle doesn't have a first-class geography type
+  symptomCategory: varchar("symptom_category", { length: 50 }),
+  description: text("description"),
+  status: varchar("status", { length: 20 }).notNull().default("pending"),
+  doctorId: uuid("doctor_id").references(() => doctors.id, { onDelete: "set null" }),
+  fee: integer("fee"),
+  commission: integer("commission"),
+  requestedAt: timestamp("requested_at", { withTimezone: true }).defaultNow().notNull(),
+  acceptedAt: timestamp("accepted_at", { withTimezone: true }),
+  completedAt: timestamp("completed_at", { withTimezone: true }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+}, (table) => [
+  index("sos_sessions_status_idx").on(table.status),
+  index("sos_sessions_patient_idx").on(table.patientId),
 ]);
