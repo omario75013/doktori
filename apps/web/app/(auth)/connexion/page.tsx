@@ -3,12 +3,14 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 export default function ConnexionPage() {
   const router = useRouter();
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -42,7 +44,7 @@ export default function ConnexionPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="w-full max-w-sm space-y-6">
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold tracking-tight">Connexion Médecin</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("loginTitle")}</h1>
           <p className="text-sm text-muted-foreground">
             Accédez à votre espace professionnel Doktori
           </p>
@@ -50,7 +52,7 @@ export default function ConnexionPage() {
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="email">Email</Label>
+            <Label htmlFor="email">{t("email")}</Label>
             <Input
               id="email"
               type="email"
@@ -63,7 +65,7 @@ export default function ConnexionPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="password">Mot de passe</Label>
+            <Label htmlFor="password">{t("password")}</Label>
             <Input
               id="password"
               type="password"
@@ -80,14 +82,14 @@ export default function ConnexionPage() {
           )}
 
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
-            {loading ? "Connexion..." : "Se connecter"}
+            {loading ? t("loginLoading") : t("loginButton")}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
-          Pas encore de compte ?{" "}
+          {t("noAccount")}{" "}
           <a href="/inscription" className="font-medium text-primary hover:underline">
-            S&apos;inscrire
+            {t("createAccount")}
           </a>
         </p>
       </div>
