@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db, doctors } from "@doktori/db";
@@ -54,7 +55,15 @@ export default async function ProfilPage() {
           </div>
         )}
       </div>
-      <p className="text-xs text-gray-400 mt-4">{"L'édition du profil arrive bientôt."}</p>
+      <div className="mt-6">
+        <Link
+          href="/profil/parcours"
+          className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
+        >
+          Éditer mon parcours
+        </Link>
+      </div>
+      <p className="text-xs text-gray-400 mt-4">{"L'édition des infos de base arrive bientôt."}</p>
     </div>
   );
 }
