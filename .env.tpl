@@ -7,3 +7,5 @@ TWILIO_ACCOUNT_SID=op://Dartank-Infra/Doktori Prod/TWILIO_ACCOUNT_SID
 TWILIO_AUTH_TOKEN=op://Dartank-Infra/Doktori Prod/TWILIO_AUTH_TOKEN
 TWILIO_PHONE_NUMBER=op://Dartank-Infra/Doktori Prod/TWILIO_PHONE_NUMBER
 CRON_SECRET=op://Dartank-Infra/Doktori Prod/CRON_SECRET
+SOCKETIO_BROADCAST_SECRET=op://Dartank-Infra/Doktori Prod/SOCKETIO_BROADCAST_SECRET
+NEXT_PUBLIC_SOCKETIO_URL=https://sos.doktori.tn

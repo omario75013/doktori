@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -35,27 +36,46 @@ export default function SOSPage() {
       });
   }, []);
 
-  // Poll feed every 3s when SOS is active
+  // Real-time feed updates via Socket.io with 10s HTTP fallback
   useEffect(() => {
     if (!sosAvailable) {
       setFeed([]);
       return;
     }
-    let active = true;
-    async function poll() {
-      try {
-        const res = await fetch("/api/sos/doctor/feed");
-        if (res.ok && active) {
-          const data = await res.json();
-          setFeed(Array.isArray(data) ? data : []);
-        }
-      } catch {}
-    }
-    poll();
-    const interval = setInterval(poll, 3000);
+
+    // Initial load
+    fetch("/api/sos/doctor/feed")
+      .then((r) => r.json())
+      .then((data) => setFeed(Array.isArray(data) ? data : []))
+      .catch(() => {});
+
+    const SOCKETIO_URL =
+      process.env.NEXT_PUBLIC_SOCKETIO_URL || "http://localhost:3010";
+    const socket: Socket = io(SOCKETIO_URL, { path: "/sos-socket" });
+
+    socket.on("connect", () => {
+      socket.emit("join-doctor-feed", "all");
+    });
+
+    socket.on("new-request", () => {
+      // A new SOS request arrived — refresh the feed
+      fetch("/api/sos/doctor/feed")
+        .then((r) => r.json())
+        .then((data) => setFeed(Array.isArray(data) ? data : []))
+        .catch(() => {});
+    });
+
+    // Fallback polling every 10s in case Socket.io is unreachable
+    const fallback = setInterval(() => {
+      fetch("/api/sos/doctor/feed")
+        .then((r) => r.json())
+        .then((data) => setFeed(Array.isArray(data) ? data : []))
+        .catch(() => {});
+    }, 10000);
+
     return () => {
-      active = false;
-      clearInterval(interval);
+      socket.disconnect();
+      clearInterval(fallback);
     };
   }, [sosAvailable]);
 
@@ -179,7 +199,7 @@ export default function SOSPage() {
           <div className="p-4 border-b">
             <h2 className="font-semibold">Demandes en cours ({feed.length})</h2>
             <p className="text-xs text-gray-400 mt-1">
-              Mise à jour automatique toutes les 3 secondes
+              Mise à jour en temps réel
             </p>
           </div>
           {feed.length === 0 ? (

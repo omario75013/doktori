@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { io, Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,10 +28,34 @@ export default function SOSPage() {
   const [sessionData, setSessionData] = useState<SessionData | null>(null);
   const [error, setError] = useState("");
 
-  // Poll session state when waiting
+  // Real-time session updates via Socket.io with 10s HTTP fallback
   useEffect(() => {
-    if (!sessionId || step !== "waiting") return;
-    const interval = setInterval(async () => {
+    if (step !== "waiting" || !sessionId) return;
+
+    const SOCKETIO_URL =
+      process.env.NEXT_PUBLIC_SOCKETIO_URL || "http://localhost:3010";
+    const socket: Socket = io(SOCKETIO_URL, { path: "/sos-socket" });
+
+    socket.on("connect", () => {
+      socket.emit("join-session", sessionId);
+    });
+
+    socket.on("session-update", (data: { status: string; doctorName: string; doctorPhone: string; doctorAddress: string }) => {
+      if (data.status === "accepted") {
+        setSessionData({
+          id: sessionId,
+          status: "accepted",
+          expires_at: "",
+          doctor_name: data.doctorName,
+          doctor_phone: data.doctorPhone,
+          doctor_address: data.doctorAddress,
+        });
+        setStep("accepted");
+      }
+    });
+
+    // Fallback: poll every 10s in case Socket.io is unreachable
+    const fallbackInterval = setInterval(async () => {
       const res = await fetch(`/api/sos/session/${sessionId}`);
       if (res.ok) {
         const data: SessionData = await res.json();
@@ -38,9 +63,13 @@ export default function SOSPage() {
         if (data.status === "accepted") setStep("accepted");
         else if (new Date(data.expires_at) < new Date()) setStep("expired");
       }
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [sessionId, step]);
+    }, 10000);
+
+    return () => {
+      socket.disconnect();
+      clearInterval(fallbackInterval);
+    };
+  }, [step, sessionId]);
 
   async function submitRequest(e: React.FormEvent) {
     e.preventDefault();
