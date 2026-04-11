@@ -178,3 +178,22 @@ export const secretaries = pgTable("secretaries", {
   uniqueIndex("secretaries_email_idx").on(table.email),
   index("secretaries_doctor_idx").on(table.doctorId),
 ]);
+
+// ── Referrals ────────────────────────────────────────────
+export const doctorReferralCodes = pgTable("doctor_referral_codes", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }).unique(),
+  code: varchar("code", { length: 20 }).notNull().unique(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const referrals = pgTable("referrals", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  referrerId: uuid("referrer_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  referredId: uuid("referred_id").notNull().references(() => doctors.id, { onDelete: "cascade" }).unique(),
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending | validated | rewarded
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  validatedAt: timestamp("validated_at", { withTimezone: true }),
+}, (table) => [
+  index("referrals_referrer_idx").on(table.referrerId),
+]);
