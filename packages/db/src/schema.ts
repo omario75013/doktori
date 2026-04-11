@@ -197,3 +197,29 @@ export const referrals = pgTable("referrals", {
 }, (table) => [
   index("referrals_referrer_idx").on(table.referrerId),
 ]);
+
+// ── Clinics ──────────────────────────────────────────────
+export const clinics = pgTable("clinics", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  address: text("address").notNull(),
+  city: varchar("city", { length: 50 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  logoUrl: text("logo_url"),
+  plan: varchar("plan", { length: 20 }).notNull().default("free"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+export const clinicDoctors = pgTable("clinic_doctors", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clinicId: uuid("clinic_id").notNull().references(() => clinics.id, { onDelete: "cascade" }),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 20 }).notNull().default("member"), // admin | member
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("clinic_doctors_unique_idx").on(table.clinicId, table.doctorId),
+  index("clinic_doctors_clinic_idx").on(table.clinicId),
+]);
