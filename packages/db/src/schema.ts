@@ -261,3 +261,14 @@ export const appointmentTypes = pgTable("appointment_types", {
 }, (table) => [
   index("appointment_types_doctor_idx").on(table.doctorId),
 ]);
+
+// ── Teleconsultations ────────────────────────────────────
+export const teleconsultations = pgTable("teleconsultations", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  appointmentId: uuid("appointment_id").notNull().references(() => appointments.id, { onDelete: "cascade" }).unique(),
+  roomName: varchar("room_name", { length: 100 }).notNull().unique(),
+  startedAt: timestamp("started_at", { withTimezone: true }),
+  endedAt: timestamp("ended_at", { withTimezone: true }),
+  durationSeconds: integer("duration_seconds"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
