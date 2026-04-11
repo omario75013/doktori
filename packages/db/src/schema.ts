@@ -88,9 +88,29 @@ export const patients = pgTable(
     name: varchar("name", { length: 255 }).notNull(),
     phone: varchar("phone", { length: 30 }).notNull(),
     email: varchar("email", { length: 255 }),
+    dateOfBirth: date("date_of_birth"),
+    gender: varchar("gender", { length: 10 }),
+    bloodType: varchar("blood_type", { length: 5 }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex("patients_phone_idx").on(table.phone)]
+);
+
+// ─── Patient Medical Profile (1:1 with patients) ─────────────────────────────
+export const patientMedicalProfile = pgTable(
+  "patient_medical_profile",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id")
+      .notNull()
+      .references(() => patients.id, { onDelete: "cascade" }),
+    allergies: text("allergies"),
+    chronicConditions: text("chronic_conditions"),
+    currentMeds: text("current_meds"),
+    notes: text("notes"),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex("patient_medical_profile_patient_uidx").on(table.patientId)]
 );
 
 // ─── Patient Dependents ──────────────────────────────────────────────────────

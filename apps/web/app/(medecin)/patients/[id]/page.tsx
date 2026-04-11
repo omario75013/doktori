@@ -21,8 +21,19 @@ type Patient = {
   name: string;
   phone: string;
   email: string | null;
+  dateOfBirth: string | null;
+  gender: string | null;
+  bloodType: string | null;
   createdAt: string;
 };
+
+type MedicalProfile = {
+  allergies: string | null;
+  chronicConditions: string | null;
+  currentMeds: string | null;
+  notes: string | null;
+  updatedAt: string;
+} | null;
 
 const STATUS_LABELS: Record<string, string> = {
   pending: "À confirmer",
@@ -39,6 +50,37 @@ const STATUS_STYLES: Record<string, string> = {
   completed: "bg-blue-100 text-blue-700",
   no_show: "bg-red-100 text-red-700",
 };
+
+const HIGHLIGHT_STYLES: Record<string, string> = {
+  red: "bg-red-50 border-red-200 text-red-900",
+  orange: "bg-orange-50 border-orange-200 text-orange-900",
+  blue: "bg-blue-50 border-blue-200 text-blue-900",
+  gray: "bg-gray-50 border-gray-200 text-gray-700",
+};
+
+function MedBlock({
+  title,
+  value,
+  highlight,
+}: {
+  title: string;
+  value?: string | null;
+  highlight: "red" | "orange" | "blue" | "gray";
+}) {
+  const hasValue = value && value.trim().length > 0;
+  return (
+    <div>
+      <div className="text-xs text-gray-500 uppercase mb-1">{title}</div>
+      {hasValue ? (
+        <div className={`rounded-lg border px-3 py-2 whitespace-pre-wrap ${HIGHLIGHT_STYLES[highlight]}`}>
+          {value}
+        </div>
+      ) : (
+        <div className="text-gray-300 italic">Non renseigné</div>
+      )}
+    </div>
+  );
+}
 
 function NotesCell({ appointment }: { appointment: Appointment }) {
   const [notes, setNotes] = useState(appointment.notes ?? "");
@@ -113,6 +155,7 @@ export default function PatientDetailPage() {
   const router = useRouter();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [medical, setMedical] = useState<MedicalProfile>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -130,6 +173,7 @@ export default function PatientDetailPage() {
         const data = await res.json();
         setPatient(data.patient);
         setAppointments(data.appointments);
+        setMedical(data.medical ?? null);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Erreur inconnue");
       } finally {
@@ -186,6 +230,43 @@ export default function PatientDetailPage() {
           <div className="text-lg font-semibold mt-1">
             {format(new Date(patient.createdAt), "d MMM yyyy", { locale: fr })}
           </div>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-xl border">
+        <div className="p-4 border-b flex items-center justify-between">
+          <h2 className="font-semibold">Dossier médical</h2>
+          {medical?.updatedAt && (
+            <span className="text-xs text-gray-400">
+              Mis à jour le {format(new Date(medical.updatedAt), "d MMM yyyy", { locale: fr })}
+            </span>
+          )}
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5 border-b text-sm">
+          <div>
+            <div className="text-xs text-gray-500 uppercase">Date de naissance</div>
+            <div className="font-medium">
+              {patient.dateOfBirth
+                ? format(new Date(patient.dateOfBirth), "d MMM yyyy", { locale: fr })
+                : "—"}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-500 uppercase">Sexe</div>
+            <div className="font-medium">
+              {patient.gender === "M" ? "Homme" : patient.gender === "F" ? "Femme" : "—"}
+            </div>
+          </div>
+          <div>
+            <div className="text-xs text-gray-500 uppercase">Groupe sanguin</div>
+            <div className="font-medium">{patient.bloodType ?? "—"}</div>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 text-sm">
+          <MedBlock title="Allergies" value={medical?.allergies} highlight="red" />
+          <MedBlock title="Maladies chroniques" value={medical?.chronicConditions} highlight="orange" />
+          <MedBlock title="Traitements en cours" value={medical?.currentMeds} highlight="blue" />
+          <MedBlock title="Autres remarques" value={medical?.notes} highlight="gray" />
         </div>
       </div>
 

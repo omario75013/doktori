@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
-import { db, appointments, patients } from "@doktori/db";
+import { db, appointments, patients, patientMedicalProfile } from "@doktori/db";
 import { eq, and, desc } from "drizzle-orm";
 
 export async function GET(
@@ -51,5 +51,11 @@ export async function GET(
     return NextResponse.json({ error: "Patient introuvable" }, { status: 404 });
   }
 
-  return NextResponse.json({ patient, appointments: history });
+  const [medical] = await db
+    .select()
+    .from(patientMedicalProfile)
+    .where(eq(patientMedicalProfile.patientId, id))
+    .limit(1);
+
+  return NextResponse.json({ patient, appointments: history, medical: medical ?? null });
 }
