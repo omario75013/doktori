@@ -22,9 +22,9 @@ async function verifyOwnership(doctorId: string, typeId: string) {
 
 export async function GET(
   _req: Request,
-  { params }: { params: Promise<{ typeId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { typeId } = await params;
+  const { id: typeId } = await params;
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
@@ -46,9 +46,9 @@ export async function GET(
 
 export async function POST(
   req: Request,
-  { params }: { params: Promise<{ typeId: string }> }
+  { params }: { params: Promise<{ id: string }> }
 ) {
-  const { typeId } = await params;
+  const { id: typeId } = await params;
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });

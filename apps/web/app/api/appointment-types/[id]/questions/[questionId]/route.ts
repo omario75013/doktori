@@ -33,9 +33,9 @@ async function verifyOwnership(doctorId: string, typeId: string, questionId: str
 
 export async function PATCH(
   req: Request,
-  { params }: { params: Promise<{ typeId: string; questionId: string }> }
+  { params }: { params: Promise<{ id: string; questionId: string }> }
 ) {
-  const { typeId, questionId } = await params;
+  const { id: typeId, questionId } = await params;
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
@@ -121,9 +121,9 @@ export async function PATCH(
 
 export async function DELETE(
   _req: Request,
-  { params }: { params: Promise<{ typeId: string; questionId: string }> }
+  { params }: { params: Promise<{ id: string; questionId: string }> }
 ) {
-  const { typeId, questionId } = await params;
+  const { id: typeId, questionId } = await params;
   const session = await auth();
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
