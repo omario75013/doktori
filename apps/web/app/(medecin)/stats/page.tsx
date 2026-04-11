@@ -92,12 +92,12 @@ export default async function StatsPage() {
       AND starts_at < DATE_TRUNC('month', NOW()) + INTERVAL '1 month'
   `);
 
-  const confirmedCount = (confirmedRows.rows[0] as { count: number })?.count ?? 0;
+  const confirmedCount = ((confirmedRows as unknown as Array<{ count: number }>)[0]?.count) ?? 0;
   const revenueProjection = confirmedCount * feeInDT;
 
   // Derived KPIs
   type MonthlyRow = { month: string; total: number; completed: number; cancelled: number; no_shows: number };
-  const monthly = monthlyRows.rows as MonthlyRow[];
+  const monthly = monthlyRows as unknown as MonthlyRow[];
 
   const currentMonthRow = monthly[monthly.length - 1];
   const totalThisMonth = currentMonthRow?.total ?? 0;
@@ -111,17 +111,17 @@ export default async function StatsPage() {
     totalThisMonth > 0 ? Math.round((noShowsThisMonth / totalThisMonth) * 100) : 0;
 
   type PeakRow = { hour: number; count: number };
-  const peaks = peakRows.rows as PeakRow[];
+  const peaks = peakRows as unknown as PeakRow[];
   const maxPeakCount = peaks.reduce((m, r) => Math.max(m, r.count), 1);
 
   type ReasonRow = { reason: string; count: number };
-  const reasons = reasonRows.rows as ReasonRow[];
+  const reasons = reasonRows as unknown as ReasonRow[];
   const maxReasonCount = reasons.reduce((m, r) => Math.max(m, r.count), 1);
 
-  const patientStats = (patientStatsRows.rows[0] ?? {
+  const patientStats = ((patientStatsRows as unknown as Array<{ new_patients: number; returning_patients: number }>)[0]) ?? {
     new_patients: 0,
     returning_patients: 0,
-  }) as { new_patients: number; returning_patients: number };
+  };
 
   const maxMonthlyCount = monthly.reduce((m, r) => Math.max(m, r.total), 1);
 

@@ -30,7 +30,7 @@ export default async function PatientsPage() {
     LIMIT 100
   `);
 
-  const patientList = result.rows as PatientRow[];
+  const patientList = result as unknown as PatientRow[];
 
   return (
     <div className="space-y-4">

@@ -21,5 +21,5 @@ export async function GET() {
     LIMIT 100
   `);
 
-  return NextResponse.json(result.rows);
+  return NextResponse.json(result);
 }

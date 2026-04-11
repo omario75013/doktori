@@ -91,25 +91,25 @@ export async function GET() {
       AND starts_at < DATE_TRUNC('month', NOW()) + INTERVAL '1 month'
   `);
 
-  const confirmedCount = (confirmedThisMonthRows.rows[0] as { count: number }).count ?? 0;
+  const confirmedCount = ((confirmedThisMonthRows as unknown as Array<{ count: number }>)[0]?.count) ?? 0;
   // consultationFee is stored in millimes — convert to DT for display
   const feeInDT = feeMillimes / 1000;
   const revenueProjection = confirmedCount * feeInDT;
 
   return NextResponse.json({
-    monthlyAppointments: monthlyRows.rows as Array<{
+    monthlyAppointments: monthlyRows as unknown as Array<{
       month: string;
       total: number;
       completed: number;
       cancelled: number;
       no_shows: number;
     }>,
-    peakHours: peakRows.rows as Array<{ hour: number; count: number }>,
-    topReasons: reasonRows.rows as Array<{ reason: string; count: number }>,
-    patientStats: (patientStatsRows.rows[0] ?? {
+    peakHours: peakRows as unknown as Array<{ hour: number; count: number }>,
+    topReasons: reasonRows as unknown as Array<{ reason: string; count: number }>,
+    patientStats: ((patientStatsRows as unknown as Array<{ new_patients: number; returning_patients: number }>)[0] ?? {
       new_patients: 0,
       returning_patients: 0,
-    }) as { new_patients: number; returning_patients: number },
+    }),
     revenueProjection: {
       confirmedCount,
       feeInDT,
