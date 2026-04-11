@@ -59,7 +59,6 @@ async function translateBatch(texts: string[], apiKey: string): Promise<string[]
   body.set("source_lang", "FR");
   body.set("target_lang", "AR");
   body.set("preserve_formatting", "1");
-  body.set("formality", "more");
   for (const t of texts) body.append("text", t);
 
   const res = await fetch(DEEPL_ENDPOINT, {
