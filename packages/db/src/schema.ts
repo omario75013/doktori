@@ -164,3 +164,12 @@ export const reviews = pgTable("reviews", {
   index("reviews_doctor_idx").on(table.doctorId),
   index("reviews_rating_idx").on(table.rating),
 ]);
+
+// ── Premium Visibility ────────────────────────────────────
+export const doctorPremium = pgTable("doctor_premium", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }).unique(),
+  isActive: boolean("is_active").default(false).notNull(),
+  until: timestamp("until", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
