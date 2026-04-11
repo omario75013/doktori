@@ -19,7 +19,7 @@ interface Doctor {
   consultationFee: number | null;
 }
 
-type Step = "slots" | "form" | "success";
+type Step = "slots" | "form" | "payment" | "success";
 
 interface BookingState {
   date: string;
@@ -61,6 +61,7 @@ export default function RdvPage({
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
+  const [payingNow, setPayingNow] = useState(false);
 
   function handleSlotSelect(date: string, startTime: string) {
     setBooking({ date, startTime });
@@ -97,7 +98,7 @@ export default function RdvPage({
 
       const data = await res.json();
       setAppointmentId(data.id as string);
-      setStep("success");
+      setStep("payment");
     } catch (err: unknown) {
       setFormError(
         err instanceof Error ? err.message : "Erreur inattendue"
@@ -235,6 +236,63 @@ export default function RdvPage({
                   : "Confirmer le rendez-vous"}
               </Button>
             </form>
+          </div>
+        )}
+
+        {/* Step: optional payment prompt */}
+        {step === "payment" && (
+          <div className="bg-white rounded-xl border border-gray-200 p-8 text-center space-y-4">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
+              <svg
+                className="w-8 h-8 text-green-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2}
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div className="space-y-1">
+              <h2 className="font-semibold text-gray-900">Rendez-vous réservé !</h2>
+              <p className="text-sm text-gray-500 mb-4">
+                Voulez-vous payer votre consultation maintenant pour garantir votre place ?
+              </p>
+            </div>
+            <div className="space-y-2">
+              <Button
+                disabled={payingNow}
+                onClick={async () => {
+                  setPayingNow(true);
+                  try {
+                    const res = await fetch("/api/payments/appointment", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({ appointmentId }),
+                    });
+                    if (res.ok) {
+                      const data = await res.json();
+                      window.location.href = data.paymentUrl;
+                    } else {
+                      setStep("success");
+                    }
+                  } catch {
+                    setStep("success");
+                  } finally {
+                    setPayingNow(false);
+                  }
+                }}
+                className="w-full bg-blue-600"
+              >
+                {payingNow ? "Redirection..." : "Payer maintenant (sécurisé)"}
+              </Button>
+              <button
+                onClick={() => setStep("success")}
+                className="w-full text-sm text-gray-500 hover:underline py-2"
+              >
+                Payer sur place
+              </button>
+            </div>
           </div>
         )}
 
