@@ -91,6 +91,7 @@ export const patients = pgTable(
     dateOfBirth: date("date_of_birth"),
     gender: varchar("gender", { length: 10 }),
     bloodType: varchar("blood_type", { length: 5 }),
+    cnamNumber: varchar("cnam_number", { length: 20 }),
     noShowCount: integer("no_show_count").notNull().default(0),
     lastMinuteCancelCount: integer("last_minute_cancel_count").notNull().default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
@@ -339,6 +340,36 @@ export const appointmentTypes = pgTable("appointment_types", {
   index("appointment_types_doctor_idx").on(table.doctorId),
 ]);
 
+// ── CNAM Claims (Tunisia tiers-payant) ────────────────────
+// Each claim represents a bordereau that the doctor fills for a CNAM-covered
+// consultation. It is printed (via /cnam/[id]/print) and submitted to CNAM by
+// the cabinet, either on paper or batched via CSV export.
+export const cnamClaims = pgTable("cnam_claims", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  appointmentId: uuid("appointment_id")
+    .notNull()
+    .references(() => appointments.id, { onDelete: "cascade" }),
+  doctorId: uuid("doctor_id")
+    .notNull()
+    .references(() => doctors.id, { onDelete: "cascade" }),
+  patientId: uuid("patient_id")
+    .notNull()
+    .references(() => patients.id, { onDelete: "cascade" }),
+  cnamNumber: varchar("cnam_number", { length: 20 }).notNull(),
+  patientRole: varchar("patient_role", { length: 20 }).notNull().default("assure"),
+  amount: integer("amount").notNull(), // millimes
+  consultationDate: date("consultation_date").notNull(),
+  status: varchar("status", { length: 20 }).notNull().default("draft"),
+  submittedAt: timestamp("submitted_at", { withTimezone: true }),
+  reimbursedAt: timestamp("reimbursed_at", { withTimezone: true }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("cnam_claims_appointment_uidx").on(table.appointmentId),
+  index("cnam_claims_doctor_month_idx").on(table.doctorId, table.consultationDate),
+  index("cnam_claims_status_idx").on(table.status),
+]);
+
 // ── Teleconsultations ────────────────────────────────────
 export const teleconsultations = pgTable("teleconsultations", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -433,3 +464,60 @@ export const phoneProxies = pgTable("phone_proxies", {
   index("phone_proxies_session_idx").on(table.sosSessionId),
   index("phone_proxies_active_idx").on(table.isActive),
 ]);
+
+// ── Admin users (RBAC) ────────────────────────────────────────────────────────
+
+export type AdminRole =
+  | "super_admin"
+  | "moderator"
+  | "finance"
+  | "support"
+  | "marketing";
+
+export const adminUsers = pgTable(
+  "admin_users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: varchar("email", { length: 255 }).notNull(),
+    passwordHash: text("password_hash").notNull(),
+    name: varchar("name", { length: 255 }).notNull(),
+    role: varchar("role", { length: 30 }).$type<AdminRole>().notNull(),
+    isActive: boolean("is_active").notNull().default(true),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    totpSecret: text("totp_secret"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("admin_users_email_idx").on(table.email),
+    index("admin_users_role_idx").on(table.role),
+  ]
+);
+
+// ── Admin audit log (append-only) ─────────────────────────────────────────────
+
+export const adminAuditLogs = pgTable(
+  "admin_audit_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    actorId: uuid("actor_id").references(() => adminUsers.id, {
+      onDelete: "set null",
+    }),
+    actorEmail: varchar("actor_email", { length: 255 }).notNull(),
+    action: varchar("action", { length: 80 }).notNull(),
+    resourceType: varchar("resource_type", { length: 40 }).notNull(),
+    resourceId: varchar("resource_id", { length: 64 }),
+    before: jsonb("before"),
+    after: jsonb("after"),
+    reason: text("reason"),
+    ip: varchar("ip", { length: 50 }),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("admin_audit_actor_idx").on(table.actorId),
+    index("admin_audit_resource_idx").on(table.resourceType, table.resourceId),
+    index("admin_audit_action_idx").on(table.action),
+    index("admin_audit_created_idx").on(table.createdAt),
+  ]
+);

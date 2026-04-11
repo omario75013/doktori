@@ -10,6 +10,7 @@ export default async function MedecinLayout({ children }: { children: React.Reac
     { href: "/dashboard", label: "Tableau de bord" },
     { href: "/agenda", label: "Agenda" },
     { href: "/rendez-vous", label: "Rendez-vous" },
+    { href: "/cnam", label: "Bordereaux CNAM" },
     { href: "/profil", label: "Mon profil" },
   ];
 

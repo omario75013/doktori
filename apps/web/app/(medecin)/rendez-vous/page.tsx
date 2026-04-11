@@ -87,6 +87,40 @@ export default function RendezVousPage() {
     }
   };
 
+  const createCnamClaim = async (id: string) => {
+    const cnam = window.prompt("Numéro CNAM du patient ?");
+    if (!cnam) return;
+    const amountInput = window.prompt("Montant de la consultation (en DT) ?", "40");
+    if (!amountInput) return;
+    const amountDt = Number(amountInput);
+    if (!Number.isFinite(amountDt) || amountDt < 1) {
+      alert("Montant invalide");
+      return;
+    }
+    setUpdating(id);
+    try {
+      const res = await fetch("/api/cnam/claims", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          appointmentId: id,
+          cnamNumber: cnam,
+          amount: Math.round(amountDt * 1000),
+        }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Erreur création bordereau");
+      }
+      const claim = await res.json();
+      window.open(`/cnam/${claim.id}/print`, "_blank");
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setUpdating(null);
+    }
+  };
+
   const scheduleFollowup = async (id: string) => {
     const input = window.prompt(
       "Dans combien de semaines programmer le suivi ?",
@@ -210,13 +244,22 @@ export default function RendezVousPage() {
                     <td className="px-4 py-3">
                       {isTerminal ? (
                         appt.status === "completed" ? (
-                          <button
-                            onClick={() => scheduleFollowup(appt.id)}
-                            disabled={isUpdating}
-                            className="text-xs px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40"
-                          >
-                            Programmer un suivi
-                          </button>
+                          <div className="flex gap-1 flex-wrap">
+                            <button
+                              onClick={() => scheduleFollowup(appt.id)}
+                              disabled={isUpdating}
+                              className="text-xs px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40"
+                            >
+                              Programmer un suivi
+                            </button>
+                            <button
+                              onClick={() => createCnamClaim(appt.id)}
+                              disabled={isUpdating}
+                              className="text-xs px-2 py-1 rounded border border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100 disabled:opacity-40"
+                            >
+                              Bordereau CNAM
+                            </button>
+                          </div>
                         ) : (
                           <span className="text-xs text-gray-300">—</span>
                         )
