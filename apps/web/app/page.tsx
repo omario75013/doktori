@@ -179,11 +179,14 @@ export default function HomePage() {
             Doktori &copy; 2026 — La prise de rendez-vous médicale en Tunisie
           </p>
           <nav className="flex flex-wrap justify-center gap-4 text-sm text-gray-400">
-            <a href="#" className="hover:text-gray-600 transition-colors">
+            <a href="/legal/mentions" className="hover:text-gray-600 transition-colors">
               Mentions légales
             </a>
-            <a href="#" className="hover:text-gray-600 transition-colors">
+            <a href="/legal/cgu" className="hover:text-gray-600 transition-colors">
               CGU
+            </a>
+            <a href="/legal/confidentialite" className="hover:text-gray-600 transition-colors">
+              Confidentialité
             </a>
             <a href="#" className="hover:text-gray-600 transition-colors">
               FAQ
