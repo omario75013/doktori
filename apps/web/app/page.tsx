@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { SPECIALTIES } from "@doktori/shared";
 
 const SPECIALTY_ICONS: Record<string, string> = {
@@ -21,6 +22,7 @@ const SPECIALTY_ICONS: Record<string, string> = {
 export default function HomePage() {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const t = useTranslations("landing");
 
   function handleSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -29,18 +31,23 @@ export default function HomePage() {
     router.push(`/recherche?${params.toString()}`);
   }
 
+  const benefits = [
+    t("benefit1"),
+    t("benefit2"),
+    t("benefit3"),
+    t("benefit4"),
+  ];
+
   return (
     <div className="flex flex-col">
       {/* Hero */}
       <section className="bg-gradient-to-b from-blue-50 to-white px-4 pb-20 pt-20 sm:px-6 sm:pb-28 sm:pt-28">
         <div className="mx-auto max-w-3xl text-center">
           <h1 className="text-4xl font-extrabold leading-tight tracking-tight text-gray-900 sm:text-5xl lg:text-6xl">
-            Réservez votre médecin{" "}
-            <span className="text-blue-600">en 2 clics</span>
+            {t("heroTitle")}
           </h1>
           <p className="mx-auto mt-6 max-w-xl text-lg leading-relaxed text-gray-500">
-            Trouvez un médecin en Tunisie et prenez rendez-vous en ligne, 24h/24.
-            Gratuit et sans inscription.
+            {t("heroSubtitle")}
           </p>
 
           <form
@@ -51,14 +58,14 @@ export default function HomePage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Nom, spécialité, ville..."
+              placeholder={t("searchPlaceholder")}
               className="h-14 w-full flex-1 rounded-xl border border-gray-200 bg-white px-5 text-base text-gray-900 placeholder:text-gray-400 shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 sm:rounded-r-none sm:rounded-l-xl"
             />
             <button
               type="submit"
               className="h-14 shrink-0 rounded-xl bg-blue-600 px-8 text-base font-semibold text-white shadow-sm transition hover:bg-blue-700 active:bg-blue-800 sm:rounded-l-none sm:rounded-r-xl"
             >
-              Rechercher
+              {t("searchButton")}
             </button>
           </form>
 
@@ -72,7 +79,7 @@ export default function HomePage() {
       <section className="bg-white px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-5xl">
           <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">
-            Comment ça marche
+            {t("howItWorks")}
           </h2>
           <p className="mt-3 text-center text-gray-500">
             Prendre rendez-vous n&apos;a jamais été aussi simple
@@ -81,28 +88,25 @@ export default function HomePage() {
           <div className="mt-12 grid gap-6 sm:grid-cols-3">
             <div className="rounded-xl border border-gray-100 bg-white p-7 shadow-sm">
               <div className="mb-4 text-3xl">🔍</div>
-              <h3 className="text-lg font-semibold text-gray-900">Cherchez</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t("step1Title")}</h3>
               <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                Trouvez un médecin par spécialité, ville ou quartier. Consultez
-                son profil et ses disponibilités.
+                {t("step1Desc")}
               </p>
             </div>
 
             <div className="rounded-xl border border-gray-100 bg-white p-7 shadow-sm">
               <div className="mb-4 text-3xl">📅</div>
-              <h3 className="text-lg font-semibold text-gray-900">Choisissez</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t("step2Title")}</h3>
               <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                Consultez les créneaux disponibles en temps réel et choisissez
-                celui qui vous convient.
+                {t("step2Desc")}
               </p>
             </div>
 
             <div className="rounded-xl border border-gray-100 bg-white p-7 shadow-sm">
               <div className="mb-4 text-3xl">✅</div>
-              <h3 className="text-lg font-semibold text-gray-900">Réservez</h3>
+              <h3 className="text-lg font-semibold text-gray-900">{t("step3Title")}</h3>
               <p className="mt-2 text-sm leading-relaxed text-gray-500">
-                Confirmez votre rendez-vous en 2 clics. Vous recevez un rappel
-                SMS avant votre consultation.
+                {t("step3Desc")}
               </p>
             </div>
           </div>
@@ -113,7 +117,7 @@ export default function HomePage() {
       <section className="bg-gray-50 px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-5xl">
           <h2 className="text-center text-2xl font-bold text-gray-900 sm:text-3xl">
-            Trouvez votre médecin par spécialité
+            {t("bySpecialty")}
           </h2>
           <p className="mt-3 text-center text-gray-500">
             Des centaines de médecins disponibles dans toutes les spécialités
@@ -142,22 +146,14 @@ export default function HomePage() {
       <section className="bg-slate-900 px-4 py-20 sm:px-6">
         <div className="mx-auto max-w-3xl text-center">
           <h2 className="text-2xl font-bold text-white sm:text-3xl">
-            Vous êtes médecin&nbsp;?
+            {t("forDoctors")}
           </h2>
           <p className="mt-5 text-base leading-relaxed text-slate-300">
-            Rejoignez les 100 premiers médecins inscrits et bénéficiez de{" "}
-            <strong className="text-white">6 mois gratuits</strong>. Recevez
-            plus de patients, gérez votre agenda en ligne, réduisez les
-            no-shows.
+            {t("forDoctorsDesc")}
           </p>
 
           <ul className="mx-auto mt-8 max-w-xs space-y-3 text-left">
-            {[
-              "Agenda en ligne 24/7",
-              "Rappels SMS automatiques",
-              "Vitrine professionnelle référencée sur Google",
-              "Support WhatsApp dédié",
-            ].map((benefit) => (
+            {benefits.map((benefit) => (
               <li key={benefit} className="flex items-center gap-3 text-slate-300">
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-blue-500 text-xs text-white">
                   ✓
@@ -171,7 +167,7 @@ export default function HomePage() {
             href="/inscription"
             className="mt-10 inline-flex h-12 items-center justify-center rounded-xl bg-blue-600 px-8 text-base font-semibold text-white shadow-md transition hover:bg-blue-500 active:bg-blue-700"
           >
-            Créer mon compte gratuit
+            {t("forDoctorsCta")}
           </Link>
         </div>
       </section>

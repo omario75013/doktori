@@ -1,6 +1,11 @@
 import Link from "next/link";
+import { getTranslations, getLocale } from "next-intl/server";
+import { LanguageSwitcher } from "./language-switcher";
 
-export function Navbar() {
+export async function Navbar() {
+  const t = await getTranslations("nav");
+  const locale = await getLocale();
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-gray-100 bg-white">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
@@ -13,13 +18,14 @@ export function Navbar() {
             href="/recherche"
             className="hidden text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors sm:block"
           >
-            Rechercher un médecin
+            {t("search")}
           </Link>
+          <LanguageSwitcher currentLocale={locale} />
           <Link
             href="/connexion"
             className="inline-flex h-9 items-center justify-center rounded-lg border border-blue-600 bg-white px-4 text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50"
           >
-            Espace médecin
+            {t("doctorArea")}
           </Link>
         </nav>
       </div>

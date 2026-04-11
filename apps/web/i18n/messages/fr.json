@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "search": "Rechercher un médecin",
+    "doctorArea": "Espace médecin"
+  },
+  "landing": {
+    "heroTitle": "Réservez votre médecin en 2 clics",
+    "heroSubtitle": "Trouvez un médecin en Tunisie et prenez rendez-vous en ligne, 24h/24. Gratuit et sans inscription.",
+    "searchPlaceholder": "Nom, spécialité, ville...",
+    "searchButton": "Rechercher",
+    "howItWorks": "Comment ça marche",
+    "step1Title": "Cherchez",
+    "step1Desc": "Trouvez un médecin par spécialité, ville ou quartier",
+    "step2Title": "Choisissez",
+    "step2Desc": "Consultez les disponibilités en temps réel",
+    "step3Title": "Réservez",
+    "step3Desc": "Confirmez votre rendez-vous en 2 clics",
+    "bySpecialty": "Trouvez votre médecin par spécialité",
+    "forDoctors": "Vous êtes médecin ?",
+    "forDoctorsDesc": "Rejoignez les 100 premiers médecins inscrits et bénéficiez de 6 mois gratuits.",
+    "forDoctorsCta": "Créer mon compte gratuit",
+    "benefit1": "Agenda en ligne 24/7",
+    "benefit2": "Rappels SMS automatiques",
+    "benefit3": "Vitrine professionnelle référencée sur Google",
+    "benefit4": "Support WhatsApp dédié"
+  },
+  "auth": {
+    "loginTitle": "Espace médecin",
+    "email": "Email",
+    "password": "Mot de passe",
+    "loginButton": "Se connecter",
+    "loginLoading": "Connexion...",
+    "noAccount": "Pas encore inscrit ?",
+    "createAccount": "Créer un compte",
+    "registerTitle": "Rejoignez Doktori",
+    "registerSubtitle": "Créez votre page médecin en 2 minutes",
+    "fullName": "Nom complet",
+    "phone": "Téléphone",
+    "specialty": "Spécialité",
+    "city": "Ville",
+    "address": "Adresse du cabinet",
+    "consultationFee": "Tarif consultation (DT)",
+    "registerButton": "Créer mon compte gratuit",
+    "registerLoading": "Inscription..."
+  },
+  "common": {
+    "language": "Langue",
+    "french": "Français",
+    "arabic": "العربية"
+  }
+}

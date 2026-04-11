@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,7 @@ import { SPECIALTIES, CITIES } from "@doktori/shared";
 
 export default function InscriptionPage() {
   const router = useRouter();
+  const t = useTranslations("auth");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -82,15 +84,15 @@ export default function InscriptionPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
       <div className="w-full max-w-lg space-y-6">
         <div className="space-y-2 text-center">
-          <h1 className="text-2xl font-bold tracking-tight">Créer un compte médecin</h1>
+          <h1 className="text-2xl font-bold tracking-tight">{t("registerTitle")}</h1>
           <p className="text-sm text-muted-foreground">
-            Rejoignez Doktori et gérez vos rendez-vous en ligne
+            {t("registerSubtitle")}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
-            <Label htmlFor="name">Nom complet</Label>
+            <Label htmlFor="name">{t("fullName")}</Label>
             <Input
               id="name"
               name="name"
@@ -103,7 +105,7 @@ export default function InscriptionPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t("email")}</Label>
               <Input
                 id="email"
                 name="email"
@@ -117,7 +119,7 @@ export default function InscriptionPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="phone">Téléphone</Label>
+              <Label htmlFor="phone">{t("phone")}</Label>
               <Input
                 id="phone"
                 name="phone"
@@ -131,7 +133,7 @@ export default function InscriptionPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="password">Mot de passe</Label>
+            <Label htmlFor="password">{t("password")}</Label>
             <Input
               id="password"
               name="password"
@@ -146,7 +148,7 @@ export default function InscriptionPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
-              <Label>Spécialité</Label>
+              <Label>{t("specialty")}</Label>
               <Select
                 value={form.specialty}
                 onValueChange={(value) => setForm((prev) => ({ ...prev, specialty: value as string }))}
@@ -165,7 +167,7 @@ export default function InscriptionPage() {
             </div>
 
             <div className="space-y-1.5">
-              <Label>Ville</Label>
+              <Label>{t("city")}</Label>
               <Select
                 value={form.city}
                 onValueChange={(value) => setForm((prev) => ({ ...prev, city: value as string }))}
@@ -185,7 +187,7 @@ export default function InscriptionPage() {
           </div>
 
           <div className="space-y-1.5">
-            <Label htmlFor="address">Adresse du cabinet</Label>
+            <Label htmlFor="address">{t("address")}</Label>
             <Input
               id="address"
               name="address"
@@ -198,7 +200,7 @@ export default function InscriptionPage() {
 
           <div className="space-y-1.5">
             <Label htmlFor="consultationFee">
-              Tarif consultation (DT)
+              {t("consultationFee")}
               <span className="ml-1 text-muted-foreground">(optionnel)</span>
             </Label>
             <Input
@@ -235,14 +237,14 @@ export default function InscriptionPage() {
           )}
 
           <Button type="submit" className="w-full" size="lg" disabled={loading}>
-            {loading ? "Création du compte..." : "Créer mon compte"}
+            {loading ? t("registerLoading") : t("registerButton")}
           </Button>
         </form>
 
         <p className="text-center text-sm text-muted-foreground">
           Déjà inscrit ?{" "}
           <a href="/connexion" className="font-medium text-primary hover:underline">
-            Se connecter
+            {t("loginButton")}
           </a>
         </p>
       </div>

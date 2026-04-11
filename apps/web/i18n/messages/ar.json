@@ -1,0 +1,51 @@
+{
+  "nav": {
+    "search": "ابحث عن طبيب",
+    "doctorArea": "فضاء الطبيب"
+  },
+  "landing": {
+    "heroTitle": "احجز طبيبك بنقرتين",
+    "heroSubtitle": "اعثر على طبيب في تونس واحجز موعدًا عبر الإنترنت، على مدار الساعة. مجاني وبدون تسجيل.",
+    "searchPlaceholder": "الاسم، الاختصاص، المدينة...",
+    "searchButton": "بحث",
+    "howItWorks": "كيف يعمل",
+    "step1Title": "ابحث",
+    "step1Desc": "اعثر على طبيب حسب الاختصاص أو المدينة أو الحي",
+    "step2Title": "اختر",
+    "step2Desc": "اطلع على المواعيد المتاحة في الوقت الفعلي",
+    "step3Title": "احجز",
+    "step3Desc": "أكد موعدك بنقرتين",
+    "bySpecialty": "اعثر على طبيبك حسب الاختصاص",
+    "forDoctors": "هل أنت طبيب؟",
+    "forDoctorsDesc": "انضم إلى أول 100 طبيب مسجل واستفد من 6 أشهر مجانًا.",
+    "forDoctorsCta": "أنشئ حسابي المجاني",
+    "benefit1": "جدول مواعيد عبر الإنترنت 24/7",
+    "benefit2": "تذكيرات SMS تلقائية",
+    "benefit3": "واجهة احترافية مفهرسة على Google",
+    "benefit4": "دعم WhatsApp مخصص"
+  },
+  "auth": {
+    "loginTitle": "فضاء الطبيب",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة السر",
+    "loginButton": "تسجيل الدخول",
+    "loginLoading": "جاري الدخول...",
+    "noAccount": "ليس لديك حساب؟",
+    "createAccount": "إنشاء حساب",
+    "registerTitle": "انضم إلى Doktori",
+    "registerSubtitle": "أنشئ صفحة الطبيب الخاصة بك في دقيقتين",
+    "fullName": "الاسم الكامل",
+    "phone": "رقم الهاتف",
+    "specialty": "الاختصاص",
+    "city": "المدينة",
+    "address": "عنوان العيادة",
+    "consultationFee": "ثمن الاستشارة (دت)",
+    "registerButton": "أنشئ حسابي المجاني",
+    "registerLoading": "جاري التسجيل..."
+  },
+  "common": {
+    "language": "اللغة",
+    "french": "Français",
+    "arabic": "العربية"
+  }
+}
