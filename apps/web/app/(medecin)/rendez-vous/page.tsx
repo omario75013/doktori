@@ -245,6 +245,12 @@ export default function RendezVousPage() {
                       {isTerminal ? (
                         appt.status === "completed" ? (
                           <div className="flex gap-1 flex-wrap">
+                            <a
+                              href={`/rendez-vous/${appt.id}/consultation`}
+                              className="text-xs px-2 py-1 rounded border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
+                            >
+                              Note SOAP
+                            </a>
                             <button
                               onClick={() => scheduleFollowup(appt.id)}
                               disabled={isUpdating}

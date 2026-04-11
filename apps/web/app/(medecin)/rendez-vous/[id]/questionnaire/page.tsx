@@ -134,9 +134,12 @@ export default function AppointmentQuestionnairePage({
       )}
 
       <div className="mt-6">
-        <Button variant="outline" asChild>
-          <Link href="/rendez-vous">Retour</Link>
-        </Button>
+        <Link
+          href="/rendez-vous"
+          className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
+        >
+          Retour
+        </Link>
       </div>
     </div>
   );
