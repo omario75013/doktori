@@ -149,3 +149,18 @@ export const waitlist = pgTable("waitlist", {
   index("waitlist_doctor_date_idx").on(table.doctorId, table.preferredDate),
   index("waitlist_patient_idx").on(table.patientId),
 ]);
+
+// ── Reviews ──────────────────────────────────────────────
+export const reviews = pgTable("reviews", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+  appointmentId: uuid("appointment_id").notNull().references(() => appointments.id, { onDelete: "cascade" }).unique(),
+  rating: integer("rating").notNull(), // 1-5
+  comment: text("comment"),
+  verified: boolean("verified").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("reviews_doctor_idx").on(table.doctorId),
+  index("reviews_rating_idx").on(table.rating),
+]);
