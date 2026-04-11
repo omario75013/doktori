@@ -15,11 +15,10 @@ RUN pnpm install --frozen-lockfile
 # Builder
 FROM base AS builder
 WORKDIR /app
-COPY --from=deps /app/node_modules ./node_modules
-COPY --from=deps /app/apps/web/node_modules ./apps/web/node_modules
-COPY --from=deps /app/packages/db/node_modules ./packages/db/node_modules
-COPY --from=deps /app/packages/shared/node_modules ./packages/shared/node_modules
-COPY --from=deps /app/packages/validation/node_modules ./packages/validation/node_modules
+# Copy the whole deps tree — pnpm only creates per-package node_modules
+# for packages that actually declare dependencies (shared has none), so
+# the previous per-path COPYs broke whenever a workspace pkg had zero deps.
+COPY --from=deps /app ./
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN pnpm turbo build --filter=web
