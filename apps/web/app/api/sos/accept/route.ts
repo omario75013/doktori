@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 import { sendSMS } from "@/lib/sms";
+import { createPhoneProxy } from "@/lib/phone-proxy";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -34,10 +35,20 @@ export async function POST(req: Request) {
   const info = (doctorResult as unknown as any[])[0];
 
   if (info) {
+    // Create phone proxy (dev mode just returns the real number)
+    const proxy = await createPhoneProxy({
+      sosSessionId: updated.id,
+      patientPhone: info.patient_phone,
+      doctorPhone: info.phone,
+      ttlMinutes: 60,
+    });
+
+    const displayPhone = proxy.success ? proxy.proxyNumber : info.phone;
+
     try {
       await sendSMS(
         info.patient_phone,
-        `Doktori SOS: ${info.name} accepte votre demande. Tel: ${info.phone}. Adresse: ${info.address}`,
+        `Doktori SOS: ${info.name} accepte votre demande. Tel: ${displayPhone}. Adresse: ${info.address}`,
       );
     } catch (e) {
       console.error("SMS failed:", e);
