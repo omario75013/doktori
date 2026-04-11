@@ -15,7 +15,7 @@ import {
   Heart,
   Bone,
   Ear,
-  Activity,
+  Smile,
   Sparkles,
   ArrowRight,
   ShieldCheck,
@@ -25,6 +25,11 @@ import {
   Star,
   Zap,
   Siren,
+  Apple,
+  Smartphone,
+  Users,
+  TrendingUp,
+  BadgeCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -34,11 +39,11 @@ const SPECIALTY_ICONS: Record<string, LucideIcon> = {
   ophtalmologue: Eye,
   gynecologue: Heart,
   pediatre: Baby,
-  dentiste: Activity,
+  dentiste: Smile,
   orl: Ear,
   cardiologue: Heart,
   orthopediste: Bone,
-  gastrologue: Activity,
+  gastrologue: Stethoscope,
 };
 
 export default function HomePage() {
@@ -53,182 +58,218 @@ export default function HomePage() {
     router.push(`/recherche?${params.toString()}`);
   }
 
-  const benefits = [
-    { icon: Clock, text: t("benefit1") },
-    { icon: MessageSquareText, text: t("benefit2") },
-    { icon: Search, text: t("benefit3") },
-    { icon: ShieldCheck, text: t("benefit4") },
-  ];
-
   return (
-    <div className="flex flex-col">
-      {/* ─────────────────────────────── HERO ─────────────────────────────── */}
-      <section className="relative overflow-hidden bg-white px-4 pb-24 pt-20 sm:px-6 sm:pb-32 sm:pt-28">
-        {/* Dotted background */}
+    <div className="flex flex-col bg-white">
+      {/* ═══════════════════════════ HERO ═══════════════════════════ */}
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#F0FDFA] via-white to-white px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
+        {/* Subtle grid background */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,_theme(colors.gray.200)_1px,_transparent_1px)] opacity-40 [background-size:24px_24px]"
-        />
-        {/* Blue glow */}
-        <div
-          aria-hidden
-          className="pointer-events-none absolute -top-40 left-1/2 h-[600px] w-[900px] -translate-x-1/2 rounded-full bg-blue-400/10 blur-3xl"
+          className="pointer-events-none absolute inset-0 [mask-image:radial-gradient(ellipse_at_top,black_40%,transparent_75%)]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(8, 145, 178, 0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(8, 145, 178, 0.08) 1px, transparent 1px)`,
+            backgroundSize: "48px 48px",
+          }}
         />
 
-        <div className="relative mx-auto max-w-4xl text-center">
-          {/* Badge */}
-          <div className="mx-auto mb-6 inline-flex items-center gap-2 rounded-full border border-blue-200 bg-blue-50 px-4 py-1.5 text-xs font-semibold text-blue-700 shadow-sm">
-            <Sparkles className="h-3.5 w-3.5" />
-            <span>Nouvelle plateforme — 100 premiers médecins gratuits 6 mois</span>
+        <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
+          {/* Left: copy + CTA */}
+          <div className="text-center lg:text-left">
+            {/* Accreditation badge */}
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#0891B2]/20 bg-[#F0FDFA] px-4 py-1.5 text-xs font-semibold text-[#0E7490] shadow-sm">
+              <BadgeCheck className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
+              <span>Plateforme de santé tunisienne · 65+ médecins vérifiés</span>
+            </div>
+
+            <h1 className="text-balance font-heading text-4xl font-black leading-[1.02] tracking-tight text-[#134E4A] sm:text-5xl lg:text-6xl xl:text-7xl">
+              Votre santé.{" "}
+              <span className="block">
+                Un{" "}
+                <span className="relative inline-block text-[#0891B2]">
+                  rendez-vous.
+                  <svg
+                    aria-hidden
+                    viewBox="0 0 300 12"
+                    className="absolute -bottom-1 left-0 h-2 w-full"
+                    preserveAspectRatio="none"
+                  >
+                    <path
+                      d="M2 8 Q 75 2, 150 6 T 298 5"
+                      fill="none"
+                      stroke="#22C55E"
+                      strokeWidth="4"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </span>
+              </span>
+            </h1>
+
+            <p className="mx-auto mt-6 max-w-xl text-balance text-lg leading-relaxed text-[#5E7574] lg:mx-0 lg:text-xl">
+              Trouvez un médecin et prenez rendez-vous en ligne en{" "}
+              <strong className="font-bold text-[#134E4A]">moins de 60 secondes</strong>.
+              Gratuit pour les patients. Disponible à Tunis, Ariana et Manouba.
+            </p>
+
+            {/* Search bar */}
+            <form onSubmit={handleSearch} className="mx-auto mt-8 max-w-xl lg:mx-0">
+              <div className="group flex h-16 items-center rounded-2xl border-2 border-[#E6F4F1] bg-white p-1.5 shadow-lg shadow-[#0891B2]/5 transition-all focus-within:border-[#0891B2] focus-within:shadow-xl focus-within:shadow-[#0891B2]/10">
+                <div className="flex h-full w-12 shrink-0 items-center justify-center text-[#5E7574]">
+                  <Search className="h-5 w-5" strokeWidth={2.5} />
+                </div>
+                <input
+                  type="text"
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder="Dermatologue, Tunis Centre..."
+                  className="h-full flex-1 border-0 bg-transparent px-2 text-base text-[#134E4A] placeholder:text-[#5E7574]/60 outline-none"
+                />
+                <button
+                  type="submit"
+                  className="group/btn inline-flex h-full items-center gap-2 rounded-xl bg-[#0891B2] px-6 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#0E7490] active:scale-[0.98]"
+                >
+                  <span>Rechercher</span>
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" strokeWidth={3} />
+                </button>
+              </div>
+            </form>
+
+            {/* Trust chips */}
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[#5E7574] lg:justify-start">
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-[#22C55E]" strokeWidth={2.5} />
+                <span className="font-medium">100% sécurisé · RGPD</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Clock className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
+                <span className="font-medium">Disponible 24/7</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Users className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
+                <span className="font-medium">+1000 patients actifs</span>
+              </div>
+            </div>
           </div>
 
-          <h1 className="text-balance text-5xl font-extrabold leading-[1.05] tracking-tighter text-gray-900 sm:text-6xl lg:text-7xl">
-            Réservez votre médecin{" "}
-            <span className="relative inline-block">
-              <span className="relative z-10 bg-gradient-to-br from-blue-600 to-blue-800 bg-clip-text text-transparent">
-                en 2 clics
-              </span>
-              <span
-                aria-hidden
-                className="absolute inset-x-0 bottom-1 -z-0 h-3 bg-yellow-200/70 sm:h-4"
-              />
-            </span>
-          </h1>
-          <p className="mx-auto mt-8 max-w-2xl text-balance text-lg leading-relaxed text-gray-600 sm:text-xl">
-            {t("heroSubtitle")}
-          </p>
-
-          <form
-            onSubmit={handleSearch}
-            className="mx-auto mt-10 max-w-2xl"
-          >
-            <div className="group flex h-16 items-center rounded-2xl border border-gray-200 bg-white p-2 shadow-[0_4px_32px_-4px_rgba(0,0,0,0.08)] ring-1 ring-gray-100 transition-all focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-500/20">
-              <div className="flex h-full w-12 shrink-0 items-center justify-center text-gray-400">
-                <Search className="h-5 w-5" />
-              </div>
-              <input
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="Dermatologue, La Marsa..."
-                className="h-full flex-1 border-0 bg-transparent px-2 text-base text-gray-900 placeholder:text-gray-400 outline-none"
-              />
-              <button
-                type="submit"
-                className="group/btn inline-flex h-full items-center gap-2 rounded-xl bg-gradient-to-b from-blue-600 to-blue-700 px-6 text-sm font-semibold text-white shadow-sm transition-all hover:from-blue-500 hover:to-blue-700 hover:shadow-md active:scale-[0.98]"
-              >
-                <span>{t("searchButton")}</span>
-                <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" />
-              </button>
-            </div>
-          </form>
-
-          {/* Trust signals */}
-          <div className="mt-10 flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-gray-500">
-            <div className="flex items-center gap-1.5">
-              <MapPin className="h-4 w-4 text-blue-600" />
-              <span>Tunis • Ariana • Manouba</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-green-600" />
-              <span>100% sécurisé • Conforme RGPD</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-              <span>Avis patients vérifiés</span>
-            </div>
+          {/* Right: phone mockup */}
+          <div className="relative hidden lg:block">
+            <PhoneMockup />
           </div>
         </div>
       </section>
 
-      {/* ─────────────────────────── SOS BANNER ─────────────────────────── */}
-      <section className="border-y border-red-100 bg-gradient-to-r from-red-50 via-orange-50 to-red-50 px-4 py-6 sm:px-6">
-        <div className="mx-auto flex max-w-5xl flex-col items-center justify-between gap-3 sm:flex-row">
-          <div className="flex items-center gap-3">
-            <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-red-600 text-white shadow-sm">
-              <Siren className="h-5 w-5" />
-              <span className="absolute -right-0.5 -top-0.5 flex h-3 w-3">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-400 opacity-75"></span>
-                <span className="relative inline-flex h-3 w-3 rounded-full bg-red-500"></span>
+      {/* ═══════════════════════ STATS STRIP ═══════════════════════ */}
+      <section className="border-y border-[#E6F4F1] bg-[#F0FDFA]/50 py-10">
+        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 px-6 md:grid-cols-4">
+          {[
+            { value: "65+", label: "Médecins vérifiés", icon: Stethoscope },
+            { value: "10", label: "Spécialités", icon: Sparkles },
+            { value: "4", label: "Quartiers couverts", icon: MapPin },
+            { value: "4.8/5", label: "Avis patients", icon: Star },
+          ].map(({ value, label, icon: Icon }) => (
+            <div key={label} className="flex items-center gap-3">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-[#0891B2] ring-1 ring-[#E6F4F1]">
+                <Icon className="h-5 w-5" strokeWidth={2.5} />
+              </div>
+              <div>
+                <div className="font-heading text-2xl font-black text-[#134E4A]">
+                  {value}
+                </div>
+                <div className="text-xs font-medium text-[#5E7574]">{label}</div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* ═══════════════════════ SOS BANNER ═══════════════════════ */}
+      <section className="bg-white px-4 py-12 sm:px-6">
+        <div className="mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-[#DC2626] to-[#991B1B] shadow-xl">
+          <div className="grid gap-8 p-8 md:grid-cols-[auto_1fr_auto] md:items-center md:p-10">
+            <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur-sm">
+              <Siren className="h-8 w-8 text-white" strokeWidth={2.5} />
+              <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/40"></span>
+                <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-white ring-2 ring-[#DC2626]"></span>
               </span>
-            </span>
-            <div>
-              <p className="text-sm font-semibold text-red-900">Besoin d'un médecin maintenant ?</p>
-              <p className="text-xs text-red-700">
-                Consultation urgente non-vitale. Réponse en moins de 2 minutes.
+            </div>
+            <div className="min-w-0">
+              <h3 className="font-heading text-2xl font-bold text-white">
+                Besoin d&apos;un médecin maintenant ?
+              </h3>
+              <p className="mt-1 text-sm text-red-100">
+                SOS Docteur · Consultation urgente non-vitale · Réponse en moins de 2 minutes
               </p>
             </div>
+            <Link
+              href="/sos"
+              className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#DC2626] shadow-sm transition-all hover:bg-red-50 active:scale-[0.98]"
+            >
+              <Zap className="h-4 w-4" strokeWidth={3} />
+              <span>Activer SOS</span>
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
+            </Link>
           </div>
-          <Link
-            href="/sos"
-            className="group inline-flex items-center gap-2 rounded-xl bg-red-600 px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition-all hover:bg-red-700 hover:shadow-md"
-          >
-            <Zap className="h-4 w-4" />
-            <span>Activer SOS Docteur</span>
-            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-          </Link>
         </div>
       </section>
 
-      {/* ─────────────────────── COMMENT ÇA MARCHE ─────────────────────── */}
-      <section className="bg-gray-50/50 px-4 py-24 sm:px-6">
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
-              En 3 étapes
-            </p>
-            <h2 className="mt-2 text-balance text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              {t("howItWorks")}
+      {/* ═══════════════════════ HOW IT WORKS ═══════════════════════ */}
+      <section className="bg-white px-4 py-24 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#F0FDFA] px-4 py-1 text-xs font-bold uppercase tracking-wider text-[#0E7490]">
+              <TrendingUp className="h-3.5 w-3.5" />
+              3 étapes simples
+            </div>
+            <h2 className="mt-4 text-balance font-heading text-3xl font-black tracking-tight text-[#134E4A] sm:text-4xl">
+              Prendre rendez-vous n&apos;a jamais été aussi facile
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base text-gray-500">
-              De la recherche à la réservation, en moins de 60 secondes.
+            <p className="mt-4 text-base text-[#5E7574]">
+              De la recherche à la confirmation, en moins de 60 secondes chrono.
             </p>
           </div>
 
-          <div className="mt-16 grid gap-5 sm:grid-cols-3">
+          <div className="mt-16 grid gap-6 md:grid-cols-3">
             {[
               {
+                step: "01",
                 icon: Search,
-                title: t("step1Title"),
-                desc: t("step1Desc"),
-                color: "blue",
+                title: "Cherchez",
+                desc: "Trouvez votre médecin par spécialité, ville ou quartier. Filtrez par disponibilité.",
               },
               {
+                step: "02",
                 icon: CalendarCheck2,
-                title: t("step2Title"),
-                desc: t("step2Desc"),
-                color: "purple",
+                title: "Choisissez",
+                desc: "Consultez les créneaux disponibles en temps réel et sélectionnez celui qui vous convient.",
               },
               {
+                step: "03",
                 icon: CheckCircle2,
-                title: t("step3Title"),
-                desc: t("step3Desc"),
-                color: "green",
+                title: "Réservez",
+                desc: "Confirmez en 2 clics. Vous recevrez un SMS de rappel la veille du rendez-vous.",
               },
-            ].map((step, i) => {
-              const Icon = step.icon;
-              const colorMap: Record<string, string> = {
-                blue: "bg-blue-100 text-blue-600 ring-blue-200",
-                purple: "bg-purple-100 text-purple-600 ring-purple-200",
-                green: "bg-green-100 text-green-600 ring-green-200",
-              };
+            ].map((s) => {
+              const Icon = s.icon;
               return (
                 <div
-                  key={step.title}
-                  className="group relative overflow-hidden rounded-2xl border border-gray-100 bg-white p-7 shadow-sm transition-all hover:-translate-y-1 hover:shadow-xl"
+                  key={s.step}
+                  className="group relative overflow-hidden rounded-3xl border border-[#E6F4F1] bg-white p-8 transition-all hover:-translate-y-1 hover:border-[#0891B2]/30 hover:shadow-xl hover:shadow-[#0891B2]/5"
                 >
-                  <div className="absolute -right-6 -top-6 text-[120px] font-black leading-none text-gray-50 transition-all group-hover:text-gray-100">
-                    0{i + 1}
+                  <div className="absolute -right-4 -top-4 font-heading text-8xl font-black leading-none text-[#F0FDFA] transition-colors group-hover:text-[#E6F4F1]">
+                    {s.step}
                   </div>
-                  <div
-                    className={`relative mb-5 inline-flex h-14 w-14 items-center justify-center rounded-xl ring-1 ${colorMap[step.color]}`}
-                  >
-                    <Icon className="h-7 w-7" strokeWidth={2} />
+                  <div className="relative">
+                    <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0891B2] text-white shadow-lg shadow-[#0891B2]/20">
+                      <Icon className="h-7 w-7" strokeWidth={2.5} />
+                    </div>
+                    <h3 className="font-heading text-xl font-bold text-[#134E4A]">
+                      {s.title}
+                    </h3>
+                    <p className="mt-3 text-sm leading-relaxed text-[#5E7574]">
+                      {s.desc}
+                    </p>
                   </div>
-                  <h3 className="relative text-xl font-bold text-gray-900">{step.title}</h3>
-                  <p className="relative mt-2 text-sm leading-relaxed text-gray-600">
-                    {step.desc}
-                  </p>
                 </div>
               );
             })}
@@ -236,34 +277,35 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─────────────────────── PAR SPÉCIALITÉ ─────────────────────── */}
-      <section className="bg-white px-4 py-24 sm:px-6">
-        <div className="mx-auto max-w-5xl">
-          <div className="text-center">
-            <p className="text-sm font-semibold uppercase tracking-wider text-blue-600">
+      {/* ═══════════════════════ SPECIALTIES ═══════════════════════ */}
+      <section className="bg-[#F0FDFA]/50 px-4 py-24 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1 text-xs font-bold uppercase tracking-wider text-[#0E7490] ring-1 ring-[#E6F4F1]">
+              <Stethoscope className="h-3.5 w-3.5" />
               Spécialités
-            </p>
-            <h2 className="mt-2 text-balance text-3xl font-extrabold tracking-tight text-gray-900 sm:text-4xl">
-              {t("bySpecialty")}
+            </div>
+            <h2 className="mt-4 text-balance font-heading text-3xl font-black tracking-tight text-[#134E4A] sm:text-4xl">
+              Trouvez votre médecin par spécialité
             </h2>
-            <p className="mx-auto mt-4 max-w-xl text-base text-gray-500">
+            <p className="mt-4 text-base text-[#5E7574]">
               10 spécialités disponibles dans le Grand Tunis.
             </p>
           </div>
 
-          <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5 sm:gap-4">
+          <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             {SPECIALTIES.map((specialty) => {
               const Icon = SPECIALTY_ICONS[specialty.id] ?? Stethoscope;
               return (
                 <Link
                   key={specialty.id}
                   href={`/recherche?specialty=${specialty.id}`}
-                  className="group relative flex flex-col items-center gap-3 rounded-2xl border border-gray-100 bg-white p-5 text-center shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg"
+                  className="group relative flex flex-col items-center gap-3 rounded-2xl border border-[#E6F4F1] bg-white p-6 text-center transition-all hover:-translate-y-0.5 hover:border-[#0891B2] hover:shadow-lg hover:shadow-[#0891B2]/10"
                 >
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-50 to-blue-100 text-blue-600 ring-1 ring-blue-100 transition-all group-hover:scale-105 group-hover:from-blue-100 group-hover:to-blue-200">
-                    <Icon className="h-6 w-6" strokeWidth={2} />
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#F0FDFA] text-[#0891B2] transition-all group-hover:scale-105 group-hover:bg-[#0891B2] group-hover:text-white">
+                    <Icon className="h-6 w-6" strokeWidth={2.5} />
                   </div>
-                  <span className="text-xs font-semibold text-gray-700 group-hover:text-blue-700 sm:text-sm">
+                  <span className="text-xs font-bold text-[#134E4A] group-hover:text-[#0891B2] sm:text-sm">
                     {specialty.label}
                   </span>
                 </Link>
@@ -273,36 +315,52 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ─────────────────────── POUR LES MÉDECINS ─────────────────────── */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-blue-950 px-4 py-24 sm:px-6">
+      {/* ═══════════════════════ FOR DOCTORS ═══════════════════════ */}
+      <section className="relative overflow-hidden bg-[#134E4A] px-4 py-24 sm:px-6">
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle,_theme(colors.white/0.08)_1px,_transparent_1px)] [background-size:32px_32px]"
+          className="pointer-events-none absolute inset-0 opacity-[0.07]"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
+            backgroundSize: "32px 32px",
+          }}
         />
-        <div className="relative mx-auto grid max-w-5xl items-center gap-12 md:grid-cols-2">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute right-0 top-0 h-[600px] w-[600px] rounded-full bg-[#22C55E]/10 blur-3xl"
+        />
+
+        <div className="relative mx-auto grid max-w-6xl items-center gap-16 md:grid-cols-2">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-blue-500/30 bg-blue-500/10 px-4 py-1.5 text-xs font-semibold text-blue-300">
-              <Sparkles className="h-3.5 w-3.5" />
-              Programme Fondateur
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#22C55E]/40 bg-[#22C55E]/10 px-4 py-1.5 text-xs font-bold text-[#22C55E]">
+              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
+              PROGRAMME FONDATEUR · PLACES LIMITÉES
             </div>
-            <h2 className="mt-6 text-balance text-4xl font-extrabold tracking-tight text-white sm:text-5xl">
-              {t("forDoctors")}
+            <h2 className="mt-6 font-heading text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl">
+              Vous êtes médecin ?{" "}
+              <span className="text-[#22D3EE]">Rejoignez-nous.</span>
             </h2>
-            <p className="mt-5 text-lg leading-relaxed text-slate-300">
-              Rejoignez les <span className="font-bold text-white">100 premiers médecins</span>{" "}
-              et bénéficiez de <span className="font-bold text-white">6 mois gratuits</span>.
-              Après, à partir de 49 DT/mois.
+            <p className="mt-6 text-lg leading-relaxed text-[#A7F3D0]">
+              Les <strong className="font-bold text-white">100 premiers médecins</strong>{" "}
+              inscrits bénéficient de{" "}
+              <strong className="font-bold text-white">6 mois gratuits</strong>. Après, à
+              partir de <strong className="font-bold text-white">49 DT/mois</strong>.
             </p>
 
-            <ul className="mt-8 space-y-3">
-              {benefits.map((benefit) => {
-                const Icon = benefit.icon;
+            <ul className="mt-10 space-y-4">
+              {[
+                { icon: Clock, text: "Agenda en ligne disponible 24h/24, 7j/7" },
+                { icon: MessageSquareText, text: "Rappels SMS automatiques pour réduire les no-shows" },
+                { icon: Search, text: "Vitrine professionnelle référencée sur Google" },
+                { icon: ShieldCheck, text: "Support dédié WhatsApp en moins de 2 heures" },
+              ].map((b) => {
+                const Icon = b.icon;
                 return (
-                  <li key={benefit.text} className="flex items-start gap-3">
-                    <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-blue-500/20 text-blue-300 ring-1 ring-blue-500/30">
-                      <Icon className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  <li key={b.text} className="flex items-start gap-4">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#22C55E] text-[#134E4A]">
+                      <Icon className="h-4 w-4" strokeWidth={3} />
                     </span>
-                    <span className="text-sm leading-6 text-slate-200">{benefit.text}</span>
+                    <span className="text-base leading-7 text-white">{b.text}</span>
                   </li>
                 );
               })}
@@ -311,106 +369,264 @@ export default function HomePage() {
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/inscription"
-                className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-base font-bold text-slate-900 shadow-lg transition-all hover:bg-blue-50 active:scale-[0.98]"
+                className="group inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-[#22C55E] px-8 font-heading text-base font-bold text-[#134E4A] shadow-lg shadow-[#22C55E]/20 transition-all hover:bg-[#4ADE80] active:scale-[0.98]"
               >
-                <span>{t("forDoctorsCta")}</span>
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                <span>Créer mon compte gratuit</span>
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
               </Link>
               <Link
                 href="/connexion"
-                className="inline-flex h-12 items-center justify-center gap-2 rounded-xl border border-white/20 bg-white/5 px-6 text-base font-semibold text-white backdrop-blur-sm transition-all hover:bg-white/10"
+                className="inline-flex h-14 items-center justify-center gap-2 rounded-xl border-2 border-white/20 bg-white/5 px-8 text-base font-bold text-white backdrop-blur-sm transition-all hover:bg-white/10"
               >
-                J'ai déjà un compte
+                J&apos;ai déjà un compte
               </Link>
             </div>
           </div>
 
           <div className="relative hidden md:block">
-            {/* Floating mockup card */}
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="relative rotate-2 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-md transition-transform hover:rotate-0">
-                <div className="mb-4 flex items-center gap-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 text-white">
-                    <Stethoscope className="h-6 w-6" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-white">Dr. Sonia Trabelsi</p>
-                    <p className="text-xs text-slate-400">Dermatologue · Tunis</p>
-                  </div>
-                </div>
-                <div className="space-y-2">
-                  {[
-                    { time: "09:00", status: "Confirmé" },
-                    { time: "10:30", status: "Confirmé" },
-                    { time: "11:00", status: "En attente" },
-                    { time: "14:00", status: "Confirmé" },
-                  ].map((slot) => (
-                    <div
-                      key={slot.time}
-                      className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2 text-xs"
-                    >
-                      <span className="font-mono font-bold text-white">{slot.time}</span>
-                      <span
-                        className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                          slot.status === "Confirmé"
-                            ? "bg-green-500/20 text-green-300"
-                            : "bg-yellow-500/20 text-yellow-300"
-                        }`}
-                      >
-                        {slot.status}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-                <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3">
-                  <span className="text-xs text-slate-400">Aujourd'hui</span>
-                  <span className="text-xs font-bold text-white">12 RDV</span>
-                </div>
-              </div>
-            </div>
-            <div className="h-[380px]" />
+            <DoctorDashboardMockup />
           </div>
         </div>
       </section>
 
-      {/* ──────────────────────────── FOOTER ──────────────────────────── */}
-      <footer className="border-t border-gray-100 bg-white px-4 py-12 sm:px-6">
-        <div className="mx-auto max-w-5xl">
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:justify-between">
-            <div className="flex items-center gap-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-gradient-to-br from-blue-500 to-blue-700 text-white">
-                <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
-              </span>
-              <span className="text-lg font-extrabold text-gray-900">
-                Doktori<span className="text-blue-600">.tn</span>
-              </span>
+      {/* ═══════════════════════ FOOTER ═══════════════════════ */}
+      <footer className="bg-white px-4 py-16 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="grid gap-10 md:grid-cols-[2fr_1fr_1fr_1fr]">
+            <div>
+              <div className="flex items-center gap-2">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0891B2] text-white">
+                  <Stethoscope className="h-5 w-5" strokeWidth={2.5} />
+                </div>
+                <span className="font-heading text-xl font-black text-[#134E4A]">
+                  Doktori<span className="text-[#0891B2]">.tn</span>
+                </span>
+              </div>
+              <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#5E7574]">
+                La plateforme de prise de rendez-vous médicaux en ligne en Tunisie.
+                Conçu avec soin pour les patients et les médecins tunisiens.
+              </p>
+              <div className="mt-6 flex items-center gap-2">
+                <a
+                  href="#"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#E6F4F1] text-[#134E4A] transition-colors hover:border-[#0891B2] hover:text-[#0891B2]"
+                  aria-label="iOS App"
+                >
+                  <Apple className="h-4 w-4" strokeWidth={2} />
+                </a>
+                <a
+                  href="#"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#E6F4F1] text-[#134E4A] transition-colors hover:border-[#0891B2] hover:text-[#0891B2]"
+                  aria-label="Android App"
+                >
+                  <Smartphone className="h-4 w-4" strokeWidth={2} />
+                </a>
+              </div>
             </div>
-            <nav className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm">
-              <Link href="/legal/mentions" className="text-gray-500 transition-colors hover:text-gray-900">
-                Mentions légales
-              </Link>
-              <Link href="/legal/cgu" className="text-gray-500 transition-colors hover:text-gray-900">
-                CGU
-              </Link>
-              <Link href="/legal/confidentialite" className="text-gray-500 transition-colors hover:text-gray-900">
-                Confidentialité
-              </Link>
-              <a href="#" className="text-gray-500 transition-colors hover:text-gray-900">
-                FAQ
-              </a>
-              <a href="#" className="text-gray-500 transition-colors hover:text-gray-900">
-                Contact
-              </a>
-            </nav>
+
+            <div>
+              <h4 className="font-heading text-sm font-bold text-[#134E4A]">Produit</h4>
+              <ul className="mt-4 space-y-2 text-sm">
+                <li><Link href="/recherche" className="text-[#5E7574] hover:text-[#0891B2]">Rechercher</Link></li>
+                <li><Link href="/sos" className="text-[#5E7574] hover:text-[#0891B2]">SOS Docteur</Link></li>
+                <li><Link href="/inscription" className="text-[#5E7574] hover:text-[#0891B2]">Espace médecin</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-heading text-sm font-bold text-[#134E4A]">Légal</h4>
+              <ul className="mt-4 space-y-2 text-sm">
+                <li><Link href="/legal/cgu" className="text-[#5E7574] hover:text-[#0891B2]">CGU</Link></li>
+                <li><Link href="/legal/confidentialite" className="text-[#5E7574] hover:text-[#0891B2]">Confidentialité</Link></li>
+                <li><Link href="/legal/mentions" className="text-[#5E7574] hover:text-[#0891B2]">Mentions légales</Link></li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="font-heading text-sm font-bold text-[#134E4A]">Contact</h4>
+              <ul className="mt-4 space-y-2 text-sm">
+                <li><a href="mailto:contact@doktori.tn" className="text-[#5E7574] hover:text-[#0891B2]">contact@doktori.tn</a></li>
+                <li><span className="text-[#5E7574]">Support WhatsApp</span></li>
+                <li><span className="text-[#5E7574]">Tunis, Tunisie</span></li>
+              </ul>
+            </div>
           </div>
-          <div className="mt-8 border-t border-gray-100 pt-6 text-center">
-            <p className="text-xs text-gray-400">
-              Doktori &copy; 2026 — La prise de rendez-vous médicale en Tunisie.
-              Conçu avec ❤️ pour les patients et les médecins tunisiens.
+
+          <div className="mt-12 border-t border-[#E6F4F1] pt-8 text-center">
+            <p className="text-xs text-[#5E7574]">
+              Doktori © 2026 · Fait avec soin pour la santé des Tunisiens
             </p>
           </div>
         </div>
       </footer>
+    </div>
+  );
+}
+
+/* ═════════════════ Phone Mockup Component ═════════════════ */
+function PhoneMockup() {
+  return (
+    <div className="relative mx-auto aspect-[9/19] w-full max-w-[340px]">
+      {/* Phone frame */}
+      <div className="absolute inset-0 rounded-[3rem] bg-[#134E4A] p-3 shadow-2xl shadow-[#0891B2]/20">
+        <div className="h-full w-full overflow-hidden rounded-[2.5rem] bg-white">
+          {/* Status bar */}
+          <div className="flex items-center justify-between px-6 py-3 text-[10px] font-bold text-[#134E4A]">
+            <span>9:41</span>
+            <span>●●● ●●</span>
+          </div>
+
+          {/* Mock app header */}
+          <div className="px-4">
+            <div className="flex items-center gap-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0891B2] text-white">
+                <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
+              </div>
+              <span className="text-sm font-black text-[#134E4A]">Doktori</span>
+            </div>
+
+            {/* Search input mock */}
+            <div className="mt-4 flex h-11 items-center rounded-xl border border-[#E6F4F1] bg-[#F0FDFA] px-3">
+              <Search className="h-4 w-4 text-[#5E7574]" />
+              <span className="ml-2 text-xs text-[#5E7574]">Dermatologue...</span>
+            </div>
+
+            {/* Doctor cards mock */}
+            <div className="mt-4 space-y-2">
+              {[
+                { name: "Dr. Sonia Trabelsi", spec: "Dermatologue", price: "80", color: "#0891B2" },
+                { name: "Dr. Karim Ben Ali", spec: "Généraliste", price: "40", color: "#22C55E" },
+                { name: "Dr. Leila Ben Othman", spec: "Dermatologue", price: "80", color: "#0891B2" },
+              ].map((d, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-3 rounded-xl border border-[#E6F4F1] bg-white p-3"
+                >
+                  <div
+                    className="flex h-10 w-10 items-center justify-center rounded-lg text-xs font-bold text-white"
+                    style={{ backgroundColor: d.color }}
+                  >
+                    {d.name.split(" ")[1][0]}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-[11px] font-bold text-[#134E4A]">
+                      {d.name}
+                    </p>
+                    <p className="truncate text-[9px] text-[#5E7574]">{d.spec}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[11px] font-black text-[#0891B2]">{d.price}</p>
+                    <p className="text-[8px] text-[#5E7574]">DT</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Bottom nav */}
+            <div className="mt-4 flex items-center justify-around border-t border-[#E6F4F1] pt-3">
+              <div className="flex flex-col items-center gap-0.5">
+                <Search className="h-4 w-4 text-[#0891B2]" />
+                <span className="text-[8px] font-bold text-[#0891B2]">Chercher</span>
+              </div>
+              <div className="flex flex-col items-center gap-0.5">
+                <Siren className="h-4 w-4 text-[#DC2626]" />
+                <span className="text-[8px] font-bold text-[#DC2626]">SOS</span>
+              </div>
+              <div className="flex flex-col items-center gap-0.5">
+                <CalendarCheck2 className="h-4 w-4 text-[#5E7574]" />
+                <span className="text-[8px] font-bold text-[#5E7574]">Mes RDV</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Floating badge */}
+      <div className="absolute -left-8 top-1/3 rotate-[-8deg] rounded-xl bg-white p-4 shadow-xl ring-1 ring-[#E6F4F1]">
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#22C55E]">
+            <CheckCircle2 className="h-4 w-4 text-white" strokeWidth={3} />
+          </div>
+          <div>
+            <p className="text-xs font-bold text-[#134E4A]">RDV confirmé</p>
+            <p className="text-[10px] text-[#5E7574]">15 avril · 14:30</p>
+          </div>
+        </div>
+      </div>
+      <div className="absolute -right-4 bottom-1/4 rotate-[6deg] rounded-xl bg-white p-3 shadow-xl ring-1 ring-[#E6F4F1]">
+        <div className="flex items-center gap-2">
+          <Star className="h-4 w-4 fill-[#FBBF24] text-[#FBBF24]" />
+          <span className="text-xs font-black text-[#134E4A]">4.8/5</span>
+        </div>
+        <p className="mt-0.5 text-[9px] text-[#5E7574]">1 247 avis</p>
+      </div>
+    </div>
+  );
+}
+
+/* ═════════════════ Doctor Dashboard Mockup ═════════════════ */
+function DoctorDashboardMockup() {
+  return (
+    <div className="relative mx-auto max-w-sm">
+      <div className="rotate-1 rounded-2xl border border-white/10 bg-white/5 p-6 shadow-2xl backdrop-blur-md">
+        <div className="mb-5 flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white/10 text-white ring-1 ring-white/20">
+            <Stethoscope className="h-5 w-5" strokeWidth={2.5} />
+          </div>
+          <div>
+            <p className="font-heading text-sm font-bold text-white">Dr. Sonia Trabelsi</p>
+            <p className="text-xs text-[#A7F3D0]">Dermatologue · Tunis</p>
+          </div>
+          <div className="ml-auto">
+            <div className="flex items-center gap-1 rounded-full bg-[#22C55E]/20 px-2.5 py-1 text-[10px] font-bold text-[#22C55E]">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>
+              Actif
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-4 grid grid-cols-2 gap-2">
+          <div className="rounded-lg bg-white/5 p-3">
+            <p className="text-[10px] uppercase tracking-wider text-[#A7F3D0]">Aujourd&apos;hui</p>
+            <p className="mt-1 font-heading text-2xl font-black text-white">12</p>
+            <p className="text-[10px] text-[#A7F3D0]">rendez-vous</p>
+          </div>
+          <div className="rounded-lg bg-white/5 p-3">
+            <p className="text-[10px] uppercase tracking-wider text-[#A7F3D0]">Ce mois</p>
+            <p className="mt-1 font-heading text-2xl font-black text-white">6 200</p>
+            <p className="text-[10px] text-[#A7F3D0]">DT estimés</p>
+          </div>
+        </div>
+
+        <div className="space-y-1.5">
+          {[
+            { time: "09:00", patient: "Amina B.", status: "confirmed" },
+            { time: "10:30", patient: "Youssef K.", status: "confirmed" },
+            { time: "11:00", patient: "Leila M.", status: "pending" },
+            { time: "14:00", patient: "Mohamed T.", status: "confirmed" },
+          ].map((slot, i) => (
+            <div
+              key={i}
+              className="flex items-center justify-between rounded-lg bg-white/5 px-3 py-2"
+            >
+              <div className="flex items-center gap-3">
+                <span className="font-mono text-xs font-bold text-white">
+                  {slot.time}
+                </span>
+                <span className="text-xs text-[#A7F3D0]">{slot.patient}</span>
+              </div>
+              <span
+                className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
+                  slot.status === "confirmed"
+                    ? "bg-[#22C55E]/20 text-[#22C55E]"
+                    : "bg-yellow-400/20 text-yellow-300"
+                }`}
+              >
+                {slot.status === "confirmed" ? "Confirmé" : "En attente"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }

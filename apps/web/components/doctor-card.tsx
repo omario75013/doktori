@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
-import { MapPin, ArrowRight, Star, Clock } from "lucide-react";
+import { MapPin, ArrowRight, Star, Clock, BadgeCheck } from "lucide-react";
 
 interface Props {
   doctor: {
@@ -14,24 +14,9 @@ interface Props {
   };
 }
 
-// Deterministic gradient based on name to avoid hydration mismatch
-function avatarGradient(name: string): string {
-  const gradients = [
-    "from-blue-500 to-indigo-600",
-    "from-emerald-500 to-teal-600",
-    "from-purple-500 to-pink-600",
-    "from-amber-500 to-orange-600",
-    "from-rose-500 to-red-600",
-    "from-cyan-500 to-blue-600",
-  ];
-  const hash = name.split("").reduce((acc, c) => acc + c.charCodeAt(0), 0);
-  return gradients[hash % gradients.length];
-}
-
 export function DoctorCard({ doctor }: Props) {
   const specialty = SPECIALTIES.find((s) => s.id === doctor.specialty);
   const city = CITIES.find((c) => c.id === doctor.city);
-  const gradient = avatarGradient(doctor.name);
   const initials = doctor.name
     .replace(/^Dr\.?\s*/i, "")
     .split(" ")
@@ -43,39 +28,56 @@ export function DoctorCard({ doctor }: Props) {
   return (
     <Link
       href={`/medecin/${doctor.slug}`}
-      className="group relative block overflow-hidden rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-lg"
+      className="group relative block overflow-hidden rounded-3xl border border-[#E6F4F1] bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-[#0891B2]/40 hover:shadow-xl hover:shadow-[#0891B2]/8"
     >
-      {/* Subtle gradient shine on hover */}
+      {/* Subtle teal wash on hover */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-blue-50/0 via-blue-50/0 to-blue-50/50 opacity-0 transition-opacity group-hover:opacity-100"
+        className="pointer-events-none absolute inset-0 bg-gradient-to-br from-[#F0FDFA] via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100"
       />
 
       <div className="relative flex items-start gap-4">
-        {/* Avatar with gradient */}
-        <div
-          className={`flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br ${gradient} text-lg font-bold text-white shadow-sm ring-1 ring-black/5`}
-        >
-          {initials}
+        {/* Avatar — photo or initials fallback */}
+        <div className="relative shrink-0">
+          {doctor.photoUrl ? (
+            <div className="h-20 w-20 overflow-hidden rounded-2xl ring-1 ring-[#E6F4F1]">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={doctor.photoUrl}
+                alt={`Portrait du ${doctor.name}`}
+                className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                loading="lazy"
+              />
+            </div>
+          ) : (
+            <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-[#0891B2] font-heading text-xl font-black text-white ring-1 ring-[#0891B2]/20">
+              {initials}
+            </div>
+          )}
+          {/* Verified badge */}
+          <div className="absolute -bottom-1 -right-1 flex h-6 w-6 items-center justify-center rounded-full bg-white ring-2 ring-white">
+            <BadgeCheck className="h-5 w-5 fill-[#22C55E] text-white" strokeWidth={2.5} />
+          </div>
         </div>
 
         {/* Info */}
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-base font-bold text-gray-900">{doctor.name}</h3>
-          <p className="mt-0.5 text-sm font-medium text-blue-600">{specialty?.label}</p>
-          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-gray-500">
-            <span className="flex items-center gap-1">
-              <MapPin className="h-3 w-3" />
-              {city?.label}
+          <h3 className="font-heading text-lg font-bold text-[#134E4A]">{doctor.name}</h3>
+          <p className="mt-0.5 text-sm font-semibold text-[#0891B2]">{specialty?.label}</p>
+
+          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
+            <span className="flex items-center gap-1 text-[#5E7574]">
+              <MapPin className="h-3.5 w-3.5" strokeWidth={2.5} />
+              <span className="font-medium">{city?.label}</span>
             </span>
             <span className="flex items-center gap-1">
-              <Star className="h-3 w-3 fill-yellow-400 text-yellow-400" />
-              <span className="font-semibold text-gray-700">4.8</span>
-              <span className="text-gray-400">(24)</span>
+              <Star className="h-3.5 w-3.5 fill-[#FBBF24] text-[#FBBF24]" />
+              <span className="font-bold text-[#134E4A]">4.8</span>
+              <span className="text-[#5E7574]">(24)</span>
             </span>
-            <span className="flex items-center gap-1">
-              <Clock className="h-3 w-3 text-green-600" />
-              <span className="font-medium text-green-700">Dispo aujourd'hui</span>
+            <span className="flex items-center gap-1 rounded-full bg-[#22C55E]/10 px-2 py-0.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>
+              <span className="font-bold text-[#16A34A]">Dispo aujourd&apos;hui</span>
             </span>
           </div>
         </div>
@@ -83,15 +85,15 @@ export function DoctorCard({ doctor }: Props) {
         {/* Price */}
         {doctor.consultationFee && (
           <div className="shrink-0 text-right">
-            <div className="rounded-xl bg-blue-50 px-3 py-2 ring-1 ring-blue-100">
-              <div className="text-[10px] font-semibold uppercase tracking-wider text-blue-600">
+            <div className="rounded-2xl border border-[#E6F4F1] bg-[#F0FDFA] px-4 py-3">
+              <div className="text-[9px] font-bold uppercase tracking-wider text-[#0E7490]">
                 Consultation
               </div>
-              <div className="mt-0.5 flex items-baseline gap-0.5">
-                <span className="text-xl font-extrabold text-blue-900">
+              <div className="mt-0.5 flex items-baseline justify-end gap-1">
+                <span className="font-heading text-2xl font-black text-[#0891B2]">
                   {doctor.consultationFee / 1000}
                 </span>
-                <span className="text-xs font-semibold text-blue-700">DT</span>
+                <span className="text-xs font-bold text-[#0E7490]">DT</span>
               </div>
             </div>
           </div>
@@ -99,11 +101,14 @@ export function DoctorCard({ doctor }: Props) {
       </div>
 
       {/* CTA row */}
-      <div className="relative mt-4 flex items-center justify-between border-t border-gray-100 pt-3">
-        <span className="truncate text-xs text-gray-500">{doctor.address}</span>
-        <span className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-blue-600 transition-all group-hover:gap-1.5">
+      <div className="relative mt-5 flex items-center justify-between border-t border-[#E6F4F1] pt-4">
+        <span className="flex items-center gap-1.5 truncate text-xs text-[#5E7574]">
+          <Clock className="h-3.5 w-3.5 shrink-0" />
+          <span className="truncate">{doctor.address}</span>
+        </span>
+        <span className="inline-flex shrink-0 items-center gap-1 rounded-lg bg-[#0891B2] px-3 py-1.5 text-xs font-bold text-white transition-all group-hover:bg-[#0E7490] group-hover:gap-1.5">
           Prendre RDV
-          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
+          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
         </span>
       </div>
     </Link>

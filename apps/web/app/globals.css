@@ -2,6 +2,9 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 
+/* ── Doktori fonts: Figtree (headings) + Noto Sans (body) ────────── */
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&family=Noto+Sans:wght@400;500;600;700&display=swap');
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
@@ -49,24 +52,39 @@
 }
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  /* ── Doktori palette — medical teal + health green (WCAG AAA) ── */
+  /* Figtree for headings, Noto Sans for body */
+  --font-sans: "Noto Sans", system-ui, -apple-system, sans-serif;
+  --font-heading: "Figtree", "Noto Sans", system-ui, sans-serif;
+
+  /* Core brand — medical teal #0891B2, health green #22C55E */
+  --doktori-teal: #0891B2;
+  --doktori-teal-dark: #0E7490;
+  --doktori-teal-light: #22D3EE;
+  --doktori-green: #22C55E;
+  --doktori-green-dark: #16A34A;
+  --doktori-ink: #134E4A;
+  --doktori-mist: #F0FDFA;
+  --doktori-cream: #FAFDFC;
+
+  --background: #FFFFFF;
+  --foreground: #134E4A;
+  --card: #FFFFFF;
+  --card-foreground: #134E4A;
+  --popover: #FFFFFF;
+  --popover-foreground: #134E4A;
+  --primary: #0891B2;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F0FDFA;
+  --secondary-foreground: #134E4A;
+  --muted: #F0FDFA;
+  --muted-foreground: #5E7574;
+  --accent: #22C55E;
+  --accent-foreground: #FFFFFF;
+  --destructive: #DC2626;
+  --border: #E6F4F1;
+  --input: #E6F4F1;
+  --ring: #0891B2;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -123,8 +141,26 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-family: "Noto Sans", system-ui, -apple-system, sans-serif;
+    font-feature-settings: "ss01", "cv11";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
   }
-  html {
-    @apply font-sans;
+  h1, h2, h3, h4, h5, h6 {
+    font-family: "Figtree", "Noto Sans", system-ui, sans-serif;
+    letter-spacing: -0.02em;
+  }
+  /* WCAG AAA: focus rings for keyboard nav */
+  *:focus-visible {
+    outline: 3px solid #0891B2;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  /* Respect user motion preferences */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
   }
 }
