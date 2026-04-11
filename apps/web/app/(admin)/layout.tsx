@@ -1,0 +1,73 @@
+import { auth } from "@/lib/auth";
+import { isSuperAdmin } from "@/lib/admin";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import {
+  LayoutDashboard,
+  Stethoscope,
+  UserCheck,
+  BarChart3,
+  Shield,
+  LogOut,
+} from "lucide-react";
+
+export default async function AdminLayout({ children }: { children: React.ReactNode }) {
+  const session = await auth();
+  if (!session) redirect("/connexion");
+  if (!isSuperAdmin(session.user?.email)) redirect("/");
+
+  const links = [
+    { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard },
+    { href: "/admin/medecins", label: "Médecins", icon: Stethoscope },
+    { href: "/admin/validation", label: "Validation", icon: UserCheck },
+    { href: "/admin/stats", label: "Statistiques", icon: BarChart3 },
+  ];
+
+  return (
+    <div className="min-h-screen flex bg-slate-50">
+      <aside className="w-64 bg-slate-900 text-white flex flex-col">
+        <div className="p-5 border-b border-slate-800">
+          <div className="flex items-center gap-2">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
+              <Shield className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-sm font-bold">Doktori Admin</p>
+              <p className="text-[10px] text-slate-400 uppercase tracking-wider">
+                Super admin
+              </p>
+            </div>
+          </div>
+        </div>
+        <nav className="flex-1 p-3 space-y-1">
+          {links.map((l) => {
+            const Icon = l.icon;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+              >
+                <Icon className="w-4 h-4" />
+                {l.label}
+              </Link>
+            );
+          })}
+        </nav>
+        <div className="p-3 border-t border-slate-800">
+          <div className="px-3 py-2 text-xs text-slate-400 truncate">
+            {session.user?.email}
+          </div>
+          <Link
+            href="/api/auth/signout"
+            className="flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-colors"
+          >
+            <LogOut className="w-4 h-4" />
+            Déconnexion
+          </Link>
+        </div>
+      </aside>
+      <main className="flex-1 overflow-auto">{children}</main>
+    </div>
+  );
+}
