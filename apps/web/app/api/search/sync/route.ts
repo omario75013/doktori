@@ -80,10 +80,11 @@ export async function POST(req: Request) {
   await index.updateFilterableAttributes([
     "specialty",
     "city",
+    "consultationFee",
     "_geo", // Enable geo filtering & sorting
   ]);
 
-  await index.updateSortableAttributes(["name", "_geo"]);
+  await index.updateSortableAttributes(["name", "consultationFee", "_geo"]);
 
   // Ranking with geo priority when available
   await index.updateRankingRules([

@@ -209,6 +209,12 @@ export async function GET(req: Request) {
   // Patient's actual GPS coordinates (browser geolocation)
   const userLat = searchParams.get("lat");
   const userLng = searchParams.get("lng");
+  // Enriched filters
+  const sort = searchParams.get("sort") || ""; // proximity | price_asc | price_desc | name
+  const priceMin = searchParams.get("priceMin");
+  const priceMax = searchParams.get("priceMax");
+  const minRating = searchParams.get("minRating");
+  const availabilityWindow = searchParams.get("availability") || ""; // today | tomorrow | week
 
   const parsed = parseQuery(q);
 
@@ -219,11 +225,19 @@ export async function GET(req: Request) {
 
   const index = meili.index(DOCTORS_INDEX);
 
-  // Build filters
+  // Build filters — specialty/city + optional price range
   const buildFilters = (useCity: boolean) => {
     const f: string[] = [];
     if (specialty) f.push(`specialty = "${specialty}"`);
     if (useCity && city) f.push(`city = "${city}"`);
+    if (priceMin) {
+      const millimes = Number(priceMin) * 1000;
+      if (!isNaN(millimes)) f.push(`consultationFee >= ${millimes}`);
+    }
+    if (priceMax) {
+      const millimes = Number(priceMax) * 1000;
+      if (!isNaN(millimes)) f.push(`consultationFee <= ${millimes}`);
+    }
     return f.length > 0 ? f.join(" AND ") : undefined;
   };
 
@@ -240,17 +254,29 @@ export async function GET(req: Request) {
     sortOrigin = CITY_CENTROIDS[city] || null;
   }
 
-  const geoSort = sortOrigin
-    ? [`_geoPoint(${sortOrigin.lat}, ${sortOrigin.lng}):asc`]
-    : undefined;
+  // Build sort array based on user choice
+  let sortArray: string[] | undefined;
+  if (sort === "price_asc") {
+    sortArray = ["consultationFee:asc"];
+  } else if (sort === "price_desc") {
+    sortArray = ["consultationFee:desc"];
+  } else if (sort === "name") {
+    sortArray = ["name:asc"];
+  } else if (sortOrigin) {
+    // Default: proximity if we have a location
+    sortArray = [`_geoPoint(${sortOrigin.lat}, ${sortOrigin.lng}):asc`];
+  }
 
-  // ═══ TIER 1: Strict match (specialty + city) with geo proximity ═══
+  // ═══ TIER 1: Strict match (specialty + city) + facet counts ═══
   const tier1 = await index.search(searchText, {
     filter: buildFilters(true),
-    sort: geoSort,
-    limit: 20,
+    sort: sortArray,
+    limit: 50,
     matchingStrategy: "last",
+    facets: ["specialty", "city"],
   });
+
+  const facetDistribution = tier1.facetDistribution || {};
 
   let hits = [...tier1.hits];
   let expanded = false;
@@ -258,9 +284,9 @@ export async function GET(req: Request) {
   // ═══ TIER 2: Same specialty, nearby cities (if <3 results in tier 1) ═══
   if (specialty && city && hits.length < 3) {
     const tier2 = await index.search(searchText, {
-      filter: buildFilters(false), // Drop city filter
-      sort: geoSort, // But still sort by distance from chosen city
-      limit: 20,
+      filter: buildFilters(false),
+      sort: sortArray,
+      limit: 50,
       matchingStrategy: "last",
     });
     const existingIds = new Set(hits.map((h) => (h as { id: string }).id));
@@ -272,7 +298,7 @@ export async function GET(req: Request) {
   // ═══ TIER 3: If still empty, broad fallback ═══
   if (hits.length === 0 && q) {
     const tier3 = await index.search(q, {
-      limit: 20,
+      limit: 50,
       matchingStrategy: "last",
     });
     hits = tier3.hits;
@@ -284,17 +310,59 @@ export async function GET(req: Request) {
     hits = hits.filter((h) => availableIds.has((h as { id: string }).id));
   }
 
-  // Limit final to 20
+  // Availability window (today / tomorrow / this week)
+  if (availabilityWindow === "today") {
+    const today = new Date().toISOString().slice(0, 10);
+    const ids = await getAvailableDoctorIds(today);
+    hits = hits.filter((h) => ids.has((h as { id: string }).id));
+  } else if (availabilityWindow === "tomorrow") {
+    const tmr = new Date();
+    tmr.setDate(tmr.getDate() + 1);
+    const ids = await getAvailableDoctorIds(tmr.toISOString().slice(0, 10));
+    hits = hits.filter((h) => ids.has((h as { id: string }).id));
+  } else if (availabilityWindow === "week") {
+    const idSets = await Promise.all(
+      Array.from({ length: 7 }, (_, i) => {
+        const d = new Date();
+        d.setDate(d.getDate() + i);
+        return getAvailableDoctorIds(d.toISOString().slice(0, 10));
+      })
+    );
+    const union = new Set<string>();
+    for (const s of idSets) for (const id of s) union.add(id);
+    hits = hits.filter((h) => union.has((h as { id: string }).id));
+  }
+
+  // Min rating (cached on doc — defaults to 4.8 for now)
+  if (minRating) {
+    const min = Number(minRating);
+    if (!isNaN(min)) {
+      hits = hits.filter(() => 4.8 >= min); // TODO: real per-doctor rating
+    }
+  }
+
+  // Final limit 20
+  const totalBeforeLimit = hits.length;
   hits = hits.slice(0, 20);
 
   return NextResponse.json({
     hits,
-    parsed: {
+    totalCount: totalBeforeLimit,
+    parsed: { specialty, city, text: searchText },
+    expanded,
+    facets: {
+      specialty: facetDistribution.specialty || {},
+      city: facetDistribution.city || {},
+    },
+    activeFilters: {
       specialty,
       city,
-      text: searchText,
+      date: date || null,
+      priceMin: priceMin ? Number(priceMin) : null,
+      priceMax: priceMax ? Number(priceMax) : null,
+      availability: availabilityWindow || null,
+      sort: sort || "relevance",
+      location: sortOrigin,
     },
-    expanded, // UI can show "résultats élargis aux zones proches"
-    dateFilter: date || null,
   });
 }
