@@ -232,3 +232,18 @@ export const doctorPremium = pgTable("doctor_premium", {
   until: timestamp("until", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// ── Appointment Types ────────────────────────────────────
+export const appointmentTypes = pgTable("appointment_types", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  name: varchar("name", { length: 100 }).notNull(), // e.g. "Première consultation"
+  durationMinutes: integer("duration_minutes").notNull(),
+  fee: integer("fee"), // in millimes (nullable — fallback to doctor's consultationFee)
+  color: varchar("color", { length: 20 }).default("#2563eb").notNull(),
+  isDefault: boolean("is_default").default(false).notNull(),
+  isActive: boolean("is_active").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("appointment_types_doctor_idx").on(table.doctorId),
+]);
