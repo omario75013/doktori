@@ -3,9 +3,12 @@ import { db, appointments, patients, doctors } from "@doktori/db";
 import { eq, and, gte, lte } from "drizzle-orm";
 import { sendSMS } from "@/lib/sms";
 import { sendWhatsApp } from "@/lib/whatsapp";
+import { signReminderToken } from "@/lib/reminder-token";
 import { SPECIALTIES } from "@doktori/shared";
 import { format, addDays, startOfDay, endOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
+
+const PUBLIC_URL = process.env.NEXT_PUBLIC_APP_URL || "https://doktori.tn";
 
 export async function POST(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -44,7 +47,9 @@ export async function POST(req: Request) {
     const date = format(appt.startsAt, "EEEE d MMMM", { locale: fr });
     const specialty = SPECIALTIES.find((s) => s.id === appt.doctorSpecialty)?.label || "";
 
-    const message = `Rappel Doktori: Vous avez RDV demain ${date} a ${time} avec ${appt.doctorName} (${specialty}), ${appt.doctorAddress}. Pour annuler: doktori.tn/mes-rdv`;
+    const token = signReminderToken(appt.id);
+    const link = `${PUBLIC_URL}/r/${token}`;
+    const message = `Rappel Doktori: RDV demain ${date} a ${time} avec ${appt.doctorName} (${specialty}), ${appt.doctorAddress}. Confirmer/annuler: ${link}`;
 
     await sendSMS(appt.patientPhone, message, appt.id);
 

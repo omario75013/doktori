@@ -122,6 +122,8 @@ export const appointments = pgTable(
     appointmentTypeId: uuid("appointment_type_id"),
     reason: text("reason"),
     notes: text("notes"),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
