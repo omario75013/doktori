@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, ArrowLeft } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, MapPin } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -22,7 +22,7 @@ interface Doctor {
   consultationFee: number | null;
 }
 
-type Step = "type" | "slots" | "questionnaire" | "form" | "payment" | "success";
+type Step = "type" | "practice" | "slots" | "questionnaire" | "form" | "payment" | "success";
 
 interface Question {
   id: string;
@@ -31,6 +31,15 @@ interface Question {
   choices: string[] | null;
   required: boolean;
   displayOrder: number;
+}
+
+interface Practice {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  phone: string | null;
+  isPrimary: boolean;
 }
 
 interface BookingState {
@@ -60,6 +69,8 @@ export default function RdvPage({
   const [step, setStep] = useState<Step>("slots");
   const [types, setTypes] = useState<AppointmentType[]>([]);
   const [selectedType, setSelectedType] = useState<AppointmentType | null>(null);
+  const [practices, setPractices] = useState<Practice[]>([]);
+  const [selectedPractice, setSelectedPractice] = useState<Practice | null>(null);
   const [booking, setBooking] = useState<BookingState | null>(null);
   const [questions, setQuestions] = useState<Question[]>([]);
   const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
@@ -83,12 +94,26 @@ export default function RdvPage({
       })
       .then(async (d) => {
         setDoctor(d);
-        const typesRes = await fetch(`/api/appointment-types?doctorId=${d.id}`);
+        // Fetch appointment types and practices in parallel
+        const [typesRes, practicesRes] = await Promise.all([
+          fetch(`/api/appointment-types?doctorId=${d.id}`),
+          fetch(`/api/doctors/${d.id}/practices`),
+        ]);
+        let startStep: Step = "slots";
         if (typesRes.ok) {
           const list = (await typesRes.json()) as AppointmentType[];
           setTypes(list);
-          if (list.length > 0) setStep("type");
+          if (list.length > 0) startStep = "type";
         }
+        if (practicesRes.ok) {
+          const pList = (await practicesRes.json()) as Practice[];
+          setPractices(pList);
+          // Auto-select if only one practice
+          if (pList.length === 1) {
+            setSelectedPractice(pList[0]);
+          }
+        }
+        setStep(startStep);
         setDoctorLoading(false);
       })
       .catch(() => {
@@ -120,6 +145,22 @@ export default function RdvPage({
     setStep("form");
   }
 
+  // After choosing a type, go to practice picker if >1 practice, else skip to slots
+  function handleTypeSelected(type: AppointmentType) {
+    setSelectedType(type);
+    if (practices.length > 1) {
+      setStep("practice");
+    } else {
+      setStep("slots");
+    }
+  }
+
+  // After choosing a practice, go to slots
+  function handlePracticeSelected(practice: Practice) {
+    setSelectedPractice(practice);
+    setStep("slots");
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!doctor || !booking) return;
@@ -139,6 +180,7 @@ export default function RdvPage({
           startTime: booking.startTime,
           reason: reason || undefined,
           appointmentTypeId: selectedType?.id,
+          practiceId: selectedPractice?.id,
           beneficiaryName: forSelf ? undefined : beneficiaryName.trim() || undefined,
           beneficiaryDateOfBirth: forSelf ? undefined : beneficiaryDob || undefined,
           beneficiaryRelation: forSelf ? "self" : beneficiaryRelation,
@@ -263,10 +305,7 @@ export default function RdvPage({
               {types.map((t) => (
                 <button
                   key={t.id}
-                  onClick={() => {
-                    setSelectedType(t);
-                    setStep("slots");
-                  }}
+                  onClick={() => handleTypeSelected(t)}
                   className="w-full flex items-center justify-between gap-3 rounded-2xl border border-[#E6F4F1] bg-white px-4 py-3 text-left hover:border-[#0891B2] hover:bg-[#F0FDFA]/40 transition-colors"
                 >
                   <div className="flex items-center gap-3">
@@ -294,28 +333,99 @@ export default function RdvPage({
           </div>
         )}
 
+        {/* Step: practice picker — only shown when doctor has >1 active practice */}
+        {step === "practice" && practices.length > 1 && (
+          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4">
+            <div>
+              <h2 className="font-heading font-black text-[#134E4A]">
+                Choisir un cabinet
+              </h2>
+              <p className="text-sm text-[#134E4A]/60 mt-1">
+                Ce médecin exerce dans plusieurs lieux. Sélectionnez le cabinet souhaité.
+              </p>
+            </div>
+            <div className="space-y-2">
+              {practices.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => handlePracticeSelected(p)}
+                  className="w-full flex items-start gap-3 rounded-2xl border border-[#E6F4F1] bg-white px-4 py-3 text-left hover:border-[#0891B2] hover:bg-[#F0FDFA]/40 transition-colors"
+                >
+                  <div className="h-8 w-8 rounded-full bg-[#F0FDFA] flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <MapPin className="h-4 w-4 text-[#0891B2]" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="font-bold text-[#134E4A] flex items-center gap-2">
+                      {p.name}
+                      {p.isPrimary && (
+                        <span className="text-xs font-normal text-[#0891B2] bg-[#F0FDFA] px-1.5 py-0.5 rounded-full">
+                          Principal
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-sm text-[#134E4A]/60 truncate">{p.address}</div>
+                    <div className="text-xs text-[#134E4A]/40">{p.city}</div>
+                    {p.phone && (
+                      <div className="text-xs text-[#0891B2] mt-0.5">{p.phone}</div>
+                    )}
+                  </div>
+                </button>
+              ))}
+            </div>
+            {types.length > 0 && (
+              <button
+                onClick={() => setStep("type")}
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0891B2] hover:underline pt-1"
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Changer le motif
+              </button>
+            )}
+          </div>
+        )}
+
         {/* Step: slot selection (Doctolib-style calendar) */}
         {step === "slots" && (
           <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5">
-            {selectedType && (
-              <div className="flex items-center justify-between text-sm pb-3 border-b border-[#E6F4F1]">
-                <span className="text-[#134E4A]/60 flex items-center gap-2">
-                  <span
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ backgroundColor: selectedType.color }}
-                  />
-                  <span className="font-bold text-[#134E4A]">{selectedType.name}</span>
-                  <span className="text-[#134E4A]/40">·</span>
-                  <span className="text-[#134E4A]/60">
-                    {selectedType.durationMinutes} min
-                  </span>
-                </span>
-                <button
-                  onClick={() => setStep("type")}
-                  className="text-[#0891B2] font-bold hover:underline"
-                >
-                  Changer
-                </button>
+            {(selectedType || selectedPractice) && (
+              <div className="flex flex-col gap-1.5 pb-3 border-b border-[#E6F4F1]">
+                {selectedType && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-[#134E4A]/60 flex items-center gap-2">
+                      <span
+                        className="h-2.5 w-2.5 rounded-full"
+                        style={{ backgroundColor: selectedType.color }}
+                      />
+                      <span className="font-bold text-[#134E4A]">{selectedType.name}</span>
+                      <span className="text-[#134E4A]/40">·</span>
+                      <span className="text-[#134E4A]/60">
+                        {selectedType.durationMinutes} min
+                      </span>
+                    </span>
+                    <button
+                      onClick={() => setStep("type")}
+                      className="text-[#0891B2] font-bold hover:underline"
+                    >
+                      Changer
+                    </button>
+                  </div>
+                )}
+                {selectedPractice && practices.length > 1 && (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-[#134E4A]/60 flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5 text-[#0891B2]/60" />
+                      <span className="font-bold text-[#134E4A]">{selectedPractice.name}</span>
+                      <span className="text-[#134E4A]/40">·</span>
+                      <span className="text-[#134E4A]/60">{selectedPractice.city}</span>
+                    </span>
+                    <button
+                      onClick={() => setStep("practice")}
+                      className="text-[#0891B2] font-bold hover:underline"
+                    >
+                      Changer
+                    </button>
+                  </div>
+                )}
               </div>
             )}
             <h2 className="font-heading font-black text-[#134E4A] text-lg">

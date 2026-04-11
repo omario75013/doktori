@@ -63,6 +63,32 @@ export const doctors = pgTable(
   ]
 );
 
+// ─── Doctor Practices ─────────────────────────────────────────────────────────
+// A doctor can have multiple practice locations (cabinets).
+// doctors.address/city/latitude/longitude/phone are kept for backwards compat.
+
+export const doctorPractices = pgTable(
+  "doctor_practices",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    address: text("address").notNull(),
+    city: varchar("city", { length: 100 }).notNull(),
+    latitude: varchar("latitude", { length: 30 }),
+    longitude: varchar("longitude", { length: 30 }),
+    phone: varchar("phone", { length: 30 }),
+    isPrimary: boolean("is_primary").notNull().default(false),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("doctor_practices_doctor_idx").on(table.doctorId),
+  ]
+);
+
 // ─── Doctor Schedules ─────────────────────────────────────────────────────────
 
 export const doctorSchedules = pgTable("doctor_schedules", {
@@ -77,6 +103,8 @@ export const doctorSchedules = pgTable("doctor_schedules", {
   // Slot duration in minutes (10, 15, 20, 30, 45, 60)
   slotDuration: integer("slot_duration").notNull().default(20),
   isActive: boolean("is_active").notNull().default(true),
+  // nullable — backfilled to primary practice by migration 0024
+  practiceId: uuid("practice_id"),
 });
 
 // ─── Patients ─────────────────────────────────────────────────────────────────
@@ -167,6 +195,8 @@ export const appointments = pgTable(
     type: varchar("type", { length: 20 }).notNull().default("cabinet"),
     appointmentTypeId: uuid("appointment_type_id"),
     dependentId: uuid("dependent_id"),
+    // nullable — backfilled to primary practice by migration 0024
+    practiceId: uuid("practice_id"),
     reason: text("reason"),
     notes: text("notes"),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),

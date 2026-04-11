@@ -15,6 +15,8 @@ export const bookAppointmentSchema = z.object({
   beneficiaryRelation: z.enum(["self", "child", "parent", "spouse", "other"]).optional(),
   // G3: questionnaire answers — map of questionId → answer value
   questionnaire: z.record(z.string().uuid(), z.string()).optional(),
+  // G4 multi-practice: which practice location this appointment is for.
+  practiceId: z.string().uuid().optional(),
 });
 
 export const cancelAppointmentSchema = z.object({

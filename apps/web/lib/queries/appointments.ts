@@ -9,6 +9,7 @@ export async function getAvailableSlots(
   doctorId: string,
   date: string,
   durationOverride?: number,
+  practiceId?: string,
 ) {
   const dayOfWeek = new Date(date).getDay();
 
@@ -20,6 +21,7 @@ export async function getAvailableSlots(
         eq(doctorSchedules.doctorId, doctorId),
         eq(doctorSchedules.dayOfWeek, dayOfWeek),
         eq(doctorSchedules.isActive, true),
+        practiceId ? eq(doctorSchedules.practiceId, practiceId) : undefined,
       )
     );
 
@@ -79,6 +81,7 @@ export async function createAppointment(data: {
   reason?: string;
   appointmentTypeId?: string;
   dependentId?: string;
+  practiceId?: string;
 }) {
   return await db.transaction(async (tx) => {
     const conflicts = await tx
@@ -109,6 +112,7 @@ export async function createAppointment(data: {
         reason: data.reason,
         appointmentTypeId: data.appointmentTypeId,
         dependentId: data.dependentId,
+        practiceId: data.practiceId,
         status: "confirmed",
       })
       .returning();

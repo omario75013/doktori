@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, patients, doctors, doctorSchedules, appointmentTypes, patientDependents, appointmentAnswers } from "@doktori/db";
+import { db, patients, doctors, doctorSchedules, doctorPractices, appointmentTypes, patientDependents, appointmentAnswers } from "@doktori/db";
 import { createAppointment, getAvailableSlots } from "@/lib/queries/appointments";
 import { bookAppointmentSchema } from "@doktori/validation";
 import { formatPhone, SPECIALTIES } from "@doktori/shared";
@@ -13,6 +13,7 @@ export async function GET(req: Request) {
   const doctorId = searchParams.get("doctorId");
   const date = searchParams.get("date");
   const typeId = searchParams.get("typeId");
+  const practiceId = searchParams.get("practiceId") ?? undefined;
 
   if (!doctorId || !date) {
     return NextResponse.json(
@@ -31,7 +32,7 @@ export async function GET(req: Request) {
     if (type) duration = type.durationMinutes;
   }
 
-  const slots = await getAvailableSlots(doctorId, date, duration);
+  const slots = await getAvailableSlots(doctorId, date, duration, practiceId);
   return NextResponse.json(slots);
 }
 
@@ -134,6 +135,26 @@ export async function POST(req: Request) {
   const startsAt = new Date(`${parsed.data.date}T${parsed.data.startTime}:00`);
   const endsAt = new Date(startsAt.getTime() + slotDuration * 60 * 1000);
 
+  // Validate practiceId when provided: must belong to the doctor
+  let resolvedPracticeId: string | undefined;
+  if (parsed.data.practiceId) {
+    const [practice] = await db
+      .select({ id: doctorPractices.id })
+      .from(doctorPractices)
+      .where(
+        and(
+          eq(doctorPractices.id, parsed.data.practiceId),
+          eq(doctorPractices.doctorId, doctor.id),
+          eq(doctorPractices.isActive, true),
+        )
+      )
+      .limit(1);
+    if (!practice) {
+      return NextResponse.json({ error: "Cabinet introuvable" }, { status: 400 });
+    }
+    resolvedPracticeId = practice.id;
+  }
+
   try {
     const appointment = await createAppointment({
       doctorId: parsed.data.doctorId,
@@ -143,6 +164,7 @@ export async function POST(req: Request) {
       reason: parsed.data.reason,
       appointmentTypeId: parsed.data.appointmentTypeId,
       dependentId,
+      practiceId: resolvedPracticeId,
     });
 
     // G3: save questionnaire answers (don't fail the booking on error)
