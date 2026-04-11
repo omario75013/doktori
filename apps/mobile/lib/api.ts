@@ -36,4 +36,29 @@ export const api = {
     startTime: string;
     reason?: string;
   }) => apiFetch<any>("/api/appointments", { method: "POST", body: JSON.stringify(data) }),
+
+  sosRequest: (data: {
+    patientName: string;
+    patientPhone: string;
+    latitude: number;
+    longitude: number;
+    symptomCategory?: string;
+    description?: string;
+  }) =>
+    apiFetch<{ sessionId: string }>("/api/sos/request", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
+  sosSession: (sessionId: string) =>
+    apiFetch<{
+      id: string;
+      status: string;
+      doctor_name: string | null;
+      doctor_phone: string | null;
+      doctor_address: string | null;
+      requested_at: string;
+      accepted_at: string | null;
+      expires_at: string;
+    }>(`/api/sos/session/${sessionId}`),
 };

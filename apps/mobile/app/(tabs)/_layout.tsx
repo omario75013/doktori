@@ -13,6 +13,17 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="sos"
+        options={{
+          title: "SOS",
+          tabBarLabel: "SOS",
+          tabBarIcon: ({ color }) => <Text style={{ color: "#dc2626", fontSize: 22 }}>🚨</Text>,
+          tabBarLabelStyle: { color: "#dc2626", fontWeight: "700" },
+          headerTitle: "SOS Docteur",
+          headerStyle: { backgroundColor: "#fef2f2" },
+        }}
+      />
+      <Tabs.Screen
         name="mes-rdv"
         options={{
           title: "Mes RDV",
