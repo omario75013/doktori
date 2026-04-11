@@ -2,8 +2,11 @@ import { NextResponse } from "next/server";
 import { db, patients, doctors, doctorSchedules } from "@doktori/db";
 import { createAppointment, getAvailableSlots } from "@/lib/queries/appointments";
 import { bookAppointmentSchema } from "@doktori/validation";
-import { formatPhone } from "@doktori/shared";
+import { formatPhone, SPECIALTIES } from "@doktori/shared";
 import { eq } from "drizzle-orm";
+import { sendSMS } from "@/lib/sms";
+import { format } from "date-fns";
+import { fr } from "date-fns/locale";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -75,6 +78,17 @@ export async function POST(req: Request) {
       endsAt,
       reason: parsed.data.reason,
     });
+
+    // Send confirmation SMS (don't fail the booking on SMS error)
+    try {
+      const specialty = SPECIALTIES.find((s) => s.id === doctor.specialty)?.label || "";
+      const time = format(startsAt, "HH:mm");
+      const date = format(startsAt, "EEEE d MMMM", { locale: fr });
+      const smsMessage = `Doktori: RDV confirme le ${date} a ${time} avec ${doctor.name} (${specialty}), ${doctor.address}. Rappel la veille par SMS.`;
+      await sendSMS(phone, smsMessage, appointment.id);
+    } catch (e) {
+      console.error("SMS send failed:", e);
+    }
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (e: unknown) {
