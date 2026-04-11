@@ -207,16 +207,21 @@ export const doctorHomeVisitSettings = pgTable("doctor_home_visit_settings", {
 });
 
 // ── Waitlist ─────────────────────────────────────────────
+// source: 'patient' — patient asked to be notified if a slot frees up
+//         'follow_up' — doctor scheduled a follow-up reminder for this date
 export const waitlist = pgTable("waitlist", {
   id: uuid("id").primaryKey().defaultRandom(),
   doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
   patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
   preferredDate: varchar("preferred_date", { length: 10 }).notNull(), // YYYY-MM-DD
+  source: varchar("source", { length: 20 }).notNull().default("patient"),
+  appointmentId: uuid("appointment_id"),
   notifiedAt: timestamp("notified_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("waitlist_doctor_date_idx").on(table.doctorId, table.preferredDate),
   index("waitlist_patient_idx").on(table.patientId),
+  index("waitlist_source_date_idx").on(table.source, table.preferredDate),
 ]);
 
 // ── Reviews ──────────────────────────────────────────────

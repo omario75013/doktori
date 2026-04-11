@@ -87,6 +87,36 @@ export default function RendezVousPage() {
     }
   };
 
+  const scheduleFollowup = async (id: string) => {
+    const input = window.prompt(
+      "Dans combien de semaines programmer le suivi ?",
+      "4",
+    );
+    if (!input) return;
+    const weeks = Number(input);
+    if (!Number.isFinite(weeks) || weeks < 1 || weeks > 104) {
+      alert("Valeur invalide (1 à 104 semaines)");
+      return;
+    }
+    setUpdating(id);
+    try {
+      const res = await fetch(`/api/appointments/${id}/followup`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ weeks }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Erreur programmation");
+      }
+      alert(`Suivi programmé dans ${weeks} semaine${weeks > 1 ? "s" : ""}. Le patient recevra un SMS.`);
+    } catch (e) {
+      alert(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setUpdating(null);
+    }
+  };
+
   if (loading) {
     return <p className="text-gray-400 text-sm p-6">Chargement...</p>;
   }
@@ -179,7 +209,17 @@ export default function RendezVousPage() {
                     </td>
                     <td className="px-4 py-3">
                       {isTerminal ? (
-                        <span className="text-xs text-gray-300">—</span>
+                        appt.status === "completed" ? (
+                          <button
+                            onClick={() => scheduleFollowup(appt.id)}
+                            disabled={isUpdating}
+                            className="text-xs px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40"
+                          >
+                            Programmer un suivi
+                          </button>
+                        ) : (
+                          <span className="text-xs text-gray-300">—</span>
+                        )
                       ) : (
                         <div className="flex gap-1 flex-wrap">
                           {ACTIONS.filter((a) => a.status !== appt.status).map((action) => (
