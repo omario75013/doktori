@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  output: "standalone",
+  transpilePackages: ["@doktori/db", "@doktori/shared", "@doktori/validation"],
 };
 
 export default nextConfig;
