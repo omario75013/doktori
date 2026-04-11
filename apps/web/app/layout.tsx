@@ -4,6 +4,7 @@ import "./globals.css";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
 import { Navbar } from "@/components/navbar";
+import { Chatbot } from "@/components/chatbot";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -49,6 +50,7 @@ export default async function RootLayout({
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Navbar />
           {children}
+          <Chatbot />
         </NextIntlClientProvider>
       </body>
     </html>

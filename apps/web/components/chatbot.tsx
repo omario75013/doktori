@@ -1,0 +1,274 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import {
+  MessageCircle,
+  X,
+  Send,
+  Stethoscope,
+  Sparkles,
+  AlertTriangle,
+  Loader2,
+} from "lucide-react";
+
+interface Message {
+  role: "user" | "assistant";
+  content: string;
+}
+
+const QUICK_REPLIES = [
+  "Trouver un dermatologue",
+  "Comment annuler un RDV ?",
+  "Visite à domicile",
+  "Tarifs consultation",
+];
+
+const WELCOME_MESSAGE: Message = {
+  role: "assistant",
+  content:
+    "Bonjour 👋 Je suis **Dokti**, votre assistant Doktori.\n\nJe peux vous aider à :\n• Trouver un médecin par spécialité et quartier\n• Comprendre comment réserver\n• Répondre à vos questions sur Doktori\n\nQue puis-je faire pour vous ?",
+};
+
+export function Chatbot() {
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([WELCOME_MESSAGE]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Auto-scroll to bottom on new message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, loading]);
+
+  // Focus input when opened
+  useEffect(() => {
+    if (open) setTimeout(() => inputRef.current?.focus(), 100);
+  }, [open]);
+
+  async function sendMessage(text: string) {
+    if (!text.trim() || loading) return;
+
+    const userMessage: Message = { role: "user", content: text };
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    setInput("");
+    setLoading(true);
+
+    try {
+      const res = await fetch("/api/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          // Skip welcome message when sending to API
+          messages: newMessages
+            .slice(1)
+            .map((m) => ({ role: m.role, content: m.content })),
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: err.error || "Désolé, une erreur est survenue. Réessayez.",
+          },
+        ]);
+        return;
+      }
+
+      const data = await res.json();
+      setMessages((prev) => [...prev, { role: "assistant", content: data.content }]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content:
+            "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  return (
+    <>
+      {/* Floating toggle button */}
+      {!open && (
+        <button
+          onClick={() => setOpen(true)}
+          className="group fixed bottom-6 right-6 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-[#0891B2] text-white shadow-xl shadow-[#0891B2]/30 transition-all hover:scale-110 hover:bg-[#0E7490] sm:bottom-8 sm:right-8"
+          aria-label="Ouvrir l'assistant Dokti"
+        >
+          <MessageCircle className="h-7 w-7" strokeWidth={2.5} />
+          <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22C55E] opacity-75"></span>
+            <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#22C55E] text-[10px] font-bold text-[#134E4A] ring-2 ring-white">
+              !
+            </span>
+          </span>
+          {/* Tooltip */}
+          <span className="absolute right-full top-1/2 mr-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#134E4A] px-3 py-1.5 text-xs font-semibold text-white shadow-lg group-hover:block">
+            Besoin d&apos;aide ? Demandez à Dokti
+            <span className="absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-[#134E4A]"></span>
+          </span>
+        </button>
+      )}
+
+      {/* Chat panel */}
+      {open && (
+        <div className="fixed inset-x-0 bottom-0 z-50 flex h-full w-full flex-col bg-white shadow-2xl sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[640px] sm:w-[400px] sm:rounded-3xl sm:border sm:border-[#E6F4F1]">
+          {/* Header */}
+          <div className="flex shrink-0 items-center justify-between bg-gradient-to-br from-[#0891B2] to-[#0E7490] px-5 py-4 sm:rounded-t-3xl">
+            <div className="flex items-center gap-3">
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
+                <Stethoscope className="h-5 w-5 text-white" strokeWidth={2.5} />
+                <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22C55E]"></span>
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#22C55E] ring-2 ring-[#0891B2]"></span>
+                </span>
+              </div>
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="font-heading text-base font-bold text-white">Dokti</span>
+                  <Sparkles className="h-3 w-3 text-[#A7F3D0]" strokeWidth={2.5} />
+                </div>
+                <div className="text-[11px] text-[#A7F3D0]">Assistant Doktori · En ligne</div>
+              </div>
+            </div>
+            <button
+              onClick={() => setOpen(false)}
+              className="flex h-8 w-8 items-center justify-center rounded-lg text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+              aria-label="Fermer"
+            >
+              <X className="h-5 w-5" strokeWidth={2.5} />
+            </button>
+          </div>
+
+          {/* Disclaimer banner */}
+          <div className="flex shrink-0 items-start gap-2 border-b border-yellow-100 bg-yellow-50 px-4 py-2">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-yellow-600" strokeWidth={2.5} />
+            <p className="text-[10px] leading-tight text-yellow-800">
+              Dokti n&apos;est pas un médecin. En cas d&apos;urgence vitale, composez le{" "}
+              <strong>190 (SAMU)</strong>.
+            </p>
+          </div>
+
+          {/* Messages */}
+          <div className="flex-1 overflow-y-auto bg-[#F0FDFA]/30 p-4">
+            <div className="space-y-4">
+              {messages.map((msg, i) => (
+                <MessageBubble key={i} message={msg} />
+              ))}
+              {loading && (
+                <div className="flex items-center gap-2 text-xs text-[#5E7574]">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0891B2] text-white">
+                    <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
+                  </div>
+                  <Loader2 className="h-4 w-4 animate-spin text-[#0891B2]" />
+                  <span>Dokti réfléchit...</span>
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+          </div>
+
+          {/* Quick replies (only on first message) */}
+          {messages.length === 1 && !loading && (
+            <div className="shrink-0 border-t border-[#E6F4F1] bg-white px-4 py-3">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#5E7574]">
+                Suggestions
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {QUICK_REPLIES.map((q) => (
+                  <button
+                    key={q}
+                    onClick={() => sendMessage(q)}
+                    className="rounded-full border border-[#E6F4F1] bg-[#F0FDFA] px-3 py-1.5 text-xs font-semibold text-[#0E7490] transition-all hover:border-[#0891B2] hover:bg-[#0891B2] hover:text-white"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Input */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              sendMessage(input);
+            }}
+            className="shrink-0 border-t border-[#E6F4F1] bg-white p-4 sm:rounded-b-3xl"
+          >
+            <div className="flex items-center gap-2">
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Posez votre question..."
+                disabled={loading}
+                className="h-12 flex-1 rounded-xl border-2 border-[#E6F4F1] bg-[#F0FDFA]/50 px-4 text-sm text-[#134E4A] placeholder:text-[#5E7574]/60 outline-none transition-colors focus:border-[#0891B2] focus:bg-white disabled:opacity-60"
+              />
+              <button
+                type="submit"
+                disabled={!input.trim() || loading}
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0891B2] text-white transition-all hover:bg-[#0E7490] disabled:opacity-40"
+                aria-label="Envoyer"
+              >
+                <Send className="h-5 w-5" strokeWidth={2.5} />
+              </button>
+            </div>
+            <p className="mt-2 text-center text-[9px] text-[#5E7574]">
+              Propulsé par Claude · Vos conversations ne sont pas sauvegardées
+            </p>
+          </form>
+        </div>
+      )}
+    </>
+  );
+}
+
+// ──────────────────────────────────────────────────────────────────────────────
+// Message bubble with basic markdown (bold + newlines)
+// ──────────────────────────────────────────────────────────────────────────────
+function MessageBubble({ message }: { message: Message }) {
+  const isUser = message.role === "user";
+  const html = simpleMarkdown(message.content);
+
+  return (
+    <div className={`flex items-start gap-2 ${isUser ? "flex-row-reverse" : ""}`}>
+      {!isUser && (
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0891B2] text-white ring-1 ring-[#0891B2]/20">
+          <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
+        </div>
+      )}
+      <div
+        className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+          isUser
+            ? "rounded-br-sm bg-[#0891B2] text-white"
+            : "rounded-bl-sm bg-white text-[#134E4A] shadow-sm ring-1 ring-[#E6F4F1]"
+        }`}
+        dangerouslySetInnerHTML={{ __html: html }}
+      />
+    </div>
+  );
+}
+
+// Minimal, safe markdown subset: **bold**, line breaks, bullet lists
+function simpleMarkdown(text: string): string {
+  const escaped = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+  return escaped
+    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+    .replace(/^[•\-] (.+)$/gm, '<div class="flex gap-1.5"><span>•</span><span>$1</span></div>')
+    .replace(/\n/g, "<br/>");
+}
