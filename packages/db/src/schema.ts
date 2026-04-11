@@ -272,3 +272,15 @@ export const teleconsultations = pgTable("teleconsultations", {
   durationSeconds: integer("duration_seconds"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// ── Insurance Conventions ────────────────────────────────────
+export const doctorInsurance = pgTable("doctor_insurance", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  insuranceType: varchar("insurance_type", { length: 50 }).notNull(), // cnam | cnrps | star | gat | carte | maghrebia | etc.
+  isConventioned: boolean("is_conventioned").default(true).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("doctor_insurance_unique_idx").on(table.doctorId, table.insuranceType),
+  index("doctor_insurance_type_idx").on(table.insuranceType),
+]);

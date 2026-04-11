@@ -1,9 +1,10 @@
-import type { SPECIALTIES, CITIES, APPOINTMENT_STATUSES, APPOINTMENT_TYPES } from "./constants";
+import type { SPECIALTIES, CITIES, APPOINTMENT_STATUSES, APPOINTMENT_TYPES, INSURANCES } from "./constants";
 
 export type SpecialtyId = (typeof SPECIALTIES)[number]["id"];
 export type CityId = (typeof CITIES)[number]["id"];
 export type AppointmentStatus = (typeof APPOINTMENT_STATUSES)[number];
 export type AppointmentType = (typeof APPOINTMENT_TYPES)[number];
+export type InsuranceId = (typeof INSURANCES)[number]["id"];
 
 export interface DoctorPublic {
   id: string;
