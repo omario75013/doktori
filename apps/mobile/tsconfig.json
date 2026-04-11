@@ -5,6 +5,12 @@
     "paths": {
       "@/*": [
         "./*"
+      ],
+      "@doktori/shared": [
+        "../../packages/shared/src/index.ts"
+      ],
+      "@doktori/validation": [
+        "../../packages/validation/src/index.ts"
       ]
     }
   },
