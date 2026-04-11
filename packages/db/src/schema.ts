@@ -320,3 +320,23 @@ export const sosSessions = pgTable("sos_sessions", {
   index("sos_sessions_status_idx").on(table.status),
   index("sos_sessions_patient_idx").on(table.patientId),
 ]);
+
+// ── Subscriptions ────────────────────────────────────────
+export const subscriptions = pgTable("subscriptions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  plan: varchar("plan", { length: 20 }).notNull(), // free | essentiel | pro | clinique
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending | active | expired | cancelled
+  priceMillimes: integer("price_millimes").notNull(),
+  billingCycle: varchar("billing_cycle", { length: 20 }).notNull().default("monthly"), // monthly | annual
+  paymentProvider: varchar("payment_provider", { length: 20 }), // flouci | paymee | manual
+  externalRef: varchar("external_ref", { length: 255 }),
+  startsAt: timestamp("starts_at", { withTimezone: true }),
+  endsAt: timestamp("ends_at", { withTimezone: true }),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("subscriptions_doctor_idx").on(table.doctorId),
+  index("subscriptions_status_idx").on(table.status),
+]);
