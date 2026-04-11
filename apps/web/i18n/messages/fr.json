@@ -201,5 +201,21 @@
     "payLater": "Payer sur place",
     "redirecting": "Redirection...",
     "motifsSectionTitle": "Motifs de consultation"
+  },
+  "faq": {
+    "metaTitle": "Questions fréquentes — Prise de rendez-vous médical en ligne en Tunisie | Doktori",
+    "metaDescription": "Toutes les réponses à vos questions sur la prise de rendez-vous médical en ligne avec Doktori : comment réserver, annuler, payer, trouver un médecin à Tunis, Ariana ou La Marsa, comprendre SOS Docteur et bien plus.",
+    "metaKeywords": "FAQ médecin Tunisie,questions rendez-vous médical,prise rdv en ligne,comment réserver médecin,annuler rdv docteur,CNAM conventionné,SOS Docteur Tunisie,médecin à domicile Tunis,Doktori aide",
+    "heroTitle": "Comment pouvons-nous vous aider ?",
+    "heroSubtitle": "Trouvez en quelques secondes la réponse à vos questions sur la prise de rendez-vous, le paiement, SOS Docteur et l'utilisation de Doktori.",
+    "searchPlaceholder": "Rechercher une question... (ex : annuler, CNAM, SOS)",
+    "allCategories": "Toutes",
+    "resultsCount": "%count% question(s)",
+    "emptyTitle": "Aucune question ne correspond",
+    "emptyDesc": "Essayez un autre mot-clé ou contactez notre support WhatsApp — nous répondons en moins de 2 heures.",
+    "stillHaveTitle": "Vous n'avez pas trouvé votre réponse ?",
+    "stillHaveDesc": "Notre équipe support est disponible sur WhatsApp du lundi au samedi, de 8h à 20h. Réponse garantie en moins de 2 heures.",
+    "whatsappCta": "Contacter sur WhatsApp",
+    "searchDoctorCta": "Trouver un médecin"
   }
 }
