@@ -223,3 +223,12 @@ export const clinicDoctors = pgTable("clinic_doctors", {
   uniqueIndex("clinic_doctors_unique_idx").on(table.clinicId, table.doctorId),
   index("clinic_doctors_clinic_idx").on(table.clinicId),
 ]);
+
+// ── Premium Visibility ────────────────────────────────────
+export const doctorPremium = pgTable("doctor_premium", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }).unique(),
+  isActive: boolean("is_active").default(false).notNull(),
+  until: timestamp("until", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
