@@ -298,9 +298,9 @@ export default function AgendaPage() {
                   <span className="text-xs text-gray-500 w-16">Durée RDV</span>
                   <Select
                     value={String(day.slotDuration)}
-                    onValueChange={(val: string) =>
-                      updateDay(day.dayOfWeek, { slotDuration: Number(val) })
-                    }
+                    onValueChange={(val) => {
+                      if (val) updateDay(day.dayOfWeek, { slotDuration: Number(val) });
+                    }}
                   >
                     <SelectTrigger className="w-28">
                       <SelectValue />
