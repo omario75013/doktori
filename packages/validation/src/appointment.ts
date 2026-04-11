@@ -13,6 +13,8 @@ export const bookAppointmentSchema = z.object({
   beneficiaryName: z.string().min(2).max(255).optional(),
   beneficiaryDateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   beneficiaryRelation: z.enum(["self", "child", "parent", "spouse", "other"]).optional(),
+  // G3: questionnaire answers — map of questionId → answer value
+  questionnaire: z.record(z.string().uuid(), z.string()).optional(),
 });
 
 export const cancelAppointmentSchema = z.object({

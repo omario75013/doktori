@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -93,7 +94,15 @@ export default function MotifsPage() {
                   <div className="font-medium">{t.name}</div>
                   <div className="text-sm text-gray-500">{t.durationMinutes} min {t.fee ? `· ${t.fee / 1000} DT` : ""}</div>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => handleDelete(t.id)}>Supprimer</Button>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/motifs/${t.id}/questions`}
+                    className="text-xs font-semibold text-[#0891B2] hover:underline border border-[#E6F4F1] rounded-md px-2 py-1"
+                  >
+                    Questions
+                  </Link>
+                  <Button variant="outline" size="sm" onClick={() => handleDelete(t.id)}>Supprimer</Button>
+                </div>
               </div>
             ))}
           </div>

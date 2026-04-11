@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, patients, doctors, doctorSchedules, appointmentTypes, patientDependents } from "@doktori/db";
+import { db, patients, doctors, doctorSchedules, appointmentTypes, patientDependents, appointmentAnswers } from "@doktori/db";
 import { createAppointment, getAvailableSlots } from "@/lib/queries/appointments";
 import { bookAppointmentSchema } from "@doktori/validation";
 import { formatPhone, SPECIALTIES } from "@doktori/shared";
@@ -144,6 +144,24 @@ export async function POST(req: Request) {
       appointmentTypeId: parsed.data.appointmentTypeId,
       dependentId,
     });
+
+    // G3: save questionnaire answers (don't fail the booking on error)
+    if (parsed.data.questionnaire && Object.keys(parsed.data.questionnaire).length > 0) {
+      try {
+        const rows = Object.entries(parsed.data.questionnaire)
+          .filter(([, value]) => value.trim().length > 0)
+          .map(([questionId, value]) => ({
+            appointmentId: appointment.id,
+            questionId,
+            value,
+          }));
+        if (rows.length > 0) {
+          await db.insert(appointmentAnswers).values(rows).onConflictDoNothing();
+        }
+      } catch (e) {
+        console.error("Failed to insert appointment answers:", e);
+      }
+    }
 
     // Send confirmation SMS (don't fail the booking on SMS error)
     try {

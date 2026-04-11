@@ -22,7 +22,16 @@ interface Doctor {
   consultationFee: number | null;
 }
 
-type Step = "type" | "slots" | "form" | "payment" | "success";
+type Step = "type" | "slots" | "questionnaire" | "form" | "payment" | "success";
+
+interface Question {
+  id: string;
+  label: string;
+  kind: "text" | "choice" | "file" | "yesno";
+  choices: string[] | null;
+  required: boolean;
+  displayOrder: number;
+}
 
 interface BookingState {
   date: string;
@@ -52,6 +61,8 @@ export default function RdvPage({
   const [types, setTypes] = useState<AppointmentType[]>([]);
   const [selectedType, setSelectedType] = useState<AppointmentType | null>(null);
   const [booking, setBooking] = useState<BookingState | null>(null);
+  const [questions, setQuestions] = useState<Question[]>([]);
+  const [questionnaireAnswers, setQuestionnaireAnswers] = useState<Record<string, string>>({});
   const [patientName, setPatientName] = useState("");
   const [patientPhone, setPatientPhone] = useState("");
   const [reason, setReason] = useState("");
@@ -86,8 +97,26 @@ export default function RdvPage({
       });
   }, [slug]);
 
-  function handleSlotSelect(date: string, startTime: string) {
+  async function handleSlotSelect(date: string, startTime: string) {
     setBooking({ date, startTime });
+
+    // Fetch questions for the selected type (if any)
+    if (selectedType) {
+      try {
+        const res = await fetch(`/api/appointment-types/questions-public?typeId=${selectedType.id}`);
+        if (res.ok) {
+          const qs = (await res.json()) as Question[];
+          if (qs.length > 0) {
+            setQuestions(qs);
+            setQuestionnaireAnswers({});
+            setStep("questionnaire");
+            return;
+          }
+        }
+      } catch {
+        // ignore — proceed to form step
+      }
+    }
     setStep("form");
   }
 
@@ -113,6 +142,9 @@ export default function RdvPage({
           beneficiaryName: forSelf ? undefined : beneficiaryName.trim() || undefined,
           beneficiaryDateOfBirth: forSelf ? undefined : beneficiaryDob || undefined,
           beneficiaryRelation: forSelf ? "self" : beneficiaryRelation,
+          questionnaire: Object.keys(questionnaireAnswers).length > 0
+            ? questionnaireAnswers
+            : undefined,
         }),
       });
 
@@ -186,7 +218,7 @@ export default function RdvPage({
         </div>
 
         {/* Sticky summary chip when slot is picked */}
-        {(step === "form" || step === "payment") && booking && (
+        {(step === "questionnaire" || step === "form" || step === "payment") && booking && (
           <div className="rounded-2xl bg-[#0891B2] text-white shadow-md px-4 py-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div className="h-9 w-9 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
@@ -295,6 +327,138 @@ export default function RdvPage({
               onSelect={handleSlotSelect}
               selected={booking}
             />
+          </div>
+        )}
+
+        {/* Step: questionnaire (shown ONLY if the selected type has questions) */}
+        {step === "questionnaire" && booking && questions.length > 0 && (
+          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5">
+            <button
+              type="button"
+              onClick={() => setStep("slots")}
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0891B2] hover:underline"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Changer de créneau
+            </button>
+
+            <div>
+              <h2 className="font-heading font-black text-[#134E4A]">
+                Quelques questions
+              </h2>
+              <p className="text-sm text-[#134E4A]/60 mt-1">
+                Aidez le médecin à préparer votre consultation en répondant aux questions ci-dessous.
+              </p>
+            </div>
+
+            <div className="space-y-4">
+              {questions.map((q) => {
+                const value = questionnaireAnswers[q.id] ?? "";
+                const setAnswer = (v: string) =>
+                  setQuestionnaireAnswers((prev) => ({ ...prev, [q.id]: v }));
+
+                return (
+                  <div key={q.id} className="space-y-1.5">
+                    <label className="block text-sm font-semibold text-[#134E4A]">
+                      {q.label}
+                      {q.required && (
+                        <span className="text-red-500 ml-1" aria-label="obligatoire">*</span>
+                      )}
+                    </label>
+
+                    {q.kind === "text" && (
+                      <textarea
+                        value={value}
+                        onChange={(e) => setAnswer(e.target.value)}
+                        required={q.required}
+                        rows={3}
+                        placeholder="Votre réponse..."
+                        className="w-full rounded-xl border border-[#E6F4F1] bg-white px-3 py-2 text-sm text-[#134E4A] focus:outline-none focus:ring-2 focus:ring-[#0891B2] resize-none"
+                      />
+                    )}
+
+                    {q.kind === "yesno" && (
+                      <div className="flex gap-3">
+                        {(["Oui", "Non"] as const).map((opt) => (
+                          <button
+                            key={opt}
+                            type="button"
+                            onClick={() => setAnswer(opt)}
+                            className={`flex-1 rounded-xl border-2 py-2 text-sm font-semibold transition ${
+                              value === opt
+                                ? "border-[#0891B2] bg-[#F0FDFA] text-[#0891B2]"
+                                : "border-[#E6F4F1] bg-white text-[#134E4A]/70"
+                            }`}
+                          >
+                            {opt}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {q.kind === "choice" && q.choices && (
+                      <div className="space-y-2">
+                        {q.choices.map((choice) => (
+                          <button
+                            key={choice}
+                            type="button"
+                            onClick={() => setAnswer(choice)}
+                            className={`w-full text-left rounded-xl border-2 px-3 py-2 text-sm font-medium transition ${
+                              value === choice
+                                ? "border-[#0891B2] bg-[#F0FDFA] text-[#0891B2]"
+                                : "border-[#E6F4F1] bg-white text-[#134E4A]/70"
+                            }`}
+                          >
+                            {choice}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+
+                    {q.kind === "file" && (
+                      <div className="space-y-1">
+                        {/* TODO: actual file upload requires R2 wiring (follow-up task).
+                            For now we capture the filename in the answer value. */}
+                        <input
+                          type="file"
+                          onChange={(e) => {
+                            const file = e.target.files?.[0];
+                            if (file) setAnswer(file.name);
+                          }}
+                          className="block w-full text-sm text-[#134E4A] file:mr-3 file:rounded-lg file:border-0 file:bg-[#F0FDFA] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#0891B2] hover:file:bg-[#E6F4F1]"
+                        />
+                        {value && (
+                          <p className="text-xs text-[#134E4A]/50">Fichier sélectionné : {value}</p>
+                        )}
+                        <p className="text-xs text-[#134E4A]/40">
+                          (Le fichier sera partagé avec le médecin — fonctionnalité en cours de déploiement)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                // Validate required questions
+                const missing = questions.filter(
+                  (q) =>
+                    q.required &&
+                    (!questionnaireAnswers[q.id] || questionnaireAnswers[q.id].trim() === "")
+                );
+                if (missing.length > 0) {
+                  alert(`Veuillez répondre aux questions obligatoires : ${missing.map((q) => q.label).join(", ")}`);
+                  return;
+                }
+                setStep("form");
+              }}
+              className="w-full rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold py-3 text-sm transition-colors"
+            >
+              Continuer
+            </button>
           </div>
         )}
 

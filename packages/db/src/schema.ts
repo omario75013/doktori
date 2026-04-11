@@ -340,6 +340,53 @@ export const appointmentTypes = pgTable("appointment_types", {
   index("appointment_types_doctor_idx").on(table.doctorId),
 ]);
 
+// ── Appointment Type Questions (G3) ─────────────────────────────────────────
+// Doctors define per-appointment-type intake questions shown to patients
+// before they confirm a booking.
+export const appointmentTypeQuestions = pgTable(
+  "appointment_type_questions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    appointmentTypeId: uuid("appointment_type_id")
+      .notNull()
+      .references(() => appointmentTypes.id, { onDelete: "cascade" }),
+    label: varchar("label", { length: 500 }).notNull(),
+    // 'text' | 'choice' | 'file' | 'yesno'
+    kind: varchar("kind", { length: 20 }).notNull(),
+    // Array of strings for kind='choice'
+    choices: jsonb("choices").$type<string[]>(),
+    required: boolean("required").notNull().default(false),
+    displayOrder: integer("display_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("atq_type_order_idx").on(table.appointmentTypeId, table.displayOrder),
+  ]
+);
+
+// ── Appointment Answers (G3) ─────────────────────────────────────────────────
+// Patient answers to questionnaire questions, stored alongside the booking.
+// file_url is null for MVP — R2 upload wiring is a follow-up task.
+export const appointmentAnswers = pgTable(
+  "appointment_answers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    appointmentId: uuid("appointment_id")
+      .notNull()
+      .references(() => appointments.id, { onDelete: "cascade" }),
+    questionId: uuid("question_id")
+      .notNull()
+      .references(() => appointmentTypeQuestions.id, { onDelete: "cascade" }),
+    value: text("value"),
+    // TODO: populated by R2 upload endpoint once storage is wired (follow-up)
+    fileUrl: text("file_url"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("appointment_answers_unique_idx").on(table.appointmentId, table.questionId),
+  ]
+);
+
 // ── CNAM Claims (Tunisia tiers-payant) ────────────────────
 // Each claim represents a bordereau that the doctor fills for a CNAM-covered
 // consultation. It is printed (via /cnam/[id]/print) and submitted to CNAM by
