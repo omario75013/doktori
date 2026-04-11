@@ -218,6 +218,19 @@
     "stillHaveTitle": "Vous n'avez pas trouvé votre réponse ?",
     "stillHaveDesc": "Notre équipe support est disponible sur WhatsApp du lundi au samedi, de 8h à 20h. Réponse garantie en moins de 2 heures.",
     "whatsappCta": "Contacter sur WhatsApp",
-    "searchDoctorCta": "Trouver un médecin"
+    "searchDoctorCta": "Trouver un médecin",
+    "breadcrumbHome": "Accueil",
+    "breadcrumbCurrent": "Centre d'aide",
+    "featuredLabel": "Questions populaires",
+    "popularSearchesLabel": "Recherches populaires :",
+    "popularSearches": ["CNAM", "annuler", "SOS", "paiement", "géolocalisation"],
+    "shortcutHint": "/",
+    "copyLink": "Copier le lien",
+    "linkCopied": "Lien copié",
+    "helpful": "Cette réponse vous a-t-elle aidé ?",
+    "helpfulYes": "Oui",
+    "helpfulNo": "Non",
+    "feedbackThanks": "Merci pour votre retour !",
+    "browseCategory": "Parcourir par thème"
   }
 }

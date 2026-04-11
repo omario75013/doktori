@@ -218,6 +218,19 @@
     "stillHaveTitle": "لم تجد إجابتك؟",
     "stillHaveDesc": "فريق الدعم متاح على WhatsApp من الإثنين إلى السبت، من 8 صباحًا حتى 8 مساءً. نضمن الرد في أقل من ساعتين.",
     "whatsappCta": "التواصل عبر WhatsApp",
-    "searchDoctorCta": "ابحث عن طبيب"
+    "searchDoctorCta": "ابحث عن طبيب",
+    "breadcrumbHome": "الرئيسية",
+    "breadcrumbCurrent": "مركز المساعدة",
+    "featuredLabel": "الأسئلة الأكثر طرحًا",
+    "popularSearchesLabel": "بحوث شائعة:",
+    "popularSearches": ["CNAM", "إلغاء", "استغاثة", "دفع", "الموقع"],
+    "shortcutHint": "/",
+    "copyLink": "نسخ الرابط",
+    "linkCopied": "تم النسخ",
+    "helpful": "هل كانت هذه الإجابة مفيدة؟",
+    "helpfulYes": "نعم",
+    "helpfulNo": "لا",
+    "feedbackThanks": "شكرًا على ملاحظتك!",
+    "browseCategory": "تصفح حسب الفئة"
   }
 }

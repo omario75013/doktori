@@ -77,6 +77,19 @@ export default async function FaqPage() {
   const stillHaveDesc = t("stillHaveDesc");
   const whatsappCta = t("whatsappCta");
   const searchDoctorCta = t("searchDoctorCta");
+  const breadcrumbHome = t("breadcrumbHome");
+  const breadcrumbCurrent = t("breadcrumbCurrent");
+  const featuredLabel = t("featuredLabel");
+  const popularSearchesLabel = t("popularSearchesLabel");
+  const popularSearches = (t.raw("popularSearches") as string[]) ?? [];
+  const shortcutHint = t("shortcutHint");
+  const copyLink = t("copyLink");
+  const linkCopied = t("linkCopied");
+  const helpful = t("helpful");
+  const helpfulYes = t("helpfulYes");
+  const helpfulNo = t("helpfulNo");
+  const feedbackThanks = t("feedbackThanks");
+  const browseCategory = t("browseCategory");
 
   const categories = FAQ_CATEGORIES.map((c) => ({
     id: c.id,
@@ -88,6 +101,7 @@ export default async function FaqPage() {
   const items = FAQ_ITEMS.map((i) => ({
     id: i.id,
     category: i.category,
+    featured: i.featured ?? false,
     question: i.question[locale],
     answer: i.answer[locale],
   }));
@@ -120,6 +134,19 @@ export default async function FaqPage() {
         searchDoctorCta={searchDoctorCta}
         categories={categories}
         items={items}
+        breadcrumbHome={breadcrumbHome}
+        breadcrumbCurrent={breadcrumbCurrent}
+        featuredLabel={featuredLabel}
+        popularSearchesLabel={popularSearchesLabel}
+        popularSearches={popularSearches}
+        shortcutHint={shortcutHint}
+        copyLink={copyLink}
+        linkCopied={linkCopied}
+        helpful={helpful}
+        helpfulYes={helpfulYes}
+        helpfulNo={helpfulNo}
+        feedbackThanks={feedbackThanks}
+        browseCategory={browseCategory}
       />
     </>
   );

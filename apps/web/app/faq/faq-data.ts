@@ -21,6 +21,8 @@ export type FaqCategoryId = (typeof FAQ_CATEGORIES)[number]["id"];
 export interface FaqItem {
   id: string;
   category: FaqCategoryId;
+  /** Surface this question in the "most asked" strip at the top. */
+  featured?: boolean;
   question: { fr: string; ar: string };
   answer: { fr: string; ar: string };
 }
@@ -30,6 +32,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     id: "how-to-book",
     category: "booking",
+    featured: true,
     question: {
       fr: "Comment prendre rendez-vous en ligne sur Doktori ?",
       ar: "كيف أحجز موعدًا عبر الإنترنت على دكتوري؟",
@@ -140,6 +143,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     id: "cnam-convention",
     category: "doctors",
+    featured: true,
     question: {
       fr: "Les médecins acceptent-ils la CNAM ?",
       ar: "هل يقبل الأطباء بطاقة الصندوق الوطني للتأمين على المرض (CNAM)؟",
@@ -216,6 +220,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     id: "data-protection",
     category: "account",
+    featured: true,
     question: {
       fr: "Mes données personnelles et médicales sont-elles protégées ?",
       ar: "هل بياناتي الشخصية والطبية محمية؟",
@@ -254,6 +259,7 @@ export const FAQ_ITEMS: FaqItem[] = [
   {
     id: "sos-what",
     category: "sos",
+    featured: true,
     question: {
       fr: "Qu'est-ce que SOS Docteur ?",
       ar: "ما هو استغاثة طبيب؟",
