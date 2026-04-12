@@ -68,6 +68,7 @@ const analyticsLinks = [
 const systemLinks = [
   { href: "/admin/acces/utilisateurs", label: "Accès & rôles", icon: Shield },
   { href: "/admin/acces/audit", label: "Journal d'audit", icon: FileText },
+  { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];
 
 interface AdminSidebarNavProps {
