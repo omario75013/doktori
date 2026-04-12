@@ -37,6 +37,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  // Auth check first — before any DB work
+  const patientAuth = getPatientFromRequest(req);
+  if (!patientAuth) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
   const body = await req.json();
   const { appointmentId, rating, comment } = body;
 
@@ -56,10 +62,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Vous pouvez laisser un avis uniquement après une consultation terminée" }, { status: 400 });
   }
 
-  // Verify caller owns this appointment via patient token
-  const patientAuth = getPatientFromRequest(req);
-  if (!patientAuth || patientAuth.id !== appt.patientId) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  // Verify caller owns this specific appointment
+  if (patientAuth.id !== appt.patientId) {
+    return NextResponse.json({ error: "Ce rendez-vous ne vous appartient pas" }, { status: 403 });
   }
 
   // Check if already reviewed
