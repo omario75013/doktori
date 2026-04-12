@@ -9,6 +9,9 @@ import {
   Shield,
   MessageSquare,
   LogOut,
+  Radio,
+  Activity,
+  Map,
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -31,6 +34,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
     { href: "/admin/stats", label: "Statistiques", icon: BarChart3 },
   ];
 
+  const sosLinks = [
+    { href: "/admin/sos", label: "SOS", icon: Radio },
+    { href: "/admin/sos/sessions", label: "Sessions SOS", icon: Activity },
+    { href: "/admin/sos/kpis", label: "KPIs SOS", icon: BarChart3 },
+    { href: "/admin/sos/coverage", label: "Couverture", icon: Map },
+  ];
+
   return (
     <div className="min-h-screen flex bg-slate-50">
       <aside className="w-64 bg-slate-900 text-white flex flex-col">
@@ -47,8 +57,26 @@ export default async function AdminLayout({ children }: { children: React.ReactN
             </div>
           </div>
         </div>
-        <nav className="flex-1 p-3 space-y-1">
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
           {links.map((l) => {
+            const Icon = l.icon;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-slate-300 hover:bg-slate-800 hover:text-white transition-colors"
+              >
+                <Icon className="w-4 h-4" />
+                {l.label}
+              </Link>
+            );
+          })}
+          <div className="pt-3 pb-1 px-3">
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+              Opérations
+            </p>
+          </div>
+          {sosLinks.map((l) => {
             const Icon = l.icon;
             return (
               <Link
