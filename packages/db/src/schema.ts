@@ -830,3 +830,16 @@ export const messages = pgTable(
     index("messages_conversation_idx").on(table.conversationId, table.createdAt),
   ]
 );
+
+// ── Platform Settings ─────────────────────────────────────────────────────────
+
+export const platformSettings = pgTable("platform_settings", {
+  key: varchar("key", { length: 100 }).primaryKey(),
+  value: text("value").notNull(),
+  category: varchar("category", { length: 50 }).notNull(),
+  label: varchar("label", { length: 255 }).notNull(),
+  description: text("description"),
+  type: varchar("type", { length: 20 }).notNull().default("text"),
+  options: jsonb("options"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
