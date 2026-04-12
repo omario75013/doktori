@@ -19,6 +19,8 @@ export async function GET(req: NextRequest) {
 
   const [
     ratesResult,
+    totalAllTimeResult,
+    activeNowResult,
     declineReasonsResult,
     bySymptomResult,
     byHourResult,
@@ -35,9 +37,25 @@ export async function GET(req: NextRequest) {
           ORDER BY distance_m
         ) FILTER (WHERE distance_m IS NOT NULL) AS median_distance_m,
         COUNT(*) FILTER (WHERE status = 'completed')::float /
-          NULLIF(COUNT(*) FILTER (WHERE status IN ('accepted','completed')), 0) AS completion_rate
+          NULLIF(COUNT(*) FILTER (WHERE status IN ('accepted','completed')), 0) AS completion_rate,
+        COUNT(*)::int AS period_total,
+        COUNT(*) FILTER (WHERE status = 'expired')::int AS expired_count
       FROM sos_sessions
       WHERE requested_at BETWEEN ${fromParam} AND ${toParam}
+    `),
+
+    // Total sessions all time
+    db.execute(sql`
+      SELECT COUNT(*)::int AS total FROM sos_sessions
+    `),
+
+    // Active now (pending + accepted)
+    db.execute(sql`
+      SELECT
+        COUNT(*) FILTER (WHERE status = 'pending')::int AS pending_count,
+        COUNT(*) FILTER (WHERE status = 'accepted')::int AS accepted_count
+      FROM sos_sessions
+      WHERE status IN ('pending', 'accepted')
     `),
 
     // Top decline reasons
@@ -76,8 +94,18 @@ export async function GET(req: NextRequest) {
   ]);
 
   const rates = (ratesResult as unknown as Record<string, number | null>[])[0] ?? {};
+  const totalRow = (totalAllTimeResult as unknown as { total: number }[])[0] ?? { total: 0 };
+  const activeRow = (activeNowResult as unknown as { pending_count: number; accepted_count: number }[])[0] ?? { pending_count: 0, accepted_count: 0 };
 
   return NextResponse.json({
+    // All-time summary
+    totalAllTime: totalRow.total,
+    activeNow: (activeRow.pending_count ?? 0) + (activeRow.accepted_count ?? 0),
+    pendingNow: activeRow.pending_count ?? 0,
+    acceptedNow: activeRow.accepted_count ?? 0,
+    // Period stats
+    periodTotal: rates.period_total ?? 0,
+    expiredCount: rates.expired_count ?? 0,
     acceptanceRate: rates.acceptance_rate ?? 0,
     medianResponseTimeMs: rates.median_response_ms ?? null,
     medianDistanceM: rates.median_distance_m ?? null,

@@ -14,9 +14,17 @@ import {
   CartesianGrid,
   Legend,
 } from "recharts";
-import { TrendingUp, Clock, MapPin, CheckCircle } from "lucide-react";
+import { TrendingUp, Clock, MapPin, CheckCircle, Database, Activity, AlertTriangle, XCircle } from "lucide-react";
 
 interface KpiData {
+  // All-time
+  totalAllTime: number;
+  activeNow: number;
+  pendingNow: number;
+  acceptedNow: number;
+  // Period
+  periodTotal: number;
+  expiredCount: number;
   acceptanceRate: number;
   medianResponseTimeMs: number | null;
   medianDistanceM: number | null;
@@ -123,7 +131,35 @@ export default function SosKpisPage() {
 
       {data && (
         <>
-          {/* KPI cards */}
+          {/* All-time summary cards */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <KpiCard
+              label="Sessions totales (tous temps)"
+              value={String(data.totalAllTime ?? 0)}
+              icon={<Database className="w-5 h-5 text-slate-600" />}
+              color="bg-slate-100"
+            />
+            <KpiCard
+              label="Actives maintenant"
+              value={String(data.activeNow ?? 0)}
+              icon={<Activity className="w-5 h-5 text-teal-600" />}
+              color="bg-teal-50"
+            />
+            <KpiCard
+              label="Expirées (période)"
+              value={String(data.expiredCount ?? 0)}
+              icon={<XCircle className="w-5 h-5 text-red-500" />}
+              color="bg-red-50"
+            />
+            <KpiCard
+              label="En attente maintenant"
+              value={String(data.pendingNow ?? 0)}
+              icon={<AlertTriangle className="w-5 h-5 text-amber-600" />}
+              color="bg-amber-50"
+            />
+          </div>
+
+          {/* Period performance cards */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             <KpiCard
               label="Taux d'acceptation"

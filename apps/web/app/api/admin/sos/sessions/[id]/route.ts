@@ -23,15 +23,18 @@ export async function GET(
       s.description,
       s.fee,
       s.commission,
+      s.distance_m,
+      s.resolution,
+      s.admin_notes,
       s.requested_at,
       s.accepted_at,
       s.completed_at,
       s.expires_at,
+      s.cancel_reason,
+      s.cancelled_by,
+      s.cancelled_at,
       s.patient_lat,
       s.patient_lng,
-      s.distance_m,
-      s.resolution,
-      s.admin_notes,
       s.doctor_id,
       p.name  AS patient_name,
       p.phone AS patient_phone,
@@ -59,7 +62,7 @@ export async function GET(
     return NextResponse.json({ error: "Session introuvable" }, { status: 404 });
   }
 
-  // Declines timeline
+  // Declines with doctor names
   const declinesResult = await db.execute(sql`
     SELECT
       sd.id,
@@ -72,22 +75,18 @@ export async function GET(
     ORDER BY sd.declined_at ASC
   `);
 
-  // SMS logs for patient phone
-  const patientPhone = session.patient_phone as string | null;
-  const smsResult = patientPhone
-    ? await db.execute(sql`
-        SELECT id, recipient, message, status, created_at
-        FROM sms_logs
-        WHERE recipient = ${patientPhone}
-        ORDER BY created_at DESC
-        LIMIT 20
-      `)
-    : [];
+  // Phone proxy details
+  const proxyResult = await db.execute(sql`
+    SELECT proxy_number, patient_phone, doctor_phone, is_active
+    FROM phone_proxies
+    WHERE sos_session_id = ${id}
+    LIMIT 1
+  `);
 
   return NextResponse.json({
     session,
     declines: declinesResult as unknown as Record<string, unknown>[],
-    smsLogs: smsResult as unknown as Record<string, unknown>[],
+    proxy: (proxyResult as unknown as Record<string, unknown>[])[0] ?? null,
   });
 }
 
@@ -130,7 +129,6 @@ export async function PATCH(
   if (typeof body.status !== "undefined") {
     updates.push(sql`status = ${body.status}`);
     after.status = body.status;
-    // Set completion timestamp if marking completed
     if (body.status === "completed") {
       updates.push(sql`completed_at = COALESCE(completed_at, NOW())`);
     }
@@ -144,7 +142,6 @@ export async function PATCH(
     after.resolution = body.resolution;
   }
 
-  // Compose the SET clause by joining with commas
   const setClauses = updates.reduce(
     (acc, clause, idx) => (idx === 0 ? sql`${clause}` : sql`${acc}, ${clause}`),
     sql``

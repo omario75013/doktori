@@ -13,6 +13,8 @@ interface SosSession {
   doctor_name: string | null;
   fee: number | null;
   commission: number | null;
+  distance_m: number | null;
+  resolution: string | null;
   requested_at: string;
   duration_ms: number | null;
   review_rating: number | null;
@@ -40,7 +42,7 @@ const SYMPTOM_OPTIONS = SYMPTOM_LIST.map((s) => s.label);
 function exportCsv(sessions: SosSession[]) {
   const headers = [
     "ID", "Statut", "Patient", "Médecin", "Symptôme",
-    "Honoraire (DT)", "Commission (DT)", "Demandé le", "Durée", "Note",
+    "Honoraire (DT)", "Commission (DT)", "Distance (m)", "Résolution", "Demandé le", "Durée", "Note",
   ];
   const rows = sessions.map((s) => [
     s.id.slice(0, 8),
@@ -50,6 +52,8 @@ function exportCsv(sessions: SosSession[]) {
     s.symptom_category ?? "",
     s.fee ? (s.fee / 1000).toFixed(3) : "",
     s.commission ? (s.commission / 1000).toFixed(3) : "",
+    s.distance_m != null ? String(Math.round(s.distance_m)) : "",
+    s.resolution ?? "",
     new Date(s.requested_at).toLocaleString("fr-TN"),
     formatDuration(s.duration_ms),
     s.review_rating?.toString() ?? "",
@@ -213,7 +217,8 @@ export default function SosSessionsPage() {
                 <th className="px-4 py-3 font-semibold">Symptôme</th>
                 <th className="px-4 py-3 font-semibold">Statut</th>
                 <th className="px-4 py-3 font-semibold">Honoraire</th>
-                <th className="px-4 py-3 font-semibold">Commission</th>
+                <th className="px-4 py-3 font-semibold">Distance</th>
+                <th className="px-4 py-3 font-semibold">Résolution</th>
                 <th className="px-4 py-3 font-semibold">Demandé le</th>
                 <th className="px-4 py-3 font-semibold">Durée</th>
                 <th className="px-4 py-3 font-semibold">Note</th>
@@ -222,14 +227,14 @@ export default function SosSessionsPage() {
             <tbody className="divide-y divide-slate-100">
               {isLoading && (
                 <tr>
-                  <td colSpan={10} className="px-4 py-12 text-center text-slate-500">
+                  <td colSpan={11} className="px-4 py-12 text-center text-slate-500">
                     Chargement…
                   </td>
                 </tr>
               )}
               {!isLoading && visible.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="px-4 py-12 text-center text-slate-500">
+                  <td colSpan={11} className="px-4 py-12 text-center text-slate-500">
                     Aucune session trouvée
                   </td>
                 </tr>
@@ -261,7 +266,14 @@ export default function SosSessionsPage() {
                     </span>
                   </td>
                   <td className="px-4 py-3 tabular-nums text-slate-700">{formatDT(s.fee)}</td>
-                  <td className="px-4 py-3 tabular-nums text-slate-700">{formatDT(s.commission)}</td>
+                  <td className="px-4 py-3 tabular-nums text-slate-600">
+                    {s.distance_m != null ? `${Math.round(s.distance_m)} m` : "—"}
+                  </td>
+                  <td className="px-4 py-3 text-slate-600 text-xs">
+                    {s.resolution ? (
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-600 rounded-full">{s.resolution}</span>
+                    ) : "—"}
+                  </td>
                   <td className="px-4 py-3 text-slate-600 whitespace-nowrap">
                     {new Date(s.requested_at).toLocaleString("fr-TN")}
                   </td>

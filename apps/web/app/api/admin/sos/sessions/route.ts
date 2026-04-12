@@ -48,6 +48,8 @@ export async function GET(req: NextRequest) {
         s.description,
         s.fee,
         s.commission,
+        s.distance_m,
+        s.resolution,
         s.requested_at,
         s.accepted_at,
         s.completed_at,
