@@ -30,28 +30,21 @@ export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
 
-  // OTA update check on every launch (skipped in dev)
+  // Silent OTA update — download + auto-reload, no user prompt
   useEffect(() => {
-    async function checkForUpdates() {
+    async function silentUpdate() {
       if (__DEV__) return;
       try {
         const update = await Updates.checkForUpdateAsync();
         if (update.isAvailable) {
           await Updates.fetchUpdateAsync();
-          Alert.alert(
-            "Mise à jour disponible",
-            "Une nouvelle version est prête. Redémarrer maintenant ?",
-            [
-              { text: "Plus tard", style: "cancel" },
-              { text: "Redémarrer", onPress: () => Updates.reloadAsync() },
-            ]
-          );
+          await Updates.reloadAsync();
         }
       } catch (e) {
-        console.log("[Updates] check failed:", e);
+        console.log("[Updates] silent update failed:", e);
       }
     }
-    checkForUpdates();
+    silentUpdate();
   }, []);
 
   // Analytics: track app_open and app_background transitions
