@@ -767,3 +767,28 @@ export const featureFlags = pgTable("feature_flags", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ── Catalog: Specialties ──────────────────────────────────────────────────────
+
+export const catalogSpecialties = pgTable("catalog_specialties", {
+  id: varchar("id", { length: 50 }).primaryKey(),
+  label: varchar("label", { length: 100 }).notNull(),
+  labelAr: varchar("label_ar", { length: 100 }),
+  icon: varchar("icon", { length: 50 }),
+  isActive: boolean("is_active").notNull().default(true),
+  displayOrder: integer("display_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ── Catalog: Cities ───────────────────────────────────────────────────────────
+
+export const catalogCities = pgTable("catalog_cities", {
+  id: varchar("id", { length: 50 }).primaryKey(),
+  label: varchar("label", { length: 100 }).notNull(),
+  labelAr: varchar("label_ar", { length: 100 }),
+  latitude: varchar("latitude", { length: 30 }),
+  longitude: varchar("longitude", { length: 30 }),
+  isActive: boolean("is_active").notNull().default(true),
+  displayOrder: integer("display_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
