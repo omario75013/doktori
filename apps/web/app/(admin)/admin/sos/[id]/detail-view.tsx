@@ -196,7 +196,7 @@ export function DetailView({
   const session = initial as unknown as Session;
 
   const [notes, setNotes] = useState<string>(
-    (session as Record<string, unknown>).admin_notes as string ?? ""
+    (session as unknown as Record<string, unknown>).admin_notes as string ?? ""
   );
   const [notesSaving, setNotesSaving] = useState(false);
   const [busy, setBusy] = useState(false);
