@@ -304,6 +304,29 @@ function getTools(locale: string): OpenAITool[] {
 // ──────────────────────────────────────────────────────────────────────────────
 type UserLocation = { lat: number; lng: number } | null;
 
+/** Resolve a doctorId that might be a UUID, slug, or partial name to a real UUID */
+async function resolveDoctorId(raw: string): Promise<string | null> {
+  if (!raw) return null;
+  // Already a valid UUID format
+  if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(raw)) {
+    return raw;
+  }
+  // Try slug match
+  const [bySlug] = await db
+    .select({ id: doctors.id })
+    .from(doctors)
+    .where(ilike(doctors.slug, `%${raw.replace(/[^a-z0-9-]/gi, "")}%`))
+    .limit(1);
+  if (bySlug) return bySlug.id;
+  // Try name match
+  const [byName] = await db
+    .select({ id: doctors.id })
+    .from(doctors)
+    .where(ilike(doctors.name, `%${raw}%`))
+    .limit(1);
+  return byName?.id ?? null;
+}
+
 async function runTool(
   name: string,
   input: Record<string, unknown>,
@@ -521,8 +544,9 @@ async function toolIdentifyPatient(input: Record<string, unknown>): Promise<stri
 
 // ── get_doctor_appointment_types ─────────────────────────────────────────────
 async function toolGetDoctorTypes(input: Record<string, unknown>): Promise<string> {
-  const doctorId = String(input.doctorId || "");
-  if (!doctorId) return JSON.stringify({ error: "doctorId requis" });
+  const rawDoctorId = String(input.doctorId || "");
+  const doctorId = rawDoctorId ? await resolveDoctorId(rawDoctorId) : null;
+  if (!doctorId) return JSON.stringify({ error: "Médecin introuvable" });
 
   const types = await db
     .select()
@@ -570,8 +594,9 @@ async function toolGetSlots(input: Record<string, unknown>): Promise<string> {
 
 // ── get_doctor_practices ─────────────────────────────────────────────────────
 async function toolGetPractices(input: Record<string, unknown>): Promise<string> {
-  const doctorId = String(input.doctorId || "");
-  if (!doctorId) return JSON.stringify({ error: "doctorId requis" });
+  const rawDoctorId = String(input.doctorId || "");
+  const doctorId = rawDoctorId ? await resolveDoctorId(rawDoctorId) : null;
+  if (!doctorId) return JSON.stringify({ error: "Médecin introuvable" });
 
   const practices = await db
     .select()
@@ -591,8 +616,9 @@ async function toolGetPractices(input: Record<string, unknown>): Promise<string>
 
 // ── check_doctor_calendar ────────────────────────────────────────────────────
 async function toolCheckCalendar(input: Record<string, unknown>): Promise<string> {
-  const doctorId = String(input.doctorId || "");
-  if (!doctorId) return JSON.stringify({ error: "doctorId requis" });
+  const rawDoctorId = String(input.doctorId || "");
+  const doctorId = rawDoctorId ? await resolveDoctorId(rawDoctorId) : null;
+  if (!doctorId) return JSON.stringify({ error: "Médecin introuvable" });
 
   const typeId = typeof input.appointmentTypeId === "string" && input.appointmentTypeId.length > 0 ? input.appointmentTypeId : undefined;
   let duration: number | undefined;
@@ -637,7 +663,8 @@ async function toolCheckCalendar(input: Record<string, unknown>): Promise<string
 
 // ── book_appointment ─────────────────────────────────────────────────────────
 async function toolBookAppointment(input: Record<string, unknown>): Promise<string> {
-  const doctorId = String(input.doctorId || "");
+  const rawDoctorId = String(input.doctorId || "");
+  const doctorId = rawDoctorId ? await resolveDoctorId(rawDoctorId) : null;
   const patientName = String(input.patientName || "");
   const patientPhone = typeof input.patientPhone === "string" ? formatPhone(input.patientPhone) : "";
   const date = String(input.date || "");
