@@ -44,6 +44,16 @@ export async function registerForPushNotifications(): Promise<string | null> {
   }
 }
 
+export async function registerPushTokenIfNeeded() {
+  const token = await registerForPushNotifications();
+  if (token) {
+    const { api } = await import("./api");
+    await api.registerPushToken(token).catch((e: any) =>
+      console.error("Push token registration failed:", e)
+    );
+  }
+}
+
 export async function registerTokenWithServer(
   token: string,
   jwtToken: string,

@@ -4,8 +4,17 @@ import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { getToken, isTokenValid } from "@/lib/auth";
 import { colors } from "@/lib/theme";
+import * as Notifications from "expo-notifications";
 
 SplashScreen.preventAutoHideAsync();
+
+Notifications.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: true,
+    shouldSetBadge: true,
+  }),
+});
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -29,6 +38,10 @@ export default function RootLayout() {
   useEffect(() => {
     if (!isReady || !fontsLoaded) return;
     SplashScreen.hideAsync();
+
+    if (isAuthed) {
+      import("@/lib/push").then(({ registerPushTokenIfNeeded }) => registerPushTokenIfNeeded());
+    }
 
     const inAuth = segments[0] === "(auth)";
     if (!isAuthed && !inAuth) {
