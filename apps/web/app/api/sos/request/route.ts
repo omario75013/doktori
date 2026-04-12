@@ -3,6 +3,7 @@ import { db, patients } from "@doktori/db";
 import { sql, eq } from "drizzle-orm";
 import { formatPhone } from "@doktori/shared";
 import { broadcastSos } from "@/lib/sos-broadcast";
+import { signSosToken } from "@/lib/sos-hmac";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -46,5 +47,5 @@ export async function POST(req: NextRequest) {
   // Notify all available SOS doctors in real-time (they filter by location in their feed)
   await broadcastSos("doctors-all", "new-request", { sessionId });
 
-  return NextResponse.json({ sessionId }, { status: 201 });
+  return NextResponse.json({ sessionId, token: signSosToken(sessionId) }, { status: 201 });
 }

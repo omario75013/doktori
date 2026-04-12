@@ -16,7 +16,14 @@ export async function POST(req: Request) {
   // Atomic update: only succeeds if session is still pending
   const result = await db.execute(sql`
     UPDATE sos_sessions
-    SET status = 'accepted', doctor_id = ${session.user.id}, accepted_at = NOW()
+    SET status = 'accepted',
+        doctor_id = ${session.user.id},
+        accepted_at = NOW(),
+        distance_m = (
+          SELECT ST_Distance(s.patient_location, d.location)::integer
+          FROM sos_sessions s, doctors d
+          WHERE s.id = ${sessionId} AND d.id = ${session.user.id}
+        )
     WHERE id = ${sessionId} AND status = 'pending' AND expires_at > NOW()
     RETURNING id, patient_id
   `);
@@ -46,13 +53,13 @@ export async function POST(req: Request) {
 
     const displayPhone = proxy.success ? proxy.proxyNumber : info.phone;
 
-    try {
-      await sendSMS(
-        info.patient_phone,
-        `Doktori SOS: ${info.name} accepte votre demande. Tel: ${displayPhone}. Adresse: ${info.address}`,
-      );
-    } catch (e) {
-      console.error("SMS failed:", e);
+    const smsText = `Doktori SOS: ${info.name} accepte votre demande. Tel: ${displayPhone}. Adresse: ${info.address}`;
+    const smsResult = await sendSMS(info.patient_phone, smsText);
+    if (!smsResult.success) {
+      // Fire-and-forget retry after 5 seconds
+      setTimeout(() => {
+        sendSMS(info.patient_phone, smsText).catch(() => {});
+      }, 5000);
     }
 
     // Notify the patient in real-time that their session was accepted
@@ -63,6 +70,9 @@ export async function POST(req: Request) {
       doctorPhone: displayPhone,
       doctorAddress: info.address,
     });
+
+    // Notify all doctors that this request has been taken
+    await broadcastSos("doctors-all", "request-taken", { sessionId });
   }
 
   return NextResponse.json({ success: true });
