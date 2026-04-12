@@ -31,7 +31,7 @@ Tu es une **réceptionniste virtuelle**. Ton objectif #1 est de **réserver un r
 ## Flux conversationnel idéal
 1. Accueil → demander ce que le patient recherche (spécialité ou symptômes)
 2. Si symptômes → suggest_specialty → recommander une spécialité
-3. Demander la ville → search_doctors → proposer 3-5 médecins
+3. Si la géolocalisation est activée, search_doctors trie automatiquement par distance (montre "à X km") → proposer les plus proches. Sinon demander la ville.
 4. Patient choisit un médecin → get_doctor_appointment_types → proposer les motifs
 5. Si le médecin a plusieurs cabinets → get_doctor_practices → demander lequel
 6. check_doctor_calendar pour voir la disponibilité de la semaine → proposer les meilleurs jours
@@ -302,14 +302,17 @@ function getTools(locale: string): OpenAITool[] {
 // ──────────────────────────────────────────────────────────────────────────────
 // Tool execution
 // ──────────────────────────────────────────────────────────────────────────────
+type UserLocation = { lat: number; lng: number } | null;
+
 async function runTool(
   name: string,
   input: Record<string, unknown>,
+  userLocation?: UserLocation,
 ): Promise<string> {
   try {
     switch (name) {
       case "search_doctors":
-        return await toolSearchDoctors(input);
+        return await toolSearchDoctors(input, userLocation);
       case "suggest_specialty":
         return toolSuggestSpecialty(input);
       case "identify_patient":
@@ -336,7 +339,17 @@ async function runTool(
 }
 
 // ── search_doctors ──────────────────────────────────────────────────────────
-async function toolSearchDoctors(input: Record<string, unknown>): Promise<string> {
+
+function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+async function toolSearchDoctors(input: Record<string, unknown>, userLocation?: UserLocation): Promise<string> {
   const specialty = typeof input.specialty === "string" ? input.specialty : null;
   const city = typeof input.city === "string" ? input.city : null;
   const query = typeof input.query === "string" ? input.query : null;
@@ -357,30 +370,57 @@ async function toolSearchDoctors(input: Record<string, unknown>): Promise<string
       specialty: doctors.specialty,
       city: doctors.city,
       address: doctors.address,
+      latitude: doctors.latitude,
+      longitude: doctors.longitude,
       consultationFee: doctors.consultationFee,
       consultationMode: doctors.consultationMode,
     })
     .from(doctors)
     .where(and(...conditions))
-    .limit(5);
+    .limit(20); // fetch more, then sort by distance and limit to 5
 
   if (results.length === 0) {
     return JSON.stringify({ count: 0, doctors: [], message: "Aucun médecin trouvé" });
   }
 
+  // Sort by distance if user location is available
+  let sorted = results;
+  if (userLocation) {
+    sorted = results
+      .map((d) => {
+        const dlat = d.latitude ? parseFloat(d.latitude) : null;
+        const dlng = d.longitude ? parseFloat(d.longitude) : null;
+        const distKm = dlat && dlng ? haversineKm(userLocation.lat, userLocation.lng, dlat, dlng) : 999;
+        return { ...d, distKm };
+      })
+      .sort((a, b) => a.distKm - b.distKm)
+      .slice(0, 5);
+  } else {
+    sorted = results.slice(0, 5);
+  }
+
   return JSON.stringify({
-    count: results.length,
-    doctors: results.map((d) => ({
-      id: d.id,
-      name: d.name,
-      specialty: SPECIALTIES.find((s) => s.id === d.specialty)?.label ?? d.specialty,
-      city: CITIES.find((c) => c.id === d.city)?.label ?? d.city,
-      address: d.address,
-      fee: d.consultationFee ? `${d.consultationFee / 1000} DT` : null,
-      mode: d.consultationMode,
-      profileUrl: `/medecin/${d.slug}`,
-      bookingUrl: `/rdv/${d.slug}`,
-    })),
+    count: sorted.length,
+    geoSorted: !!userLocation,
+    doctors: sorted.map((d) => {
+      const dlat = d.latitude ? parseFloat(d.latitude) : null;
+      const dlng = d.longitude ? parseFloat(d.longitude) : null;
+      const distKm = userLocation && dlat && dlng
+        ? haversineKm(userLocation.lat, userLocation.lng, dlat, dlng)
+        : null;
+      return {
+        id: d.id,
+        name: d.name,
+        specialty: SPECIALTIES.find((s) => s.id === d.specialty)?.label ?? d.specialty,
+        city: CITIES.find((c) => c.id === d.city)?.label ?? d.city,
+        address: d.address,
+        fee: d.consultationFee ? `${d.consultationFee / 1000} DT` : null,
+        mode: d.consultationMode,
+        distanceKm: distKm ? Math.round(distKm * 10) / 10 : null,
+        profileUrl: `/medecin/${d.slug}`,
+        bookingUrl: `/rdv/${d.slug}`,
+      };
+    }),
   });
 }
 
@@ -840,6 +880,9 @@ export async function POST(req: Request) {
   const body = await req.json();
   const userMessages: Array<{ role: string; content: string }> = body.messages || [];
   const locale: string = typeof body.locale === "string" ? body.locale : "fr";
+  const userLocation: UserLocation = body.location && typeof body.location.lat === "number" && typeof body.location.lng === "number"
+    ? { lat: body.location.lat, lng: body.location.lng }
+    : null;
 
   if (!Array.isArray(userMessages) || userMessages.length === 0) {
     return NextResponse.json({ error: "messages requis" }, { status: 400 });
@@ -955,7 +998,7 @@ export async function POST(req: Request) {
         try {
           toolInput = JSON.parse(call.function.arguments || "{}");
         } catch {}
-        const result = await runTool(call.function.name, toolInput);
+        const result = await runTool(call.function.name, toolInput, userLocation);
         lastToolName = call.function.name;
         lastToolResult = result;
         messages.push({

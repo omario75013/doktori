@@ -36,6 +36,8 @@ export function Chatbot() {
     [t]
   );
   const [open, setOpen] = useState(false);
+  const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoRequested, setGeoRequested] = useState(false);
   const [messages, setMessages] = useState<Message[]>(() => [
     { role: "assistant", content: t("welcome") },
   ]);
@@ -48,6 +50,18 @@ export function Chatbot() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
+
+  // Request geolocation when chat opens (silently, one-time)
+  useEffect(() => {
+    if (open && !geoRequested && "geolocation" in navigator) {
+      setGeoRequested(true);
+      navigator.geolocation.getCurrentPosition(
+        (pos) => setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => {}, // silently ignore denial
+        { timeout: 5000, enableHighAccuracy: false }
+      );
+    }
+  }, [open, geoRequested]);
 
   // Focus input when opened
   useEffect(() => {
@@ -69,6 +83,7 @@ export function Chatbot() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           locale,
+          location: userLocation,
           // Skip welcome message when sending to API
           messages: newMessages
             .slice(1)
