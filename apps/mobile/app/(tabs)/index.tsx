@@ -107,6 +107,12 @@ export default function SearchScreen() {
   const activeFilterCount = countActiveFilters(filters);
 
   const doSearch = useCallback(async () => {
+    // Don't auto-search on mount with no input
+    if (!query && !filters.specialty && filters.availability === "all" && filters.lat === undefined) {
+      setResults([]);
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     try {
       const params = new URLSearchParams();
