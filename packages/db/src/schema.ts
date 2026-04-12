@@ -743,3 +743,14 @@ export const adminAuditLogs = pgTable(
     index("admin_audit_created_idx").on(table.createdAt),
   ]
 );
+
+// ── Feature Flags ─────────────────────────────────────────────────────────────
+
+export const featureFlags = pgTable("feature_flags", {
+  key: varchar("key", { length: 100 }).primaryKey(),
+  enabled: boolean("enabled").notNull().default(false),
+  description: text("description"),
+  rules: jsonb("rules").default({}),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
