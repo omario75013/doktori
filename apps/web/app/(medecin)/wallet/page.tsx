@@ -38,25 +38,25 @@ export default async function WalletPage() {
   ]);
 
   const balanceMillimes = Number(
-    (walletRow.rows[0] as { balance: number | null } | undefined)?.balance ?? 0
+    ((walletRow as unknown as Array<{ balance: number | null }>)[0])?.balance ?? 0
   );
 
-  const allTxs = txRows.rows as Array<{
+  const allTxs = (txRows as unknown as Array<{
     id: string;
     type: "credit" | "commission" | "withdrawal" | "refund";
     amountMillimes: number;
     description: string;
     createdAt: string;
-  }>;
+  }>);
 
   const hasMore = allTxs.length > PAGE_SIZE;
   const transactions = hasMore ? allTxs.slice(0, PAGE_SIZE) : allTxs;
 
-  const stats = (statsRow.rows[0] as {
+  const stats = ((statsRow as unknown as Array<{
     total_earned: number;
     total_commission: number;
     total_withdrawn: number;
-  } | undefined) ?? { total_earned: 0, total_commission: 0, total_withdrawn: 0 };
+  }>)[0]) ?? { total_earned: 0, total_commission: 0, total_withdrawn: 0 };
 
   return (
     <div className="space-y-6">

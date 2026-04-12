@@ -88,15 +88,15 @@ export default async function DashboardPage() {
   ]);
 
   const consultationMode =
-    (doctorRow.rows[0] as { consultation_mode: string | null } | undefined)
+    ((doctorRow as unknown as Array<{ consultation_mode: string | null }>)[0])
       ?.consultation_mode ?? "cabinet";
 
   const teleconsultCount = Number(
-    (teleconsultCountRow.rows[0] as { count: string } | undefined)?.count ?? 0
+    ((teleconsultCountRow as unknown as Array<{ count: string }>)[0])?.count ?? 0
   );
 
   const walletBalance = Number(
-    (walletRow.rows[0] as { balance: number | null } | undefined)?.balance ?? 0
+    ((walletRow as unknown as Array<{ balance: number | null }>)[0])?.balance ?? 0
   );
 
   const hasTeleconsult = consultationMode === "teleconsult" || consultationMode === "both";

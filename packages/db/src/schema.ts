@@ -60,10 +60,6 @@ export const doctors = pgTable(
     sosFee: integer("sos_fee"),
     sosAvailableFrom: time("sos_available_from"),
     sosAvailableTo: time("sos_available_to"),
-    // Teleconsultation — 'cabinet' | 'teleconsult' | 'both'
-    consultationMode: varchar("consultation_mode", { length: 20 }).notNull().default("cabinet"),
-    // Fee for teleconsultation in millimes (DT × 1000), null = same as consultationFee
-    teleconsultFee: integer("teleconsult_fee"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

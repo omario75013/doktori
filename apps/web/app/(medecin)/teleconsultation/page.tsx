@@ -15,11 +15,11 @@ export default async function TeleconsultationPage() {
     sql`SELECT consultation_mode, teleconsult_fee, consultation_fee FROM doctors WHERE id = ${doctorId} LIMIT 1`
   );
 
-  const doctor = doctorRows.rows[0] as {
+  const doctor = (doctorRows as unknown as Array<{
     consultation_mode: string | null;
     teleconsult_fee: number | null;
     consultation_fee: number | null;
-  } | undefined;
+  }>)[0];
 
   const initialMode = (doctor?.consultation_mode ?? "cabinet") as
     | "cabinet"
