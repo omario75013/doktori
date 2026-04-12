@@ -48,12 +48,11 @@ export const api = {
     }),
 
   // Search
-  searchDoctors: (q: string, filters?: { specialty?: string; city?: string; mode?: string }) => {
+  searchDoctors: (q: string, filters?: { specialty?: string; city?: string }) => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (filters?.specialty) params.set("specialty", filters.specialty);
     if (filters?.city) params.set("city", filters.city);
-    if (filters?.mode) params.set("mode", filters.mode);
     return apiFetch<any>(`/api/search?${params.toString()}`);
   },
 
@@ -79,8 +78,34 @@ export const api = {
     date: string;
     startTime: string;
     reason?: string;
-    type?: "teleconsult";
-  }) => apiFetch<any>("/api/appointments", { method: "POST", body: JSON.stringify(data) }),
+    appointmentTypeId?: string;
+    practiceId?: string;
+    beneficiaryRelation?: string;
+    beneficiaryName?: string;
+    beneficiaryDateOfBirth?: string;
+    questionnaire?: Record<string, string>;
+  }) => apiFetch<{ id: string; paymentUrl?: string }>("/api/appointments", {
+    method: "POST",
+    body: JSON.stringify(data),
+  }),
+
+  getAppointment: (id: string) =>
+    apiFetch<{ id: string; status: string }>(`/api/appointments/${id}`),
+
+  getAppointmentTypes: (doctorId: string) =>
+    apiFetch<Array<{ id: string; name: string; durationMinutes: number; fee: number | null; color: string }>>(
+      `/api/appointment-types?doctorId=${doctorId}`
+    ),
+
+  getAppointmentTypeQuestions: (typeId: string) =>
+    apiFetch<Array<{ id: string; label: string; kind: string; choices: string[] | null; required: boolean; displayOrder: number }>>(
+      `/api/appointment-types/questions-public?typeId=${typeId}`
+    ),
+
+  getDoctorPractices: (doctorId: string) =>
+    apiFetch<Array<{ id: string; name: string; address: string; city: string; phone: string | null; isPrimary: boolean }>>(
+      `/api/doctors/${doctorId}/practices`
+    ),
 
   getMyAppointments: () => apiFetch<any>("/api/appointments/patient"),
 
@@ -118,19 +143,4 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ token, platform: Platform.OS }),
     }),
-
-  // Teleconsult
-  getTeleconsultRoom: (appointmentId: string) =>
-    apiFetch<{ roomUrl: string; roomName: string }>(`/api/teleconsult/${appointmentId}`),
-
-  getMyTeleconsultAppointments: () =>
-    apiFetch<Array<{
-      id: string;
-      doctorName: string;
-      specialty: string;
-      date: string;
-      startTime: string;
-      status: string;
-      type: string;
-    }>>("/api/appointments/patient?type=teleconsult"),
 };
