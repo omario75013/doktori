@@ -46,7 +46,7 @@ export async function POST(req: Request) {
   const token = sign(
     { id: patient.id, phone: patient.phone, role: "patient" },
     process.env.NEXTAUTH_SECRET!,
-    { expiresIn: "30d" }
+    { expiresIn: "7d" }
   );
 
   return NextResponse.json({ token, patient: { id: patient.id, phone: patient.phone } });
