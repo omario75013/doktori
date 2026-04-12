@@ -1,77 +1,96 @@
-import { useEffect, useState } from "react";
-import { View, Text, TextInput, FlatList, Pressable, ActivityIndicator, StyleSheet } from "react-native";
+// apps/mobile/app/(tabs)/index.tsx
+import { useCallback, useEffect, useState } from "react";
+import { View, Text, TextInput, FlatList, Pressable, StyleSheet, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
+import { Search as SearchIcon } from "lucide-react-native";
 import { api } from "@/lib/api";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
+import { colors, spacing, radius } from "@/lib/theme";
+import { DoctorCard } from "@/components/ui/DoctorCard";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function SearchScreen() {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [specialty, setSpecialty] = useState<string | undefined>();
+  const [city, setCity] = useState<string | undefined>();
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const doSearch = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await api.searchDoctors(query, { specialty, city });
+      setResults(data.hits || []);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setLoading(false);
+    }
+  }, [query, specialty, city]);
 
   useEffect(() => {
-    const handler = setTimeout(async () => {
-      setLoading(true);
-      try {
-        const data = await api.searchDoctors(query);
-        setResults(data.hits || []);
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setLoading(false);
-      }
-    }, 300);
+    const handler = setTimeout(doSearch, 300);
     return () => clearTimeout(handler);
-  }, [query]);
+  }, [doSearch]);
+
+  function onRefresh() {
+    setRefreshing(true);
+    doSearch().finally(() => setRefreshing(false));
+  }
 
   return (
     <View style={styles.container}>
       <View style={styles.header}>
         <Text style={styles.title}>Trouvez un médecin</Text>
-        <Text style={styles.subtitle}>Réservez en 2 clics</Text>
+        <View style={styles.searchRow}>
+          <SearchIcon size={18} color={colors.slate500} />
+          <TextInput
+            style={styles.input}
+            placeholder="Nom, spécialité, ville..."
+            placeholderTextColor={colors.slate500}
+            value={query}
+            onChangeText={setQuery}
+          />
+        </View>
       </View>
-      <TextInput
-        style={styles.input}
-        placeholder="Nom, spécialité, ville..."
-        placeholderTextColor="#9ca3af"
-        value={query}
-        onChangeText={setQuery}
+
+      {/* Filter chips */}
+      <FlatList
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        data={SPECIALTIES}
+        keyExtractor={(s) => s.id}
+        style={styles.chips}
+        contentContainerStyle={{ paddingHorizontal: spacing.md, gap: spacing.sm }}
+        renderItem={({ item }) => (
+          <Pressable
+            style={[styles.chip, specialty === item.id && styles.chipActive]}
+            onPress={() => setSpecialty(specialty === item.id ? undefined : item.id)}
+          >
+            <Text style={[styles.chipText, specialty === item.id && styles.chipTextActive]}>
+              {item.label}
+            </Text>
+          </Pressable>
+        )}
       />
-      {loading ? (
-        <ActivityIndicator style={{ marginTop: 20 }} color="#2563eb" />
+
+      {loading && !refreshing ? (
+        <LoadingSpinner />
       ) : (
         <FlatList
           data={results}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: 16, gap: 12 }}
+          contentContainerStyle={{ padding: spacing.md, gap: spacing.md, flexGrow: 1 }}
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
           ListEmptyComponent={
-            <Text style={styles.empty}>Tapez pour rechercher un médecin</Text>
+            <EmptyState icon="🔍" title="Recherchez un médecin" description="Tapez un nom, une spécialité ou une ville" />
           }
-          renderItem={({ item }) => {
-            const spec = SPECIALTIES.find((s) => s.id === item.specialty);
-            const city = CITIES.find((c) => c.id === item.city);
-            return (
-              <Pressable
-                style={styles.card}
-                onPress={() => router.push(`/medecin/${item.slug}`)}
-              >
-                <View style={styles.avatar}>
-                  <Text style={styles.avatarText}>{item.name?.charAt(0) || "?"}</Text>
-                </View>
-                <View style={{ flex: 1 }}>
-                  <Text style={styles.doctorName}>{item.name}</Text>
-                  <Text style={styles.specialty}>{spec?.label}</Text>
-                  <Text style={styles.city}>{city?.label}</Text>
-                </View>
-                {item.consultationFee && (
-                  <View>
-                    <Text style={styles.fee}>{item.consultationFee / 1000} DT</Text>
-                  </View>
-                )}
-              </Pressable>
-            );
-          }}
+          renderItem={({ item }) => (
+            <DoctorCard doctor={item} onPress={() => router.push(`/medecin/${item.slug}`)} />
+          )}
         />
       )}
     </View>
@@ -79,26 +98,18 @@ export default function SearchScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
-  header: { padding: 20, paddingBottom: 10, backgroundColor: "#fff", borderBottomWidth: 1, borderBottomColor: "#e5e7eb" },
-  title: { fontSize: 24, fontWeight: "700", color: "#111827" },
-  subtitle: { fontSize: 14, color: "#6b7280", marginTop: 4 },
-  input: {
-    backgroundColor: "#fff", margin: 16, padding: 14, borderRadius: 12,
-    borderWidth: 1, borderColor: "#e5e7eb", fontSize: 16,
+  container: { flex: 1, backgroundColor: colors.bg },
+  header: { padding: spacing.md, paddingBottom: spacing.sm, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.border },
+  title: { fontSize: 24, fontWeight: "700", color: colors.ink, marginBottom: spacing.md },
+  searchRow: {
+    flexDirection: "row", alignItems: "center", gap: spacing.sm,
+    backgroundColor: colors.bg, paddingHorizontal: 14, paddingVertical: 12,
+    borderRadius: radius.md, borderWidth: 1, borderColor: colors.border,
   },
-  empty: { textAlign: "center", color: "#9ca3af", marginTop: 40 },
-  card: {
-    backgroundColor: "#fff", padding: 16, borderRadius: 12, flexDirection: "row",
-    alignItems: "center", gap: 12, borderWidth: 1, borderColor: "#e5e7eb",
-  },
-  avatar: {
-    width: 48, height: 48, borderRadius: 24, backgroundColor: "#dbeafe",
-    alignItems: "center", justifyContent: "center",
-  },
-  avatarText: { fontSize: 20, fontWeight: "700", color: "#2563eb" },
-  doctorName: { fontSize: 16, fontWeight: "600", color: "#111827" },
-  specialty: { fontSize: 14, color: "#2563eb", marginTop: 2 },
-  city: { fontSize: 13, color: "#6b7280", marginTop: 2 },
-  fee: { fontSize: 16, fontWeight: "700", color: "#111827" },
+  input: { flex: 1, fontSize: 16, color: colors.ink },
+  chips: { maxHeight: 48, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.border },
+  chip: { paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.mist, borderRadius: radius.full },
+  chipActive: { backgroundColor: colors.primary },
+  chipText: { fontSize: 13, color: colors.ink },
+  chipTextActive: { color: colors.white, fontWeight: "600" },
 });

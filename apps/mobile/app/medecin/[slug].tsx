@@ -1,21 +1,31 @@
+// apps/mobile/app/medecin/[slug].tsx
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, ActivityIndicator, Pressable } from "react-native";
+import { View, Text, ScrollView, StyleSheet, Pressable, Share } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+import { Share2 } from "lucide-react-native";
 import { api } from "@/lib/api";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
+import { colors, spacing, radius } from "@/lib/theme";
+import { Button } from "@/components/ui/Button";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 export default function DoctorScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
   const [doctor, setDoctor] = useState<any>(null);
+  const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api.getDoctor(slug).then((d) => { setDoctor(d); setLoading(false); }).catch(() => setLoading(false));
+    api.getDoctor(slug).then((d) => {
+      setDoctor(d);
+      setLoading(false);
+      if (d?.id) api.getDoctorReviews(d.id).then((r) => setReviews(r.reviews ?? r ?? [])).catch(() => {});
+    }).catch(() => setLoading(false));
   }, [slug]);
 
-  if (loading) return <ActivityIndicator style={{ flex: 1 }} color="#2563eb" />;
-  if (!doctor) return <Text style={{ padding: 20 }}>Médecin introuvable</Text>;
+  if (loading) return <LoadingSpinner />;
+  if (!doctor) return <Text style={{ padding: 20, color: colors.ink }}>Médecin introuvable</Text>;
 
   const spec = SPECIALTIES.find((s) => s.id === doctor.specialty);
   const city = CITIES.find((c) => c.id === doctor.city);
@@ -23,40 +33,146 @@ export default function DoctorScreen() {
   return (
     <>
       <Stack.Screen options={{ title: doctor.name }} />
-      <ScrollView style={styles.container}>
-        <View style={styles.card}>
-          <View style={styles.avatar}>
-            <Text style={styles.avatarText}>{doctor.name.charAt(0)}</Text>
+      <View style={{ flex: 1, backgroundColor: colors.bg }}>
+        <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>{doctor.name.charAt(0)}</Text>
+            </View>
+            <Text style={styles.name}>{doctor.name}</Text>
+            <Text style={styles.specialty}>{spec?.label ?? doctor.specialty}</Text>
+            <Text style={styles.city}>{city?.label ?? doctor.city}</Text>
+            {doctor.consultationFee && (
+              <Text style={styles.fee}>Consultation : {doctor.consultationFee / 1000} DT</Text>
+            )}
+            <Pressable style={styles.shareBtn} onPress={() => Share.share({ url: `https://doktori.tn/medecin/${slug}` })}>
+              <Share2 size={18} color={colors.primary} />
+              <Text style={styles.shareText}>Partager</Text>
+            </Pressable>
           </View>
-          <Text style={styles.name}>{doctor.name}</Text>
-          <Text style={styles.specialty}>{spec?.label}</Text>
-          <Text style={styles.city}>{city?.label}</Text>
-          {doctor.consultationFee && (
-            <Text style={styles.fee}>Consultation : {doctor.consultationFee / 1000} DT</Text>
-          )}
-          <Text style={styles.address}>{doctor.address}</Text>
-          {doctor.bio && <Text style={styles.bio}>{doctor.bio}</Text>}
-        </View>
 
-        <Pressable style={styles.cta} onPress={() => router.push(`/rdv/${doctor.slug}`)}>
-          <Text style={styles.ctaText}>Prendre rendez-vous</Text>
-        </Pressable>
-      </ScrollView>
+          {/* Bio */}
+          {doctor.bio && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>À propos</Text>
+              <Text style={styles.bioText}>{doctor.bio}</Text>
+            </View>
+          )}
+
+          {/* Education */}
+          {doctor.educations?.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Formation</Text>
+              {doctor.educations.map((e: any, i: number) => (
+                <View key={i} style={styles.timelineItem}>
+                  <View style={styles.dot} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.itemTitle}>{e.degree}</Text>
+                    <Text style={styles.itemSub}>{e.institution} {e.year ? `· ${e.year}` : ""}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Experience */}
+          {doctor.experiences?.length > 0 && (
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Expérience</Text>
+              {doctor.experiences.map((e: any, i: number) => (
+                <View key={i} style={styles.timelineItem}>
+                  <View style={styles.dot} />
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.itemTitle}>{e.position}</Text>
+                    <Text style={styles.itemSub}>{e.institution} {e.period ? `· ${e.period}` : ""}</Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {/* Languages + Expertise */}
+          {(doctor.languages?.length > 0 || doctor.expertise?.length > 0) && (
+            <View style={styles.section}>
+              {doctor.languages?.length > 0 && (
+                <>
+                  <Text style={styles.sectionTitle}>Langues</Text>
+                  <View style={styles.chipRow}>
+                    {doctor.languages.map((l: string) => (
+                      <View key={l} style={styles.chip}><Text style={styles.chipText}>{l}</Text></View>
+                    ))}
+                  </View>
+                </>
+              )}
+              {doctor.expertise?.length > 0 && (
+                <>
+                  <Text style={[styles.sectionTitle, { marginTop: spacing.md }]}>Expertise</Text>
+                  <View style={styles.chipRow}>
+                    {doctor.expertise.map((e: string) => (
+                      <View key={e} style={styles.chip}><Text style={styles.chipText}>{e}</Text></View>
+                    ))}
+                  </View>
+                </>
+              )}
+            </View>
+          )}
+
+          {/* Reviews */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Avis patients ({reviews.length})</Text>
+            {reviews.length === 0 ? (
+              <Text style={styles.emptyText}>Aucun avis pour le moment</Text>
+            ) : (
+              reviews.slice(0, 5).map((r: any) => (
+                <View key={r.id} style={styles.reviewCard}>
+                  <View style={{ flexDirection: "row", gap: 2 }}>
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <Text key={i} style={{ color: i < r.rating ? "#F59E0B" : "#D1D5DB", fontSize: 16 }}>★</Text>
+                    ))}
+                  </View>
+                  {r.comment && <Text style={styles.reviewText}>{r.comment}</Text>}
+                  <Text style={styles.reviewDate}>
+                    {new Date(r.createdAt).toLocaleDateString("fr-FR")}
+                  </Text>
+                </View>
+              ))
+            )}
+          </View>
+        </ScrollView>
+
+        {/* Sticky CTA */}
+        <View style={styles.stickyCta}>
+          <Button title="Prendre rendez-vous" onPress={() => router.push(`/rdv/${doctor.slug}`)} />
+        </View>
+      </View>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
-  card: { backgroundColor: "#fff", margin: 16, padding: 24, borderRadius: 12, alignItems: "center", borderWidth: 1, borderColor: "#e5e7eb" },
-  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: "#dbeafe", alignItems: "center", justifyContent: "center", marginBottom: 12 },
-  avatarText: { fontSize: 32, fontWeight: "700", color: "#2563eb" },
-  name: { fontSize: 20, fontWeight: "700", color: "#111827" },
-  specialty: { fontSize: 16, color: "#2563eb", marginTop: 4 },
-  city: { fontSize: 14, color: "#6b7280", marginTop: 2 },
-  fee: { fontSize: 14, color: "#111827", marginTop: 8 },
-  address: { fontSize: 13, color: "#6b7280", marginTop: 8, textAlign: "center" },
-  bio: { fontSize: 14, color: "#374151", marginTop: 16, lineHeight: 20, textAlign: "center" },
-  cta: { backgroundColor: "#2563eb", margin: 16, padding: 16, borderRadius: 12, alignItems: "center" },
-  ctaText: { color: "#fff", fontSize: 16, fontWeight: "600" },
+  header: { backgroundColor: colors.white, padding: spacing.xl, alignItems: "center", borderBottomWidth: 1, borderBottomColor: colors.border },
+  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: colors.mist, alignItems: "center", justifyContent: "center", marginBottom: spacing.md },
+  avatarText: { fontSize: 32, fontWeight: "700", color: colors.primary },
+  name: { fontSize: 22, fontWeight: "700", color: colors.ink },
+  specialty: { fontSize: 16, color: colors.primary, marginTop: 4 },
+  city: { fontSize: 14, color: colors.slate500, marginTop: 2 },
+  fee: { fontSize: 14, color: colors.ink, marginTop: spacing.sm, fontWeight: "600" },
+  shareBtn: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: spacing.md, paddingVertical: 6 },
+  shareText: { fontSize: 14, color: colors.primary, fontWeight: "600" },
+  section: { backgroundColor: colors.white, margin: spacing.md, marginBottom: 0, padding: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
+  sectionTitle: { fontSize: 16, fontWeight: "700", color: colors.ink, marginBottom: spacing.sm },
+  bioText: { fontSize: 14, color: colors.ink, lineHeight: 20 },
+  timelineItem: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm, marginBottom: spacing.sm },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary, marginTop: 6 },
+  itemTitle: { fontSize: 14, fontWeight: "600", color: colors.ink },
+  itemSub: { fontSize: 13, color: colors.slate500, marginTop: 2 },
+  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
+  chip: { paddingHorizontal: 12, paddingVertical: 6, backgroundColor: colors.mist, borderRadius: radius.full },
+  chipText: { fontSize: 13, color: colors.primary },
+  reviewCard: { padding: spacing.sm, borderBottomWidth: 1, borderBottomColor: colors.border },
+  reviewText: { fontSize: 14, color: colors.ink, marginTop: 4, lineHeight: 20 },
+  reviewDate: { fontSize: 12, color: colors.slate500, marginTop: 4 },
+  emptyText: { fontSize: 14, color: colors.slate500 },
+  stickyCta: { position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: colors.white, padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
 });

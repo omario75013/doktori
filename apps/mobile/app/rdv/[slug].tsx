@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, Pressable, TextInput, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ScrollView, StyleSheet, TextInput, ActivityIndicator, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { api } from "@/lib/api";
+import { colors, spacing, radius } from "@/lib/theme";
+import { getPatient } from "@/lib/auth";
+import { Button } from "@/components/ui/Button";
+import { Pressable } from "react-native";
 
 export default function BookingScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -26,11 +30,17 @@ export default function BookingScreen() {
   const [phone, setPhone] = useState("");
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState(false);
 
   useEffect(() => {
     api.getDoctor(slug).then(setDoctor);
   }, [slug]);
+
+  useEffect(() => {
+    getPatient().then((p) => {
+      if (p?.name) setName(p.name);
+      if (p?.phone) setPhone(p.phone);
+    });
+  }, []);
 
   useEffect(() => {
     if (!doctor) return;
@@ -43,7 +53,7 @@ export default function BookingScreen() {
     if (!doctor || !selectedTime || !name || !phone) return;
     setLoading(true);
     try {
-      await api.bookAppointment({
+      const result = await api.bookAppointment({
         doctorId: doctor.id,
         patientName: name,
         patientPhone: phone,
@@ -51,25 +61,17 @@ export default function BookingScreen() {
         startTime: selectedTime,
         reason: reason || undefined,
       });
-      setSuccess(true);
+      if (result?.id) {
+        router.replace(`/rdv/${result.id}/confirmation`);
+      } else {
+        Alert.alert("Réservation confirmée", "Votre rendez-vous a été pris.");
+        router.replace("/(tabs)");
+      }
     } catch (e: any) {
       Alert.alert("Erreur", e.message || "Impossible de réserver");
     } finally {
       setLoading(false);
     }
-  }
-
-  if (success) {
-    return (
-      <View style={styles.successContainer}>
-        <Text style={styles.successIcon}>✓</Text>
-        <Text style={styles.successTitle}>Rendez-vous confirmé !</Text>
-        <Text style={styles.successText}>Vous recevrez un SMS de rappel la veille.</Text>
-        <Pressable style={styles.cta} onPress={() => router.push("/(tabs)")}>
-          <Text style={styles.ctaText}>Retour à l'accueil</Text>
-        </Pressable>
-      </View>
-    );
   }
 
   const availableSlots = slots.filter((s) => s.available);
@@ -104,7 +106,7 @@ export default function BookingScreen() {
       <View style={styles.section}>
         <Text style={styles.label}>Choisissez un créneau</Text>
         {loading ? (
-          <ActivityIndicator color="#2563eb" style={{ marginTop: 12 }} />
+          <ActivityIndicator color={colors.primary} style={{ marginTop: 12 }} />
         ) : availableSlots.length === 0 ? (
           <Text style={styles.empty}>Aucun créneau disponible ce jour</Text>
         ) : (
@@ -127,12 +129,16 @@ export default function BookingScreen() {
       {selectedTime && (
         <View style={styles.section}>
           <Text style={styles.label}>Vos coordonnées</Text>
-          <TextInput style={styles.input} placeholder="Nom complet" value={name} onChangeText={setName} placeholderTextColor="#9ca3af" />
-          <TextInput style={styles.input} placeholder="+216 XX XXX XXX" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholderTextColor="#9ca3af" />
-          <TextInput style={[styles.input, { height: 80 }]} placeholder="Motif (optionnel)" value={reason} onChangeText={setReason} multiline placeholderTextColor="#9ca3af" />
-          <Pressable style={[styles.cta, (!name || !phone) && { opacity: 0.5 }]} onPress={handleBook} disabled={!name || !phone || loading}>
-            <Text style={styles.ctaText}>{loading ? "Réservation..." : "Confirmer le RDV"}</Text>
-          </Pressable>
+          <TextInput style={styles.input} placeholder="Nom complet" value={name} onChangeText={setName} placeholderTextColor={colors.slate500} />
+          <TextInput style={styles.input} placeholder="+216 XX XXX XXX" value={phone} onChangeText={setPhone} keyboardType="phone-pad" placeholderTextColor={colors.slate500} />
+          <TextInput style={[styles.input, { height: 80 }]} placeholder="Motif (optionnel)" value={reason} onChangeText={setReason} multiline placeholderTextColor={colors.slate500} />
+          <Button
+            title={loading ? "Réservation..." : "Confirmer le RDV"}
+            onPress={handleBook}
+            loading={loading}
+            disabled={!name || !phone}
+            style={{ marginTop: spacing.md }}
+          />
         </View>
       )}
     </ScrollView>
@@ -140,25 +146,19 @@ export default function BookingScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f9fafb" },
-  section: { backgroundColor: "#fff", margin: 16, marginBottom: 0, padding: 16, borderRadius: 12, borderWidth: 1, borderColor: "#e5e7eb" },
-  sectionTitle: { fontSize: 18, fontWeight: "600", color: "#111827" },
-  label: { fontSize: 14, fontWeight: "600", color: "#374151", marginBottom: 4 },
-  dateChip: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: "#f3f4f6", borderRadius: 8 },
-  dateChipActive: { backgroundColor: "#2563eb" },
-  dateChipText: { fontSize: 13, color: "#374151" },
-  dateChipTextActive: { color: "#fff" },
+  container: { flex: 1, backgroundColor: colors.bg },
+  section: { backgroundColor: colors.white, margin: spacing.md, marginBottom: 0, padding: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },
+  sectionTitle: { fontSize: 18, fontWeight: "600", color: colors.ink },
+  label: { fontSize: 14, fontWeight: "600", color: colors.slate500, marginBottom: 4 },
+  dateChip: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: colors.mist, borderRadius: radius.sm },
+  dateChipActive: { backgroundColor: colors.primary },
+  dateChipText: { fontSize: 13, color: colors.slate500 },
+  dateChipTextActive: { color: colors.white },
   slotGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: 8 },
-  slot: { paddingHorizontal: 12, paddingVertical: 10, backgroundColor: "#f3f4f6", borderRadius: 8, minWidth: 72, alignItems: "center" },
-  slotActive: { backgroundColor: "#2563eb" },
-  slotText: { fontSize: 14, color: "#374151" },
-  slotTextActive: { color: "#fff", fontWeight: "600" },
-  empty: { color: "#9ca3af", textAlign: "center", marginTop: 12 },
-  input: { backgroundColor: "#f9fafb", padding: 12, borderRadius: 8, borderWidth: 1, borderColor: "#e5e7eb", marginTop: 8, fontSize: 15 },
-  cta: { backgroundColor: "#2563eb", padding: 16, borderRadius: 12, alignItems: "center", marginTop: 16 },
-  ctaText: { color: "#fff", fontSize: 16, fontWeight: "600" },
-  successContainer: { flex: 1, alignItems: "center", justifyContent: "center", padding: 20, backgroundColor: "#f9fafb" },
-  successIcon: { fontSize: 64, color: "#22c55e", marginBottom: 16 },
-  successTitle: { fontSize: 24, fontWeight: "700", color: "#111827", marginBottom: 8 },
-  successText: { fontSize: 15, color: "#6b7280", textAlign: "center" },
+  slot: { paddingHorizontal: 12, paddingVertical: 10, backgroundColor: colors.mist, borderRadius: radius.sm, minWidth: 72, alignItems: "center" },
+  slotActive: { backgroundColor: colors.primary },
+  slotText: { fontSize: 14, color: colors.slate500 },
+  slotTextActive: { color: colors.white, fontWeight: "600" },
+  empty: { color: colors.slate500, textAlign: "center", marginTop: 12 },
+  input: { backgroundColor: colors.bg, padding: 12, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.border, marginTop: 8, fontSize: 15 },
 });

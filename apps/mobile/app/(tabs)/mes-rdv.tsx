@@ -1,23 +1,136 @@
-import { View, Text, StyleSheet } from "react-native";
+// apps/mobile/app/(tabs)/mes-rdv.tsx
+import { useEffect, useState, useCallback } from "react";
+import { View, Text, FlatList, Pressable, Alert, StyleSheet, RefreshControl } from "react-native";
+import { useRouter } from "expo-router";
+import { api, ApiError } from "@/lib/api";
+import { colors, spacing, radius } from "@/lib/theme";
+import { StatusBadge } from "@/components/ui/StatusBadge";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+
+type Appointment = {
+  id: string;
+  doctorName: string;
+  doctorSpecialty: string;
+  doctorSlug: string;
+  startsAt: string;
+  status: string;
+};
 
 export default function MesRdvScreen() {
+  const router = useRouter();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const data = await api.getMyAppointments();
+      setAppointments(data.appointments ?? data ?? []);
+    } catch (e) {
+      if (e instanceof ApiError && e.status !== 401) {
+        console.error("Failed to load appointments:", e);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => { load(); }, [load]);
+
+  function onRefresh() {
+    setRefreshing(true);
+    load().finally(() => setRefreshing(false));
+  }
+
+  async function handleCancel(id: string) {
+    Alert.alert("Annuler ce RDV ?", "Cette action est irréversible.", [
+      { text: "Non", style: "cancel" },
+      {
+        text: "Oui, annuler",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await api.cancelAppointment(id);
+            load();
+          } catch (e: any) {
+            Alert.alert("Erreur", e.message);
+          }
+        },
+      },
+    ]);
+  }
+
+  if (loading) return <LoadingSpinner />;
+
+  const now = new Date();
+  const upcoming = appointments.filter((a) => new Date(a.startsAt) >= now && a.status !== "cancelled");
+  const past = appointments.filter((a) => new Date(a.startsAt) < now || a.status === "cancelled");
+
   return (
-    <View style={styles.container}>
-      <Text style={styles.icon}>📅</Text>
-      <Text style={styles.title}>Mes rendez-vous</Text>
-      <Text style={styles.text}>
-        Cette fonctionnalité arrive bientôt.{"\n"}
-        En attendant, retrouvez vos RDV sur{"\n"}
-        <Text style={styles.link}>doktori.tn/mes-rdv</Text>
-      </Text>
-    </View>
+    <FlatList
+      style={styles.container}
+      contentContainerStyle={{ padding: spacing.md, flexGrow: 1 }}
+      refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+      data={[...upcoming, ...past]}
+      keyExtractor={(a) => a.id}
+      ListEmptyComponent={
+        <EmptyState
+          icon="📅"
+          title="Aucun rendez-vous"
+          description="Recherchez un médecin pour prendre votre premier RDV"
+          ctaTitle="Rechercher"
+          onCta={() => router.push("/(tabs)")}
+        />
+      }
+      ListHeaderComponent={
+        upcoming.length > 0 ? <Text style={styles.section}>À venir</Text> : null
+      }
+      renderItem={({ item, index }) => {
+        const isFirstPast = index === upcoming.length && past.length > 0;
+        const isPast = new Date(item.startsAt) < now || item.status === "cancelled";
+        const canCancel = !isPast && item.status === "pending";
+        return (
+          <>
+            {isFirstPast && <Text style={styles.section}>Passés</Text>}
+            <Pressable
+              style={[styles.card, isPast && { opacity: 0.6 }]}
+              onPress={() => router.push(`/medecin/${item.doctorSlug}`)}
+            >
+              <View style={{ flex: 1 }}>
+                <Text style={styles.doctorName}>{item.doctorName}</Text>
+                <Text style={styles.detail}>{item.doctorSpecialty}</Text>
+                <Text style={styles.detail}>
+                  {new Date(item.startsAt).toLocaleDateString("fr-FR", {
+                    weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
+                  })}
+                </Text>
+              </View>
+              <View style={{ alignItems: "flex-end", gap: 8 }}>
+                <StatusBadge status={item.status} />
+                {canCancel && (
+                  <Pressable onPress={() => handleCancel(item.id)}>
+                    <Text style={styles.cancelText}>Annuler</Text>
+                  </Pressable>
+                )}
+              </View>
+            </Pressable>
+          </>
+        );
+      }}
+    />
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: "center", justifyContent: "center", padding: 20, backgroundColor: "#f9fafb" },
-  icon: { fontSize: 48, marginBottom: 16 },
-  title: { fontSize: 24, fontWeight: "700", color: "#111827", marginBottom: 8 },
-  text: { fontSize: 15, color: "#6b7280", textAlign: "center", lineHeight: 22 },
-  link: { color: "#2563eb", fontWeight: "600" },
+  container: { flex: 1, backgroundColor: colors.bg },
+  section: { fontSize: 14, fontWeight: "700", color: colors.slate500, marginTop: spacing.md, marginBottom: spacing.sm, textTransform: "uppercase" },
+  card: {
+    backgroundColor: colors.white, padding: spacing.md, borderRadius: radius.md,
+    flexDirection: "row", alignItems: "center", gap: 12,
+    borderWidth: 1, borderColor: colors.border, marginBottom: spacing.sm,
+  },
+  doctorName: { fontSize: 16, fontWeight: "600", color: colors.ink },
+  detail: { fontSize: 13, color: colors.slate500, marginTop: 2 },
+  cancelText: { fontSize: 12, color: colors.red, fontWeight: "600" },
 });
