@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import {
   MessageCircle,
   X,
@@ -19,6 +19,7 @@ interface Message {
 
 export function Chatbot() {
   const t = useTranslations("chatbot");
+  const locale = useLocale();
   const QUICK_REPLIES = useMemo(
     () => [
       t("quickReply1"),
@@ -61,6 +62,7 @@ export function Chatbot() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          locale,
           // Skip welcome message when sending to API
           messages: newMessages
             .slice(1)

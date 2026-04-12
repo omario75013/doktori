@@ -9,7 +9,7 @@ export const dynamic = "force-dynamic";
 // ──────────────────────────────────────────────────────────────────────────────
 // System prompt — French, patient-facing, Doktori context
 // ──────────────────────────────────────────────────────────────────────────────
-const SYSTEM_PROMPT = `Tu es **Dokti**, l'assistant virtuel de Doktori.tn, la plateforme tunisienne de prise de rendez-vous médicaux.
+const SYSTEM_PROMPT_FR = `Tu es **Dokti**, l'assistant virtuel de Doktori.tn, la plateforme tunisienne de prise de rendez-vous médicaux.
 
 ## Ton rôle
 Aider les patients à :
@@ -47,6 +47,48 @@ Aider les patients à :
 ## Spécialités disponibles
 Généraliste, Dermatologue, Ophtalmologue, Gynécologue, Pédiatre, Dentiste, ORL, Cardiologue, Orthopédiste, Gastro-entérologue.`;
 
+const SYSTEM_PROMPT_AR = `أنت **دكتري**، المساعد الافتراضي لمنصة Doktori.tn، المنصة التونسية لحجز المواعيد الطبية.
+
+## دورك
+مساعدة المرضى في:
+- إيجاد الطبيب المناسب (التخصص، المنطقة، التوفر)
+- فهم كيفية حجز موعد
+- التنقل في دكتري (SOS، زيارة منزلية، إلغاء، إلخ)
+- الإجابة على أسئلتهم العملية حول المنصة
+
+## قواعد مطلقة
+- **لا تقدم أبداً نصيحة طبية أو تشخيصاً أو علاجاً.** إذا وصف المريض أعراضاً خطيرة، أجب: "في حالة الطوارئ الحيوية، اتصل فوراً بـ **190 (SAMU)**. للاستشارة العاجلة غير الحيوية، استخدم **SOS Docteur** على doktori.tn/sos."
+- إذا سأل المريض "شنو عندي؟" أو "شنو نشرب دواء؟" → ارفض بأدب ووجهه لاستشارة طبيب.
+- إذا وصف المريض أعراضاً خفيفة (حمى، صداع)، يمكنك **اقتراح تخصص** (مثال: طبيب عام) دون تشخيص.
+- **اللغة**: أجب دائماً بالعربية. أسماء الأطباء والعناوين تبقى بالفرنسية/اللاتينية (عادة تونسية).
+
+## الأسلوب
+- ودّي، مهني، مختصر (2-3 جمل كحد أقصى لكل رد إلا في حالة قائمة أطباء)
+- استخدم صيغة المخاطب المؤدبة
+- استخدم النقاط للقوائم
+- اختم غالباً بسؤال توضيحي أو اقتراح إجراء
+
+## الأدوات المتاحة
+- \`search_doctors\` : البحث عن أطباء حسب التخصص والمدينة
+- \`suggest_specialty\` : اقتراح تخصص طبي بناءً على الأعراض
+
+## معلومات عن دكتري
+- **مجاني** للمرضى
+- **SOS Docteur** : يجد طبيباً متاحاً في الحالات العاجلة غير الحيوية
+- **زيارة منزلية** : بعض الأطباء يتنقلون
+- **الإلغاء** : ممكن حتى ساعتين قبل الموعد عبر /mes-rdv
+- **تذكير SMS** : يُرسل تلقائياً عشية الموعد
+- **التقييمات** : متاحة فقط بعد انتهاء الاستشارة
+- **التغطية الحالية** : تونس الكبرى (تونس، أريانة، منوبة، البحيرة، المرسى، السكرة)
+- **الدفع** : يتم في العيادة مباشرة (نقداً، بطاقة، CNAM)
+
+## التخصصات المتاحة
+طبيب عام، طبيب أمراض جلدية، طبيب عيون، طبيب نساء وتوليد، طبيب أطفال، طبيب أسنان، طبيب أنف وأذن وحنجرة، طبيب قلب، طبيب عظام، طبيب جهاز هضمي.`;
+
+function getSystemPrompt(locale: string): string {
+  return locale === "ar" ? SYSTEM_PROMPT_AR : SYSTEM_PROMPT_FR;
+}
+
 // ──────────────────────────────────────────────────────────────────────────────
 // OpenAI-compatible tool definitions (for OpenRouter)
 // ──────────────────────────────────────────────────────────────────────────────
@@ -59,53 +101,64 @@ interface OpenAITool {
   };
 }
 
-const TOOLS: OpenAITool[] = [
-  {
-    type: "function",
-    function: {
-      name: "search_doctors",
-      description:
-        "Recherche les médecins par spécialité et/ou ville. Retourne jusqu'à 5 médecins avec leur nom, spécialité, ville, adresse et URLs (profil + booking).",
-      parameters: {
-        type: "object",
-        properties: {
-          specialty: {
-            type: "string",
-            description:
-              "ID de la spécialité. Valeurs : generaliste, dermatologue, ophtalmologue, gynecologue, pediatre, dentiste, orl, cardiologue, orthopediste, gastrologue",
-          },
-          city: {
-            type: "string",
-            description:
-              "ID de la ville. Valeurs : tunis, la-marsa, lac-1, lac-2, ariana, la-soukra, raoued, manouba",
-          },
-          query: {
-            type: "string",
-            description: "Mot-clé de recherche libre (nom, mot dans bio)",
+function getTools(locale: string): OpenAITool[] {
+  const isAr = locale === "ar";
+  return [
+    {
+      type: "function",
+      function: {
+        name: "search_doctors",
+        description: isAr
+          ? "البحث عن أطباء حسب التخصص و/أو المدينة. يُرجع حتى 5 أطباء مع الاسم والتخصص والمدينة والعنوان وروابط الملف الشخصي والحجز."
+          : "Recherche les médecins par spécialité et/ou ville. Retourne jusqu'à 5 médecins avec leur nom, spécialité, ville, adresse et URLs (profil + booking).",
+        parameters: {
+          type: "object",
+          properties: {
+            specialty: {
+              type: "string",
+              description: isAr
+                ? "معرّف التخصص. القيم: generaliste, dermatologue, ophtalmologue, gynecologue, pediatre, dentiste, orl, cardiologue, orthopediste, gastrologue"
+                : "ID de la spécialité. Valeurs : generaliste, dermatologue, ophtalmologue, gynecologue, pediatre, dentiste, orl, cardiologue, orthopediste, gastrologue",
+            },
+            city: {
+              type: "string",
+              description: isAr
+                ? "معرّف المدينة. القيم: tunis, la-marsa, lac-1, lac-2, ariana, la-soukra, raoued, manouba"
+                : "ID de la ville. Valeurs : tunis, la-marsa, lac-1, lac-2, ariana, la-soukra, raoued, manouba",
+            },
+            query: {
+              type: "string",
+              description: isAr
+                ? "كلمة بحث حرة (اسم، كلمة في السيرة)"
+                : "Mot-clé de recherche libre (nom, mot dans bio)",
+            },
           },
         },
       },
     },
-  },
-  {
-    type: "function",
-    function: {
-      name: "suggest_specialty",
-      description:
-        "Suggère une spécialité médicale en fonction de symptômes ou d'un domaine décrit par le patient. À utiliser uniquement pour ORIENTER, jamais pour diagnostiquer.",
-      parameters: {
-        type: "object",
-        properties: {
-          symptoms: {
-            type: "string",
-            description: "Description courte des symptômes ou de la zone concernée",
+    {
+      type: "function",
+      function: {
+        name: "suggest_specialty",
+        description: isAr
+          ? "اقتراح تخصص طبي بناءً على الأعراض أو المنطقة التي يصفها المريض. للتوجيه فقط، ليس للتشخيص."
+          : "Suggère une spécialité médicale en fonction de symptômes ou d'un domaine décrit par le patient. À utiliser uniquement pour ORIENTER, jamais pour diagnostiquer.",
+        parameters: {
+          type: "object",
+          properties: {
+            symptoms: {
+              type: "string",
+              description: isAr
+                ? "وصف مختصر للأعراض أو المنطقة المعنية"
+                : "Description courte des symptômes ou de la zone concernée",
+            },
           },
+          required: ["symptoms"],
         },
-        required: ["symptoms"],
       },
     },
-  },
-];
+  ];
+}
 
 // ──────────────────────────────────────────────────────────────────────────────
 // Tool execution
@@ -240,6 +293,7 @@ export async function POST(req: Request) {
 
   const body = await req.json();
   const userMessages: Array<{ role: string; content: string }> = body.messages || [];
+  const locale: string = typeof body.locale === "string" ? body.locale : "fr";
 
   if (!Array.isArray(userMessages) || userMessages.length === 0) {
     return NextResponse.json({ error: "messages requis" }, { status: 400 });
@@ -257,8 +311,9 @@ export async function POST(req: Request) {
   }
 
   // Build messages array: system + user history
+  const tools = getTools(locale);
   const messages: ChatMessage[] = [
-    { role: "system", content: SYSTEM_PROMPT },
+    { role: "system", content: getSystemPrompt(locale) },
     ...userMessages.map((m) => ({
       role: m.role as "user" | "assistant",
       content: m.content,
@@ -280,7 +335,7 @@ export async function POST(req: Request) {
         body: JSON.stringify({
           model,
           messages,
-          tools: TOOLS,
+          tools,
           temperature: 0.3,
           max_tokens: 1024,
         }),
