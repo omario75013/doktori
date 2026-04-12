@@ -143,4 +143,26 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ token, platform: Platform.OS }),
     }),
+
+  // Messaging
+  getConversations: () =>
+    apiFetch<any[]>("/api/messages/conversations"),
+
+  createConversation: (doctorId: string) =>
+    apiFetch<any>("/api/messages/conversations", {
+      method: "POST",
+      body: JSON.stringify({ doctorId }),
+    }),
+
+  getMessages: (conversationId: string) =>
+    apiFetch<any[]>(`/api/messages/${conversationId}`),
+
+  sendMessage: (conversationId: string, content: string) =>
+    apiFetch<{ message: any }>(`/api/messages/${conversationId}`, {
+      method: "POST",
+      body: JSON.stringify({ content }),
+    }),
+
+  getUnreadCount: () =>
+    apiFetch<{ count: number }>("/api/messages/unread"),
 };

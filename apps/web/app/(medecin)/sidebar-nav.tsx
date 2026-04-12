@@ -1,7 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 
 const links = [
@@ -20,6 +20,7 @@ const links = [
   { href: "/parrainage", label: "Parrainage" },
   { href: "/abonnement", label: "Abonnement" },
   { href: "/teleconsultation", label: "Téléconsultation" },
+  { href: "/messages", label: "Messages" },
   { href: "/messagerie", label: "Messagerie" },
   { href: "/wallet", label: "Portefeuille" },
   { href: "/profil", label: "Mon profil" },
@@ -28,6 +29,22 @@ const links = [
 export function SidebarNav({ userName }: { userName?: string | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchUnread() {
+      try {
+        const r = await fetch("/api/messages/unread");
+        if (r.ok) {
+          const data = await r.json();
+          setUnreadCount(data.count ?? 0);
+        }
+      } catch {
+        // ignore
+      }
+    }
+    fetchUnread();
+  }, []);
 
   return (
     <>
@@ -54,18 +71,24 @@ export function SidebarNav({ userName }: { userName?: string | null }) {
           {links.map((l) => {
             const active =
               pathname === l.href || pathname.startsWith(l.href + "/");
+            const showBadge = l.href === "/messages" && unreadCount > 0;
             return (
               <Link
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className={`block px-3 py-2 rounded text-sm transition-colors ${
+                className={`flex items-center justify-between px-3 py-2 rounded text-sm transition-colors ${
                   active
                     ? "bg-teal-600 text-white font-medium"
                     : "text-slate-300 hover:bg-gray-800"
                 }`}
               >
-                {l.label}
+                <span>{l.label}</span>
+                {showBadge && (
+                  <span className="ml-2 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
               </Link>
             );
           })}

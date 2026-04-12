@@ -28,6 +28,7 @@ interface Appointment {
   doctorName: string;
   doctorSpecialty: string;
   doctorAddress: string;
+  doctorId: string;
   doctorSlug: string;
   beneficiaryName: string | null;
   beneficiaryRelation: string | null;
@@ -222,7 +223,15 @@ export default function MesRdvPage() {
                           </div>
                         )}
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => setCancelConfirm({ id: a.id })}>Annuler</Button>
+                      <div className="flex flex-col gap-2 items-end">
+                        <a
+                          href={`/messages?doctorId=${a.doctorId}`}
+                          className="inline-flex items-center gap-1 text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg px-3 py-1.5 transition-colors"
+                        >
+                          Message
+                        </a>
+                        <Button variant="outline" size="sm" onClick={() => setCancelConfirm({ id: a.id })}>Annuler</Button>
+                      </div>
                     </div>
                   );
                 })}
@@ -245,9 +254,17 @@ export default function MesRdvPage() {
                           <span className="font-medium">{a.doctorName}</span>
                           <span className="text-gray-500"> — {spec?.label}</span>
                         </div>
-                        <span className={`text-xs px-2 py-1 rounded ${a.status === "cancelled" ? "bg-gray-200 text-gray-600" : "bg-blue-100 text-blue-700"}`}>
-                          {a.status === "cancelled" ? "Annulé" : "Passé"}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={`/messages?doctorId=${a.doctorId}`}
+                            className="text-xs font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg px-2.5 py-1 transition-colors"
+                          >
+                            Message
+                          </a>
+                          <span className={`text-xs px-2 py-1 rounded ${a.status === "cancelled" ? "bg-gray-200 text-gray-600" : "bg-blue-100 text-blue-700"}`}>
+                            {a.status === "cancelled" ? "Annulé" : "Passé"}
+                          </span>
+                        </div>
                       </div>
                       <div className="text-xs text-gray-500 mt-1">
                         {format(new Date(a.startsAt), "d MMM yyyy 'à' HH:mm", { locale: fr })}
