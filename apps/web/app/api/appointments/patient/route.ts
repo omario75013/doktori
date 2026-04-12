@@ -17,6 +17,7 @@ export async function GET(req: NextRequest) {
       status: appointments.status,
       type: appointments.type,
       reason: appointments.reason,
+      doctorId: doctors.id,
       doctorName: doctors.name,
       doctorSpecialty: doctors.specialty,
       doctorAddress: doctors.address,
