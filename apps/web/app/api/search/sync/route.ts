@@ -49,6 +49,8 @@ export async function POST(req: Request) {
       photoUrl: d.photoUrl,
       consultation_mode: d.consultationMode,
       teleconsult_fee: d.teleconsultFee,
+      average_rating: d.averageRating ?? 0,
+      review_count: d.reviewCount ?? 0,
       searchContent: [
         d.name,
         spec?.label,
@@ -84,10 +86,11 @@ export async function POST(req: Request) {
     "city",
     "consultationFee",
     "consultation_mode",
+    "average_rating",
     "_geo", // Enable geo filtering & sorting
   ]);
 
-  await index.updateSortableAttributes(["name", "consultationFee", "_geo"]);
+  await index.updateSortableAttributes(["name", "consultationFee", "average_rating", "_geo"]);
 
   // Ranking with geo priority when available
   await index.updateRankingRules([

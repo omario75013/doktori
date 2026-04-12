@@ -232,7 +232,7 @@ export async function GET(req: Request) {
 
   const index = meili.index(DOCTORS_INDEX);
 
-  // Build filters — specialty/city + optional price range
+  // Build filters — specialty/city + optional price range + optional min rating
   const buildFilters = (useCity: boolean) => {
     const f: string[] = [];
     if (specialty) f.push(`specialty = "${specialty}"`);
@@ -244,6 +244,10 @@ export async function GET(req: Request) {
     if (priceMax) {
       const millimes = Number(priceMax) * 1000;
       if (!isNaN(millimes)) f.push(`consultationFee <= ${millimes}`);
+    }
+    if (minRating) {
+      const rating = Number(minRating);
+      if (!isNaN(rating) && rating > 0) f.push(`average_rating >= ${rating}`);
     }
     return f.length > 0 ? f.join(" AND ") : undefined;
   };
@@ -269,6 +273,8 @@ export async function GET(req: Request) {
     sortArray = ["consultationFee:desc"];
   } else if (sort === "name") {
     sortArray = ["name:asc"];
+  } else if (sort === "rating") {
+    sortArray = ["average_rating:desc"];
   } else if (sortOrigin) {
     // Default: proximity if we have a location
     sortArray = [`_geoPoint(${sortOrigin.lat}, ${sortOrigin.lng}):asc`];
@@ -356,9 +362,6 @@ export async function GET(req: Request) {
     hits = hits.filter((h) => teleconsultIds.has((h as { id: string }).id));
   }
 
-  // TODO: minRating filter removed — real per-doctor ratings not yet stored per doctor.
-  // Re-enable once doctor.avgRating is populated.
-
   // Final limit 20
   const totalBeforeLimit = hits.length;
   hits = hits.slice(0, 20);
@@ -378,6 +381,7 @@ export async function GET(req: Request) {
       date: date || null,
       priceMin: priceMin ? Number(priceMin) : null,
       priceMax: priceMax ? Number(priceMax) : null,
+      minRating: minRating ? Number(minRating) : null,
       availability: availabilityWindow || null,
       sort: sort || "relevance",
       location: sortOrigin,

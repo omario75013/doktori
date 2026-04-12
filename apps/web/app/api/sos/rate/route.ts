@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, reviews } from "@doktori/db";
 import { sql } from "drizzle-orm";
 import { verifySosToken } from "@/lib/sos-hmac";
+import { recomputeDoctorRating } from "@/lib/doctor-rating";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -62,6 +63,9 @@ export async function POST(req: Request) {
     status: "published",
     verified: true,
   });
+
+  // Fire-and-forget: recompute doctor's average rating without blocking the response
+  recomputeDoctorRating(sosSession.doctor_id).catch(console.error);
 
   return NextResponse.json({ success: true });
 }

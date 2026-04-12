@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, reviews, appointments, patients, doctors } from "@doktori/db";
 import { eq, and, desc } from "drizzle-orm";
 import { getPatientFromRequest } from "@/lib/patient-auth";
+import { recomputeDoctorRating } from "@/lib/doctor-rating";
 
 // Only published reviews are exposed on public pages; pending/rejected are hidden
 // until an admin moderates them via /admin/reviews.
@@ -90,6 +91,9 @@ export async function POST(req: NextRequest) {
       status: "pending",
     })
     .returning();
+
+  // Fire-and-forget: recompute doctor's average rating without blocking the response
+  recomputeDoctorRating(appt.doctorId).catch(console.error);
 
   return NextResponse.json(review, { status: 201 });
 }

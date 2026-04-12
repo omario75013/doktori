@@ -15,6 +15,8 @@ interface Props {
     _geoDistance?: number; // meters from user (Meili geo sort)
     consultation_mode?: string; // 'cabinet' | 'teleconsult' | 'both'
     consultationMode?: string; // camelCase variant
+    average_rating?: number | null; // from Meilisearch document
+    review_count?: number | null; // from Meilisearch document
   };
 }
 
@@ -97,11 +99,15 @@ export function DoctorCard({ doctor }: Props) {
                 {formatDistance(doctor._geoDistance)}
               </span>
             )}
-            <span className="flex items-center gap-1">
-              <Star className="h-3.5 w-3.5 fill-[#FBBF24] text-[#FBBF24]" />
-              <span className="font-bold text-[#134E4A]">4.8</span>
-              <span className="text-[#5E7574]">(24)</span>
-            </span>
+            {typeof doctor.average_rating === "number" && doctor.average_rating > 0 && (
+              <span className="flex items-center gap-1">
+                <Star className="h-3.5 w-3.5 fill-[#FBBF24] text-[#FBBF24]" />
+                <span className="font-bold text-[#134E4A]">{doctor.average_rating.toFixed(1)}</span>
+                {typeof doctor.review_count === "number" && doctor.review_count > 0 && (
+                  <span className="text-[#5E7574]">({doctor.review_count})</span>
+                )}
+              </span>
+            )}
             <span className="flex items-center gap-1 rounded-full bg-[#22C55E]/10 px-2 py-0.5">
               <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>
               <span className="font-bold text-[#16A34A]">{t("availableToday")}</span>
