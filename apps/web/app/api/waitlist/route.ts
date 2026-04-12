@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, waitlist, patients } from "@doktori/db";
 import { formatPhone } from "@doktori/shared";
 import { eq, and } from "drizzle-orm";
+import { getPatientFromRequest } from "@/lib/patient-auth";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -46,12 +47,24 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  const patientAuth = getPatientFromRequest(req);
+  if (!patientAuth) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
   const { searchParams } = new URL(req.url);
   const id = searchParams.get("id");
   if (!id) return NextResponse.json({ error: "id requis" }, { status: 400 });
 
-  const [deleted] = await db.delete(waitlist).where(eq(waitlist.id, id)).returning();
-  if (!deleted) return NextResponse.json({ error: "Entrée introuvable" }, { status: 404 });
+  // Fetch first, verify ownership, then delete
+  const [entry] = await db.select().from(waitlist).where(eq(waitlist.id, id)).limit(1);
+  if (!entry) return NextResponse.json({ error: "Entrée introuvable" }, { status: 404 });
+
+  if (entry.patientId !== patientAuth.id) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+  }
+
+  await db.delete(waitlist).where(eq(waitlist.id, id));
 
   return NextResponse.json({ success: true });
 }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { db, appointments, patients, doctors, doctorHomeVisitSettings } from "@doktori/db";
 import { formatPhone } from "@doktori/shared";
-import { eq, and } from "drizzle-orm";
+import { eq, and, gte, count } from "drizzle-orm";
 import { sendSMS } from "@/lib/sms";
 
 export async function POST(req: Request) {
@@ -35,6 +35,24 @@ export async function POST(req: Request) {
   let [patient] = await db.select().from(patients).where(eq(patients.phone, phone)).limit(1);
   if (!patient) {
     [patient] = await db.insert(patients).values({ name: patientName, phone }).returning();
+  }
+
+  // Rate limit: max 3 home-visit requests per 30 minutes per patient
+  const windowStart = new Date(Date.now() - 30 * 60 * 1000);
+  const [recentCount] = await db
+    .select({ total: count(appointments.id) })
+    .from(appointments)
+    .where(and(
+      eq(appointments.patientId, patient.id),
+      eq(appointments.type, "home_visit"),
+      gte(appointments.startsAt, windowStart),
+    ));
+
+  if ((recentCount?.total ?? 0) >= 3) {
+    return NextResponse.json(
+      { error: "Trop de demandes de visite à domicile. Veuillez patienter 30 minutes avant de réessayer." },
+      { status: 429 }
+    );
   }
 
   const startsAt = new Date(`${preferredDate}T${preferredTime}:00`);

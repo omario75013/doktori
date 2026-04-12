@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, clinics, clinicDoctors, doctors, appointments } from "@doktori/db";
 import { eq, and, gte, lte, count, inArray } from "drizzle-orm";
+import { requireAdmin } from "@/lib/admin-auth";
 
-// TODO: Replace query-param clinicId with proper session-based auth before production.
-// Clinic auth (JWT or NextAuth provider) is planned for a later phase.
 export async function GET(req: NextRequest) {
+  const admin = await requireAdmin();
+  if (admin instanceof NextResponse) return admin;
   const { searchParams } = new URL(req.url);
 
   // MVP: accept clinicId from query param or x-clinic-id header

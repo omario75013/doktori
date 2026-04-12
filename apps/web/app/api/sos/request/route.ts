@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, patients } from "@doktori/db";
-import { sql, eq } from "drizzle-orm";
+import { db, patients, sosSessions } from "@doktori/db";
+import { sql, eq, and, gte, count } from "drizzle-orm";
 import { formatPhone } from "@doktori/shared";
 import { broadcastSos } from "@/lib/sos-broadcast";
 import { signSosToken } from "@/lib/sos-hmac";
@@ -24,6 +24,23 @@ export async function POST(req: NextRequest) {
   let [patient] = await db.select().from(patients).where(eq(patients.phone, phone)).limit(1);
   if (!patient) {
     [patient] = await db.insert(patients).values({ name: patientName, phone }).returning();
+  }
+
+  // Rate limit: max 3 SOS requests per 30 minutes per patient
+  const windowStart = new Date(Date.now() - 30 * 60 * 1000);
+  const [recentCount] = await db
+    .select({ total: count(sosSessions.id) })
+    .from(sosSessions)
+    .where(and(
+      eq(sosSessions.patientId, patient.id),
+      gte(sosSessions.requestedAt, windowStart),
+    ));
+
+  if ((recentCount?.total ?? 0) >= 3) {
+    return NextResponse.json(
+      { error: "Trop de demandes SOS. Veuillez patienter 30 minutes avant de réessayer." },
+      { status: 429 }
+    );
   }
 
   // Create SOS session (expires in 30 min)

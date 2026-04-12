@@ -1,12 +1,18 @@
 import { NextResponse } from "next/server";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
+import { verifySosToken } from "@/lib/sos-hmac";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
+
+  const sig = new URL(req.url).searchParams.get("sig");
+  if (!sig || !verifySosToken(id, sig)) {
+    return NextResponse.json({ error: "Token invalide" }, { status: 401 });
+  }
 
   const result = await db.execute(sql`
     SELECT

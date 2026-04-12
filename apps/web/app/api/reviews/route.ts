@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, reviews, appointments, patients, doctors } from "@doktori/db";
 import { eq, and, desc } from "drizzle-orm";
+import { getPatientFromRequest } from "@/lib/patient-auth";
 
 // Only published reviews are exposed on public pages; pending/rejected are hidden
 // until an admin moderates them via /admin/reviews.
@@ -53,6 +54,12 @@ export async function POST(req: NextRequest) {
   if (!appt) return NextResponse.json({ error: "Rendez-vous introuvable" }, { status: 404 });
   if (appt.status !== "completed") {
     return NextResponse.json({ error: "Vous pouvez laisser un avis uniquement après une consultation terminée" }, { status: 400 });
+  }
+
+  // Verify caller owns this appointment via patient token
+  const patientAuth = getPatientFromRequest(req);
+  if (!patientAuth || patientAuth.id !== appt.patientId) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
   // Check if already reviewed
