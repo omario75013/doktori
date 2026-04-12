@@ -15,7 +15,8 @@ import {
 import { useRouter } from "expo-router";
 import {
   Search as SearchIcon, SlidersHorizontal, MapPin, X,
-  Stethoscope, Siren, Calendar, Star, Activity,
+  Stethoscope, Siren, Calendar, Star, Activity, Heart, Clock,
+  ChevronRight,
 } from "lucide-react-native";
 import * as Location from "expo-location";
 import { apiFetch } from "@/lib/api";
@@ -23,7 +24,8 @@ import { SPECIALTIES } from "@doktori/shared";
 import { colors, spacing, radius, shadow } from "@/lib/theme";
 import { DoctorCard } from "@/components/ui/DoctorCard";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { DoctorCardSkeleton } from "@/components/ui/SkeletonLoader";
+import { getRecentDoctors, getFavorites, type SavedDoctor } from "@/lib/favorites";
 
 const { width } = Dimensions.get("window");
 
@@ -84,6 +86,13 @@ export default function SearchScreen() {
   const [locationLoading, setLocationLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [recentDoctors, setRecentDoctors] = useState<SavedDoctor[]>([]);
+  const [favoriteDoctors, setFavoriteDoctors] = useState<SavedDoctor[]>([]);
+
+  useEffect(() => {
+    getRecentDoctors().then(setRecentDoctors);
+    getFavorites().then(setFavoriteDoctors);
+  }, []);
 
   const headerOpacity = useRef(new Animated.Value(0)).current;
   const headerSlide = useRef(new Animated.Value(20)).current;
@@ -249,7 +258,11 @@ export default function SearchScreen() {
 
       {/* Results or hero */}
       {loading && !refreshing ? (
-        <LoadingSpinner message="Recherche en cours..." />
+        <View style={{ padding: spacing.md, gap: spacing.sm }}>
+          <DoctorCardSkeleton />
+          <DoctorCardSkeleton />
+          <DoctorCardSkeleton />
+        </View>
       ) : (
         <FlatList
           data={results}
@@ -295,11 +308,47 @@ export default function SearchScreen() {
                 </View>
               </Pressable>
 
+              {/* Favorites */}
+              {favoriteDoctors.length > 0 && (
+                <View style={styles.heroSection}>
+                  <View style={styles.heroSectionHeader}>
+                    <Heart size={16} color={colors.red} fill={colors.red} />
+                    <Text style={styles.quickTitle}>Mes médecins favoris</Text>
+                  </View>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: spacing.sm }}>
+                    {favoriteDoctors.map((d) => (
+                      <Pressable key={d.id} style={[styles.miniDoctorCard, shadow.sm]} onPress={() => router.push(`/medecin/${d.slug}`)}>
+                        <View style={styles.miniAvatar}><Text style={styles.miniAvatarText}>{d.name.charAt(0)}</Text></View>
+                        <Text style={styles.miniName} numberOfLines={1}>{d.name}</Text>
+                        <Text style={styles.miniSpec} numberOfLines={1}>{d.specialty}</Text>
+                      </Pressable>
+                    ))}
+                  </ScrollView>
+                </View>
+              )}
+
+              {/* Recent doctors */}
+              {recentDoctors.length > 0 && (
+                <View style={styles.heroSection}>
+                  <View style={styles.heroSectionHeader}>
+                    <Clock size={16} color={colors.slate500} />
+                    <Text style={styles.quickTitle}>Consultés récemment</Text>
+                  </View>
+                  {recentDoctors.slice(0, 3).map((d) => (
+                    <Pressable key={d.id} style={[styles.recentCard, shadow.sm]} onPress={() => router.push(`/medecin/${d.slug}`)}>
+                      <View style={styles.recentAvatar}><Text style={styles.recentAvatarText}>{d.name.charAt(0)}</Text></View>
+                      <View style={{ flex: 1 }}>
+                        <Text style={styles.recentName}>{d.name}</Text>
+                        <Text style={styles.recentSpec}>{d.specialty}</Text>
+                      </View>
+                      <ChevronRight size={16} color={colors.slate200} />
+                    </Pressable>
+                  ))}
+                </View>
+              )}
+
               {/* All specialties link */}
-              <Pressable
-                style={styles.allSpecBtn}
-                onPress={() => setFiltersExpanded(true)}
-              >
+              <Pressable style={styles.allSpecBtn} onPress={() => setFiltersExpanded(true)}>
                 <Text style={styles.allSpecText}>Voir toutes les spécialités</Text>
               </Pressable>
             </View>
@@ -422,11 +471,33 @@ const styles = StyleSheet.create({
   },
   sosArrowText: { fontSize: 18, color: colors.white, fontWeight: "700" },
 
-  allSpecBtn: {
-    alignItems: "center", paddingVertical: spacing.sm,
+  // Hero sections
+  heroSection: { marginBottom: spacing.lg },
+  heroSectionHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: spacing.sm },
+
+  // Mini doctor cards (favorites horizontal scroll)
+  miniDoctorCard: {
+    width: 100, alignItems: "center", padding: spacing.md,
+    backgroundColor: colors.white, borderRadius: radius.lg,
+    borderWidth: 1, borderColor: colors.border,
   },
-  allSpecText: {
-    fontSize: 14, fontWeight: "600", color: colors.primary,
-    textDecorationLine: "underline",
+  miniAvatar: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.mist, alignItems: "center", justifyContent: "center", marginBottom: spacing.xs },
+  miniAvatarText: { fontSize: 18, fontWeight: "700", color: colors.primary },
+  miniName: { fontSize: 12, fontWeight: "700", color: colors.ink, textAlign: "center" },
+  miniSpec: { fontSize: 11, color: colors.slate400, textAlign: "center", marginTop: 1 },
+
+  // Recent doctor cards
+  recentCard: {
+    flexDirection: "row", alignItems: "center", gap: spacing.sm,
+    backgroundColor: colors.white, borderRadius: radius.lg,
+    padding: spacing.sm, paddingHorizontal: spacing.md,
+    borderWidth: 1, borderColor: colors.border, marginBottom: spacing.xs,
   },
+  recentAvatar: { width: 36, height: 36, borderRadius: 18, backgroundColor: colors.mist, alignItems: "center", justifyContent: "center" },
+  recentAvatarText: { fontSize: 15, fontWeight: "700", color: colors.primary },
+  recentName: { fontSize: 14, fontWeight: "600", color: colors.ink },
+  recentSpec: { fontSize: 12, color: colors.slate400 },
+
+  allSpecBtn: { alignItems: "center", paddingVertical: spacing.sm },
+  allSpecText: { fontSize: 14, fontWeight: "600", color: colors.primary, textDecorationLine: "underline" },
 });

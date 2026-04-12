@@ -3,11 +3,13 @@ import { View, Text, ScrollView, StyleSheet, Pressable, Share } from "react-nati
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
 import {
   Share2, MapPin, GraduationCap, Briefcase, Languages, Award,
-  Video, ChevronRight, Stethoscope,
+  Video, ChevronRight, Stethoscope, Heart,
 } from "lucide-react-native";
+import * as Haptics from "expo-haptics";
 import { api } from "@/lib/api";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 import { colors, spacing, radius, shadow } from "@/lib/theme";
+import { addRecentDoctor, toggleFavorite, isFavorite } from "@/lib/favorites";
 import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { StarRating } from "@/components/ui/StarRating";
@@ -18,6 +20,7 @@ export default function DoctorScreen() {
   const [doctor, setDoctor] = useState<any>(null);
   const [reviews, setReviews] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isFav, setIsFav] = useState(false);
 
   useEffect(() => {
     api.getDoctor(slug).then((d) => {
@@ -25,9 +28,20 @@ export default function DoctorScreen() {
       setLoading(false);
       if (d?.id) {
         api.getDoctorReviews(d.id).then((r) => setReviews(r.reviews ?? r ?? [])).catch(() => {});
+        isFavorite(d.id).then(setIsFav);
+        const spec = SPECIALTIES.find((s) => s.id === d.specialty);
+        addRecentDoctor({ id: d.id, name: d.name, slug: d.slug, specialty: spec?.label ?? d.specialty, city: d.city });
       }
     }).catch(() => setLoading(false));
   }, [slug]);
+
+  async function handleToggleFav() {
+    if (!doctor) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const spec = SPECIALTIES.find((s) => s.id === doctor.specialty);
+    const result = await toggleFavorite({ id: doctor.id, name: doctor.name, slug: doctor.slug, specialty: spec?.label ?? doctor.specialty, city: doctor.city });
+    setIsFav(result);
+  }
 
   if (loading) return <LoadingSpinner message="Chargement du profil..." />;
   if (!doctor) return (
@@ -94,13 +108,22 @@ export default function DoctorScreen() {
               </Text>
             )}
 
-            <Pressable
-              style={styles.shareBtn}
-              onPress={() => Share.share({ url: `https://doktori.tn/medecin/${slug}` })}
-            >
-              <Share2 size={16} color={colors.primary} />
-              <Text style={styles.shareText}>Partager</Text>
-            </Pressable>
+            <View style={styles.actionRow}>
+              <Pressable style={styles.favBtn} onPress={handleToggleFav}>
+                <Heart size={18} color={isFav ? colors.red : colors.slate400} fill={isFav ? colors.red : "transparent"} />
+                <Text style={[styles.favText, isFav && { color: colors.red }]}>
+                  {isFav ? "Favori" : "Ajouter"}
+                </Text>
+              </Pressable>
+              <View style={styles.actionDivider} />
+              <Pressable
+                style={styles.shareBtn}
+                onPress={() => Share.share({ url: `https://doktori.tn/medecin/${slug}` })}
+              >
+                <Share2 size={16} color={colors.primary} />
+                <Text style={styles.shareText}>Partager</Text>
+              </Pressable>
+            </View>
           </View>
 
           {/* Bio */}
