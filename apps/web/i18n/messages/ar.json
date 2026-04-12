@@ -125,8 +125,8 @@
     "ogDescription": "الطبيب التونسي ابحث عن طبيب، وتحقق من التوافر، واحجز بنقرتين.",
     "twitterTitle": "دوكتوري - حجز المواعيد الطبية في تونس",
     "twitterDescription": "ابحث عن طبيب في تونس واحجز عبر الإنترنت بنقرتين. مجاناً للمرضى.",
-    "doctorTitle": "{الاسم} - {التخصص} في {المدينة} | دكتوري",
-    "doctorDescription": "احجز موعدًا عبر الإنترنت مع {الاسم}، {التخصص} في {المدينة}. تحقق من التوفر واحجز بنقرتين على دكتوري.",
+    "doctorTitle": "{name} — {specialty} في {city}",
+    "doctorDescription": "احجز موعدًا عبر الإنترنت مع {name}، {specialty} في {city}. تحقق من التوفر واحجز بنقرتين على دكتوري.",
     "doctorNotFound": "لم يتم العثور على الطبيب | دوكتوري"
   },
   "search": {
@@ -135,7 +135,7 @@
     "activeFiltersLabel": "الأصول :",
     "clearAll": "حذف الكل",
     "mobileFiltersTitle": "الفلاتر",
-    "apply": "تطبيق ({العدد})",
+    "apply": "تطبيق ({count})",
     "locationLabel": "الموقع",
     "findNearMe": "أطباء بالقرب مني",
     "locating": "الموقع...",
@@ -162,7 +162,7 @@
     "searching": "ابحث عن...",
     "resultSingular": "طبيب",
     "resultPlural": "الأطباء",
-    "totalSuffix": "على {الإجمالي}",
+    "totalSuffix": "على {total}",
     "sortLabel": "فرز",
     "sortRelevance": "الصلة بالموضوع",
     "sortProximity": "القرب",
@@ -175,7 +175,7 @@
     "emptyDesc": "حاول توسيع نطاق مرشحاتك.",
     "reset": "إعادة تعيين",
     "chipNearMe": "★ قريب مني",
-    "chipPriceRange": "{دقيقة} - {الحد الأقصى} DT",
+    "chipPriceRange": "{min} - {max} DT",
     "chipPriceInfinity": "∞"
   },
   "chatbot": {
@@ -184,7 +184,7 @@
     "tooltip": "هل تحتاج إلى مساعدة؟ اسأل دوكتي",
     "headerName": "دوكتي",
     "headerStatus": "مساعد دكتوري - عبر الإنترنت",
-    "disclaimer": "دوكتي ليس طبيباً. في حالة وجود حالة طارئة تهدد الحياة، اتصل بـ <strong>190 (SAMU)<strong>.",
+    "disclaimer": "دوكتي ليس طبيباً. في حالة وجود حالة طارئة تهدد الحياة، اتصل بـ <strong>190 (SAMU)</strong>.",
     "thinking": "يعتقد دوكتي أن...",
     "suggestionsLabel": "الاقتراحات",
     "quickReply1": "ابحث عن طبيب أمراض جلدية",
@@ -199,7 +199,7 @@
     "errorNetwork": "تعذر الوصول إلى الخادم. تحقق من اتصالك وحاول مرة أخرى."
   },
   "doctorCard": {
-    "portraitAlt": "صورة ل {الاسم}",
+    "portraitAlt": "صورة {name}",
     "availableToday": "متوفر اليوم",
     "consultationLabel": "الاستشارة",
     "bookCta": "حدد موعداً"

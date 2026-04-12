@@ -8,7 +8,7 @@
     "ogDescription": "Le Doctolib tunisien. Trouvez un médecin, consultez ses disponibilités, réservez en 2 clics.",
     "twitterTitle": "Doktori — Prise de rendez-vous médical en Tunisie",
     "twitterDescription": "Trouvez un médecin en Tunisie et réservez en ligne en 2 clics. Gratuit pour les patients.",
-    "doctorTitle": "{name} — {specialty} à {city} | Doktori",
+    "doctorTitle": "{name} — {specialty} à {city}",
     "doctorDescription": "Prenez rendez-vous en ligne avec {name}, {specialty} à {city}. Consultez les disponibilités et réservez en 2 clics sur Doktori.",
     "doctorNotFound": "Médecin introuvable | Doktori"
   },
