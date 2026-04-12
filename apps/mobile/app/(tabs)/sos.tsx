@@ -10,7 +10,9 @@ import {
   Linking,
 } from "react-native";
 import * as Location from "expo-location";
+import * as Haptics from "expo-haptics";
 import { api } from "@/lib/api";
+import { colors } from "@/lib/theme";
 
 type Step = "intro" | "form" | "locating" | "waiting" | "accepted" | "expired";
 
@@ -51,7 +53,7 @@ export default function SOSScreen() {
       }
     }
     poll();
-    pollRef.current = setInterval(poll, 3000);
+    pollRef.current = setInterval(poll, 5000);
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
     };
@@ -63,6 +65,7 @@ export default function SOSScreen() {
       return;
     }
     setError("");
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setStep("locating");
 
     // Request location permission
@@ -146,7 +149,7 @@ export default function SOSScreen() {
             value={name}
             onChangeText={setName}
             placeholder="Prénom Nom"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.slate500}
           />
           <Text style={styles.label}>Téléphone</Text>
           <TextInput
@@ -155,7 +158,7 @@ export default function SOSScreen() {
             onChangeText={setPhone}
             placeholder="+216 XX XXX XXX"
             keyboardType="phone-pad"
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.slate500}
           />
           <Text style={styles.label}>Type de symptôme</Text>
           <View style={styles.symptomGrid}>
@@ -185,7 +188,7 @@ export default function SOSScreen() {
             value={description}
             onChangeText={setDescription}
             placeholder="Décrivez vos symptômes..."
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={colors.slate500}
             multiline
           />
           {error ? <Text style={styles.error}>{error}</Text> : null}
@@ -200,7 +203,7 @@ export default function SOSScreen() {
 
       {step === "locating" && (
         <View style={styles.centerCard}>
-          <ActivityIndicator size="large" color="#dc2626" />
+          <ActivityIndicator size="large" color={colors.red} />
           <Text style={styles.statusText}>Obtention de votre position...</Text>
         </View>
       )}
@@ -267,13 +270,13 @@ const styles = StyleSheet.create({
   disclaimerText: { fontSize: 12, color: "#92400e", lineHeight: 18 },
   bold: { fontWeight: "700" },
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 20,
     alignItems: "center",
   },
   centerCard: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.white,
     borderRadius: 16,
     padding: 32,
     alignItems: "center",
@@ -284,19 +287,19 @@ const styles = StyleSheet.create({
     padding: 24,
     alignItems: "center",
     borderWidth: 2,
-    borderColor: "#22c55e",
+    borderColor: colors.green,
   },
   emoji: { fontSize: 56, marginBottom: 12 },
   bigEmoji: { fontSize: 48, marginBottom: 16 },
   title: {
     fontSize: 24,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.ink,
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 14,
-    color: "#6b7280",
+    color: colors.slate500,
     textAlign: "center",
     marginBottom: 20,
     lineHeight: 20,
@@ -304,27 +307,27 @@ const styles = StyleSheet.create({
   formTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.ink,
     marginBottom: 16,
     alignSelf: "flex-start",
   },
   label: {
     fontSize: 13,
     fontWeight: "600",
-    color: "#374151",
+    color: colors.ink,
     alignSelf: "flex-start",
     marginBottom: 6,
     marginTop: 12,
   },
   input: {
     width: "100%",
-    backgroundColor: "#f9fafb",
+    backgroundColor: colors.mist,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.border,
     borderRadius: 10,
     padding: 12,
     fontSize: 15,
-    color: "#111827",
+    color: colors.ink,
   },
   symptomGrid: {
     flexDirection: "row",
@@ -335,22 +338,22 @@ const styles = StyleSheet.create({
   symptomChip: {
     paddingHorizontal: 14,
     paddingVertical: 10,
-    backgroundColor: "#f3f4f6",
+    backgroundColor: colors.mist,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: "#e5e7eb",
+    borderColor: colors.border,
   },
-  symptomChipActive: { backgroundColor: "#dc2626", borderColor: "#dc2626" },
-  symptomText: { fontSize: 13, color: "#374151" },
-  symptomTextActive: { color: "#ffffff", fontWeight: "600" },
+  symptomChipActive: { backgroundColor: colors.red, borderColor: colors.red },
+  symptomText: { fontSize: 13, color: colors.ink },
+  symptomTextActive: { color: colors.white, fontWeight: "600" },
   error: {
-    color: "#dc2626",
+    color: colors.red,
     fontSize: 13,
     marginTop: 8,
     alignSelf: "flex-start",
   },
   primaryBtn: {
-    backgroundColor: "#dc2626",
+    backgroundColor: colors.red,
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
@@ -358,33 +361,33 @@ const styles = StyleSheet.create({
     width: "100%",
     alignItems: "center",
   },
-  primaryBtnText: { color: "#ffffff", fontSize: 16, fontWeight: "700" },
+  primaryBtnText: { color: colors.white, fontSize: 16, fontWeight: "700" },
   cancelText: {
-    color: "#6b7280",
+    color: colors.slate500,
     fontSize: 13,
     textDecorationLine: "underline",
   },
   statusTitle: {
     fontSize: 18,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.ink,
     marginTop: 12,
     marginBottom: 8,
   },
   statusText: {
     fontSize: 14,
-    color: "#6b7280",
+    color: colors.slate500,
     textAlign: "center",
     lineHeight: 20,
   },
   successTitle: {
     fontSize: 22,
     fontWeight: "700",
-    color: "#15803d",
+    color: colors.greenDark,
     marginBottom: 16,
   },
   doctorInfo: {
-    backgroundColor: "#ffffff",
+    backgroundColor: colors.white,
     borderRadius: 10,
     padding: 16,
     width: "100%",
@@ -393,17 +396,17 @@ const styles = StyleSheet.create({
   doctorName: {
     fontSize: 16,
     fontWeight: "700",
-    color: "#111827",
+    color: colors.ink,
     marginBottom: 6,
   },
-  doctorDetail: { fontSize: 14, color: "#6b7280", marginTop: 2 },
+  doctorDetail: { fontSize: 14, color: colors.slate500, marginTop: 2 },
   callBtn: {
-    backgroundColor: "#22c55e",
+    backgroundColor: colors.green,
     paddingVertical: 16,
     paddingHorizontal: 24,
     borderRadius: 12,
     width: "100%",
     alignItems: "center",
   },
-  callBtnText: { color: "#ffffff", fontSize: 16, fontWeight: "700" },
+  callBtnText: { color: colors.white, fontSize: 16, fontWeight: "700" },
 });
