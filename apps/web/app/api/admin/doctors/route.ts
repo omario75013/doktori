@@ -1,9 +1,41 @@
 import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
+import { ilike, or } from "drizzle-orm";
 import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
 import { db, doctors } from "@doktori/db";
+
+export async function GET(req: Request) {
+  const admin = await requireAdmin(["super_admin"]);
+  if (admin instanceof NextResponse) return admin;
+
+  const { searchParams } = new URL(req.url);
+  const q = searchParams.get("q")?.trim() ?? "";
+  const limit = Math.min(Number(searchParams.get("limit") ?? "50"), 100);
+
+  const rows = await db
+    .select({
+      id: doctors.id,
+      name: doctors.name,
+      email: doctors.email,
+      specialty: doctors.specialty,
+      city: doctors.city,
+      isActive: doctors.isActive,
+    })
+    .from(doctors)
+    .where(
+      q
+        ? or(
+            ilike(doctors.name, `%${q}%`),
+            ilike(doctors.email, `%${q}%`)
+          )
+        : undefined
+    )
+    .limit(limit);
+
+  return NextResponse.json({ doctors: rows });
+}
 
 function generateSlug(name: string): string {
   const base = name
