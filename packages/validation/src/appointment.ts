@@ -17,6 +17,8 @@ export const bookAppointmentSchema = z.object({
   questionnaire: z.record(z.string().uuid(), z.string()).optional(),
   // G4 multi-practice: which practice location this appointment is for.
   practiceId: z.string().uuid().optional(),
+  // Teleconsult: appointment type (cabinet, teleconsult, home_visit)
+  type: z.enum(["cabinet", "teleconsult", "home_visit"]).optional(),
 });
 
 export const cancelAppointmentSchema = z.object({
