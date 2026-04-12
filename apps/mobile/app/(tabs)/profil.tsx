@@ -1,13 +1,10 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Pressable, Linking, Alert, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Pressable, Linking, Alert } from "react-native";
 import { useRouter } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
-import { LogOut, Globe, Bell, Info, ClipboardHeart, ChevronRight, HelpCircle, FileText } from "lucide-react-native";
+import { LogOut, Globe, Bell, Info } from "lucide-react-native";
 import { colors, spacing, radius } from "@/lib/theme";
 import { getPatient, logout, type Patient } from "@/lib/auth";
 import Constants from "expo-constants";
-
-const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 
 export default function ProfilScreen() {
   const router = useRouter();
@@ -31,7 +28,7 @@ export default function ProfilScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+    <View style={styles.container}>
       <View style={styles.card}>
         <View style={styles.avatar}>
           <Text style={styles.avatarText}>
@@ -42,80 +39,34 @@ export default function ProfilScreen() {
         <Text style={styles.phone}>{patient?.phone}</Text>
       </View>
 
-      <Text style={styles.sectionLabel}>Santé</Text>
-      <View style={styles.menu}>
-        <MenuItem
-          icon={ClipboardHeart}
-          label="Mon dossier médical"
-          onPress={() => router.push("/dossier-medical")}
-          showChevron
-        />
-        <MenuItem
-          icon={FileText}
-          label="Mes ordonnances"
-          value="Voir dans Mes RDV"
-          onPress={() => router.push("/(tabs)/mes-rdv")}
-          showChevron
-        />
-      </View>
-
-      <Text style={styles.sectionLabel}>Paramètres</Text>
       <View style={styles.menu}>
         <MenuItem icon={Globe} label="Langue" value="Français" onPress={() => {}} />
-        <MenuItem icon={Bell} label="Notifications" onPress={() => Linking.openSettings()} showChevron />
+        <MenuItem icon={Bell} label="Notifications" onPress={() => Linking.openSettings()} />
         <MenuItem icon={Info} label="Version" value={Constants.expoConfig?.version ?? "1.0.0"} />
-      </View>
-
-      <Text style={styles.sectionLabel}>Informations</Text>
-      <View style={styles.menu}>
-        <MenuItem
-          icon={HelpCircle}
-          label="FAQ"
-          onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/faq`)}
-          showChevron
-        />
-        <MenuItem
-          icon={FileText}
-          label="CGU"
-          onPress={() => WebBrowser.openBrowserAsync(`${API_URL}/legal/cgu`)}
-          showChevron
-        />
       </View>
 
       <Pressable style={styles.logoutBtn} onPress={handleLogout}>
         <LogOut size={18} color={colors.red} />
         <Text style={styles.logoutText}>Se déconnecter</Text>
       </Pressable>
-    </ScrollView>
+    </View>
   );
 }
 
-function MenuItem({ icon: Icon, label, value, onPress, showChevron }: {
-  icon: any; label: string; value?: string; onPress?: () => void; showChevron?: boolean;
+function MenuItem({ icon: Icon, label, value, onPress }: {
+  icon: any; label: string; value?: string; onPress?: () => void;
 }) {
   return (
     <Pressable style={styles.menuItem} onPress={onPress}>
       <Icon size={20} color={colors.slate500} />
       <Text style={styles.menuLabel}>{label}</Text>
       {value ? <Text style={styles.menuValue}>{value}</Text> : null}
-      {showChevron && !value ? <ChevronRight size={16} color={colors.slate500} /> : null}
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.bg },
-  scrollContent: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
-  sectionLabel: {
-    fontSize: 12,
-    fontWeight: "700",
-    color: colors.slate500,
-    textTransform: "uppercase",
-    letterSpacing: 0.8,
-    marginTop: spacing.md,
-    marginBottom: spacing.xs,
-    marginLeft: 4,
-  },
+  container: { flex: 1, backgroundColor: colors.bg, padding: spacing.md },
   card: {
     backgroundColor: colors.white, borderRadius: radius.lg, padding: spacing.xl,
     alignItems: "center", borderWidth: 1, borderColor: colors.border, marginBottom: spacing.md,
