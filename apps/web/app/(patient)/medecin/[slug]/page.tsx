@@ -33,6 +33,8 @@ import {
   Sparkles,
   ChevronLeft,
   Zap,
+  Video,
+  Info,
 } from "lucide-react";
 
 const DAY_NAMES = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"] as const;
@@ -309,15 +311,31 @@ export default async function DoctorProfilePage({
                         <h1 className="font-heading text-2xl font-black tracking-tight text-[#134E4A] sm:text-3xl">
                           {doctor.name}
                         </h1>
-                        <div className="mt-1 flex items-center gap-2">
+                        <div className="mt-1 flex items-center gap-2 flex-wrap">
                           <Stethoscope className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
                           <span className="text-sm font-bold text-[#0891B2]">
                             {specialtyLabel}
                           </span>
+                          {(doctor.consultationMode === "teleconsult" || doctor.consultationMode === "both") && (
+                            <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-1 text-xs font-bold text-purple-800">
+                              <Video className="h-3 w-3" strokeWidth={2.5} />
+                              Téléconsultation disponible
+                            </span>
+                          )}
                         </div>
                       </div>
 
-                      {doctor.consultationFee !== null && (
+                      {doctor.consultationFee !== null && doctor.teleconsultFee !== null && doctor.teleconsultFee !== doctor.consultationFee ? (
+                        <div className="rounded-2xl border border-[#E6F4F1] bg-[#F0FDFA] px-4 py-2 text-right space-y-0.5">
+                          <div className="text-[9px] font-bold uppercase tracking-wider text-[#0E7490]">Tarifs</div>
+                          <div className="text-xs text-[#134E4A] font-semibold">
+                            Cabinet: <span className="text-[#0891B2] font-black">{(doctor.consultationFee / 1000).toFixed(0)} DT</span>
+                          </div>
+                          <div className="text-xs text-purple-700 font-semibold">
+                            Vidéo: <span className="text-purple-800 font-black">{(doctor.teleconsultFee / 1000).toFixed(0)} DT</span>
+                          </div>
+                        </div>
+                      ) : doctor.consultationFee !== null ? (
                         <div className="rounded-2xl border border-[#E6F4F1] bg-[#F0FDFA] px-4 py-2 text-right">
                           <div className="text-[9px] font-bold uppercase tracking-wider text-[#0E7490]">
                             À partir de
@@ -329,7 +347,7 @@ export default async function DoctorProfilePage({
                             <span className="text-sm font-bold text-[#0E7490]">DT</span>
                           </div>
                         </div>
-                      )}
+                      ) : null}
                     </div>
 
                     {/* Badges */}
@@ -362,11 +380,21 @@ export default async function DoctorProfilePage({
                       )}
                     </div>
 
-                    {/* Address */}
-                    <div className="mt-4 flex items-start gap-2 text-sm text-[#5E7574]">
-                      <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#0891B2]" strokeWidth={2.5} />
-                      <span>{doctor.address}</span>
-                    </div>
+                    {/* Address — hidden for teleconsult-only doctors */}
+                    {doctor.consultationMode !== "teleconsult" && (
+                      <div className="mt-4 flex items-start gap-2 text-sm text-[#5E7574]">
+                        <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#0891B2]" strokeWidth={2.5} />
+                        <span>{doctor.address}</span>
+                      </div>
+                    )}
+
+                    {/* Teleconsult-only info box */}
+                    {doctor.consultationMode === "teleconsult" && (
+                      <div className="mt-4 flex items-start gap-2 rounded-xl bg-purple-50 px-4 py-3 text-sm text-purple-900 ring-1 ring-purple-200">
+                        <Info className="mt-0.5 h-4 w-4 shrink-0 text-purple-600" strokeWidth={2.5} />
+                        <p className="font-medium">Ce médecin consulte uniquement en vidéo. Aucun déplacement nécessaire.</p>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -769,14 +797,25 @@ export default async function DoctorProfilePage({
                     </li>
                   </ul>
 
-                  <Link
-                    href={`/rdv/${doctor.slug}`}
-                    className="group mt-6 inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0891B2] font-heading text-base font-bold text-white shadow-lg shadow-[#0891B2]/20 transition-all hover:bg-[#0E7490] active:scale-[0.98]"
-                  >
-                    <Calendar className="h-5 w-5" strokeWidth={2.5} />
-                    <span>Prendre rendez-vous</span>
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
-                  </Link>
+                  {doctor.consultationMode === "teleconsult" ? (
+                    <Link
+                      href={`/rdv/${doctor.slug}`}
+                      className="group mt-6 inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-purple-600 font-heading text-base font-bold text-white shadow-lg shadow-purple-600/20 transition-all hover:bg-purple-700 active:scale-[0.98]"
+                    >
+                      <Video className="h-5 w-5" strokeWidth={2.5} />
+                      <span>Prendre un RDV vidéo</span>
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
+                    </Link>
+                  ) : (
+                    <Link
+                      href={`/rdv/${doctor.slug}`}
+                      className="group mt-6 inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0891B2] font-heading text-base font-bold text-white shadow-lg shadow-[#0891B2]/20 transition-all hover:bg-[#0E7490] active:scale-[0.98]"
+                    >
+                      <Calendar className="h-5 w-5" strokeWidth={2.5} />
+                      <span>Prendre rendez-vous</span>
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
+                    </Link>
+                  )}
 
                   <Link
                     href={`/domicile/${doctor.slug}`}

@@ -15,6 +15,8 @@ export async function getDoctorBySlug(slug: string) {
       photoUrl: doctors.photoUrl,
       bio: doctors.bio,
       consultationFee: doctors.consultationFee,
+      consultationMode: doctors.consultationMode,
+      teleconsultFee: doctors.teleconsultFee,
       educations: doctors.educations,
       experiences: doctors.experiences,
       languages: doctors.languages,

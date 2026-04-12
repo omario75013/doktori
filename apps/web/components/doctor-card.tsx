@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
-import { MapPin, ArrowRight, Star, Clock, BadgeCheck, Navigation } from "lucide-react";
+import { MapPin, ArrowRight, Star, Clock, BadgeCheck, Navigation, Video } from "lucide-react";
 
 interface Props {
   doctor: {
@@ -13,6 +13,8 @@ interface Props {
     consultationFee: number | null;
     photoUrl: string | null;
     _geoDistance?: number; // meters from user (Meili geo sort)
+    consultation_mode?: string; // 'cabinet' | 'teleconsult' | 'both'
+    consultationMode?: string; // camelCase variant
   };
 }
 
@@ -26,6 +28,8 @@ export function DoctorCard({ doctor }: Props) {
   const t = useTranslations("doctorCard");
   const specialty = SPECIALTIES.find((s) => s.id === doctor.specialty);
   const city = CITIES.find((c) => c.id === doctor.city);
+  const mode = doctor.consultationMode ?? doctor.consultation_mode;
+  const hasVideo = mode === "teleconsult" || mode === "both";
   const initials = doctor.name
     .replace(/^Dr\.?\s*/i, "")
     .split(" ")
@@ -72,7 +76,15 @@ export function DoctorCard({ doctor }: Props) {
         {/* Info */}
         <div className="min-w-0 flex-1">
           <h3 className="font-heading text-lg font-bold text-[#134E4A]">{doctor.name}</h3>
-          <p className="mt-0.5 text-sm font-semibold text-[#0891B2]">{specialty?.label}</p>
+          <div className="mt-0.5 flex items-center gap-2 flex-wrap">
+            <p className="text-sm font-semibold text-[#0891B2]">{specialty?.label}</p>
+            {hasVideo && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-800">
+                <Video className="h-3 w-3" strokeWidth={2.5} />
+                Vidéo
+              </span>
+            )}
+          </div>
 
           <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs">
             <span className="flex items-center gap-1 text-[#5E7574]">

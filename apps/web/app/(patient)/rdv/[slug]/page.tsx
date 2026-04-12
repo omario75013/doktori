@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, ArrowLeft, MapPin } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, MapPin, Video, Building } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -20,9 +20,11 @@ interface Doctor {
   photoUrl: string | null;
   bio: string | null;
   consultationFee: number | null;
+  consultationMode?: string; // 'cabinet' | 'teleconsult' | 'both'
+  teleconsultFee?: number | null;
 }
 
-type Step = "type" | "practice" | "slots" | "questionnaire" | "form" | "payment" | "success";
+type Step = "mode" | "type" | "practice" | "slots" | "questionnaire" | "form" | "payment" | "success";
 
 interface Question {
   id: string;
@@ -67,6 +69,8 @@ export default function RdvPage({
   const [doctorLoading, setDoctorLoading] = useState(true);
 
   const [step, setStep] = useState<Step>("slots");
+  // 'cabinet' | 'teleconsult' — only relevant when doctor.consultationMode === 'both'
+  const [selectedMode, setSelectedMode] = useState<"cabinet" | "teleconsult" | null>(null);
   const [types, setTypes] = useState<AppointmentType[]>([]);
   const [selectedType, setSelectedType] = useState<AppointmentType | null>(null);
   const [practices, setPractices] = useState<Practice[]>([]);
@@ -94,6 +98,10 @@ export default function RdvPage({
       })
       .then(async (d) => {
         setDoctor(d);
+        // Auto-set mode for teleconsult-only doctors
+        if (d.consultationMode === "teleconsult") {
+          setSelectedMode("teleconsult");
+        }
         // Fetch appointment types and practices in parallel
         const [typesRes, practicesRes] = await Promise.all([
           fetch(`/api/appointment-types?doctorId=${d.id}`),
@@ -112,6 +120,10 @@ export default function RdvPage({
           if (pList.length === 1) {
             setSelectedPractice(pList[0]);
           }
+        }
+        // If doctor offers both modes, show mode selection first
+        if (d.consultationMode === "both") {
+          startStep = "mode";
         }
         setStep(startStep);
         setDoctorLoading(false);
@@ -145,10 +157,13 @@ export default function RdvPage({
     setStep("form");
   }
 
-  // After choosing a type, go to practice picker if >1 practice, else skip to slots
+  // After choosing a type, go to practice picker if >1 practice (and not teleconsult), else skip to slots
   function handleTypeSelected(type: AppointmentType) {
     setSelectedType(type);
-    if (practices.length > 1) {
+    if (selectedMode === "teleconsult") {
+      // Teleconsult: no physical location needed
+      setStep("slots");
+    } else if (practices.length > 1) {
       setStep("practice");
     } else {
       setStep("slots");
@@ -180,7 +195,8 @@ export default function RdvPage({
           startTime: booking.startTime,
           reason: reason || undefined,
           appointmentTypeId: selectedType?.id,
-          practiceId: selectedPractice?.id,
+          practiceId: selectedMode === "teleconsult" ? undefined : selectedPractice?.id,
+          type: selectedMode === "teleconsult" ? "teleconsult" : undefined,
           beneficiaryName: forSelf ? undefined : beneficiaryName.trim() || undefined,
           beneficiaryDateOfBirth: forSelf ? undefined : beneficiaryDob || undefined,
           beneficiaryRelation: forSelf ? "self" : beneficiaryRelation,
@@ -286,6 +302,79 @@ export default function RdvPage({
                 Changer
               </button>
             )}
+          </div>
+        )}
+
+        {/* Step: consultation mode selection (only for doctors offering both) */}
+        {step === "mode" && doctor.consultationMode === "both" && (
+          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4">
+            <div>
+              <h2 className="font-heading font-black text-[#134E4A]">
+                Mode de consultation
+              </h2>
+              <p className="text-sm text-[#134E4A]/60 mt-1">
+                Choisissez comment vous souhaitez consulter ce médecin.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {/* Au cabinet */}
+              <button
+                onClick={() => {
+                  setSelectedMode("cabinet");
+                  if (types.length > 0) {
+                    setStep("type");
+                  } else if (practices.length > 1) {
+                    setStep("practice");
+                  } else {
+                    setStep("slots");
+                  }
+                }}
+                className="flex flex-col items-center gap-3 rounded-2xl border-2 border-[#E6F4F1] bg-white p-5 text-center hover:border-[#0891B2] hover:bg-[#F0FDFA]/40 transition-colors"
+              >
+                <div className="h-12 w-12 rounded-2xl bg-[#F0FDFA] flex items-center justify-center">
+                  <Building className="h-6 w-6 text-[#0891B2]" strokeWidth={2} />
+                </div>
+                <div>
+                  <div className="font-bold text-[#134E4A]">Au cabinet</div>
+                  <div className="text-xs text-[#134E4A]/60 mt-1">
+                    Rendez-vous en présentiel dans le cabinet du médecin.
+                  </div>
+                  {doctor.consultationFee != null && (
+                    <div className="text-sm font-bold text-[#0891B2] mt-1.5">
+                      {(doctor.consultationFee / 1000).toFixed(0)} DT
+                    </div>
+                  )}
+                </div>
+              </button>
+
+              {/* En vidéo */}
+              <button
+                onClick={() => {
+                  setSelectedMode("teleconsult");
+                  if (types.length > 0) {
+                    setStep("type");
+                  } else {
+                    setStep("slots");
+                  }
+                }}
+                className="flex flex-col items-center gap-3 rounded-2xl border-2 border-[#E6F4F1] bg-white p-5 text-center hover:border-purple-400 hover:bg-purple-50/40 transition-colors"
+              >
+                <div className="h-12 w-12 rounded-2xl bg-purple-100 flex items-center justify-center">
+                  <Video className="h-6 w-6 text-purple-600" strokeWidth={2} />
+                </div>
+                <div>
+                  <div className="font-bold text-[#134E4A]">En vidéo</div>
+                  <div className="text-xs text-[#134E4A]/60 mt-1">
+                    Consultation à distance par vidéo.
+                  </div>
+                  {(doctor.teleconsultFee != null ? doctor.teleconsultFee : doctor.consultationFee) != null && (
+                    <div className="text-sm font-bold text-purple-700 mt-1.5">
+                      {((doctor.teleconsultFee ?? doctor.consultationFee ?? 0) / 1000).toFixed(0)} DT
+                    </div>
+                  )}
+                </div>
+              </button>
+            </div>
           </div>
         )}
 
@@ -584,9 +673,17 @@ export default function RdvPage({
               Changer de créneau
             </button>
 
-            <h2 className="font-heading font-black text-[#134E4A]">
-              Vos informations
-            </h2>
+            <div className="flex items-center gap-3">
+              <h2 className="font-heading font-black text-[#134E4A]">
+                Vos informations
+              </h2>
+              {selectedMode === "teleconsult" && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2.5 py-1 text-xs font-bold text-purple-800">
+                  <Video className="h-3 w-3" strokeWidth={2.5} />
+                  Consultation vidéo
+                </span>
+              )}
+            </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
@@ -810,6 +907,12 @@ export default function RdvPage({
                 <p className="text-xs text-[#134E4A]/40 font-mono">
                   Réf: {appointmentId}
                 </p>
+              )}
+              {selectedMode === "teleconsult" && (
+                <div className="flex items-start gap-2 rounded-xl bg-purple-50 px-4 py-3 text-sm text-purple-900 ring-1 ring-purple-200 text-left mt-2">
+                  <Video className="mt-0.5 h-4 w-4 shrink-0 text-purple-600" strokeWidth={2.5} />
+                  <p className="font-medium">Vous recevrez un lien vidéo avant votre rendez-vous.</p>
+                </div>
               )}
             </div>
             <Button

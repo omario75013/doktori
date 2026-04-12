@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { meili, DOCTORS_INDEX } from "@/lib/meilisearch";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
-import { db, doctorSchedules, appointments } from "@doktori/db";
-import { eq, and, gte, lte, not, inArray } from "drizzle-orm";
+import { db, doctorSchedules, appointments, doctors } from "@doktori/db";
+import { eq, and, gte, lte, not, inArray, sql } from "drizzle-orm";
 
 // ─────────────────────────────── UTILITIES ────────────────────────────────────
 
@@ -215,6 +215,7 @@ export async function GET(req: Request) {
   const priceMax = searchParams.get("priceMax");
   const minRating = searchParams.get("minRating");
   const availabilityWindow = searchParams.get("availability") || ""; // today | tomorrow | week
+  const mode = searchParams.get("mode") || ""; // teleconsult
 
   const parsed = parseQuery(q);
 
@@ -331,6 +332,22 @@ export async function GET(req: Request) {
     const union = new Set<string>();
     for (const s of idSets) for (const id of s) union.add(id);
     hits = hits.filter((h) => union.has((h as { id: string }).id));
+  }
+
+  // Teleconsult mode filter — DB cross-check since Meilisearch may not have this attribute yet
+  if (mode === "teleconsult" && hits.length > 0) {
+    const ids = hits.map((h) => (h as { id: string }).id);
+    const teleconsultRows = await db
+      .select({ id: doctors.id })
+      .from(doctors)
+      .where(
+        and(
+          inArray(doctors.id, ids),
+          sql`${doctors.consultationMode} IN ('teleconsult', 'both')`
+        )
+      );
+    const teleconsultIds = new Set(teleconsultRows.map((d) => d.id));
+    hits = hits.filter((h) => teleconsultIds.has((h as { id: string }).id));
   }
 
   // Min rating (cached on doc — defaults to 4.8 for now)

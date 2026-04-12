@@ -23,6 +23,7 @@ import {
   DollarSign,
   Clock,
   ChevronDown,
+  Video,
 } from "lucide-react";
 
 interface Doctor {
@@ -35,6 +36,7 @@ interface Doctor {
   consultationFee: number | null;
   photoUrl: string | null;
   _geoDistance?: number; // meters from user, added by Meili when sorting by geo
+  consultation_mode?: string; // 'cabinet' | 'teleconsult' | 'both'
 }
 
 interface SearchResponse {
@@ -86,6 +88,9 @@ function RechercheInner() {
   const [city, setCity] = useState(() => searchParams.get("city") || "");
   const [date, setDate] = useState(() => searchParams.get("date") || "");
 
+  // Teleconsult filter
+  const [modeFilter, setModeFilter] = useState(() => searchParams.get("mode") || "");
+
   // Enriched filters
   const [priceMin, setPriceMin] = useState(() => searchParams.get("priceMin") || "");
   const [priceMax, setPriceMax] = useState(() => searchParams.get("priceMax") || "");
@@ -129,7 +134,8 @@ function RechercheInner() {
       pMax: string,
       avail: string,
       sortKey: SortKey,
-      loc: { lat: number; lng: number } | null
+      loc: { lat: number; lng: number } | null,
+      mode: string
     ) => {
       setLoading(true);
       try {
@@ -146,6 +152,7 @@ function RechercheInner() {
           params.set("lat", String(loc.lat));
           params.set("lng", String(loc.lng));
         }
+        if (mode) params.set("mode", mode);
 
         const res = await fetch(`/api/search?${params.toString()}`);
         if (!res.ok) throw new Error("Erreur");
@@ -169,10 +176,10 @@ function RechercheInner() {
   // Debounced search
   useEffect(() => {
     const timer = setTimeout(() => {
-      fetchResults(query, specialty, city, date, priceMin, priceMax, availability, sort, userLocation);
+      fetchResults(query, specialty, city, date, priceMin, priceMax, availability, sort, userLocation, modeFilter);
     }, 300);
     return () => clearTimeout(timer);
-  }, [query, specialty, city, date, priceMin, priceMax, availability, sort, userLocation, fetchResults]);
+  }, [query, specialty, city, date, priceMin, priceMax, availability, sort, userLocation, modeFilter, fetchResults]);
 
   // Sync URL
   useEffect(() => {
@@ -185,9 +192,10 @@ function RechercheInner() {
     if (priceMax) params.set("priceMax", priceMax);
     if (availability) params.set("availability", availability);
     if (sort && sort !== "relevance") params.set("sort", sort);
+    if (modeFilter) params.set("mode", modeFilter);
     const url = `/recherche${params.toString() ? `?${params.toString()}` : ""}`;
     router.replace(url, { scroll: false });
-  }, [query, specialty, city, date, priceMin, priceMax, availability, sort, router]);
+  }, [query, specialty, city, date, priceMin, priceMax, availability, sort, modeFilter, router]);
 
   // Geolocation
   function requestGeolocation() {
@@ -221,6 +229,7 @@ function RechercheInner() {
     setAvailability("");
     setSort("relevance");
     setUserLocation(null);
+    setModeFilter("");
   }
 
   // Active filter chips
@@ -276,6 +285,13 @@ function RechercheInner() {
       key: "geo",
       label: t("chipNearMe"),
       onRemove: () => setUserLocation(null),
+    });
+  }
+  if (modeFilter === "teleconsult") {
+    activeChips.push({
+      key: "mode",
+      label: "En vidéo",
+      onRemove: () => setModeFilter(""),
     });
   }
 
@@ -498,6 +514,21 @@ function RechercheInner() {
           <div>
             {/* Date picker + sort bar */}
             <div className="mb-4 space-y-3">
+              {/* Teleconsult toggle pill */}
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => setModeFilter(modeFilter === "teleconsult" ? "" : "teleconsult")}
+                  className={`inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-xs font-bold transition-all ${
+                    modeFilter === "teleconsult"
+                      ? "border-purple-600 bg-purple-600 text-white shadow-sm"
+                      : "border-purple-200 bg-white text-purple-700 hover:border-purple-400 hover:bg-purple-50"
+                  }`}
+                >
+                  <Video className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  En vidéo
+                </button>
+              </div>
+
               {/* Date picker */}
               <div>
                 <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#5E7574]">

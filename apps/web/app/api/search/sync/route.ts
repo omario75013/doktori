@@ -47,6 +47,8 @@ export async function POST(req: Request) {
       bio: d.bio,
       consultationFee: d.consultationFee,
       photoUrl: d.photoUrl,
+      consultation_mode: d.consultationMode,
+      teleconsult_fee: d.teleconsultFee,
       searchContent: [
         d.name,
         spec?.label,
@@ -81,6 +83,7 @@ export async function POST(req: Request) {
     "specialty",
     "city",
     "consultationFee",
+    "consultation_mode",
     "_geo", // Enable geo filtering & sorting
   ]);
 
