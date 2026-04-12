@@ -61,6 +61,12 @@ export default function RootLayout() {
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="medecin/[slug]" options={{ title: "" }} />
       <Stack.Screen name="rdv/[slug]" options={{ title: "Prendre RDV" }} />
+      <Stack.Screen name="dossier-medical" options={{ title: "Dossier médical" }} />
+      <Stack.Screen name="ordonnance/[id]" options={{ title: "Ordonnance" }} />
+      <Stack.Screen name="avis/[appointmentId]" options={{ title: "Donner un avis" }} />
+      <Stack.Screen name="avis-sos/[sessionId]" options={{ title: "Évaluer la consultation SOS" }} />
+      <Stack.Screen name="domicile/[slug]" options={{ title: "Visite à domicile" }} />
+      <Stack.Screen name="r/[token]" options={{ title: "Rappel de rendez-vous" }} />
     </Stack>
   );
 }
