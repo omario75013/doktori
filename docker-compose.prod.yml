@@ -5,7 +5,7 @@ services:
       dockerfile: Dockerfile
     container_name: doktori-web
     ports:
-      - "3004:3000"
+      - "3005:3000"
     env_file: .env
     restart: unless-stopped
     networks:
