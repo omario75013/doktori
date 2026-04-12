@@ -21,6 +21,14 @@ export async function GET() {
       AND d.sos_available = true
       AND d.location IS NOT NULL
       AND ST_DWithin(s.patient_location, d.location, d.sos_radius_km * 1000)
+      AND s.id NOT IN (SELECT session_id FROM sos_declines WHERE doctor_id = ${session.user.id})
+      AND (d.sos_available_from IS NULL OR (
+        CASE WHEN d.sos_available_from <= d.sos_available_to
+          THEN LOCALTIME AT TIME ZONE 'Africa/Tunis' BETWEEN d.sos_available_from AND d.sos_available_to
+          ELSE LOCALTIME AT TIME ZONE 'Africa/Tunis' >= d.sos_available_from
+               OR LOCALTIME AT TIME ZONE 'Africa/Tunis' <= d.sos_available_to
+        END
+      ))
     ORDER BY s.requested_at ASC
     LIMIT 20
   `);
