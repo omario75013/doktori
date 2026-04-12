@@ -53,6 +53,11 @@ export const doctors = pgTable(
     latitude: varchar("latitude", { length: 30 }),
     longitude: varchar("longitude", { length: 30 }),
     isActive: boolean("is_active").notNull().default(true),
+    sosAvailable: boolean("sos_available").notNull().default(false),
+    sosRadiusKm: integer("sos_radius_km").notNull().default(10),
+    sosFee: integer("sos_fee"),
+    sosAvailableFrom: time("sos_available_from"),
+    sosAvailableTo: time("sos_available_to"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -261,7 +266,8 @@ export const reviews = pgTable("reviews", {
   id: uuid("id").primaryKey().defaultRandom(),
   doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
   patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
-  appointmentId: uuid("appointment_id").notNull().references(() => appointments.id, { onDelete: "cascade" }).unique(),
+  appointmentId: uuid("appointment_id").references(() => appointments.id, { onDelete: "cascade" }).unique(),
+  sosSessionId: uuid("sos_session_id").references(() => sosSessions.id, { onDelete: "set null" }),
   rating: integer("rating").notNull(), // 1-5
   comment: text("comment"),
   verified: boolean("verified").default(true).notNull(),
@@ -499,10 +505,29 @@ export const sosSessions = pgTable("sos_sessions", {
   requestedAt: timestamp("requested_at", { withTimezone: true }).defaultNow().notNull(),
   acceptedAt: timestamp("accepted_at", { withTimezone: true }),
   completedAt: timestamp("completed_at", { withTimezone: true }),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  cancelReason: text("cancel_reason"),
+  cancelledBy: varchar("cancelled_by", { length: 10 }),
+  distanceM: integer("distance_m"),
+  adminNotes: text("admin_notes"),
+  resolution: varchar("resolution", { length: 20 }),
   expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
 }, (table) => [
   index("sos_sessions_status_idx").on(table.status),
   index("sos_sessions_patient_idx").on(table.patientId),
+  index("sos_sessions_doctor_idx").on(table.doctorId),
+]);
+
+// ── SOS Declines ─────────────────────────────────────────
+export const sosDeclines = pgTable("sos_declines", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  sessionId: uuid("session_id").notNull().references(() => sosSessions.id, { onDelete: "cascade" }),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  reason: varchar("reason", { length: 30 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  uniqueIndex("sos_declines_unique_idx").on(table.sessionId, table.doctorId),
+  index("sos_declines_session_idx").on(table.sessionId),
 ]);
 
 // ── Subscriptions ────────────────────────────────────────
