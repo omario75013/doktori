@@ -296,6 +296,63 @@ export function newReviewDoctor(p: {
   };
 }
 
+// ─── Teleconsult receipt (post-consultation, sent to patient) ────────────────
+
+export function buildTeleconsultReceiptEmail(p: {
+  patientName: string;
+  doctorName: string;
+  fee: number; // millimes
+  prescriptionUrl: string | null;
+  noteUrl: string | null;
+  cnamEligible: boolean;
+  reviewUrl: string;
+}): string {
+  const feeDisplay = `${(p.fee / 1000).toFixed(0)} DT`;
+  const today = new Date().toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  const docLinks = [
+    p.prescriptionUrl
+      ? btn("Voir mon ordonnance", p.prescriptionUrl)
+      : "",
+    p.noteUrl
+      ? btn("Voir le compte-rendu", p.noteUrl)
+      : "",
+  ]
+    .filter(Boolean)
+    .join("\n");
+
+  const cnamSection = p.cnamEligible
+    ? `<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:16px 0">
+        <p style="margin:0;font-weight:700;color:#166534">Remboursement CNAM</p>
+        <p style="margin:8px 0 0;color:#166534;font-size:14px">Votre consultation peut être remboursée par la CNAM. Votre médecin a initié une demande de remboursement en votre nom.</p>
+      </div>`
+    : "";
+
+  return layout(`
+    <p>Bonjour ${p.patientName},</p>
+    <p style="font-size:18px;font-weight:700;color:${TEAL}">Votre téléconsultation est terminée</p>
+
+    <table style="width:100%;border-collapse:collapse;margin:16px 0">
+      <tr><td style="padding:8px;color:#6b7280">Médecin</td><td style="padding:8px;font-weight:600">Dr. ${p.doctorName}</td></tr>
+      <tr><td style="padding:8px;color:#6b7280">Date</td><td style="padding:8px;font-weight:600">${today}</td></tr>
+      <tr><td style="padding:8px;color:#6b7280">Montant payé</td><td style="padding:8px;font-weight:600">${feeDisplay} (via Doktori)</td></tr>
+    </table>
+
+    ${docLinks.length > 0 ? `<p style="font-weight:600;color:${DARK}">Vos documents :</p>${docLinks}` : ""}
+
+    ${cnamSection}
+
+    ${btn("Donner votre avis", p.reviewUrl)}
+
+    <p style="font-size:13px;color:#6b7280;margin-top:24px">Merci d'avoir choisi Doktori pour votre suivi médical.</p>
+  `);
+}
+
 // ─── Welcome patient ─────────────────────────────────────────────────────────
 
 export function welcomePatient(p: {
