@@ -598,6 +598,19 @@ export const subscriptions = pgTable("subscriptions", {
   index("subscriptions_status_idx").on(table.status),
 ]);
 
+// ── Subscription Plans catalog ───────────────────────────
+export const subscriptionPlans = pgTable("subscription_plans", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  code: varchar("code", { length: 20 }).notNull().unique(),
+  label: varchar("label", { length: 100 }).notNull(),
+  priceMillimes: integer("price_millimes").notNull(),
+  billingCycle: varchar("billing_cycle", { length: 20 }).notNull().default("monthly"),
+  features: jsonb("features").$type<string[]>().notNull().default([]),
+  isActive: boolean("is_active").notNull().default(true),
+  displayOrder: integer("display_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
 // ── Phone Masking ────────────────────────────────────────
 export const phoneProxies = pgTable("phone_proxies", {
   id: uuid("id").primaryKey().defaultRandom(),
