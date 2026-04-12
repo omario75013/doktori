@@ -1,5 +1,5 @@
-import { db, doctors } from "@doktori/db";
-import { desc } from "drizzle-orm";
+import { db, doctors, appointments, reviews } from "@doktori/db";
+import { desc, eq, count, avg, sql } from "drizzle-orm";
 import { DoctorsTable } from "./doctors-table";
 
 export const dynamic = "force-dynamic";
@@ -15,19 +15,36 @@ export default async function AdminDoctorsPage() {
       city: doctors.city,
       isActive: doctors.isActive,
       createdAt: doctors.createdAt,
+      apptCount: sql<number>`(select count(*) from ${appointments} where ${appointments.doctorId} = ${doctors.id})::int`,
+      reviewCount: sql<number>`(select count(*) from ${reviews} where ${reviews.doctorId} = ${doctors.id})::int`,
+      avgRating: sql<number | null>`(select avg(${reviews.rating}) from ${reviews} where ${reviews.doctorId} = ${doctors.id})`,
     })
     .from(doctors)
     .orderBy(desc(doctors.createdAt));
 
+  // Unique specialties and cities for filters
+  const specialties = Array.from(new Set(list.map((d) => d.specialty))).sort();
+  const cities = Array.from(new Set(list.map((d) => d.city))).sort();
+
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-8 max-w-[1600px] mx-auto">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-slate-900">Médecins</h1>
         <p className="text-slate-500 mt-1">
           {list.length} médecin{list.length > 1 ? "s" : ""} sur la plateforme
         </p>
       </div>
-      <DoctorsTable doctors={list.map((d) => ({ ...d, createdAt: d.createdAt.toISOString() }))} />
+      <DoctorsTable
+        doctors={list.map((d) => ({
+          ...d,
+          createdAt: d.createdAt.toISOString(),
+          apptCount: Number(d.apptCount ?? 0),
+          reviewCount: Number(d.reviewCount ?? 0),
+          avgRating: d.avgRating ? Number(d.avgRating) : null,
+        }))}
+        specialties={specialties}
+        cities={cities}
+      />
     </div>
   );
 }

@@ -43,7 +43,15 @@ export default async function AdminValidationPage() {
         </div>
       ) : (
         <DoctorsTable
-          doctors={pending.map((d) => ({ ...d, createdAt: d.createdAt.toISOString() }))}
+          doctors={pending.map((d) => ({
+            ...d,
+            createdAt: d.createdAt.toISOString(),
+            apptCount: 0,
+            reviewCount: 0,
+            avgRating: null,
+          }))}
+          specialties={Array.from(new Set(pending.map((d) => d.specialty))).sort()}
+          cities={Array.from(new Set(pending.map((d) => d.city))).sort()}
         />
       )}
     </div>
