@@ -17,32 +17,26 @@ export function GooglePlayIcon({ className }: { className?: string }) {
   );
 }
 
-export function AppStoreBadge({ onClick }: { onClick?: () => void }) {
+export function AppStoreBadge() {
   return (
-    <button
-      onClick={onClick}
-      className="inline-flex h-[52px] items-center gap-3 rounded-xl bg-black px-5 text-white transition-all hover:bg-black/80 hover:scale-[1.02] active:scale-[0.98]"
-    >
+    <div className="inline-flex h-[52px] items-center gap-3 rounded-xl bg-black/90 px-5 text-white cursor-default">
       <AppleIcon className="h-7 w-7" />
       <div className="text-left">
-        <div className="text-[9px] font-medium uppercase tracking-wide opacity-80">Télécharger sur</div>
+        <div className="text-[9px] font-medium uppercase tracking-wide opacity-60">Bientôt sur</div>
         <div className="text-base font-semibold leading-tight">App Store</div>
       </div>
-    </button>
+    </div>
   );
 }
 
-export function GooglePlayBadge({ onClick }: { onClick?: () => void }) {
+export function GooglePlayBadge() {
   return (
-    <button
-      onClick={onClick}
-      className="inline-flex h-[52px] items-center gap-3 rounded-xl bg-black px-5 text-white transition-all hover:bg-black/80 hover:scale-[1.02] active:scale-[0.98]"
-    >
+    <div className="inline-flex h-[52px] items-center gap-3 rounded-xl bg-black/90 px-5 text-white cursor-default">
       <GooglePlayIcon className="h-6 w-6" />
       <div className="text-left">
-        <div className="text-[9px] font-medium uppercase tracking-wide opacity-80">Disponible sur</div>
+        <div className="text-[9px] font-medium uppercase tracking-wide opacity-60">Bientôt sur</div>
         <div className="text-base font-semibold leading-tight">Google Play</div>
       </div>
-    </button>
+    </div>
   );
 }

@@ -8,7 +8,8 @@ export function AppBanner() {
 
   useEffect(() => {
     const hidden = localStorage.getItem("doktori-app-banner-dismissed");
-    if (!hidden) setDismissed(false);
+    const isStandalone = window.matchMedia("(display-mode: standalone)").matches;
+    if (!hidden && !isStandalone) setDismissed(false);
   }, []);
 
   function dismiss() {
@@ -23,17 +24,9 @@ export function AppBanner() {
       <div className="flex items-center justify-center gap-2">
         <Smartphone className="h-4 w-4 shrink-0" strokeWidth={2.5} />
         <span>
-          Doktori est disponible sur{" "}
-          <strong>iOS</strong> et <strong>Android</strong> !
+          L&apos;app Doktori arrive bientôt sur{" "}
+          <strong>App Store</strong> et <strong>Google Play</strong>
         </span>
-        <a
-          href="https://apps.apple.com/app/doktori"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="ml-1 inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-0.5 text-xs font-bold text-white hover:bg-white/30 transition-colors"
-        >
-          Télécharger
-        </a>
       </div>
       <button
         onClick={dismiss}

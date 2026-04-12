@@ -32,6 +32,7 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
+import { AppStoreBadge, GooglePlayBadge } from "@/components/store-badges";
 
 const SPECIALTY_ICONS: Record<string, LucideIcon> = {
   generaliste: Stethoscope,
@@ -471,30 +472,8 @@ export default function HomePage() {
               ))}
             </ul>
             <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row md:items-start">
-              <a
-                href="https://apps.apple.com/app/doktori"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-14 items-center gap-3 rounded-xl bg-[#134E4A] px-6 text-white shadow-lg transition-all hover:bg-[#0F3D3A] hover:shadow-xl"
-              >
-                <Apple className="h-6 w-6" />
-                <div className="text-left">
-                  <div className="text-[10px] font-medium opacity-80">Télécharger sur</div>
-                  <div className="text-sm font-bold">App Store</div>
-                </div>
-              </a>
-              <a
-                href="https://play.google.com/store/apps/details?id=tn.doktori.app"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex h-14 items-center gap-3 rounded-xl bg-[#134E4A] px-6 text-white shadow-lg transition-all hover:bg-[#0F3D3A] hover:shadow-xl"
-              >
-                <Smartphone className="h-6 w-6" />
-                <div className="text-left">
-                  <div className="text-[10px] font-medium opacity-80">Disponible sur</div>
-                  <div className="text-sm font-bold">Google Play</div>
-                </div>
-              </a>
+              <AppStoreBadge />
+              <GooglePlayBadge />
             </div>
           </div>
         </div>
@@ -516,21 +495,9 @@ export default function HomePage() {
               <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#5E7574]">
                 {t("footerTagline")}
               </p>
-              <div className="mt-6 flex items-center gap-2">
-                <a
-                  href="#"
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#E6F4F1] text-[#134E4A] transition-colors hover:border-[#0891B2] hover:text-[#0891B2]"
-                  aria-label={t("iosApp")}
-                >
-                  <Apple className="h-4 w-4" strokeWidth={2} />
-                </a>
-                <a
-                  href="#"
-                  className="flex h-10 w-10 items-center justify-center rounded-lg border border-[#E6F4F1] text-[#134E4A] transition-colors hover:border-[#0891B2] hover:text-[#0891B2]"
-                  aria-label={t("androidApp")}
-                >
-                  <Smartphone className="h-4 w-4" strokeWidth={2} />
-                </a>
+              <div className="mt-6 flex flex-wrap items-center gap-2">
+                <AppStoreBadge />
+                <GooglePlayBadge />
               </div>
             </div>
 
