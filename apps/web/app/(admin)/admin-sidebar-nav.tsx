@@ -15,6 +15,7 @@ import {
   Map,
   Menu,
   X,
+  Smartphone,
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -38,6 +39,10 @@ const sosLinks = [
   { href: "/admin/sos/sessions", label: "Sessions SOS", icon: Activity },
   { href: "/admin/sos/kpis", label: "KPIs SOS", icon: BarChart3 },
   { href: "/admin/sos/coverage", label: "Couverture", icon: Map },
+];
+
+const analyticsLinks = [
+  { href: "/admin/analytics/mobile", label: "Analytics mobile", icon: Smartphone },
 ];
 
 interface AdminSidebarNavProps {
@@ -128,6 +133,27 @@ export function AdminSidebarNav({ adminName, adminEmail, adminRole }: AdminSideb
                 href={l.href}
                 onClick={() => setOpen(false)}
                 className={linkClass(l.href, l.exact)}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {l.label}
+              </Link>
+            );
+          })}
+
+          <div className="pt-3 pb-1 px-3">
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+              Analytics
+            </p>
+          </div>
+
+          {analyticsLinks.map((l) => {
+            const Icon = l.icon;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className={linkClass(l.href)}
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 {l.label}
