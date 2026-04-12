@@ -19,6 +19,7 @@ import { colors, spacing, radius } from "@/lib/theme";
 import { DoctorCard } from "@/components/ui/DoctorCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { trackEvent } from "@/lib/analytics";
 
 type SortOption = "relevance" | "distance" | "fee_asc" | "fee_desc";
 type AvailabilityOption = "all" | "today" | "tomorrow" | "week";
@@ -94,6 +95,11 @@ export default function SearchScreen() {
 
       const data = await apiFetch<any>(`/api/search?${params.toString()}`);
       setResults(data.hits || []);
+      trackEvent("search", {
+        query: query || null,
+        specialty: filters.specialty || null,
+        availability: filters.availability,
+      });
     } catch (e) {
       console.error(e);
     } finally {

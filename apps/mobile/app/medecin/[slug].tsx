@@ -10,6 +10,7 @@ import { SPECIALTIES, CITIES } from "@doktori/shared";
 import { colors, spacing, radius } from "@/lib/theme";
 import { Button } from "@/components/ui/Button";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { trackEvent } from "@/lib/analytics";
 
 export default function DoctorScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -22,7 +23,10 @@ export default function DoctorScreen() {
     api.getDoctor(slug).then((d) => {
       setDoctor(d);
       setLoading(false);
-      if (d?.id) api.getDoctorReviews(d.id).then((r) => setReviews(r.reviews ?? r ?? [])).catch(() => {});
+      if (d?.id) {
+        api.getDoctorReviews(d.id).then((r) => setReviews(r.reviews ?? r ?? [])).catch(() => {});
+        trackEvent("doctor_view", { slug });
+      }
     }).catch(() => setLoading(false));
   }, [slug]);
 

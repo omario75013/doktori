@@ -687,6 +687,31 @@ export const adminUsers = pgTable(
 
 // ── Admin audit log (append-only) ─────────────────────────────────────────────
 
+// ── Mobile analytics ──────────────────────────────────────────────────────────
+
+export const mobileAnalytics = pgTable(
+  "mobile_analytics",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    event: varchar("event", { length: 50 }).notNull(),
+    platform: varchar("platform", { length: 10 }).notNull(),
+    appVersion: varchar("app_version", { length: 20 }),
+    buildNumber: varchar("build_number", { length: 10 }),
+    patientId: uuid("patient_id").references(() => patients.id, {
+      onDelete: "set null",
+    }),
+    eventData: jsonb("event_data").default({}),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("mobile_analytics_event_idx").on(table.event, table.createdAt),
+    index("mobile_analytics_platform_idx").on(table.platform, table.createdAt),
+    index("mobile_analytics_version_idx").on(table.appVersion, table.createdAt),
+  ]
+);
+
 export const adminAuditLogs = pgTable(
   "admin_audit_logs",
   {

@@ -3,6 +3,7 @@ import { View, Text, ScrollView, StyleSheet, TextInput, Alert, Pressable } from 
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { apiFetch } from "@/lib/api";
 import { colors, spacing, radius } from "@/lib/theme";
+import { trackEvent } from "@/lib/analytics";
 import { Button } from "@/components/ui/Button";
 
 type ReviewPayload = {
@@ -31,6 +32,7 @@ export default function AvisScreen() {
         method: "POST",
         body: JSON.stringify(payload),
       });
+      trackEvent("review_submit", { appointmentId, rating });
       setSubmitted(true);
     } catch (e: any) {
       Alert.alert("Erreur", e.message || "Impossible de soumettre l'avis.");

@@ -13,6 +13,7 @@ import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
 import { api } from "@/lib/api";
 import { colors } from "@/lib/theme";
+import { trackEvent } from "@/lib/analytics";
 
 type Step = "intro" | "form" | "locating" | "waiting" | "accepted" | "expired";
 
@@ -89,6 +90,7 @@ export default function SOSScreen() {
         description: description || undefined,
       });
       setSessionId(result.sessionId);
+      trackEvent("sos_request", { symptom });
       setStep("waiting");
     } catch (e: any) {
       setError(e.message || "Erreur lors de l'envoi");

@@ -6,6 +6,7 @@ import { OtpInput } from "@/components/ui/OtpInput";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
 import { setToken, setPatient } from "@/lib/auth";
+import { trackEvent } from "@/lib/analytics";
 
 export default function OtpScreen() {
   const { phone } = useLocalSearchParams<{ phone: string }>();
@@ -27,6 +28,7 @@ export default function OtpScreen() {
       const result = await api.verifyOtp(phone, code);
       await setToken(result.token);
       await setPatient(result.patient);
+      trackEvent("login");
       router.replace("/(tabs)");
     } catch (e: any) {
       setError(e.message || "Code invalide");

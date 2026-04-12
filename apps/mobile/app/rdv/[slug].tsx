@@ -14,6 +14,7 @@ import * as WebBrowser from "expo-web-browser";
 import { apiFetch } from "@/lib/api";
 import { colors, spacing, radius } from "@/lib/theme";
 import { getPatient } from "@/lib/auth";
+import { trackEvent } from "@/lib/analytics";
 import { Button } from "@/components/ui/Button";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -266,6 +267,7 @@ export default function BookingScreen() {
         setPaymentUrl(result.paymentUrl);
         setStep("payment");
       } else {
+        trackEvent("booking_complete", { doctorId: slug, appointmentId: result.id });
         router.replace(`/rdv/${result.id}/confirmation`);
       }
     } catch (e: unknown) {

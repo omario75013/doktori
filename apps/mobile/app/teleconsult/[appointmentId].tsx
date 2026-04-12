@@ -5,6 +5,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { apiFetch } from "@/lib/api";
 import { colors, spacing, radius } from "@/lib/theme";
+import { trackEvent } from "@/lib/analytics";
 import { Button } from "@/components/ui/Button";
 
 const PURPLE = "#7C3AED";
@@ -48,6 +49,7 @@ export default function TeleconsultScreen() {
 
   async function joinCall() {
     if (!roomUrl) return;
+    if (!joined) trackEvent("teleconsult_join");
     setJoined(true);
     await WebBrowser.openBrowserAsync(roomUrl, {
       dismissButtonStyle: "close",
