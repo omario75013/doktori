@@ -27,6 +27,9 @@ Host crontab on `157.90.152.204` (user `root`). Adjust `CRON_SECRET` via 1Passwo
 
 # Review requests — email patients to review yesterday's completed appointments
 0 10 * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/review-requests
+
+# Teleconsult no-show detection — refund + replacement suggestion
+*/5 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/teleconsult-noshow
 ```
 
 Load `CRON_SECRET` into the shell environment via:

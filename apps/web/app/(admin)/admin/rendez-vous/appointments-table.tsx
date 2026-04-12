@@ -25,6 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
   completed: "Terminé",
   cancelled: "Annulé",
   no_show: "Absent",
+  doctor_noshow: "Médecin absent",
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -33,6 +34,7 @@ const STATUS_COLORS: Record<string, string> = {
   completed: "bg-green-50 text-green-700",
   cancelled: "bg-red-50 text-red-700",
   no_show: "bg-slate-100 text-slate-600",
+  doctor_noshow: "bg-red-50 text-red-700",
 };
 
 const TYPE_LABELS: Record<string, string> = {

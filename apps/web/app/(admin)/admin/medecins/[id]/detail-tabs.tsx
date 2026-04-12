@@ -1104,10 +1104,14 @@ function StatusBadge({ status }: { status: string }) {
     completed: "bg-green-50 text-green-700",
     cancelled: "bg-red-50 text-red-700",
     no_show: "bg-slate-100 text-slate-600",
+    doctor_noshow: "bg-red-50 text-red-700",
     approved: "bg-green-50 text-green-700",
     rejected: "bg-red-50 text-red-700",
     active: "bg-green-50 text-green-700",
     expired: "bg-slate-100 text-slate-600",
+  };
+  const labels: Record<string, string> = {
+    doctor_noshow: "Médecin absent",
   };
   return (
     <span
@@ -1115,7 +1119,7 @@ function StatusBadge({ status }: { status: string }) {
         map[status] ?? "bg-slate-100 text-slate-600"
       }`}
     >
-      {status}
+      {labels[status] ?? status}
     </span>
   );
 }

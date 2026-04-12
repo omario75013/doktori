@@ -285,6 +285,7 @@ function StatusBadge({ status }: { status: string }) {
     cancelled: "bg-gray-100 text-gray-500",
     completed: "bg-blue-100 text-blue-700",
     no_show: "bg-red-100 text-red-700",
+    doctor_noshow: "bg-red-100 text-red-700",
   };
   const labels: Record<string, string> = {
     pending: "À confirmer",
@@ -292,6 +293,7 @@ function StatusBadge({ status }: { status: string }) {
     cancelled: "Annulé",
     completed: "Terminé",
     no_show: "Absent",
+    doctor_noshow: "Médecin absent",
   };
   return (
     <span className={`text-xs px-2 py-1 rounded ${styles[status] ?? "bg-gray-100"}`}>
