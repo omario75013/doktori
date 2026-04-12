@@ -135,6 +135,9 @@ export const patients = pgTable(
     cnamNumber: varchar("cnam_number", { length: 20 }),
     noShowCount: integer("no_show_count").notNull().default(0),
     lastMinuteCancelCount: integer("last_minute_cancel_count").notNull().default(0),
+    isSuspended: boolean("is_suspended").notNull().default(false),
+    suspensionReason: text("suspension_reason"),
+    suspendedAt: timestamp("suspended_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex("patients_phone_idx").on(table.phone)]
