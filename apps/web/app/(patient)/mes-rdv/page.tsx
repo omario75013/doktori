@@ -9,6 +9,7 @@ import { format, isPast } from "date-fns";
 import { fr } from "date-fns/locale";
 
 type Step = "phone" | "code" | "loggedIn";
+type CancelState = { id: string } | null;
 
 const RELATION_LABELS: Record<string, string> = {
   child: "enfant",
@@ -41,6 +42,7 @@ export default function MesRdvPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [sessionExpiredMsg, setSessionExpiredMsg] = useState("");
+  const [cancelConfirm, setCancelConfirm] = useState<CancelState>(null);
 
   // Check if already logged in
   useEffect(() => {
@@ -110,7 +112,6 @@ export default function MesRdvPage() {
 
   async function cancelAppointment(id: string) {
     if (!token) return;
-    if (!confirm("Annuler ce rendez-vous ?")) return;
     const res = await fetch(`/api/appointments/${id}/cancel`, {
       method: "POST",
       headers: { Authorization: `Bearer ${token}` },
@@ -118,6 +119,7 @@ export default function MesRdvPage() {
     if (res.ok) {
       setAppointments((prev) => prev.map((a) => a.id === id ? { ...a, status: "cancelled" } : a));
     }
+    setCancelConfirm(null);
   }
 
   function logout() {
@@ -220,7 +222,7 @@ export default function MesRdvPage() {
                           </div>
                         )}
                       </div>
-                      <Button variant="outline" size="sm" onClick={() => cancelAppointment(a.id)}>Annuler</Button>
+                      <Button variant="outline" size="sm" onClick={() => setCancelConfirm({ id: a.id })}>Annuler</Button>
                     </div>
                   );
                 })}
@@ -257,6 +259,18 @@ export default function MesRdvPage() {
             )}
           </section>
         </>
+      )}
+      {cancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
+            <h3 className="text-lg font-bold text-gray-900">Annuler ce rendez-vous ?</h3>
+            <p className="mt-2 text-sm text-gray-500">Cette action est irréversible. Vous devrez reprendre un nouveau rendez-vous.</p>
+            <div className="mt-6 flex gap-3 justify-end">
+              <button onClick={() => setCancelConfirm(null)} className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50">Non</button>
+              <button onClick={() => cancelAppointment(cancelConfirm.id)} className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700">Oui, annuler</button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

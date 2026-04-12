@@ -213,11 +213,13 @@ function RoleCell({
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [role, setRole] = useState<AdminRole>(currentRole);
+  const [error, setError] = useState<string | null>(null);
 
   async function handleChange(newRole: AdminRole) {
     if (newRole === role) return;
     const prev = role;
     setRole(newRole);
+    setError(null);
     const res = await fetch(`/api/admin/access/users/${userId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -225,7 +227,7 @@ function RoleCell({
     });
     if (!res.ok) {
       setRole(prev);
-      alert("Erreur lors de la mise à jour du rôle.");
+      setError("Erreur lors de la mise à jour du rôle.");
       return;
     }
     startTransition(() => router.refresh());
@@ -233,6 +235,12 @@ function RoleCell({
 
   return (
     <div className="relative inline-block">
+      {error && (
+        <div className="absolute bottom-full mb-1 left-0 z-10 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 whitespace-nowrap shadow-sm">
+          {error}
+          <button onClick={() => setError(null)} className="ml-2 text-red-400 hover:text-red-700">✕</button>
+        </div>
+      )}
       <select
         value={role}
         onChange={(e) => handleChange(e.target.value as AdminRole)}
@@ -264,12 +272,14 @@ function ActiveToggle({
   const router = useRouter();
   const [isActive, setIsActive] = useState(initialValue);
   const [isPending, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   async function toggle() {
     const next = !isActive;
     const label = next ? "activer" : "désactiver";
     if (!confirm(`Voulez-vous ${label} cet administrateur ?`)) return;
     setIsActive(next);
+    setError(null);
     const res = await fetch(`/api/admin/access/users/${userId}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -277,26 +287,34 @@ function ActiveToggle({
     });
     if (!res.ok) {
       setIsActive(!next);
-      alert("Erreur lors de la mise à jour.");
+      setError("Erreur lors de la mise à jour.");
       return;
     }
     startTransition(() => router.refresh());
   }
 
   return (
-    <button
-      onClick={toggle}
-      disabled={isPending}
-      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
-        isActive ? "bg-teal-500" : "bg-slate-200"
-      }`}
-    >
-      <span
-        className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
-          isActive ? "translate-x-4" : "translate-x-0.5"
+    <div className="relative inline-flex items-center gap-2">
+      {error && (
+        <div className="absolute bottom-full mb-1 left-0 z-10 px-3 py-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700 whitespace-nowrap shadow-sm">
+          {error}
+          <button onClick={() => setError(null)} className="ml-2 text-red-400 hover:text-red-700">✕</button>
+        </div>
+      )}
+      <button
+        onClick={toggle}
+        disabled={isPending}
+        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors focus:outline-none disabled:opacity-50 ${
+          isActive ? "bg-teal-500" : "bg-slate-200"
         }`}
-      />
-    </button>
+      >
+        <span
+          className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+            isActive ? "translate-x-4" : "translate-x-0.5"
+          }`}
+        />
+      </button>
+    </div>
   );
 }
 

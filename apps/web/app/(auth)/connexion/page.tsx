@@ -157,7 +157,7 @@ export default function ConnexionPage() {
                   <input
                     id="email"
                     type="email"
-                    placeholder="dr.karim@doktori.dev"
+                    placeholder="votre.email@exemple.tn"
                     autoComplete="email"
                     required
                     value={email}

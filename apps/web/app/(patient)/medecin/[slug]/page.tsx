@@ -258,7 +258,36 @@ export default async function DoctorProfilePage({
         </div>
 
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
-          <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+          {/* ═════ MOBILE STICKY CTA ═════ */}
+          <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden border-t border-[#E6F4F1] bg-white/95 backdrop-blur-sm px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+            <div className="flex items-center gap-3 max-w-lg mx-auto">
+              <div className="flex-1 min-w-0">
+                <div className="text-xs font-bold text-[#5E7574] truncate">{doctor.name}</div>
+                {doctor.consultationFee != null && (
+                  <div className="text-sm font-black text-[#0891B2]">{(doctor.consultationFee / 1000).toFixed(0)} DT</div>
+                )}
+              </div>
+              {doctor.consultationMode === "teleconsult" ? (
+                <Link
+                  href={`/rdv/${doctor.slug}`}
+                  className="inline-flex items-center gap-2 rounded-xl bg-purple-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-purple-600/20 active:scale-[0.97]"
+                >
+                  <Video className="h-4 w-4" strokeWidth={2.5} />
+                  RDV vidéo
+                </Link>
+              ) : (
+                <Link
+                  href={`/rdv/${doctor.slug}`}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#0891B2] px-6 py-3 text-sm font-bold text-white shadow-lg shadow-[#0891B2]/20 active:scale-[0.97]"
+                >
+                  <Calendar className="h-4 w-4" strokeWidth={2.5} />
+                  Prendre RDV
+                </Link>
+              )}
+            </div>
+          </div>
+
+          <div className="grid gap-6 lg:grid-cols-[1fr_360px] pb-20 lg:pb-0">
             {/* ═════ LEFT COLUMN ═════ */}
             <div className="space-y-6">
               {/* Header card */}
@@ -646,9 +675,9 @@ export default async function DoctorProfilePage({
                 </div>
               </div>
 
-              {/* Avis patients */}
+              {/* Avis patients — on mobile, pushed below practical info via order */}
               {reviewCount > 0 && (
-                <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                <div className="order-last lg:order-none rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
@@ -765,8 +794,8 @@ export default async function DoctorProfilePage({
               </div>
             </div>
 
-            {/* ═════ RIGHT COLUMN — sticky CTA ═════ */}
-            <div className="lg:sticky lg:top-24 lg:self-start">
+            {/* ═════ RIGHT COLUMN — sticky CTA (hidden on mobile, shown on desktop) ═════ */}
+            <div className="hidden lg:block lg:sticky lg:top-24 lg:self-start">
               <div className="overflow-hidden rounded-3xl border-2 border-[#0891B2] bg-white shadow-xl shadow-[#0891B2]/10">
                 <div className="bg-[#0891B2] px-6 py-4 text-white">
                   <div className="flex items-center gap-2">

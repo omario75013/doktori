@@ -55,6 +55,12 @@ export default function RendezVousPage() {
   const [cnamAmount, setCnamAmount] = useState("40");
   const [cnamError, setCnamError] = useState<string | null>(null);
 
+  // Followup modal state
+  const [followupDialogId, setFollowupDialogId] = useState<string | null>(null);
+  const [followupWeeks, setFollowupWeeks] = useState("4");
+  const [followupError, setFollowupError] = useState<string | null>(null);
+  const [followupSuccess, setFollowupSuccess] = useState<string | null>(null);
+
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -140,17 +146,22 @@ export default function RendezVousPage() {
     }
   };
 
-  const scheduleFollowup = async (id: string) => {
-    const input = window.prompt(
-      "Dans combien de semaines programmer le suivi ?",
-      "4",
-    );
-    if (!input) return;
-    const weeks = Number(input);
+  const openFollowupDialog = (id: string) => {
+    setFollowupDialogId(id);
+    setFollowupWeeks("4");
+    setFollowupError(null);
+    setFollowupSuccess(null);
+  };
+
+  const submitFollowup = async () => {
+    const id = followupDialogId;
+    if (!id) return;
+    const weeks = Number(followupWeeks);
     if (!Number.isFinite(weeks) || weeks < 1 || weeks > 104) {
-      alert("Valeur invalide (1 à 104 semaines)");
+      setFollowupError("Valeur invalide (1 à 104 semaines).");
       return;
     }
+    setFollowupError(null);
     setUpdating(id);
     try {
       const res = await fetch(`/api/appointments/${id}/followup`, {
@@ -162,9 +173,15 @@ export default function RendezVousPage() {
         const data = await res.json();
         throw new Error(data.error ?? "Erreur programmation");
       }
-      alert(`Suivi programmé dans ${weeks} semaine${weeks > 1 ? "s" : ""}. Le patient recevra un SMS.`);
+      setFollowupSuccess(
+        `Suivi programmé dans ${weeks} semaine${weeks > 1 ? "s" : ""}. Le patient recevra un SMS.`,
+      );
+      setTimeout(() => {
+        setFollowupDialogId(null);
+        setFollowupSuccess(null);
+      }, 2000);
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Erreur");
+      setFollowupError(e instanceof Error ? e.message : "Erreur");
     } finally {
       setUpdating(null);
     }
@@ -284,7 +301,7 @@ export default function RendezVousPage() {
                               Note SOAP
                             </a>
                             <button
-                              onClick={() => scheduleFollowup(appt.id)}
+                              onClick={() => openFollowupDialog(appt.id)}
                               disabled={isUpdating}
                               className="text-xs px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40"
                             >
@@ -321,6 +338,65 @@ export default function RendezVousPage() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* Followup modal */}
+      {followupDialogId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setFollowupDialogId(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl bg-white shadow-xl p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-base font-semibold text-gray-800">Programmer un suivi</h2>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Dans combien de semaines ?
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="104"
+                value={followupWeeks}
+                onChange={(e) => setFollowupWeeks(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                autoFocus
+              />
+              <p className="text-xs text-gray-400">Entre 1 et 104 semaines</p>
+            </div>
+
+            {followupError && (
+              <p className="text-sm text-red-600">{followupError}</p>
+            )}
+
+            {followupSuccess && (
+              <p className="text-sm text-green-700 bg-green-50 rounded-lg px-3 py-2">
+                {followupSuccess}
+              </p>
+            )}
+
+            {!followupSuccess && (
+              <div className="flex gap-2 justify-end pt-1">
+                <button
+                  onClick={() => setFollowupDialogId(null)}
+                  className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={submitFollowup}
+                  disabled={updating === followupDialogId}
+                  className="px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium disabled:opacity-40"
+                >
+                  {updating === followupDialogId ? "..." : "Confirmer"}
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 

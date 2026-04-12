@@ -17,14 +17,16 @@ export function SuspensionsTable({ patients }: { patients: SuspendedPatient[] })
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [busy, setBusy] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   async function unban(id: string) {
     if (!confirm("Réactiver ce patient ?")) return;
     setBusy(id);
+    setError(null);
     const res = await fetch(`/api/admin/patients/${id}/unban`, { method: "POST" });
     setBusy(null);
     if (res.ok) startTransition(() => router.refresh());
-    else alert("Erreur");
+    else setError("Erreur lors de la réactivation du patient.");
   }
 
   if (patients.length === 0) {
@@ -36,6 +38,13 @@ export function SuspensionsTable({ patients }: { patients: SuspendedPatient[] })
   }
 
   return (
+    <div className="space-y-3">
+      {error && (
+        <div className="flex items-center justify-between px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="ml-4 text-red-400 hover:text-red-700 transition-colors">✕</button>
+        </div>
+      )}
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
@@ -92,6 +101,7 @@ export function SuspensionsTable({ patients }: { patients: SuspendedPatient[] })
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   );
 }

@@ -25,6 +25,7 @@ export default function AbonnementPage() {
   const [current, setCurrent] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [checkingOut, setCheckingOut] = useState<string | null>(null);
+  const [checkoutError, setCheckoutError] = useState<string | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -48,7 +49,7 @@ export default function AbonnementPage() {
       const data = await res.json();
       window.location.href = data.paymentUrl;
     } else {
-      alert("Erreur lors du checkout");
+      setCheckoutError("Erreur lors du checkout. Veuillez réessayer.");
       setCheckingOut(null);
     }
   }
@@ -68,6 +69,19 @@ export default function AbonnementPage() {
               Valide jusqu&apos;au {format(new Date(current.endsAt), "d MMMM yyyy", { locale: fr })}
             </div>
           )}
+        </div>
+      )}
+
+      {checkoutError && (
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700 mb-4 max-w-3xl">
+          <span>{checkoutError}</span>
+          <button
+            onClick={() => setCheckoutError(null)}
+            className="ml-4 text-red-400 hover:text-red-600 font-bold"
+            aria-label="Fermer"
+          >
+            ×
+          </button>
         </div>
       )}
 

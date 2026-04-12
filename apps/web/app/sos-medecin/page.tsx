@@ -101,6 +101,10 @@ export default function SOSPage() {
   const [completeFee, setCompleteFee] = useState("");
   const [completing, setCompleting] = useState(false);
   const [cancelling, setCancelling] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+
+  // Action-level error (accept, complete, cancel)
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // History
   const [history, setHistory] = useState<HistoryRow[]>([]);
@@ -289,7 +293,7 @@ export default function SOSPage() {
       setCompleteFee(String(fee));
     } else {
       const err = await res.json();
-      alert(err.error || "Erreur lors de l'acceptation");
+      setActionError(err.error || "Erreur lors de l'acceptation");
     }
   }
 
@@ -306,7 +310,7 @@ export default function SOSPage() {
     if (!activeSession) return;
     const feeNum = parseFloat(completeFee);
     if (isNaN(feeNum) || feeNum <= 0) {
-      alert("Veuillez saisir un tarif valide");
+      setActionError("Veuillez saisir un tarif valide");
       return;
     }
     setCompleting(true);
@@ -322,13 +326,18 @@ export default function SOSPage() {
       refreshFeed();
     } else {
       const err = await res.json();
-      alert(err.error || "Erreur lors de la clôture");
+      setActionError(err.error || "Erreur lors de la clôture");
     }
   }
 
   async function cancelSession() {
     if (!activeSession) return;
-    if (!confirm("Annuler cette consultation ?")) return;
+    setShowCancelConfirm(true);
+  }
+
+  async function confirmCancelSession() {
+    if (!activeSession) return;
+    setShowCancelConfirm(false);
     setCancelling(true);
     const res = await fetch("/api/sos/cancel", {
       method: "POST",
@@ -341,7 +350,7 @@ export default function SOSPage() {
       refreshFeed();
     } else {
       const err = await res.json();
-      alert(err.error || "Erreur lors de l'annulation");
+      setActionError(err.error || "Erreur lors de l'annulation");
     }
   }
 
@@ -353,6 +362,46 @@ export default function SOSPage() {
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6 space-y-6">
+      {/* Action error banner */}
+      {actionError && (
+        <div className="flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <span className="flex-1">{actionError}</span>
+          <button
+            onClick={() => setActionError(null)}
+            className="shrink-0 text-red-400 hover:text-red-600 font-medium leading-none"
+            aria-label="Fermer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
+      {/* Cancel confirmation modal */}
+      {showCancelConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
+            <h3 className="font-semibold text-[#134E4A]">Annuler la consultation ?</h3>
+            <p className="text-sm text-gray-600">
+              Cette action annulera la consultation en cours. Le patient sera notifié.
+            </p>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowCancelConfirm(false)}
+                className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+              >
+                Non
+              </button>
+              <button
+                onClick={confirmCancelSession}
+                className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700"
+              >
+                Oui, annuler
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div>
         <h1 className="text-2xl font-bold text-[#134E4A]">SOS Docteur</h1>

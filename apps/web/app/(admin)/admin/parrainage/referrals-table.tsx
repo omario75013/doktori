@@ -26,6 +26,7 @@ export function ReferralsTable({ referrals }: { referrals: Referral[] }) {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [busy, setBusy] = useState(false);
   const [, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     if (statusFilter === "all") return referrals;
@@ -53,7 +54,7 @@ export function ReferralsTable({ referrals }: { referrals: Referral[] }) {
       if (res.ok) startTransition(() => router.refresh());
       else {
         const err = await res.json() as { error: string };
-        alert(err.error ?? "Erreur");
+        setError(err.error ?? "Erreur lors de la mise à jour du parrainage.");
       }
     } finally {
       setBusy(false);
@@ -61,6 +62,13 @@ export function ReferralsTable({ referrals }: { referrals: Referral[] }) {
   }
 
   return (
+    <div className="space-y-3">
+      {error && (
+        <div className="flex items-center justify-between px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="ml-4 text-red-400 hover:text-red-700 transition-colors">✕</button>
+        </div>
+      )}
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className="p-4 border-b border-slate-200">
         <div className="flex gap-1 p-1 bg-slate-100 rounded-lg w-fit">
@@ -155,6 +163,7 @@ export function ReferralsTable({ referrals }: { referrals: Referral[] }) {
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   );
 }

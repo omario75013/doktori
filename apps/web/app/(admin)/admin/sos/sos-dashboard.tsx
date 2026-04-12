@@ -49,6 +49,7 @@ export function SosDashboard() {
     { refreshInterval: 10000 }
   );
   const [actionBusy, setActionBusy] = useState<string | null>(null);
+  const [cancelDialog, setCancelDialog] = useState<{ sessionId: string; reason: string } | null>(null);
 
   const sessions = data?.sessions ?? [];
   const pending = sessions.filter((s) => s.status === "pending");
@@ -199,10 +200,7 @@ export function SosDashboard() {
                             +15 min
                           </button>
                           <button
-                            onClick={() => {
-                              const r = window.prompt("Raison d'annulation :");
-                              if (r !== null) doAction(session.id, "cancel", r);
-                            }}
+                            onClick={() => setCancelDialog({ sessionId: session.id, reason: "" })}
                             disabled={busy}
                             className="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors disabled:opacity-50"
                           >
@@ -213,10 +211,7 @@ export function SosDashboard() {
                       )}
                       {session.status === "accepted" && (
                         <button
-                          onClick={() => {
-                            const r = window.prompt("Raison d'annulation :");
-                            if (r !== null) doAction(session.id, "cancel", r);
-                          }}
+                          onClick={() => setCancelDialog({ sessionId: session.id, reason: "" })}
                           disabled={busy}
                           className="px-3 py-1.5 text-xs font-medium text-red-700 bg-red-50 rounded-md hover:bg-red-100 transition-colors disabled:opacity-50"
                         >
@@ -228,6 +223,41 @@ export function SosDashboard() {
                   </div>
                 );
               })}
+          </div>
+        </div>
+      )}
+
+      {/* Cancel reason modal */}
+      {cancelDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-base font-semibold text-slate-900 mb-3">
+              Raison d&apos;annulation
+            </h2>
+            <textarea
+              value={cancelDialog.reason}
+              onChange={(e) => setCancelDialog({ ...cancelDialog, reason: e.target.value })}
+              placeholder="Entrez la raison..."
+              rows={3}
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none mb-4"
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setCancelDialog(null)}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  doAction(cancelDialog.sessionId, "cancel", cancelDialog.reason);
+                  setCancelDialog(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Confirmer
+              </button>
+            </div>
           </div>
         </div>
       )}

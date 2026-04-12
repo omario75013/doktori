@@ -47,6 +47,7 @@ export function DoctorsTable({
   const [pending, startTransition] = useTransition();
   const [busy, setBusy] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [error, setError] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -100,7 +101,7 @@ export function DoctorsTable({
       setSelected(new Set());
       startTransition(() => router.refresh());
     } else {
-      alert("Erreur");
+      setError("Erreur lors de l'action groupée.");
     }
   }
 
@@ -121,7 +122,7 @@ export function DoctorsTable({
     const res = await fetch(`/api/admin/doctors/${id}`, { method: "DELETE" });
     setBusy(false);
     if (res.ok) startTransition(() => router.refresh());
-    else alert("Impossible de supprimer (rendez-vous existants ?)");
+    else setError("Impossible de supprimer ce médecin (des rendez-vous existent peut-être).");
   }
 
   function exportCSV() {
@@ -170,6 +171,13 @@ export function DoctorsTable({
   }
 
   return (
+    <div className="space-y-3">
+      {error && (
+        <div className="flex items-center justify-between px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="ml-4 text-red-400 hover:text-red-700 transition-colors">✕</button>
+        </div>
+      )}
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className="p-4 border-b border-slate-200 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
         <div className="relative flex-1">
@@ -401,6 +409,7 @@ export function DoctorsTable({
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   );
 }

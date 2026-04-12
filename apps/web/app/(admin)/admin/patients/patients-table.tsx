@@ -23,6 +23,7 @@ export function PatientsTable({ patients }: { patients: PatientRow[] }) {
   const [query, setQuery] = useState("");
   const [suspendedFilter, setSuspendedFilter] = useState<"all" | "suspended" | "active">("all");
   const [, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -40,12 +41,20 @@ export function PatientsTable({ patients }: { patients: PatientRow[] }) {
 
   async function unban(id: string) {
     if (!confirm("Réactiver ce patient ?")) return;
+    setError(null);
     const res = await fetch(`/api/admin/patients/${id}/unban`, { method: "POST" });
     if (res.ok) startTransition(() => router.refresh());
-    else alert("Erreur");
+    else setError("Erreur lors de la réactivation du patient.");
   }
 
   return (
+    <div className="space-y-3">
+      {error && (
+        <div className="flex items-center justify-between px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="ml-4 text-red-400 hover:text-red-700 transition-colors">✕</button>
+        </div>
+      )}
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className="p-4 border-b border-slate-200 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
         <div className="relative flex-1">
@@ -169,6 +178,7 @@ export function PatientsTable({ patients }: { patients: PatientRow[] }) {
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   );
 }

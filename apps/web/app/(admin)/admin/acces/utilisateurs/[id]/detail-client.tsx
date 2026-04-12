@@ -83,6 +83,7 @@ export function AdminUserDetailClient({
   const [role, setRole] = useState<AdminRole>(user.role);
   const [isActive, setIsActive] = useState(user.isActive);
   const [roleError, setRoleError] = useState<string | null>(null);
+  const [toggleError, setToggleError] = useState<string | null>(null);
 
   async function patchUser(updates: Record<string, unknown>) {
     const res = await fetch(`/api/admin/access/users/${user.id}`, {
@@ -122,12 +123,25 @@ export function AdminUserDetailClient({
       startTransition(() => router.refresh());
     } catch {
       setIsActive(prev);
-      alert("Erreur lors de la mise à jour.");
+      setToggleError("Erreur lors de la mise à jour.");
     }
   }
 
   return (
     <>
+      {/* Error banner */}
+      {toggleError && (
+        <div className="mb-4 flex items-center justify-between px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <span>{toggleError}</span>
+          <button
+            onClick={() => setToggleError(null)}
+            className="ml-4 text-red-400 hover:text-red-700 transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Profile card */}
       <div className="bg-white rounded-xl border border-slate-200 p-6">
         <div className="flex items-start justify-between gap-4 flex-wrap">

@@ -32,6 +32,7 @@ export function ClinicDetailClient({
   const [doctors, setDoctors] = useState<ClinicDoctor[]>(initialDoctors);
   const [busy, setBusy] = useState(false);
   const [, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   // Doctor search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -79,7 +80,7 @@ export function ClinicDetailClient({
         }
       } else {
         const err = await res.json() as { error: string };
-        alert(err.error ?? "Erreur");
+        setError(err.error ?? "Erreur lors de l'ajout du médecin.");
       }
     } finally {
       setBusy(false);
@@ -89,6 +90,7 @@ export function ClinicDetailClient({
   async function removeDoctor(doctorId: string, doctorName: string) {
     if (!confirm(`Retirer ${doctorName} de la clinique ?`)) return;
     setBusy(true);
+    setError(null);
     try {
       const res = await fetch(`/api/admin/clinics/${clinicId}/doctors/${doctorId}`, {
         method: "DELETE",
@@ -97,7 +99,7 @@ export function ClinicDetailClient({
         setDoctors((prev) => prev.filter((d) => d.doctorId !== doctorId));
         startTransition(() => router.refresh());
       } else {
-        alert("Erreur lors du retrait");
+        setError("Erreur lors du retrait du médecin.");
       }
     } finally {
       setBusy(false);
@@ -106,6 +108,14 @@ export function ClinicDetailClient({
 
   return (
     <div className="space-y-6">
+      {/* Error banner */}
+      {error && (
+        <div className="flex items-center justify-between px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="ml-4 text-red-400 hover:text-red-700 transition-colors">✕</button>
+        </div>
+      )}
+
       {/* Doctors list */}
       <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">

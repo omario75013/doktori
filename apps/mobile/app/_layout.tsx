@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
-import { Alert, AppState, AppStateStatus } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
-import * as Updates from "expo-updates";
 import { getToken, isTokenValid } from "@/lib/auth";
-import { trackEvent } from "@/lib/analytics";
 import { colors } from "@/lib/theme";
 import * as Notifications from "expo-notifications";
 
@@ -30,40 +27,10 @@ export default function RootLayout() {
   const router = useRouter();
   const segments = useSegments();
 
-  // Silent OTA update — download + auto-reload, no user prompt
-  useEffect(() => {
-    async function silentUpdate() {
-      if (__DEV__) return;
-      try {
-        const update = await Updates.checkForUpdateAsync();
-        if (update.isAvailable) {
-          await Updates.fetchUpdateAsync();
-          await Updates.reloadAsync();
-        }
-      } catch (e) {
-        console.log("[Updates] silent update failed:", e);
-      }
-    }
-    silentUpdate();
-  }, []);
-
-  // Analytics: track app_open and app_background transitions
-  useEffect(() => {
-    trackEvent("app_open");
-    const subscription = AppState.addEventListener(
-      "change",
-      (nextState: AppStateStatus) => {
-        if (nextState === "background" || nextState === "inactive") {
-          trackEvent("app_background");
-        }
-      }
-    );
-    return () => subscription.remove();
-  }, []);
-
   useEffect(() => {
     async function check() {
-      const { initLocale } = await import("@/lib/i18n"); await initLocale();
+      const { initLocale } = await import("@/lib/i18n");
+      await initLocale();
       const token = await getToken();
       setIsAuthed(token !== null && isTokenValid(token));
       setIsReady(true);
@@ -76,7 +43,9 @@ export default function RootLayout() {
     SplashScreen.hideAsync();
 
     if (isAuthed) {
-      import("@/lib/push").then(({ registerPushTokenIfNeeded }) => registerPushTokenIfNeeded());
+      import("@/lib/push").then(({ registerPushTokenIfNeeded }) =>
+        registerPushTokenIfNeeded()
+      );
     }
 
     const inAuth = segments[0] === "(auth)";
@@ -90,17 +59,16 @@ export default function RootLayout() {
   if (!isReady || !fontsLoaded) return null;
 
   return (
-    <Stack screenOptions={{ headerStyle: { backgroundColor: colors.white }, headerTintColor: colors.primary }}>
+    <Stack
+      screenOptions={{
+        headerStyle: { backgroundColor: colors.white },
+        headerTintColor: colors.primary,
+      }}
+    >
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="medecin/[slug]" options={{ title: "" }} />
       <Stack.Screen name="rdv/[slug]" options={{ title: "Prendre RDV" }} />
-      <Stack.Screen name="dossier-medical" options={{ title: "Dossier médical" }} />
-      <Stack.Screen name="ordonnance/[id]" options={{ title: "Ordonnance" }} />
-      <Stack.Screen name="avis/[appointmentId]" options={{ title: "Donner un avis" }} />
-      <Stack.Screen name="avis-sos/[sessionId]" options={{ title: "Évaluer la consultation SOS" }} />
-      <Stack.Screen name="domicile/[slug]" options={{ title: "Visite à domicile" }} />
-      <Stack.Screen name="r/[token]" options={{ title: "Rappel de rendez-vous" }} />
     </Stack>
   );
 }

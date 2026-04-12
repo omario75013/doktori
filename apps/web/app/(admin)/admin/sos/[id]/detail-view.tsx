@@ -188,6 +188,8 @@ export function DetailView({
   const [notesSaving, setNotesSaving] = useState(false);
   const [busy, setBusy] = useState(false);
   const [showForceModal, setShowForceModal] = useState(false);
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [cancelDialog, setCancelDialog] = useState<{ reason: string } | null>(null);
 
   const saveNotes = useCallback(async () => {
     setNotesSaving(true);
@@ -201,6 +203,7 @@ export function DetailView({
 
   async function doAction(action: string, body?: Record<string, unknown>) {
     setBusy(true);
+    setActionError(null);
     try {
       const res = await fetch(`/api/admin/sos/${session.id}/${action}`, {
         method: "POST",
@@ -209,12 +212,12 @@ export function DetailView({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        alert(data.error || `Erreur ${res.status}`);
+        setActionError(data.error || `Erreur ${res.status}`);
         return;
       }
       router.refresh();
     } catch {
-      alert("Erreur réseau");
+      setActionError("Erreur réseau");
     } finally {
       setBusy(false);
     }
@@ -225,6 +228,19 @@ export function DetailView({
 
   return (
     <div className="p-8 max-w-5xl mx-auto">
+      {/* Action error banner */}
+      {actionError && (
+        <div className="mb-4 flex items-center justify-between px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <span>{actionError}</span>
+          <button
+            onClick={() => setActionError(null)}
+            className="ml-4 text-red-400 hover:text-red-700 transition-colors"
+          >
+            ✕
+          </button>
+        </div>
+      )}
+
       {/* Header */}
       <div className="mb-6 flex items-center gap-4">
         <Link
@@ -485,10 +501,7 @@ export function DetailView({
                   Forcer l&apos;acceptation
                 </button>
                 <button
-                  onClick={() => {
-                    const r = window.prompt("Raison d'annulation :");
-                    if (r !== null) doAction("cancel", { reason: r });
-                  }}
+                  onClick={() => setCancelDialog({ reason: "" })}
                   disabled={busy}
                   className="w-full px-4 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors"
                 >
@@ -514,10 +527,7 @@ export function DetailView({
                   Marquer terminée
                 </button>
                 <button
-                  onClick={() => {
-                    const r = window.prompt("Raison d'annulation :");
-                    if (r !== null) doAction("cancel", { reason: r });
-                  }}
+                  onClick={() => setCancelDialog({ reason: "" })}
                   disabled={busy}
                   className="w-full px-4 py-2 text-sm font-medium text-red-700 bg-red-50 rounded-lg hover:bg-red-100 disabled:opacity-50 transition-colors"
                 >
@@ -543,6 +553,41 @@ export function DetailView({
           }}
           onClose={() => setShowForceModal(false)}
         />
+      )}
+
+      {/* Cancel reason modal */}
+      {cancelDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-xl border border-slate-200 shadow-xl w-full max-w-sm p-6">
+            <h2 className="text-base font-semibold text-slate-900 mb-3">
+              Raison d&apos;annulation
+            </h2>
+            <textarea
+              value={cancelDialog.reason}
+              onChange={(e) => setCancelDialog({ reason: e.target.value })}
+              placeholder="Entrez la raison..."
+              rows={3}
+              className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none mb-4"
+            />
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setCancelDialog(null)}
+                className="px-4 py-2 text-sm font-medium text-slate-700 bg-slate-100 rounded-lg hover:bg-slate-200 transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => {
+                  doAction("cancel", { reason: cancelDialog.reason });
+                  setCancelDialog(null);
+                }}
+                className="px-4 py-2 text-sm font-medium text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Confirmer
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

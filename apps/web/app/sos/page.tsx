@@ -60,6 +60,8 @@ export default function SOSPage() {
   const [doctorLat, setDoctorLat] = useState<number | null>(null);
   const [doctorLng, setDoctorLng] = useState<number | null>(null);
   const [cancelling, setCancelling] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [pendingCancelByDoctor, setPendingCancelByDoctor] = useState(false);
 
   const geoRef = useRef<{ lat: number; lng: number } | null>(null);
 
@@ -208,17 +210,14 @@ export default function SOSPage() {
     await sendRequest();
   }
 
-  async function cancelRequest(confirmedByDoctor = false) {
+  function cancelRequest(confirmedByDoctor = false) {
     if (!sessionId) return;
+    setPendingCancelByDoctor(confirmedByDoctor);
+    setShowCancelConfirm(true);
+  }
 
-    if (confirmedByDoctor) {
-      const doctorName = sessionData?.doctor_name ?? "le médecin";
-      const ok = window.confirm(
-        `${doctorName} a déjà accepté. Annuler quand même ?`
-      );
-      if (!ok) return;
-    }
-
+  async function confirmCancelRequest() {
+    setShowCancelConfirm(false);
     setCancelling(true);
     try {
       await fetch("/api/sos/cancel", {
@@ -287,6 +286,34 @@ export default function SOSPage() {
           <strong>190 (SAMU)</strong>. Doktori SOS est destiné aux consultations
           urgentes non-vitales uniquement (fièvre, douleur aiguë, etc.).
         </div>
+
+        {/* ── Cancel confirmation modal ── */}
+        {showCancelConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+            <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
+              <h3 className="font-semibold text-gray-800">Êtes-vous sûr ?</h3>
+              <p className="text-sm text-gray-600">
+                {pendingCancelByDoctor
+                  ? `${sessionData?.doctor_name ?? "Le médecin"} a déjà accepté. Annuler quand même ?`
+                  : "Voulez-vous vraiment annuler votre demande ?"}
+              </p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setShowCancelConfirm(false)}
+                  className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  Non
+                </button>
+                <button
+                  onClick={confirmCancelRequest}
+                  className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700"
+                >
+                  Oui
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* ── INTRO ── */}
         {step === "intro" && (

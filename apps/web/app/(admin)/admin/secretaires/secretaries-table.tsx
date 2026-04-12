@@ -19,6 +19,7 @@ export function SecretariesTable({ secretaries }: { secretaries: Secretary[] }) 
   const [query, setQuery] = useState("");
   const [busy, setBusy] = useState(false);
   const [, startTransition] = useTransition();
+  const [error, setError] = useState<string | null>(null);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -40,13 +41,20 @@ export function SecretariesTable({ secretaries }: { secretaries: Secretary[] }) 
         body: JSON.stringify({ isActive: next }),
       });
       if (res.ok) startTransition(() => router.refresh());
-      else alert("Erreur lors de la mise à jour");
+      else setError("Erreur lors de la mise à jour de la secrétaire.");
     } finally {
       setBusy(false);
     }
   }
 
   return (
+    <div className="space-y-3">
+      {error && (
+        <div className="flex items-center justify-between px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+          <span>{error}</span>
+          <button onClick={() => setError(null)} className="ml-4 text-red-400 hover:text-red-700 transition-colors">✕</button>
+        </div>
+      )}
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className="p-4 border-b border-slate-200">
         <div className="relative max-w-sm">
@@ -128,6 +136,7 @@ export function SecretariesTable({ secretaries }: { secretaries: Secretary[] }) 
           </tbody>
         </table>
       </div>
+    </div>
     </div>
   );
 }

@@ -205,6 +205,7 @@ function ProfileTab({ doctor }: { doctor: Doctor }) {
   const [pending, startTransition] = useTransition();
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [resetMsg, setResetMsg] = useState<{ text: string; isError: boolean } | null>(null);
 
   async function save() {
     setSaving(true);
@@ -242,12 +243,9 @@ function ProfileTab({ doctor }: { doctor: Doctor }) {
     });
     const data = await res.json();
     if (res.ok) {
-      prompt(
-        "Mot de passe temporaire (copiez-le et transmettez-le au médecin) :",
-        data.tempPassword
-      );
+      setResetMsg({ text: `Mot de passe temporaire : ${data.tempPassword as string} — Copiez-le et transmettez-le au médecin.`, isError: false });
     } else {
-      alert(data.error || "Erreur");
+      setResetMsg({ text: data.error || "Erreur lors de la réinitialisation du mot de passe.", isError: true });
     }
   }
 
@@ -356,6 +354,13 @@ function ProfileTab({ doctor }: { doctor: Doctor }) {
           className="input"
         />
       </Field>
+
+      {resetMsg && (
+        <div className={`flex items-center justify-between px-4 py-3 rounded-xl text-sm border ${resetMsg.isError ? "bg-red-50 border-red-200 text-red-700" : "bg-teal-50 border-teal-200 text-teal-700"}`}>
+          <span>{resetMsg.text}</span>
+          <button onClick={() => setResetMsg(null)} className="ml-4 opacity-60 hover:opacity-100 transition-opacity">✕</button>
+        </div>
+      )}
 
       <div className="flex items-center justify-between pt-4 border-t border-slate-100">
         <button
