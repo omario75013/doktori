@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
-import { View, Text, ScrollView, StyleSheet, TextInput, ActivityIndicator, Alert } from "react-native";
+import { View, Text, ScrollView, StyleSheet, TextInput, ActivityIndicator, Alert, Pressable } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { api } from "@/lib/api";
 import { colors, spacing, radius } from "@/lib/theme";
 import { getPatient } from "@/lib/auth";
 import { Button } from "@/components/ui/Button";
-import { Pressable } from "react-native";
+
+const PURPLE = "#7C3AED";
 
 export default function BookingScreen() {
   const { slug } = useLocalSearchParams<{ slug: string }>();
@@ -30,9 +31,16 @@ export default function BookingScreen() {
   const [phone, setPhone] = useState("");
   const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
+  const [consultMode, setConsultMode] = useState<"cabinet" | "teleconsult">("cabinet");
 
   useEffect(() => {
-    api.getDoctor(slug).then(setDoctor);
+    api.getDoctor(slug).then((d) => {
+      setDoctor(d);
+      // Auto-select teleconsult if that's the only option
+      if (d?.consultation_mode === "teleconsult") {
+        setConsultMode("teleconsult");
+      }
+    });
   }, [slug]);
 
   useEffect(() => {
@@ -60,6 +68,7 @@ export default function BookingScreen() {
         date: selectedDate,
         startTime: selectedTime,
         reason: reason || undefined,
+        type: consultMode === "teleconsult" ? "teleconsult" : undefined,
       });
       if (result?.id) {
         router.replace(`/rdv/${result.id}/confirmation`);
@@ -81,6 +90,33 @@ export default function BookingScreen() {
       {doctor && (
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Avec {doctor.name}</Text>
+        </View>
+      )}
+
+      {/* Mode selection — only shown when doctor supports both */}
+      {doctor?.consultation_mode === "both" && (
+        <View style={styles.section}>
+          <Text style={styles.label}>Type de consultation</Text>
+          <View style={styles.modeRow}>
+            <Pressable
+              style={[styles.modeCard, consultMode === "cabinet" && styles.modeCardActiveTeal]}
+              onPress={() => setConsultMode("cabinet")}
+            >
+              <Text style={styles.modeIcon}>🏥</Text>
+              <Text style={[styles.modeLabel, consultMode === "cabinet" && styles.modeLabelActiveTeal]}>
+                Au cabinet
+              </Text>
+            </Pressable>
+            <Pressable
+              style={[styles.modeCard, consultMode === "teleconsult" && styles.modeCardActivePurple]}
+              onPress={() => setConsultMode("teleconsult")}
+            >
+              <Text style={styles.modeIcon}>📹</Text>
+              <Text style={[styles.modeLabel, consultMode === "teleconsult" && styles.modeLabelActivePurple]}>
+                En vidéo
+              </Text>
+            </Pressable>
+          </View>
         </View>
       )}
 
@@ -161,4 +197,21 @@ const styles = StyleSheet.create({
   slotTextActive: { color: colors.white, fontWeight: "600" },
   empty: { color: colors.slate500, textAlign: "center", marginTop: 12 },
   input: { backgroundColor: colors.bg, padding: 12, borderRadius: radius.sm, borderWidth: 1, borderColor: colors.border, marginTop: 8, fontSize: 15 },
+  modeRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.sm },
+  modeCard: {
+    flex: 1,
+    padding: spacing.md,
+    borderRadius: radius.md,
+    borderWidth: 2,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+    alignItems: "center",
+    gap: spacing.xs,
+  },
+  modeCardActiveTeal: { borderColor: colors.primary, backgroundColor: "#F0FDFA" },
+  modeCardActivePurple: { borderColor: PURPLE, backgroundColor: "#F5F3FF" },
+  modeIcon: { fontSize: 24 },
+  modeLabel: { fontSize: 14, fontWeight: "600", color: colors.slate500 },
+  modeLabelActiveTeal: { color: colors.primary },
+  modeLabelActivePurple: { color: PURPLE },
 });

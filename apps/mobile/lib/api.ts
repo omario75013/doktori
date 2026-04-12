@@ -48,11 +48,12 @@ export const api = {
     }),
 
   // Search
-  searchDoctors: (q: string, filters?: { specialty?: string; city?: string }) => {
+  searchDoctors: (q: string, filters?: { specialty?: string; city?: string; mode?: string }) => {
     const params = new URLSearchParams();
     if (q) params.set("q", q);
     if (filters?.specialty) params.set("specialty", filters.specialty);
     if (filters?.city) params.set("city", filters.city);
+    if (filters?.mode) params.set("mode", filters.mode);
     return apiFetch<any>(`/api/search?${params.toString()}`);
   },
 
@@ -78,6 +79,7 @@ export const api = {
     date: string;
     startTime: string;
     reason?: string;
+    type?: "teleconsult";
   }) => apiFetch<any>("/api/appointments", { method: "POST", body: JSON.stringify(data) }),
 
   getMyAppointments: () => apiFetch<any>("/api/appointments/patient"),

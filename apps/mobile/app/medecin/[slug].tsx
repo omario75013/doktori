@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import { View, Text, ScrollView, StyleSheet, Pressable, Share } from "react-native";
 import { useLocalSearchParams, useRouter, Stack } from "expo-router";
+
+const PURPLE = "#7C3AED";
 import { Share2 } from "lucide-react-native";
 import { api } from "@/lib/api";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
@@ -29,6 +31,8 @@ export default function DoctorScreen() {
 
   const spec = SPECIALTIES.find((s) => s.id === doctor.specialty);
   const city = CITIES.find((c) => c.id === doctor.city);
+  const hasTeleconsult = doctor.consultation_mode === "teleconsult" || doctor.consultation_mode === "both";
+  const teleconsultOnly = doctor.consultation_mode === "teleconsult";
 
   return (
     <>
@@ -43,8 +47,31 @@ export default function DoctorScreen() {
             <Text style={styles.name}>{doctor.name}</Text>
             <Text style={styles.specialty}>{spec?.label ?? doctor.specialty}</Text>
             <Text style={styles.city}>{city?.label ?? doctor.city}</Text>
-            {doctor.consultationFee && (
-              <Text style={styles.fee}>Consultation : {doctor.consultationFee / 1000} DT</Text>
+            {teleconsultOnly ? (
+              <>
+                {doctor.teleconsultFee && (
+                  <Text style={styles.fee}>Vidéo : {doctor.teleconsultFee / 1000} DT</Text>
+                )}
+              </>
+            ) : (
+              <>
+                {doctor.consultationFee && (
+                  <Text style={styles.fee}>Cabinet : {doctor.consultationFee / 1000} DT</Text>
+                )}
+                {hasTeleconsult && doctor.teleconsultFee && (
+                  <Text style={styles.fee}>Vidéo : {doctor.teleconsultFee / 1000} DT</Text>
+                )}
+              </>
+            )}
+            {hasTeleconsult && (
+              <View style={styles.teleconsultBadge}>
+                <Text style={styles.teleconsultBadgeText}>📹 Téléconsultation disponible</Text>
+              </View>
+            )}
+            {teleconsultOnly && (
+              <Text style={styles.teleconsultOnlyText}>
+                Ce médecin consulte uniquement en vidéo
+              </Text>
             )}
             <Pressable style={styles.shareBtn} onPress={() => Share.share({ url: `https://doktori.tn/medecin/${slug}` })}>
               <Share2 size={18} color={colors.primary} />
@@ -158,6 +185,15 @@ const styles = StyleSheet.create({
   specialty: { fontSize: 16, color: colors.primary, marginTop: 4 },
   city: { fontSize: 14, color: colors.slate500, marginTop: 2 },
   fee: { fontSize: 14, color: colors.ink, marginTop: spacing.sm, fontWeight: "600" },
+  teleconsultBadge: {
+    marginTop: spacing.sm,
+    backgroundColor: "#EDE9FE",
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: radius.full,
+  },
+  teleconsultBadgeText: { fontSize: 13, fontWeight: "700", color: PURPLE },
+  teleconsultOnlyText: { fontSize: 13, color: PURPLE, marginTop: spacing.xs, fontStyle: "italic" },
   shareBtn: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: spacing.md, paddingVertical: 6 },
   shareText: { fontSize: 14, color: colors.primary, fontWeight: "600" },
   section: { backgroundColor: colors.white, margin: spacing.md, marginBottom: 0, padding: spacing.md, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border },

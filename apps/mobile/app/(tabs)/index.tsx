@@ -10,11 +10,14 @@ import { DoctorCard } from "@/components/ui/DoctorCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
+const PURPLE = "#7C3AED";
+
 export default function SearchScreen() {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const [specialty, setSpecialty] = useState<string | undefined>();
   const [city, setCity] = useState<string | undefined>();
+  const [videoOnly, setVideoOnly] = useState(false);
   const [results, setResults] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -22,14 +25,14 @@ export default function SearchScreen() {
   const doSearch = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await api.searchDoctors(query, { specialty, city });
+      const data = await api.searchDoctors(query, { specialty, city, mode: videoOnly ? "teleconsult" : undefined });
       setResults(data.hits || []);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
     }
-  }, [query, specialty, city]);
+  }, [query, specialty, city, videoOnly]);
 
   useEffect(() => {
     const handler = setTimeout(doSearch, 300);
@@ -58,24 +61,36 @@ export default function SearchScreen() {
       </View>
 
       {/* Filter chips */}
-      <FlatList
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        data={SPECIALTIES}
-        keyExtractor={(s) => s.id}
-        style={styles.chips}
-        contentContainerStyle={{ paddingHorizontal: spacing.md, gap: spacing.sm }}
-        renderItem={({ item }) => (
+      <View style={styles.filtersContainer}>
+        <FlatList
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          data={SPECIALTIES}
+          keyExtractor={(s) => s.id}
+          style={styles.chips}
+          contentContainerStyle={{ paddingHorizontal: spacing.md, gap: spacing.sm }}
+          renderItem={({ item }) => (
+            <Pressable
+              style={[styles.chip, specialty === item.id && styles.chipActive]}
+              onPress={() => setSpecialty(specialty === item.id ? undefined : item.id)}
+            >
+              <Text style={[styles.chipText, specialty === item.id && styles.chipTextActive]}>
+                {item.label}
+              </Text>
+            </Pressable>
+          )}
+        />
+        <View style={styles.videoFilterRow}>
           <Pressable
-            style={[styles.chip, specialty === item.id && styles.chipActive]}
-            onPress={() => setSpecialty(specialty === item.id ? undefined : item.id)}
+            style={[styles.videoChip, videoOnly && styles.videoChipActive]}
+            onPress={() => setVideoOnly(!videoOnly)}
           >
-            <Text style={[styles.chipText, specialty === item.id && styles.chipTextActive]}>
-              {item.label}
+            <Text style={[styles.videoChipText, videoOnly && styles.videoChipTextActive]}>
+              📹 En vidéo
             </Text>
           </Pressable>
-        )}
-      />
+        </View>
+      </View>
 
       {loading && !refreshing ? (
         <LoadingSpinner />
@@ -107,9 +122,30 @@ const styles = StyleSheet.create({
     borderRadius: radius.md, borderWidth: 1, borderColor: colors.border,
   },
   input: { flex: 1, fontSize: 16, color: colors.ink },
-  chips: { maxHeight: 48, backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.border },
+  filtersContainer: { backgroundColor: colors.white, borderBottomWidth: 1, borderBottomColor: colors.border },
+  chips: { maxHeight: 48 },
   chip: { paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.mist, borderRadius: radius.full },
   chipActive: { backgroundColor: colors.primary },
   chipText: { fontSize: 13, color: colors.ink },
   chipTextActive: { color: colors.white, fontWeight: "600" },
+  videoFilterRow: {
+    flexDirection: "row",
+    paddingHorizontal: spacing.md,
+    paddingBottom: spacing.sm,
+    paddingTop: 4,
+  },
+  videoChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 7,
+    backgroundColor: colors.mist,
+    borderRadius: radius.full,
+    borderWidth: 1.5,
+    borderColor: "transparent",
+  },
+  videoChipActive: {
+    backgroundColor: "#F5F3FF",
+    borderColor: PURPLE,
+  },
+  videoChipText: { fontSize: 13, color: colors.ink, fontWeight: "500" },
+  videoChipTextActive: { color: PURPLE, fontWeight: "700" },
 });
