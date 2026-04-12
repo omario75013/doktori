@@ -381,6 +381,125 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ═══════════════════════ APP DOWNLOAD ═══════════════════════ */}
+      <section className="relative overflow-hidden bg-gradient-to-br from-[#F0FDFA] via-white to-[#F0FDFA] px-4 py-20 sm:px-6 sm:py-28">
+        <div className="absolute inset-0 opacity-30">
+          <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-[#0891B2]/10 blur-3xl" />
+          <div className="absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-[#22C55E]/10 blur-3xl" />
+        </div>
+        <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-12 md:flex-row md:gap-16">
+          {/* Phone mockup */}
+          <div className="flex shrink-0 items-center justify-center">
+            <div className="relative">
+              <div className="h-[420px] w-[210px] rounded-[2.5rem] border-[6px] border-[#134E4A] bg-white p-3 shadow-2xl sm:h-[480px] sm:w-[240px]">
+                <div className="h-full w-full overflow-hidden rounded-[2rem] bg-[#F0FDFA]">
+                  <div className="flex h-10 items-center justify-center bg-[#0891B2]">
+                    <span className="text-xs font-bold text-white">Doktori</span>
+                  </div>
+                  <div className="space-y-3 p-3">
+                    <div className="rounded-xl bg-white p-3 shadow-sm">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0891B2]/10">
+                          <Search className="h-4 w-4 text-[#0891B2]" />
+                        </div>
+                        <span className="text-[10px] text-[#64748B]">Rechercher un médecin...</span>
+                      </div>
+                    </div>
+                    {[
+                      { name: "Dr. Karim B.", spec: "Généraliste", color: "#0891B2" },
+                      { name: "Dr. Sonia T.", spec: "Dermatologue", color: "#22C55E" },
+                      { name: "Dr. Mohamed G.", spec: "Pédiatre", color: "#6366F1" },
+                    ].map((d) => (
+                      <div key={d.name} className="flex items-center gap-2 rounded-xl bg-white p-2.5 shadow-sm">
+                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white" style={{ backgroundColor: d.color }}>
+                          {d.name.charAt(4)}
+                        </div>
+                        <div>
+                          <p className="text-[10px] font-semibold text-[#134E4A]">{d.name}</p>
+                          <p className="text-[8px] text-[#64748B]">{d.spec}</p>
+                        </div>
+                        <div className="ml-auto rounded-md bg-[#0891B2] px-2 py-0.5">
+                          <span className="text-[7px] font-bold text-white">RDV</span>
+                        </div>
+                      </div>
+                    ))}
+                    <div className="flex items-center justify-around rounded-xl bg-white py-2 shadow-sm">
+                      <Search className="h-4 w-4 text-[#0891B2]" />
+                      <Siren className="h-4 w-4 text-red-500" />
+                      <CalendarCheck2 className="h-4 w-4 text-[#64748B]" />
+                      <Users className="h-4 w-4 text-[#64748B]" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+              {/* Floating badge */}
+              <div className="absolute -right-4 top-8 rounded-xl bg-white px-3 py-2 shadow-lg ring-1 ring-black/5 sm:-right-8">
+                <div className="flex items-center gap-1.5">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#22C55E]">
+                    <CheckCircle2 className="h-3.5 w-3.5 text-white" />
+                  </div>
+                  <span className="text-[10px] font-semibold text-[#134E4A]">RDV confirmé !</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Text + CTA */}
+          <div className="text-center md:text-left">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#0891B2]/10 px-4 py-1.5 text-xs font-semibold text-[#0891B2]">
+              <Smartphone className="h-3.5 w-3.5" />
+              Nouveau
+            </div>
+            <h2 className="mt-4 font-heading text-3xl font-black leading-tight text-[#134E4A] sm:text-4xl">
+              Doktori dans<br />
+              <span className="text-[#0891B2]">votre poche</span>
+            </h2>
+            <p className="mt-4 max-w-md text-base leading-relaxed text-[#5E7574]">
+              Prenez rendez-vous en 2 clics, recevez des rappels automatiques et accédez à SOS Docteur — le tout depuis votre téléphone.
+            </p>
+            <ul className="mt-6 space-y-2.5 text-sm text-[#134E4A]">
+              {[
+                "Réservation instantanée 24/7",
+                "Rappels SMS avant chaque RDV",
+                "SOS Docteur — médecin en 2 min",
+                "100% gratuit pour les patients",
+              ].map((item) => (
+                <li key={item} className="flex items-center gap-2 justify-center md:justify-start">
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-[#22C55E]" />
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row md:items-start">
+              <a
+                href="https://apps.apple.com/app/doktori"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-14 items-center gap-3 rounded-xl bg-[#134E4A] px-6 text-white shadow-lg transition-all hover:bg-[#0F3D3A] hover:shadow-xl"
+              >
+                <Apple className="h-6 w-6" />
+                <div className="text-left">
+                  <div className="text-[10px] font-medium opacity-80">Télécharger sur</div>
+                  <div className="text-sm font-bold">App Store</div>
+                </div>
+              </a>
+              <a
+                href="https://play.google.com/store/apps/details?id=tn.doktori.app"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex h-14 items-center gap-3 rounded-xl bg-[#134E4A] px-6 text-white shadow-lg transition-all hover:bg-[#0F3D3A] hover:shadow-xl"
+              >
+                <Smartphone className="h-6 w-6" />
+                <div className="text-left">
+                  <div className="text-[10px] font-medium opacity-80">Disponible sur</div>
+                  <div className="text-sm font-bold">Google Play</div>
+                </div>
+              </a>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* ═══════════════════════ FOOTER ═══════════════════════ */}
       <footer className="bg-white px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-6xl">
