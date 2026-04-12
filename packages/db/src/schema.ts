@@ -96,21 +96,27 @@ export const doctorPractices = pgTable(
 
 // ─── Doctor Schedules ─────────────────────────────────────────────────────────
 
-export const doctorSchedules = pgTable("doctor_schedules", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  doctorId: uuid("doctor_id")
-    .notNull()
-    .references(() => doctors.id, { onDelete: "cascade" }),
-  // 0 = Sunday … 6 = Saturday
-  dayOfWeek: integer("day_of_week").notNull(),
-  startTime: time("start_time").notNull(),
-  endTime: time("end_time").notNull(),
-  // Slot duration in minutes (10, 15, 20, 30, 45, 60)
-  slotDuration: integer("slot_duration").notNull().default(20),
-  isActive: boolean("is_active").notNull().default(true),
-  // nullable — backfilled to primary practice by migration 0024
-  practiceId: uuid("practice_id"),
-});
+export const doctorSchedules = pgTable(
+  "doctor_schedules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    // 0 = Sunday … 6 = Saturday
+    dayOfWeek: integer("day_of_week").notNull(),
+    startTime: time("start_time").notNull(),
+    endTime: time("end_time").notNull(),
+    // Slot duration in minutes (10, 15, 20, 30, 45, 60)
+    slotDuration: integer("slot_duration").notNull().default(20),
+    isActive: boolean("is_active").notNull().default(true),
+    // nullable — backfilled to primary practice by migration 0024
+    practiceId: uuid("practice_id"),
+  },
+  (table) => [
+    index("doctor_schedules_doctor_day_idx").on(table.doctorId, table.dayOfWeek),
+  ]
+);
 
 // ─── Patients ─────────────────────────────────────────────────────────────────
 
@@ -198,10 +204,19 @@ export const appointments = pgTable(
     endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
     status: varchar("status", { length: 20 }).notNull().default("pending"),
     type: varchar("type", { length: 20 }).notNull().default("cabinet"),
-    appointmentTypeId: uuid("appointment_type_id"),
-    dependentId: uuid("dependent_id"),
+    appointmentTypeId: uuid("appointment_type_id").references(
+      () => appointmentTypes.id,
+      { onDelete: "set null" }
+    ),
+    dependentId: uuid("dependent_id").references(
+      () => patientDependents.id,
+      { onDelete: "set null" }
+    ),
     // nullable — backfilled to primary practice by migration 0024
-    practiceId: uuid("practice_id"),
+    practiceId: uuid("practice_id").references(
+      () => doctorPractices.id,
+      { onDelete: "set null" }
+    ),
     reason: text("reason"),
     notes: text("notes"),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
@@ -213,6 +228,7 @@ export const appointments = pgTable(
     index("appointments_doctor_date_idx").on(table.doctorId, table.startsAt),
     index("appointments_patient_idx").on(table.patientId),
     index("appointments_status_idx").on(table.status),
+    index("appointments_appointment_type_idx").on(table.appointmentTypeId),
   ]
 );
 
