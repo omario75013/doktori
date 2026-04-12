@@ -1,0 +1,29 @@
+{
+  "cli": { "version": ">= 12.0.0" },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://157.90.152.204:3005",
+        "EXPO_PUBLIC_DEV_MODE": "true"
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "EXPO_PUBLIC_API_URL": "http://157.90.152.204:3005",
+        "EXPO_PUBLIC_DEV_MODE": "false"
+      }
+    },
+    "production": {
+      "env": {
+        "EXPO_PUBLIC_API_URL": "https://doktori.tn",
+        "EXPO_PUBLIC_DEV_MODE": "false"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
+}
