@@ -6,19 +6,7 @@ import { AppState } from "react-native";
 import * as SecureStore from "expo-secure-store";
 import { getToken, isTokenValid } from "@/lib/auth";
 import { colors } from "@/lib/theme";
-import * as Notifications from "expo-notifications";
-
 SplashScreen.preventAutoHideAsync();
-
-Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
-});
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -66,11 +54,10 @@ export default function RootLayout() {
     checkAuth().then(({ authed, onboardingDone }) => {
       SplashScreen.hideAsync();
 
-      if (authed) {
-        import("@/lib/push")
-          .then(({ registerPushTokenIfNeeded }) => registerPushTokenIfNeeded())
-          .catch(() => {});
-      }
+      // Push notifications disabled until EAS project is configured
+      // if (authed) {
+      //   import("@/lib/push").then(({ registerPushTokenIfNeeded }) => registerPushTokenIfNeeded()).catch(() => {});
+      // }
 
       const inOnboarding = segments[0] === "onboarding";
       const inAuth = segments[0] === "(auth)";
