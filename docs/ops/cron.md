@@ -28,6 +28,12 @@ Host crontab on `157.90.152.204` (user `root`). Adjust `CRON_SECRET` via 1Passwo
 # Review requests — email patients to review yesterday's completed appointments
 0 10 * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/review-requests
 
+# No-show auto-detection — mark stale confirmed appointments + progressive ban (3 strikes)
+*/15 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/noshow-detection
+
+# Teleconsult reminders — SMS + email 30min before video appointment
+*/15 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/teleconsult-reminders
+
 # Teleconsult no-show detection — refund + replacement suggestion
 */5 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/teleconsult-noshow
 ```
