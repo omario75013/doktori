@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db, doctorReferralCodes } from "@doktori/db";
@@ -21,8 +22,8 @@ export async function GET() {
     return NextResponse.json({ code: existing.code });
   }
 
-  // Generate an 8-char uppercase alphanumeric code
-  const code = Math.random().toString(36).slice(2, 10).toUpperCase();
+  // Generate an 8-char uppercase hex code
+  const code = randomBytes(4).toString("hex").toUpperCase();
 
   const [created] = await db
     .insert(doctorReferralCodes)

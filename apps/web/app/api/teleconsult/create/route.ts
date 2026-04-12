@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db, teleconsultations, appointments } from "@doktori/db";
@@ -25,7 +26,8 @@ export async function POST(req: Request) {
   if (existing) return NextResponse.json(existing);
 
   // Generate unique room name: doktori-<appointmentId-short>-<random>
-  const roomName = `doktori-${appointmentId.slice(0, 8)}-${Math.random().toString(36).slice(2, 8)}`;
+  const roomSuffix = randomBytes(6).toString("hex");
+  const roomName = `doktori-${appointmentId.slice(0, 8)}-${roomSuffix}`;
 
   const [created] = await db.insert(teleconsultations).values({
     appointmentId,

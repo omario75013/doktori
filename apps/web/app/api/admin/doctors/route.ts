@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { requireAdmin } from "@/lib/admin-auth";
@@ -12,7 +13,7 @@ function generateSlug(name: string): string {
     .replace(/[^a-z0-9\s-]/g, "")
     .trim()
     .replace(/\s+/g, "-");
-  const suffix = Math.random().toString(36).slice(2, 6);
+  const suffix = randomBytes(2).toString("hex"); // 4 hex chars
   return `${base}-${suffix}`;
 }
 

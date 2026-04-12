@@ -1,7 +1,9 @@
+import { randomInt } from "node:crypto";
 import { NextResponse } from "next/server";
 import { db, otpCodes } from "@doktori/db";
 import { phoneOtpRequestSchema } from "@doktori/validation";
 import { formatPhone } from "@doktori/shared";
+import { sendSMS } from "@/lib/sms";
 import { eq, and, gt } from "drizzle-orm";
 
 export async function POST(req: Request) {
@@ -27,11 +29,12 @@ export async function POST(req: Request) {
     );
   }
 
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+  const code = randomInt(100000, 999999).toString();
   const expiresAt = new Date(Date.now() + 5 * 60 * 1000);
 
   await db.insert(otpCodes).values({ phone, code, expiresAt });
 
-  console.log(`[OTP-DEV] ${phone}: ${code}`); // TODO: send via SMS in Task 10
+  // Send via SMS (dev mode logs to console, prod sends via Twilio)
+  await sendSMS(phone, `Doktori: Votre code de vérification est ${code}. Valable 5 minutes.`);
   return NextResponse.json({ success: true, message: "Code envoyé" });
 }
