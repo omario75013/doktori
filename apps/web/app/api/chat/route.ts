@@ -547,7 +547,7 @@ async function toolGetSlots(input: Record<string, unknown>): Promise<string> {
   if (!doctorId || !date) return JSON.stringify({ error: "doctorId et date requis" });
 
   let duration: number | undefined;
-  const typeId = typeof input.appointmentTypeId === "string" ? input.appointmentTypeId : undefined;
+  const typeId = typeof input.appointmentTypeId === "string" && input.appointmentTypeId.length > 0 ? input.appointmentTypeId : undefined;
   if (typeId) {
     const [type] = await db
       .select({ durationMinutes: appointmentTypes.durationMinutes })
@@ -594,7 +594,7 @@ async function toolCheckCalendar(input: Record<string, unknown>): Promise<string
   const doctorId = String(input.doctorId || "");
   if (!doctorId) return JSON.stringify({ error: "doctorId requis" });
 
-  const typeId = typeof input.appointmentTypeId === "string" ? input.appointmentTypeId : undefined;
+  const typeId = typeof input.appointmentTypeId === "string" && input.appointmentTypeId.length > 0 ? input.appointmentTypeId : undefined;
   let duration: number | undefined;
   if (typeId) {
     const [type] = await db
@@ -674,7 +674,7 @@ async function toolBookAppointment(input: Record<string, unknown>): Promise<stri
 
   // Resolve slot duration
   let slotDuration: number | undefined;
-  const typeId = typeof input.appointmentTypeId === "string" ? input.appointmentTypeId : undefined;
+  const typeId = typeof input.appointmentTypeId === "string" && input.appointmentTypeId.length > 0 ? input.appointmentTypeId : undefined;
   if (typeId) {
     const [type] = await db
       .select()
@@ -728,7 +728,7 @@ async function toolBookAppointment(input: Record<string, unknown>): Promise<stri
       patientId: patient.id,
       startsAt,
       endsAt,
-      reason: typeof input.reason === "string" ? input.reason : undefined,
+      reason: typeof input.reason === "string" && input.reason.length > 0 ? input.reason : undefined,
       appointmentTypeId: typeId,
       dependentId,
     });
