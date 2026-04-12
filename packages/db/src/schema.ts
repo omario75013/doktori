@@ -52,6 +52,8 @@ export const doctors = pgTable(
     consultationFee: integer("consultation_fee"),
     latitude: varchar("latitude", { length: 30 }),
     longitude: varchar("longitude", { length: 30 }),
+    consultationMode: varchar("consultation_mode", { length: 20 }).notNull().default("cabinet"),
+    teleconsultFee: integer("teleconsult_fee"),
     isActive: boolean("is_active").notNull().default(true),
     sosAvailable: boolean("sos_available").notNull().default(false),
     sosRadiusKm: integer("sos_radius_km").notNull().default(10),
@@ -385,6 +387,7 @@ export const appointmentTypes = pgTable("appointment_types", {
   durationMinutes: integer("duration_minutes").notNull(),
   fee: integer("fee"), // in millimes (nullable — fallback to doctor's consultationFee)
   color: varchar("color", { length: 20 }).default("#2563eb").notNull(),
+  mode: varchar("mode", { length: 20 }).notNull().default("cabinet"),
   isDefault: boolean("is_default").default(false).notNull(),
   isActive: boolean("is_active").default(true).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
@@ -479,6 +482,29 @@ export const teleconsultations = pgTable("teleconsultations", {
   durationSeconds: integer("duration_seconds"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 });
+
+// ── Doctor Wallets ────────────────────────────────────────────
+export const doctorWallets = pgTable("doctor_wallets", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }).unique(),
+  balance: integer("balance").notNull().default(0),
+  totalEarned: integer("total_earned").notNull().default(0),
+  totalCommission: integer("total_commission").notNull().default(0),
+  totalWithdrawn: integer("total_withdrawn").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export const walletTransactions = pgTable("wallet_transactions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  type: varchar("type", { length: 20 }).notNull(),
+  amount: integer("amount").notNull(),
+  appointmentId: uuid("appointment_id").references(() => appointments.id, { onDelete: "set null" }),
+  description: text("description"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [
+  index("wallet_tx_doctor_idx").on(table.doctorId, table.createdAt),
+]);
 
 // ── Insurance Conventions ────────────────────────────────────
 export const doctorInsurance = pgTable("doctor_insurance", {

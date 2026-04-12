@@ -26,7 +26,7 @@ export const APPOINTMENT_STATUSES = [
   "pending", "confirmed", "cancelled", "completed", "no_show",
 ] as const;
 
-export const APPOINTMENT_TYPES = ["cabinet", "home_visit", "sos"] as const;
+export const APPOINTMENT_TYPES = ["cabinet", "home_visit", "sos", "teleconsult"] as const;
 
 export const SLOT_DURATIONS = [10, 15, 20, 30, 45, 60] as const;
 
