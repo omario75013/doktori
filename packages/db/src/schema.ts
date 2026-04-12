@@ -792,3 +792,41 @@ export const catalogCities = pgTable("catalog_cities", {
   displayOrder: integer("display_order").notNull().default(0),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ── Conversations (doctor-patient messaging) ─────────────────────────────────
+
+export const conversations = pgTable(
+  "conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
+    status: varchar("status", { length: 20 }).notNull().default("active"),
+    lastNotificationAt: timestamp("last_notification_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("conversations_doctor_patient_uidx").on(table.doctorId, table.patientId),
+    index("conversations_doctor_idx").on(table.doctorId),
+    index("conversations_patient_idx").on(table.patientId),
+  ]
+);
+
+export const messages = pgTable(
+  "messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id").notNull().references(() => conversations.id, { onDelete: "cascade" }),
+    senderType: varchar("sender_type", { length: 10 }).notNull(),
+    senderId: uuid("sender_id").notNull(),
+    content: text("content").notNull(),
+    fileUrl: text("file_url"),
+    fileName: varchar("file_name", { length: 255 }),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("messages_conversation_idx").on(table.conversationId, table.createdAt),
+  ]
+);
