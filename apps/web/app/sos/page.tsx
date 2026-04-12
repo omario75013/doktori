@@ -157,8 +157,7 @@ export default function SOSPage() {
     });
   }
 
-  async function submitRequest(e: React.FormEvent) {
-    e.preventDefault();
+  async function sendRequest() {
     setError("");
     setStep("locating");
 
@@ -202,6 +201,11 @@ export default function SOSPage() {
       setError("Erreur lors de l'envoi de la demande");
       setStep("form");
     }
+  }
+
+  async function submitRequest(e: React.FormEvent) {
+    e.preventDefault();
+    await sendRequest();
   }
 
   async function cancelRequest(confirmedByDoctor = false) {
@@ -253,49 +257,7 @@ export default function SOSPage() {
   }
 
   async function retryRequest() {
-    setError("");
-    setStep("locating");
-
-    let pos: GeolocationPosition;
-    try {
-      pos = await getGeolocation();
-    } catch {
-      setError("Impossible d'obtenir votre position");
-      setStep("form");
-      return;
-    }
-
-    const lat = pos.coords.latitude;
-    const lng = pos.coords.longitude;
-    setPatientLat(lat);
-    setPatientLng(lng);
-    geoRef.current = { lat, lng };
-
-    const res = await fetch("/api/sos/request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        patientName: name,
-        patientPhone: phone,
-        latitude: lat,
-        longitude: lng,
-        symptomCategory: symptom,
-        description,
-      }),
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      setSessionId(data.sessionId);
-      if (data.token) setCancelToken(data.token);
-      const exp = new Date(Date.now() + 30 * 60 * 1000);
-      setExpiresAt(exp);
-      setCountdown(TOTAL_SECONDS);
-      setStep("waiting");
-    } else {
-      setError("Erreur lors de l'envoi de la demande");
-      setStep("form");
-    }
+    await sendRequest();
   }
 
   // SVG ring dimensions

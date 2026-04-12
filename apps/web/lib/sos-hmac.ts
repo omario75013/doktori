@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 const SECRET = process.env.NEXTAUTH_SECRET || "dev-secret";
 
@@ -8,5 +8,6 @@ export function signSosToken(sessionId: string): string {
 
 export function verifySosToken(sessionId: string, sig: string): boolean {
   const expected = signSosToken(sessionId);
-  return expected === sig;
+  if (expected.length !== sig.length) return false;
+  return timingSafeEqual(Buffer.from(expected), Buffer.from(sig));
 }

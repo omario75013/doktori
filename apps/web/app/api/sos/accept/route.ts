@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireDoctor } from "@/lib/doctor-auth";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 import { broadcastSos } from "@/lib/sos-broadcast";
@@ -7,8 +7,8 @@ import { createPhoneProxy } from "@/lib/phone-proxy";
 import { sendSMSWithRetry } from "@/lib/sos-lifecycle";
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const doctor = await requireDoctor();
+  if (doctor instanceof NextResponse) return doctor;
 
   const { sessionId } = await req.json();
   if (!sessionId) return NextResponse.json({ error: "sessionId requis" }, { status: 400 });
@@ -17,11 +17,11 @@ export async function POST(req: Request) {
   const result = await db.execute(sql`
     WITH updated AS (
       UPDATE sos_sessions
-      SET status = 'accepted', doctor_id = ${session.user.id}, accepted_at = NOW(),
+      SET status = 'accepted', doctor_id = ${doctor.id}, accepted_at = NOW(),
           distance_m = (
             SELECT ST_Distance(s.patient_location, d.location)::integer
             FROM sos_sessions s, doctors d
-            WHERE s.id = ${sessionId} AND d.id = ${session.user.id}
+            WHERE s.id = ${sessionId} AND d.id = ${doctor.id}
           )
       WHERE id = ${sessionId} AND status = 'pending' AND expires_at > NOW()
       RETURNING id, patient_id
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
            d.latitude AS doctor_lat, d.longitude AS doctor_lng,
            p.phone AS patient_phone
     FROM updated u
-    JOIN doctors d ON d.id = ${session.user.id}
+    JOIN doctors d ON d.id = ${doctor.id}
     JOIN patients p ON p.id = u.patient_id
   `);
 

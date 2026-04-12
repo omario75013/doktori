@@ -49,26 +49,19 @@ const DECLINE_REASONS = [
   { value: "other", label: "Autre" },
 ];
 
-const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  completed: { label: "Terminée", className: "bg-green-100 text-green-800" },
-  cancelled: { label: "Annulée", className: "bg-red-100 text-red-800" },
-  accepted: { label: "En cours", className: "bg-blue-100 text-blue-800" },
-  pending: { label: "En attente", className: "bg-yellow-100 text-yellow-800" },
-};
+import {
+  SOS_STATUS_LABELS,
+  SOS_STATUS_COLORS,
+  formatDT,
+  formatElapsed as timeSince,
+} from "@/lib/sos-constants";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function formatDT(millimes: number | null): string {
-  if (millimes == null) return "—";
-  return `${(millimes / 1000).toFixed(0)} DT`;
-}
-
-function timeSince(iso: string): string {
-  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
-  if (diff < 60) return `${diff}s`;
-  if (diff < 3600) return `${Math.floor(diff / 60)}min`;
-  return `${Math.floor(diff / 3600)}h${Math.floor((diff % 3600) / 60)}min`;
-}
+const STATUS_LABELS = Object.fromEntries(
+  Object.entries(SOS_STATUS_LABELS).map(([k, label]) => [
+    k,
+    { label, className: SOS_STATUS_COLORS[k] ?? "" },
+  ]),
+);
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -83,14 +76,7 @@ function LiveTimer({ since }: { since: string }) {
   return <span>{display}</span>;
 }
 
-function StarRating({ rating }: { rating: number | null }) {
-  if (rating == null) return <span className="text-gray-300 text-xs">—</span>;
-  return (
-    <span className="text-yellow-400 text-sm">
-      {"★".repeat(rating)}{"☆".repeat(5 - rating)}
-    </span>
-  );
-}
+import { StarRating } from "@/components/star-rating";
 
 // ─── Main page ────────────────────────────────────────────────────────────────
 
@@ -646,7 +632,7 @@ export default function SOSPage() {
                       </td>
                       <td className="px-4 py-3 text-right">{formatDT(row.fee)}</td>
                       <td className="px-4 py-3 text-right">
-                        <StarRating rating={row.rating} />
+                        <StarRating value={row.rating ?? 0} readOnly size="sm" />
                       </td>
                     </tr>
                   );

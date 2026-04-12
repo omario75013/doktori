@@ -1,12 +1,10 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireDoctor } from "@/lib/doctor-auth";
 import { db, sosDeclines } from "@doktori/db";
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
+  const doctor = await requireDoctor();
+  if (doctor instanceof NextResponse) return doctor;
 
   const body = await req.json();
   const { sessionId, reason } = body;
@@ -18,7 +16,7 @@ export async function POST(req: Request) {
   try {
     await db.insert(sosDeclines).values({
       sessionId,
-      doctorId: session.user.id,
+      doctorId: doctor.id,
       reason: reason || null,
     });
   } catch (e: unknown) {

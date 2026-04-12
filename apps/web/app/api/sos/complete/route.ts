@@ -1,15 +1,13 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireDoctor } from "@/lib/doctor-auth";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 import { signSosToken } from "@/lib/sos-hmac";
 import { finalizeSosSession, sendSMSWithRetry } from "@/lib/sos-lifecycle";
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
+  const doctor = await requireDoctor();
+  if (doctor instanceof NextResponse) return doctor;
 
   const body = await req.json();
   const { sessionId, fee: bodyFee } = body;
@@ -22,10 +20,10 @@ export async function POST(req: Request) {
     SELECT s.id, s.patient_id, s.status,
            d.name AS doctor_name, d.sos_fee, p.phone AS patient_phone
     FROM sos_sessions s
-    JOIN doctors d ON d.id = ${session.user.id}
+    JOIN doctors d ON d.id = ${doctor.id}
     JOIN patients p ON p.id = s.patient_id
     WHERE s.id = ${sessionId}
-      AND s.doctor_id = ${session.user.id}
+      AND s.doctor_id = ${doctor.id}
       AND s.status = 'accepted'
     LIMIT 1
   `);
@@ -54,7 +52,7 @@ export async function POST(req: Request) {
     UPDATE sos_sessions
     SET status = 'completed', completed_at = NOW(),
         fee = ${fee}, commission = ${commission}, resolution = 'completed'
-    WHERE id = ${sessionId} AND doctor_id = ${session.user.id} AND status = 'accepted'
+    WHERE id = ${sessionId} AND doctor_id = ${doctor.id} AND status = 'accepted'
   `);
 
   // Parallelize proxy cleanup + broadcast (don't block response)

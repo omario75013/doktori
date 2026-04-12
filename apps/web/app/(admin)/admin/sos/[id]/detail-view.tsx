@@ -70,23 +70,11 @@ interface AvailableDoctor {
   specialty: string;
 }
 
-// ── Constants ──────────────────────────────────────────────────────────────────
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: "En attente",
-  accepted: "Acceptée",
-  completed: "Terminée",
-  expired: "Expirée",
-  cancelled: "Annulée",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-red-100 text-red-700",
-  accepted: "bg-amber-100 text-amber-700",
-  completed: "bg-green-100 text-green-700",
-  expired: "bg-slate-100 text-slate-500",
-  cancelled: "bg-slate-100 text-slate-500",
-};
+import {
+  SOS_STATUS_LABELS as STATUS_LABELS,
+  SOS_STATUS_COLORS as STATUS_COLORS,
+  formatDT,
+} from "@/lib/sos-constants";
 
 // ── Sub-components ─────────────────────────────────────────────────────────────
 

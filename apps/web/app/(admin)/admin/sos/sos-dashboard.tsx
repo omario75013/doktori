@@ -24,30 +24,15 @@ interface ApiResponse {
   total: number;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: "En attente",
-  accepted: "Acceptée",
-  completed: "Terminée",
-  expired: "Expirée",
-  cancelled: "Annulée",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-red-100 text-red-700",
-  accepted: "bg-amber-100 text-amber-700",
-  completed: "bg-green-100 text-green-700",
-  expired: "bg-slate-100 text-slate-600",
-  cancelled: "bg-slate-100 text-slate-600",
-};
+import {
+  sosFetcher as fetcher,
+  SOS_STATUS_LABELS as STATUS_LABELS,
+  SOS_STATUS_COLORS as STATUS_COLORS,
+  formatElapsed,
+} from "@/lib/sos-constants";
 
 function elapsed(requestedAt: string): string {
-  const ms = Date.now() - new Date(requestedAt).getTime();
-  const mins = Math.floor(ms / 60000);
-  if (mins < 60) return `${mins} min`;
-  const hrs = Math.floor(mins / 60);
-  return `${hrs}h ${mins % 60}min`;
+  return formatElapsed(requestedAt);
 }
 
 function timeLeft(expiresAt: string): { label: string; urgent: boolean } {

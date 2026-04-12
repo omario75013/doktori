@@ -25,54 +25,17 @@ interface ApiResponse {
   limit: number;
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+import {
+  sosFetcher as fetcher,
+  SOS_STATUS_LABELS as STATUS_LABELS,
+  SOS_STATUS_COLORS as STATUS_COLORS,
+  SYMPTOM_OPTIONS as SYMPTOM_LIST,
+  formatDT,
+  formatDuration,
+} from "@/lib/sos-constants";
+import { StarRating } from "@/components/star-rating";
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "En attente",
-  accepted: "Acceptée",
-  completed: "Terminée",
-  expired: "Expirée",
-  cancelled: "Annulée",
-};
-
-const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-red-100 text-red-700",
-  accepted: "bg-amber-100 text-amber-700",
-  completed: "bg-green-100 text-green-700",
-  expired: "bg-slate-100 text-slate-500",
-  cancelled: "bg-slate-100 text-slate-500",
-};
-
-const SYMPTOM_OPTIONS = [
-  "cardiaque", "respiratoire", "neurologique", "digestif",
-  "traumatologie", "fièvre", "autre",
-];
-
-function formatDuration(ms: number | null): string {
-  if (!ms) return "—";
-  const mins = Math.floor(ms / 60000);
-  if (mins < 60) return `${mins} min`;
-  return `${Math.floor(mins / 60)}h ${mins % 60}min`;
-}
-
-function formatDT(millimes: number | null): string {
-  if (!millimes) return "—";
-  return `${(millimes / 1000).toFixed(3)} DT`;
-}
-
-function StarRating({ rating }: { rating: number | null }) {
-  if (!rating) return <span className="text-slate-400">—</span>;
-  return (
-    <span className="inline-flex items-center gap-0.5">
-      {Array.from({ length: 5 }).map((_, i) => (
-        <Star
-          key={i}
-          className={`w-3 h-3 ${i < rating ? "fill-amber-400 text-amber-400" : "text-slate-200"}`}
-        />
-      ))}
-    </span>
-  );
-}
+const SYMPTOM_OPTIONS = SYMPTOM_LIST.map((s) => s.label);
 
 function exportCsv(sessions: SosSession[]) {
   const headers = [
@@ -304,7 +267,7 @@ export default function SosSessionsPage() {
                   </td>
                   <td className="px-4 py-3 text-slate-600">{formatDuration(s.duration_ms)}</td>
                   <td className="px-4 py-3">
-                    <StarRating rating={s.review_rating} />
+                    <StarRating value={s.review_rating ?? 0} readOnly size="sm" />
                   </td>
                 </tr>
               ))}

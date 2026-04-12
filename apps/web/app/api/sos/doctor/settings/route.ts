@@ -1,24 +1,24 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireDoctor } from "@/lib/doctor-auth";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const doctor = await requireDoctor();
+  if (doctor instanceof NextResponse) return doctor;
 
   const result = await db.execute(sql`
     SELECT sos_available, sos_radius_km, sos_fee, latitude, longitude,
            sos_available_from, sos_available_to
-    FROM doctors WHERE id = ${session.user.id} LIMIT 1
+    FROM doctors WHERE id = ${doctor.id} LIMIT 1
   `);
 
   return NextResponse.json((result as unknown as any[])[0] || {});
 }
 
 export async function PUT(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const doctorPut = await requireDoctor();
+  if (doctorPut instanceof NextResponse) return doctorPut;
 
   const { sosAvailable, sosRadiusKm, sosFee, latitude, longitude, availableFrom, availableTo } = await req.json();
 
@@ -50,7 +50,7 @@ export async function PUT(req: Request) {
         location = ST_SetSRID(ST_MakePoint(${longitude}, ${latitude}), 4326)::geography,
         sos_available_from = ${fromVal},
         sos_available_to = ${toVal}
-      WHERE id = ${session.user.id}
+      WHERE id = ${doctorPut.id}
     `);
   } else {
     await db.execute(sql`
@@ -58,7 +58,7 @@ export async function PUT(req: Request) {
         sos_available = false,
         sos_available_from = ${fromVal},
         sos_available_to = ${toVal}
-      WHERE id = ${session.user.id}
+      WHERE id = ${doctorPut.id}
     `);
   }
 

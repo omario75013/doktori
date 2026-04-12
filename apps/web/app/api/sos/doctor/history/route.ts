@@ -1,13 +1,13 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireDoctor } from "@/lib/doctor-auth";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const doctor = await requireDoctor();
+  if (doctor instanceof NextResponse) return doctor;
 
-  const doctorId = session.user.id;
+  const doctorId = doctor.id;
 
   const history = await db.execute(sql`
     SELECT s.id, s.status, s.resolution, s.fee, s.commission,

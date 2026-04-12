@@ -30,3 +30,24 @@ export function formatDT(millimes: number | null | undefined, decimals = 0): str
   if (millimes == null) return "—";
   return `${(millimes / 1000).toFixed(decimals)} DT`;
 }
+
+/** SWR fetcher — shared across all admin SOS client components. */
+export const sosFetcher = (url: string) => fetch(url).then((r) => r.json());
+
+/** Format elapsed time from an ISO timestamp to a human-readable string. */
+export function formatElapsed(iso: string): string {
+  const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+  if (diff < 60) return `${diff}s`;
+  if (diff < 3600) return `${Math.floor(diff / 60)} min`;
+  const hrs = Math.floor(diff / 3600);
+  const mins = Math.floor((diff % 3600) / 60);
+  return `${hrs}h${mins > 0 ? ` ${mins}min` : ""}`;
+}
+
+/** Format duration in milliseconds. */
+export function formatDuration(ms: number | null | undefined): string {
+  if (ms == null) return "—";
+  const mins = Math.floor(ms / 60000);
+  if (mins < 60) return `${mins} min`;
+  return `${Math.floor(mins / 60)}h ${mins % 60}min`;
+}

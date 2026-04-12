@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireDoctor } from "@/lib/doctor-auth";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 
 export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  const doctor = await requireDoctor();
+  if (doctor instanceof NextResponse) return doctor;
 
   // Find pending SOS sessions within the doctor's radius
   const result = await db.execute(sql`
@@ -14,7 +14,7 @@ export async function GET() {
       p.name AS patient_name,
       ST_Distance(s.patient_location, d.location) AS distance_m
     FROM sos_sessions s
-    INNER JOIN doctors d ON d.id = ${session.user.id}
+    INNER JOIN doctors d ON d.id = ${doctor.id}
     INNER JOIN patients p ON p.id = s.patient_id
     WHERE s.status = 'pending'
       AND s.expires_at > NOW()
@@ -23,7 +23,7 @@ export async function GET() {
       AND ST_DWithin(s.patient_location, d.location, d.sos_radius_km * 1000)
       AND NOT EXISTS (
         SELECT 1 FROM sos_declines sd
-        WHERE sd.session_id = s.id AND sd.doctor_id = ${session.user.id}
+        WHERE sd.session_id = s.id AND sd.doctor_id = ${doctor.id}
       )
       AND (d.sos_available_from IS NULL OR (
         CASE WHEN d.sos_available_from <= d.sos_available_to

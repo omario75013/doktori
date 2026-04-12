@@ -26,7 +26,7 @@ interface KpiData {
   byHour: { hour: number; count: number }[];
 }
 
-const fetcher = (url: string) => fetch(url).then((r) => r.json());
+import { sosFetcher as fetcher } from "@/lib/sos-constants";
 
 function KpiCard({
   label,

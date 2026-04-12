@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireDoctor } from "@/lib/doctor-auth";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 import { verifySosToken } from "@/lib/sos-hmac";
@@ -17,20 +17,17 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "cancelledBy doit être 'doctor' ou 'patient'" }, { status: 400 });
   }
 
-  // Auth: doctor uses session, patient uses HMAC token
+  let doctorId: string | null = null;
+
   if (cancelledBy === "doctor") {
-    const session = await auth();
-    if (!session?.user?.id) {
-      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-    }
+    const doctor = await requireDoctor();
+    if (doctor instanceof NextResponse) return doctor;
+    doctorId = doctor.id;
   } else if (!token || !verifySosToken(sessionId, token)) {
     return NextResponse.json({ error: "Token invalide" }, { status: 401 });
   }
 
-  // Single UPDATE for both cases — doctor branch adds doctor_id guard
-  const doctorGuard = cancelledBy === "doctor"
-    ? sql`AND doctor_id = ${(await auth())!.user!.id}`
-    : sql``;
+  const doctorGuard = doctorId ? sql`AND doctor_id = ${doctorId}` : sql``;
 
   const result = await db.execute(sql`
     UPDATE sos_sessions
@@ -49,7 +46,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Session introuvable ou déjà terminée" }, { status: 409 });
   }
 
-  // Parallel proxy cleanup + broadcast (fire-and-forget)
   finalizeSosSession(sessionId, "cancelled");
 
   return NextResponse.json({ success: true });
