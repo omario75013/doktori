@@ -16,25 +16,23 @@ Create item **`Doktori Prod - WhatsApp Cloud API`** with fields:
 
 **Owner:** ops@doktori.tn must create the Meta business account and approve templates first.
 
-## R2 — Cloudflare storage (blocks G3 questionnaire file uploads)
+## ~~R2 — Cloudflare storage~~ RESOLVED (2026-04-12)
 
-Check `.env` on prod first — keys may already exist:
+Using shared Dartank R2 bucket (`dartank-images`) with `doktori/` key prefix.
+R2 env vars added to prod `.env`. Upload endpoint live at `/api/appointments/[id]/answers/[questionId]/upload`.
 
-```sh
-ssh root@157.90.152.204 'grep -E "^R2_" /opt/doktori/.env | cut -d= -f1'
-```
+## Resend — Email delivery (blocks email notifications)
 
-If missing, create item **`Doktori Prod - Cloudflare R2`**:
+Create item **`Doktori Prod - Resend`** with fields:
 
-- `R2_ACCOUNT_ID`
-- `R2_ACCESS_KEY_ID`
-- `R2_SECRET_ACCESS_KEY`
-- `R2_BUCKET_NAME` — recommended `doktori-uploads`
-- `R2_PUBLIC_URL` — custom domain like `https://uploads.doktori.tn`
+- `RESEND_API_KEY` — from resend.com dashboard
+- `EMAIL_FROM` — `Doktori <noreply@doktori.tn>` (requires domain verification in Resend)
 
-**Unblocks:** file-kind answers on pre-appointment questionnaires (uploading analyses, imaging, ordonnances).
+**Unblocks:** Booking confirmation emails, reminder emails (J-1 + J-3), review request emails, doctor notification emails, welcome emails. All coded and deployed — currently falling back to console logging.
 
-**Priority:** high — the feature is coded but blocks silently without these.
+**Priority:** high — the entire email system is wired but silent without this key.
+
+**Owner:** Create a Resend account at resend.com, verify the `doktori.tn` domain, create an API key.
 
 ## Mobile release (blocks App Store / Google Play submission)
 
