@@ -66,9 +66,18 @@ ALTER TABLE sos_sessions ADD COLUMN admin_notes text;
 ALTER TABLE sos_sessions ADD COLUMN resolution varchar(20);
 -- values: completed | expired | cancelled_by_patient | cancelled_by_doctor | cancelled_by_admin | refunded
 
+-- Reviews: relax appointment_id NOT NULL so SOS reviews (no appointment) can insert
+ALTER TABLE reviews ALTER COLUMN appointment_id DROP NOT NULL;
+
 -- Reviews link to SOS
 ALTER TABLE reviews ADD COLUMN sos_session_id uuid REFERENCES sos_sessions(id) ON DELETE SET NULL;
 CREATE INDEX reviews_sos_session_idx ON reviews(sos_session_id) WHERE sos_session_id IS NOT NULL;
+
+-- Doctor feed performance
+CREATE INDEX sos_sessions_doctor_idx ON sos_sessions(doctor_id);
+
+-- Backfill resolution for existing sessions
+UPDATE sos_sessions SET resolution = status WHERE status IN ('completed', 'expired');
 
 -- Prevent duplicate active requests per patient
 CREATE UNIQUE INDEX sos_sessions_active_patient_uidx
@@ -94,8 +103,9 @@ CREATE INDEX sos_declines_session_idx ON sos_declines(session_id);
 ### 1.2 Schema.ts additions
 
 Add to `packages/db/src/schema.ts`:
+- **Fix existing gap:** add `sosAvailable`, `sosRadiusKm`, `sosFee` boolean/integer columns + `location` (raw SQL placeholder) to `doctors` table definition — these exist in DB (from migration 0011) but were never added to the Drizzle schema, causing TS errors on typed queries
 - `cancelledAt`, `cancelReason`, `cancelledBy`, `distanceM`, `adminNotes`, `resolution` columns on `sosSessions`
-- `sosSessionId` nullable FK on `reviews`
+- `sosSessionId` nullable FK on `reviews`; **change `appointmentId` from `.notNull()` to optional** (line 264)
 - `sosAvailableFrom`, `sosAvailableTo` time columns on `doctors`
 - New `sosDeclines` table definition
 
@@ -105,14 +115,14 @@ Add to `packages/db/src/schema.ts`:
 - Auth: doctor session required
 - Body: `{ sessionId, fee? }`
 - Guards: session must be `accepted`, `doctorId` must match caller
-- Sets: `status='completed'`, `completedAt=now()`, `resolution='completed'`, `fee` (from body or `doctor.sos_fee`), `commission` (10% of fee)
+- Sets: `status='completed'`, `completedAt=now()`, `resolution='completed'`, `fee` (from body or `doctor.sos_fee`), `commission` (`Math.round(fee * SOS_COMMISSION_RATE)` — rate from env `SOS_COMMISSION_RATE`, default `0.10`)
 - Calls: `closePhoneProxy(sessionId)`
 - Broadcasts: `session-update` with `{ status: 'completed', doctorName }` to patient room
 - Sends SMS to patient with review link: `{baseUrl}/avis-sos/{sessionId}`
 
 **`POST /api/sos/cancel`** — Either party cancels.
-- Auth: doctor session OR patient phone+sessionId match
-- Body: `{ sessionId, reason?, cancelledBy: 'patient' | 'doctor' }`
+- Auth: doctor session required if `cancelledBy='doctor'`. For patient cancel: the SOS page stores a short-lived signed token (HMAC of sessionId, signed with NEXTAUTH_SECRET) in component state at creation time. The cancel request includes this token. The endpoint verifies the HMAC before allowing patient cancellation — no phone-number guessing.
+- Body: `{ sessionId, reason?, cancelledBy: 'patient' | 'doctor', token?: string }`
 - Guards: session must be `pending` or `accepted`
 - Sets: `status='cancelled'`, `cancelledAt=now()`, `cancelReason`, `cancelledBy`, `resolution='cancelled_by_{actor}'`
 - Calls: `closePhoneProxy(sessionId)` if status was `accepted`
@@ -126,10 +136,10 @@ Add to `packages/db/src/schema.ts`:
 - Returns `{ success: true }`
 
 **`POST /api/sos/rate`** — Patient rates after completion.
-- Auth: unauthenticated (accessed via SMS link with sessionId)
-- Body: `{ sessionId, rating: 1-5, comment? }`
-- Guards: session must be `completed`, no existing review for this session
-- Creates `reviews` row with `sosSessionId` set, `status='published'` (SOS reviews auto-publish), `verified=true`
+- Auth: HMAC-signed link. SMS contains `{baseUrl}/avis-sos/{sessionId}?sig={HMAC(sessionId, NEXTAUTH_SECRET)}`. The endpoint verifies the signature before accepting. This prevents review-stuffing by anyone who guesses a session UUID.
+- Body: `{ sessionId, sig: string, rating: 1-5, comment? }`
+- Guards: valid HMAC, session must be `completed`, no existing review for this session, comment max 1000 chars
+- Creates `reviews` row with `sosSessionId` set, `appointmentId: null`, `status='published'` (SOS reviews auto-publish), `verified=true`
 - Returns `{ success: true }`
 
 ### 1.4 Race condition fix
@@ -143,14 +153,14 @@ In `POST /api/sos/accept`, after successful atomic UPDATE:
 **`POST /api/cron/sos-cleanup`** — Runs every 5 minutes.
 - Auth: Bearer `CRON_SECRET`
 - Step 1: `UPDATE sos_sessions SET status='expired', resolution='expired' WHERE status='pending' AND expires_at < now()` — broadcast `session-update` with `status='expired'` per session
-- Step 2: `UPDATE sos_sessions SET status='expired', resolution='expired' WHERE status='accepted' AND accepted_at < now() - interval '2 hours'` — stale accepted sessions
+- Step 2: `UPDATE sos_sessions SET status='expired', resolution='expired' WHERE status='accepted' AND accepted_at < now() - interval '24 hours'` — safety net for sessions where doctor never marked complete (24h, not 2h, since real visits can take hours)
 - Step 3: Close active phone proxies for all sessions marked expired in this run
 - Returns: `{ expired, staleCompleted, proxiesClosed }`
 
 ### 1.6 SMS retry on accept
 
 In `POST /api/sos/accept`, after sending SMS to patient:
-- If `sendSMS` returns `success: false`, wait 5s and retry once
+- If `sendSMS` returns `success: false`, fire a retry asynchronously (do NOT block the accept response — return success to the doctor immediately). Use `setTimeout(() => sendSMS(...), 5000)` in a fire-and-forget wrapper.
 - If retry also fails, log to `sms_logs` with `status='failed'` — patient will still see doctor info via Socket.IO/polling (already in the response payload)
 
 ---
@@ -204,7 +214,7 @@ New page: `apps/web/app/avis-sos/[sessionId]/page.tsx`
 - Reached via SMS link sent on completion
 - Star rating (1-5) + optional comment textarea
 - Calls `POST /api/sos/rate`
-- Same styling as existing `/avis/[appointmentId]` page
+- Styling: white card, rounded-xl border, teal primary button, star icons from lucide-react, matching the medical teal design system (`#0891B2` primary, `#F0FDFA` bg)
 - Success state: "Merci pour votre avis !"
 
 ---
@@ -258,7 +268,16 @@ Extend the SOS settings form:
 - Two time pickers: "Disponible de" / "à" (e.g., 08:00 – 22:00)
 - Null = 24/7 (checkbox: "Disponible 24h/24")
 - `PUT /api/sos/doctor/settings` accepts `{ availableFrom?: string, availableTo?: string }`
-- Doctor feed query adds: `AND (d.sos_available_from IS NULL OR LOCALTIME BETWEEN d.sos_available_from AND d.sos_available_to)`
+- Doctor feed query adds midnight-safe time check (handles night shifts like 22:00→06:00):
+  ```sql
+  AND (d.sos_available_from IS NULL OR (
+    CASE WHEN d.sos_available_from <= d.sos_available_to
+      THEN LOCALTIME AT TIME ZONE 'Africa/Tunis' BETWEEN d.sos_available_from AND d.sos_available_to
+      ELSE LOCALTIME AT TIME ZONE 'Africa/Tunis' >= d.sos_available_from
+           OR LOCALTIME AT TIME ZONE 'Africa/Tunis' <= d.sos_available_to
+    END
+  ))
+  ```
 
 ---
 
@@ -301,7 +320,7 @@ Vertical timeline:
 - Admin notes textarea (saves to `sos_sessions.admin_notes`)
 
 **Admin actions:**
-- **Force-accept** — assign a doctor to a pending session. Dropdown of SOS-available doctors sorted by distance. Runs same logic as `/api/sos/accept` with `actorType: 'admin'`. `logAudit action: 'sos.force_accept'`.
+- **Force-accept** — assign a doctor to a pending session. Dropdown of SOS-available doctors sorted by distance, with a warning badge if the doctor has a decline record for this session. Runs same logic as `/api/sos/accept` with `actorType: 'admin'`. `logAudit action: 'sos.force_accept'`.
 - **Mark completed** — for sessions stuck in `accepted`. `logAudit action: 'sos.admin_complete'`.
 - **Cancel** — cancel any non-completed session with reason. `logAudit action: 'sos.admin_cancel'`.
 - **Extend expiry** — push `expiresAt` forward by 15 minutes. `logAudit action: 'sos.extend_expiry'`.
