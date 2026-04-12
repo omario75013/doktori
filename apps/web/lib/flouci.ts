@@ -61,6 +61,27 @@ export async function createFlouciPayment(data: FlouciPaymentRequest): Promise<F
   }
 }
 
+export async function refundPayment(paymentRef: string, amount: number): Promise<boolean> {
+  const appToken = process.env.FLOUCI_APP_TOKEN;
+  const appSecret = process.env.FLOUCI_APP_SECRET;
+
+  if (!appToken || !appSecret) {
+    console.warn(`[FLOUCI-DEV] Would refund ${paymentRef} for ${amount} millimes`);
+    return true; // Simulate success in dev
+  }
+
+  try {
+    // Flouci refund API (if available)
+    // TODO: Replace with actual Flouci refund endpoint when documented
+    // For now, mark as pending and ops handles manually
+    console.log(`[FLOUCI] Refund requested: ${paymentRef} for ${amount} millimes`);
+    return false; // Manual refund needed
+  } catch (e) {
+    console.error("[FLOUCI] Refund failed:", e);
+    return false;
+  }
+}
+
 export async function verifyFlouciPayment(paymentId: string): Promise<{ success: boolean; status?: string }> {
   const appToken = process.env.FLOUCI_APP_TOKEN;
   const appSecret = process.env.FLOUCI_APP_SECRET;
