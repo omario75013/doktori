@@ -21,6 +21,12 @@ Host crontab on `157.90.152.204` (user `root`). Adjust `CRON_SECRET` via 1Passwo
 
 # SOS cleanup — expire pending/stale sessions, close phone proxies
 */5 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/sos-cleanup
+
+# J-3 email reminders — 3 days ahead (email only, not SMS)
+0 9 * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/reminders-j3
+
+# Review requests — email patients to review yesterday's completed appointments
+0 10 * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/review-requests
 ```
 
 Load `CRON_SECRET` into the shell environment via:
