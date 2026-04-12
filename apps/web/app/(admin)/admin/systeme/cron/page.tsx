@@ -94,11 +94,12 @@ export default function CronDashboardPage() {
       const res = await fetch(`/api/admin/system/cron/${name}/run`, {
         method: "POST",
       });
-      let body: unknown;
+      let body: RunResult["body"] = null;
+      const text = await res.text();
       try {
-        body = await res.json();
+        body = JSON.parse(text) as Record<string, unknown>;
       } catch {
-        body = await res.text();
+        body = text;
       }
       setResults((prev) => ({
         ...prev,
@@ -110,7 +111,7 @@ export default function CronDashboardPage() {
         [name]: {
           success: false,
           status: 0,
-          body: { error: err instanceof Error ? err.message : String(err) },
+          body: { error: err instanceof Error ? err.message : String(err) } as Record<string, unknown>,
         },
       }));
     } finally {
