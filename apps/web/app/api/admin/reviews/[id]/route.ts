@@ -12,10 +12,18 @@ export async function PATCH(
   if (admin instanceof NextResponse) return admin;
 
   const { id } = await params;
-  const { status, reason } = await req.json().catch(() => ({}));
+  const body = await req.json().catch(() => ({}));
+  const { action, rejectionReason } = body as {
+    action?: string;
+    rejectionReason?: string;
+  };
 
-  if (!["published", "rejected"].includes(status)) {
-    return NextResponse.json({ error: "Statut invalide" }, { status: 400 });
+  if (!action || !["publish", "reject"].includes(action)) {
+    return NextResponse.json({ error: "Action invalide" }, { status: 400 });
+  }
+
+  if (action === "reject" && (!rejectionReason || typeof rejectionReason !== "string")) {
+    return NextResponse.json({ error: "Motif de rejet requis" }, { status: 400 });
   }
 
   const [before] = await db.select().from(reviews).where(eq(reviews.id, id)).limit(1);
@@ -23,21 +31,37 @@ export async function PATCH(
     return NextResponse.json({ error: "Avis introuvable" }, { status: 404 });
   }
 
+  const now = new Date();
+  const updateValues =
+    action === "publish"
+      ? {
+          status: "published" as const,
+          moderatedBy: admin.id,
+          moderatedAt: now,
+          rejectionReason: null,
+        }
+      : {
+          status: "rejected" as const,
+          moderatedBy: admin.id,
+          moderatedAt: now,
+          rejectionReason: rejectionReason!,
+        };
+
   const [updated] = await db
     .update(reviews)
-    .set({ status })
+    .set(updateValues)
     .where(eq(reviews.id, id))
     .returning();
 
   const meta = extractRequestMeta(req);
   await logAudit({
     actor: admin,
-    action: status === "published" ? "reviews.approve" : "reviews.reject",
+    action: action === "publish" ? "reviews.approve" : "reviews.reject",
     resourceType: "reviews",
     resourceId: id,
-    before: { status: before.status },
-    after: { status: updated.status },
-    reason: typeof reason === "string" ? reason : null,
+    before: { status: before.status, rejectionReason: before.rejectionReason },
+    after: { status: updated.status, rejectionReason: updated.rejectionReason },
+    reason: action === "reject" ? rejectionReason : null,
     ip: meta.ip,
     userAgent: meta.userAgent,
   });

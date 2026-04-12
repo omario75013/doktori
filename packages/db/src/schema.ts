@@ -290,6 +290,9 @@ export const reviews = pgTable("reviews", {
   comment: text("comment"),
   verified: boolean("verified").default(true).notNull(),
   status: varchar("status", { length: 20 }).notNull().default("pending"),
+  rejectionReason: text("rejection_reason"),
+  moderatedBy: uuid("moderated_by").references(() => adminUsers.id),
+  moderatedAt: timestamp("moderated_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("reviews_doctor_idx").on(table.doctorId),
