@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
-import { View, Text, StyleSheet, Pressable, Linking, Alert, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Pressable, Linking, Alert, ScrollView, Switch } from "react-native";
 import { useRouter } from "expo-router";
 import {
   LogOut, Globe, Bell, Info, ChevronRight, Shield, FileText,
-  HelpCircle, Heart, User,
+  HelpCircle, Heart, User, Fingerprint, Scan,
 } from "lucide-react-native";
+import * as LocalAuthentication from "expo-local-authentication";
+import * as SecureStore from "expo-secure-store";
 import { colors, spacing, radius, shadow } from "@/lib/theme";
 import { getPatient, logout, type Patient } from "@/lib/auth";
 import Constants from "expo-constants";
@@ -12,10 +14,23 @@ import Constants from "expo-constants";
 export default function ProfilScreen() {
   const router = useRouter();
   const [patient, setPatient] = useState<Patient | null>(null);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricEnabled, setBiometricEnabled] = useState(false);
 
   useEffect(() => {
     getPatient().then(setPatient);
+    LocalAuthentication.hasHardwareAsync().then(setBiometricAvailable);
+    SecureStore.getItemAsync("biometric_enabled").then((v) => setBiometricEnabled(v === "1"));
   }, []);
+
+  async function toggleBiometric(value: boolean) {
+    if (value) {
+      const result = await LocalAuthentication.authenticateAsync({ promptMessage: "Activer le verrouillage biométrique" });
+      if (!result.success) return;
+    }
+    await SecureStore.setItemAsync("biometric_enabled", value ? "1" : "0");
+    setBiometricEnabled(value);
+  }
 
   async function handleLogout() {
     Alert.alert("Déconnexion", "Voulez-vous vous déconnecter ?", [
@@ -68,6 +83,18 @@ export default function ProfilScreen() {
       {/* Settings menu */}
       <View style={[styles.menuSection, shadow.sm]}>
         <Text style={styles.menuSectionTitle}>Paramètres</Text>
+        {biometricAvailable && (
+          <View style={styles.menuItem}>
+            <View style={styles.menuIconWrap}><Fingerprint size={18} color={colors.primary} /></View>
+            <Text style={styles.menuLabel}>Verrouillage biométrique</Text>
+            <Switch
+              value={biometricEnabled}
+              onValueChange={toggleBiometric}
+              trackColor={{ true: colors.primary, false: colors.slate200 }}
+              thumbColor={colors.white}
+            />
+          </View>
+        )}
         <MenuItem icon={Globe} label="Langue" value="Français" />
         <MenuItem icon={Bell} label="Notifications" onPress={() => Linking.openSettings()} />
         <MenuItem icon={Shield} label="Confidentialité" onPress={() => router.push("/legal")} />

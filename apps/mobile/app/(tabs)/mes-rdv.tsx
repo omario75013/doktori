@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { View, Text, FlatList, Pressable, Alert, StyleSheet, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
-import { Calendar, Video, Clock, MapPin, XCircle, ChevronRight } from "lucide-react-native";
+import { Calendar, Video, Clock, MapPin, XCircle, ChevronRight, RotateCw } from "lucide-react-native";
 import { api, ApiError } from "@/lib/api";
 import { colors, spacing, radius, shadow } from "@/lib/theme";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -160,25 +160,32 @@ export default function MesRdvScreen() {
                 </View>
 
                 {/* Actions */}
-                {(showJoin || canCancel) && (
-                  <View style={styles.actions}>
-                    {showJoin && (
-                      <Button
-                        title="Rejoindre"
-                        onPress={() => router.push(`/teleconsult/${item.id}`)}
-                        size="sm"
-                        icon={<Video size={14} color={colors.white} />}
-                        style={{ backgroundColor: colors.purple }}
-                      />
-                    )}
-                    {canCancel && (
-                      <Pressable style={styles.cancelBtn} onPress={() => handleCancel(item.id)}>
-                        <XCircle size={14} color={colors.red} />
-                        <Text style={styles.cancelText}>Annuler</Text>
-                      </Pressable>
-                    )}
-                  </View>
-                )}
+                <View style={styles.actions}>
+                  {showJoin && (
+                    <Button
+                      title="Rejoindre"
+                      onPress={() => router.push(`/teleconsult/${item.id}`)}
+                      size="sm"
+                      icon={<Video size={14} color={colors.white} />}
+                      style={{ backgroundColor: colors.purple }}
+                    />
+                  )}
+                  {canCancel && (
+                    <Pressable style={styles.cancelBtn} onPress={() => handleCancel(item.id)}>
+                      <XCircle size={14} color={colors.red} />
+                      <Text style={styles.cancelText}>Annuler</Text>
+                    </Pressable>
+                  )}
+                  {isPast && item.status === "completed" && (
+                    <Pressable
+                      style={styles.rebookBtn}
+                      onPress={() => router.push(`/rdv/${item.doctorSlug}`)}
+                    >
+                      <RotateCw size={13} color={colors.primary} />
+                      <Text style={styles.rebookText}>Reprendre RDV</Text>
+                    </Pressable>
+                  )}
+                </View>
               </View>
 
               <ChevronRight size={18} color={colors.slate200} style={{ alignSelf: "center" }} />
@@ -255,4 +262,10 @@ const styles = StyleSheet.create({
   actions: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.sm },
   cancelBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 4 },
   cancelText: { fontSize: 13, color: colors.red, fontWeight: "600" },
+  rebookBtn: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    paddingVertical: 6, paddingHorizontal: 12,
+    backgroundColor: colors.primaryFaint, borderRadius: radius.full,
+  },
+  rebookText: { fontSize: 12, fontWeight: "600", color: colors.primary },
 });
