@@ -19,6 +19,8 @@ const links = [
   { href: "/secretaires", label: "Secrétaires" },
   { href: "/parrainage", label: "Parrainage" },
   { href: "/abonnement", label: "Abonnement" },
+  { href: "/teleconsultation", label: "Téléconsultation" },
+  { href: "/wallet", label: "Portefeuille" },
   { href: "/profil", label: "Mon profil" },
 ];
 
