@@ -66,7 +66,9 @@ export async function verifyFlouciPayment(paymentId: string): Promise<{ success:
   const appSecret = process.env.FLOUCI_APP_SECRET;
 
   if (!appToken || !appSecret) {
-    // Dev mode: always verified
+    // Dev mode: FLOUCI_APP_TOKEN not set — skipping live verification.
+    // Idempotency in the webhook layer prevents duplicate processing.
+    console.warn(`[FLOUCI-DEV] verifyFlouciPayment called without credentials (paymentId: ${paymentId}). Treating as verified in dev mode.`);
     return { success: true, status: "SUCCESS" };
   }
 

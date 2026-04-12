@@ -14,10 +14,15 @@ export async function POST(req: Request) {
   const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.id, subId)).limit(1);
   if (!sub) return NextResponse.json({ error: "Subscription not found" }, { status: 404 });
 
-  // Verify with Flouci
+  // Idempotency: if already active, return 200 without re-processing
+  if (sub.status === "active") {
+    return NextResponse.json({ success: true, idempotent: true });
+  }
+
+  // Verify with Flouci before activating the subscription
   const verification = await verifyFlouciPayment(payment_id || sub.externalRef || "");
   if (!verification.success) {
-    return NextResponse.json({ error: "Payment not verified" }, { status: 402 });
+    return NextResponse.json({ error: "Paiement non vérifié" }, { status: 402 });
   }
 
   // Activate the subscription

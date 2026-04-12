@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { verifyFlouciPayment } from "@/lib/flouci";
-import { markAppointmentPaid } from "@/lib/queries/payments";
+import { getAppointmentPayment, markAppointmentPaid } from "@/lib/queries/payments";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -8,9 +8,19 @@ export async function POST(req: Request) {
 
   if (!reference) return NextResponse.json({ error: "Missing reference" }, { status: 400 });
 
+  // Idempotency: if already paid, return 200 without re-processing
+  const appt = await getAppointmentPayment(reference);
+  if (!appt) {
+    return NextResponse.json({ error: "RDV introuvable" }, { status: 404 });
+  }
+  if (appt.payment_status === "paid") {
+    return NextResponse.json({ success: true, idempotent: true });
+  }
+
+  // Verify the payment with Flouci before trusting the callback
   const verification = await verifyFlouciPayment(payment_id || reference);
   if (!verification.success) {
-    return NextResponse.json({ error: "Payment not verified" }, { status: 402 });
+    return NextResponse.json({ error: "Paiement non vérifié" }, { status: 402 });
   }
 
   // Mark the appointment as paid
