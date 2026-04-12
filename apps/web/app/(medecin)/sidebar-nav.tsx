@@ -20,6 +20,7 @@ const links = [
   { href: "/parrainage", label: "Parrainage" },
   { href: "/abonnement", label: "Abonnement" },
   { href: "/teleconsultation", label: "Téléconsultation" },
+  { href: "/messagerie", label: "Messagerie" },
   { href: "/wallet", label: "Portefeuille" },
   { href: "/profil", label: "Mon profil" },
 ];
