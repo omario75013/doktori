@@ -51,7 +51,12 @@ export default function DoctorScreen() {
             <Text style={styles.name}>{doctor.name}</Text>
             <Text style={styles.specialty}>{spec?.label ?? doctor.specialty}</Text>
             <Text style={styles.city}>{city?.label ?? doctor.city}</Text>
-            {/* Fees hidden — Doctolib-style */}
+            {/* Only teleconsult fee shown (prepaid platform service, set by doctor) */}
+            {hasTeleconsult && doctor.teleconsultFee != null && (
+              <Text style={styles.teleconsultFee}>
+                Téléconsultation : {doctor.teleconsultFee / 1000} DT
+              </Text>
+            )}
             {hasTeleconsult && (
               <View style={styles.teleconsultBadge}>
                 <Text style={styles.teleconsultBadgeText}>📹 Téléconsultation disponible</Text>
@@ -186,6 +191,7 @@ const styles = StyleSheet.create({
   specialty: { fontSize: 16, color: colors.primary, marginTop: 4 },
   city: { fontSize: 14, color: colors.slate500, marginTop: 2 },
   fee: { fontSize: 14, color: colors.ink, marginTop: spacing.sm, fontWeight: "600" },
+  teleconsultFee: { fontSize: 14, color: "#7C3AED", marginTop: spacing.sm, fontWeight: "700" },
   teleconsultBadge: {
     marginTop: spacing.sm,
     backgroundColor: "#EDE9FE",

@@ -352,7 +352,20 @@ export default async function DoctorProfilePage({
                         </div>
                       </div>
 
-                      {/* Fees not shown publicly — Doctolib-style */}
+                      {/* Only teleconsult fee shown (prepaid platform service) */}
+                      {(doctor.consultationMode === "teleconsult" || doctor.consultationMode === "both") && doctor.teleconsultFee != null && (
+                        <div className="rounded-2xl border border-purple-200 bg-purple-50 px-4 py-2 text-right">
+                          <div className="text-[9px] font-bold uppercase tracking-wider text-purple-600">
+                            Téléconsultation
+                          </div>
+                          <div className="flex items-baseline gap-1 justify-end">
+                            <span className="font-heading text-2xl font-black text-purple-700">
+                              {(doctor.teleconsultFee / 1000).toFixed(0)}
+                            </span>
+                            <span className="text-sm font-bold text-purple-500">DT</span>
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     {/* Badges */}
