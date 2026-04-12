@@ -11,12 +11,14 @@
     },
     "preview": {
       "distribution": "internal",
+      "channel": "preview",
       "env": {
         "EXPO_PUBLIC_API_URL": "http://157.90.152.204:3005",
         "EXPO_PUBLIC_DEV_MODE": "false"
       }
     },
     "production": {
+      "channel": "production",
       "env": {
         "EXPO_PUBLIC_API_URL": "https://doktori.tn",
         "EXPO_PUBLIC_DEV_MODE": "false"

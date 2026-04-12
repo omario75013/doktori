@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { Alert, AppState, AppStateStatus } from "react-native";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
+import * as Updates from "expo-updates";
 import { getToken, isTokenValid } from "@/lib/auth";
+import { trackEvent } from "@/lib/analytics";
 import { colors } from "@/lib/theme";
 import * as Notifications from "expo-notifications";
 
@@ -26,6 +29,44 @@ export default function RootLayout() {
   const [isAuthed, setIsAuthed] = useState(false);
   const router = useRouter();
   const segments = useSegments();
+
+  // OTA update check on every launch (skipped in dev)
+  useEffect(() => {
+    async function checkForUpdates() {
+      if (__DEV__) return;
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          Alert.alert(
+            "Mise à jour disponible",
+            "Une nouvelle version est prête. Redémarrer maintenant ?",
+            [
+              { text: "Plus tard", style: "cancel" },
+              { text: "Redémarrer", onPress: () => Updates.reloadAsync() },
+            ]
+          );
+        }
+      } catch (e) {
+        console.log("[Updates] check failed:", e);
+      }
+    }
+    checkForUpdates();
+  }, []);
+
+  // Analytics: track app_open and app_background transitions
+  useEffect(() => {
+    trackEvent("app_open");
+    const subscription = AppState.addEventListener(
+      "change",
+      (nextState: AppStateStatus) => {
+        if (nextState === "background" || nextState === "inactive") {
+          trackEvent("app_background");
+        }
+      }
+    );
+    return () => subscription.remove();
+  }, []);
 
   useEffect(() => {
     async function check() {
