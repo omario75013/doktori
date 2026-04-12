@@ -118,4 +118,19 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ token, platform: Platform.OS }),
     }),
+
+  // Teleconsult
+  getTeleconsultRoom: (appointmentId: string) =>
+    apiFetch<{ roomUrl: string; roomName: string }>(`/api/teleconsult/${appointmentId}`),
+
+  getMyTeleconsultAppointments: () =>
+    apiFetch<Array<{
+      id: string;
+      doctorName: string;
+      specialty: string;
+      date: string;
+      startTime: string;
+      status: string;
+      type: string;
+    }>>("/api/appointments/patient?type=teleconsult"),
 };

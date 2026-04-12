@@ -71,7 +71,11 @@ export default function BookingScreen() {
         type: consultMode === "teleconsult" ? "teleconsult" : undefined,
       });
       if (result?.id) {
-        router.replace(`/rdv/${result.id}/confirmation`);
+        const isTeleconsult = doctor?.consultation_mode === "teleconsult";
+        const confirmPath = isTeleconsult
+          ? `/rdv/${result.id}/confirmation?type=teleconsult`
+          : `/rdv/${result.id}/confirmation`;
+        router.replace(confirmPath as any);
       } else {
         Alert.alert("Réservation confirmée", "Votre rendez-vous a été pris.");
         router.replace("/(tabs)");

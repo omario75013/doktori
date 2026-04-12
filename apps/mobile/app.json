@@ -18,7 +18,9 @@
       "bundleIdentifier": "tn.doktori.app",
       "infoPlist": {
         "NSLocationWhenInUseUsageDescription": "Doktori utilise votre position pour trouver les médecins les plus proches.",
-        "NSCalendarsUsageDescription": "Doktori ajoute vos rendez-vous à votre calendrier."
+        "NSCalendarsUsageDescription": "Doktori ajoute vos rendez-vous à votre calendrier.",
+        "NSCameraUsageDescription": "Doktori utilise votre caméra pour les consultations vidéo.",
+        "NSMicrophoneUsageDescription": "Doktori utilise votre microphone pour les consultations vidéo."
       }
     },
     "android": {
@@ -32,7 +34,9 @@
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
         "READ_CALENDAR",
-        "WRITE_CALENDAR"
+        "WRITE_CALENDAR",
+        "CAMERA",
+        "RECORD_AUDIO"
       ]
     },
     "web": {
