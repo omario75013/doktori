@@ -70,7 +70,7 @@ function ResultBadge({ result }: { result: RunResult }) {
         <code className="text-xs opacity-70 truncate max-w-[200px]">
           {typeof result.body === "string"
             ? result.body
-            : JSON.stringify(result.body)}
+            : JSON.stringify(result.body) as string}
         </code>
       )}
     </div>
