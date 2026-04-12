@@ -16,6 +16,9 @@ export default async function AdminValidationPage() {
       city: doctors.city,
       isActive: doctors.isActive,
       createdAt: doctors.createdAt,
+      yearsOfExperience: doctors.yearsOfExperience,
+      consultationFee: doctors.consultationFee,
+      consultationMode: doctors.consultationMode,
     })
     .from(doctors)
     .where(eq(doctors.isActive, false))
@@ -49,6 +52,9 @@ export default async function AdminValidationPage() {
             apptCount: 0,
             reviewCount: 0,
             avgRating: null,
+            yearsOfExperience: d.yearsOfExperience,
+            consultationFee: d.consultationFee,
+            consultationMode: d.consultationMode,
           }))}
           specialties={Array.from(new Set(pending.map((d) => d.specialty))).sort()}
           cities={Array.from(new Set(pending.map((d) => d.city))).sort()}
