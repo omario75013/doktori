@@ -60,6 +60,8 @@ export const doctors = pgTable(
     sosFee: integer("sos_fee"),
     sosAvailableFrom: time("sos_available_from"),
     sosAvailableTo: time("sos_available_to"),
+    averageRating: doublePrecision("average_rating").default(0),
+    reviewCount: integer("review_count").default(0),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
