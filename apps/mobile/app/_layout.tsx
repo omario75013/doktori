@@ -3,6 +3,7 @@ import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
 import { AppState } from "react-native";
+import * as SecureStore from "expo-secure-store";
 import { getToken, isTokenValid } from "@/lib/auth";
 import { colors } from "@/lib/theme";
 import * as Notifications from "expo-notifications";
@@ -25,6 +26,7 @@ export default function RootLayout() {
   });
   const [isReady, setIsReady] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
+  const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const router = useRouter();
   const segments = useSegments();
 
@@ -33,19 +35,25 @@ export default function RootLayout() {
       const { initLocale } = await import("@/lib/i18n");
       await initLocale();
     } catch {}
+
+    // Check onboarding
+    let onboardingDone = false;
+    try {
+      onboardingDone = (await SecureStore.getItemAsync("onboarding_done")) === "1";
+    } catch {}
+    setNeedsOnboarding(!onboardingDone);
+
     const token = await getToken();
     const authed = token !== null && isTokenValid(token);
     setIsAuthed(authed);
     setIsReady(true);
-    return authed;
+    return { authed, onboardingDone };
   }, []);
 
-  // Check auth on mount
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
-  // Re-check auth when app comes to foreground (catches post-OTP state)
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
       if (state === "active") checkAuth();
@@ -53,10 +61,9 @@ export default function RootLayout() {
     return () => sub.remove();
   }, [checkAuth]);
 
-  // Re-check auth on every navigation (catches OTP → tabs transition)
   useEffect(() => {
     if (!isReady || !fontsLoaded) return;
-    checkAuth().then((authed) => {
+    checkAuth().then(({ authed, onboardingDone }) => {
       SplashScreen.hideAsync();
 
       if (authed) {
@@ -65,10 +72,14 @@ export default function RootLayout() {
           .catch(() => {});
       }
 
+      const inOnboarding = segments[0] === "onboarding";
       const inAuth = segments[0] === "(auth)";
-      if (!authed && !inAuth) {
+
+      if (!onboardingDone && !inOnboarding) {
+        router.replace("/onboarding");
+      } else if (onboardingDone && !authed && !inAuth) {
         router.replace("/(auth)/login");
-      } else if (authed && inAuth) {
+      } else if (authed && (inAuth || inOnboarding)) {
         router.replace("/(tabs)");
       }
     });
@@ -83,6 +94,7 @@ export default function RootLayout() {
         headerTintColor: colors.primary,
       }}
     >
+      <Stack.Screen name="onboarding" options={{ headerShown: false, animation: "fade" }} />
       <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
       <Stack.Screen name="medecin/[slug]" options={{ title: "" }} />
