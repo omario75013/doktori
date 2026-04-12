@@ -5,6 +5,8 @@ import { bookAppointmentSchema } from "@doktori/validation";
 import { formatPhone, SPECIALTIES } from "@doktori/shared";
 import { eq, and, sql } from "drizzle-orm";
 import { sendSMS } from "@/lib/sms";
+import { sendEmail } from "@/lib/email";
+import { bookingConfirmation, welcomePatient, newBookingDoctor } from "@/emails/templates";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -191,14 +193,58 @@ export async function POST(req: Request) {
     }
 
     // Send confirmation SMS (don't fail the booking on SMS error)
+    const specialty = SPECIALTIES.find((s) => s.id === doctor.specialty)?.label || "";
+    const timeStr = format(startsAt, "HH:mm");
+    const dateStr = format(startsAt, "EEEE d MMMM", { locale: fr });
     try {
-      const specialty = SPECIALTIES.find((s) => s.id === doctor.specialty)?.label || "";
-      const time = format(startsAt, "HH:mm");
-      const date = format(startsAt, "EEEE d MMMM", { locale: fr });
-      const smsMessage = `Doktori: RDV confirme le ${date} a ${time} avec ${doctor.name} (${specialty}), ${doctor.address}. Rappel la veille par SMS.`;
+      const smsMessage = `Doktori: RDV confirme le ${dateStr} a ${timeStr} avec ${doctor.name} (${specialty}), ${doctor.address}. Rappel la veille par SMS.`;
       await sendSMS(phone, smsMessage, appointment.id);
     } catch (e) {
       console.error("SMS send failed:", e);
+    }
+
+    // Send confirmation email to patient (best-effort)
+    if (patient.email) {
+      try {
+        const email = bookingConfirmation({
+          patientName: patient.name,
+          doctorName: doctor.name,
+          specialty,
+          date: dateStr,
+          time: timeStr,
+          address: doctor.address,
+        });
+        await sendEmail({ to: patient.email, ...email, appointmentId: appointment.id });
+      } catch (e) {
+        console.error("Patient email send failed:", e);
+      }
+
+      // Welcome email for first-time patients
+      try {
+        const isFirstBooking = patient.createdAt && (Date.now() - new Date(patient.createdAt).getTime()) < 60_000;
+        if (isFirstBooking) {
+          const welcome = welcomePatient({ patientName: patient.name });
+          await sendEmail({ to: patient.email, ...welcome });
+        }
+      } catch {}
+    }
+
+    // Notify doctor of new booking (best-effort)
+    if (doctor.email) {
+      try {
+        const doctorEmail = newBookingDoctor({
+          doctorName: doctor.name,
+          patientName: parsed.data.patientName,
+          patientPhone: phone,
+          date: dateStr,
+          time: timeStr,
+          reason: parsed.data.reason,
+          agendaUrl: `https://doktori.tn/agenda`,
+        });
+        await sendEmail({ to: doctor.email, ...doctorEmail, appointmentId: appointment.id });
+      } catch (e) {
+        console.error("Doctor email send failed:", e);
+      }
     }
 
     return NextResponse.json(appointment, { status: 201 });

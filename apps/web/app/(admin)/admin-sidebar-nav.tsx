@@ -45,9 +45,12 @@ const links = [
 ];
 
 const orgLinks = [
+  { href: "/admin/finance", label: "Finance", icon: CreditCard },
+  { href: "/admin/communications", label: "Communications", icon: Phone },
   { href: "/admin/cliniques", label: "Cliniques", icon: Building2 },
   { href: "/admin/secretaires", label: "Secrétaires", icon: UserCog },
   { href: "/admin/parrainage", label: "Parrainage", icon: Star },
+  { href: "/admin/catalog/specialites", label: "Catalogue", icon: FileText },
 ];
 
 const sosLinks = [
