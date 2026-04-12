@@ -9,6 +9,7 @@ import { sendEmail } from "@/lib/email";
 import { bookingConfirmation, welcomePatient, newBookingDoctor } from "@/emails/templates";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { createFlouciPayment } from "@/lib/flouci";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -79,6 +80,7 @@ export async function POST(req: Request) {
   }
 
   let slotDuration: number | undefined;
+  let resolvedTypeFee: number | null = null;
   if (parsed.data.appointmentTypeId) {
     const [type] = await db
       .select()
@@ -95,6 +97,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Motif introuvable" }, { status: 400 });
     }
     slotDuration = type.durationMinutes;
+    resolvedTypeFee = type.fee ?? null;
   }
 
   if (!slotDuration) {
@@ -245,6 +248,46 @@ export async function POST(req: Request) {
       } catch (e) {
         console.error("Doctor email send failed:", e);
       }
+    }
+
+    // Teleconsult: mandatory payment via Flouci
+    const isTeleconsult = parsed.data.type === "teleconsult";
+    if (isTeleconsult) {
+      const fee = resolvedTypeFee ?? doctor.teleconsultFee ?? doctor.consultationFee ?? null;
+
+      if (fee != null && fee > 0) {
+        const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+        const successUrl = `${baseUrl}/payment/success?appt=${appointment.id}`;
+        const failUrl = `${baseUrl}/payment/fail?appt=${appointment.id}`;
+
+        const payment = await createFlouciPayment({
+          amount: fee,
+          reference: appointment.id,
+          successUrl,
+          failUrl,
+        });
+
+        if (payment.success && payment.paymentUrl) {
+          // Mark appointment with pending payment
+          await db.execute(sql`
+            UPDATE appointments
+            SET payment_status = 'pending',
+                payment_amount = ${fee},
+                payment_ref = ${payment.paymentRef ?? null},
+                payment_provider = 'flouci',
+                updated_at = NOW()
+            WHERE id = ${appointment.id}
+          `);
+
+          return NextResponse.json(
+            { id: appointment.id, paymentUrl: payment.paymentUrl, paymentRequired: true },
+            { status: 201 }
+          );
+        }
+        // If Flouci fails, fall through — appointment created but no payment attached
+        console.error("Flouci payment creation failed:", payment.error);
+      }
+      // fee is 0 or null — free teleconsult, proceed without payment
     }
 
     return NextResponse.json(appointment, { status: 201 });

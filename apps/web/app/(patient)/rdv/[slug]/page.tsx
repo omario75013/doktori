@@ -216,6 +216,13 @@ export default function RdvPage({
 
       const data = await res.json();
       setAppointmentId(data.id as string);
+
+      // Teleconsult with mandatory payment: redirect immediately to Flouci
+      if (data.paymentRequired && data.paymentUrl) {
+        window.location.href = data.paymentUrl as string;
+        return;
+      }
+
       setStep("payment");
     } catch (err: unknown) {
       setFormError(err instanceof Error ? err.message : "Erreur inattendue");
@@ -821,7 +828,7 @@ export default function RdvPage({
           </div>
         )}
 
-        {/* Step: optional payment prompt */}
+        {/* Step: payment prompt (optional for cabinet, mandatory for teleconsult is handled by redirect) */}
         {step === "payment" && (
           <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-8 text-center space-y-4">
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
@@ -856,7 +863,7 @@ export default function RdvPage({
                     });
                     if (res.ok) {
                       const data = await res.json();
-                      window.location.href = data.paymentUrl;
+                      window.location.href = data.paymentUrl as string;
                     } else {
                       setStep("success");
                     }
