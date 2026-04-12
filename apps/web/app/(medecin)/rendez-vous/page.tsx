@@ -47,6 +47,13 @@ export default function RendezVousPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
+
+  // CNAM modal state
+  const [cnamDialogAppointmentId, setCnamDialogAppointmentId] = useState<string | null>(null);
+  const [cnamNumber, setCnamNumber] = useState("");
+  const [cnamAmount, setCnamAmount] = useState("40");
+  const [cnamError, setCnamError] = useState<string | null>(null);
 
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
@@ -69,6 +76,7 @@ export default function RendezVousPage() {
 
   const updateStatus = async (id: string, status: string) => {
     setUpdating(id);
+    setActionError(null);
     try {
       const res = await fetch(`/api/appointments/${id}/status`, {
         method: "PATCH",
@@ -81,22 +89,33 @@ export default function RendezVousPage() {
       }
       await fetchAppointments();
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Erreur");
+      setActionError(e instanceof Error ? e.message : "Erreur");
     } finally {
       setUpdating(null);
     }
   };
 
-  const createCnamClaim = async (id: string) => {
-    const cnam = window.prompt("Numéro CNAM du patient ?");
-    if (!cnam) return;
-    const amountInput = window.prompt("Montant de la consultation (en DT) ?", "40");
-    if (!amountInput) return;
-    const amountDt = Number(amountInput);
-    if (!Number.isFinite(amountDt) || amountDt < 1) {
-      alert("Montant invalide");
+  const openCnamDialog = (id: string) => {
+    setCnamDialogAppointmentId(id);
+    setCnamNumber("");
+    setCnamAmount("40");
+    setCnamError(null);
+  };
+
+  const submitCnamClaim = async () => {
+    const id = cnamDialogAppointmentId;
+    if (!id) return;
+    if (!cnamNumber.trim()) {
+      setCnamError("Veuillez saisir le numéro CNAM.");
       return;
     }
+    const amountDt = Number(cnamAmount);
+    if (!Number.isFinite(amountDt) || amountDt < 1) {
+      setCnamError("Montant invalide (minimum 1 DT).");
+      return;
+    }
+    setCnamError(null);
+    setCnamDialogAppointmentId(null);
     setUpdating(id);
     try {
       const res = await fetch("/api/cnam/claims", {
@@ -104,7 +123,7 @@ export default function RendezVousPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           appointmentId: id,
-          cnamNumber: cnam,
+          cnamNumber: cnamNumber.trim(),
           amount: Math.round(amountDt * 1000),
         }),
       });
@@ -115,7 +134,7 @@ export default function RendezVousPage() {
       const claim = await res.json();
       window.open(`/cnam/${claim.id}/print`, "_blank");
     } catch (e) {
-      alert(e instanceof Error ? e.message : "Erreur");
+      setActionError(e instanceof Error ? e.message : "Erreur création bordereau");
     } finally {
       setUpdating(null);
     }
@@ -180,6 +199,19 @@ export default function RendezVousPage() {
           Actualiser
         </button>
       </div>
+
+      {actionError && (
+        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+          <span>{actionError}</span>
+          <button
+            onClick={() => setActionError(null)}
+            className="ml-4 text-red-400 hover:text-red-600 font-bold"
+            aria-label="Fermer"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {appointments.length === 0 ? (
         <p className="text-gray-400 text-sm">Aucun rendez-vous.</p>
@@ -259,7 +291,7 @@ export default function RendezVousPage() {
                               Programmer un suivi
                             </button>
                             <button
-                              onClick={() => createCnamClaim(appt.id)}
+                              onClick={() => openCnamDialog(appt.id)}
                               disabled={isUpdating}
                               className="text-xs px-2 py-1 rounded border border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100 disabled:opacity-40"
                             >
@@ -289,6 +321,68 @@ export default function RendezVousPage() {
               })}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {/* CNAM modal */}
+      {cnamDialogAppointmentId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={() => setCnamDialogAppointmentId(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-xl bg-white shadow-xl p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-base font-semibold text-gray-800">Créer un bordereau CNAM</h2>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Numéro CNAM du patient
+              </label>
+              <input
+                type="text"
+                value={cnamNumber}
+                onChange={(e) => setCnamNumber(e.target.value)}
+                placeholder="Ex : 12345678"
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                autoFocus
+              />
+            </div>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-gray-700">
+                Montant de la consultation (DT)
+              </label>
+              <input
+                type="number"
+                min="1"
+                step="0.5"
+                value={cnamAmount}
+                onChange={(e) => setCnamAmount(e.target.value)}
+                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+              />
+            </div>
+
+            {cnamError && (
+              <p className="text-sm text-red-600">{cnamError}</p>
+            )}
+
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                onClick={() => setCnamDialogAppointmentId(null)}
+                className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={submitCnamClaim}
+                className="px-4 py-2 text-sm rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-medium"
+              >
+                Créer le bordereau
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

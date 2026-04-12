@@ -13,10 +13,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
   }
 
+  const email = parsed.data.email.toLowerCase();
+
   const [existing] = await db
     .select()
     .from(doctors)
-    .where(eq(doctors.email, parsed.data.email))
+    .where(eq(doctors.email, email))
     .limit(1);
 
   if (existing) {
@@ -36,7 +38,7 @@ export async function POST(req: Request) {
     .values({
       name: parsed.data.name,
       slug,
-      email: parsed.data.email,
+      email,
       passwordHash,
       phone: parsed.data.phone,
       specialty: parsed.data.specialty,

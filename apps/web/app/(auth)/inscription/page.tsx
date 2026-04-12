@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -72,7 +73,16 @@ export default function InscriptionPage() {
         return;
       }
 
-      router.push("/connexion?registered=1");
+      const loginResult = await signIn("doctor-credentials", {
+        email: form.email,
+        password: form.password,
+        redirect: false,
+      });
+      if (!loginResult?.error) {
+        router.push("/dashboard");
+      } else {
+        router.push(`/connexion?registered=1&email=${encodeURIComponent(form.email)}`);
+      }
     } catch {
       setError("Une erreur est survenue. Veuillez réessayer.");
     } finally {

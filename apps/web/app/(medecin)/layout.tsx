@@ -5,6 +5,9 @@ import { SidebarNav } from "./sidebar-nav";
 export default async function MedecinLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
   if (!session) redirect("/connexion");
+  if (!session?.user?.role || session.user.role !== "doctor") {
+    redirect("/connexion");
+  }
 
   return (
     <div className="min-h-screen flex">

@@ -40,6 +40,7 @@ export default function MesRdvPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [sessionExpiredMsg, setSessionExpiredMsg] = useState("");
 
   // Check if already logged in
   useEffect(() => {
@@ -60,6 +61,7 @@ export default function MesRdvPage() {
             localStorage.removeItem("doktori_patient_token");
             setToken(null);
             setStep("phone");
+            setSessionExpiredMsg("Votre session a expiré, veuillez vous reconnecter.");
             return [];
           }
           return r.json();
@@ -131,6 +133,11 @@ export default function MesRdvPage() {
       <div className="max-w-md mx-auto px-4 py-12">
         <h1 className="text-2xl font-bold mb-2">Mes rendez-vous</h1>
         <p className="text-gray-500 mb-6">Entrez votre numéro de téléphone pour accéder à vos RDV</p>
+        {sessionExpiredMsg && (
+          <p className="text-amber-600 text-sm bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 mb-4">
+            {sessionExpiredMsg}
+          </p>
+        )}
         <form onSubmit={requestOtp} className="space-y-4">
           <div>
             <Label htmlFor="phone">Téléphone</Label>

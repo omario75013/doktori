@@ -176,12 +176,6 @@ export default function ConnexionPage() {
                   >
                     {t("password")}
                   </label>
-                  <a
-                    href="#"
-                    className="text-xs font-bold text-[#0891B2] hover:underline"
-                  >
-                    Mot de passe oublié ?
-                  </a>
                 </div>
                 <div className="group flex h-12 items-center rounded-xl border-2 border-[#E6F4F1] bg-white px-4 transition-colors focus-within:border-[#0891B2]">
                   <Lock
@@ -228,17 +222,6 @@ export default function ConnexionPage() {
                 )}
               </button>
 
-              {/* Demo credentials hint */}
-              <div className="rounded-xl bg-[#F0FDFA] p-3 text-center text-xs text-[#0E7490]">
-                <span className="font-bold">Demo :</span>{" "}
-                <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#134E4A]">
-                  dr.karim@doktori.dev
-                </code>{" "}
-                /{" "}
-                <code className="rounded bg-white px-1.5 py-0.5 font-mono text-[11px] text-[#134E4A]">
-                  password123
-                </code>
-              </div>
             </form>
 
             <p className="mt-6 text-center text-sm text-[#5E7574]">

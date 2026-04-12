@@ -87,6 +87,7 @@ export default function RdvPage({
   const [beneficiaryRelation, setBeneficiaryRelation] = useState<"child" | "parent" | "spouse" | "other">("child");
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
+  const [questionError, setQuestionError] = useState<string | null>(null);
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
   const [payingNow, setPayingNow] = useState(false);
 
@@ -639,6 +640,12 @@ export default function RdvPage({
               })}
             </div>
 
+            {questionError && (
+              <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                {questionError}
+              </p>
+            )}
+
             <button
               type="button"
               onClick={() => {
@@ -649,9 +656,10 @@ export default function RdvPage({
                     (!questionnaireAnswers[q.id] || questionnaireAnswers[q.id].trim() === "")
                 );
                 if (missing.length > 0) {
-                  alert(`Veuillez répondre aux questions obligatoires : ${missing.map((q) => q.label).join(", ")}`);
+                  setQuestionError(`Veuillez répondre aux questions obligatoires : ${missing.map((q) => q.label).join(", ")}`);
                   return;
                 }
+                setQuestionError(null);
                 setStep("form");
               }}
               className="w-full rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold py-3 text-sm transition-colors"

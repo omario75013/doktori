@@ -6,6 +6,7 @@ import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { Navbar } from "@/components/navbar";
 import { Chatbot } from "@/components/chatbot";
 import { AppBanner } from "@/components/app-banner";
+import { PatientShell } from "@/components/patient-shell";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -87,10 +88,14 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <AppBanner />
-          <Navbar />
+          <PatientShell>
+            <AppBanner />
+            <Navbar />
+          </PatientShell>
           {children}
-          <Chatbot />
+          <PatientShell>
+            <Chatbot />
+          </PatientShell>
         </NextIntlClientProvider>
       </body>
     </html>

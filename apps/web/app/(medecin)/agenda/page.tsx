@@ -134,6 +134,14 @@ export default function AgendaPage() {
     for (const day of days) {
       if (!day.open) continue;
       if (day.morningStart && day.morningEnd) {
+        if (day.morningStart >= day.morningEnd) {
+          setFeedback({
+            type: "error",
+            message: `${DAY_LABELS[day.dayOfWeek]} : l'heure de fin du matin doit être après l'heure de début.`,
+          });
+          setSaving(false);
+          return;
+        }
         slots.push({
           dayOfWeek: day.dayOfWeek,
           startTime: day.morningStart,
@@ -143,6 +151,14 @@ export default function AgendaPage() {
         });
       }
       if (day.afternoonStart && day.afternoonEnd) {
+        if (day.afternoonStart >= day.afternoonEnd) {
+          setFeedback({
+            type: "error",
+            message: `${DAY_LABELS[day.dayOfWeek]} : l'heure de fin de l'après-midi doit être après l'heure de début.`,
+          });
+          setSaving(false);
+          return;
+        }
         slots.push({
           dayOfWeek: day.dayOfWeek,
           startTime: day.afternoonStart,

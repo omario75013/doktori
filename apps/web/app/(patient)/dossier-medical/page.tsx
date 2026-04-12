@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +27,7 @@ interface Profile {
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 export default function DossierMedicalPage() {
+  const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -42,7 +44,7 @@ export default function DossierMedicalPage() {
   useEffect(() => {
     const stored = localStorage.getItem("doktori_patient_token");
     if (!stored) {
-      window.location.href = "/mes-rdv";
+      router.push("/mes-rdv");
       return;
     }
     setToken(stored);
@@ -54,7 +56,7 @@ export default function DossierMedicalPage() {
       .then(async (r) => {
         if (r.status === 401) {
           localStorage.removeItem("doktori_patient_token");
-          window.location.href = "/mes-rdv";
+          router.push("/mes-rdv");
           return null;
         }
         return r.ok ? ((await r.json()) as Profile) : null;

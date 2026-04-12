@@ -15,10 +15,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
+        const email = (credentials.email as string).toLowerCase();
         const [doctor] = await db
           .select()
           .from(doctors)
-          .where(eq(doctors.email, credentials.email as string))
+          .where(eq(doctors.email, email))
           .limit(1);
         if (!doctor) return null;
         const valid = await compare(credentials.password as string, doctor.passwordHash);

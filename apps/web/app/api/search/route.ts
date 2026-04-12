@@ -153,8 +153,9 @@ async function getAvailableDoctorIds(date: string): Promise<Set<string>> {
 
   if (schedules.length === 0) return new Set();
 
-  // Aggregate total working minutes per doctor
+  // Aggregate total working minutes per doctor and track slot duration
   const workMinutesByDoctor = new Map<string, number>();
+  const slotDurationByDoctor = new Map<string, number>();
   for (const s of schedules) {
     const [sh, sm] = s.startTime.split(":").map(Number);
     const [eh, em] = s.endTime.split(":").map(Number);
@@ -163,6 +164,10 @@ async function getAvailableDoctorIds(date: string): Promise<Set<string>> {
       s.doctorId,
       (workMinutesByDoctor.get(s.doctorId) || 0) + minutes
     );
+    // Use the first schedule row's slotDuration for this doctor
+    if (!slotDurationByDoctor.has(s.doctorId)) {
+      slotDurationByDoctor.set(s.doctorId, s.slotDuration);
+    }
   }
 
   // Booked appointments on that day (non-cancelled)
@@ -173,7 +178,7 @@ async function getAvailableDoctorIds(date: string): Promise<Set<string>> {
       and(
         gte(appointments.startsAt, dayStart),
         lte(appointments.startsAt, dayEnd),
-        not(inArray(appointments.status, ["cancelled"]))
+        not(inArray(appointments.status, ["cancelled", "no_show"]))
       )
     );
 
@@ -187,10 +192,11 @@ async function getAvailableDoctorIds(date: string): Promise<Set<string>> {
   }
 
   // Return doctors with available time left
-  // (heuristic: working minutes / avg 20min slot) > bookings
+  // (working minutes / doctor's actual slotDuration) > bookings
   const available = new Set<string>();
   for (const [doctorId, minutes] of workMinutesByDoctor) {
-    const maxSlots = Math.floor(minutes / 20);
+    const slotDuration = slotDurationByDoctor.get(doctorId) ?? 20;
+    const maxSlots = Math.floor(minutes / slotDuration);
     const used = bookingsByDoctor.get(doctorId) || 0;
     if (used < maxSlots) available.add(doctorId);
   }
@@ -350,13 +356,8 @@ export async function GET(req: Request) {
     hits = hits.filter((h) => teleconsultIds.has((h as { id: string }).id));
   }
 
-  // Min rating (cached on doc — defaults to 4.8 for now)
-  if (minRating) {
-    const min = Number(minRating);
-    if (!isNaN(min)) {
-      hits = hits.filter(() => 4.8 >= min); // TODO: real per-doctor rating
-    }
-  }
+  // TODO: minRating filter removed — real per-doctor ratings not yet stored per doctor.
+  // Re-enable once doctor.avgRating is populated.
 
   // Final limit 20
   const totalBeforeLimit = hits.length;

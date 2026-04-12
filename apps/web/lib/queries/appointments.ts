@@ -38,7 +38,7 @@ export async function getAvailableSlots(
         eq(appointments.doctorId, doctorId),
         gte(appointments.startsAt, dayStart),
         lte(appointments.startsAt, dayEnd),
-        not(inArray(appointments.status, ["cancelled"])),
+        not(inArray(appointments.status, ["cancelled", "no_show"])),
       )
     );
 
@@ -90,7 +90,7 @@ export async function createAppointment(data: {
       .where(
         and(
           eq(appointments.doctorId, data.doctorId),
-          not(inArray(appointments.status, ["cancelled"])),
+          not(inArray(appointments.status, ["cancelled", "no_show"])),
           lte(appointments.startsAt, data.endsAt),
           gte(appointments.endsAt, data.startsAt),
         )

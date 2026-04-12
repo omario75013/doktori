@@ -62,12 +62,8 @@ export async function POST(req: Request) {
   }
 
   // Guard: block suspended patients from booking
-  try {
-    if (patient.isSuspended) {
-      return NextResponse.json({ error: "Compte patient suspendu" }, { status: 403 });
-    }
-  } catch {
-    // isSuspended column may not exist yet — ignore
+  if (patient.isSuspended) {
+    return NextResponse.json({ error: "Compte patient suspendu" }, { status: 403 });
   }
 
   const [doctor] = await db
