@@ -30,7 +30,7 @@ export async function POST(
   const { id } = await params;
 
   const [doctor] = await db
-    .select()
+    .select({ id: doctors.id })
     .from(doctors)
     .where(eq(doctors.id, id))
     .limit(1);
@@ -38,20 +38,27 @@ export async function POST(
     return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
   }
 
-  const body = (await req.json()) as { provider?: unknown; conventionType?: unknown };
-  if (!body.provider || typeof body.provider !== "string" || body.provider.trim() === "") {
-    return NextResponse.json({ error: "provider requis" }, { status: 400 });
-  }
-
-  const insertValues: { doctorId: string; provider: string; conventionType?: string } = {
-    doctorId: id,
-    provider: body.provider.trim(),
+  const body = (await req.json()) as {
+    insuranceType?: unknown;
+    isConventioned?: unknown;
   };
-  if (body.conventionType !== undefined && typeof body.conventionType === "string") {
-    insertValues.conventionType = body.conventionType;
+  if (
+    !body.insuranceType ||
+    typeof body.insuranceType !== "string" ||
+    body.insuranceType.trim() === ""
+  ) {
+    return NextResponse.json({ error: "insuranceType requis" }, { status: 400 });
   }
 
-  const [row] = await db.insert(doctorInsurance).values(insertValues).returning();
+  const [row] = await db
+    .insert(doctorInsurance)
+    .values({
+      doctorId: id,
+      insuranceType: body.insuranceType.trim(),
+      isConventioned:
+        typeof body.isConventioned === "boolean" ? body.isConventioned : true,
+    })
+    .returning();
 
   const meta = extractRequestMeta(req);
   await logAudit({
@@ -60,7 +67,11 @@ export async function POST(
     resourceType: "doctors",
     resourceId: id,
     before: null,
-    after: { insuranceId: row.id, provider: row.provider, conventionType: row.conventionType },
+    after: {
+      insuranceId: row.id,
+      insuranceType: row.insuranceType,
+      isConventioned: row.isConventioned,
+    },
     ip: meta.ip,
     userAgent: meta.userAgent,
   });
@@ -77,7 +88,6 @@ export async function DELETE(
 
   const { id } = await params;
 
-  // Accept insuranceId from the request body or query param
   let insuranceId: string | null = null;
   const url = new URL(req.url);
   const queryInsuranceId = url.searchParams.get("insuranceId");
@@ -99,16 +109,23 @@ export async function DELETE(
   const [existing] = await db
     .select()
     .from(doctorInsurance)
-    .where(and(eq(doctorInsurance.id, insuranceId), eq(doctorInsurance.doctorId, id)))
+    .where(
+      and(eq(doctorInsurance.id, insuranceId), eq(doctorInsurance.doctorId, id))
+    )
     .limit(1);
 
   if (!existing) {
-    return NextResponse.json({ error: "Convention introuvable" }, { status: 404 });
+    return NextResponse.json(
+      { error: "Convention introuvable" },
+      { status: 404 }
+    );
   }
 
   await db
     .delete(doctorInsurance)
-    .where(and(eq(doctorInsurance.id, insuranceId), eq(doctorInsurance.doctorId, id)));
+    .where(
+      and(eq(doctorInsurance.id, insuranceId), eq(doctorInsurance.doctorId, id))
+    );
 
   const meta = extractRequestMeta(req);
   await logAudit({
@@ -116,7 +133,11 @@ export async function DELETE(
     action: "doctors.insurance_remove",
     resourceType: "doctors",
     resourceId: id,
-    before: { insuranceId: existing.id, provider: existing.provider, conventionType: existing.conventionType },
+    before: {
+      insuranceId: existing.id,
+      insuranceType: existing.insuranceType,
+      isConventioned: existing.isConventioned,
+    },
     after: null,
     ip: meta.ip,
     userAgent: meta.userAgent,

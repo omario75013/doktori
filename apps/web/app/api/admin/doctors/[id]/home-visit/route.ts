@@ -84,16 +84,16 @@ export async function PATCH(
     const insertValues: {
       doctorId: string;
       isAvailable: boolean;
-      radiusKm?: number;
-      fee?: number;
+      radiusKm: number;
+      fee: number;
       updatedAt: Date;
     } = {
       doctorId: id,
       isAvailable: body.isAvailable,
+      radiusKm: typeof body.radiusKm === "number" ? body.radiusKm : 5,
+      fee: typeof body.fee === "number" ? body.fee : 0,
       updatedAt: now,
     };
-    if (body.radiusKm !== undefined) insertValues.radiusKm = body.radiusKm as number;
-    if (body.fee !== undefined) insertValues.fee = body.fee as number;
 
     [after] = await db
       .insert(doctorHomeVisitSettings)
