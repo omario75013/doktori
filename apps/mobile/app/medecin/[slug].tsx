@@ -51,22 +51,7 @@ export default function DoctorScreen() {
             <Text style={styles.name}>{doctor.name}</Text>
             <Text style={styles.specialty}>{spec?.label ?? doctor.specialty}</Text>
             <Text style={styles.city}>{city?.label ?? doctor.city}</Text>
-            {teleconsultOnly ? (
-              <>
-                {doctor.teleconsultFee && (
-                  <Text style={styles.fee}>Vidéo : {doctor.teleconsultFee / 1000} DT</Text>
-                )}
-              </>
-            ) : (
-              <>
-                {doctor.consultationFee && (
-                  <Text style={styles.fee}>Cabinet : {doctor.consultationFee / 1000} DT</Text>
-                )}
-                {hasTeleconsult && doctor.teleconsultFee && (
-                  <Text style={styles.fee}>Vidéo : {doctor.teleconsultFee / 1000} DT</Text>
-                )}
-              </>
-            )}
+            {/* Fees hidden — Doctolib-style */}
             {hasTeleconsult && (
               <View style={styles.teleconsultBadge}>
                 <Text style={styles.teleconsultBadgeText}>📹 Téléconsultation disponible</Text>

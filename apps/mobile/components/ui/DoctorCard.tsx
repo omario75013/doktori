@@ -27,9 +27,7 @@ export function DoctorCard({ doctor, onPress }: Props) {
         <Text style={styles.specialty}>{spec?.label ?? doctor.specialty}</Text>
         <Text style={styles.city}>{city?.label ?? doctor.city}</Text>
       </View>
-      {doctor.consultationFee ? (
-        <Text style={styles.fee}>{doctor.consultationFee / 1000} DT</Text>
-      ) : null}
+      {/* Fee hidden — Doctolib-style */}
     </Pressable>
   );
 }

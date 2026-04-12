@@ -263,9 +263,7 @@ export default async function DoctorProfilePage({
             <div className="flex items-center gap-3 max-w-lg mx-auto">
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-bold text-[#5E7574] truncate">{doctor.name}</div>
-                {doctor.consultationFee != null && (
-                  <div className="text-sm font-black text-[#0891B2]">{(doctor.consultationFee / 1000).toFixed(0)} DT</div>
-                )}
+                <div className="text-xs text-[#0891B2] font-semibold">{specialtyLabel}</div>
               </div>
               {doctor.consultationMode === "teleconsult" ? (
                 <Link
@@ -354,29 +352,7 @@ export default async function DoctorProfilePage({
                         </div>
                       </div>
 
-                      {doctor.consultationFee !== null && doctor.teleconsultFee !== null && doctor.teleconsultFee !== doctor.consultationFee ? (
-                        <div className="rounded-2xl border border-[#E6F4F1] bg-[#F0FDFA] px-4 py-2 text-right space-y-0.5">
-                          <div className="text-[9px] font-bold uppercase tracking-wider text-[#0E7490]">Tarifs</div>
-                          <div className="text-xs text-[#134E4A] font-semibold">
-                            Cabinet: <span className="text-[#0891B2] font-black">{(doctor.consultationFee / 1000).toFixed(0)} DT</span>
-                          </div>
-                          <div className="text-xs text-purple-700 font-semibold">
-                            Vidéo: <span className="text-purple-800 font-black">{(doctor.teleconsultFee / 1000).toFixed(0)} DT</span>
-                          </div>
-                        </div>
-                      ) : doctor.consultationFee !== null ? (
-                        <div className="rounded-2xl border border-[#E6F4F1] bg-[#F0FDFA] px-4 py-2 text-right">
-                          <div className="text-[9px] font-bold uppercase tracking-wider text-[#0E7490]">
-                            À partir de
-                          </div>
-                          <div className="flex items-baseline gap-1">
-                            <span className="font-heading text-2xl font-black text-[#0891B2]">
-                              {(doctor.consultationFee / 1000).toFixed(0)}
-                            </span>
-                            <span className="text-sm font-bold text-[#0E7490]">DT</span>
-                          </div>
-                        </div>
-                      ) : null}
+                      {/* Fees not shown publicly — Doctolib-style */}
                     </div>
 
                     {/* Badges */}
@@ -618,11 +594,7 @@ export default async function DoctorProfilePage({
                             </div>
                           </div>
                         </div>
-                        {t.fee != null && (
-                          <div className="text-sm font-bold text-[#0891B2]">
-                            {(t.fee / 1000).toFixed(0)} DT
-                          </div>
-                        )}
+                        {/* Fee hidden on public profile */}
                       </li>
                     ))}
                   </ul>

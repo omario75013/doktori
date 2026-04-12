@@ -227,27 +227,7 @@ export default function SearchScreen() {
               ))}
             </ScrollView>
 
-            {/* Fee range */}
-            <Text style={[styles.filterLabel, { marginTop: spacing.sm }]}>Tarif (DT)</Text>
-            <View style={styles.feeRow}>
-              <TextInput
-                style={styles.feeInput}
-                placeholder="Min"
-                placeholderTextColor={colors.slate500}
-                keyboardType="numeric"
-                value={filters.feeMin}
-                onChangeText={(v) => updateFilter("feeMin", v)}
-              />
-              <Text style={styles.feeSeparator}>—</Text>
-              <TextInput
-                style={styles.feeInput}
-                placeholder="Max"
-                placeholderTextColor={colors.slate500}
-                keyboardType="numeric"
-                value={filters.feeMax}
-                onChangeText={(v) => updateFilter("feeMax", v)}
-              />
-            </View>
+            {/* Fee filter removed — Doctolib-style, fees not shown publicly */}
 
             {/* Availability */}
             <Text style={[styles.filterLabel, { marginTop: spacing.sm }]}>Disponibilité</Text>

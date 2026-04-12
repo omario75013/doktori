@@ -109,22 +109,7 @@ export function DoctorCard({ doctor }: Props) {
           </div>
         </div>
 
-        {/* Price */}
-        {doctor.consultationFee && (
-          <div className="shrink-0 text-right">
-            <div className="rounded-2xl border border-[#E6F4F1] bg-[#F0FDFA] px-4 py-3">
-              <div className="text-[9px] font-bold uppercase tracking-wider text-[#0E7490]">
-                {t("consultationLabel")}
-              </div>
-              <div className="mt-0.5 flex items-baseline justify-end gap-1">
-                <span className="font-heading text-2xl font-black text-[#0891B2]">
-                  {doctor.consultationFee / 1000}
-                </span>
-                <span className="text-xs font-bold text-[#0E7490]">DT</span>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Price removed — like Doctolib, fees are not shown publicly */}
       </div>
 
       {/* CTA row */}
