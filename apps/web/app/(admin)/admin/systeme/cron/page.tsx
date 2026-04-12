@@ -14,7 +14,7 @@ type CronJob = {
 type RunResult = {
   success: boolean;
   status: number;
-  body: unknown;
+  body: string | Record<string, unknown> | null;
 };
 
 // ─── Cron definitions ────────────────────────────────────────────────────────
