@@ -866,6 +866,8 @@ export async function POST(req: Request) {
   ];
 
   const MAX_ITERATIONS = 8; // raised for multi-step booking flow
+  let lastToolName: string | null = null;
+  let lastToolResult: string | null = null;
 
   try {
     for (let i = 0; i < MAX_ITERATIONS; i++) {
@@ -907,9 +909,28 @@ export async function POST(req: Request) {
       const toolCalls = message.tool_calls;
 
       if (!toolCalls || toolCalls.length === 0) {
+        // Attach metadata from last tool call when available
+        let metadata: Record<string, unknown> | undefined;
+        if (lastToolName && lastToolResult) {
+          try {
+            const parsed = JSON.parse(lastToolResult);
+            if (lastToolName === "search_doctors" && parsed.doctors) {
+              metadata = { type: "doctor_list", data: parsed };
+            } else if (lastToolName === "get_available_slots" && parsed.slots) {
+              metadata = { type: "slots", data: parsed };
+            } else if (lastToolName === "book_appointment" && parsed.success) {
+              metadata = { type: "booking_confirmation", data: parsed };
+            } else if (lastToolName === "identify_patient" && parsed.found && parsed.name) {
+              metadata = { type: "patient_greeting", data: { name: parsed.name } };
+            }
+          } catch {
+            // ignore parse errors — metadata simply won't be attached
+          }
+        }
         return NextResponse.json({
           role: "assistant",
           content: message.content || "",
+          ...(metadata ? { metadata } : {}),
         });
       }
 
@@ -935,6 +956,8 @@ export async function POST(req: Request) {
           toolInput = JSON.parse(call.function.arguments || "{}");
         } catch {}
         const result = await runTool(call.function.name, toolInput);
+        lastToolName = call.function.name;
+        lastToolResult = result;
         messages.push({
           role: "tool",
           tool_call_id: call.id,

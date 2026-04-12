@@ -10,11 +10,17 @@ import {
   Sparkles,
   AlertTriangle,
   Loader2,
+  CheckCircle,
 } from "lucide-react";
 
 interface Message {
   role: "user" | "assistant";
   content: string;
+  metadata?: {
+    type: "doctor_list" | "slots" | "booking_confirmation" | "patient_greeting";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    data: any;
+  };
 }
 
 export function Chatbot() {
@@ -83,7 +89,9 @@ export function Chatbot() {
       }
 
       const data = await res.json();
-      setMessages((prev) => [...prev, { role: "assistant", content: data.content }]);
+      const assistantMsg: Message = { role: "assistant", content: data.content };
+      if (data.metadata) assistantMsg.metadata = data.metadata;
+      setMessages((prev) => [...prev, assistantMsg]);
     } catch {
       setMessages((prev) => [
         ...prev,
@@ -164,7 +172,7 @@ export function Chatbot() {
           <div className="flex-1 overflow-y-auto bg-[#F0FDFA]/30 p-4">
             <div className="space-y-4">
               {messages.map((msg, i) => (
-                <MessageBubble key={i} message={msg} />
+                <MessageBubble key={i} message={msg} onSend={sendMessage} />
               ))}
               {loading && (
                 <div className="flex items-center gap-2 text-xs text-[#5E7574]">
@@ -235,11 +243,12 @@ export function Chatbot() {
 }
 
 // ──────────────────────────────────────────────────────────────────────────────
-// Message bubble with basic markdown (bold + newlines)
+// Message bubble with basic markdown (bold + newlines) + rich metadata widgets
 // ──────────────────────────────────────────────────────────────────────────────
-function MessageBubble({ message }: { message: Message }) {
+function MessageBubble({ message, onSend }: { message: Message; onSend: (text: string) => void }) {
   const isUser = message.role === "user";
   const html = simpleMarkdown(message.content);
+  const { metadata } = message;
 
   return (
     <div className={`flex items-start gap-2 ${isUser ? "flex-row-reverse" : ""}`}>
@@ -248,14 +257,71 @@ function MessageBubble({ message }: { message: Message }) {
           <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
         </div>
       )}
-      <div
-        className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
-          isUser
-            ? "rounded-br-sm bg-[#0891B2] text-white"
-            : "rounded-bl-sm bg-white text-[#134E4A] shadow-sm ring-1 ring-[#E6F4F1]"
-        }`}
-        dangerouslySetInnerHTML={{ __html: html }}
-      />
+      <div className="max-w-[80%]">
+        {/* Patient greeting badge */}
+        {!isUser && metadata?.type === "patient_greeting" && (
+          <div className="text-xs text-teal-600 font-medium mb-1">
+            👋 Bienvenue {metadata.data.name} !
+          </div>
+        )}
+
+        <div
+          className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
+            isUser
+              ? "rounded-br-sm bg-[#0891B2] text-white"
+              : "rounded-bl-sm bg-white text-[#134E4A] shadow-sm ring-1 ring-[#E6F4F1]"
+          }`}
+          dangerouslySetInnerHTML={{ __html: html }}
+        />
+
+        {/* Doctor chips */}
+        {!isUser && metadata?.type === "doctor_list" && Array.isArray(metadata.data?.doctors) && metadata.data.doctors.length > 0 && (
+          <div className="flex flex-wrap gap-2 mt-2">
+            {metadata.data.doctors.map((d: { id: string; name: string }) => (
+              <button
+                key={d.id}
+                onClick={() => onSend(`Je choisis ${d.name}`)}
+                className="px-3 py-1.5 rounded-full border border-teal-200 bg-teal-50 text-xs font-medium text-teal-700 hover:bg-teal-100 transition-colors"
+              >
+                {d.name}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Slot picker */}
+        {!isUser && metadata?.type === "slots" && Array.isArray(metadata.data?.slots) && metadata.data.slots.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto mt-2 pb-1">
+            {metadata.data.slots.map((s: { startTime: string }) => (
+              <button
+                key={s.startTime}
+                onClick={() => onSend(`Je choisis ${s.startTime}`)}
+                className="shrink-0 px-3 py-2 rounded-lg border border-teal-200 bg-white text-sm font-medium text-teal-700 hover:bg-teal-50 transition-colors"
+              >
+                {s.startTime}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Booking confirmation card */}
+        {!isUser && metadata?.type === "booking_confirmation" && metadata.data?.success && (
+          <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-4">
+            <div className="flex items-center gap-2 mb-2">
+              <CheckCircle className="w-5 h-5 text-green-600" />
+              <span className="font-bold text-green-800">RDV confirmé</span>
+            </div>
+            <div className="text-sm text-green-700 space-y-1">
+              <p><strong>{metadata.data.doctorName}</strong></p>
+              <p>{metadata.data.date} à {metadata.data.time}</p>
+              <p>{metadata.data.address}</p>
+            </div>
+            <a href="/mes-rdv" className="mt-3 inline-block text-sm font-medium text-teal-600 hover:underline">
+              Voir mes rendez-vous →
+            </a>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
