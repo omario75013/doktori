@@ -15,6 +15,9 @@ export default async function AdminDoctorsPage() {
       city: doctors.city,
       isActive: doctors.isActive,
       createdAt: doctors.createdAt,
+      yearsOfExperience: doctors.yearsOfExperience,
+      consultationFee: doctors.consultationFee,
+      consultationMode: doctors.consultationMode,
       apptCount: sql<number>`(select count(*) from ${appointments} where ${appointments.doctorId} = ${doctors.id})::int`,
       reviewCount: sql<number>`(select count(*) from ${reviews} where ${reviews.doctorId} = ${doctors.id})::int`,
       avgRating: sql<number | null>`(select avg(${reviews.rating}) from ${reviews} where ${reviews.doctorId} = ${doctors.id})`,
@@ -41,6 +44,9 @@ export default async function AdminDoctorsPage() {
           apptCount: Number(d.apptCount ?? 0),
           reviewCount: Number(d.reviewCount ?? 0),
           avgRating: d.avgRating ? Number(d.avgRating) : null,
+          yearsOfExperience: d.yearsOfExperience,
+          consultationFee: d.consultationFee,
+          consultationMode: d.consultationMode,
         }))}
         specialties={specialties}
         cities={cities}

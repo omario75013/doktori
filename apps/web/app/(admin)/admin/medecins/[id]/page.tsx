@@ -1,6 +1,17 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { db, doctors, appointments, reviews, adminAuditLogs } from "@doktori/db";
+import {
+  db,
+  doctors,
+  appointments,
+  reviews,
+  adminAuditLogs,
+  appointmentTypes,
+  doctorInsurance,
+  doctorHomeVisitSettings,
+  subscriptions,
+  doctorPremium,
+} from "@doktori/db";
 import { eq, desc, and, count, avg } from "drizzle-orm";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { DoctorDetailTabs } from "./detail-tabs";
@@ -16,40 +27,75 @@ export default async function AdminDoctorDetailPage({
   const [doctor] = await db.select().from(doctors).where(eq(doctors.id, id)).limit(1);
   if (!doctor) notFound();
 
-  const [[{ apptCount }], [{ reviewCount, avgRating }], recentAppointments, recentReviews, auditTrail] =
-    await Promise.all([
-      db
-        .select({ apptCount: count() })
-        .from(appointments)
-        .where(eq(appointments.doctorId, id)),
-      db
-        .select({ reviewCount: count(), avgRating: avg(reviews.rating) })
-        .from(reviews)
-        .where(eq(reviews.doctorId, id)),
-      db
-        .select()
-        .from(appointments)
-        .where(eq(appointments.doctorId, id))
-        .orderBy(desc(appointments.startsAt))
-        .limit(20),
-      db
-        .select()
-        .from(reviews)
-        .where(eq(reviews.doctorId, id))
-        .orderBy(desc(reviews.createdAt))
-        .limit(20),
-      db
-        .select()
-        .from(adminAuditLogs)
-        .where(
-          and(
-            eq(adminAuditLogs.resourceType, "doctors"),
-            eq(adminAuditLogs.resourceId, id)
-          )
+  const [
+    [{ apptCount }],
+    [{ reviewCount, avgRating }],
+    recentAppointments,
+    recentReviews,
+    auditTrail,
+    apptTypes,
+    insuranceRows,
+    [homeVisitRow],
+    activeSubscription,
+    [premiumRow],
+  ] = await Promise.all([
+    db
+      .select({ apptCount: count() })
+      .from(appointments)
+      .where(eq(appointments.doctorId, id)),
+    db
+      .select({ reviewCount: count(), avgRating: avg(reviews.rating) })
+      .from(reviews)
+      .where(eq(reviews.doctorId, id)),
+    db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.doctorId, id))
+      .orderBy(desc(appointments.startsAt))
+      .limit(20),
+    db
+      .select()
+      .from(reviews)
+      .where(eq(reviews.doctorId, id))
+      .orderBy(desc(reviews.createdAt))
+      .limit(20),
+    db
+      .select()
+      .from(adminAuditLogs)
+      .where(
+        and(
+          eq(adminAuditLogs.resourceType, "doctors"),
+          eq(adminAuditLogs.resourceId, id)
         )
-        .orderBy(desc(adminAuditLogs.createdAt))
-        .limit(50),
-    ]);
+      )
+      .orderBy(desc(adminAuditLogs.createdAt))
+      .limit(50),
+    db
+      .select()
+      .from(appointmentTypes)
+      .where(eq(appointmentTypes.doctorId, id))
+      .orderBy(appointmentTypes.createdAt),
+    db
+      .select()
+      .from(doctorInsurance)
+      .where(eq(doctorInsurance.doctorId, id)),
+    db
+      .select()
+      .from(doctorHomeVisitSettings)
+      .where(eq(doctorHomeVisitSettings.doctorId, id))
+      .limit(1),
+    db
+      .select()
+      .from(subscriptions)
+      .where(eq(subscriptions.doctorId, id))
+      .orderBy(desc(subscriptions.createdAt))
+      .limit(1),
+    db
+      .select()
+      .from(doctorPremium)
+      .where(eq(doctorPremium.doctorId, id))
+      .limit(1),
+  ]);
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
@@ -122,6 +168,10 @@ export default async function AdminDoctorDetailPage({
           consultationFee: doctor.consultationFee,
           yearsOfExperience: doctor.yearsOfExperience,
           isActive: doctor.isActive,
+          educations: doctor.educations as object[],
+          experiences: doctor.experiences as object[],
+          languages: doctor.languages as string[],
+          expertise: doctor.expertise as string[],
         }}
         appointments={recentAppointments.map((a) => ({
           id: a.id,
@@ -143,6 +193,51 @@ export default async function AdminDoctorDetailPage({
           createdAt: a.createdAt.toISOString(),
           reason: a.reason,
         }))}
+        appointmentTypes={apptTypes.map((t) => ({
+          id: t.id,
+          name: t.name,
+          durationMinutes: t.durationMinutes,
+          fee: t.fee,
+          mode: t.mode,
+          isActive: t.isActive,
+          isDefault: t.isDefault,
+        }))}
+        insurance={insuranceRows.map((i) => ({
+          id: i.id,
+          insuranceType: i.insuranceType,
+          isConventioned: i.isConventioned,
+        }))}
+        homeVisit={
+          homeVisitRow
+            ? {
+                isAvailable: homeVisitRow.isAvailable,
+                radiusKm: homeVisitRow.radiusKm,
+                fee: homeVisitRow.fee,
+              }
+            : null
+        }
+        subscription={
+          activeSubscription[0]
+            ? {
+                id: activeSubscription[0].id,
+                plan: activeSubscription[0].plan,
+                status: activeSubscription[0].status,
+                startsAt: activeSubscription[0].startsAt?.toISOString() ?? null,
+                endsAt: activeSubscription[0].endsAt?.toISOString() ?? null,
+                billingCycle: activeSubscription[0].billingCycle,
+                priceMillimes: activeSubscription[0].priceMillimes,
+              }
+            : null
+        }
+        premium={
+          premiumRow
+            ? {
+                id: premiumRow.id,
+                isActive: premiumRow.isActive,
+                until: premiumRow.until?.toISOString() ?? null,
+              }
+            : null
+        }
       />
     </div>
   );

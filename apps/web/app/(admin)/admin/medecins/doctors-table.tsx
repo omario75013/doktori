@@ -6,10 +6,11 @@ import Link from "next/link";
 import {
   Search,
   CheckCircle2,
-  XCircle,
   Trash2,
   ExternalLink,
   Star,
+  Download,
+  Plus,
 } from "lucide-react";
 
 interface Doctor {
@@ -24,6 +25,9 @@ interface Doctor {
   apptCount: number;
   reviewCount: number;
   avgRating: number | null;
+  yearsOfExperience: number | null;
+  consultationFee: number | null;
+  consultationMode: string;
 }
 
 export function DoctorsTable({
@@ -120,6 +124,51 @@ export function DoctorsTable({
     else alert("Impossible de supprimer (rendez-vous existants ?)");
   }
 
+  function exportCSV() {
+    const headers = [
+      "Nom",
+      "Email",
+      "Téléphone",
+      "Spécialité",
+      "Ville",
+      "Mode",
+      "Expérience (ans)",
+      "Tarif (DT)",
+      "Statut",
+      "RDV",
+      "Avis",
+      "Note moy.",
+      "Créé le",
+    ];
+    const rows = filtered.map((d) => [
+      d.name,
+      d.email,
+      d.phone ?? "",
+      d.specialty,
+      d.city,
+      d.consultationMode,
+      d.yearsOfExperience ?? "",
+      d.consultationFee != null ? (d.consultationFee / 1000).toFixed(1) : "",
+      d.isActive ? "Actif" : "En attente",
+      d.apptCount,
+      d.reviewCount,
+      d.avgRating != null ? d.avgRating.toFixed(1) : "",
+      new Date(d.createdAt).toLocaleDateString("fr-FR"),
+    ]);
+    const csv = [headers, ...rows]
+      .map((row) =>
+        row.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(",")
+      )
+      .join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `medecins_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   return (
     <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
       <div className="p-4 border-b border-slate-200 flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
@@ -172,6 +221,21 @@ export function DoctorsTable({
             </button>
           ))}
         </div>
+        <button
+          onClick={exportCSV}
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+          title="Exporter CSV"
+        >
+          <Download className="w-4 h-4" />
+          CSV
+        </button>
+        <Link
+          href="/admin/medecins/nouveau"
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors"
+        >
+          <Plus className="w-4 h-4" />
+          Nouveau
+        </Link>
       </div>
 
       {selected.size > 0 && (
@@ -223,8 +287,12 @@ export function DoctorsTable({
               <th className="px-4 py-3 font-semibold">Médecin</th>
               <th className="px-4 py-3 font-semibold">Spécialité</th>
               <th className="px-4 py-3 font-semibold">Ville</th>
+              <th className="px-4 py-3 font-semibold">Mode</th>
+              <th className="px-4 py-3 font-semibold">Exp.</th>
+              <th className="px-4 py-3 font-semibold">Tarif</th>
               <th className="px-4 py-3 font-semibold">RDV</th>
               <th className="px-4 py-3 font-semibold">Avis</th>
+              <th className="px-4 py-3 font-semibold">Créé le</th>
               <th className="px-4 py-3 font-semibold">Statut</th>
               <th className="px-4 py-3 font-semibold text-right">Actions</th>
             </tr>
@@ -253,6 +321,17 @@ export function DoctorsTable({
                   {d.specialty}
                 </td>
                 <td className="px-4 py-3 capitalize text-slate-700">{d.city}</td>
+                <td className="px-4 py-3 text-slate-700 capitalize text-xs">
+                  {d.consultationMode}
+                </td>
+                <td className="px-4 py-3 text-slate-700 tabular-nums text-xs">
+                  {d.yearsOfExperience != null ? `${d.yearsOfExperience} ans` : "—"}
+                </td>
+                <td className="px-4 py-3 text-slate-700 tabular-nums text-xs">
+                  {d.consultationFee != null
+                    ? `${(d.consultationFee / 1000).toFixed(0)} DT`
+                    : "—"}
+                </td>
                 <td className="px-4 py-3 text-slate-700 tabular-nums">
                   {d.apptCount}
                 </td>
@@ -269,17 +348,27 @@ export function DoctorsTable({
                     <span className="text-xs text-slate-400">—</span>
                   )}
                 </td>
+                <td className="px-4 py-3 text-xs text-slate-500 whitespace-nowrap">
+                  {new Date(d.createdAt).toLocaleDateString("fr-FR")}
+                </td>
                 <td className="px-4 py-3">
-                  {d.isActive ? (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Actif
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 text-xs font-medium rounded-full">
-                      En attente
-                    </span>
-                  )}
+                  <button
+                    onClick={() => toggleActive(d.id, !d.isActive)}
+                    disabled={busy || pending}
+                    className="disabled:opacity-50"
+                    title={d.isActive ? "Cliquer pour désactiver" : "Cliquer pour activer"}
+                  >
+                    {d.isActive ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full hover:bg-green-100 transition-colors">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Actif
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-50 text-amber-700 text-xs font-medium rounded-full hover:bg-amber-100 transition-colors">
+                        En attente
+                      </span>
+                    )}
+                  </button>
                 </td>
                 <td className="px-4 py-3">
                   <div className="flex items-center justify-end gap-1">
@@ -290,22 +379,6 @@ export function DoctorsTable({
                     >
                       <ExternalLink className="w-4 h-4" />
                     </Link>
-                    <button
-                      onClick={() => toggleActive(d.id, !d.isActive)}
-                      disabled={busy || pending}
-                      className={`p-1.5 rounded-md transition-colors disabled:opacity-50 ${
-                        d.isActive
-                          ? "text-amber-600 hover:bg-amber-50"
-                          : "text-green-600 hover:bg-green-50"
-                      }`}
-                      title={d.isActive ? "Désactiver" : "Activer"}
-                    >
-                      {d.isActive ? (
-                        <XCircle className="w-4 h-4" />
-                      ) : (
-                        <CheckCircle2 className="w-4 h-4" />
-                      )}
-                    </button>
                     <button
                       onClick={() => deleteDoc(d.id, d.name)}
                       disabled={busy || pending}
@@ -320,7 +393,7 @@ export function DoctorsTable({
             ))}
             {filtered.length === 0 && (
               <tr>
-                <td colSpan={8} className="px-4 py-12 text-center text-slate-500">
+                <td colSpan={12} className="px-4 py-12 text-center text-slate-500">
                   Aucun médecin trouvé
                 </td>
               </tr>
