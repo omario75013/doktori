@@ -18,6 +18,7 @@ export default function RootLayout() {
 
   useEffect(() => {
     async function check() {
+      const { initLocale } = await import("@/lib/i18n"); await initLocale();
       const token = await getToken();
       setIsAuthed(token !== null && isTokenValid(token));
       setIsReady(true);

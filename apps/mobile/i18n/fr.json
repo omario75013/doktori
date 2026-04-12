@@ -1,0 +1,10 @@
+{
+  "search": { "title": "Trouvez un médecin", "placeholder": "Nom, spécialité, ville...", "empty": "Recherchez un médecin", "emptyDesc": "Tapez un nom, une spécialité ou une ville" },
+  "auth": { "welcome": "Bienvenue sur Doktori", "phonePrompt": "Entrez votre numéro de téléphone", "sendCode": "Recevoir le code", "verifyTitle": "Vérification", "resend": "Renvoyer le code", "invalidCode": "Code invalide" },
+  "doctor": { "bookCta": "Prendre rendez-vous", "reviews": "Avis patients", "noReviews": "Aucun avis", "education": "Formation", "experience": "Expérience", "languages": "Langues", "share": "Partager", "about": "À propos" },
+  "booking": { "pickDate": "Choisissez une date", "pickSlot": "Choisissez un créneau", "noSlots": "Aucun créneau disponible", "confirm": "Confirmer le RDV", "confirmed": "Rendez-vous confirmé !", "smsReminder": "Vous recevrez un SMS de rappel.", "viewRdv": "Voir mes rendez-vous", "backHome": "Retour à l'accueil" },
+  "appointments": { "upcoming": "À venir", "past": "Passés", "empty": "Aucun rendez-vous", "emptyDesc": "Recherchez un médecin pour prendre votre premier RDV", "cancel": "Annuler", "cancelConfirm": "Annuler ce RDV ?", "cancelWarning": "Cette action est irréversible." },
+  "sos": { "title": "SOS Docteur", "cta": "Demander un médecin maintenant", "searching": "Recherche d'un médecin...", "found": "Médecin trouvé !", "noDoctor": "Aucun médecin disponible", "retry": "Réessayer" },
+  "profile": { "language": "Langue", "notifications": "Notifications", "version": "Version", "logout": "Se déconnecter", "logoutConfirm": "Voulez-vous vous déconnecter ?" },
+  "common": { "error": "Erreur", "loading": "Chargement...", "yes": "Oui", "no": "Non" }
+}

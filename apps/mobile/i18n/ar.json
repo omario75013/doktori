@@ -1,0 +1,10 @@
+{
+  "search": { "title": "ابحث عن طبيب", "placeholder": "اسم، تخصص، مدينة...", "empty": "ابحث عن طبيب", "emptyDesc": "اكتب اسماً أو تخصصاً أو مدينة" },
+  "auth": { "welcome": "مرحباً بك في دكتوري", "phonePrompt": "أدخل رقم هاتفك", "sendCode": "استلم الرمز", "verifyTitle": "التحقق", "resend": "إعادة إرسال الرمز", "invalidCode": "رمز غير صالح" },
+  "doctor": { "bookCta": "احجز موعد", "reviews": "آراء المرضى", "noReviews": "لا توجد آراء", "education": "التكوين", "experience": "الخبرة", "languages": "اللغات", "share": "مشاركة", "about": "حول" },
+  "booking": { "pickDate": "اختر تاريخاً", "pickSlot": "اختر موعداً", "noSlots": "لا توجد مواعيد متاحة", "confirm": "تأكيد الموعد", "confirmed": "تم تأكيد الموعد!", "smsReminder": "ستتلقى رسالة تذكير.", "viewRdv": "عرض مواعيدي", "backHome": "العودة للرئيسية" },
+  "appointments": { "upcoming": "القادمة", "past": "السابقة", "empty": "لا توجد مواعيد", "emptyDesc": "ابحث عن طبيب لحجز أول موعد", "cancel": "إلغاء", "cancelConfirm": "إلغاء هذا الموعد؟", "cancelWarning": "لا يمكن التراجع عن هذا الإجراء." },
+  "sos": { "title": "طبيب طوارئ", "cta": "اطلب طبيباً الآن", "searching": "جاري البحث عن طبيب...", "found": "تم العثور على طبيب!", "noDoctor": "لا يوجد طبيب متاح", "retry": "إعادة المحاولة" },
+  "profile": { "language": "اللغة", "notifications": "الإشعارات", "version": "الإصدار", "logout": "تسجيل الخروج", "logoutConfirm": "هل تريد تسجيل الخروج؟" },
+  "common": { "error": "خطأ", "loading": "جاري التحميل...", "yes": "نعم", "no": "لا" }
+}
