@@ -1,17 +1,54 @@
-import { useState } from "react";
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Pressable } from "react-native";
+import { useState, useEffect, useRef } from "react";
+import {
+  View, Text, StyleSheet, KeyboardAvoidingView, Platform,
+  Animated, Easing, StatusBar, Dimensions,
+} from "react-native";
 import { useRouter } from "expo-router";
-import { Stethoscope, Phone } from "lucide-react-native";
+import { Stethoscope, Phone, ArrowRight } from "lucide-react-native";
 import { colors, spacing, radius, shadow } from "@/lib/theme";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
+
+const { width, height } = Dimensions.get("window");
+
+function FloatingCircle({ x, y, size, delay }: { x: number; y: number; size: number; delay: number }) {
+  const anim = useRef(new Animated.Value(0)).current;
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(anim, { toValue: 1, duration: 4000, delay, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(anim, { toValue: 0, duration: 4000, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+  const translateY = anim.interpolate({ inputRange: [0, 1], outputRange: [0, -15] });
+  return (
+    <Animated.View style={{
+      position: "absolute", left: x, top: y, width: size, height: size,
+      borderRadius: size / 2, backgroundColor: "rgba(255,255,255,0.08)",
+      transform: [{ translateY }],
+    }} />
+  );
+}
 
 export default function LoginScreen() {
   const router = useRouter();
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const fadeIn = useRef(new Animated.Value(0)).current;
+  const cardSlide = useRef(new Animated.Value(60)).current;
+  const logoScale = useRef(new Animated.Value(0.5)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(fadeIn, { toValue: 1, duration: 900, useNativeDriver: true }),
+      Animated.spring(cardSlide, { toValue: 0, speed: 8, bounciness: 6, useNativeDriver: true }),
+      Animated.spring(logoScale, { toValue: 1, speed: 6, bounciness: 12, useNativeDriver: true }),
+    ]).start();
+  }, []);
 
   const phoneDigits = phone.replace(/\D/g, "");
   const fullPhone = `+216${phoneDigits}`;
@@ -36,22 +73,39 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      {/* Top gradient area */}
+      <StatusBar barStyle="light-content" />
+
+      {/* Animated background */}
       <View style={styles.heroArea}>
-        <View style={styles.decorCircle1} />
-        <View style={styles.decorCircle2} />
-        <View style={styles.logoWrap}>
-          <Stethoscope size={36} color={colors.white} strokeWidth={1.8} />
-        </View>
-        <Text style={styles.brand}>Doktori</Text>
-        <Text style={styles.tagline}>Votre santé, simplement.</Text>
+        <FloatingCircle x={-30} y={20} size={160} delay={0} />
+        <FloatingCircle x={width * 0.6} y={-20} size={120} delay={600} />
+        <FloatingCircle x={width * 0.3} y={60} size={80} delay={1200} />
+
+        <Animated.View style={[styles.logoWrap, { transform: [{ scale: logoScale }] }]}>
+          <View style={styles.logoInner}>
+            <Stethoscope size={40} color={colors.white} strokeWidth={1.6} />
+          </View>
+        </Animated.View>
+
+        <Animated.View style={{ opacity: fadeIn, alignItems: "center" }}>
+          <Text style={styles.brand}>Doktori</Text>
+          <Text style={styles.tagline}>Votre santé, simplement.</Text>
+          <View style={styles.trustRow}>
+            <View style={styles.trustDot} />
+            <Text style={styles.trustText}>500+ médecins</Text>
+            <View style={styles.trustDot} />
+            <Text style={styles.trustText}>100% gratuit</Text>
+          </View>
+        </Animated.View>
       </View>
 
       {/* Form card */}
-      <View style={[styles.formCard, shadow.lg]}>
+      <Animated.View style={[styles.formCard, { transform: [{ translateY: cardSlide }], opacity: fadeIn }]}>
+        <View style={styles.cardHandle} />
+
         <Text style={styles.title}>Connexion</Text>
         <Text style={styles.subtitle}>
-          Entrez votre numéro pour recevoir un code de vérification
+          Entrez votre numéro pour recevoir un code de vérification par SMS
         </Text>
 
         <View style={styles.phoneRow}>
@@ -77,14 +131,17 @@ export default function LoginScreen() {
           loading={loading}
           disabled={!isValid}
           size="lg"
-          icon={<Phone size={18} color={colors.white} />}
+          icon={<ArrowRight size={18} color={colors.white} />}
           style={{ marginTop: spacing.lg, width: "100%" }}
         />
 
         <Text style={styles.legal}>
-          En continuant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.
+          En continuant, vous acceptez nos{" "}
+          <Text style={styles.legalLink}>conditions d'utilisation</Text>
+          {" "}et notre{" "}
+          <Text style={styles.legalLink}>politique de confidentialité</Text>.
         </Text>
-      </View>
+      </Animated.View>
     </KeyboardAvoidingView>
   );
 }
@@ -92,73 +149,72 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.primary },
   heroArea: {
-    flex: 0.4,
-    alignItems: "center",
-    justifyContent: "center",
-    paddingTop: 60,
-    overflow: "hidden",
+    flex: 0.42, alignItems: "center", justifyContent: "center",
+    paddingTop: 50, overflow: "hidden",
   },
-  decorCircle1: {
-    position: "absolute",
-    top: -40,
-    right: -60,
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: colors.primaryLight,
-    opacity: 0.15,
-  },
-  decorCircle2: {
-    position: "absolute",
-    bottom: 10,
-    left: -40,
-    width: 140,
-    height: 140,
-    borderRadius: 70,
-    backgroundColor: colors.primaryLight,
-    opacity: 0.1,
-  },
-  logoWrap: {
-    width: 72,
-    height: 72,
-    borderRadius: 24,
+  logoWrap: { marginBottom: spacing.lg },
+  logoInner: {
+    width: 80, height: 80, borderRadius: 26,
     backgroundColor: "rgba(255,255,255,0.2)",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: spacing.md,
+    alignItems: "center", justifyContent: "center",
+    borderWidth: 1.5, borderColor: "rgba(255,255,255,0.15)",
   },
-  brand: { fontSize: 32, fontWeight: "800", color: colors.white, letterSpacing: -0.5 },
-  tagline: { fontSize: 15, color: "rgba(255,255,255,0.8)", marginTop: 4 },
+  brand: {
+    fontSize: 36, fontWeight: "900", color: colors.white,
+    letterSpacing: -1,
+  },
+  tagline: {
+    fontSize: 16, color: "rgba(255,255,255,0.8)",
+    marginTop: 4, fontWeight: "500",
+  },
+  trustRow: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    marginTop: spacing.md,
+    backgroundColor: "rgba(255,255,255,0.12)",
+    paddingHorizontal: 16, paddingVertical: 8,
+    borderRadius: radius.full,
+  },
+  trustDot: {
+    width: 5, height: 5, borderRadius: 2.5,
+    backgroundColor: "rgba(255,255,255,0.5)",
+  },
+  trustText: {
+    fontSize: 13, color: "rgba(255,255,255,0.9)", fontWeight: "600",
+  },
   formCard: {
-    flex: 0.6,
-    backgroundColor: colors.white,
-    borderTopLeftRadius: 32,
-    borderTopRightRadius: 32,
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xl,
+    flex: 0.58, backgroundColor: colors.white,
+    borderTopLeftRadius: 32, borderTopRightRadius: 32,
+    paddingHorizontal: 28, paddingTop: 20,
+    ...shadow.lg,
   },
-  title: { fontSize: 24, fontWeight: "800", color: colors.ink, letterSpacing: -0.3 },
-  subtitle: { fontSize: 14, color: colors.slate500, marginTop: spacing.sm, lineHeight: 20 },
-  phoneRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm, marginTop: spacing.lg },
+  cardHandle: {
+    width: 40, height: 4, borderRadius: 2,
+    backgroundColor: colors.slate200,
+    alignSelf: "center", marginBottom: spacing.lg,
+  },
+  title: {
+    fontSize: 26, fontWeight: "900", color: colors.ink,
+    letterSpacing: -0.5,
+  },
+  subtitle: {
+    fontSize: 15, color: colors.slate500,
+    marginTop: spacing.sm, lineHeight: 22,
+  },
+  phoneRow: {
+    flexDirection: "row", alignItems: "flex-start",
+    gap: spacing.sm, marginTop: spacing.xl,
+  },
   prefix: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-    backgroundColor: colors.bg,
-    paddingHorizontal: 14,
-    paddingVertical: 14,
-    borderRadius: radius.md,
-    borderWidth: 1.5,
-    borderColor: colors.slate200,
+    flexDirection: "row", alignItems: "center", gap: 6,
+    backgroundColor: colors.bg, paddingHorizontal: 14, paddingVertical: 14,
+    borderRadius: radius.md, borderWidth: 1.5, borderColor: colors.slate200,
     marginTop: spacing.md,
   },
-  flag: { fontSize: 18 },
-  prefixText: { fontSize: 16, fontWeight: "600", color: colors.ink },
+  flag: { fontSize: 20 },
+  prefixText: { fontSize: 16, fontWeight: "700", color: colors.ink },
   legal: {
-    fontSize: 12,
-    color: colors.slate400,
-    textAlign: "center",
-    marginTop: spacing.xl,
-    lineHeight: 17,
+    fontSize: 12, color: colors.slate400,
+    textAlign: "center", marginTop: spacing.xl, lineHeight: 18,
   },
+  legalLink: { color: colors.primary, fontWeight: "600" },
 });

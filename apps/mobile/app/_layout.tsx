@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { Stack, useRouter, useSegments } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useFonts } from "expo-font";
@@ -17,6 +17,7 @@ export default function RootLayout() {
   const [needsOnboarding, setNeedsOnboarding] = useState(false);
   const router = useRouter();
   const segments = useSegments();
+  const hasNavigated = useRef(false);
 
   const checkAuth = useCallback(async () => {
     try {
@@ -24,7 +25,6 @@ export default function RootLayout() {
       await initLocale();
     } catch {}
 
-    // Check onboarding
     let onboardingDone = false;
     try {
       onboardingDone = (await SecureStore.getItemAsync("onboarding_done")) === "1";
@@ -38,10 +38,12 @@ export default function RootLayout() {
     return { authed, onboardingDone };
   }, []);
 
+  // Initial auth check
   useEffect(() => {
     checkAuth();
   }, [checkAuth]);
 
+  // Re-check on app foreground
   useEffect(() => {
     const sub = AppState.addEventListener("change", (state) => {
       if (state === "active") checkAuth();
@@ -49,28 +51,23 @@ export default function RootLayout() {
     return () => sub.remove();
   }, [checkAuth]);
 
+  // Navigate once when ready — only runs once after initial load
   useEffect(() => {
-    if (!isReady || !fontsLoaded) return;
+    if (!isReady || !fontsLoaded || hasNavigated.current) return;
+
     checkAuth().then(({ authed, onboardingDone }) => {
       SplashScreen.hideAsync();
+      hasNavigated.current = true;
 
-      // Push notifications disabled until EAS project is configured
-      // if (authed) {
-      //   import("@/lib/push").then(({ registerPushTokenIfNeeded }) => registerPushTokenIfNeeded()).catch(() => {});
-      // }
-
-      const inOnboarding = segments[0] === "onboarding";
-      const inAuth = segments[0] === "(auth)";
-
-      if (!onboardingDone && !inOnboarding) {
+      if (!onboardingDone) {
         router.replace("/onboarding");
-      } else if (onboardingDone && !authed && !inAuth) {
+      } else if (!authed) {
         router.replace("/(auth)/login");
-      } else if (authed && (inAuth || inOnboarding)) {
+      } else {
         router.replace("/(tabs)");
       }
     });
-  }, [isReady, fontsLoaded, segments]);
+  }, [isReady, fontsLoaded]);
 
   if (!isReady || !fontsLoaded) return null;
 
