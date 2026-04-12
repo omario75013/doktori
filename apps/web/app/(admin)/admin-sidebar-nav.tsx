@@ -16,6 +16,15 @@ import {
   Menu,
   X,
   Smartphone,
+  Users,
+  Calendar,
+  CreditCard,
+  Building2,
+  UserCog,
+  Settings,
+  Star,
+  Phone,
+  FileText,
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -29,9 +38,16 @@ const ROLE_LABELS: Record<string, string> = {
 const links = [
   { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard, exact: true },
   { href: "/admin/medecins", label: "Médecins", icon: Stethoscope },
+  { href: "/admin/patients", label: "Patients", icon: Users },
+  { href: "/admin/rendez-vous", label: "Rendez-vous", icon: Calendar },
   { href: "/admin/validation", label: "Validation", icon: UserCheck },
   { href: "/admin/reviews", label: "Avis patients", icon: MessageSquare },
-  { href: "/admin/stats", label: "Statistiques", icon: BarChart3 },
+];
+
+const orgLinks = [
+  { href: "/admin/cliniques", label: "Cliniques", icon: Building2 },
+  { href: "/admin/secretaires", label: "Secrétaires", icon: UserCog },
+  { href: "/admin/parrainage", label: "Parrainage", icon: Star },
 ];
 
 const sosLinks = [
@@ -43,6 +59,12 @@ const sosLinks = [
 
 const analyticsLinks = [
   { href: "/admin/analytics/mobile", label: "Analytics mobile", icon: Smartphone },
+  { href: "/admin/stats", label: "Statistiques", icon: BarChart3 },
+];
+
+const systemLinks = [
+  { href: "/admin/acces/utilisateurs", label: "Accès & rôles", icon: Shield },
+  { href: "/admin/acces/audit", label: "Journal d'audit", icon: FileText },
 ];
 
 interface AdminSidebarNavProps {
@@ -121,6 +143,27 @@ export function AdminSidebarNav({ adminName, adminEmail, adminRole }: AdminSideb
 
           <div className="pt-3 pb-1 px-3">
             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+              Organisations
+            </p>
+          </div>
+
+          {orgLinks.map((l) => {
+            const Icon = l.icon;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className={linkClass(l.href)}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {l.label}
+              </Link>
+            );
+          })}
+
+          <div className="pt-3 pb-1 px-3">
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
               Opérations
             </p>
           </div>
@@ -147,6 +190,27 @@ export function AdminSidebarNav({ adminName, adminEmail, adminRole }: AdminSideb
           </div>
 
           {analyticsLinks.map((l) => {
+            const Icon = l.icon;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className={linkClass(l.href)}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {l.label}
+              </Link>
+            );
+          })}
+
+          <div className="pt-3 pb-1 px-3">
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+              Système
+            </p>
+          </div>
+
+          {systemLinks.map((l) => {
             const Icon = l.icon;
             return (
               <Link
