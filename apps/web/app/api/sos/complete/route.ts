@@ -2,10 +2,8 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
-import { sendSMS } from "@/lib/sms";
-import { broadcastSos } from "@/lib/sos-broadcast";
-import { closePhoneProxy } from "@/lib/phone-proxy";
 import { signSosToken } from "@/lib/sos-hmac";
+import { finalizeSosSession, sendSMSWithRetry } from "@/lib/sos-lifecycle";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -20,11 +18,9 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "sessionId requis" }, { status: 400 });
   }
 
-  // Verify session is accepted and belongs to this doctor
   const sessionResult = await db.execute(sql`
     SELECT s.id, s.patient_id, s.status,
-           d.name AS doctor_name, d.phone AS doctor_phone,
-           d.sos_fee, p.phone AS patient_phone
+           d.name AS doctor_name, d.sos_fee, p.phone AS patient_phone
     FROM sos_sessions s
     JOIN doctors d ON d.id = ${session.user.id}
     JOIN patients p ON p.id = s.patient_id
@@ -39,7 +35,6 @@ export async function POST(req: Request) {
     patient_id: string;
     status: string;
     doctor_name: string;
-    doctor_phone: string;
     sos_fee: number | null;
     patient_phone: string;
   }>)[0];
@@ -49,46 +44,25 @@ export async function POST(req: Request) {
   }
 
   const commissionRate = parseFloat(process.env.SOS_COMMISSION_RATE || "0.10");
+  if (isNaN(commissionRate) || commissionRate < 0 || commissionRate > 1) {
+    return NextResponse.json({ error: "SOS_COMMISSION_RATE invalide" }, { status: 500 });
+  }
   const fee = bodyFee ?? sosSession.sos_fee ?? 0;
   const commission = Math.round(fee * commissionRate);
 
-  // Mark session completed
   await db.execute(sql`
     UPDATE sos_sessions
-    SET status = 'completed',
-        completed_at = NOW(),
-        fee = ${fee},
-        commission = ${commission},
-        resolution = 'completed'
-    WHERE id = ${sessionId}
-      AND doctor_id = ${session.user.id}
-      AND status = 'accepted'
+    SET status = 'completed', completed_at = NOW(),
+        fee = ${fee}, commission = ${commission}, resolution = 'completed'
+    WHERE id = ${sessionId} AND doctor_id = ${session.user.id} AND status = 'accepted'
   `);
 
-  // Close phone proxy (best effort)
-  try {
-    await closePhoneProxy(sessionId);
-  } catch (e) {
-    console.error("[SOS-COMPLETE] closePhoneProxy failed:", e);
-  }
-
-  // Broadcast completion to patient
-  await broadcastSos(`session:${sessionId}`, "session-update", {
-    status: "completed",
-    doctorName: sosSession.doctor_name,
-  });
-
-  // Send SMS review link to patient
+  // Parallelize proxy cleanup + broadcast (don't block response)
   const reviewUrl = `${process.env.NEXTAUTH_URL}/avis-sos/${sessionId}?sig=${signSosToken(sessionId)}`;
   const smsText = `Doktori SOS: Consultation terminée. Donnez votre avis: ${reviewUrl}`;
 
-  const smsResult = await sendSMS(sosSession.patient_phone, smsText);
-  if (!smsResult.success) {
-    // Fire-and-forget retry after 5 seconds
-    setTimeout(() => {
-      sendSMS(sosSession.patient_phone, smsText).catch(() => {});
-    }, 5000);
-  }
+  finalizeSosSession(sessionId, "completed", { doctorName: sosSession.doctor_name });
+  sendSMSWithRetry(sosSession.patient_phone, smsText);
 
   return NextResponse.json({ success: true, fee, commission });
 }

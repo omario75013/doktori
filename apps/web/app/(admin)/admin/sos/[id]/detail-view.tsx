@@ -45,6 +45,7 @@ interface Session {
   review_rating: number | null;
   review_comment: string | null;
   review_at: string | null;
+  admin_notes: string | null;
 }
 
 interface Decline {
@@ -195,9 +196,7 @@ export function DetailView({
   const router = useRouter();
   const session = initial as unknown as Session;
 
-  const [notes, setNotes] = useState<string>(
-    (session as unknown as Record<string, unknown>).admin_notes as string ?? ""
-  );
+  const [notes, setNotes] = useState<string>(session.admin_notes ?? "");
   const [notesSaving, setNotesSaving] = useState(false);
   const [busy, setBusy] = useState(false);
   const [showForceModal, setShowForceModal] = useState(false);
@@ -214,13 +213,23 @@ export function DetailView({
 
   async function doAction(action: string, body?: Record<string, unknown>) {
     setBusy(true);
-    await fetch(`/api/admin/sos/${session.id}/${action}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body ?? {}),
-    });
-    setBusy(false);
-    router.refresh();
+    try {
+      const res = await fetch(`/api/admin/sos/${session.id}/${action}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body ?? {}),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        alert(data.error || `Erreur ${res.status}`);
+        return;
+      }
+      router.refresh();
+    } catch {
+      alert("Erreur réseau");
+    } finally {
+      setBusy(false);
+    }
   }
 
   const declinesList = declines as unknown as Decline[];
@@ -450,7 +459,7 @@ export function DetailView({
           )}
 
           {/* Financial */}
-          {(session.fee || session.commission) && (
+          {(session.fee != null || session.commission != null) && (
             <div className="bg-white rounded-xl border border-slate-200 p-4">
               <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
                 Facturation

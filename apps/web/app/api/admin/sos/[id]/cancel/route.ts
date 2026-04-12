@@ -38,8 +38,12 @@ export async function POST(
     );
   }
 
-  // Close phone proxy if one was active
-  await closePhoneProxy(id);
+  // Close phone proxy if one was active (best effort)
+  try {
+    await closePhoneProxy(id);
+  } catch (e) {
+    console.error("[SOS-ADMIN-CANCEL] closePhoneProxy failed:", e);
+  }
 
   const meta = extractRequestMeta(req);
   await logAudit({

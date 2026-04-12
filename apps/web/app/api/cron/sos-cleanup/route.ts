@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
-import { broadcastSos } from "@/lib/sos-broadcast";
-import { closePhoneProxy } from "@/lib/phone-proxy";
+import { finalizeSosSession } from "@/lib/sos-lifecycle";
 
 export async function POST(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -30,22 +29,14 @@ export async function POST(req: Request) {
 
   const allExpired = [...expiredPending, ...staleAccepted];
 
-  // Step 3: close phone proxies and broadcast for all newly expired sessions
-  let proxiesClosed = 0;
-  for (const { id } of allExpired) {
-    try {
-      await closePhoneProxy(id);
-      proxiesClosed++;
-    } catch (e) {
-      console.error(`[SOS-CLEANUP] closePhoneProxy failed for session ${id}:`, e);
-    }
-
-    await broadcastSos(`session:${id}`, "session-update", { status: "expired" });
-  }
+  // Step 3: parallel proxy cleanup + broadcast for all expired sessions
+  await Promise.allSettled(
+    allExpired.map(({ id }) => finalizeSosSession(id, "expired")),
+  );
 
   return NextResponse.json({
     expired: expiredPending.length,
     staleCompleted: staleAccepted.length,
-    proxiesClosed,
+    proxiesClosed: allExpired.length,
   });
 }
