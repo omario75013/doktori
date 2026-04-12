@@ -1,34 +1,52 @@
 import { Tabs } from "expo-router";
-import { Text } from "react-native";
+import { Search, Siren, Calendar, User } from "lucide-react-native";
+import { colors } from "@/lib/theme";
 
 export default function TabsLayout() {
   return (
-    <Tabs screenOptions={{ tabBarActiveTintColor: "#2563eb", headerStyle: { backgroundColor: "#fff" } }}>
+    <Tabs
+      screenOptions={{
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.slate500,
+        tabBarStyle: { borderTopColor: colors.border },
+        headerStyle: { backgroundColor: colors.white },
+        headerTintColor: colors.ink,
+      }}
+    >
       <Tabs.Screen
         name="index"
         options={{
           title: "Rechercher",
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>🔍</Text>,
+          tabBarIcon: ({ color, size }) => <Search size={size} color={color} />,
           headerTitle: "Doktori",
+          headerTitleStyle: { fontWeight: "800", color: colors.ink },
         }}
       />
       <Tabs.Screen
         name="sos"
         options={{
           title: "SOS",
-          tabBarLabel: "SOS",
-          tabBarIcon: ({ color }) => <Text style={{ color: "#dc2626", fontSize: 22 }}>🚨</Text>,
-          tabBarLabelStyle: { color: "#dc2626", fontWeight: "700" },
+          tabBarIcon: ({ size }) => <Siren size={size} color={colors.red} />,
+          tabBarLabelStyle: { color: colors.red, fontWeight: "700" },
           headerTitle: "SOS Docteur",
-          headerStyle: { backgroundColor: "#fef2f2" },
+          headerStyle: { backgroundColor: "#FEF2F2" },
+          headerTintColor: colors.red,
         }}
       />
       <Tabs.Screen
         name="mes-rdv"
         options={{
           title: "Mes RDV",
-          tabBarIcon: ({ color }) => <Text style={{ color, fontSize: 20 }}>📅</Text>,
+          tabBarIcon: ({ color, size }) => <Calendar size={size} color={color} />,
           headerTitle: "Mes rendez-vous",
+        }}
+      />
+      <Tabs.Screen
+        name="profil"
+        options={{
+          title: "Profil",
+          tabBarIcon: ({ color, size }) => <User size={size} color={color} />,
+          headerTitle: "Mon profil",
         }}
       />
     </Tabs>
