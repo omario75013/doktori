@@ -14,11 +14,10 @@ import {
   Search,
   CalendarCheck,
   Siren,
-  Bell,
   Shield,
   Stethoscope,
 } from "lucide-react-native";
-import { colors, spacing, radius } from "@/lib/theme";
+import { colors, spacing, radius, shadow } from "@/lib/theme";
 import { Button } from "@/components/ui/Button";
 
 const { width } = Dimensions.get("window");
@@ -28,6 +27,7 @@ type Slide = {
   icon: any;
   iconBg: string;
   iconColor: string;
+  accentBg: string;
   title: string;
   description: string;
 };
@@ -38,45 +38,50 @@ const SLIDES: Slide[] = [
     icon: Stethoscope,
     iconBg: colors.primary,
     iconColor: colors.white,
+    accentBg: colors.primaryFaint,
     title: "Bienvenue sur Doktori",
     description:
-      "La plateforme médicale tunisienne qui simplifie votre accès aux soins. Trouvez un médecin et prenez rendez-vous en quelques secondes.",
+      "La plateforme médicale tunisienne qui simplifie votre accès aux soins.",
   },
   {
     id: "search",
     icon: Search,
     iconBg: "#DBEAFE",
     iconColor: "#2563EB",
+    accentBg: "#EFF6FF",
     title: "Trouvez votre médecin",
     description:
-      "Recherchez par spécialité, ville ou nom. Consultez les avis, les tarifs et les disponibilités en temps réel.",
+      "Recherchez par spécialité, ville ou nom. Consultez les avis et les disponibilités en temps réel.",
   },
   {
     id: "book",
     icon: CalendarCheck,
     iconBg: "#DCFCE7",
     iconColor: "#16A34A",
+    accentBg: "#F0FDF4",
     title: "Réservez en 2 clics",
     description:
-      "Choisissez un créneau, confirmez — c'est fait. Recevez un rappel SMS automatique avant chaque consultation.",
+      "Choisissez un créneau, confirmez — c'est fait. Recevez un rappel SMS avant chaque consultation.",
   },
   {
     id: "sos",
     icon: Siren,
     iconBg: "#FEE2E2",
     iconColor: "#DC2626",
+    accentBg: "#FEF2F2",
     title: "SOS Docteur",
     description:
-      "Besoin d'un médecin en urgence ? Activez SOS et un médecin disponible près de chez vous vous contacte en moins de 2 minutes.",
+      "Besoin d'un médecin en urgence ? Un médecin disponible vous contacte en moins de 2 minutes.",
   },
   {
     id: "ready",
     icon: Shield,
     iconBg: colors.mist,
     iconColor: colors.primary,
+    accentBg: colors.primaryFaint,
     title: "Gratuit et sécurisé",
     description:
-      "Doktori est 100% gratuit pour les patients. Vos données de santé sont protégées et ne sont jamais partagées.",
+      "100% gratuit pour les patients. Vos données de santé sont protégées et ne sont jamais partagées.",
   },
 ];
 
@@ -102,10 +107,12 @@ export default function OnboardingScreen() {
     }
   }
 
+  const isLast = currentIndex === SLIDES.length - 1;
+
   return (
     <View style={styles.container}>
       {/* Skip button */}
-      {currentIndex < SLIDES.length - 1 && (
+      {!isLast && (
         <Pressable style={styles.skipBtn} onPress={finish}>
           <Text style={styles.skipText}>Passer</Text>
         </Pressable>
@@ -128,20 +135,25 @@ export default function OnboardingScreen() {
           const index = Math.round(e.nativeEvent.contentOffset.x / width);
           setCurrentIndex(index);
         }}
-        renderItem={({ item }) => {
+        renderItem={({ item, index }) => {
           const Icon = item.icon;
           return (
             <View style={[styles.slide, { width }]}>
-              <View style={styles.illustrationArea}>
-                {/* Decorative circles */}
-                <View style={[styles.circle, styles.circleLg, { backgroundColor: item.iconBg, opacity: 0.15 }]} />
-                <View style={[styles.circle, styles.circleMd, { backgroundColor: item.iconBg, opacity: 0.25 }]} />
-                <View style={[styles.iconWrap, { backgroundColor: item.iconBg }]}>
-                  <Icon size={48} color={item.iconColor} strokeWidth={1.8} />
+              <View style={[styles.illustrationArea, { backgroundColor: item.accentBg }]}>
+                {/* Decorative rings */}
+                <View style={[styles.ring, styles.ringOuter, { borderColor: item.iconBg }]} />
+                <View style={[styles.ring, styles.ringMiddle, { borderColor: item.iconBg }]} />
+                <View style={[styles.iconWrap, { backgroundColor: item.iconBg }, shadow.lg]}>
+                  <Icon size={44} color={item.iconColor} strokeWidth={1.8} />
                 </View>
               </View>
-              <Text style={styles.title}>{item.title}</Text>
-              <Text style={styles.description}>{item.description}</Text>
+              <View style={styles.textArea}>
+                <Text style={styles.stepIndicator}>
+                  {index + 1} / {SLIDES.length}
+                </Text>
+                <Text style={styles.title}>{item.title}</Text>
+                <Text style={styles.description}>{item.description}</Text>
+              </View>
             </View>
           );
         }}
@@ -154,12 +166,12 @@ export default function OnboardingScreen() {
             const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
             const dotWidth = scrollX.interpolate({
               inputRange,
-              outputRange: [8, 24, 8],
+              outputRange: [8, 28, 8],
               extrapolate: "clamp",
             });
             const dotOpacity = scrollX.interpolate({
               inputRange,
-              outputRange: [0.3, 1, 0.3],
+              outputRange: [0.25, 1, 0.25],
               extrapolate: "clamp",
             });
             return (
@@ -178,9 +190,10 @@ export default function OnboardingScreen() {
           })}
         </View>
         <Button
-          title={currentIndex === SLIDES.length - 1 ? "Commencer" : "Suivant"}
+          title={isLast ? "Commencer" : "Suivant"}
           onPress={next}
-          style={{ width: "100%" } as any}
+          size="lg"
+          style={{ width: "100%" }}
         />
       </View>
     </View>
@@ -189,31 +202,74 @@ export default function OnboardingScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.white },
-  skipBtn: { position: "absolute", top: 60, right: 20, zIndex: 10, padding: 8 },
-  skipText: { fontSize: 15, color: colors.slate500, fontWeight: "600" },
-  slide: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 40 },
-  illustrationArea: {
-    width: 200, height: 200, alignItems: "center", justifyContent: "center",
-    marginBottom: 40,
+  skipBtn: {
+    position: "absolute",
+    top: 60,
+    right: 20,
+    zIndex: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: radius.full,
+    backgroundColor: colors.bg,
   },
-  circle: { position: "absolute", borderRadius: 9999 },
-  circleLg: { width: 200, height: 200 },
-  circleMd: { width: 140, height: 140 },
+  skipText: { fontSize: 14, color: colors.slate500, fontWeight: "600" },
+  slide: { flex: 1 },
+  illustrationArea: {
+    flex: 0.5,
+    alignItems: "center",
+    justifyContent: "center",
+    borderBottomLeftRadius: 40,
+    borderBottomRightRadius: 40,
+  },
+  ring: {
+    position: "absolute",
+    borderRadius: 9999,
+    borderWidth: 1.5,
+    opacity: 0.12,
+  },
+  ringOuter: { width: 200, height: 200 },
+  ringMiddle: { width: 150, height: 150, opacity: 0.2 },
   iconWrap: {
-    width: 96, height: 96, borderRadius: 32, alignItems: "center",
-    justifyContent: "center", shadowColor: "#000", shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1, shadowRadius: 24, elevation: 8,
+    width: 88,
+    height: 88,
+    borderRadius: 28,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  textArea: {
+    flex: 0.5,
+    paddingHorizontal: 40,
+    paddingTop: 32,
+    alignItems: "center",
+  },
+  stepIndicator: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.slate400,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    marginBottom: spacing.sm,
   },
   title: {
-    fontSize: 26, fontWeight: "800", color: colors.ink, textAlign: "center",
-    marginBottom: 16,
+    fontSize: 28,
+    fontWeight: "800",
+    color: colors.ink,
+    textAlign: "center",
+    marginBottom: spacing.md,
+    letterSpacing: -0.5,
   },
   description: {
-    fontSize: 15, color: colors.slate500, textAlign: "center", lineHeight: 22,
-    maxWidth: 320,
+    fontSize: 16,
+    color: colors.slate500,
+    textAlign: "center",
+    lineHeight: 24,
+    maxWidth: 300,
   },
   bottom: {
-    paddingHorizontal: 32, paddingBottom: 50, alignItems: "center", gap: 24,
+    paddingHorizontal: 32,
+    paddingBottom: 50,
+    alignItems: "center",
+    gap: spacing.lg,
   },
   dots: { flexDirection: "row", gap: 6, alignItems: "center" },
   dot: { height: 8, borderRadius: 4 },

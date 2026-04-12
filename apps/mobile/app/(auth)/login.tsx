@@ -1,7 +1,8 @@
 import { useState } from "react";
-import { View, Text, StyleSheet, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, StyleSheet, KeyboardAvoidingView, Platform, Pressable } from "react-native";
 import { useRouter } from "expo-router";
-import { colors, spacing, radius } from "@/lib/theme";
+import { Stethoscope, Phone } from "lucide-react-native";
+import { colors, spacing, radius, shadow } from "@/lib/theme";
 import { Input } from "@/components/ui/Input";
 import { Button } from "@/components/ui/Button";
 import { api } from "@/lib/api";
@@ -35,25 +36,34 @@ export default function LoginScreen() {
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <View style={styles.content}>
-        <View style={styles.logo}>
-          <Text style={styles.logoText}>D</Text>
+      {/* Top gradient area */}
+      <View style={styles.heroArea}>
+        <View style={styles.decorCircle1} />
+        <View style={styles.decorCircle2} />
+        <View style={styles.logoWrap}>
+          <Stethoscope size={36} color={colors.white} strokeWidth={1.8} />
         </View>
-        <Text style={styles.title}>Bienvenue sur Doktori</Text>
+        <Text style={styles.brand}>Doktori</Text>
+        <Text style={styles.tagline}>Votre santé, simplement.</Text>
+      </View>
+
+      {/* Form card */}
+      <View style={[styles.formCard, shadow.lg]}>
+        <Text style={styles.title}>Connexion</Text>
         <Text style={styles.subtitle}>
-          Entrez votre numéro de téléphone pour vous connecter
+          Entrez votre numéro pour recevoir un code de vérification
         </Text>
 
         <View style={styles.phoneRow}>
           <View style={styles.prefix}>
+            <Text style={styles.flag}>🇹🇳</Text>
             <Text style={styles.prefixText}>+216</Text>
           </View>
           <View style={{ flex: 1 }}>
             <Input
-              label=""
               placeholder="XX XXX XXX"
               value={phone}
-              onChangeText={setPhone}
+              onChangeText={(t) => { setPhone(t); setError(""); }}
               keyboardType="phone-pad"
               maxLength={8}
               error={error || undefined}
@@ -66,27 +76,89 @@ export default function LoginScreen() {
           onPress={handleSend}
           loading={loading}
           disabled={!isValid}
-          style={{ marginTop: spacing.lg }}
+          size="lg"
+          icon={<Phone size={18} color={colors.white} />}
+          style={{ marginTop: spacing.lg, width: "100%" }}
         />
+
+        <Text style={styles.legal}>
+          En continuant, vous acceptez nos conditions d'utilisation et notre politique de confidentialité.
+        </Text>
       </View>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.white },
-  content: { flex: 1, justifyContent: "center", padding: spacing.xl },
-  logo: {
-    width: 64, height: 64, borderRadius: radius.lg, backgroundColor: colors.primary,
-    alignItems: "center", justifyContent: "center", alignSelf: "center", marginBottom: spacing.lg,
+  container: { flex: 1, backgroundColor: colors.primary },
+  heroArea: {
+    flex: 0.4,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 60,
+    overflow: "hidden",
   },
-  logoText: { fontSize: 28, fontWeight: "800", color: colors.white },
-  title: { fontSize: 24, fontWeight: "700", color: colors.ink, textAlign: "center" },
-  subtitle: { fontSize: 14, color: colors.slate500, textAlign: "center", marginTop: spacing.sm, marginBottom: spacing.xl },
-  phoneRow: { flexDirection: "row", alignItems: "flex-end", gap: spacing.sm },
+  decorCircle1: {
+    position: "absolute",
+    top: -40,
+    right: -60,
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: colors.primaryLight,
+    opacity: 0.15,
+  },
+  decorCircle2: {
+    position: "absolute",
+    bottom: 10,
+    left: -40,
+    width: 140,
+    height: 140,
+    borderRadius: 70,
+    backgroundColor: colors.primaryLight,
+    opacity: 0.1,
+  },
+  logoWrap: {
+    width: 72,
+    height: 72,
+    borderRadius: 24,
+    backgroundColor: "rgba(255,255,255,0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.md,
+  },
+  brand: { fontSize: 32, fontWeight: "800", color: colors.white, letterSpacing: -0.5 },
+  tagline: { fontSize: 15, color: "rgba(255,255,255,0.8)", marginTop: 4 },
+  formCard: {
+    flex: 0.6,
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 32,
+    borderTopRightRadius: 32,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xl,
+  },
+  title: { fontSize: 24, fontWeight: "800", color: colors.ink, letterSpacing: -0.3 },
+  subtitle: { fontSize: 14, color: colors.slate500, marginTop: spacing.sm, lineHeight: 20 },
+  phoneRow: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm, marginTop: spacing.lg },
   prefix: {
-    backgroundColor: colors.mist, paddingHorizontal: 14, paddingVertical: 13,
-    borderRadius: radius.sm, borderWidth: 1, borderColor: colors.border,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: colors.bg,
+    paddingHorizontal: 14,
+    paddingVertical: 14,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.slate200,
+    marginTop: spacing.md,
   },
-  prefixText: { fontSize: 15, fontWeight: "600", color: colors.ink },
+  flag: { fontSize: 18 },
+  prefixText: { fontSize: 16, fontWeight: "600", color: colors.ink },
+  legal: {
+    fontSize: 12,
+    color: colors.slate400,
+    textAlign: "center",
+    marginTop: spacing.xl,
+    lineHeight: 17,
+  },
 });

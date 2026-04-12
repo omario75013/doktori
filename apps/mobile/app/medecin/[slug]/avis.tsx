@@ -1,10 +1,11 @@
-// apps/mobile/app/medecin/[slug]/avis.tsx
 import { useEffect, useState } from "react";
 import { View, Text, FlatList, StyleSheet } from "react-native";
 import { useLocalSearchParams, Stack } from "expo-router";
+import { MessageSquare } from "lucide-react-native";
 import { api } from "@/lib/api";
-import { colors, spacing, radius } from "@/lib/theme";
+import { colors, spacing, radius, shadow } from "@/lib/theme";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { StarRating } from "@/components/ui/StarRating";
 
 interface Review {
   id: string;
@@ -17,26 +18,15 @@ interface Review {
 interface ReviewStats {
   average: number;
   total: number;
-  distribution: Record<string, number>; // "1".."5" → count
-}
-
-function StarRow({ rating, max = 5 }: { rating: number; max?: number }) {
-  return (
-    <View style={{ flexDirection: "row", gap: 2 }}>
-      {Array.from({ length: max }).map((_, i) => (
-        <Text key={i} style={{ color: i < Math.round(rating) ? "#F59E0B" : "#D1D5DB", fontSize: 16 }}>
-          ★
-        </Text>
-      ))}
-    </View>
-  );
+  distribution: Record<string, number>;
 }
 
 function RatingBar({ label, count, total }: { label: string; count: number; total: number }) {
   const pct = total > 0 ? (count / total) * 100 : 0;
   return (
     <View style={styles.barRow}>
-      <Text style={styles.barLabel}>{label} ★</Text>
+      <Text style={styles.barLabel}>{label}</Text>
+      <StarRating rating={parseInt(label)} size={10} />
       <View style={styles.barTrack}>
         <View style={[styles.barFill, { width: `${pct}%` as any }]} />
       </View>
@@ -50,19 +40,16 @@ export default function AvisScreen() {
   const [reviews, setReviews] = useState<Review[]>([]);
   const [stats, setStats] = useState<ReviewStats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [doctorId, setDoctorId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
       try {
         const doctor = await api.getDoctor(slug);
         if (!doctor?.id) return;
-        setDoctorId(doctor.id);
         const data = await api.getDoctorReviews(doctor.id);
         const list: Review[] = data.reviews ?? data ?? [];
         setReviews(list);
 
-        // Compute stats from the list
         if (list.length > 0) {
           const total = list.length;
           const sum = list.reduce((acc, r) => acc + r.rating, 0);
@@ -84,7 +71,7 @@ export default function AvisScreen() {
     load();
   }, [slug]);
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <LoadingSpinner message="Chargement des avis..." />;
 
   return (
     <>
@@ -95,45 +82,52 @@ export default function AvisScreen() {
         style={{ backgroundColor: colors.bg }}
         ListHeaderComponent={
           stats ? (
-            <View style={styles.statsCard}>
+            <View style={[styles.statsCard, shadow.md]}>
               <View style={styles.statsTop}>
-                <Text style={styles.avgScore}>{stats.average.toFixed(1)}</Text>
-                <View>
-                  <StarRow rating={stats.average} />
+                <View style={styles.scoreWrap}>
+                  <Text style={styles.avgScore}>{stats.average.toFixed(1)}</Text>
+                  <StarRating rating={stats.average} size={18} />
                   <Text style={styles.totalText}>{stats.total} avis</Text>
                 </View>
-              </View>
-              <View style={styles.distribution}>
-                {(["5", "4", "3", "2", "1"] as const).map((star) => (
-                  <RatingBar
-                    key={star}
-                    label={star}
-                    count={stats.distribution[star] ?? 0}
-                    total={stats.total}
-                  />
-                ))}
+                <View style={styles.distribution}>
+                  {(["5", "4", "3", "2", "1"] as const).map((star) => (
+                    <RatingBar key={star} label={star} count={stats.distribution[star] ?? 0} total={stats.total} />
+                  ))}
+                </View>
               </View>
             </View>
           ) : null
         }
         contentContainerStyle={{ padding: spacing.md, gap: spacing.sm, paddingBottom: spacing.xl }}
         ListEmptyComponent={
-          <Text style={styles.emptyText}>Aucun avis pour le moment.</Text>
+          <View style={styles.emptyWrap}>
+            <MessageSquare size={40} color={colors.slate200} />
+            <Text style={styles.emptyText}>Aucun avis pour le moment</Text>
+          </View>
         }
         renderItem={({ item }) => (
-          <View style={styles.reviewCard}>
+          <View style={[styles.reviewCard, shadow.sm]}>
             <View style={styles.reviewHeader}>
-              <StarRow rating={item.rating} />
-              <Text style={styles.reviewDate}>
-                {new Date(item.createdAt).toLocaleDateString("fr-FR")}
-              </Text>
+              <View style={styles.reviewAuthor}>
+                <View style={styles.authorAvatar}>
+                  <Text style={styles.authorInitial}>
+                    {item.patientName?.charAt(0) || "P"}
+                  </Text>
+                </View>
+                <View>
+                  {item.patientName && (
+                    <Text style={styles.patientName}>{item.patientName}</Text>
+                  )}
+                  <Text style={styles.reviewDate}>
+                    {new Date(item.createdAt).toLocaleDateString("fr-FR", {
+                      day: "numeric", month: "long", year: "numeric",
+                    })}
+                  </Text>
+                </View>
+              </View>
+              <StarRating rating={item.rating} size={14} />
             </View>
-            {item.patientName && (
-              <Text style={styles.patientName}>{item.patientName}</Text>
-            )}
-            {item.comment ? (
-              <Text style={styles.reviewComment}>{item.comment}</Text>
-            ) : null}
+            {item.comment && <Text style={styles.reviewComment}>{item.comment}</Text>}
           </View>
         )}
       />
@@ -144,51 +138,34 @@ export default function AvisScreen() {
 const styles = StyleSheet.create({
   statsCard: {
     backgroundColor: colors.white,
-    borderRadius: radius.lg,
-    padding: spacing.md,
+    borderRadius: radius.xl,
+    padding: spacing.lg,
     marginBottom: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
   },
   statsTop: {
     flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.md,
-    marginBottom: spacing.md,
+    gap: spacing.lg,
   },
-  avgScore: {
-    fontSize: 48,
-    fontWeight: "700",
-    color: colors.ink,
-  },
-  totalText: {
-    fontSize: 13,
-    color: colors.slate500,
-    marginTop: 4,
-  },
-  distribution: { gap: spacing.xs },
-  barRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: spacing.sm,
-  },
-  barLabel: { fontSize: 12, color: colors.slate500, width: 18, textAlign: "right" },
+  scoreWrap: { alignItems: "center", justifyContent: "center" },
+  avgScore: { fontSize: 48, fontWeight: "800", color: colors.ink, letterSpacing: -1 },
+  totalText: { fontSize: 13, color: colors.slate500, marginTop: 4 },
+  distribution: { flex: 1, gap: 4, justifyContent: "center" },
+  barRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+  barLabel: { fontSize: 12, fontWeight: "600", color: colors.slate500, width: 14, textAlign: "right" },
   barTrack: {
     flex: 1,
-    height: 8,
-    backgroundColor: colors.mist,
+    height: 6,
+    backgroundColor: colors.bg,
     borderRadius: radius.full,
     overflow: "hidden",
   },
-  barFill: {
-    height: "100%",
-    backgroundColor: "#F59E0B",
-    borderRadius: radius.full,
-  },
-  barCount: { fontSize: 12, color: colors.slate500, width: 24, textAlign: "right" },
+  barFill: { height: "100%", backgroundColor: colors.orange, borderRadius: radius.full },
+  barCount: { fontSize: 12, color: colors.slate400, width: 24, textAlign: "right" },
   reviewCard: {
     backgroundColor: colors.white,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     padding: spacing.md,
     borderWidth: 1,
     borderColor: colors.border,
@@ -196,11 +173,21 @@ const styles = StyleSheet.create({
   reviewHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: spacing.xs,
+    alignItems: "flex-start",
   },
-  reviewDate: { fontSize: 12, color: colors.slate500 },
-  patientName: { fontSize: 13, fontWeight: "600", color: colors.ink, marginBottom: 4 },
-  reviewComment: { fontSize: 14, color: colors.ink, lineHeight: 20 },
-  emptyText: { fontSize: 14, color: colors.slate500, textAlign: "center", marginTop: spacing.xl },
+  reviewAuthor: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  authorAvatar: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.mist,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  authorInitial: { fontSize: 15, fontWeight: "700", color: colors.primary },
+  patientName: { fontSize: 14, fontWeight: "600", color: colors.ink },
+  reviewDate: { fontSize: 12, color: colors.slate400, marginTop: 1 },
+  reviewComment: { fontSize: 14, color: colors.ink, lineHeight: 21, marginTop: spacing.sm },
+  emptyWrap: { alignItems: "center", justifyContent: "center", paddingVertical: spacing.xxl },
+  emptyText: { fontSize: 15, color: colors.slate400, marginTop: spacing.md },
 });

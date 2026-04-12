@@ -171,5 +171,6 @@ const styles = StyleSheet.create({
   },
   itemName: { fontSize: 15, fontWeight: "600", color: colors.ink },
   itemDetail: { fontSize: 13, color: colors.slate500, marginTop: 2 },
+  content: { fontSize: 14, color: colors.ink, lineHeight: 20, padding: spacing.md, paddingTop: 0 },
   actions: { flexDirection: "row", gap: spacing.sm },
 });

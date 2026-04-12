@@ -1,4 +1,3 @@
-// apps/mobile/app/(tabs)/index.tsx
 import { useCallback, useEffect, useState } from "react";
 import {
   View,
@@ -9,17 +8,17 @@ import {
   StyleSheet,
   RefreshControl,
   ScrollView,
+  Animated,
 } from "react-native";
 import { useRouter } from "expo-router";
-import { Search as SearchIcon, Filter, MapPin, ChevronDown, ChevronUp } from "lucide-react-native";
+import { Search as SearchIcon, SlidersHorizontal, MapPin, X, ChevronDown, ChevronUp, Stethoscope } from "lucide-react-native";
 import * as Location from "expo-location";
 import { apiFetch } from "@/lib/api";
 import { SPECIALTIES } from "@doktori/shared";
-import { colors, spacing, radius } from "@/lib/theme";
+import { colors, spacing, radius, shadow } from "@/lib/theme";
 import { DoctorCard } from "@/components/ui/DoctorCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { trackEvent } from "@/lib/analytics";
 
 type SortOption = "relevance" | "distance" | "fee_asc" | "fee_desc";
 type AvailabilityOption = "all" | "today" | "tomorrow" | "week";
@@ -77,6 +76,7 @@ export default function SearchScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const [locationLoading, setLocationLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   const activeFilterCount = countActiveFilters(filters);
 
@@ -95,11 +95,7 @@ export default function SearchScreen() {
 
       const data = await apiFetch<any>(`/api/search?${params.toString()}`);
       setResults(data.hits || []);
-      trackEvent("search", {
-        query: query || null,
-        specialty: filters.specialty || null,
-        availability: filters.availability,
-      });
+      setHasSearched(true);
     } catch (e) {
       console.error(e);
     } finally {
@@ -129,9 +125,7 @@ export default function SearchScreen() {
     setLocationLoading(true);
     try {
       const { status } = await Location.requestForegroundPermissionsAsync();
-      if (status !== "granted") {
-        return;
-      }
+      if (status !== "granted") return;
       const location = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       setFilters((prev) => ({
         ...prev,
@@ -148,71 +142,87 @@ export default function SearchScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Trouvez un médecin</Text>
-        <View style={styles.searchRow}>
-          <SearchIcon size={18} color={colors.slate500} />
+      {/* Search header */}
+      <View style={[styles.header, shadow.sm]}>
+        {/* Search bar */}
+        <View style={[styles.searchRow, shadow.sm]}>
+          <SearchIcon size={20} color={colors.slate400} />
           <TextInput
-            style={styles.input}
+            style={styles.searchInput}
             placeholder="Nom, spécialité, ville..."
-            placeholderTextColor={colors.slate500}
+            placeholderTextColor={colors.slate400}
             value={query}
             onChangeText={setQuery}
+            returnKeyType="search"
           />
+          {query.length > 0 && (
+            <Pressable onPress={() => setQuery("")} hitSlop={8}>
+              <X size={18} color={colors.slate400} />
+            </Pressable>
+          )}
         </View>
 
-        {/* Filters toggle row */}
-        <View style={styles.filterToggleRow}>
+        {/* Filter pills row */}
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.filterRow}
+        >
+          {/* Filters button */}
           <Pressable
-            style={[styles.filterToggleBtn, filtersExpanded && styles.filterToggleBtnActive]}
+            style={[styles.filterPill, filtersExpanded && styles.filterPillActive]}
             onPress={() => setFiltersExpanded((v) => !v)}
           >
-            <Filter size={15} color={filtersExpanded ? colors.white : colors.primary} />
-            <Text style={[styles.filterToggleText, filtersExpanded && styles.filterToggleTextActive]}>
-              Filtres
-            </Text>
+            <SlidersHorizontal size={14} color={filtersExpanded ? colors.white : colors.primary} />
+            <Text style={[styles.filterPillText, filtersExpanded && styles.filterPillTextActive]}>Filtres</Text>
             {activeFilterCount > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{activeFilterCount}</Text>
+              <View style={styles.countBadge}>
+                <Text style={styles.countBadgeText}>{activeFilterCount}</Text>
               </View>
-            )}
-            {filtersExpanded ? (
-              <ChevronUp size={14} color={filtersExpanded ? colors.white : colors.primary} />
-            ) : (
-              <ChevronDown size={14} color={colors.primary} />
             )}
           </Pressable>
 
           {/* Near me */}
           <Pressable
-            style={[styles.nearMeBtn, filters.lat !== undefined && styles.nearMeBtnActive]}
+            style={[styles.filterPill, filters.lat !== undefined && styles.filterPillActive]}
             onPress={requestLocation}
             disabled={locationLoading}
           >
-            <MapPin size={15} color={filters.lat !== undefined ? colors.white : colors.primary} />
-            <Text style={[styles.nearMeText, filters.lat !== undefined && styles.nearMeTextActive]}>
+            <MapPin size={14} color={filters.lat !== undefined ? colors.white : colors.primary} />
+            <Text style={[styles.filterPillText, filters.lat !== undefined && styles.filterPillTextActive]}>
               {locationLoading ? "..." : "Près de moi"}
             </Text>
           </Pressable>
 
+          {/* Quick specialty pills */}
+          {SPECIALTIES.slice(0, 6).map((s) => (
+            <Pressable
+              key={s.id}
+              style={[styles.filterPill, filters.specialty === s.id && styles.filterPillActive]}
+              onPress={() => updateFilter("specialty", filters.specialty === s.id ? undefined : s.id)}
+            >
+              <Text style={[styles.filterPillText, filters.specialty === s.id && styles.filterPillTextActive]}>
+                {s.label}
+              </Text>
+            </Pressable>
+          ))}
+
           {activeFilterCount > 0 && (
-            <Pressable onPress={resetFilters} style={styles.resetLink}>
-              <Text style={styles.resetText}>Réinitialiser</Text>
+            <Pressable style={styles.resetPill} onPress={resetFilters}>
+              <X size={14} color={colors.slate500} />
+              <Text style={styles.resetText}>Effacer</Text>
             </Pressable>
           )}
-        </View>
+        </ScrollView>
 
         {/* Expandable filter panel */}
         {filtersExpanded && (
           <View style={styles.filterPanel}>
-            {/* Specialty chips */}
             <Text style={styles.filterLabel}>Spécialité</Text>
             <ScrollView
               horizontal
               showsHorizontalScrollIndicator={false}
-              style={styles.chipsScroll}
-              contentContainerStyle={{ gap: spacing.sm }}
+              contentContainerStyle={{ gap: spacing.sm, paddingBottom: spacing.sm }}
             >
               {SPECIALTIES.map((s) => (
                 <Pressable
@@ -227,34 +237,30 @@ export default function SearchScreen() {
               ))}
             </ScrollView>
 
-            {/* Fee filter removed — Doctolib-style, fees not shown publicly */}
-
-            {/* Availability */}
             <Text style={[styles.filterLabel, { marginTop: spacing.sm }]}>Disponibilité</Text>
             <View style={styles.pillRow}>
               {AVAILABILITY_OPTIONS.map((opt) => (
                 <Pressable
                   key={opt.id}
-                  style={[styles.pill, filters.availability === opt.id && styles.pillActive]}
+                  style={[styles.chip, filters.availability === opt.id && styles.chipActive]}
                   onPress={() => updateFilter("availability", opt.id)}
                 >
-                  <Text style={[styles.pillText, filters.availability === opt.id && styles.pillTextActive]}>
+                  <Text style={[styles.chipText, filters.availability === opt.id && styles.chipTextActive]}>
                     {opt.label}
                   </Text>
                 </Pressable>
               ))}
             </View>
 
-            {/* Sort */}
             <Text style={[styles.filterLabel, { marginTop: spacing.sm }]}>Trier par</Text>
             <View style={styles.pillRow}>
               {SORT_OPTIONS.map((opt) => (
                 <Pressable
                   key={opt.id}
-                  style={[styles.pill, filters.sort === opt.id && styles.pillActive]}
+                  style={[styles.chip, filters.sort === opt.id && styles.chipActive]}
                   onPress={() => updateFilter("sort", opt.id)}
                 >
-                  <Text style={[styles.pillText, filters.sort === opt.id && styles.pillTextActive]}>
+                  <Text style={[styles.chipText, filters.sort === opt.id && styles.chipTextActive]}>
                     {opt.label}
                   </Text>
                 </Pressable>
@@ -264,21 +270,26 @@ export default function SearchScreen() {
         )}
       </View>
 
+      {/* Results */}
       {loading && !refreshing ? (
-        <LoadingSpinner />
+        <LoadingSpinner message="Recherche en cours..." />
       ) : (
         <FlatList
           data={results}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ padding: spacing.md, gap: spacing.md, flexGrow: 1 }}
+          contentContainerStyle={{ padding: spacing.md, gap: spacing.sm, flexGrow: 1 }}
           refreshControl={
             <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
           }
           ListEmptyComponent={
             <EmptyState
-              icon="🔍"
-              title="Recherchez un médecin"
-              description="Tapez un nom, une spécialité ou une ville"
+              icon={<Stethoscope size={48} color={colors.primaryLight} />}
+              title={hasSearched ? "Aucun résultat" : "Trouvez votre médecin"}
+              description={
+                hasSearched
+                  ? "Essayez avec d'autres termes ou filtres"
+                  : "Recherchez par nom, spécialité ou ville"
+              }
             />
           }
           renderItem={({ item }) => (
@@ -293,112 +304,85 @@ export default function SearchScreen() {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
   header: {
-    padding: spacing.md,
-    paddingBottom: spacing.sm,
     backgroundColor: colors.white,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.sm,
+    borderBottomLeftRadius: 20,
+    borderBottomRightRadius: 20,
   },
-  title: { fontSize: 24, fontWeight: "700", color: colors.ink, marginBottom: spacing.md },
   searchRow: {
     flexDirection: "row",
     alignItems: "center",
     gap: spacing.sm,
     backgroundColor: colors.bg,
+    marginHorizontal: spacing.md,
     paddingHorizontal: 14,
     paddingVertical: 12,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: spacing.sm,
   },
-  input: { flex: 1, fontSize: 16, color: colors.ink },
-  filterToggleRow: {
+  searchInput: { flex: 1, fontSize: 16, color: colors.ink },
+  filterRow: {
     flexDirection: "row",
-    alignItems: "center",
     gap: spacing.sm,
-    flexWrap: "wrap",
+    paddingHorizontal: spacing.md,
+    paddingTop: spacing.sm,
+    paddingBottom: 4,
   },
-  filterToggleBtn: {
+  filterPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 5,
     paddingHorizontal: 12,
     paddingVertical: 8,
     borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.primary,
+    borderWidth: 1.5,
+    borderColor: colors.border,
     backgroundColor: colors.white,
   },
-  filterToggleBtnActive: {
+  filterPillActive: {
     backgroundColor: colors.primary,
     borderColor: colors.primary,
   },
-  filterToggleText: { fontSize: 13, fontWeight: "600", color: colors.primary },
-  filterToggleTextActive: { color: colors.white },
-  badge: {
+  filterPillText: { fontSize: 13, fontWeight: "600", color: colors.ink },
+  filterPillTextActive: { color: colors.white },
+  countBadge: {
     backgroundColor: colors.red,
     borderRadius: radius.full,
-    width: 18,
+    minWidth: 18,
     height: 18,
     alignItems: "center",
     justifyContent: "center",
+    paddingHorizontal: 4,
   },
-  badgeText: { fontSize: 11, fontWeight: "700", color: colors.white },
-  nearMeBtn: {
+  countBadgeText: { fontSize: 10, fontWeight: "700", color: colors.white },
+  resetPill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
-    paddingHorizontal: 12,
+    gap: 4,
+    paddingHorizontal: 10,
     paddingVertical: 8,
-    borderRadius: radius.full,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    backgroundColor: colors.white,
   },
-  nearMeBtnActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  nearMeText: { fontSize: 13, fontWeight: "600", color: colors.primary },
-  nearMeTextActive: { color: colors.white },
-  resetLink: { paddingVertical: 8 },
-  resetText: { fontSize: 13, color: colors.slate500, textDecorationLine: "underline" },
+  resetText: { fontSize: 13, color: colors.slate500 },
   filterPanel: {
+    marginHorizontal: spacing.md,
     marginTop: spacing.sm,
     paddingTop: spacing.sm,
     borderTopWidth: 1,
     borderTopColor: colors.border,
   },
-  filterLabel: { fontSize: 13, fontWeight: "600", color: colors.slate500, marginBottom: spacing.xs },
-  chipsScroll: { maxHeight: 40 },
-  chip: { paddingHorizontal: 14, paddingVertical: 8, backgroundColor: colors.mist, borderRadius: radius.full },
-  chipActive: { backgroundColor: colors.primary },
-  chipText: { fontSize: 13, color: colors.ink },
-  chipTextActive: { color: colors.white, fontWeight: "600" },
-  feeRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
-  feeInput: {
-    flex: 1,
-    backgroundColor: colors.bg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radius.md,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-    color: colors.ink,
-  },
-  feeSeparator: { fontSize: 16, color: colors.slate500 },
+  filterLabel: { fontSize: 12, fontWeight: "700", color: colors.slate500, marginBottom: spacing.xs, textTransform: "uppercase", letterSpacing: 0.5 },
   pillRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm },
-  pill: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+  chip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    backgroundColor: colors.bg,
     borderRadius: radius.full,
     borderWidth: 1,
     borderColor: colors.border,
-    backgroundColor: colors.white,
   },
-  pillActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  pillText: { fontSize: 13, color: colors.ink },
-  pillTextActive: { color: colors.white, fontWeight: "600" },
+  chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
+  chipText: { fontSize: 13, color: colors.ink },
+  chipTextActive: { color: colors.white, fontWeight: "600" },
 });

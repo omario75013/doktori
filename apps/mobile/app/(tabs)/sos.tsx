@@ -8,21 +8,56 @@ import {
   ActivityIndicator,
   StyleSheet,
   Linking,
+  Animated,
+  Easing,
 } from "react-native";
 import * as Location from "expo-location";
 import * as Haptics from "expo-haptics";
+import { Siren, Phone, MapPin, AlertTriangle, Clock, CheckCircle2, UserRound, XCircle, Heart, Thermometer, Baby, HelpCircle } from "lucide-react-native";
 import { api } from "@/lib/api";
-import { colors } from "@/lib/theme";
-import { trackEvent } from "@/lib/analytics";
+import { colors, spacing, radius, shadow } from "@/lib/theme";
+import { Button } from "@/components/ui/Button";
 
 type Step = "intro" | "form" | "locating" | "waiting" | "accepted" | "expired";
 
 const SYMPTOMS = [
-  { id: "fievre", label: "Fièvre" },
-  { id: "douleur", label: "Douleur aiguë" },
-  { id: "enfant", label: "Enfant malade" },
-  { id: "autre", label: "Autre" },
+  { id: "fievre", label: "Fièvre", icon: Thermometer },
+  { id: "douleur", label: "Douleur aiguë", icon: Heart },
+  { id: "enfant", label: "Enfant malade", icon: Baby },
+  { id: "autre", label: "Autre", icon: HelpCircle },
 ];
+
+function PulseCircle({ color, size }: { color: string; size: number }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const opacity = useRef(new Animated.Value(0.4)).current;
+  useEffect(() => {
+    const anim = Animated.loop(
+      Animated.parallel([
+        Animated.sequence([
+          Animated.timing(scale, { toValue: 1.8, duration: 1500, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+          Animated.timing(scale, { toValue: 1, duration: 0, useNativeDriver: true }),
+        ]),
+        Animated.sequence([
+          Animated.timing(opacity, { toValue: 0, duration: 1500, easing: Easing.out(Easing.ease), useNativeDriver: true }),
+          Animated.timing(opacity, { toValue: 0.4, duration: 0, useNativeDriver: true }),
+        ]),
+      ])
+    );
+    anim.start();
+    return () => anim.stop();
+  }, []);
+  return (
+    <Animated.View style={{
+      position: "absolute",
+      width: size,
+      height: size,
+      borderRadius: size / 2,
+      backgroundColor: color,
+      transform: [{ scale }],
+      opacity,
+    }} />
+  );
+}
 
 export default function SOSScreen() {
   const [step, setStep] = useState<Step>("intro");
@@ -35,7 +70,6 @@ export default function SOSScreen() {
   const [error, setError] = useState("");
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Poll session when waiting
   useEffect(() => {
     if (step !== "waiting" || !sessionId) return;
     async function poll() {
@@ -43,6 +77,7 @@ export default function SOSScreen() {
         const data = await api.sosSession(sessionId!);
         setSession(data);
         if (data.status === "accepted") {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           setStep("accepted");
           if (pollRef.current) clearInterval(pollRef.current);
         } else if (new Date(data.expires_at) < new Date()) {
@@ -55,9 +90,7 @@ export default function SOSScreen() {
     }
     poll();
     pollRef.current = setInterval(poll, 5000);
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
+    return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [step, sessionId]);
 
   async function submitRequest() {
@@ -69,7 +102,6 @@ export default function SOSScreen() {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
     setStep("locating");
 
-    // Request location permission
     const { status } = await Location.requestForegroundPermissionsAsync();
     if (status !== "granted") {
       setError("Permission de géolocalisation refusée");
@@ -78,9 +110,7 @@ export default function SOSScreen() {
     }
 
     try {
-      const loc = await Location.getCurrentPositionAsync({
-        accuracy: Location.Accuracy.Balanced,
-      });
+      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
       const result = await api.sosRequest({
         patientName: name,
         patientPhone: phone,
@@ -90,7 +120,6 @@ export default function SOSScreen() {
         description: description || undefined,
       });
       setSessionId(result.sessionId);
-      trackEvent("sos_request", { symptom });
       setStep("waiting");
     } catch (e: any) {
       setError(e.message || "Erreur lors de l'envoi");
@@ -115,44 +144,72 @@ export default function SOSScreen() {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      {/* Disclaimer always visible */}
-      <View style={styles.disclaimer}>
+      {/* Emergency disclaimer */}
+      <View style={[styles.disclaimer, shadow.sm]}>
+        <AlertTriangle size={16} color="#92400E" />
         <Text style={styles.disclaimerText}>
-          ⚠️ Pour une urgence vitale, composez le{" "}
+          Pour une urgence vitale, composez le{" "}
           <Text style={styles.bold}>190 (SAMU)</Text>.{"\n"}
-          Doktori SOS est destiné aux consultations urgentes{" "}
-          <Text style={styles.bold}>non-vitales</Text>.
+          Doktori SOS : consultations urgentes <Text style={styles.bold}>non-vitales</Text>.
         </Text>
       </View>
 
+      {/* INTRO */}
       {step === "intro" && (
-        <View style={styles.card}>
-          <Text style={styles.emoji}>🚨</Text>
+        <View style={[styles.card, shadow.md]}>
+          <View style={styles.introIconWrap}>
+            <PulseCircle color={colors.red} size={100} />
+            <View style={styles.sosIcon}>
+              <Siren size={32} color={colors.white} strokeWidth={2} />
+            </View>
+          </View>
           <Text style={styles.title}>SOS Docteur</Text>
           <Text style={styles.subtitle}>
-            Trouvez un médecin disponible près de vous en 2 minutes. Nous
-            cherchons automatiquement les médecins en mode urgence dans votre
-            quartier.
+            Trouvez un médecin disponible près de vous en 2 minutes
           </Text>
-          <Pressable style={styles.primaryBtn} onPress={() => setStep("form")}>
-            <Text style={styles.primaryBtnText}>
-              Demander un médecin maintenant
-            </Text>
-          </Pressable>
+
+          <View style={styles.featureRow}>
+            <View style={styles.featureItem}>
+              <Clock size={18} color={colors.primary} />
+              <Text style={styles.featureText}>2 min</Text>
+            </View>
+            <View style={styles.featureDot} />
+            <View style={styles.featureItem}>
+              <MapPin size={18} color={colors.primary} />
+              <Text style={styles.featureText}>Proche</Text>
+            </View>
+            <View style={styles.featureDot} />
+            <View style={styles.featureItem}>
+              <Phone size={18} color={colors.primary} />
+              <Text style={styles.featureText}>Direct</Text>
+            </View>
+          </View>
+
+          <Button
+            title="Demander un médecin"
+            onPress={() => setStep("form")}
+            variant="danger"
+            size="lg"
+            icon={<Siren size={20} color={colors.white} />}
+            style={{ width: "100%", marginTop: spacing.lg }}
+          />
         </View>
       )}
 
+      {/* FORM */}
       {step === "form" && (
-        <View style={styles.card}>
-          <Text style={styles.formTitle}>Informations</Text>
+        <View style={[styles.card, shadow.md]}>
+          <Text style={styles.formTitle}>Vos informations</Text>
+
           <Text style={styles.label}>Votre nom</Text>
           <TextInput
             style={styles.input}
             value={name}
             onChangeText={setName}
             placeholder="Prénom Nom"
-            placeholderTextColor={colors.slate500}
+            placeholderTextColor={colors.slate400}
           />
+
           <Text style={styles.label}>Téléphone</Text>
           <TextInput
             style={styles.input}
@@ -160,98 +217,137 @@ export default function SOSScreen() {
             onChangeText={setPhone}
             placeholder="+216 XX XXX XXX"
             keyboardType="phone-pad"
-            placeholderTextColor={colors.slate500}
+            placeholderTextColor={colors.slate400}
           />
+
           <Text style={styles.label}>Type de symptôme</Text>
           <View style={styles.symptomGrid}>
-            {SYMPTOMS.map((s) => (
-              <Pressable
-                key={s.id}
-                style={[
-                  styles.symptomChip,
-                  symptom === s.id && styles.symptomChipActive,
-                ]}
-                onPress={() => setSymptom(s.id)}
-              >
-                <Text
-                  style={[
-                    styles.symptomText,
-                    symptom === s.id && styles.symptomTextActive,
-                  ]}
+            {SYMPTOMS.map((s) => {
+              const Icon = s.icon;
+              const active = symptom === s.id;
+              return (
+                <Pressable
+                  key={s.id}
+                  style={[styles.symptomChip, active && styles.symptomChipActive, active && shadow.sm]}
+                  onPress={() => setSymptom(s.id)}
                 >
-                  {s.label}
-                </Text>
-              </Pressable>
-            ))}
+                  <Icon size={18} color={active ? colors.white : colors.red} />
+                  <Text style={[styles.symptomText, active && styles.symptomTextActive]}>
+                    {s.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
           </View>
+
           <Text style={styles.label}>Description (optionnel)</Text>
           <TextInput
-            style={[styles.input, { height: 80 }]}
+            style={[styles.input, { height: 80, textAlignVertical: "top" }]}
             value={description}
             onChangeText={setDescription}
             placeholder="Décrivez vos symptômes..."
-            placeholderTextColor={colors.slate500}
+            placeholderTextColor={colors.slate400}
             multiline
           />
+
           {error ? <Text style={styles.error}>{error}</Text> : null}
-          <Pressable style={styles.primaryBtn} onPress={submitRequest}>
-            <Text style={styles.primaryBtnText}>Envoyer la demande</Text>
-          </Pressable>
-          <Pressable onPress={() => setStep("intro")} style={{ marginTop: 10 }}>
+
+          <Button
+            title="Envoyer la demande"
+            onPress={submitRequest}
+            variant="danger"
+            size="lg"
+            style={{ width: "100%", marginTop: spacing.lg }}
+          />
+          <Pressable onPress={() => setStep("intro")} style={styles.cancelLink}>
             <Text style={styles.cancelText}>Annuler</Text>
           </Pressable>
         </View>
       )}
 
+      {/* LOCATING */}
       {step === "locating" && (
-        <View style={styles.centerCard}>
+        <View style={[styles.centerCard, shadow.md]}>
           <ActivityIndicator size="large" color={colors.red} />
-          <Text style={styles.statusText}>Obtention de votre position...</Text>
+          <Text style={styles.statusTitle}>Localisation en cours...</Text>
+          <Text style={styles.statusText}>Obtention de votre position GPS</Text>
         </View>
       )}
 
+      {/* WAITING */}
       {step === "waiting" && (
-        <View style={styles.centerCard}>
-          <Text style={styles.bigEmoji}>⏳</Text>
+        <View style={[styles.centerCard, shadow.md]}>
+          <View style={styles.waitingIconWrap}>
+            <PulseCircle color={colors.primary} size={80} />
+            <Clock size={32} color={colors.primary} />
+          </View>
           <Text style={styles.statusTitle}>Recherche d'un médecin...</Text>
           <Text style={styles.statusText}>
             Nous contactons les médecins disponibles dans votre zone.
           </Text>
-          <Pressable onPress={reset} style={{ marginTop: 20 }}>
+          <Pressable onPress={reset} style={styles.cancelLink}>
             <Text style={styles.cancelText}>Annuler la demande</Text>
           </Pressable>
         </View>
       )}
 
+      {/* ACCEPTED */}
       {step === "accepted" && session && (
-        <View style={styles.successCard}>
-          <Text style={styles.bigEmoji}>✓</Text>
-          <Text style={styles.successTitle}>Médecin trouvé !</Text>
-          <View style={styles.doctorInfo}>
-            <Text style={styles.doctorName}>{session.doctor_name}</Text>
-            <Text style={styles.doctorDetail}>📞 {session.doctor_phone}</Text>
-            <Text style={styles.doctorDetail}>📍 {session.doctor_address}</Text>
+        <View style={[styles.successCard, shadow.lg]}>
+          <View style={styles.successIconWrap}>
+            <CheckCircle2 size={56} color={colors.green} />
           </View>
-          <Pressable style={styles.callBtn} onPress={callDoctor}>
-            <Text style={styles.callBtnText}>📞 Appeler maintenant</Text>
-          </Pressable>
-          <Pressable onPress={reset} style={{ marginTop: 12 }}>
+          <Text style={styles.successTitle}>Médecin trouvé !</Text>
+
+          <View style={[styles.doctorCard, shadow.sm]}>
+            <View style={styles.doctorAvatar}>
+              <UserRound size={24} color={colors.primary} />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.doctorName}>{session.doctor_name}</Text>
+              {session.doctor_address && (
+                <View style={styles.doctorMeta}>
+                  <MapPin size={13} color={colors.slate400} />
+                  <Text style={styles.doctorDetail}>{session.doctor_address}</Text>
+                </View>
+              )}
+              {session.doctor_phone && (
+                <View style={styles.doctorMeta}>
+                  <Phone size={13} color={colors.slate400} />
+                  <Text style={styles.doctorDetail}>{session.doctor_phone}</Text>
+                </View>
+              )}
+            </View>
+          </View>
+
+          <Button
+            title="Appeler maintenant"
+            onPress={callDoctor}
+            size="lg"
+            icon={<Phone size={20} color={colors.white} />}
+            style={{ width: "100%", marginTop: spacing.lg, backgroundColor: colors.green }}
+          />
+          <Pressable onPress={reset} style={styles.cancelLink}>
             <Text style={styles.cancelText}>Nouvelle demande</Text>
           </Pressable>
         </View>
       )}
 
+      {/* EXPIRED */}
       {step === "expired" && (
-        <View style={styles.centerCard}>
-          <Text style={styles.bigEmoji}>😞</Text>
+        <View style={[styles.centerCard, shadow.md]}>
+          <XCircle size={56} color={colors.slate400} />
           <Text style={styles.statusTitle}>Aucun médecin disponible</Text>
           <Text style={styles.statusText}>
-            Aucun médecin n'est disponible dans votre zone pour le moment.
-            Réessayez dans quelques minutes.
+            Aucun médecin n'est disponible dans votre zone pour le moment. Réessayez dans quelques minutes.
           </Text>
-          <Pressable style={styles.primaryBtn} onPress={reset}>
-            <Text style={styles.primaryBtnText}>Réessayer</Text>
-          </Pressable>
+          <Button
+            title="Réessayer"
+            onPress={reset}
+            variant="danger"
+            size="lg"
+            style={{ width: "100%", marginTop: spacing.lg }}
+          />
         </View>
       )}
     </ScrollView>
@@ -259,156 +355,147 @@ export default function SOSScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fef2f2" },
-  content: { padding: 16, paddingBottom: 40 },
+  container: { flex: 1, backgroundColor: colors.redFaint },
+  content: { padding: spacing.md, paddingBottom: 40 },
   disclaimer: {
-    backgroundColor: "#fef3c7",
+    flexDirection: "row",
+    gap: 10,
+    backgroundColor: "#FEF3C7",
     borderWidth: 1,
-    borderColor: "#fde68a",
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 16,
+    borderColor: "#FDE68A",
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.md,
   },
-  disclaimerText: { fontSize: 12, color: "#92400e", lineHeight: 18 },
+  disclaimerText: { flex: 1, fontSize: 13, color: "#92400E", lineHeight: 19 },
   bold: { fontWeight: "700" },
   card: {
     backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 20,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
     alignItems: "center",
   },
   centerCard: {
     backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 32,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
     alignItems: "center",
   },
   successCard: {
-    backgroundColor: "#f0fdf4",
-    borderRadius: 16,
-    padding: 24,
+    backgroundColor: colors.greenFaint,
+    borderRadius: radius.xl,
+    padding: spacing.xl,
     alignItems: "center",
     borderWidth: 2,
     borderColor: colors.green,
   },
-  emoji: { fontSize: 56, marginBottom: 12 },
-  bigEmoji: { fontSize: 48, marginBottom: 16 },
-  title: {
-    fontSize: 24,
-    fontWeight: "700",
-    color: colors.ink,
-    marginBottom: 8,
+  introIconWrap: {
+    width: 100,
+    height: 100,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.lg,
   },
-  subtitle: {
-    fontSize: 14,
-    color: colors.slate500,
-    textAlign: "center",
-    marginBottom: 20,
-    lineHeight: 20,
+  sosIcon: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: colors.red,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  formTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.ink,
-    marginBottom: 16,
-    alignSelf: "flex-start",
+  title: { fontSize: 26, fontWeight: "800", color: colors.ink, marginBottom: 8, letterSpacing: -0.3 },
+  subtitle: { fontSize: 15, color: colors.slate500, textAlign: "center", lineHeight: 22, maxWidth: 280 },
+  featureRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: spacing.md,
+    marginTop: spacing.lg,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.md,
+    backgroundColor: colors.bg,
+    borderRadius: radius.lg,
+    width: "100%",
   },
+  featureItem: { flexDirection: "row", alignItems: "center", gap: 6 },
+  featureText: { fontSize: 13, fontWeight: "600", color: colors.ink },
+  featureDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: colors.slate200 },
+  formTitle: { fontSize: 20, fontWeight: "800", color: colors.ink, marginBottom: spacing.md, alignSelf: "flex-start", letterSpacing: -0.3 },
   label: {
     fontSize: 13,
     fontWeight: "600",
-    color: colors.ink,
+    color: colors.slate700,
     alignSelf: "flex-start",
     marginBottom: 6,
-    marginTop: 12,
+    marginTop: spacing.md,
   },
   input: {
     width: "100%",
-    backgroundColor: colors.mist,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: 10,
-    padding: 12,
+    backgroundColor: colors.bg,
+    borderWidth: 1.5,
+    borderColor: colors.slate200,
+    borderRadius: radius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
     fontSize: 15,
     color: colors.ink,
   },
   symptomGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: spacing.sm,
     width: "100%",
   },
   symptomChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
     paddingHorizontal: 14,
-    paddingVertical: 10,
-    backgroundColor: colors.mist,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.border,
+    paddingVertical: 11,
+    backgroundColor: colors.redFaint,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: "transparent",
   },
-  symptomChipActive: { backgroundColor: colors.red, borderColor: colors.red },
-  symptomText: { fontSize: 13, color: colors.ink },
-  symptomTextActive: { color: colors.white, fontWeight: "600" },
-  error: {
-    color: colors.red,
-    fontSize: 13,
-    marginTop: 8,
-    alignSelf: "flex-start",
-  },
-  primaryBtn: {
+  symptomChipActive: {
     backgroundColor: colors.red,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    marginTop: 20,
-    width: "100%",
+    borderColor: colors.red,
+  },
+  symptomText: { fontSize: 13, fontWeight: "500", color: colors.ink },
+  symptomTextActive: { color: colors.white, fontWeight: "700" },
+  error: { color: colors.red, fontSize: 13, fontWeight: "500", marginTop: spacing.sm, alignSelf: "flex-start" },
+  cancelLink: { marginTop: spacing.md, paddingVertical: spacing.sm },
+  cancelText: { color: colors.slate500, fontSize: 14, fontWeight: "500" },
+  waitingIconWrap: {
+    width: 80,
+    height: 80,
     alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.lg,
   },
-  primaryBtnText: { color: colors.white, fontSize: 16, fontWeight: "700" },
-  cancelText: {
-    color: colors.slate500,
-    fontSize: 13,
-    textDecorationLine: "underline",
-  },
-  statusTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    color: colors.ink,
-    marginTop: 12,
-    marginBottom: 8,
-  },
-  statusText: {
-    fontSize: 14,
-    color: colors.slate500,
-    textAlign: "center",
-    lineHeight: 20,
-  },
-  successTitle: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: colors.greenDark,
-    marginBottom: 16,
-  },
-  doctorInfo: {
+  statusTitle: { fontSize: 20, fontWeight: "700", color: colors.ink, marginTop: spacing.sm, marginBottom: 8 },
+  statusText: { fontSize: 14, color: colors.slate500, textAlign: "center", lineHeight: 21 },
+  successIconWrap: { marginBottom: spacing.md },
+  successTitle: { fontSize: 24, fontWeight: "800", color: colors.greenDark, marginBottom: spacing.md, letterSpacing: -0.3 },
+  doctorCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
     backgroundColor: colors.white,
-    borderRadius: 10,
-    padding: 16,
+    borderRadius: radius.lg,
+    padding: spacing.md,
     width: "100%",
-    marginBottom: 16,
   },
-  doctorName: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.ink,
-    marginBottom: 6,
-  },
-  doctorDetail: { fontSize: 14, color: colors.slate500, marginTop: 2 },
-  callBtn: {
-    backgroundColor: colors.green,
-    paddingVertical: 16,
-    paddingHorizontal: 24,
-    borderRadius: 12,
-    width: "100%",
+  doctorAvatar: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.mist,
     alignItems: "center",
+    justifyContent: "center",
   },
-  callBtnText: { color: colors.white, fontSize: 16, fontWeight: "700" },
+  doctorName: { fontSize: 16, fontWeight: "700", color: colors.ink },
+  doctorMeta: { flexDirection: "row", alignItems: "center", gap: 6, marginTop: 3 },
+  doctorDetail: { fontSize: 13, color: colors.slate500 },
 });

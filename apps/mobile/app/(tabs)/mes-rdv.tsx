@@ -1,14 +1,13 @@
-// apps/mobile/app/(tabs)/mes-rdv.tsx
 import { useEffect, useState, useCallback } from "react";
 import { View, Text, FlatList, Pressable, Alert, StyleSheet, RefreshControl } from "react-native";
 import { useRouter } from "expo-router";
+import { Calendar, Video, Clock, MapPin, XCircle, ChevronRight } from "lucide-react-native";
 import { api, ApiError } from "@/lib/api";
-import { colors, spacing, radius } from "@/lib/theme";
+import { colors, spacing, radius, shadow } from "@/lib/theme";
 import { StatusBadge } from "@/components/ui/StatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-
-const PURPLE = "#7C3AED";
+import { Button } from "@/components/ui/Button";
 
 type Appointment = {
   id: string;
@@ -20,13 +19,20 @@ type Appointment = {
   type?: string;
 };
 
-/** Returns true if appointment starts within 15 minutes or is already in progress (up to 60 min after start). */
 function canJoinTeleconsult(startsAt: string): boolean {
   const start = new Date(startsAt).getTime();
   const now = Date.now();
-  const fifteenMin = 15 * 60 * 1000;
-  const sixtyMin = 60 * 60 * 1000;
-  return now >= start - fifteenMin && now <= start + sixtyMin;
+  return now >= start - 15 * 60 * 1000 && now <= start + 60 * 60 * 1000;
+}
+
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+}
+
+function formatTime(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
 }
 
 export default function MesRdvScreen() {
@@ -73,7 +79,7 @@ export default function MesRdvScreen() {
     ]);
   }
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <LoadingSpinner message="Chargement..." />;
 
   const now = new Date();
   const upcoming = appointments.filter((a) => new Date(a.startsAt) >= now && a.status !== "cancelled");
@@ -88,15 +94,21 @@ export default function MesRdvScreen() {
       keyExtractor={(a) => a.id}
       ListEmptyComponent={
         <EmptyState
-          icon="📅"
+          icon={<Calendar size={48} color={colors.primaryLight} />}
           title="Aucun rendez-vous"
-          description="Recherchez un médecin pour prendre votre premier RDV"
-          ctaTitle="Rechercher"
+          description="Recherchez un médecin pour prendre votre premier rendez-vous"
+          ctaTitle="Rechercher un médecin"
           onCta={() => router.push("/(tabs)")}
         />
       }
       ListHeaderComponent={
-        upcoming.length > 0 ? <Text style={styles.section}>À venir</Text> : null
+        upcoming.length > 0 ? (
+          <View style={styles.sectionHeader}>
+            <View style={styles.sectionDot} />
+            <Text style={styles.sectionTitle}>À venir</Text>
+            <Text style={styles.sectionCount}>{upcoming.length}</Text>
+          </View>
+        ) : null
       }
       renderItem={({ item, index }) => {
         const isFirstPast = index === upcoming.length && past.length > 0;
@@ -104,45 +116,72 @@ export default function MesRdvScreen() {
         const canCancel = !isPast && item.status === "pending";
         const isTeleconsult = item.type === "teleconsult";
         const showJoin = isTeleconsult && item.status === "confirmed" && !isPast && canJoinTeleconsult(item.startsAt);
+
         return (
           <>
-            {isFirstPast && <Text style={styles.section}>Passés</Text>}
+            {isFirstPast && (
+              <View style={[styles.sectionHeader, { marginTop: spacing.lg }]}>
+                <View style={[styles.sectionDot, { backgroundColor: colors.slate400 }]} />
+                <Text style={styles.sectionTitle}>Passés</Text>
+                <Text style={styles.sectionCount}>{past.length}</Text>
+              </View>
+            )}
             <Pressable
-              style={[styles.card, isPast && { opacity: 0.6 }]}
+              style={[styles.card, isPast && styles.cardPast, shadow.sm]}
               onPress={() => router.push(`/medecin/${item.doctorSlug}`)}
             >
-              <View style={{ flex: 1 }}>
-                <View style={styles.nameRow}>
-                  <Text style={styles.doctorName}>{item.doctorName}</Text>
-                  {isTeleconsult && (
-                    <View style={styles.videoBadge}>
-                      <Text style={styles.videoBadgeText}>Vidéo</Text>
+              {/* Left accent bar */}
+              <View style={[styles.accentBar, {
+                backgroundColor: isPast ? colors.slate200 : item.status === "confirmed" ? colors.green : colors.primary,
+              }]} />
+
+              <View style={styles.cardContent}>
+                <View style={styles.cardTop}>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.nameRow}>
+                      <Text style={styles.doctorName} numberOfLines={1}>{item.doctorName}</Text>
+                      {isTeleconsult && (
+                        <View style={styles.videoBadge}>
+                          <Video size={11} color={colors.purple} />
+                          <Text style={styles.videoBadgeText}>Vidéo</Text>
+                        </View>
+                      )}
                     </View>
-                  )}
+                    <Text style={styles.specialty}>{item.doctorSpecialty}</Text>
+                  </View>
+                  <StatusBadge status={item.status} />
                 </View>
-                <Text style={styles.detail}>{item.doctorSpecialty}</Text>
-                <Text style={styles.detail}>
-                  {new Date(item.startsAt).toLocaleDateString("fr-FR", {
-                    weekday: "short", day: "numeric", month: "short", hour: "2-digit", minute: "2-digit",
-                  })}
-                </Text>
-                {showJoin && (
-                  <Pressable
-                    style={styles.joinButton}
-                    onPress={() => router.push(`/teleconsult/${item.id}`)}
-                  >
-                    <Text style={styles.joinButtonText}>Rejoindre</Text>
-                  </Pressable>
+
+                <View style={styles.dateRow}>
+                  <Calendar size={14} color={colors.slate400} />
+                  <Text style={styles.dateText}>{formatDate(item.startsAt)}</Text>
+                  <Clock size={14} color={colors.slate400} />
+                  <Text style={styles.dateText}>{formatTime(item.startsAt)}</Text>
+                </View>
+
+                {/* Actions */}
+                {(showJoin || canCancel) && (
+                  <View style={styles.actions}>
+                    {showJoin && (
+                      <Button
+                        title="Rejoindre"
+                        onPress={() => router.push(`/teleconsult/${item.id}`)}
+                        size="sm"
+                        icon={<Video size={14} color={colors.white} />}
+                        style={{ backgroundColor: colors.purple }}
+                      />
+                    )}
+                    {canCancel && (
+                      <Pressable style={styles.cancelBtn} onPress={() => handleCancel(item.id)}>
+                        <XCircle size={14} color={colors.red} />
+                        <Text style={styles.cancelText}>Annuler</Text>
+                      </Pressable>
+                    )}
+                  </View>
                 )}
               </View>
-              <View style={{ alignItems: "flex-end", gap: 8 }}>
-                <StatusBadge status={item.status} />
-                {canCancel && (
-                  <Pressable onPress={() => handleCancel(item.id)}>
-                    <Text style={styles.cancelText}>Annuler</Text>
-                  </Pressable>
-                )}
-              </View>
+
+              <ChevronRight size={18} color={colors.slate200} style={{ alignSelf: "center" }} />
             </Pressable>
           </>
         );
@@ -153,30 +192,67 @@ export default function MesRdvScreen() {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  section: { fontSize: 14, fontWeight: "700", color: colors.slate500, marginTop: spacing.md, marginBottom: spacing.sm, textTransform: "uppercase" },
-  card: {
-    backgroundColor: colors.white, padding: spacing.md, borderRadius: radius.md,
-    flexDirection: "row", alignItems: "center", gap: 12,
-    borderWidth: 1, borderColor: colors.border, marginBottom: spacing.sm,
+  sectionHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginBottom: spacing.sm,
+    paddingVertical: spacing.xs,
   },
-  doctorName: { fontSize: 16, fontWeight: "600", color: colors.ink },
-  detail: { fontSize: 13, color: colors.slate500, marginTop: 2 },
-  cancelText: { fontSize: 12, color: colors.red, fontWeight: "600" },
-  nameRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, flexWrap: "wrap" },
-  videoBadge: {
-    backgroundColor: "#EDE9FE",
+  sectionDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary },
+  sectionTitle: {
+    fontSize: 13,
+    fontWeight: "700",
+    color: colors.slate500,
+    textTransform: "uppercase",
+    letterSpacing: 0.8,
+  },
+  sectionCount: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.slate400,
+    backgroundColor: colors.slate100,
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: radius.full,
   },
-  videoBadgeText: { fontSize: 11, fontWeight: "700", color: PURPLE },
-  joinButton: {
-    marginTop: spacing.sm,
-    backgroundColor: PURPLE,
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: radius.sm,
-    alignSelf: "flex-start",
+  card: {
+    backgroundColor: colors.white,
+    borderRadius: radius.lg,
+    flexDirection: "row",
+    overflow: "hidden",
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  joinButtonText: { fontSize: 13, fontWeight: "700", color: colors.white },
+  cardPast: { opacity: 0.6 },
+  accentBar: { width: 4 },
+  cardContent: { flex: 1, padding: spacing.md },
+  cardTop: { flexDirection: "row", alignItems: "flex-start", gap: spacing.sm },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm, flexWrap: "wrap" },
+  doctorName: { fontSize: 16, fontWeight: "700", color: colors.ink },
+  specialty: { fontSize: 13, color: colors.slate500, marginTop: 2 },
+  videoBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: colors.purpleFaint,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: radius.full,
+  },
+  videoBadgeText: { fontSize: 11, fontWeight: "700", color: colors.purple },
+  dateRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  dateText: { fontSize: 13, color: colors.slate500, fontWeight: "500" },
+  actions: { flexDirection: "row", alignItems: "center", gap: spacing.md, marginTop: spacing.sm },
+  cancelBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingVertical: 4 },
+  cancelText: { fontSize: 13, color: colors.red, fontWeight: "600" },
 });

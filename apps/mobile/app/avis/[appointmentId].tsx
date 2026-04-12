@@ -1,16 +1,11 @@
 import { useState } from "react";
-import { View, Text, ScrollView, StyleSheet, TextInput, Alert, Pressable } from "react-native";
+import { View, Text, ScrollView, StyleSheet, TextInput, Alert } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
+import { CheckCircle2, MessageSquare } from "lucide-react-native";
 import { apiFetch } from "@/lib/api";
-import { colors, spacing, radius } from "@/lib/theme";
-import { trackEvent } from "@/lib/analytics";
+import { colors, spacing, radius, shadow } from "@/lib/theme";
 import { Button } from "@/components/ui/Button";
-
-type ReviewPayload = {
-  appointmentId: string;
-  rating: number;
-  comment: string;
-};
+import { StarRating } from "@/components/ui/StarRating";
 
 export default function AvisScreen() {
   const { appointmentId } = useLocalSearchParams<{ appointmentId: string }>();
@@ -27,12 +22,10 @@ export default function AvisScreen() {
     }
     setSubmitting(true);
     try {
-      const payload: ReviewPayload = { appointmentId, rating, comment };
       await apiFetch("/api/reviews", {
         method: "POST",
-        body: JSON.stringify(payload),
+        body: JSON.stringify({ appointmentId, rating, comment }),
       });
-      trackEvent("review_submit", { appointmentId, rating });
       setSubmitted(true);
     } catch (e: any) {
       Alert.alert("Erreur", e.message || "Impossible de soumettre l'avis.");
@@ -44,15 +37,18 @@ export default function AvisScreen() {
   if (submitted) {
     return (
       <View style={styles.successContainer}>
-        <Text style={styles.successIcon}>✓</Text>
+        <View style={[styles.successIconWrap, shadow.lg]}>
+          <CheckCircle2 size={56} color={colors.green} />
+        </View>
         <Text style={styles.successTitle}>Merci pour votre avis !</Text>
         <Text style={styles.successSubtitle}>
-          Votre retour nous aide à améliorer nos services.
+          Votre retour aide les autres patients à choisir leur médecin.
         </Text>
         <Button
           title="Retour à l'accueil"
           onPress={() => router.replace("/(tabs)")}
-          style={styles.successBtn}
+          size="lg"
+          style={{ width: "100%" }}
         />
       </View>
     );
@@ -61,21 +57,27 @@ export default function AvisScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.heading}>Donner un avis</Text>
-      <Text style={styles.subtitle}>
-        Comment s'est passée votre consultation ?
-      </Text>
+      <Text style={styles.subtitle}>Comment s'est passée votre consultation ?</Text>
 
-      <View style={styles.card}>
+      <View style={[styles.card, shadow.sm]}>
         <Text style={styles.label}>Votre note</Text>
-        <StarRating value={rating} onChange={setRating} />
+        <View style={styles.starWrap}>
+          <StarRating rating={rating} size={36} interactive onChange={setRating} />
+        </View>
+        <Text style={styles.ratingHint}>
+          {rating === 0 ? "Appuyez sur une étoile" : ["", "Décevant", "Moyen", "Bien", "Très bien", "Excellent"][rating]}
+        </Text>
       </View>
 
-      <View style={styles.card}>
-        <Text style={styles.label}>Commentaire (optionnel)</Text>
+      <View style={[styles.card, shadow.sm]}>
+        <View style={styles.cardHeader}>
+          <MessageSquare size={16} color={colors.slate500} />
+          <Text style={styles.label}>Commentaire (optionnel)</Text>
+        </View>
         <TextInput
           style={styles.textarea}
           placeholder="Partagez votre expérience..."
-          placeholderTextColor={colors.slate500}
+          placeholderTextColor={colors.slate400}
           value={comment}
           onChangeText={setComment}
           multiline
@@ -89,80 +91,74 @@ export default function AvisScreen() {
         onPress={handleSubmit}
         loading={submitting}
         disabled={rating === 0}
+        size="lg"
       />
     </ScrollView>
   );
 }
 
-function StarRating({ value, onChange }: { value: number; onChange: (v: number) => void }) {
-  return (
-    <View style={starStyles.row}>
-      {[1, 2, 3, 4, 5].map((star) => (
-        <Pressable key={star} onPress={() => onChange(star)} hitSlop={8}>
-          <Text style={[starStyles.star, star <= value && starStyles.starActive]}>
-            ★
-          </Text>
-        </Pressable>
-      ))}
-    </View>
-  );
-}
-
-const starStyles = StyleSheet.create({
-  row: { flexDirection: "row", gap: 8, marginTop: spacing.sm },
-  star: { fontSize: 36, color: colors.slate200 },
-  starActive: { color: "#F59E0B" },
-});
-
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
-  heading: { fontSize: 22, fontWeight: "700", color: colors.ink, marginBottom: 4 },
-  subtitle: { fontSize: 14, color: colors.slate500, marginBottom: spacing.md },
+  content: { padding: spacing.md, paddingBottom: spacing.xxl },
+  heading: { fontSize: 24, fontWeight: "800", color: colors.ink, letterSpacing: -0.3 },
+  subtitle: { fontSize: 15, color: colors.slate500, marginTop: 4, marginBottom: spacing.lg },
   card: {
     backgroundColor: colors.white,
-    borderRadius: radius.md,
+    borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: spacing.md,
+    padding: spacing.lg,
     marginBottom: spacing.md,
   },
-  label: { fontSize: 13, fontWeight: "600", color: colors.ink },
+  cardHeader: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: spacing.sm },
+  label: { fontSize: 14, fontWeight: "700", color: colors.ink },
+  starWrap: { alignItems: "center", paddingVertical: spacing.md },
+  ratingHint: {
+    fontSize: 14,
+    color: colors.slate500,
+    textAlign: "center",
+    fontWeight: "500",
+  },
   textarea: {
     backgroundColor: colors.bg,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: colors.slate200,
-    borderRadius: radius.sm,
-    padding: 12,
+    borderRadius: radius.md,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
     fontSize: 15,
     color: colors.ink,
-    marginTop: spacing.sm,
     minHeight: 120,
   },
   successContainer: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.white,
     alignItems: "center",
     justifyContent: "center",
     padding: spacing.xl,
   },
-  successIcon: {
-    fontSize: 64,
-    color: colors.green,
-    marginBottom: spacing.md,
+  successIconWrap: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: colors.greenFaint,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: spacing.lg,
   },
   successTitle: {
     fontSize: 24,
-    fontWeight: "700",
+    fontWeight: "800",
     color: colors.ink,
-    marginBottom: spacing.sm,
     textAlign: "center",
+    letterSpacing: -0.3,
   },
   successSubtitle: {
     fontSize: 15,
     color: colors.slate500,
     textAlign: "center",
+    marginTop: spacing.sm,
     marginBottom: spacing.xl,
+    lineHeight: 22,
   },
-  successBtn: { width: "100%" },
 });

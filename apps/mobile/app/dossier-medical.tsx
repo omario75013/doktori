@@ -8,14 +8,18 @@ import {
   Pressable,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { Heart, Pill, AlertTriangle, FileText, Calendar, Droplets, Users, Save } from "lucide-react-native";
 import { apiFetch } from "@/lib/api";
-import { colors, spacing, radius } from "@/lib/theme";
+import { colors, spacing, radius, shadow } from "@/lib/theme";
 import { Button } from "@/components/ui/Button";
 import { Input } from "@/components/ui/Input";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 const BLOOD_GROUPS = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
-const GENRES = ["Homme", "Femme"];
+const GENRES = [
+  { id: "Homme", label: "Homme", icon: "♂" },
+  { id: "Femme", label: "Femme", icon: "♀" },
+];
 
 type Profile = {
   allergies?: string;
@@ -67,15 +71,22 @@ export default function DossierMedicalScreen() {
     }
   }
 
-  if (loading) return <LoadingSpinner />;
+  if (loading) return <LoadingSpinner message="Chargement du dossier..." />;
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.heading}>Mon dossier médical</Text>
+      <View style={styles.headerRow}>
+        <Heart size={24} color={colors.primary} />
+        <Text style={styles.heading}>Mon dossier médical</Text>
+      </View>
+      <Text style={styles.subheading}>
+        Ces informations aident votre médecin à mieux vous soigner
+      </Text>
 
-      <View style={styles.section}>
+      {/* Medical info */}
+      <View style={[styles.section, shadow.sm]}>
+        <SectionTitle icon={<AlertTriangle size={16} color={colors.red} />} title="Allergies" />
         <Input
-          label="Allergies"
           value={profile.allergies ?? ""}
           onChangeText={(v) => update("allergies", v)}
           placeholder="Ex: pénicilline, arachides..."
@@ -84,8 +95,8 @@ export default function DossierMedicalScreen() {
           style={styles.multiline}
         />
 
+        <SectionTitle icon={<Heart size={16} color={colors.primary} />} title="Maladies chroniques" />
         <Input
-          label="Maladies chroniques"
           value={profile.chronicDiseases ?? ""}
           onChangeText={(v) => update("chronicDiseases", v)}
           placeholder="Ex: diabète, hypertension..."
@@ -94,8 +105,8 @@ export default function DossierMedicalScreen() {
           style={styles.multiline}
         />
 
+        <SectionTitle icon={<Pill size={16} color={colors.green} />} title="Médicaments en cours" />
         <Input
-          label="Médicaments en cours"
           value={profile.currentMedications ?? ""}
           onChangeText={(v) => update("currentMedications", v)}
           placeholder="Ex: metformine 500mg..."
@@ -104,8 +115,8 @@ export default function DossierMedicalScreen() {
           style={styles.multiline}
         />
 
+        <SectionTitle icon={<FileText size={16} color={colors.slate500} />} title="Notes" />
         <Input
-          label="Notes"
           value={profile.notes ?? ""}
           onChangeText={(v) => update("notes", v)}
           placeholder="Informations supplémentaires..."
@@ -113,18 +124,20 @@ export default function DossierMedicalScreen() {
           numberOfLines={3}
           style={styles.multiline}
         />
+      </View>
 
+      {/* Personal info */}
+      <View style={[styles.section, shadow.sm]}>
+        <SectionTitle icon={<Calendar size={16} color={colors.primary} />} title="Date de naissance" />
         <Input
-          label="Date de naissance (AAAA-MM-JJ)"
           value={profile.birthDate ?? ""}
           onChangeText={(v) => update("birthDate", v)}
           placeholder="1990-01-31"
           keyboardType="numeric"
+          hint="Format: AAAA-MM-JJ"
         />
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.pickerLabel}>Groupe sanguin</Text>
+        <SectionTitle icon={<Droplets size={16} color={colors.red} />} title="Groupe sanguin" />
         <View style={styles.chipRow}>
           {BLOOD_GROUPS.map((g) => (
             <Pressable
@@ -138,19 +151,18 @@ export default function DossierMedicalScreen() {
             </Pressable>
           ))}
         </View>
-      </View>
 
-      <View style={styles.section}>
-        <Text style={styles.pickerLabel}>Genre</Text>
-        <View style={styles.chipRow}>
+        <SectionTitle icon={<Users size={16} color={colors.primary} />} title="Genre" />
+        <View style={styles.genderRow}>
           {GENRES.map((g) => (
             <Pressable
-              key={g}
-              onPress={() => update("gender", g)}
-              style={[styles.chip, profile.gender === g && styles.chipActive]}
+              key={g.id}
+              onPress={() => update("gender", g.id)}
+              style={[styles.genderChip, profile.gender === g.id && styles.genderChipActive]}
             >
-              <Text style={[styles.chipText, profile.gender === g && styles.chipTextActive]}>
-                {g}
+              <Text style={styles.genderIcon}>{g.icon}</Text>
+              <Text style={[styles.genderText, profile.gender === g.id && styles.genderTextActive]}>
+                {g.label}
               </Text>
             </Pressable>
           ))}
@@ -161,47 +173,73 @@ export default function DossierMedicalScreen() {
         title="Enregistrer"
         onPress={handleSave}
         loading={saving}
-        style={styles.saveBtn}
+        size="lg"
+        icon={<Save size={18} color={colors.white} />}
+        style={{ marginTop: spacing.sm }}
       />
     </ScrollView>
   );
 }
 
+function SectionTitle({ icon, title }: { icon: React.ReactNode; title: string }) {
+  return (
+    <View style={styles.sectionTitle}>
+      {icon}
+      <Text style={styles.sectionTitleText}>{title}</Text>
+    </View>
+  );
+}
+
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.bg },
-  content: { padding: spacing.md, paddingBottom: spacing.xl * 2 },
-  heading: {
-    fontSize: 22,
-    fontWeight: "700",
-    color: colors.ink,
-    marginBottom: spacing.md,
-  },
+  content: { padding: spacing.md, paddingBottom: spacing.xxl },
+  headerRow: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  heading: { fontSize: 24, fontWeight: "800", color: colors.ink, letterSpacing: -0.3 },
+  subheading: { fontSize: 14, color: colors.slate500, marginTop: 4, marginBottom: spacing.lg, lineHeight: 20 },
   section: {
     backgroundColor: colors.white,
-    borderRadius: radius.md,
+    borderRadius: radius.xl,
     borderWidth: 1,
     borderColor: colors.border,
-    padding: spacing.md,
+    padding: spacing.lg,
     marginBottom: spacing.md,
   },
-  multiline: { height: 80, textAlignVertical: "top" },
-  pickerLabel: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: colors.ink,
-    marginBottom: spacing.sm,
+  sectionTitle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginTop: spacing.md,
+    marginBottom: -spacing.xs,
   },
-  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  sectionTitleText: { fontSize: 14, fontWeight: "700", color: colors.ink },
+  multiline: { height: 80, textAlignVertical: "top" },
+  chipRow: { flexDirection: "row", flexWrap: "wrap", gap: 8, marginTop: spacing.sm },
   chip: {
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    backgroundColor: colors.mist,
-    borderRadius: radius.sm,
-    borderWidth: 1,
-    borderColor: colors.border,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    backgroundColor: colors.bg,
+    borderRadius: radius.md,
+    borderWidth: 1.5,
+    borderColor: colors.slate200,
   },
   chipActive: { backgroundColor: colors.primary, borderColor: colors.primary },
-  chipText: { fontSize: 14, color: colors.slate500 },
-  chipTextActive: { color: colors.white, fontWeight: "600" },
-  saveBtn: { marginTop: spacing.sm },
+  chipText: { fontSize: 14, fontWeight: "600", color: colors.slate500 },
+  chipTextActive: { color: colors.white },
+  genderRow: { flexDirection: "row", gap: spacing.sm, marginTop: spacing.sm },
+  genderChip: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    paddingVertical: 14,
+    backgroundColor: colors.bg,
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    borderColor: colors.slate200,
+  },
+  genderChipActive: { backgroundColor: colors.primaryFaint, borderColor: colors.primary },
+  genderIcon: { fontSize: 20 },
+  genderText: { fontSize: 15, fontWeight: "600", color: colors.slate500 },
+  genderTextActive: { color: colors.primary },
 });
