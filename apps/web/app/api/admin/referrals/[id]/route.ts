@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
-import { eq } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, referrals } from "@doktori/db";
+import { db, referrals, subscriptions } from "@doktori/db";
 
 export async function PATCH(
   req: Request,
@@ -35,7 +36,44 @@ export async function PATCH(
     updates.validatedAt = new Date();
   }
 
-  // TODO: when status === "rewarded", trigger subscription extension for referrer
+  // When rewarded: extend the referrer's active subscription by 1 month
+  // or create a 1-month premium subscription if none exists
+  if (status === "rewarded") {
+    const [activeSub] = await db
+      .select({ id: subscriptions.id })
+      .from(subscriptions)
+      .where(
+        and(
+          eq(subscriptions.doctorId, existing.referrerId),
+          eq(subscriptions.status, "active"),
+        ),
+      )
+      .limit(1);
+
+    if (activeSub) {
+      await db.execute(sql`
+        UPDATE subscriptions
+        SET ends_at = ends_at + INTERVAL '1 month',
+            updated_at = now()
+        WHERE id = ${activeSub.id}
+      `);
+    } else {
+      const now = new Date();
+      const endsAt = new Date(now);
+      endsAt.setMonth(endsAt.getMonth() + 1);
+      await db.insert(subscriptions).values({
+        doctorId: existing.referrerId,
+        plan: "premium",
+        status: "active",
+        priceMillimes: 0,
+        billingCycle: "monthly",
+        paymentProvider: "manual",
+        externalRef: `referral-reward-${id}`,
+        startsAt: now,
+        endsAt,
+      });
+    }
+  }
 
   const [updated] = await db
     .update(referrals)
