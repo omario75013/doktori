@@ -151,19 +151,31 @@ export default function DoctorScreen() {
             {reviews.length === 0 ? (
               <Text style={styles.emptyText}>Aucun avis pour le moment</Text>
             ) : (
-              reviews.slice(0, 5).map((r: any) => (
-                <View key={r.id} style={styles.reviewCard}>
-                  <View style={{ flexDirection: "row", gap: 2 }}>
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <Text key={i} style={{ color: i < r.rating ? "#F59E0B" : "#D1D5DB", fontSize: 16 }}>★</Text>
-                    ))}
+              <>
+                {reviews.slice(0, 3).map((r: any) => (
+                  <View key={r.id} style={styles.reviewCard}>
+                    <View style={{ flexDirection: "row", gap: 2 }}>
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <Text key={i} style={{ color: i < r.rating ? "#F59E0B" : "#D1D5DB", fontSize: 16 }}>★</Text>
+                      ))}
+                    </View>
+                    {r.comment && <Text style={styles.reviewText}>{r.comment}</Text>}
+                    <Text style={styles.reviewDate}>
+                      {new Date(r.createdAt).toLocaleDateString("fr-FR")}
+                    </Text>
                   </View>
-                  {r.comment && <Text style={styles.reviewText}>{r.comment}</Text>}
-                  <Text style={styles.reviewDate}>
-                    {new Date(r.createdAt).toLocaleDateString("fr-FR")}
-                  </Text>
-                </View>
-              ))
+                ))}
+                {reviews.length > 3 && (
+                  <Pressable
+                    style={styles.seeAllReviews}
+                    onPress={() => router.push(`/medecin/${slug}/avis`)}
+                  >
+                    <Text style={styles.seeAllReviewsText}>
+                      Voir tous les avis ({reviews.length}) →
+                    </Text>
+                  </Pressable>
+                )}
+              </>
             )}
           </View>
         </ScrollView>
@@ -210,5 +222,11 @@ const styles = StyleSheet.create({
   reviewText: { fontSize: 14, color: colors.ink, marginTop: 4, lineHeight: 20 },
   reviewDate: { fontSize: 12, color: colors.slate500, marginTop: 4 },
   emptyText: { fontSize: 14, color: colors.slate500 },
+  seeAllReviews: {
+    paddingVertical: spacing.sm,
+    alignItems: "center",
+    marginTop: spacing.xs,
+  },
+  seeAllReviewsText: { fontSize: 14, fontWeight: "600", color: colors.primary },
   stickyCta: { position: "absolute", bottom: 0, left: 0, right: 0, backgroundColor: colors.white, padding: spacing.md, borderTopWidth: 1, borderTopColor: colors.border },
 });
