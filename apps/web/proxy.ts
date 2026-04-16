@@ -21,8 +21,13 @@ const DOCTOR_ROUTES = [
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
-  // /admin-login is public — the login form itself
+  // /admin-login is public — but bounce already-auth'd admins to /admin
   if (pathname === "/admin-login") {
+    const session = await auth();
+    const role = (session?.user as { role?: string } | undefined)?.role;
+    if (role === "admin") {
+      return NextResponse.redirect(new URL("/admin", req.url));
+    }
     return NextResponse.next();
   }
 
