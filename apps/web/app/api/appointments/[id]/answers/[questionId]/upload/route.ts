@@ -1,8 +1,10 @@
-import { NextResponse } from "next/server";
-import { db, appointmentAnswers } from "@doktori/db";
+import { NextRequest, NextResponse } from "next/server";
+import { db, appointmentAnswers, appointments } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 import { uploadToR2 } from "@/lib/r2";
 import { randomUUID } from "crypto";
+import { auth } from "@/lib/auth";
+import { getPatientFromRequest } from "@/lib/patient-auth";
 
 const MAX_SIZE = 5 * 1024 * 1024; // 5MB
 const ALLOWED_TYPES = new Set([
@@ -11,6 +13,12 @@ const ALLOWED_TYPES = new Set([
   "image/webp",
   "application/pdf",
 ]);
+const EXT_BY_MIME: Record<string, string> = {
+  "image/jpeg": "jpg",
+  "image/png": "png",
+  "image/webp": "webp",
+  "application/pdf": "pdf",
+};
 
 /**
  * POST /api/appointments/[id]/answers/[questionId]/upload
@@ -18,10 +26,36 @@ const ALLOWED_TYPES = new Set([
  * Stores the file in R2 and updates the answer's fileUrl.
  */
 export async function POST(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string; questionId: string }> },
 ) {
   const { id: appointmentId, questionId } = await params;
+
+  const session = await auth();
+  const patient = getPatientFromRequest(req);
+  const doctorId = session?.user?.id ?? null;
+  const patientId = patient?.id ?? null;
+  if (!doctorId && !patientId) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
+  const [appt] = await db
+    .select({ doctorId: appointments.doctorId, patientId: appointments.patientId })
+    .from(appointments)
+    .where(eq(appointments.id, appointmentId))
+    .limit(1);
+
+  if (!appt) {
+    return NextResponse.json({ error: "Rendez-vous introuvable" }, { status: 404 });
+  }
+
+  const isParticipant =
+    (doctorId && appt.doctorId === doctorId) ||
+    (patientId && appt.patientId === patientId);
+
+  if (!isParticipant) {
+    return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+  }
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
@@ -61,7 +95,7 @@ export async function POST(
   }
 
   try {
-    const ext = file.name.split(".").pop() || "bin";
+    const ext = EXT_BY_MIME[file.type] ?? "bin";
     const key = `answers/${appointmentId}/${questionId}/${randomUUID()}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
 
