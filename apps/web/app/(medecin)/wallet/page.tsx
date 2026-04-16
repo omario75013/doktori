@@ -18,7 +18,7 @@ export default async function WalletPage() {
     ),
     db.execute(
       sql`
-        SELECT id, type, amount_millimes AS "amountMillimes", description, created_at AS "createdAt"
+        SELECT id, type, amount AS "amountMillimes", description, created_at AS "createdAt"
         FROM wallet_transactions
         WHERE doctor_id = ${doctorId}
         ORDER BY created_at DESC
@@ -28,9 +28,9 @@ export default async function WalletPage() {
     db.execute(
       sql`
         SELECT
-          COALESCE(SUM(amount_millimes) FILTER (WHERE type = 'credit'), 0)     AS total_earned,
-          COALESCE(SUM(amount_millimes) FILTER (WHERE type = 'commission'), 0)  AS total_commission,
-          COALESCE(SUM(amount_millimes) FILTER (WHERE type = 'withdrawal'), 0)  AS total_withdrawn
+          COALESCE(SUM(amount) FILTER (WHERE type = 'credit'), 0)     AS total_earned,
+          COALESCE(SUM(amount) FILTER (WHERE type = 'commission'), 0)  AS total_commission,
+          COALESCE(SUM(amount) FILTER (WHERE type = 'withdrawal'), 0)  AS total_withdrawn
         FROM wallet_transactions
         WHERE doctor_id = ${doctorId}
       `

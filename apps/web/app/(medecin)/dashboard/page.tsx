@@ -80,7 +80,7 @@ export default async function DashboardPage() {
       sql`SELECT consultation_mode FROM doctors WHERE id = ${doctorId} LIMIT 1`
     ),
     db.execute(
-      sql`SELECT COUNT(*) AS count FROM appointments WHERE doctor_id = ${doctorId} AND type = 'teleconsult' AND starts_at >= ${monthStart}`
+      sql`SELECT COUNT(*) AS count FROM appointments WHERE doctor_id = ${doctorId} AND type = 'teleconsult' AND starts_at >= ${monthStart.toISOString()}`
     ),
     db.execute(
       sql`SELECT balance FROM doctor_wallets WHERE doctor_id = ${doctorId} LIMIT 1`
