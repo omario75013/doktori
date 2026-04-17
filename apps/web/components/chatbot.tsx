@@ -292,14 +292,24 @@ function MessageBubble({ message, onSend }: { message: Message; onSend: (text: s
         {/* Doctor chips */}
         {!isUser && metadata?.type === "doctor_list" && Array.isArray(metadata.data?.doctors) && metadata.data.doctors.length > 0 && (
           <div className="flex flex-wrap gap-2 mt-2">
-            {metadata.data.doctors.map((d: { id: string; name: string }) => (
-              <button
-                key={d.id}
-                onClick={() => onSend(`Je choisis ${d.name}`)}
-                className="px-3 py-1.5 rounded-full border border-teal-200 bg-teal-50 text-xs font-medium text-teal-700 hover:bg-teal-100 transition-colors"
-              >
-                {d.name}
-              </button>
+            {metadata.data.doctors.map((d: { id: string; name: string; slug?: string }) => (
+              d.slug ? (
+                <a
+                  key={d.id}
+                  href={`/rdv/${d.slug}`}
+                  className="inline-flex items-center gap-1 rounded-full bg-[#0891B2] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#0E7490] transition-colors"
+                >
+                  Réserver avec {d.name}
+                </a>
+              ) : (
+                <button
+                  key={d.id}
+                  onClick={() => onSend(`Je choisis ${d.name}`)}
+                  className="px-3 py-1.5 rounded-full border border-teal-200 bg-teal-50 text-xs font-medium text-teal-700 hover:bg-teal-100 transition-colors"
+                >
+                  {d.name}
+                </button>
+              )
             ))}
           </div>
         )}

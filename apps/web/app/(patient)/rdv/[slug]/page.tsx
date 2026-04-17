@@ -85,7 +85,9 @@ export default function RdvPage({
   const [beneficiaryName, setBeneficiaryName] = useState("");
   const [beneficiaryDob, setBeneficiaryDob] = useState("");
   const [beneficiaryRelation, setBeneficiaryRelation] = useState<"child" | "parent" | "spouse" | "other">("child");
+  const [fileUploads, setFileUploads] = useState<Map<string, File>>(new Map());
   const [submitting, setSubmitting] = useState(false);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [questionError, setQuestionError] = useState<string | null>(null);
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
@@ -215,7 +217,30 @@ export default function RdvPage({
       }
 
       const data = await res.json();
-      setAppointmentId(data.id as string);
+      const newAppointmentId = data.id as string;
+      setAppointmentId(newAppointmentId);
+
+      // Upload queued files if any
+      if (fileUploads.size > 0) {
+        setSubmitting(false);
+        setUploadingFiles(true);
+        try {
+          await Promise.all(
+            Array.from(fileUploads.entries()).map(async ([questionId, file]) => {
+              const formData = new FormData();
+              formData.append("file", file);
+              await fetch(
+                `/api/appointments/${newAppointmentId}/answers/${questionId}/upload`,
+                { method: "POST", body: formData }
+              );
+            })
+          );
+        } catch {
+          // Non-blocking: files failed to upload but appointment was created
+        } finally {
+          setUploadingFiles(false);
+        }
+      }
 
       // Teleconsult with mandatory payment: redirect immediately to Flouci
       if (data.paymentRequired && data.paymentUrl) {
@@ -613,22 +638,62 @@ export default function RdvPage({
                     )}
 
                     {q.kind === "file" && (
-                      <div className="space-y-1">
-                        {/* TODO: actual file upload requires R2 wiring (follow-up task).
-                            For now we capture the filename in the answer value. */}
+                      <div className="space-y-2">
+                        <label
+                          htmlFor={`file-${q.id}`}
+                          className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-5 cursor-pointer transition-colors ${
+                            value
+                              ? "border-[#0891B2] bg-[#F0FDFA]"
+                              : "border-[#E6F4F1] bg-white hover:border-[#0891B2] hover:bg-[#F0FDFA]/40"
+                          }`}
+                        >
+                          {value ? (
+                            <>
+                              <svg className="h-6 w-6 text-[#0891B2]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                              </svg>
+                              <span className="text-sm font-semibold text-[#0891B2]">{value}</span>
+                              <span className="text-xs text-[#134E4A]/50">
+                                {fileUploads.get(q.id)
+                                  ? `${(fileUploads.get(q.id)!.size / 1024 / 1024).toFixed(2)} Mo`
+                                  : ""}
+                              </span>
+                              <span className="text-xs text-[#0891B2] underline underline-offset-2">Changer le fichier</span>
+                            </>
+                          ) : (
+                            <>
+                              <svg className="h-6 w-6 text-[#134E4A]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
+                              </svg>
+                              <span className="text-sm font-semibold text-[#134E4A]/60">
+                                Cliquez pour choisir un fichier
+                              </span>
+                              <span className="text-xs text-[#134E4A]/40">PDF, JPG, PNG · 5 Mo max</span>
+                            </>
+                          )}
+                        </label>
                         <input
+                          id={`file-${q.id}`}
                           type="file"
+                          accept="image/jpeg,image/png,application/pdf"
+                          className="sr-only"
                           onChange={(e) => {
                             const file = e.target.files?.[0];
-                            if (file) setAnswer(file.name);
+                            if (!file) return;
+                            if (file.size > 5 * 1024 * 1024) {
+                              setQuestionError(`Le fichier "${file.name}" dépasse la limite de 5 Mo.`);
+                              return;
+                            }
+                            setFileUploads((prev) => {
+                              const next = new Map(prev);
+                              next.set(q.id, file);
+                              return next;
+                            });
+                            setAnswer(file.name);
                           }}
-                          className="block w-full text-sm text-[#134E4A] file:mr-3 file:rounded-lg file:border-0 file:bg-[#F0FDFA] file:px-3 file:py-1.5 file:text-xs file:font-semibold file:text-[#0891B2] hover:file:bg-[#E6F4F1]"
                         />
-                        {value && (
-                          <p className="text-xs text-[#134E4A]/50">Fichier sélectionné : {value}</p>
-                        )}
                         <p className="text-xs text-[#134E4A]/40">
-                          (Le fichier sera partagé avec le médecin — fonctionnalité en cours de déploiement)
+                          Le fichier sera partagé avec le médecin après confirmation du rendez-vous.
                         </p>
                       </div>
                     )}
@@ -809,8 +874,10 @@ export default function RdvPage({
                 </p>
               )}
 
-              <Button type="submit" disabled={submitting} className="w-full">
-                {submitting
+              <Button type="submit" disabled={submitting || uploadingFiles} className="w-full">
+                {uploadingFiles
+                  ? "Téléversement des documents..."
+                  : submitting
                   ? "Réservation en cours..."
                   : "Confirmer le rendez-vous"}
               </Button>
