@@ -3,33 +3,35 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
-
-const links = [
-  { href: "/dashboard", label: "Tableau de bord" },
-  { href: "/agenda", label: "Agenda" },
-  { href: "/rendez-vous", label: "Rendez-vous" },
-  { href: "/patients", label: "Mes patients" },
-  { href: "/motifs", label: "Motifs" },
-  { href: "/cabinets", label: "Cabinets" },
-  { href: "/domicile", label: "Visites à domicile" },
-  { href: "/conventions", label: "Conventions" },
-  { href: "/cnam", label: "CNAM" },
-  { href: "/sos-medecin", label: "SOS Docteur" },
-  { href: "/stats", label: "Statistiques" },
-  { href: "/secretaires", label: "Secrétaires" },
-  { href: "/parrainage", label: "Parrainage" },
-  { href: "/abonnement", label: "Abonnement" },
-  { href: "/teleconsultation", label: "Téléconsultation" },
-  { href: "/messages", label: "Messages" },
-  { href: "/messagerie", label: "Messagerie" },
-  { href: "/wallet", label: "Portefeuille" },
-  { href: "/profil", label: "Mon profil" },
-];
+import { useTranslations } from "next-intl";
 
 export function SidebarNav({ userName }: { userName?: string | null }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const t = useTranslations("medecin.nav");
+
+  const links = [
+    { href: "/dashboard", label: t("dashboard") },
+    { href: "/agenda", label: t("agenda") },
+    { href: "/rendez-vous", label: t("rendezVous") },
+    { href: "/patients", label: t("patients") },
+    { href: "/motifs", label: t("motifs") },
+    { href: "/cabinets", label: t("cabinets") },
+    { href: "/domicile", label: t("domicile") },
+    { href: "/conventions", label: t("conventions") },
+    { href: "/cnam", label: t("cnam") },
+    { href: "/sos-medecin", label: t("sos") },
+    { href: "/stats", label: t("stats") },
+    { href: "/secretaires", label: t("secretaires") },
+    { href: "/parrainage", label: t("parrainage") },
+    { href: "/abonnement", label: t("abonnement") },
+    { href: "/teleconsultation", label: t("teleconsultation") },
+    { href: "/messages", label: t("messages") },
+    { href: "/messagerie", label: t("messagerie") },
+    { href: "/wallet", label: t("wallet") },
+    { href: "/profil", label: t("profil") },
+  ];
 
   useEffect(() => {
     async function fetchUnread() {
@@ -52,7 +54,7 @@ export function SidebarNav({ userName }: { userName?: string | null }) {
       <button
         onClick={() => setOpen(!open)}
         className="md:hidden fixed top-4 left-4 z-50 bg-gray-900 text-white p-2 rounded-lg"
-        aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+        aria-label={open ? t("closeMenu") : t("openMenu")}
       >
         {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>

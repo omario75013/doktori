@@ -3,12 +3,15 @@ import { redirect } from "next/navigation";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 import { WalletClient } from "./wallet-client";
+import { getLocale, getTranslations } from "next-intl/server";
 
 const PAGE_SIZE = 50;
 
 export default async function WalletPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: "medecin.wallet" });
 
   const doctorId = session.user.id;
 
@@ -61,9 +64,9 @@ export default async function WalletPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Portefeuille</h1>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Consultez vos revenus de téléconsultation et gérez vos retraits.
+          {t("subtitle")}
         </p>
       </div>
 

@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CalendarDays, Sun, Sunset, Clock, CheckCircle2, AlertCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type DaySchedule = {
   dayOfWeek: number;
@@ -22,16 +23,6 @@ type DaySchedule = {
   afternoonStart: string;
   afternoonEnd: string;
   slotDuration: number;
-};
-
-const DAY_LABELS: Record<number, string> = {
-  1: "Lundi",
-  2: "Mardi",
-  3: "Mercredi",
-  4: "Jeudi",
-  5: "Vendredi",
-  6: "Samedi",
-  0: "Dimanche",
 };
 
 // Display order: Mon–Sun
@@ -94,6 +85,18 @@ const timeInputClass =
   "w-28 h-10 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] text-sm";
 
 export default function AgendaPage() {
+  const t = useTranslations("medecin.agenda");
+
+  const DAY_LABELS: Record<number, string> = {
+    1: t("days.1"),
+    2: t("days.2"),
+    3: t("days.3"),
+    4: t("days.4"),
+    5: t("days.5"),
+    6: t("days.6"),
+    0: t("days.0"),
+  };
+
   const [days, setDays] = useState<DaySchedule[]>(buildDefaultDays());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -105,16 +108,17 @@ export default function AgendaPage() {
     async function fetchSchedule() {
       try {
         const res = await fetch("/api/schedules");
-        if (!res.ok) throw new Error("Erreur lors du chargement");
+        if (!res.ok) throw new Error(t("loadError"));
         const data: ApiSlot[] = await res.json();
         setDays((prev) => mergeApiSlots(prev, data));
       } catch {
-        setFeedback({ type: "error", message: "Impossible de charger l'agenda." });
+        setFeedback({ type: "error", message: t("loadError") });
       } finally {
         setLoading(false);
       }
     }
     fetchSchedule();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function updateDay(dayOfWeek: number, patch: Partial<DaySchedule>) {
@@ -141,7 +145,7 @@ export default function AgendaPage() {
         if (day.morningStart >= day.morningEnd) {
           setFeedback({
             type: "error",
-            message: `${DAY_LABELS[day.dayOfWeek]} : l'heure de fin du matin doit être après l'heure de début.`,
+            message: `${DAY_LABELS[day.dayOfWeek]} : ${t("morningEndError")}`,
           });
           setSaving(false);
           return;
@@ -158,7 +162,7 @@ export default function AgendaPage() {
         if (day.afternoonStart >= day.afternoonEnd) {
           setFeedback({
             type: "error",
-            message: `${DAY_LABELS[day.dayOfWeek]} : l'heure de fin de l'après-midi doit être après l'heure de début.`,
+            message: `${DAY_LABELS[day.dayOfWeek]} : ${t("afternoonEndError")}`,
           });
           setSaving(false);
           return;
@@ -185,11 +189,11 @@ export default function AgendaPage() {
         throw new Error(err?.error ? JSON.stringify(err.error) : "Erreur serveur");
       }
 
-      setFeedback({ type: "success", message: "Agenda sauvegardé avec succès." });
+      setFeedback({ type: "success", message: t("saved") });
     } catch (e) {
       setFeedback({
         type: "error",
-        message: e instanceof Error ? e.message : "Erreur lors de la sauvegarde.",
+        message: e instanceof Error ? e.message : t("saveError"),
       });
     } finally {
       setSaving(false);
@@ -201,7 +205,7 @@ export default function AgendaPage() {
       <div className="flex items-center justify-center h-64">
         <div className="text-center space-y-3">
           <div className="w-10 h-10 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-[#134E4A]/60 text-sm">Chargement de l'agenda...</p>
+          <p className="text-[#134E4A]/60 text-sm">{t("loading")}</p>
         </div>
       </div>
     );
@@ -217,10 +221,10 @@ export default function AgendaPage() {
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0891B2]/10">
             <CalendarDays className="h-4 w-4 text-[#0891B2]" strokeWidth={2} />
           </div>
-          <h1 className="text-2xl font-black text-[#134E4A]">Configuration de l'agenda</h1>
+          <h1 className="text-2xl font-black text-[#134E4A]">{t("title")}</h1>
         </div>
         <p className="text-sm text-[#134E4A]/60 ml-10">
-          Définissez vos horaires de disponibilité pour chaque jour de la semaine.
+          {t("subtitle")}
         </p>
       </div>
 
@@ -246,7 +250,7 @@ export default function AgendaPage() {
       <div className="flex items-center gap-2">
         <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0891B2]/10 px-3 py-1 text-xs font-semibold text-[#0891B2]">
           <Clock className="h-3 w-3" />
-          {openDaysCount} jour{openDaysCount !== 1 ? "s" : ""} ouvert{openDaysCount !== 1 ? "s" : ""}
+          {openDaysCount !== 1 ? t("openDaysPlural", { count: openDaysCount }) : t("openDays", { count: openDaysCount })}
         </span>
       </div>
 
@@ -282,7 +286,7 @@ export default function AgendaPage() {
                 )}
               </Label>
               {!day.open && (
-                <span className="text-xs text-gray-400 italic">Fermé</span>
+                <span className="text-xs text-gray-400 italic">{t("closed")}</span>
               )}
             </div>
 
@@ -293,7 +297,7 @@ export default function AgendaPage() {
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
                     <Sun className="h-3.5 w-3.5 text-amber-400" />
-                    <span className="text-xs font-semibold text-[#134E4A]/70">Matin</span>
+                    <span className="text-xs font-semibold text-[#134E4A]/70">{t("morning")}</span>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <Label htmlFor={`ms-${day.dayOfWeek}`} className="sr-only">
@@ -328,7 +332,7 @@ export default function AgendaPage() {
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
                     <Sunset className="h-3.5 w-3.5 text-orange-400" />
-                    <span className="text-xs font-semibold text-[#134E4A]/70">Après-midi</span>
+                    <span className="text-xs font-semibold text-[#134E4A]/70">{t("afternoon")}</span>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <Label htmlFor={`as-${day.dayOfWeek}`} className="sr-only">
@@ -363,7 +367,7 @@ export default function AgendaPage() {
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
                     <Clock className="h-3.5 w-3.5 text-[#0891B2]" />
-                    <span className="text-xs font-semibold text-[#134E4A]/70">Durée RDV</span>
+                    <span className="text-xs font-semibold text-[#134E4A]/70">{t("duration")}</span>
                   </div>
                   <Select
                     value={String(day.slotDuration)}
@@ -397,7 +401,7 @@ export default function AgendaPage() {
           className="h-12 px-8 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] font-bold text-white text-base transition-colors"
           size="lg"
         >
-          {saving ? "Sauvegarde en cours..." : "Enregistrer l'agenda"}
+          {saving ? t("saving") : t("save")}
         </Button>
       </div>
     </div>

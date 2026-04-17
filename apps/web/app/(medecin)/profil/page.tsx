@@ -5,10 +5,13 @@ import { db, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 import { User, Pencil } from "lucide-react";
+import { getLocale, getTranslations } from "next-intl/server";
 
 export default async function ProfilPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: "medecin.profil" });
 
   const [doctor] = await db
     .select()
@@ -22,14 +25,14 @@ export default async function ProfilPage() {
   const city = CITIES.find((c) => c.id === doctor.city);
 
   const fields = [
-    { label: "Nom", value: doctor.name },
-    { label: "Email", value: doctor.email },
-    { label: "Téléphone", value: doctor.phone },
-    { label: "Spécialité", value: specialty?.label },
-    { label: "Ville", value: city?.label },
-    { label: "Adresse", value: doctor.address },
+    { label: t("fieldName"), value: doctor.name },
+    { label: t("fieldEmail"), value: doctor.email },
+    { label: t("fieldPhone"), value: doctor.phone },
+    { label: t("fieldSpecialty"), value: specialty?.label },
+    { label: t("fieldCity"), value: city?.label },
+    { label: t("fieldAddress"), value: doctor.address },
     ...(doctor.consultationFee
-      ? [{ label: "Tarif", value: `${doctor.consultationFee / 1000} DT` }]
+      ? [{ label: t("fieldFee"), value: `${doctor.consultationFee / 1000} DT` }]
       : []),
   ];
 
@@ -40,7 +43,7 @@ export default async function ProfilPage() {
         <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
           <User className="h-5 w-5" />
         </div>
-        <h1 className="text-2xl font-bold text-[#134E4A]">Mon profil</h1>
+        <h1 className="text-2xl font-bold text-[#134E4A]">{t("title")}</h1>
       </div>
 
       <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm max-w-lg">
@@ -60,11 +63,11 @@ export default async function ProfilPage() {
           className="inline-flex items-center gap-2 bg-[#0891B2] hover:bg-[#0E7490] text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-colors h-12"
         >
           <Pencil className="h-4 w-4" />
-          Éditer mon parcours
+          {t("editParcours")}
         </Link>
       </div>
 
-      <p className="text-xs text-gray-400">{"L'édition des infos de base arrive bientôt."}</p>
+      <p className="text-xs text-gray-400">{t("editComingSoon")}</p>
     </div>
   );
 }

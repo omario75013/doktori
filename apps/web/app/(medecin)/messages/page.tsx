@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { MessageCircle, Send } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useTranslations } from "next-intl";
 
 interface Conversation {
   id: string;
@@ -34,6 +35,7 @@ function initials(name: string) {
 }
 
 export default function DoctorMessagesPage() {
+  const t = useTranslations("medecin.messages");
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -155,18 +157,18 @@ export default function DoctorMessagesPage() {
       <div className="w-[350px] flex-shrink-0 flex flex-col border-r border-gray-100">
         <div className="px-4 py-4 border-b border-gray-100 flex items-center gap-2">
           <MessageCircle className="w-5 h-5 text-teal-600" />
-          <h1 className="text-lg font-bold text-gray-900">Messages</h1>
+          <h1 className="text-lg font-bold text-gray-900">{t("title")}</h1>
         </div>
 
         <div className="flex-1 overflow-y-auto">
           {loadingConvs ? (
-            <p className="text-sm text-gray-400 text-center py-8">Chargement...</p>
+            <p className="text-sm text-gray-400 text-center py-8">{t("loading")}</p>
           ) : conversations.length === 0 ? (
             <div className="text-center py-12 px-4">
               <MessageCircle className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-              <p className="text-sm text-gray-500 font-medium">Aucune conversation</p>
+              <p className="text-sm text-gray-500 font-medium">{t("noConversations")}</p>
               <p className="text-xs text-gray-400 mt-1">
-                Les patients peuvent vous contacter après une consultation
+                {t("noConversationsDesc")}
               </p>
             </div>
           ) : (
@@ -211,7 +213,7 @@ export default function DoctorMessagesPage() {
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
               <MessageCircle className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">Sélectionnez une conversation</p>
+              <p className="text-gray-500 font-medium">{t("selectConversation")}</p>
             </div>
           </div>
         ) : (
@@ -230,10 +232,10 @@ export default function DoctorMessagesPage() {
             {/* Messages area */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
               {loadingMsgs ? (
-                <p className="text-center text-gray-400 text-sm py-8">Chargement...</p>
+                <p className="text-center text-gray-400 text-sm py-8">{t("loading")}</p>
               ) : messages.length === 0 ? (
                 <p className="text-center text-gray-400 text-sm py-8">
-                  Aucun message. Commencez la conversation.
+                  {t("noMessages")}
                 </p>
               ) : (
                 messages.map((msg) => {
@@ -263,7 +265,7 @@ export default function DoctorMessagesPage() {
                             minute: "2-digit",
                           })}
                           {isDoctor && msg.readAt && (
-                            <span className="ml-1 opacity-70">· Lu</span>
+                            <span className="ml-1 opacity-70">· {t("read")}</span>
                           )}
                         </p>
                       </div>
@@ -288,7 +290,7 @@ export default function DoctorMessagesPage() {
                     sendMessage(e as unknown as React.FormEvent);
                   }
                 }}
-                placeholder="Écrire un message..."
+                placeholder={t("placeholder")}
                 rows={1}
                 className="flex-1 resize-none rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent max-h-32 overflow-y-auto"
               />

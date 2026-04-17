@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Building2, Video, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useTranslations } from "next-intl";
 
 type ConsultationMode = "cabinet" | "teleconsult" | "both";
 
@@ -15,51 +16,50 @@ interface TeleconsultSettingsProps {
 
 interface ModeCard {
   id: ConsultationMode;
-  label: string;
-  description: string;
-  icon: React.ReactNode;
   selectedBorderClass: string;
   selectedBgClass: string;
+  icon: React.ReactNode;
 }
-
-const MODE_CARDS: ModeCard[] = [
-  {
-    id: "cabinet",
-    label: "Cabinet uniquement",
-    description: "Consultations en présentiel dans votre cabinet.",
-    icon: <Building2 className="w-8 h-8" />,
-    selectedBorderClass: "border-teal-500",
-    selectedBgClass: "bg-teal-50",
-  },
-  {
-    id: "teleconsult",
-    label: "Téléconsultation uniquement",
-    description:
-      "Idéal si vous exercez depuis l'étranger. Consultez vos patients en vidéo.",
-    icon: <Video className="w-8 h-8" />,
-    selectedBorderClass: "border-purple-500",
-    selectedBgClass: "bg-purple-50",
-  },
-  {
-    id: "both",
-    label: "Les deux",
-    description: "Proposez le choix à vos patients.",
-    icon: (
-      <span className="flex items-center gap-1">
-        <Building2 className="w-6 h-6" />
-        <Video className="w-6 h-6" />
-      </span>
-    ),
-    selectedBorderClass: "border-indigo-500",
-    selectedBgClass: "bg-gradient-to-br from-teal-50 to-purple-50",
-  },
-];
 
 export function TeleconsultSettings({
   initialMode,
   initialTeleconsultFee,
   consultationFee,
 }: TeleconsultSettingsProps) {
+  const t = useTranslations("medecin.teleconsult");
+
+  const MODE_CARDS: ModeCard[] = [
+    {
+      id: "cabinet",
+      icon: <Building2 className="w-8 h-8" />,
+      selectedBorderClass: "border-teal-500",
+      selectedBgClass: "bg-teal-50",
+    },
+    {
+      id: "teleconsult",
+      icon: <Video className="w-8 h-8" />,
+      selectedBorderClass: "border-purple-500",
+      selectedBgClass: "bg-purple-50",
+    },
+    {
+      id: "both",
+      icon: (
+        <span className="flex items-center gap-1">
+          <Building2 className="w-6 h-6" />
+          <Video className="w-6 h-6" />
+        </span>
+      ),
+      selectedBorderClass: "border-indigo-500",
+      selectedBgClass: "bg-gradient-to-br from-teal-50 to-purple-50",
+    },
+  ];
+
+  const MODE_LABELS: Record<ConsultationMode, { label: string; description: string }> = {
+    cabinet: { label: t("cabinetOnly"), description: t("cabinetOnlyDesc") },
+    teleconsult: { label: t("teleconsultOnly"), description: t("teleconsultOnlyDesc") },
+    both: { label: t("both"), description: t("bothDesc") },
+  };
+
   const [mode, setMode] = useState<ConsultationMode>(initialMode);
   const [useSameFee, setUseSameFee] = useState(initialTeleconsultFee === null);
   const [teleconsultFee, setTeleconsultFee] = useState<string>(
@@ -84,7 +84,7 @@ export function TeleconsultSettings({
     if (!useSameFee && mode !== "cabinet") {
       const parsed = parseFloat(teleconsultFee);
       if (isNaN(parsed) || parsed < 0) {
-        setToast({ type: "error", message: "Tarif invalide." });
+        setToast({ type: "error", message: t("feeInvalid") });
         setSaving(false);
         return;
       }
@@ -102,11 +102,11 @@ export function TeleconsultSettings({
     setSaving(false);
 
     if (res.ok) {
-      setToast({ type: "success", message: "Paramètres sauvegardés avec succès." });
+      setToast({ type: "success", message: t("saveSuccess") });
       setTimeout(() => setToast(null), 4000);
     } else {
       const data = await res.json().catch(() => ({}));
-      setToast({ type: "error", message: data.error ?? "Erreur lors de la sauvegarde." });
+      setToast({ type: "error", message: data.error ?? t("saveError") });
     }
   }
 
@@ -127,10 +127,11 @@ export function TeleconsultSettings({
 
       {/* Mode selector */}
       <div>
-        <p className="text-sm font-medium text-gray-700 mb-3">Mode de consultation</p>
+        <p className="text-sm font-medium text-gray-700 mb-3">{t("modeLabel")}</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {MODE_CARDS.map((card) => {
             const selected = mode === card.id;
+            const modeInfo = MODE_LABELS[card.id];
             return (
               <button
                 key={card.id}
@@ -150,10 +151,10 @@ export function TeleconsultSettings({
                 </span>
                 <span>
                   <span className={`block text-sm font-semibold ${selected ? "text-gray-900" : "text-gray-700"}`}>
-                    {card.label}
+                    {modeInfo.label}
                   </span>
                   <span className="block text-xs text-gray-500 mt-0.5 leading-snug">
-                    {card.description}
+                    {modeInfo.description}
                   </span>
                 </span>
               </button>
@@ -165,15 +166,14 @@ export function TeleconsultSettings({
       {/* Helper info when teleconsult is active */}
       {(mode === "teleconsult" || mode === "both") && (
         <div className="rounded-lg border border-purple-200 bg-purple-50 p-4 text-sm text-purple-800">
-          Vos créneaux horaires restent gérés dans l&apos;Agenda. La téléconsultation
-          utilise les mêmes horaires que vos consultations.
+          {t("scheduleNote")}
         </div>
       )}
 
       {/* Fee section */}
       {(mode === "teleconsult" || mode === "both") && (
         <div className="bg-white rounded-xl border p-5 space-y-4">
-          <p className="text-sm font-medium text-gray-700">Tarif téléconsultation (DT)</p>
+          <p className="text-sm font-medium text-gray-700">{t("fee")}</p>
 
           <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
             <input
@@ -182,7 +182,7 @@ export function TeleconsultSettings({
               onChange={(e) => setUseSameFee(e.target.checked)}
               className="rounded border-gray-300 text-teal-600 focus:ring-teal-500"
             />
-            Même tarif que la consultation au cabinet
+            {t("sameFee")}
             {consultationFee !== null && (
               <span className="text-gray-400">
                 ({consultationFee / 1000} DT)
@@ -206,8 +206,7 @@ export function TeleconsultSettings({
 
           {/* Commission info */}
           <div className="rounded-lg bg-purple-50 border border-purple-100 p-3 text-xs text-purple-700 leading-relaxed">
-            Doktori prend une commission de 15% sur chaque téléconsultation pour
-            couvrir les frais de la plateforme et le traitement des paiements.
+            {t("commission")}
           </div>
         </div>
       )}
@@ -217,7 +216,7 @@ export function TeleconsultSettings({
         disabled={saving}
         className="bg-teal-600 hover:bg-teal-700 text-white"
       >
-        {saving ? "Sauvegarde..." : "Enregistrer"}
+        {saving ? t("saving") : t("save")}
       </Button>
     </div>
   );

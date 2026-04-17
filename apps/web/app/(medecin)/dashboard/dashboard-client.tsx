@@ -11,6 +11,7 @@ import {
   Wallet,
   CheckCircle,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -46,36 +47,30 @@ type DashboardClientProps = {
   upcomingAppts: UpcomingAppt[];
 };
 
-// ─── Status config ─────────────────────────────────────────────────────────────
+// ─── Status badge/border config (labels resolved at render time via t()) ───────
 
-const STATUS_CONFIG: Record<string, { label: string; badge: string; border: string }> = {
+const STATUS_BADGE_BORDER: Record<string, { badge: string; border: string }> = {
   pending: {
-    label: "À confirmer",
     badge: "bg-orange-100 text-orange-700",
     border: "border-l-orange-400",
   },
   confirmed: {
-    label: "Confirmé",
     badge: "bg-green-100 text-green-700",
     border: "border-l-green-400",
   },
   cancelled: {
-    label: "Annulé",
     badge: "bg-gray-100 text-gray-500",
     border: "border-l-gray-300",
   },
   completed: {
-    label: "Terminé",
     badge: "bg-blue-100 text-blue-700",
     border: "border-l-blue-400",
   },
   no_show: {
-    label: "Absent",
     badge: "bg-red-100 text-red-700",
     border: "border-l-red-400",
   },
   doctor_noshow: {
-    label: "Médecin absent",
     badge: "bg-red-100 text-red-700",
     border: "border-l-red-400",
   },
@@ -129,10 +124,14 @@ function TypeBadge({
   type,
   mode,
   appointmentId,
+  videoLabel,
+  cabinetLabel,
 }: {
   type: string;
   mode: string;
   appointmentId: string;
+  videoLabel: string;
+  cabinetLabel: string;
 }) {
   if (type === "teleconsult") {
     return (
@@ -141,14 +140,14 @@ function TypeBadge({
         className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full bg-purple-100 text-purple-700 hover:bg-purple-200 transition-colors"
       >
         <Video className="h-3 w-3" strokeWidth={2.5} />
-        Vidéo
+        {videoLabel}
       </Link>
     );
   }
   if (mode === "both") {
     return (
       <span className="inline-flex items-center text-xs px-2 py-0.5 rounded-full bg-teal-100 text-teal-700">
-        Cabinet
+        {cabinetLabel}
       </span>
     );
   }
@@ -180,27 +179,30 @@ export function DashboardClient({
   todayAppts,
   upcomingAppts,
 }: DashboardClientProps) {
+  const t = useTranslations("medecin.dashboard");
+  const tStatus = useTranslations("medecin.appointments.status");
+
   const kpis = [
     {
-      label: "Aujourd'hui",
+      label: t("today"),
       value: todayCount,
-      sublabel: "rendez-vous",
+      sublabel: t("appointments"),
       accentColor: "bg-[#0891B2]",
       icon: Calendar,
       iconBg: "bg-cyan-50 text-cyan-600",
     },
     {
-      label: "À confirmer",
+      label: t("toConfirm"),
       value: toConfirm,
-      sublabel: "en attente",
+      sublabel: t("pending"),
       accentColor: "bg-orange-400",
       icon: Clock,
       iconBg: "bg-orange-50 text-orange-500",
     },
     {
-      label: "No-shows ce mois",
+      label: t("noShows"),
       value: noShowCount,
-      sublabel: "manqués",
+      sublabel: t("missed"),
       accentColor: "bg-red-400",
       icon: AlertCircle,
       iconBg: "bg-red-50 text-red-500",
@@ -209,14 +211,25 @@ export function DashboardClient({
 
   const teleconsultKpi = hasTeleconsult
     ? {
-        label: "Téléconsultations",
+        label: t("teleconsultMonth"),
         value: teleconsultCount,
-        sublabel: "ce mois · vidéo",
+        sublabel: t("teleconsultSubLabel"),
         accentColor: "bg-purple-500",
         icon: Video,
         iconBg: "bg-purple-50 text-purple-600",
       }
     : null;
+
+  function getStatusConfig(status: string) {
+    const bb = STATUS_BADGE_BORDER[status] ?? {
+      badge: "bg-gray-100 text-gray-500",
+      border: "border-l-gray-300",
+    };
+    const label = STATUS_BADGE_BORDER[status]
+      ? tStatus(status as Parameters<typeof tStatus>[0])
+      : status;
+    return { ...bb, label };
+  }
 
   return (
     <div className="space-y-8">
@@ -226,11 +239,11 @@ export function DashboardClient({
         style={{ animation: "fadeSlideIn 0.4s ease both" }}
       >
         <h1 className="text-2xl font-black text-slate-900">
-          Bonjour, Dr.{" "}
+          {t("greeting")}, Dr.{" "}
           <span className="text-[#0891B2]">{doctorName}</span>
         </h1>
         <p className="text-slate-500 text-sm mt-1">
-          Voici un aperçu de votre activité aujourd&apos;hui.
+          {t("greetingSubtitle")}
         </p>
       </div>
 
@@ -245,9 +258,9 @@ export function DashboardClient({
       {/* Wallet card */}
       {hasTeleconsult && (
         <KpiCard
-          label="Solde disponible"
+          label={t("walletBalance")}
           value={`${(walletBalance / 1000).toFixed(3)} DT`}
-          sublabel="portefeuille"
+          sublabel={t("walletSubLabel")}
           accentColor="bg-green-500"
           icon={Wallet}
           iconBg="bg-green-50 text-green-600"
@@ -267,11 +280,10 @@ export function DashboardClient({
             </div>
             <div>
               <h3 className="font-bold text-lg leading-tight">
-                Vous exercez depuis l&apos;étranger&nbsp;?
+                {t("teleconsultPromoTitle")}
               </h3>
               <p className="text-white/80 text-sm mt-1 max-w-md">
-                Activez la téléconsultation pour recevoir des patients en vidéo.
-                Doktori gère les paiements et vous reverse 85% du tarif.
+                {t("teleconsultPromoDesc")}
               </p>
             </div>
           </div>
@@ -279,7 +291,7 @@ export function DashboardClient({
             href="/teleconsultation"
             className="shrink-0 bg-white text-purple-700 font-semibold text-sm px-5 py-2.5 rounded-xl hover:bg-white/90 transition-colors whitespace-nowrap"
           >
-            Activer la téléconsultation →
+            {t("teleconsultPromoCta")}
           </Link>
         </div>
       )}
@@ -287,21 +299,17 @@ export function DashboardClient({
       {/* Today's appointments */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100">
-          <SectionHeader>{"RDV d'aujourd'hui"}</SectionHeader>
+          <SectionHeader>{t("todayAppointments")}</SectionHeader>
         </div>
         <div className="divide-y divide-slate-50">
           {todayAppts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-slate-400">
               <CheckCircle className="h-8 w-8 mb-2 text-slate-300" strokeWidth={1.5} />
-              <p className="text-sm">{"Aucun rendez-vous aujourd'hui"}</p>
+              <p className="text-sm">{t("noAppointments")}</p>
             </div>
           ) : (
             todayAppts.map((a) => {
-              const cfg = STATUS_CONFIG[a.status] ?? {
-                label: a.status,
-                badge: "bg-gray-100 text-gray-500",
-                border: "border-l-gray-300",
-              };
+              const cfg = getStatusConfig(a.status);
               return (
                 <div
                   key={a.id}
@@ -314,7 +322,13 @@ export function DashboardClient({
                       </span>
                       <span className="text-slate-400">—</span>
                       {a.patientName}
-                      <TypeBadge type={a.type} mode={consultationMode} appointmentId={a.id} />
+                      <TypeBadge
+                        type={a.type}
+                        mode={consultationMode}
+                        appointmentId={a.id}
+                        videoLabel={t("video")}
+                        cabinetLabel={t("cabinet")}
+                      />
                     </div>
                     <div className="text-xs text-slate-500 mt-0.5">
                       {a.patientPhone}
@@ -334,24 +348,20 @@ export function DashboardClient({
       {/* Upcoming appointments */}
       <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-          <SectionHeader>Prochains RDV (7 jours)</SectionHeader>
+          <SectionHeader>{t("upcoming")}</SectionHeader>
           <Link href="/rendez-vous" className="text-xs font-semibold text-[#0891B2] hover:underline">
-            Tout voir →
+            {t("viewAll")} →
           </Link>
         </div>
         <div className="divide-y divide-slate-50">
           {upcomingAppts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-slate-400">
               <Calendar className="h-8 w-8 mb-2 text-slate-300" strokeWidth={1.5} />
-              <p className="text-sm">Aucun rendez-vous à venir</p>
+              <p className="text-sm">{t("noUpcoming")}</p>
             </div>
           ) : (
             upcomingAppts.map((a) => {
-              const cfg = STATUS_CONFIG[a.status] ?? {
-                label: a.status,
-                badge: "bg-gray-100 text-gray-500",
-                border: "border-l-gray-300",
-              };
+              const cfg = getStatusConfig(a.status);
               return (
                 <div
                   key={a.id}
@@ -367,7 +377,13 @@ export function DashboardClient({
                         </span>
                         <span className="text-slate-400">—</span>
                         {a.patientName}
-                        <TypeBadge type={a.type} mode={consultationMode} appointmentId={a.id} />
+                        <TypeBadge
+                          type={a.type}
+                          mode={consultationMode}
+                          appointmentId={a.id}
+                          videoLabel={t("video")}
+                          cabinetLabel={t("cabinet")}
+                        />
                       </div>
                       {a.reason && (
                         <div className="text-xs text-slate-500 mt-0.5">{a.reason}</div>

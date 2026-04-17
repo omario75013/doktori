@@ -3,10 +3,13 @@ import { redirect } from "next/navigation";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 import { TeleconsultSettings } from "./teleconsult-settings";
+import { getLocale, getTranslations } from "next-intl/server";
 
 export default async function TeleconsultationPage() {
   const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: "medecin.teleconsult" });
 
   const doctorId = session.user.id;
 
@@ -31,9 +34,9 @@ export default async function TeleconsultationPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">Téléconsultation</h1>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
         <p className="text-gray-500 text-sm mt-1">
-          Configurez votre mode de consultation et vos tarifs de téléconsultation.
+          {t("subtitle")}
         </p>
       </div>
 
