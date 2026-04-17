@@ -40,7 +40,6 @@ const ACTIONS: { status: string; label: string }[] = [
   { status: "confirmed", label: "Confirmer" },
   { status: "completed", label: "Terminé" },
   { status: "no_show", label: "Absent" },
-  { status: "cancelled", label: "Annuler" },
 ];
 
 export default function RendezVousPage() {
@@ -61,6 +60,12 @@ export default function RendezVousPage() {
   const [followupWeeks, setFollowupWeeks] = useState("4");
   const [followupError, setFollowupError] = useState<string | null>(null);
   const [followupSuccess, setFollowupSuccess] = useState<string | null>(null);
+
+  // Cancel modal state
+  const [cancelDialogId, setCancelDialogId] = useState<string | null>(null);
+  const [cancelReason, setCancelReason] = useState("");
+  const [cancelError, setCancelError] = useState<string | null>(null);
+  const [cancelSubmitting, setCancelSubmitting] = useState(false);
 
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
@@ -185,6 +190,36 @@ export default function RendezVousPage() {
       setFollowupError(e instanceof Error ? e.message : "Erreur");
     } finally {
       setUpdating(null);
+    }
+  };
+
+  const openCancelDialog = (id: string) => {
+    setCancelDialogId(id);
+    setCancelReason("");
+    setCancelError(null);
+  };
+
+  const submitCancel = async () => {
+    const id = cancelDialogId;
+    if (!id) return;
+    setCancelError(null);
+    setCancelSubmitting(true);
+    try {
+      const res = await fetch(`/api/appointments/${id}/cancel-doctor`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reason: cancelReason.trim() }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Erreur lors de l'annulation");
+      }
+      setCancelDialogId(null);
+      await fetchAppointments();
+    } catch (e) {
+      setCancelError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setCancelSubmitting(false);
     }
   };
 
@@ -340,6 +375,15 @@ export default function RendezVousPage() {
                               {isUpdating ? "..." : action.label}
                             </button>
                           ))}
+                          {["pending", "confirmed"].includes(appt.status) && (
+                            <button
+                              disabled={isUpdating}
+                              onClick={() => openCancelDialog(appt.id)}
+                              className="text-xs px-2.5 py-1.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                            >
+                              Annuler
+                            </button>
+                          )}
                         </div>
                       )}
                     </td>
@@ -406,6 +450,57 @@ export default function RendezVousPage() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* Cancel modal */}
+      {cancelDialogId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+          onClick={() => !cancelSubmitting && setCancelDialogId(null)}
+        >
+          <div
+            className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-[#E6F4F1]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h2 className="text-base font-semibold text-[#134E4A]">Annuler le rendez-vous</h2>
+
+            <div className="space-y-1">
+              <label className="block text-sm font-medium text-[#134E4A]">
+                Motif d'annulation (optionnel)
+              </label>
+              <textarea
+                value={cancelReason}
+                onChange={(e) => setCancelReason(e.target.value)}
+                placeholder="Ex : Patient absent, urgence, indisponibilité..."
+                rows={3}
+                className="w-full rounded-xl border border-[#E6F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
+                autoFocus
+              />
+              <p className="text-xs text-gray-400">Le patient recevra un SMS et un e-mail d'annulation.</p>
+            </div>
+
+            {cancelError && (
+              <p className="text-sm text-red-600">{cancelError}</p>
+            )}
+
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                onClick={() => setCancelDialogId(null)}
+                disabled={cancelSubmitting}
+                className="px-4 py-2 text-sm rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] text-gray-600 disabled:opacity-40 transition-colors"
+              >
+                Retour
+              </button>
+              <button
+                onClick={submitCancel}
+                disabled={cancelSubmitting}
+                className="px-4 py-2 text-sm rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold disabled:opacity-40 transition-colors"
+              >
+                {cancelSubmitting ? "Annulation..." : "Confirmer l'annulation"}
+              </button>
+            </div>
           </div>
         </div>
       )}
