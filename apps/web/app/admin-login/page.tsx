@@ -3,7 +3,18 @@
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { Shield, Loader2 } from "lucide-react";
+import {
+  Shield,
+  Mail,
+  Lock,
+  Loader2,
+  AlertCircle,
+  ArrowRight,
+  BarChart3,
+  Users,
+  FileText,
+  Settings,
+} from "lucide-react";
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -30,83 +41,203 @@ export default function AdminLoginPage() {
     router.refresh();
   }
 
+  const benefits = [
+    { icon: BarChart3, label: "Tableau de bord en temps réel" },
+    { icon: Users, label: "Gestion des médecins et patients" },
+    { icon: FileText, label: "Analytics et rapports" },
+    { icon: Settings, label: "Paramètres de la plateforme" },
+  ];
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-900 px-4">
-      <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg">
-            <Shield className="w-6 h-6 text-white" />
+    <div className="flex min-h-screen">
+      {/* ═════ LEFT: hero panel ═════ */}
+      <div className="relative hidden overflow-hidden lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:p-12"
+        style={{ background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)" }}
+      >
+        {/* Grid overlay */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0"
+          style={{
+            backgroundImage: `linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px)`,
+            backgroundSize: "40px 40px",
+          }}
+        />
+        {/* Glow blobs */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -left-32 top-0 h-[500px] w-[500px] rounded-full blur-3xl"
+          style={{ background: "rgba(8,145,178,0.15)" }}
+        />
+        <div
+          aria-hidden
+          className="pointer-events-none absolute -right-32 bottom-0 h-[500px] w-[500px] rounded-full blur-3xl"
+          style={{ background: "rgba(99,102,241,0.12)" }}
+        />
+
+        {/* Logo */}
+        <div className="relative flex items-center gap-3">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 backdrop-blur border border-white/20">
+            <Shield className="h-6 w-6 text-white" strokeWidth={2.5} />
           </div>
           <div>
-            <h1 className="text-xl font-bold text-white">Doktori Admin</h1>
-            <p className="text-xs text-slate-400 uppercase tracking-wider">
-              Accès réservé
+            <span className="text-2xl font-black text-white">Doktori</span>
+            <span className="text-2xl font-black text-[#22D3EE]">.tn</span>
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mt-0.5">
+              Administration
             </p>
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl p-8 shadow-2xl">
-          <h2 className="text-2xl font-bold text-slate-900 mb-1">Connexion</h2>
-          <p className="text-sm text-slate-500 mb-6">
-            Cette zone est réservée aux administrateurs Doktori.
+        {/* Body */}
+        <div className="relative">
+          <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-bold text-slate-300 backdrop-blur">
+            <Shield className="h-3.5 w-3.5 text-[#22D3EE]" strokeWidth={2.5} />
+            ACCÈS SÉCURISÉ
+          </div>
+          <h2 className="mt-6 text-4xl font-black leading-tight tracking-tight text-white xl:text-5xl">
+            Gérez votre
+            <br />
+            <span className="text-[#22D3EE]">plateforme.</span>
+          </h2>
+          <p className="mt-4 max-w-md text-base leading-relaxed text-slate-400">
+            Espace réservé aux administrateurs Doktori. Toutes les actions
+            sont tracées dans le journal d&apos;audit.
           </p>
 
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <ul className="mt-8 space-y-3">
+            {benefits.map(({ icon: Icon, label }) => (
+              <li key={label} className="flex items-center gap-3 text-sm text-slate-300">
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#0891B2]/20 border border-[#0891B2]/30">
+                  <Icon className="h-3.5 w-3.5 text-[#22D3EE]" strokeWidth={2.5} />
+                </span>
+                {label}
+              </li>
+            ))}
+          </ul>
+        </div>
+
+        <p className="relative text-xs text-slate-500">
+          Doktori © 2026 · Zone d&apos;administration sécurisée
+        </p>
+      </div>
+
+      {/* ═════ RIGHT: form ═════ */}
+      <div className="flex w-full items-center justify-center bg-slate-50 px-4 py-12 sm:px-6 lg:w-1/2">
+        <div className="w-full max-w-md">
+          {/* Mobile logo */}
+          <div className="mb-8 flex items-center justify-center gap-3 lg:hidden">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-900">
+              <Shield className="h-5 w-5 text-white" strokeWidth={2.5} />
+            </div>
             <div>
-              <label
-                htmlFor="email"
-                className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider"
-              >
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@doktori.tn"
-                className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              />
+              <span className="text-xl font-black text-slate-900">Doktori</span>
+              <span className="text-xl font-black text-[#0891B2]">.tn</span>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                Administration
+              </p>
+            </div>
+          </div>
+
+          <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-xl shadow-slate-900/5 sm:p-10">
+            <div className="mb-8">
+              <h1 className="text-3xl font-black tracking-tight text-slate-900">
+                Connexion
+              </h1>
+              <p className="mt-2 text-sm text-slate-500">
+                Cette zone est réservée aux administrateurs Doktori.
+              </p>
             </div>
 
-            <div>
-              <label
-                htmlFor="password"
-                className="block text-xs font-semibold text-slate-700 mb-1.5 uppercase tracking-wider"
-              >
-                Mot de passe
-              </label>
-              <input
-                id="password"
-                type="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full px-3 py-2.5 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent"
-              />
-            </div>
-
-            {error && (
-              <div className="px-3 py-2 bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg">
-                {error}
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Email */}
+              <div>
+                <label
+                  htmlFor="email"
+                  className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
+                >
+                  Email
+                </label>
+                <div className="group flex h-12 items-center rounded-xl border-2 border-slate-200 bg-white px-4 transition-colors focus-within:border-[#0891B2]">
+                  <Mail
+                    className="mr-3 h-4 w-4 shrink-0 text-slate-400 transition-colors group-focus-within:text-[#0891B2]"
+                    strokeWidth={2.5}
+                  />
+                  <input
+                    id="email"
+                    type="email"
+                    required
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="admin@doktori.tn"
+                    autoComplete="email"
+                    className="h-full flex-1 border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400/60"
+                  />
+                </div>
               </div>
-            )}
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 bg-slate-900 hover:bg-slate-800 text-white font-semibold rounded-lg transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-            >
-              {loading && <Loader2 className="w-4 h-4 animate-spin" />}
-              {loading ? "Connexion..." : "Se connecter"}
-            </button>
-          </form>
+              {/* Password */}
+              <div>
+                <label
+                  htmlFor="password"
+                  className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-600"
+                >
+                  Mot de passe
+                </label>
+                <div className="group flex h-12 items-center rounded-xl border-2 border-slate-200 bg-white px-4 transition-colors focus-within:border-[#0891B2]">
+                  <Lock
+                    className="mr-3 h-4 w-4 shrink-0 text-slate-400 transition-colors group-focus-within:text-[#0891B2]"
+                    strokeWidth={2.5}
+                  />
+                  <input
+                    id="password"
+                    type="password"
+                    required
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    className="h-full flex-1 border-0 bg-transparent text-sm text-slate-900 outline-none placeholder:text-slate-400/60"
+                  />
+                </div>
+              </div>
 
-          <p className="mt-6 text-xs text-slate-400 text-center">
-            Toutes les actions dans cette zone sont tracées dans le journal
-            d&apos;audit.
-          </p>
+              {/* Error */}
+              {error && (
+                <div className="flex items-start gap-2 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.5} />
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Submit */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-slate-900 text-base font-bold text-white shadow-lg shadow-slate-900/20 transition-all hover:bg-slate-800 disabled:opacity-60"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Connexion...
+                  </>
+                ) : (
+                  <>
+                    <span>Se connecter</span>
+                    <ArrowRight
+                      className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
+                      strokeWidth={3}
+                    />
+                  </>
+                )}
+              </button>
+            </form>
+
+            <p className="mt-6 text-center text-xs text-slate-400">
+              Toutes les actions dans cette zone sont tracées dans le journal
+              d&apos;audit.
+            </p>
+          </div>
         </div>
       </div>
     </div>
