@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { db, doctors } from "@doktori/db";
 import { sql, eq } from "drizzle-orm";
+import { BarChart3 } from "lucide-react";
 
 export default async function StatsPage() {
   const session = await auth();
@@ -138,9 +139,15 @@ export default async function StatsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Statistiques</h1>
-        <p className="text-gray-500 text-sm mt-1">Analyse des 6 derniers mois</p>
+      {/* Page header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+          <BarChart3 className="h-5 w-5" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-[#134E4A]">Statistiques</h1>
+          <p className="text-sm text-gray-500">Analyse des 6 derniers mois</p>
+        </div>
       </div>
 
       {/* KPI Cards */}
@@ -149,7 +156,7 @@ export default async function StatsPage() {
           label="Patients ce mois"
           value={String(totalThisMonth)}
           sub="rendez-vous"
-          color="blue"
+          color="teal"
         />
         <KpiCard
           label="Taux de confirmation"
@@ -172,8 +179,8 @@ export default async function StatsPage() {
       </div>
 
       {/* Monthly Bar Chart */}
-      <div className="bg-white rounded-xl border p-5">
-        <h2 className="font-semibold mb-4">Rendez-vous mensuels</h2>
+      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm">
+        <h2 className="font-semibold text-[#134E4A] mb-4">Rendez-vous mensuels</h2>
         {monthly.length === 0 ? (
           <p className="text-gray-400 text-sm text-center py-8">Aucune donnée disponible</p>
         ) : (
@@ -187,7 +194,7 @@ export default async function StatsPage() {
                 <div key={row.month} className="flex flex-col items-center flex-1 gap-1">
                   <span className="text-xs text-gray-500">{row.total}</span>
                   <div
-                    className="w-full rounded-t bg-blue-500"
+                    className="w-full rounded-t bg-[#0891B2]"
                     style={{ height: barHeight }}
                     title={`${row.completed} complétés, ${row.cancelled} annulés, ${row.no_shows} absences`}
                   />
@@ -204,37 +211,37 @@ export default async function StatsPage() {
       {/* New vs Returning + Peak Hours */}
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         {/* Patient stats */}
-        <div className="bg-white rounded-xl border p-5">
-          <h2 className="font-semibold mb-4">Patients (30 derniers jours)</h2>
+        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm">
+          <h2 className="font-semibold text-[#134E4A] mb-4">Patients (30 derniers jours)</h2>
           <div className="space-y-4">
             <PatientBar
               label="Nouveaux patients"
               count={patientStats.new_patients}
               total={patientStats.new_patients + patientStats.returning_patients}
-              color="bg-green-500"
+              color="bg-[#0891B2]"
             />
             <PatientBar
               label="Patients récurrents"
               count={patientStats.returning_patients}
               total={patientStats.new_patients + patientStats.returning_patients}
-              color="bg-blue-500"
+              color="bg-[#134E4A]"
             />
           </div>
           <div className="mt-4 flex gap-4 text-sm text-gray-500">
             <span>
-              <span className="font-semibold text-gray-800">{patientStats.new_patients}</span>{" "}
+              <span className="font-semibold text-[#134E4A]">{patientStats.new_patients}</span>{" "}
               nouveaux
             </span>
             <span>
-              <span className="font-semibold text-gray-800">{patientStats.returning_patients}</span>{" "}
+              <span className="font-semibold text-[#134E4A]">{patientStats.returning_patients}</span>{" "}
               récurrents
             </span>
           </div>
         </div>
 
         {/* Top Reasons */}
-        <div className="bg-white rounded-xl border p-5">
-          <h2 className="font-semibold mb-4">Motifs les plus fréquents</h2>
+        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm">
+          <h2 className="font-semibold text-[#134E4A] mb-4">Motifs les plus fréquents</h2>
           {reasons.length === 0 ? (
             <p className="text-gray-400 text-sm text-center py-4">Aucun motif enregistré</p>
           ) : (
@@ -242,14 +249,14 @@ export default async function StatsPage() {
               {reasons.map((r, i) => (
                 <div key={i} className="space-y-1">
                   <div className="flex justify-between text-sm">
-                    <span className="text-gray-700 truncate max-w-[200px]" title={r.reason}>
+                    <span className="text-[#134E4A] truncate max-w-[200px]" title={r.reason}>
                       {r.reason}
                     </span>
                     <span className="text-gray-500 shrink-0 ml-2">{r.count}</span>
                   </div>
-                  <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                  <div className="h-2 bg-[#F0FDFA] rounded-full overflow-hidden">
                     <div
-                      className="h-full bg-indigo-400 rounded-full"
+                      className="h-full bg-[#0891B2] rounded-full"
                       style={{
                         width: `${Math.round((r.count / maxReasonCount) * 100)}%`,
                       }}
@@ -263,8 +270,8 @@ export default async function StatsPage() {
       </div>
 
       {/* Peak Hours Heatmap */}
-      <div className="bg-white rounded-xl border p-5">
-        <h2 className="font-semibold mb-4">Créneaux les plus demandés</h2>
+      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm">
+        <h2 className="font-semibold text-[#134E4A] mb-4">Créneaux les plus demandés</h2>
         {peaks.length === 0 ? (
           <p className="text-gray-400 text-sm text-center py-4">Aucune donnée disponible</p>
         ) : (
@@ -278,7 +285,7 @@ export default async function StatsPage() {
                   <div key={h} className="flex flex-col items-center flex-1">
                     {count > 0 && (
                       <div
-                        className="w-full rounded-t bg-teal-500"
+                        className="w-full rounded-t bg-[#0891B2]"
                         style={{ height: barH }}
                         title={`${h}h — ${count} RDV`}
                       />
@@ -298,11 +305,11 @@ export default async function StatsPage() {
             {peaks.length > 0 && (
               <p className="mt-3 text-xs text-gray-500">
                 Créneau le plus chargé :{" "}
-                <span className="font-medium text-gray-700">
+                <span className="font-medium text-[#134E4A]">
                   {peaks.reduce((a, b) => (a.count > b.count ? a : b)).hour}h
                 </span>
                 {" "}avec{" "}
-                <span className="font-medium text-gray-700">
+                <span className="font-medium text-[#134E4A]">
                   {peaks.reduce((a, b) => (a.count > b.count ? a : b)).count}
                 </span>{" "}
                 RDV
@@ -326,17 +333,17 @@ function KpiCard({
   label: string;
   value: string;
   sub: string;
-  color: "blue" | "green" | "orange" | "red" | "purple";
+  color: "teal" | "green" | "orange" | "red" | "purple";
 }) {
   const valueColors: Record<string, string> = {
-    blue: "text-blue-600",
+    teal: "text-[#0891B2]",
     green: "text-green-600",
     orange: "text-orange-600",
     red: "text-red-600",
     purple: "text-purple-600",
   };
   return (
-    <div className="bg-white rounded-xl p-5 border">
+    <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
       <div className="text-xs text-gray-500 uppercase tracking-wide">{label}</div>
       <div className={`text-3xl font-bold mt-1 ${valueColors[color]}`}>{value}</div>
       <div className="text-xs text-gray-400 mt-1">{sub}</div>
@@ -359,12 +366,12 @@ function PatientBar({
   return (
     <div className="space-y-1">
       <div className="flex justify-between text-sm">
-        <span className="text-gray-700">{label}</span>
+        <span className="text-[#134E4A]">{label}</span>
         <span className="text-gray-500">
           {count} ({pct}%)
         </span>
       </div>
-      <div className="h-3 bg-gray-100 rounded-full overflow-hidden">
+      <div className="h-3 bg-[#F0FDFA] rounded-full overflow-hidden">
         <div
           className={`h-full ${color} rounded-full transition-all`}
           style={{ width: `${pct}%` }}

@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Calendar } from "lucide-react";
 
 type Appointment = {
   id: string;
@@ -27,7 +28,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-orange-100 text-orange-700",
-  confirmed: "bg-green-100 text-green-700",
+  confirmed: "bg-[#F0FDFA] text-[#0891B2]",
   cancelled: "bg-gray-100 text-gray-500",
   completed: "bg-blue-100 text-blue-700",
   no_show: "bg-red-100 text-red-700",
@@ -188,16 +189,16 @@ export default function RendezVousPage() {
   };
 
   if (loading) {
-    return <p className="text-gray-400 text-sm p-6">Chargement...</p>;
+    return <p className="text-[#0891B2] text-sm p-6">Chargement...</p>;
   }
 
   if (error) {
     return (
-      <div className="p-6">
+      <div className="p-6 space-y-3">
         <p className="text-red-500 text-sm">{error}</p>
         <button
           onClick={fetchAppointments}
-          className="mt-2 text-sm text-blue-600 hover:underline"
+          className="text-sm text-[#0891B2] hover:underline"
         >
           Réessayer
         </button>
@@ -206,19 +207,24 @@ export default function RendezVousPage() {
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Rendez-vous</h1>
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+            <Calendar className="h-5 w-5" />
+          </div>
+          <h1 className="text-2xl font-bold text-[#134E4A]">Rendez-vous</h1>
+        </div>
         <button
           onClick={fetchAppointments}
-          className="text-sm text-blue-600 hover:underline"
+          className="text-sm text-[#0891B2] hover:text-[#0E7490] font-medium border border-[#E6F4F1] hover:bg-[#F0FDFA] rounded-xl px-3 py-2 transition-colors"
         >
           Actualiser
         </button>
       </div>
 
       {actionError && (
-        <div className="flex items-center justify-between rounded-lg border border-red-200 bg-red-50 px-4 py-2 text-sm text-red-700">
+        <div className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <span>{actionError}</span>
           <button
             onClick={() => setActionError(null)}
@@ -231,34 +237,38 @@ export default function RendezVousPage() {
       )}
 
       {appointments.length === 0 ? (
-        <p className="text-gray-400 text-sm">Aucun rendez-vous.</p>
+        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-12 text-center shadow-sm">
+          <div className="h-14 w-14 rounded-2xl bg-[#F0FDFA] flex items-center justify-center mx-auto mb-3">
+            <Calendar className="h-7 w-7 text-[#0891B2]" />
+          </div>
+          <p className="text-[#134E4A] font-medium mb-1">Aucun rendez-vous</p>
+          <p className="text-sm text-gray-400">Vos prochains rendez-vous apparaîtront ici.</p>
+        </div>
       ) : (
-        <div className="bg-white rounded-xl border overflow-x-auto">
+        <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b bg-gray-50 text-left">
-                <th className="px-4 py-3 font-medium text-gray-600">Date / Heure</th>
-                <th className="px-4 py-3 font-medium text-gray-600">Patient</th>
-                <th className="px-4 py-3 font-medium text-gray-600">Téléphone</th>
-                <th className="px-4 py-3 font-medium text-gray-600">Motif</th>
-                <th className="px-4 py-3 font-medium text-gray-600">Statut</th>
-                <th className="px-4 py-3 font-medium text-gray-600">Actions</th>
+              <tr className="border-b border-[#E6F4F1] bg-[#F0FDFA] text-left">
+                <th className="px-4 py-3 font-medium text-[#134E4A]">Date / Heure</th>
+                <th className="px-4 py-3 font-medium text-[#134E4A]">Patient</th>
+                <th className="px-4 py-3 font-medium text-[#134E4A]">Téléphone</th>
+                <th className="px-4 py-3 font-medium text-[#134E4A]">Motif</th>
+                <th className="px-4 py-3 font-medium text-[#134E4A]">Statut</th>
+                <th className="px-4 py-3 font-medium text-[#134E4A]">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y">
+            <tbody className="divide-y divide-[#E6F4F1]">
               {appointments.map((appt) => {
                 const isTerminal = TERMINAL_STATUSES.includes(appt.status);
                 const isUpdating = updating === appt.id;
                 return (
-                  <tr key={appt.id} className="hover:bg-gray-50">
-                    <td className="px-4 py-3 whitespace-nowrap">
-                      {format(new Date(appt.startsAt), "EEE d MMM yyyy HH:mm", {
-                        locale: fr,
-                      })}
+                  <tr key={appt.id} className="hover:bg-[#F0FDFA] transition-colors">
+                    <td className="px-4 py-3 whitespace-nowrap text-gray-700">
+                      {format(new Date(appt.startsAt), "EEE d MMM yyyy HH:mm", { locale: fr })}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span>{appt.patientName}</span>
+                        <span className="font-medium text-[#134E4A]">{appt.patientName}</span>
                         {appt.patientNoShowCount >= 2 && (
                           <span
                             className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700"
@@ -277,13 +287,13 @@ export default function RendezVousPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap">{appt.patientPhone}</td>
+                    <td className="px-4 py-3 whitespace-nowrap text-gray-500">{appt.patientPhone}</td>
                     <td className="px-4 py-3 text-gray-500">
                       {appt.reason ?? <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3">
                       <span
-                        className={`text-xs px-2 py-1 rounded ${
+                        className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                           STATUS_STYLES[appt.status] ?? "bg-gray-100"
                         }`}
                       >
@@ -293,24 +303,24 @@ export default function RendezVousPage() {
                     <td className="px-4 py-3">
                       {isTerminal ? (
                         appt.status === "completed" ? (
-                          <div className="flex gap-1 flex-wrap">
+                          <div className="flex gap-1.5 flex-wrap">
                             <a
                               href={`/rendez-vous/${appt.id}/consultation`}
-                              className="text-xs px-2 py-1 rounded border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100"
+                              className="text-xs px-2.5 py-1.5 rounded-xl border border-purple-200 bg-purple-50 text-purple-700 hover:bg-purple-100 transition-colors"
                             >
                               Note SOAP
                             </a>
                             <button
                               onClick={() => openFollowupDialog(appt.id)}
                               disabled={isUpdating}
-                              className="text-xs px-2 py-1 rounded border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40"
+                              className="text-xs px-2.5 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40 transition-colors"
                             >
                               Programmer un suivi
                             </button>
                             <button
                               onClick={() => openCnamDialog(appt.id)}
                               disabled={isUpdating}
-                              className="text-xs px-2 py-1 rounded border border-teal-200 bg-teal-50 text-teal-700 hover:bg-teal-100 disabled:opacity-40"
+                              className="text-xs px-2.5 py-1.5 rounded-xl border border-[#E6F4F1] bg-[#F0FDFA] text-[#0891B2] hover:bg-[#E6F4F1] disabled:opacity-40 transition-colors"
                             >
                               Bordereau CNAM
                             </button>
@@ -319,13 +329,13 @@ export default function RendezVousPage() {
                           <span className="text-xs text-gray-300">—</span>
                         )
                       ) : (
-                        <div className="flex gap-1 flex-wrap">
+                        <div className="flex gap-1.5 flex-wrap">
                           {ACTIONS.filter((a) => a.status !== appt.status).map((action) => (
                             <button
                               key={action.status}
                               disabled={isUpdating}
                               onClick={() => updateStatus(appt.id, action.status)}
-                              className="text-xs px-2 py-1 rounded border border-gray-200 hover:bg-gray-100 disabled:opacity-40 disabled:cursor-not-allowed"
+                              className="text-xs px-2.5 py-1.5 rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >
                               {isUpdating ? "..." : action.label}
                             </button>
@@ -344,17 +354,17 @@ export default function RendezVousPage() {
       {/* Followup modal */}
       {followupDialogId && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
           onClick={() => setFollowupDialogId(null)}
         >
           <div
-            className="w-full max-w-sm rounded-xl bg-white shadow-xl p-6 space-y-4"
+            className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-[#E6F4F1]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-base font-semibold text-gray-800">Programmer un suivi</h2>
+            <h2 className="text-base font-semibold text-[#134E4A]">Programmer un suivi</h2>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-[#134E4A]">
                 Dans combien de semaines ?
               </label>
               <input
@@ -363,7 +373,7 @@ export default function RendezVousPage() {
                 max="104"
                 value={followupWeeks}
                 onChange={(e) => setFollowupWeeks(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
+                className="w-full h-12 rounded-xl border border-[#E6F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2]"
                 autoFocus
               />
               <p className="text-xs text-gray-400">Entre 1 et 104 semaines</p>
@@ -374,7 +384,7 @@ export default function RendezVousPage() {
             )}
 
             {followupSuccess && (
-              <p className="text-sm text-green-700 bg-green-50 rounded-lg px-3 py-2">
+              <p className="text-sm text-[#0891B2] bg-[#F0FDFA] border border-[#E6F4F1] rounded-xl px-3 py-2">
                 {followupSuccess}
               </p>
             )}
@@ -383,14 +393,14 @@ export default function RendezVousPage() {
               <div className="flex gap-2 justify-end pt-1">
                 <button
                   onClick={() => setFollowupDialogId(null)}
-                  className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600"
+                  className="px-4 py-2 text-sm rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] text-gray-600 transition-colors"
                 >
                   Annuler
                 </button>
                 <button
                   onClick={submitFollowup}
                   disabled={updating === followupDialogId}
-                  className="px-4 py-2 text-sm rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium disabled:opacity-40"
+                  className="px-4 py-2 text-sm rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold disabled:opacity-40 transition-colors"
                 >
                   {updating === followupDialogId ? "..." : "Confirmer"}
                 </button>
@@ -403,17 +413,17 @@ export default function RendezVousPage() {
       {/* CNAM modal */}
       {cnamDialogAppointmentId && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
           onClick={() => setCnamDialogAppointmentId(null)}
         >
           <div
-            className="w-full max-w-sm rounded-xl bg-white shadow-xl p-6 space-y-4"
+            className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-[#E6F4F1]"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-base font-semibold text-gray-800">Créer un bordereau CNAM</h2>
+            <h2 className="text-base font-semibold text-[#134E4A]">Créer un bordereau CNAM</h2>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-[#134E4A]">
                 Numéro CNAM du patient
               </label>
               <input
@@ -421,13 +431,13 @@ export default function RendezVousPage() {
                 value={cnamNumber}
                 onChange={(e) => setCnamNumber(e.target.value)}
                 placeholder="Ex : 12345678"
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                className="w-full h-12 rounded-xl border border-[#E6F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2]"
                 autoFocus
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-[#134E4A]">
                 Montant de la consultation (DT)
               </label>
               <input
@@ -436,7 +446,7 @@ export default function RendezVousPage() {
                 step="0.5"
                 value={cnamAmount}
                 onChange={(e) => setCnamAmount(e.target.value)}
-                className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-400"
+                className="w-full h-12 rounded-xl border border-[#E6F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2]"
               />
             </div>
 
@@ -447,13 +457,13 @@ export default function RendezVousPage() {
             <div className="flex gap-2 justify-end pt-1">
               <button
                 onClick={() => setCnamDialogAppointmentId(null)}
-                className="px-4 py-2 text-sm rounded-lg border border-gray-200 hover:bg-gray-50 text-gray-600"
+                className="px-4 py-2 text-sm rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] text-gray-600 transition-colors"
               >
                 Annuler
               </button>
               <button
                 onClick={submitCnamClaim}
-                className="px-4 py-2 text-sm rounded-lg bg-teal-600 hover:bg-teal-700 text-white font-medium"
+                className="px-4 py-2 text-sm rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold transition-colors"
               >
                 Créer le bordereau
               </button>

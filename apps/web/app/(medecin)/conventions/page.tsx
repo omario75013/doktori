@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { INSURANCES } from "@doktori/shared";
+import { Shield } from "lucide-react";
 
 export default function ConventionsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -44,35 +45,53 @@ export default function ConventionsPage() {
     if (res.ok) setSavedAt(new Date());
   }
 
-  if (loading) return <p className="text-gray-400">Chargement...</p>;
+  if (loading) return <p className="text-[#0891B2] text-sm p-6">Chargement...</p>;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold mb-2">Conventions & Assurances</h1>
-      <p className="text-gray-500 mb-6">
-        Indiquez les mutuelles et caisses d&apos;assurance maladie que vous acceptez. Les patients pourront filtrer leur recherche par assurance.
-      </p>
+    <div className="space-y-6">
+      {/* Page header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+          <Shield className="h-5 w-5" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-[#134E4A]">Conventions & Assurances</h1>
+          <p className="text-sm text-gray-500">
+            Indiquez les mutuelles et caisses d&apos;assurance maladie que vous acceptez.
+          </p>
+        </div>
+      </div>
 
-      <div className="bg-white rounded-xl border p-6 max-w-xl space-y-4">
+      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm max-w-xl space-y-4">
         {INSURANCES.map((ins) => (
-          <div key={ins.id} className="flex items-center gap-3">
+          <div
+            key={ins.id}
+            className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-[#F0FDFA] transition-colors cursor-pointer"
+            onClick={() => toggle(ins.id)}
+          >
             <Checkbox
               id={ins.id}
               checked={selected.has(ins.id)}
               onCheckedChange={() => toggle(ins.id)}
             />
             <Label htmlFor={ins.id} className="cursor-pointer flex flex-col">
-              <span className="font-medium">{ins.label}</span>
+              <span className="font-medium text-[#134E4A]">{ins.label}</span>
               <span className="text-xs text-gray-400">{ins.labelAr}</span>
             </Label>
           </div>
         ))}
 
-        <div className="flex items-center gap-3 pt-4 border-t">
-          <Button onClick={save} disabled={saving}>
+        <div className="flex items-center gap-3 pt-4 border-t border-[#E6F4F1]">
+          <Button
+            onClick={save}
+            disabled={saving}
+            className="bg-[#0891B2] hover:bg-[#0E7490] h-12 rounded-xl font-bold text-white"
+          >
             {saving ? "Enregistrement..." : "Enregistrer"}
           </Button>
-          {savedAt && <span className="text-sm text-green-600">✓ Enregistré</span>}
+          {savedAt && (
+            <span className="text-sm text-[#0891B2] font-medium">&#x2713; Enregistré</span>
+          )}
         </div>
       </div>
     </div>

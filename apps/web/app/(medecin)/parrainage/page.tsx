@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { Gift } from "lucide-react";
 
 type Referral = {
   id: string;
@@ -22,7 +23,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-orange-100 text-orange-700",
   validated: "bg-blue-100 text-blue-700",
-  rewarded: "bg-green-100 text-green-700",
+  rewarded: "bg-[#F0FDFA] text-[#0891B2]",
 };
 
 export default function ParrainagePage() {
@@ -69,19 +70,23 @@ export default function ParrainagePage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold">Programme de parrainage</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          Gagnez 1 mois gratuit pour chaque confrère inscrit
-        </p>
+      {/* Page header */}
+      <div className="flex items-center gap-3 mb-6">
+        <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+          <Gift className="h-5 w-5" />
+        </div>
+        <div>
+          <h1 className="text-2xl font-bold text-[#134E4A]">Programme de parrainage</h1>
+          <p className="text-sm text-gray-500">Gagnez 1 mois gratuit pour chaque confrère inscrit</p>
+        </div>
       </div>
 
       {/* CTA Banner */}
-      <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-xl p-6 text-white">
+      <div className="rounded-2xl bg-gradient-to-r from-[#0891B2] to-[#134E4A] p-6 text-white shadow-sm">
         <h2 className="text-lg font-semibold mb-1">
           Parrainez vos confrères, gagnez des mois gratuits
         </h2>
-        <p className="text-blue-100 text-sm">
+        <p className="text-white/80 text-sm">
           Partagez votre code unique. Dès qu&apos;un confrère parrainé confirme
           son premier rendez-vous, vous recevez <strong>1 mois gratuit</strong>{" "}
           tous les deux.
@@ -90,33 +95,33 @@ export default function ParrainagePage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="bg-white rounded-xl p-5 border text-center">
-          <div className="text-3xl font-bold">{referrals.length}</div>
+        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm text-center hover:shadow-md transition-shadow">
+          <div className="text-3xl font-bold text-[#134E4A]">{referrals.length}</div>
           <div className="text-xs text-gray-500 mt-1">Parrainages envoyés</div>
         </div>
-        <div className="bg-white rounded-xl p-5 border text-center">
-          <div className="text-3xl font-bold text-blue-600">{validatedCount}</div>
+        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm text-center hover:shadow-md transition-shadow">
+          <div className="text-3xl font-bold text-[#0891B2]">{validatedCount}</div>
           <div className="text-xs text-gray-500 mt-1">Validés</div>
         </div>
-        <div className="bg-white rounded-xl p-5 border text-center">
+        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm text-center hover:shadow-md transition-shadow">
           <div className="text-3xl font-bold text-green-600">{rewardedCount}</div>
           <div className="text-xs text-gray-500 mt-1">Mois gratuits gagnés</div>
         </div>
       </div>
 
       {/* Referral Code Card */}
-      <div className="bg-white rounded-xl border p-6 space-y-4">
-        <h2 className="font-semibold">Mon code de parrainage</h2>
+      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm space-y-4">
+        <h2 className="font-semibold text-[#134E4A]">Mon code de parrainage</h2>
         {loading ? (
-          <div className="h-12 bg-gray-100 rounded animate-pulse" />
+          <div className="h-12 bg-[#F0FDFA] rounded-xl animate-pulse" />
         ) : (
           <div className="flex items-center gap-3">
-            <div className="flex-1 bg-gray-50 border rounded-lg px-4 py-3 font-mono text-xl tracking-widest font-bold text-center select-all">
+            <div className="flex-1 bg-[#F0FDFA] border border-[#E6F4F1] rounded-xl px-4 py-3 font-mono text-xl tracking-widest font-bold text-center select-all text-[#134E4A]">
               {code}
             </div>
             <button
               onClick={handleCopy}
-              className="px-4 py-3 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors min-w-24"
+              className="px-4 py-3 bg-[#0891B2] text-white rounded-xl text-sm font-bold hover:bg-[#0E7490] transition-colors min-w-24 h-12"
             >
               {copied ? "Copié !" : "Copier"}
             </button>
@@ -126,7 +131,7 @@ export default function ParrainagePage() {
           href={whatsappLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white rounded-lg px-4 py-3 text-sm font-medium transition-colors"
+          className="flex items-center justify-center gap-2 w-full bg-green-500 hover:bg-green-600 text-white rounded-xl px-4 py-3 text-sm font-bold transition-colors h-12"
         >
           <svg
             className="w-5 h-5"
@@ -144,26 +149,33 @@ export default function ParrainagePage() {
       </div>
 
       {/* Referrals List */}
-      <div className="bg-white rounded-xl border">
-        <div className="p-4 border-b">
-          <h2 className="font-semibold">Mes parrainages</h2>
+      <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm">
+        <div className="p-4 border-b border-[#E6F4F1] flex items-center justify-between">
+          <h2 className="font-semibold text-[#134E4A]">Mes parrainages</h2>
+          {referrals.length > 0 && (
+            <span className="text-xs text-[#0891B2] font-semibold bg-[#F0FDFA] px-2.5 py-1 rounded-full">{referrals.length}</span>
+          )}
         </div>
         {loading ? (
           <div className="p-6 space-y-3">
             {[1, 2].map((i) => (
-              <div key={i} className="h-10 bg-gray-100 rounded animate-pulse" />
+              <div key={i} className="h-10 bg-[#F0FDFA] rounded-xl animate-pulse" />
             ))}
           </div>
         ) : referrals.length === 0 ? (
-          <p className="p-6 text-gray-400 text-center text-sm">
-            Aucun parrainage pour le moment. Partagez votre code pour commencer !
-          </p>
+          <div className="p-10 text-center">
+            <div className="h-12 w-12 rounded-2xl bg-[#F0FDFA] flex items-center justify-center mx-auto mb-3">
+              <Gift className="h-6 w-6 text-[#0891B2]" />
+            </div>
+            <p className="text-[#134E4A] font-medium mb-1">Aucun parrainage pour le moment</p>
+            <p className="text-sm text-gray-400">Partagez votre code pour commencer !</p>
+          </div>
         ) : (
-          <div className="divide-y">
+          <div className="divide-y divide-[#E6F4F1]">
             {referrals.map((r) => (
-              <div key={r.id} className="p-4 flex items-center justify-between">
+              <div key={r.id} className="p-4 flex items-center justify-between hover:bg-[#F0FDFA] transition-colors">
                 <div>
-                  <div className="font-medium text-sm">{r.referredName}</div>
+                  <div className="font-medium text-sm text-[#134E4A]">{r.referredName}</div>
                   <div className="text-xs text-gray-500">
                     {r.referredEmail} &middot; Inscrit le{" "}
                     {format(new Date(r.createdAt), "d MMM yyyy", { locale: fr })}
@@ -173,7 +185,7 @@ export default function ParrainagePage() {
                   </div>
                 </div>
                 <span
-                  className={`text-xs px-2 py-1 rounded font-medium ${
+                  className={`text-xs px-2.5 py-1 rounded-full font-medium ${
                     STATUS_STYLES[r.status] ?? "bg-gray-100 text-gray-600"
                   }`}
                 >

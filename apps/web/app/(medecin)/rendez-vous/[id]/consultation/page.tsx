@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { searchIcd10, type Icd10Code } from "@/lib/icd10-tn";
-import { CheckCircle2, X } from "lucide-react";
+import { CheckCircle2, X, ClipboardList, ArrowLeft } from "lucide-react";
 
 type Vitals = {
   bp_systolic?: number | "";
@@ -75,7 +75,7 @@ function VitalsGrid({
                 [key]: val === "" ? "" : parseFloat(val),
               });
             }}
-            className="w-full border border-[#E6F4F1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] focus:border-transparent bg-white"
+            className="w-full h-10 border border-[#E6F4F1] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] focus:border-transparent bg-white"
           />
         </div>
       ))}
@@ -129,18 +129,18 @@ function IcdTagger({
           onChange={(e) => setQuery(e.target.value)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           placeholder="Rechercher un code CIM-10 (ex: diabète, I10...)"
-          className="w-full border border-[#E6F4F1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] bg-white"
+          className="w-full h-10 border border-[#E6F4F1] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] bg-white"
         />
         {open && results.length > 0 && (
-          <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#E6F4F1] rounded-lg shadow-lg max-h-60 overflow-y-auto">
+          <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#E6F4F1] rounded-xl shadow-lg max-h-60 overflow-y-auto">
             {results.map((r) => (
               <button
                 key={r.code}
                 type="button"
                 onMouseDown={() => addCode(r)}
-                className="w-full text-left px-3 py-2 hover:bg-[#F0FDFA] text-sm flex items-center gap-2"
+                className="w-full text-left px-3 py-2 hover:bg-[#F0FDFA] text-sm flex items-center gap-2 transition-colors"
               >
-                <span className="font-mono text-xs bg-[#E6F4F1] text-[#0891B2] px-1.5 py-0.5 rounded font-bold shrink-0">
+                <span className="font-mono text-xs bg-[#E6F4F1] text-[#0891B2] px-1.5 py-0.5 rounded-lg font-bold shrink-0">
                   {r.code}
                 </span>
                 <span className="text-gray-700">{r.label}</span>
@@ -200,7 +200,7 @@ function SoapSection({
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={4}
-        className="w-full border border-[#E6F4F1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] resize-y bg-white text-gray-800"
+        className="w-full border border-[#E6F4F1] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] resize-y bg-white text-gray-800"
       />
     </div>
   );
@@ -311,7 +311,7 @@ export default function ConsultationPage() {
   );
 
   if (loading) {
-    return <p className="text-gray-400 text-sm p-6">Chargement de la note de consultation...</p>;
+    return <p className="text-[#0891B2] text-sm p-6">Chargement de la note de consultation...</p>;
   }
 
   return (
@@ -320,10 +320,13 @@ export default function ConsultationPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push("/rendez-vous")}
-          className="text-sm text-gray-500 hover:text-gray-700"
+          className="h-9 w-9 rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] flex items-center justify-center text-gray-500 hover:text-[#0891B2] transition-colors"
         >
-          ←
+          <ArrowLeft className="h-4 w-4" />
         </button>
+        <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+          <ClipboardList className="h-5 w-5" />
+        </div>
         <div className="flex-1">
           <h1 className="text-xl font-bold text-[#134E4A]">Note de consultation SOAP</h1>
           {appointmentDate && (
@@ -337,7 +340,7 @@ export default function ConsultationPage() {
             <span className="text-gray-400">Enregistrement...</span>
           )}
           {saveStatus === "saved" && (
-            <span className="flex items-center gap-1 text-green-600">
+            <span className="flex items-center gap-1 text-[#0891B2] font-medium">
               <CheckCircle2 size={15} />
               Enregistré
             </span>
@@ -349,7 +352,7 @@ export default function ConsultationPage() {
       </div>
 
       {/* Vitals */}
-      <div className="bg-white rounded-xl border border-[#E6F4F1] p-5 space-y-4">
+      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm space-y-4">
         <h2 className="font-semibold text-[#134E4A] text-sm uppercase tracking-wide">
           Constantes vitales
         </h2>
@@ -360,7 +363,7 @@ export default function ConsultationPage() {
       </div>
 
       {/* SOAP Sections */}
-      <div className="bg-white rounded-xl border border-[#E6F4F1] p-5 space-y-6">
+      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm space-y-6">
         <SoapSection
           letter="S"
           label="Subjectif — Ce que rapporte le patient"
@@ -391,7 +394,7 @@ export default function ConsultationPage() {
             onChange={(e) => updateNote({ assessment: e.target.value })}
             placeholder="Diagnostic principal, diagnostics différentiels..."
             rows={3}
-            className="w-full border border-[#E6F4F1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] resize-y bg-white text-gray-800 mb-3"
+            className="w-full border border-[#E6F4F1] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] resize-y bg-white text-gray-800 mb-3"
           />
           <div className="space-y-1.5">
             <div className="text-xs text-[#134E4A] font-medium">Codes CIM-10</div>
