@@ -302,7 +302,7 @@ export default function InscriptionPage() {
                           <Label className="text-[#134E4A] font-semibold">{t("specialty")}</Label>
                           <Select
                             value={form.specialty}
-                            onValueChange={(v) => setForm((p) => ({ ...p, specialty: v }))}
+                            onValueChange={(v) => setForm((p) => ({ ...p, specialty: v ?? "" }))}
                           >
                             <SelectTrigger className="h-12 rounded-xl border-[#E6F4F1]">
                               <SelectValue placeholder="Choisir..." />
@@ -318,7 +318,7 @@ export default function InscriptionPage() {
                           <Label className="text-[#134E4A] font-semibold">{t("city")}</Label>
                           <Select
                             value={form.city}
-                            onValueChange={(v) => setForm((p) => ({ ...p, city: v }))}
+                            onValueChange={(v) => setForm((p) => ({ ...p, city: v ?? "" }))}
                           >
                             <SelectTrigger className="h-12 rounded-xl border-[#E6F4F1]">
                               <SelectValue placeholder="Choisir..." />
