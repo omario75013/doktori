@@ -50,7 +50,7 @@ export async function generateMetadata(): Promise<Metadata> {
       canonical: "https://doktori.tn",
       languages: {
         "fr-TN": "https://doktori.tn",
-        "ar-TN": "https://doktori.tn/ar",
+        "ar-TN": "https://doktori.tn",
         "x-default": "https://doktori.tn",
       },
     },

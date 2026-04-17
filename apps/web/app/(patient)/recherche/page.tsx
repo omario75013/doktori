@@ -330,7 +330,7 @@ function RechercheInner() {
             {/* Mobile filter toggle */}
             <button
               onClick={() => setMobileFiltersOpen(true)}
-              className="relative flex h-12 w-12 items-center justify-center rounded-xl border-2 border-[#E6F4F1] bg-white text-[#0891B2] lg:hidden"
+              className="relative flex h-12 w-12 items-center justify-center rounded-xl border-2 border-[#E6F4F1] bg-white text-[#0891B2] md:hidden"
               aria-label={t("filtersAriaLabel")}
             >
               <SlidersHorizontal className="h-5 w-5" strokeWidth={2.5} />
@@ -371,11 +371,11 @@ function RechercheInner() {
 
       {/* ═══════════════ MAIN LAYOUT ═══════════════ */}
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+        <div className="grid gap-6 md:grid-cols-[280px_1fr]">
           {/* ═══════════════ SIDEBAR FILTERS ═══════════════ */}
-          <aside className={`${mobileFiltersOpen ? "fixed inset-0 z-50 overflow-y-auto bg-white p-4 lg:static lg:p-0" : "hidden lg:block"}`}>
+          <aside className={`${mobileFiltersOpen ? "fixed inset-0 z-50 overflow-y-auto bg-white p-4 md:static md:p-0" : "hidden md:block"}`}>
             {mobileFiltersOpen && (
-              <div className="mb-4 flex items-center justify-between border-b pb-3 lg:hidden">
+              <div className="mb-4 flex items-center justify-between border-b pb-3 md:hidden">
                 <h2 className="font-heading text-lg font-bold text-[#134E4A]">{t("mobileFiltersTitle")}</h2>
                 <button
                   onClick={() => setMobileFiltersOpen(false)}
@@ -503,7 +503,7 @@ function RechercheInner() {
             {mobileFiltersOpen && (
               <button
                 onClick={() => setMobileFiltersOpen(false)}
-                className="mt-6 h-12 w-full rounded-xl bg-[#0891B2] font-bold text-white lg:hidden"
+                className="mt-6 h-12 w-full rounded-xl bg-[#0891B2] font-bold text-white md:hidden"
               >
                 {t("apply", { count: results.length })}
               </button>

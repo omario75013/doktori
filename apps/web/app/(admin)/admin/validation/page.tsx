@@ -25,7 +25,7 @@ export default async function AdminValidationPage() {
     .orderBy(desc(doctors.createdAt));
 
   return (
-    <div className="p-8 max-w-7xl mx-auto">
+    <div className="p-4 sm:p-8 max-w-7xl mx-auto overflow-x-hidden">
       <div className="mb-6 flex items-center gap-3">
         <div className="w-10 h-10 rounded-lg bg-amber-100 flex items-center justify-center">
           <Clock className="w-5 h-5 text-amber-600" />

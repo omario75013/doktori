@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 
 export default function AdminDashboardPage() {
   return (
-    <div className="p-8 max-w-[1600px] mx-auto space-y-6">
+    <div className="p-4 sm:p-8 max-w-[1600px] mx-auto space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Tableau de bord</h1>
         <p className="text-slate-500 mt-1">

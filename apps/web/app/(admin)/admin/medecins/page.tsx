@@ -30,7 +30,7 @@ export default async function AdminDoctorsPage() {
   const cities = Array.from(new Set(list.map((d) => d.city))).sort();
 
   return (
-    <div className="p-8 max-w-[1600px] mx-auto">
+    <div className="p-4 sm:p-8 max-w-[1600px] mx-auto overflow-x-hidden">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-slate-900">Médecins</h1>
         <p className="text-slate-500 mt-1">
