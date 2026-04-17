@@ -6,7 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Heart, ShieldCheck } from "lucide-react";
+import {
+  Heart,
+  ShieldCheck,
+  ClipboardList,
+  Pill,
+  Activity,
+  Droplets,
+  User,
+} from "lucide-react";
 
 interface Profile {
   patient: {
@@ -25,6 +33,11 @@ interface Profile {
 }
 
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+
+const selectClass =
+  "w-full h-12 rounded-xl border border-[#E6F4F1] bg-white px-3 py-2 text-sm text-[#134E4A] focus:outline-none focus:ring-2 focus:ring-[#0891B2] focus:border-transparent transition-shadow";
+
+const labelClass = "text-[#134E4A] font-semibold text-sm";
 
 export default function DossierMedicalPage() {
   const router = useRouter();
@@ -79,6 +92,7 @@ export default function DossierMedicalPage() {
     e.preventDefault();
     if (!token) return;
     setSaving(true);
+    setSavedAt(null);
     const res = await fetch("/api/patients/me/profile", {
       method: "PUT",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
@@ -98,68 +112,110 @@ export default function DossierMedicalPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p className="text-gray-400 text-sm">Chargement...</p>
+      <div className="min-h-screen bg-[#F0FDFA]/40 flex items-center justify-center">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-[#134E4A]/60 text-sm">Chargement...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F0FDFA]/40 px-4 py-8">
-      <div className="mx-auto max-w-2xl space-y-6">
-        <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-1">
-          <div className="flex items-center gap-2 text-[#0891B2]">
-            <Heart className="h-5 w-5" strokeWidth={2.5} />
-            <span className="text-xs font-bold uppercase tracking-wider">Mon dossier médical</span>
+    <div className="min-h-screen bg-[#F0FDFA]/40">
+      {/* Teal gradient banner */}
+      <div className="bg-gradient-to-br from-[#0891B2] to-[#134E4A] px-4 py-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20">
+              <ClipboardList className="h-5 w-5 text-white" strokeWidth={2} />
+            </div>
+            <div>
+              <h1 className="text-xl font-black text-white">Mon dossier médical</h1>
+              <p className="text-white/70 text-xs mt-0.5">{patientName}</p>
+            </div>
           </div>
-          <h1 className="font-heading text-2xl font-black text-[#134E4A]">{patientName}</h1>
-          <p className="text-sm text-[#134E4A]/60">
+        </div>
+      </div>
+
+      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
+        {/* Context note */}
+        <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm p-4 flex items-start gap-3">
+          <ShieldCheck className="h-5 w-5 text-[#0891B2] flex-shrink-0 mt-0.5" strokeWidth={2} />
+          <p className="text-sm text-[#134E4A]/70">
             Ces informations sont partagées avec le médecin que vous consultez sur Doktori.
+            Elles sont strictement confidentielles.
           </p>
         </div>
 
-        <form onSubmit={handleSave} className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-5">
-          <h2 className="font-heading text-lg font-black text-[#134E4A]">Informations générales</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="dob">Date de naissance</Label>
-              <Input id="dob" type="date" value={dob} onChange={(e) => setDob(e.target.value)} />
+        <form onSubmit={handleSave} className="space-y-6">
+          {/* Section: Informations générales */}
+          <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-5">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0891B2]/10">
+                <User className="h-4 w-4 text-[#0891B2]" strokeWidth={2} />
+              </div>
+              <h2 className="font-bold text-[#134E4A]">Informations générales</h2>
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="gender">Sexe</Label>
-              <select
-                id="gender"
-                value={gender}
-                onChange={(e) => setGender(e.target.value as "M" | "F" | "")}
-                className="w-full rounded-md border border-[#E6F4F1] bg-white px-3 py-2 text-sm"
-              >
-                <option value="">—</option>
-                <option value="M">Homme</option>
-                <option value="F">Femme</option>
-              </select>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="blood">Groupe sanguin</Label>
-              <select
-                id="blood"
-                value={bloodType}
-                onChange={(e) => setBloodType(e.target.value)}
-                className="w-full rounded-md border border-[#E6F4F1] bg-white px-3 py-2 text-sm"
-              >
-                <option value="">—</option>
-                {BLOOD_TYPES.map((b) => (
-                  <option key={b} value={b}>
-                    {b}
-                  </option>
-                ))}
-              </select>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="dob" className={labelClass}>Date de naissance</Label>
+                <Input
+                  id="dob"
+                  type="date"
+                  value={dob}
+                  onChange={(e) => setDob(e.target.value)}
+                  className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="gender" className={labelClass}>Sexe</Label>
+                <select
+                  id="gender"
+                  value={gender}
+                  onChange={(e) => setGender(e.target.value as "M" | "F" | "")}
+                  className={selectClass}
+                >
+                  <option value="">—</option>
+                  <option value="M">Homme</option>
+                  <option value="F">Femme</option>
+                </select>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="blood" className={labelClass}>
+                  <span className="flex items-center gap-1">
+                    <Droplets className="h-3.5 w-3.5 text-red-500" />
+                    Groupe sanguin
+                  </span>
+                </Label>
+                <select
+                  id="blood"
+                  value={bloodType}
+                  onChange={(e) => setBloodType(e.target.value)}
+                  className={selectClass}
+                >
+                  <option value="">—</option>
+                  {BLOOD_TYPES.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
-          <h2 className="font-heading text-lg font-black text-[#134E4A] pt-2">Antécédents</h2>
-          <div className="space-y-4">
+          {/* Section: Allergies */}
+          <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-50">
+                <Heart className="h-4 w-4 text-red-500" strokeWidth={2} />
+              </div>
+              <h2 className="font-bold text-[#134E4A]">Allergies</h2>
+            </div>
             <div className="space-y-1.5">
-              <Label htmlFor="allergies">Allergies connues</Label>
+              <Label htmlFor="allergies" className={labelClass}>Allergies connues</Label>
               <Textarea
                 id="allergies"
                 placeholder="Ex: pénicilline, arachides, pollen..."
@@ -167,21 +223,21 @@ export default function DossierMedicalPage() {
                 onChange={(e) => setAllergies(e.target.value)}
                 maxLength={2000}
                 rows={2}
+                className="rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] resize-none"
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="chronic">Maladies chroniques</Label>
-              <Textarea
-                id="chronic"
-                placeholder="Ex: diabète type 2, hypertension, asthme..."
-                value={chronic}
-                onChange={(e) => setChronic(e.target.value)}
-                maxLength={2000}
-                rows={2}
-              />
+          </div>
+
+          {/* Section: Traitements */}
+          <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50">
+                <Pill className="h-4 w-4 text-blue-500" strokeWidth={2} />
+              </div>
+              <h2 className="font-bold text-[#134E4A]">Traitements en cours</h2>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="meds">Traitements en cours</Label>
+              <Label htmlFor="meds" className={labelClass}>Médicaments et posologie</Label>
               <Textarea
                 id="meds"
                 placeholder="Ex: metformine 500mg x2/jour, losartan 50mg..."
@@ -189,10 +245,33 @@ export default function DossierMedicalPage() {
                 onChange={(e) => setMeds(e.target.value)}
                 maxLength={2000}
                 rows={2}
+                className="rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] resize-none"
+              />
+            </div>
+          </div>
+
+          {/* Section: Maladies chroniques + notes */}
+          <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-4">
+            <div className="flex items-center gap-2">
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50">
+                <Activity className="h-4 w-4 text-orange-500" strokeWidth={2} />
+              </div>
+              <h2 className="font-bold text-[#134E4A]">Antécédents médicaux</h2>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="chronic" className={labelClass}>Maladies chroniques</Label>
+              <Textarea
+                id="chronic"
+                placeholder="Ex: diabète type 2, hypertension, asthme..."
+                value={chronic}
+                onChange={(e) => setChronic(e.target.value)}
+                maxLength={2000}
+                rows={2}
+                className="rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] resize-none"
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="notes">Autres remarques</Label>
+              <Label htmlFor="notes" className={labelClass}>Autres remarques</Label>
               <Textarea
                 id="notes"
                 placeholder="Grossesse, interventions chirurgicales, antécédents familiaux..."
@@ -200,24 +279,30 @@ export default function DossierMedicalPage() {
                 onChange={(e) => setNotes(e.target.value)}
                 maxLength={2000}
                 rows={3}
+                className="rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] resize-none"
               />
             </div>
           </div>
 
-          <div className="flex items-center gap-3 pt-2">
-            <Button type="submit" disabled={saving} className="bg-[#0891B2] hover:bg-[#0E7490]">
-              {saving ? "Enregistrement..." : "Enregistrer"}
+          {/* Save button */}
+          <div className="space-y-3">
+            <Button
+              type="submit"
+              disabled={saving}
+              className="w-full h-12 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] font-bold text-white text-base transition-colors"
+            >
+              {saving ? "Enregistrement..." : "Enregistrer le dossier"}
             </Button>
             {savedAt && (
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-[#16A34A]">
+              <div className="flex items-center justify-center gap-2 text-sm font-semibold text-[#16A34A] bg-green-50 border border-green-200 rounded-xl py-2.5">
                 <ShieldCheck className="h-4 w-4" strokeWidth={2.5} />
-                Enregistré
-              </span>
+                Dossier enregistré avec succès
+              </div>
             )}
           </div>
         </form>
 
-        <div className="text-center">
+        <div className="text-center pb-4">
           <a href="/mes-rdv" className="text-sm font-semibold text-[#0891B2] hover:underline">
             ← Retour à mes rendez-vous
           </a>

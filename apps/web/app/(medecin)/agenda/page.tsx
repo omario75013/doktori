@@ -12,6 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { CalendarDays, Sun, Sunset, Clock, CheckCircle2, AlertCircle } from "lucide-react";
 
 type DaySchedule = {
   dayOfWeek: number;
@@ -88,6 +89,9 @@ function mergeApiSlots(defaults: DaySchedule[], apiSlots: ApiSlot[]): DaySchedul
     };
   });
 }
+
+const timeInputClass =
+  "w-28 h-10 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] text-sm";
 
 export default function AgendaPage() {
   const [days, setDays] = useState<DaySchedule[]>(buildDefaultDays());
@@ -194,48 +198,88 @@ export default function AgendaPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64 text-gray-500">
-        Chargement de l'agenda…
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-[#134E4A]/60 text-sm">Chargement de l'agenda...</p>
+        </div>
       </div>
     );
   }
 
-  return (
-    <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-900 mb-2">Configuration de l'agenda</h1>
-      <p className="text-sm text-gray-500 mb-6">
-        Définissez vos horaires de disponibilité pour chaque jour de la semaine.
-      </p>
+  const openDaysCount = days.filter((d) => d.open).length;
 
+  return (
+    <div className="max-w-3xl mx-auto space-y-6">
+      {/* Page header */}
+      <div>
+        <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0891B2]/10">
+            <CalendarDays className="h-4 w-4 text-[#0891B2]" strokeWidth={2} />
+          </div>
+          <h1 className="text-2xl font-black text-[#134E4A]">Configuration de l'agenda</h1>
+        </div>
+        <p className="text-sm text-[#134E4A]/60 ml-10">
+          Définissez vos horaires de disponibilité pour chaque jour de la semaine.
+        </p>
+      </div>
+
+      {/* Feedback banner */}
       {feedback && (
         <div
-          className={`mb-4 rounded-lg px-4 py-3 text-sm ${
+          className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium ${
             feedback.type === "success"
               ? "bg-green-50 text-green-800 border border-green-200"
               : "bg-red-50 text-red-800 border border-red-200"
           }`}
         >
+          {feedback.type === "success" ? (
+            <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-green-600" />
+          ) : (
+            <AlertCircle className="h-4 w-4 flex-shrink-0 text-red-600" />
+          )}
           {feedback.message}
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-gray-200 divide-y divide-gray-100">
+      {/* Summary pill */}
+      <div className="flex items-center gap-2">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0891B2]/10 px-3 py-1 text-xs font-semibold text-[#0891B2]">
+          <Clock className="h-3 w-3" />
+          {openDaysCount} jour{openDaysCount !== 1 ? "s" : ""} ouvert{openDaysCount !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      {/* Schedule grid */}
+      <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm divide-y divide-[#E6F4F1]">
         {days.map((day) => (
-          <div key={day.dayOfWeek} className="p-4">
+          <div
+            key={day.dayOfWeek}
+            className={`p-5 transition-colors ${day.open ? "bg-white" : "bg-[#F0FDFA]/30"}`}
+          >
             {/* Day header row */}
-            <div className="flex items-center gap-3 mb-3">
+            <div className="flex items-center gap-3">
               <Checkbox
                 id={`day-${day.dayOfWeek}`}
                 checked={day.open}
                 onCheckedChange={(checked) =>
                   updateDay(day.dayOfWeek, { open: Boolean(checked) })
                 }
+                className="data-[state=checked]:bg-[#0891B2] data-[state=checked]:border-[#0891B2]"
               />
               <Label
                 htmlFor={`day-${day.dayOfWeek}`}
-                className="w-24 font-semibold text-gray-700"
+                className="cursor-pointer select-none"
               >
-                {DAY_LABELS[day.dayOfWeek]}
+                {day.open ? (
+                  <span className="inline-flex items-center justify-center rounded-lg bg-[#0891B2] px-3 py-1 text-sm font-bold text-white min-w-[90px] text-center">
+                    {DAY_LABELS[day.dayOfWeek]}
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center justify-center rounded-lg bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-400 min-w-[90px] text-center">
+                    {DAY_LABELS[day.dayOfWeek]}
+                  </span>
+                )}
               </Label>
               {!day.open && (
                 <span className="text-xs text-gray-400 italic">Fermé</span>
@@ -244,11 +288,14 @@ export default function AgendaPage() {
 
             {/* Time blocks (visible when day is open) */}
             {day.open && (
-              <div className="ml-7 space-y-3">
+              <div className="mt-4 ml-8 space-y-4">
                 {/* Morning block */}
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-xs text-gray-500 w-16">Matin</span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
+                    <Sun className="h-3.5 w-3.5 text-amber-400" />
+                    <span className="text-xs font-semibold text-[#134E4A]/70">Matin</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Label htmlFor={`ms-${day.dayOfWeek}`} className="sr-only">
                       Début matin
                     </Label>
@@ -259,9 +306,9 @@ export default function AgendaPage() {
                       onChange={(e) =>
                         updateDay(day.dayOfWeek, { morningStart: e.target.value })
                       }
-                      className="w-28"
+                      className={timeInputClass}
                     />
-                    <span className="text-gray-400">—</span>
+                    <span className="text-[#134E4A]/40 font-bold">—</span>
                     <Label htmlFor={`me-${day.dayOfWeek}`} className="sr-only">
                       Fin matin
                     </Label>
@@ -272,15 +319,18 @@ export default function AgendaPage() {
                       onChange={(e) =>
                         updateDay(day.dayOfWeek, { morningEnd: e.target.value })
                       }
-                      className="w-28"
+                      className={timeInputClass}
                     />
                   </div>
                 </div>
 
                 {/* Afternoon block */}
                 <div className="flex items-center gap-3 flex-wrap">
-                  <span className="text-xs text-gray-500 w-16">Après-midi</span>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
+                    <Sunset className="h-3.5 w-3.5 text-orange-400" />
+                    <span className="text-xs font-semibold text-[#134E4A]/70">Après-midi</span>
+                  </div>
+                  <div className="flex items-center gap-2 flex-wrap">
                     <Label htmlFor={`as-${day.dayOfWeek}`} className="sr-only">
                       Début après-midi
                     </Label>
@@ -291,9 +341,9 @@ export default function AgendaPage() {
                       onChange={(e) =>
                         updateDay(day.dayOfWeek, { afternoonStart: e.target.value })
                       }
-                      className="w-28"
+                      className={timeInputClass}
                     />
-                    <span className="text-gray-400">—</span>
+                    <span className="text-[#134E4A]/40 font-bold">—</span>
                     <Label htmlFor={`ae-${day.dayOfWeek}`} className="sr-only">
                       Fin après-midi
                     </Label>
@@ -304,21 +354,24 @@ export default function AgendaPage() {
                       onChange={(e) =>
                         updateDay(day.dayOfWeek, { afternoonEnd: e.target.value })
                       }
-                      className="w-28"
+                      className={timeInputClass}
                     />
                   </div>
                 </div>
 
                 {/* Slot duration */}
-                <div className="flex items-center gap-3">
-                  <span className="text-xs text-gray-500 w-16">Durée RDV</span>
+                <div className="flex items-center gap-3 flex-wrap">
+                  <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
+                    <Clock className="h-3.5 w-3.5 text-[#0891B2]" />
+                    <span className="text-xs font-semibold text-[#134E4A]/70">Durée RDV</span>
+                  </div>
                   <Select
                     value={String(day.slotDuration)}
                     onValueChange={(val) => {
                       if (val) updateDay(day.dayOfWeek, { slotDuration: Number(val) });
                     }}
                   >
-                    <SelectTrigger className="w-28">
+                    <SelectTrigger className="w-32 h-10 rounded-xl border-[#E6F4F1] focus:ring-[#0891B2]">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -336,9 +389,15 @@ export default function AgendaPage() {
         ))}
       </div>
 
-      <div className="mt-6 flex justify-end">
-        <Button onClick={handleSave} disabled={saving} size="lg">
-          {saving ? "Sauvegarde…" : "Enregistrer l'agenda"}
+      {/* Save button */}
+      <div className="flex justify-end pb-6">
+        <Button
+          onClick={handleSave}
+          disabled={saving}
+          className="h-12 px-8 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] font-bold text-white text-base transition-colors"
+          size="lg"
+        >
+          {saving ? "Sauvegarde en cours..." : "Enregistrer l'agenda"}
         </Button>
       </div>
     </div>
