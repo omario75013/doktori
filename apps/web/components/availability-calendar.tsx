@@ -144,8 +144,8 @@ export function AvailabilityCalendar({ doctorSlug, typeId, onSelect, selected }:
         </button>
       </div>
 
-      {/* Day carousel */}
-      <div className="flex gap-2 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1 scrollbar-thin">
+      {/* Day carousel — flex-nowrap + overflow-x-auto so days scroll horizontally on mobile */}
+      <div className="flex flex-nowrap gap-2 overflow-x-auto snap-x snap-mandatory pb-2 -mx-1 px-1 scrollbar-thin">
         {loading && visibleDays.length === 0
           ? Array.from({ length: 7 }).map((_, i) => (
               <div
@@ -297,7 +297,7 @@ function SlotSection({
       {slots.length === 0 ? (
         <p className="text-xs text-[#134E4A]/40 italic pl-6">Aucun créneau</p>
       ) : (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
           {slots.map((slot) => {
             const isSelected =
               selected?.date === selectedDate && selected?.startTime === slot.startTime;
@@ -306,7 +306,7 @@ function SlotSection({
                 key={slot.startTime}
                 type="button"
                 onClick={() => onSelect(selectedDate, slot.startTime)}
-                className={`rounded-xl px-4 py-2.5 text-sm font-bold transition-colors border ${
+                className={`min-h-[44px] rounded-xl px-4 py-2.5 text-sm font-bold transition-colors border ${
                   isSelected
                     ? "bg-[#0891B2] text-white border-[#0891B2] shadow-md"
                     : "border-[#E6F4F1] text-[#0891B2] hover:bg-[#F0FDFA] hover:border-[#0891B2] bg-white"

@@ -61,7 +61,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col bg-white">
+    <div className="flex flex-col bg-white overflow-hidden">
       {/* ═══════════════════════════ HERO ═══════════════════════════ */}
       <section className="relative overflow-hidden bg-gradient-to-b from-[#F0FDFA] via-white to-white px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
         {/* Subtle grid background */}

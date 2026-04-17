@@ -39,57 +39,62 @@ export async function GET(req: NextRequest) {
     ? sql`AND s.doctor_id = ${doctorId}::uuid`
     : sql``;
 
-  const [dataResult, countResult] = await Promise.all([
-    db.execute(sql`
-      SELECT
-        s.id,
-        s.status,
-        s.symptom_category,
-        s.description,
-        s.fee,
-        s.commission,
-        s.distance_m,
-        s.resolution,
-        s.requested_at,
-        s.accepted_at,
-        s.completed_at,
-        s.expires_at,
-        s.patient_lat,
-        s.patient_lng,
-        s.doctor_id,
-        p.name AS patient_name,
-        p.phone AS patient_phone,
-        d.name AS doctor_name,
-        d.city AS doctor_city,
-        r.rating AS review_rating,
-        EXTRACT(EPOCH FROM (COALESCE(s.accepted_at, s.completed_at, NOW()) - s.requested_at)) * 1000 AS duration_ms
-      FROM sos_sessions s
-      LEFT JOIN patients p ON p.id = s.patient_id
-      LEFT JOIN doctors d ON d.id = s.doctor_id
-      LEFT JOIN reviews r ON r.sos_session_id = s.id
-      WHERE 1=1
-      ${statusClause}
-      ${fromClause}
-      ${toClause}
-      ${symptomClause}
-      ${doctorClause}
-      ORDER BY s.requested_at DESC
-      LIMIT ${limit} OFFSET ${offset}
-    `),
-    db.execute(sql`
-      SELECT COUNT(*)::int AS total
-      FROM sos_sessions s
-      WHERE 1=1
-      ${statusClause}
-      ${fromClause}
-      ${toClause}
-      ${symptomClause}
-      ${doctorClause}
-    `),
-  ]);
+  try {
+    const [dataResult, countResult] = await Promise.all([
+      db.execute(sql`
+        SELECT
+          s.id,
+          s.status,
+          s.symptom_category,
+          s.description,
+          s.fee,
+          s.commission,
+          s.distance_m,
+          s.resolution,
+          s.requested_at,
+          s.accepted_at,
+          s.completed_at,
+          s.expires_at,
+          s.patient_lat,
+          s.patient_lng,
+          s.doctor_id,
+          p.name AS patient_name,
+          p.phone AS patient_phone,
+          d.name AS doctor_name,
+          d.city AS doctor_city,
+          r.rating AS review_rating,
+          EXTRACT(EPOCH FROM (COALESCE(s.accepted_at, s.completed_at, NOW()) - s.requested_at)) * 1000 AS duration_ms
+        FROM sos_sessions s
+        LEFT JOIN patients p ON p.id = s.patient_id
+        LEFT JOIN doctors d ON d.id = s.doctor_id
+        LEFT JOIN reviews r ON r.sos_session_id = s.id
+        WHERE 1=1
+        ${statusClause}
+        ${fromClause}
+        ${toClause}
+        ${symptomClause}
+        ${doctorClause}
+        ORDER BY s.requested_at DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `),
+      db.execute(sql`
+        SELECT COUNT(*)::int AS total
+        FROM sos_sessions s
+        WHERE 1=1
+        ${statusClause}
+        ${fromClause}
+        ${toClause}
+        ${symptomClause}
+        ${doctorClause}
+      `),
+    ]);
 
-  const sessions = dataResult as unknown as Record<string, unknown>[];
-  const total = ((countResult as unknown as Array<{ total: number }>)[0]?.total) ?? 0;
+    const sessions = dataResult as unknown as Record<string, unknown>[];
+    const total = ((countResult as unknown as Array<{ total: number }>)[0]?.total) ?? 0;
 
-  return NextResponse.json({ sessions, total, page, limit });
+    return NextResponse.json({ sessions, total, page, limit });
+  } catch (err) {
+    console.error("[admin/sos/sessions] DB error:", err);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
 }

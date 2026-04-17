@@ -13,7 +13,8 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         adminEmail={admin.email}
         adminRole={admin.role}
       />
-      <main className="flex-1 overflow-auto">{children}</main>
+      {/* pt-14 on mobile prevents content from sitting under the fixed hamburger button */}
+      <main className="flex-1 overflow-auto pt-14 md:pt-0">{children}</main>
     </div>
   );
 }
