@@ -27,6 +27,12 @@ const SYMPTOMS = [
   { id: "autre", label: "Autre", icon: HelpCircle },
 ];
 
+function formatCountdown(seconds: number): string {
+  const m = Math.floor(seconds / 60);
+  const s = seconds % 60;
+  return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+}
+
 function PulseCircle({ color, size }: { color: string; size: number }) {
   const scale = useRef(new Animated.Value(1)).current;
   const opacity = useRef(new Animated.Value(0.4)).current;
@@ -68,7 +74,10 @@ export default function SOSScreen() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [session, setSession] = useState<any>(null);
   const [error, setError] = useState("");
+  const [expiresAt, setExpiresAt] = useState<Date | null>(null);
+  const [countdown, setCountdown] = useState(0);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
     if (step !== "waiting" || !sessionId) return;
@@ -89,9 +98,25 @@ export default function SOSScreen() {
       }
     }
     poll();
-    pollRef.current = setInterval(poll, 5000);
+    pollRef.current = setInterval(poll, 10000);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [step, sessionId]);
+
+  // Countdown tick — updates every second while waiting
+  useEffect(() => {
+    if (step !== "waiting" || !expiresAt) return;
+    function tick() {
+      const remaining = Math.max(0, Math.floor((expiresAt!.getTime() - Date.now()) / 1000));
+      setCountdown(remaining);
+      if (remaining === 0) {
+        setStep("expired");
+        if (countdownRef.current) clearInterval(countdownRef.current);
+      }
+    }
+    tick();
+    countdownRef.current = setInterval(tick, 1000);
+    return () => { if (countdownRef.current) clearInterval(countdownRef.current); };
+  }, [step, expiresAt]);
 
   async function submitRequest() {
     if (!name.trim() || !phone.trim()) {
@@ -120,6 +145,9 @@ export default function SOSScreen() {
         description: description || undefined,
       });
       setSessionId(result.sessionId);
+      const exp = new Date(Date.now() + 30 * 60 * 1000);
+      setExpiresAt(exp);
+      setCountdown(1800);
       setStep("waiting");
     } catch (e: any) {
       setError(e.message || "Erreur lors de l'envoi");
@@ -140,6 +168,8 @@ export default function SOSScreen() {
     setName("");
     setPhone("");
     setDescription("");
+    setExpiresAt(null);
+    setCountdown(0);
   }
 
   return (
@@ -285,6 +315,12 @@ export default function SOSScreen() {
           <Text style={styles.statusText}>
             Nous contactons les médecins disponibles dans votre zone.
           </Text>
+          {countdown > 0 && (
+            <View style={styles.countdownWrap}>
+              <Text style={styles.countdownLabel}>Temps restant</Text>
+              <Text style={styles.countdownValue}>{formatCountdown(countdown)}</Text>
+            </View>
+          )}
           <Pressable onPress={reset} style={styles.cancelLink}>
             <Text style={styles.cancelText}>Annuler la demande</Text>
           </Pressable>
@@ -476,6 +512,16 @@ const styles = StyleSheet.create({
   },
   statusTitle: { fontSize: 20, fontWeight: "700", color: colors.ink, marginTop: spacing.sm, marginBottom: 8 },
   statusText: { fontSize: 14, color: colors.slate500, textAlign: "center", lineHeight: 21 },
+  countdownWrap: {
+    marginTop: spacing.md,
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.lg,
+    backgroundColor: colors.mist,
+    borderRadius: radius.md,
+    alignItems: "center",
+  },
+  countdownLabel: { fontSize: 11, color: colors.slate500, fontWeight: "500", textTransform: "uppercase", letterSpacing: 0.5 },
+  countdownValue: { fontSize: 28, fontWeight: "800", color: colors.primary, fontVariant: ["tabular-nums"], letterSpacing: 1 },
   successIconWrap: { marginBottom: spacing.md },
   successTitle: { fontSize: 24, fontWeight: "800", color: colors.greenDark, marginBottom: spacing.md, letterSpacing: -0.3 },
   doctorCard: {
