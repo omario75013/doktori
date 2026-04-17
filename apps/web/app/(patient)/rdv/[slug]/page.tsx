@@ -275,11 +275,6 @@ export default function RdvPage({
             <h1 className="font-heading font-black text-[#134E4A]">{doctor.name}</h1>
             <p className="text-sm text-[#0E7490]">{doctor.specialty}</p>
             <p className="text-xs text-[#134E4A]/50">{doctor.city}</p>
-            {doctor.consultationFee != null && (
-              <p className="text-sm text-[#0891B2] font-bold mt-0.5">
-                {(doctor.consultationFee / 1000).toFixed(0)} DT
-              </p>
-            )}
           </div>
         </div>
 
@@ -347,11 +342,6 @@ export default function RdvPage({
                   <div className="text-xs text-[#134E4A]/60 mt-1">
                     Rendez-vous en présentiel dans le cabinet du médecin.
                   </div>
-                  {doctor.consultationFee != null && (
-                    <div className="text-sm font-bold text-[#0891B2] mt-1.5">
-                      {(doctor.consultationFee / 1000).toFixed(0)} DT
-                    </div>
-                  )}
                 </div>
               </button>
 
@@ -375,9 +365,9 @@ export default function RdvPage({
                   <div className="text-xs text-[#134E4A]/60 mt-1">
                     Consultation à distance par vidéo.
                   </div>
-                  {(doctor.teleconsultFee != null ? doctor.teleconsultFee : doctor.consultationFee) != null && (
+                  {doctor.teleconsultFee != null && (
                     <div className="text-sm font-bold text-purple-700 mt-1.5">
-                      {((doctor.teleconsultFee ?? doctor.consultationFee ?? 0) / 1000).toFixed(0)} DT
+                      {(doctor.teleconsultFee / 1000).toFixed(0)} DT
                     </div>
                   )}
                 </div>
@@ -419,7 +409,7 @@ export default function RdvPage({
                       </div>
                     </div>
                   </div>
-                  {t.fee != null && (
+                  {t.fee != null && selectedMode === "teleconsult" && (
                     <div className="text-sm font-bold text-[#0891B2]">
                       {(t.fee / 1000).toFixed(0)} DT
                     </div>

@@ -229,7 +229,8 @@ export default function BookingScreen() {
   }, [appointmentId]);
 
   const availableSlots = slots.filter((s) => s.available);
-  const fee = selectedType?.fee ?? doctor?.consultationFee ?? null;
+  // Only show fee for teleconsult (prepaid via platform) — cabinet fees are paid in person
+  const fee = selectedType?.fee ?? null;
   const feeDisplay = fee != null ? `${(fee / 1000).toFixed(0)} DT` : null;
 
   if (doctorLoading) return <LoadingSpinner message="Chargement..." />;
@@ -246,11 +247,6 @@ export default function BookingScreen() {
           <Text style={styles.doctorName}>{doctor.name}</Text>
           <Text style={styles.doctorMeta}>{doctor.specialty} · {doctor.city}</Text>
         </View>
-        {feeDisplay && (
-          <View style={styles.feeBadge}>
-            <Text style={styles.feeText}>{feeDisplay}</Text>
-          </View>
-        )}
       </View>
 
       {/* Progress */}
@@ -269,10 +265,6 @@ export default function BookingScreen() {
                 <View style={styles.typeMetaRow}>
                   <Clock size={12} color={colors.slate400} />
                   <Text style={styles.typeMeta}>{t.durationMinutes} min</Text>
-                  {t.fee != null && <>
-                    <View style={styles.metaDot} />
-                    <Text style={styles.typeMeta}>{(t.fee / 1000).toFixed(0)} DT</Text>
-                  </>}
                 </View>
               </View>
               <ChevronRight size={18} color={colors.slate400} />
@@ -497,8 +489,6 @@ const styles = StyleSheet.create({
   doctorInitial: { fontSize: 18, fontWeight: "700", color: colors.primary },
   doctorName: { fontSize: 16, fontWeight: "700", color: colors.ink },
   doctorMeta: { fontSize: 13, color: colors.slate500, marginTop: 1 },
-  feeBadge: { backgroundColor: colors.primaryFaint, paddingHorizontal: 10, paddingVertical: 4, borderRadius: radius.full },
-  feeText: { fontSize: 14, fontWeight: "700", color: colors.primary },
 
   // Section
   section: {
@@ -521,7 +511,6 @@ const styles = StyleSheet.create({
   typeName: { fontSize: 15, fontWeight: "700", color: colors.ink },
   typeMetaRow: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 3 },
   typeMeta: { fontSize: 13, color: colors.slate500 },
-  metaDot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: colors.slate400, marginHorizontal: 4 },
 
   // Practice cards
   practiceCard: {
