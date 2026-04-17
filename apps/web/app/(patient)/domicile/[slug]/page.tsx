@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Home, CheckCircle, MapPin, CalendarDays } from "lucide-react";
 
 export default function HomeVisitRequestPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = use(params);
@@ -52,54 +53,119 @@ export default function HomeVisitRequestPage({ params }: { params: Promise<{ slu
 
   if (success) {
     return (
-      <div className="max-w-md mx-auto px-4 py-16 text-center">
-        <div className="text-5xl text-green-600 mb-4">✓</div>
-        <h1 className="text-2xl font-bold mb-2">Demande envoyée</h1>
-        <p className="text-gray-500 mb-6">Le médecin va vous contacter pour confirmer la visite.</p>
-        <Button onClick={() => router.push("/")}>Retour à l'accueil</Button>
+      <div className="min-h-screen bg-[#F0FDFA] flex items-center justify-center px-4">
+        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-10 shadow-sm text-center max-w-md w-full">
+          <div className="w-16 h-16 bg-[#0891B2]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-[#0891B2]" strokeWidth={2} />
+          </div>
+          <h1 className="text-2xl font-bold text-[#134E4A] mb-2">Demande envoyée</h1>
+          <p className="text-gray-500 mb-6">Le médecin va vous contacter pour confirmer la visite.</p>
+          <Button
+            onClick={() => router.push("/")}
+            className="bg-[#0891B2] hover:bg-[#0E7490] h-12 rounded-xl w-full text-white"
+          >
+            Retour à l'accueil
+          </Button>
+        </div>
       </div>
     );
   }
 
-  if (!doctor) return <div className="p-8 text-center text-gray-400">Chargement...</div>;
+  if (!doctor) {
+    return (
+      <div className="min-h-screen bg-[#F0FDFA] flex items-center justify-center">
+        <p className="text-gray-400">Chargement...</p>
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-lg mx-auto px-4 py-8">
-      <h1 className="text-2xl font-bold mb-1">Visite à domicile</h1>
-      <p className="text-gray-500 mb-6">Avec {doctor.name}</p>
+    <div className="min-h-screen bg-[#F0FDFA] py-10 px-4">
+      <div className="max-w-lg mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <div className="w-14 h-14 bg-[#0891B2]/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Home className="w-7 h-7 text-[#0891B2]" strokeWidth={2} />
+          </div>
+          <h1 className="text-2xl font-bold text-[#134E4A]">Visite à domicile</h1>
+          <p className="text-gray-500 mt-1">Avec {doctor.name}</p>
+        </div>
 
-      <form onSubmit={handleSubmit} className="bg-white rounded-xl border p-6 space-y-4">
-        <div>
-          <Label htmlFor="name">Nom complet</Label>
-          <Input id="name" name="name" required />
-        </div>
-        <div>
-          <Label htmlFor="phone">Téléphone</Label>
-          <Input id="phone" name="phone" placeholder="+216 XX XXX XXX" required />
-        </div>
-        <div>
-          <Label htmlFor="address">Adresse complète</Label>
-          <Textarea id="address" name="address" placeholder="Numéro, rue, quartier, ville" required />
-        </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div>
-            <Label htmlFor="date">Date souhaitée</Label>
-            <Input id="date" name="date" type="date" required />
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Patient info card */}
+          <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm space-y-4">
+            <h2 className="text-sm font-semibold text-[#134E4A] uppercase tracking-wide flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-[#0891B2]/10 flex items-center justify-center text-[#0891B2] text-xs font-bold">1</span>
+              Vos informations
+            </h2>
+            <div>
+              <Label htmlFor="name" className="text-[#134E4A] font-medium">Nom complet</Label>
+              <Input id="name" name="name" required className="mt-1 h-12 rounded-xl border-[#E6F4F1] focus:border-[#0891B2]" />
+            </div>
+            <div>
+              <Label htmlFor="phone" className="text-[#134E4A] font-medium">Téléphone</Label>
+              <Input id="phone" name="phone" placeholder="+216 XX XXX XXX" required className="mt-1 h-12 rounded-xl border-[#E6F4F1] focus:border-[#0891B2]" />
+            </div>
           </div>
-          <div>
-            <Label htmlFor="time">Heure souhaitée</Label>
-            <Input id="time" name="time" type="time" required />
+
+          {/* Address card */}
+          <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm space-y-4">
+            <h2 className="text-sm font-semibold text-[#134E4A] uppercase tracking-wide flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-[#0891B2]" />
+              Adresse de la visite
+            </h2>
+            <div>
+              <Label htmlFor="address" className="text-[#134E4A] font-medium">Adresse complète</Label>
+              <Textarea
+                id="address"
+                name="address"
+                placeholder="Numéro, rue, quartier, ville"
+                required
+                className="mt-1 rounded-xl border-[#E6F4F1] focus:border-[#0891B2] resize-none"
+              />
+            </div>
           </div>
-        </div>
-        <div>
-          <Label htmlFor="reason">Motif de la visite</Label>
-          <Textarea id="reason" name="reason" placeholder="Symptômes, contexte..." />
-        </div>
-        {error && <p className="text-red-500 text-sm">{error}</p>}
-        <Button type="submit" className="w-full" disabled={loading}>
-          {loading ? "Envoi..." : "Envoyer la demande"}
-        </Button>
-      </form>
+
+          {/* Date/time card */}
+          <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm space-y-4">
+            <h2 className="text-sm font-semibold text-[#134E4A] uppercase tracking-wide flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-[#0891B2]" />
+              Date souhaitée
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <Label htmlFor="date" className="text-[#134E4A] font-medium">Date</Label>
+                <Input id="date" name="date" type="date" required className="mt-1 h-12 rounded-xl border-[#E6F4F1] focus:border-[#0891B2]" />
+              </div>
+              <div>
+                <Label htmlFor="time" className="text-[#134E4A] font-medium">Heure</Label>
+                <Input id="time" name="time" type="time" required className="mt-1 h-12 rounded-xl border-[#E6F4F1] focus:border-[#0891B2]" />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="reason" className="text-[#134E4A] font-medium">Motif de la visite</Label>
+              <Textarea
+                id="reason"
+                name="reason"
+                placeholder="Symptômes, contexte..."
+                className="mt-1 rounded-xl border-[#E6F4F1] focus:border-[#0891B2] resize-none"
+              />
+            </div>
+          </div>
+
+          {error && (
+            <p className="text-red-500 text-sm bg-red-50 rounded-xl px-4 py-2">{error}</p>
+          )}
+
+          <Button
+            type="submit"
+            className="w-full bg-[#0891B2] hover:bg-[#0E7490] h-12 rounded-xl text-white font-medium"
+            disabled={loading}
+          >
+            {loading ? "Envoi..." : "Envoyer la demande"}
+          </Button>
+        </form>
+      </div>
     </div>
   );
 }

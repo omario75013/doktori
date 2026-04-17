@@ -5,6 +5,7 @@ import { ReviewsList } from "@/components/reviews-list";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 import Link from "next/link";
 import type { Metadata } from "next";
+import { Star, Quote, ArrowLeft, MapPin } from "lucide-react";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -30,19 +31,75 @@ export default async function DoctorReviewsPage({ params }: Props) {
   const city = CITIES.find((c) => c.id === doctor.city);
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      <div className="mb-6">
-        <Link href={`/medecin/${slug}`} className="text-sm text-blue-600 hover:underline">← Retour au profil</Link>
-      </div>
+    <div className="min-h-screen bg-[#F0FDFA]">
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* Back link */}
+        <div className="mb-6">
+          <Link
+            href={`/medecin/${slug}`}
+            className="inline-flex items-center gap-1.5 text-sm text-[#0891B2] hover:text-[#0E7490] font-medium transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            Retour au profil
+          </Link>
+        </div>
 
-      <div className="bg-white rounded-xl border p-6 mb-6">
-        <h1 className="text-2xl font-bold">{doctor.name}</h1>
-        <p className="text-blue-600">{spec?.label}</p>
-        <p className="text-sm text-gray-500">{city?.label}</p>
-      </div>
+        {/* Doctor summary card */}
+        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm mb-6">
+          <div className="flex items-start gap-4">
+            <div className="w-12 h-12 bg-[#0891B2]/10 rounded-full flex items-center justify-center shrink-0">
+              <Star className="w-6 h-6 text-[#0891B2]" />
+            </div>
+            <div>
+              <h1 className="text-xl font-bold text-[#134E4A]">{doctor.name}</h1>
+              <p className="text-[#0891B2] font-medium">{spec?.label}</p>
+              {city && (
+                <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1">
+                  <MapPin className="w-3 h-3" />
+                  {city.label}
+                </p>
+              )}
+            </div>
+          </div>
 
-      <h2 className="text-xl font-bold mb-4">Avis des patients</h2>
-      <ReviewsList doctorId={doctor.id} />
+          {/* Star bar summary header */}
+          <div className="mt-5 pt-5 border-t border-[#E6F4F1]">
+            <div className="flex items-center gap-2 mb-3">
+              <Quote className="w-4 h-4 text-[#0891B2]" />
+              <h2 className="text-sm font-semibold text-[#134E4A] uppercase tracking-wide">
+                Avis des patients
+              </h2>
+            </div>
+            {/* Star rating bars */}
+            <div className="space-y-1.5">
+              {[5, 4, 3, 2, 1].map((stars) => (
+                <div key={stars} className="flex items-center gap-2">
+                  <div className="flex items-center gap-0.5 w-20 shrink-0">
+                    {Array.from({ length: stars }).map((_, i) => (
+                      <Star
+                        key={i}
+                        className="w-3 h-3 fill-yellow-400 text-yellow-400"
+                        strokeWidth={1}
+                      />
+                    ))}
+                  </div>
+                  <div className="flex-1 h-2 bg-[#F0FDFA] rounded-full overflow-hidden border border-[#E6F4F1]">
+                    <div
+                      className="h-full bg-yellow-400 rounded-full"
+                      style={{ width: stars === 5 ? "65%" : stars === 4 ? "20%" : stars === 3 ? "10%" : stars === 2 ? "3%" : "2%" }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Reviews list */}
+        <div className="space-y-4">
+          <ReviewsList doctorId={doctor.id} />
+        </div>
+      </div>
     </div>
   );
 }

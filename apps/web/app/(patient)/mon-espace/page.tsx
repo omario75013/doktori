@@ -6,6 +6,15 @@ import { Button } from "@/components/ui/button";
 import { format, isPast } from "date-fns";
 import { fr } from "date-fns/locale";
 import { SPECIALTIES } from "@doktori/shared";
+import {
+  Search,
+  FileText,
+  AlertTriangle,
+  Calendar,
+  User,
+  LogOut,
+  ChevronRight,
+} from "lucide-react";
 
 interface Appointment {
   id: string;
@@ -41,6 +50,12 @@ const TYPE_LABELS: Record<string, string> = {
   cabinet: "Cabinet",
   domicile: "Domicile",
   teleconsultation: "Téléconsultation",
+};
+
+const TYPE_COLORS: Record<string, string> = {
+  cabinet: "bg-blue-50 text-blue-700",
+  domicile: "bg-amber-50 text-amber-700",
+  teleconsultation: "bg-purple-50 text-purple-700",
 };
 
 export default function PatientDashboardPage() {
@@ -104,7 +119,7 @@ export default function PatientDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-[#F0FDFA]">
         <p className="text-gray-400">Chargement...</p>
       </div>
     );
@@ -132,165 +147,203 @@ export default function PatientDashboardPage() {
   const patientName = patient?.name ?? patient?.phone ?? "Patient";
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Tableau de bord</h1>
-        <button
-          onClick={logout}
-          className="text-sm text-gray-500 hover:underline"
-        >
-          Se déconnecter
-        </button>
-      </div>
-
-      {/* Welcome card */}
-      <div className="rounded-2xl bg-blue-600 text-white p-6 mb-6">
-        <p className="text-blue-100 text-sm mb-1">Bonjour,</p>
-        <h2 className="text-xl font-bold mb-4">{patientName}</h2>
-        {nextAppointment ? (
-          <div className="bg-white/10 rounded-xl p-4">
-            <p className="text-blue-100 text-xs mb-1">Prochain rendez-vous</p>
-            <p className="font-semibold">{nextAppointment.doctorName}</p>
-            <p className="text-blue-100 text-sm">
-              {format(new Date(nextAppointment.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
-            </p>
+    <div className="min-h-screen bg-[#F0FDFA]">
+      <div className="max-w-2xl mx-auto px-4 py-8">
+        {/* Top bar */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-[#0891B2]/10 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-[#0891B2]" />
+            </div>
+            <span className="text-sm font-medium text-[#134E4A]">Mon espace</span>
           </div>
-        ) : (
-          <p className="text-blue-100 text-sm">Aucun rendez-vous à venir</p>
-        )}
-      </div>
-
-      {/* Quick actions */}
-      <section className="mb-8">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-          Actions rapides
-        </h3>
-        <div className="grid grid-cols-3 gap-3">
-          <a
-            href="/recherche"
-            className="flex flex-col items-center gap-2 rounded-xl border bg-white p-4 text-center hover:border-blue-300 hover:shadow-sm transition"
+          <button
+            onClick={logout}
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-500 transition-colors"
           >
-            <span className="text-2xl">🔍</span>
-            <span className="text-xs font-medium text-gray-700">Trouver un médecin</span>
-          </a>
-          <a
-            href="/dossier-medical"
-            className="flex flex-col items-center gap-2 rounded-xl border bg-white p-4 text-center hover:border-blue-300 hover:shadow-sm transition"
-          >
-            <span className="text-2xl">📋</span>
-            <span className="text-xs font-medium text-gray-700">Mon dossier médical</span>
-          </a>
-          <a
-            href="/sos"
-            className="flex flex-col items-center gap-2 rounded-xl border bg-white p-4 text-center hover:border-red-300 hover:shadow-sm transition"
-          >
-            <span className="text-2xl">🚨</span>
-            <span className="text-xs font-medium text-gray-700">SOS Docteur</span>
-          </a>
+            <LogOut className="w-4 h-4" />
+            Se déconnecter
+          </button>
         </div>
-      </section>
 
-      {/* Upcoming appointments */}
-      <section className="mb-8">
-        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-          Rendez-vous à venir
-        </h3>
-        {upcoming.length === 0 ? (
-          <div className="rounded-xl border bg-white p-6 text-center text-sm text-gray-400">
-            Aucun rendez-vous à venir
-          </div>
-        ) : (
-          <div className="space-y-3">
-            {upcoming.map((a) => {
-              const spec = SPECIALTIES.find((s) => s.id === a.doctorSpecialty);
-              const typeLabel = TYPE_LABELS[a.type] ?? a.type;
-              return (
-                <div
-                  key={a.id}
-                  className="rounded-xl border bg-white p-4 flex items-start justify-between"
-                >
-                  <div>
-                    <p className="font-semibold text-gray-900">{a.doctorName}</p>
-                    <p className="text-sm text-blue-600">{spec?.label}</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {format(new Date(a.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
-                    </p>
-                    <span className="mt-2 inline-block rounded-full bg-gray-100 px-2.5 py-0.5 text-xs font-medium text-gray-600">
-                      {typeLabel}
-                    </span>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCancelConfirm(a.id)}
-                  >
-                    Annuler
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </section>
+        {/* Teal gradient welcome banner */}
+        <div
+          className="rounded-2xl p-6 mb-6 text-white relative overflow-hidden"
+          style={{ background: "linear-gradient(135deg, #0891B2 0%, #134E4A 100%)" }}
+        >
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10"
+          />
+          <div
+            aria-hidden
+            className="pointer-events-none absolute -bottom-6 -left-4 w-24 h-24 rounded-full bg-white/5"
+          />
+          <p className="text-cyan-100 text-sm mb-1">Bonjour,</p>
+          <h2 className="text-xl font-bold mb-4">{patientName}</h2>
+          {nextAppointment ? (
+            <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
+              <p className="text-cyan-200 text-xs mb-1">Prochain rendez-vous</p>
+              <p className="font-semibold">{nextAppointment.doctorName}</p>
+              <p className="text-cyan-100 text-sm">
+                {format(new Date(nextAppointment.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
+              </p>
+            </div>
+          ) : (
+            <p className="text-cyan-100 text-sm">Aucun rendez-vous à venir</p>
+          )}
+        </div>
 
-      {/* Recent doctors */}
-      {recentDoctors.length > 0 && (
-        <section>
-          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-3">
-            Médecins récents
+        {/* Quick actions */}
+        <section className="mb-8">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            Actions rapides
           </h3>
-          <div className="space-y-3">
-            {recentDoctors.map((a) => {
-              const spec = SPECIALTIES.find((s) => s.id === a.doctorSpecialty);
-              return (
-                <div
-                  key={a.doctorSlug}
-                  className="rounded-xl border bg-white p-4 flex items-center justify-between"
-                >
-                  <div>
-                    <p className="font-semibold text-gray-900">{a.doctorName}</p>
-                    <p className="text-sm text-gray-500">{spec?.label}</p>
-                  </div>
-                  <a href={`/medecin/${a.doctorSlug}`}>
-                    <Button variant="outline" size="sm">
-                      Reprendre RDV
-                    </Button>
-                  </a>
-                </div>
-              );
-            })}
+          <div className="grid grid-cols-3 gap-3">
+            <a
+              href="/recherche"
+              className="flex flex-col items-center gap-2 rounded-2xl border border-[#E6F4F1] bg-white p-4 text-center hover:border-[#0891B2]/40 hover:shadow-md transition-all duration-200"
+            >
+              <div className="w-10 h-10 bg-[#0891B2]/10 rounded-full flex items-center justify-center">
+                <Search className="w-5 h-5 text-[#0891B2]" />
+              </div>
+              <span className="text-xs font-medium text-[#134E4A]">Trouver un médecin</span>
+            </a>
+            <a
+              href="/dossier-medical"
+              className="flex flex-col items-center gap-2 rounded-2xl border border-[#E6F4F1] bg-white p-4 text-center hover:border-[#0891B2]/40 hover:shadow-md transition-all duration-200"
+            >
+              <div className="w-10 h-10 bg-[#0891B2]/10 rounded-full flex items-center justify-center">
+                <FileText className="w-5 h-5 text-[#0891B2]" />
+              </div>
+              <span className="text-xs font-medium text-[#134E4A]">Mon dossier médical</span>
+            </a>
+            <a
+              href="/sos"
+              className="flex flex-col items-center gap-2 rounded-2xl border border-[#E6F4F1] bg-white p-4 text-center hover:border-red-200 hover:shadow-md transition-all duration-200"
+            >
+              <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+              </div>
+              <span className="text-xs font-medium text-[#134E4A]">SOS Docteur</span>
+            </a>
           </div>
         </section>
-      )}
 
-      {/* Cancel confirmation modal */}
-      {cancelConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl">
-            <h3 className="text-lg font-bold text-gray-900">
-              Annuler ce rendez-vous ?
+        {/* Upcoming appointments */}
+        <section className="mb-8">
+          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            Rendez-vous à venir
+          </h3>
+          {upcoming.length === 0 ? (
+            <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 text-center text-sm text-gray-400 shadow-sm">
+              <Calendar className="w-8 h-8 text-gray-200 mx-auto mb-2" />
+              Aucun rendez-vous à venir
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {upcoming.map((a) => {
+                const spec = SPECIALTIES.find((s) => s.id === a.doctorSpecialty);
+                const typeLabel = TYPE_LABELS[a.type] ?? a.type;
+                const typeColor = TYPE_COLORS[a.type] ?? "bg-gray-100 text-gray-600";
+                return (
+                  <div
+                    key={a.id}
+                    className="rounded-2xl border-l-4 border-l-[#0891B2] border border-[#E6F4F1] bg-white p-4 shadow-sm flex items-start justify-between"
+                  >
+                    <div>
+                      <p className="font-semibold text-[#134E4A]">{a.doctorName}</p>
+                      <p className="text-sm text-[#0891B2]">{spec?.label}</p>
+                      <p className="text-sm text-gray-500 mt-1">
+                        {format(new Date(a.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
+                      </p>
+                      <span className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${typeColor}`}>
+                        {typeLabel}
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCancelConfirm(a.id)}
+                      className="rounded-xl border-[#E6F4F1] hover:border-red-200 hover:text-red-500 text-gray-500"
+                    >
+                      Annuler
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </section>
+
+        {/* Recent doctors */}
+        {recentDoctors.length > 0 && (
+          <section>
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+              Médecins récents
             </h3>
-            <p className="mt-2 text-sm text-gray-500">
-              Cette action est irréversible. Vous devrez reprendre un nouveau rendez-vous.
-            </p>
-            <div className="mt-6 flex gap-3 justify-end">
-              <button
-                onClick={() => setCancelConfirm(null)}
-                className="rounded-lg border border-gray-200 px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
-              >
-                Non
-              </button>
-              <button
-                onClick={() => cancelAppointment(cancelConfirm)}
-                className="rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
-              >
-                Oui, annuler
-              </button>
+            <div className="space-y-3">
+              {recentDoctors.map((a) => {
+                const spec = SPECIALTIES.find((s) => s.id === a.doctorSpecialty);
+                return (
+                  <div
+                    key={a.doctorSlug}
+                    className="rounded-2xl border border-[#E6F4F1] bg-white p-4 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-[#0891B2]/10 rounded-full flex items-center justify-center shrink-0">
+                        <User className="w-5 h-5 text-[#0891B2]" />
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[#134E4A]">{a.doctorName}</p>
+                        <p className="text-sm text-gray-500">{spec?.label}</p>
+                      </div>
+                    </div>
+                    <a href={`/medecin/${a.doctorSlug}`}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl border-[#0891B2]/30 text-[#0891B2] hover:bg-[#0891B2] hover:text-white transition-colors gap-1"
+                      >
+                        Reprendre RDV
+                        <ChevronRight className="w-3 h-3" />
+                      </Button>
+                    </a>
+                  </div>
+                );
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* Cancel confirmation modal */}
+        {cancelConfirm && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+            <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl border border-[#E6F4F1]">
+              <h3 className="text-lg font-bold text-[#134E4A]">
+                Annuler ce rendez-vous ?
+              </h3>
+              <p className="mt-2 text-sm text-gray-500">
+                Cette action est irréversible. Vous devrez reprendre un nouveau rendez-vous.
+              </p>
+              <div className="mt-6 flex gap-3 justify-end">
+                <button
+                  onClick={() => setCancelConfirm(null)}
+                  className="rounded-xl border border-[#E6F4F1] px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                >
+                  Non
+                </button>
+                <button
+                  onClick={() => cancelAppointment(cancelConfirm)}
+                  className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
+                >
+                  Oui, annuler
+                </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }
