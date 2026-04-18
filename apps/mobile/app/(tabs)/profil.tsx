@@ -72,6 +72,12 @@ export default function ProfilScreen() {
           </View>
           <Text style={styles.quickLabel}>Mes{"\n"}rendez-vous</Text>
         </Pressable>
+        <Pressable style={[styles.quickAction, shadow.sm]} onPress={() => router.push("/mes-documents")}>
+          <View style={[styles.quickIcon, { backgroundColor: colors.purpleFaint }]}>
+            <FileText size={20} color={colors.purple} />
+          </View>
+          <Text style={styles.quickLabel}>Mes{"\n"}documents</Text>
+        </Pressable>
         <Pressable style={[styles.quickAction, shadow.sm]} onPress={() => router.push("/faq")}>
           <View style={[styles.quickIcon, { backgroundColor: "#FEF3C7" }]}>
             <HelpCircle size={20} color="#F59E0B" />
