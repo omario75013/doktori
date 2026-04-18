@@ -8,6 +8,8 @@ import { Chatbot } from "@/components/chatbot";
 import { AppBanner } from "@/components/app-banner";
 import { PatientShell } from "@/components/patient-shell";
 import { InstallPrompt } from "@/components/install-prompt";
+import { Toaster } from "sonner";
+import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -94,6 +96,8 @@ export default async function RootLayout({
             <Navbar />
           </PatientShell>
           {children}
+          <Toaster position="bottom-right" richColors toastOptions={{ style: { borderRadius: "16px" } }} />
+          <KeyboardShortcuts />
           <PatientShell>
             <Chatbot />
             <InstallPrompt />

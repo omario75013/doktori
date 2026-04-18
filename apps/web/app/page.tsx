@@ -127,7 +127,7 @@ export default function HomePage() {
                 />
                 <button
                   type="submit"
-                  className="group/btn inline-flex h-full items-center gap-2 rounded-xl bg-[#0891B2] px-6 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#0E7490] active:scale-[0.98]"
+                  className="group/btn inline-flex h-full items-center gap-2 rounded-xl bg-[#0891B2] px-4 sm:px-6 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#0E7490] active:scale-[0.98]"
                 >
                   <span>{t("searchButton")}</span>
                   <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" strokeWidth={3} />
