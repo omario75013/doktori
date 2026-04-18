@@ -1,15 +1,99 @@
 "use client";
 
-import { use, useState, useEffect } from "react";
+import { use, useState, useEffect, useRef } from "react";
 import { AvailabilityCalendar } from "@/components/availability-calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, ArrowLeft, MapPin, Video, Building, CheckCircle2, Download, ArrowRight, Home } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, MapPin, Video, Building, CheckCircle2, Download, ArrowRight, Home, Check } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import confetti from "canvas-confetti";
+
+// Maps booking Step to visual step index (0-based)
+function getVisualStep(step: Step): number {
+  if (step === "mode" || step === "type" || step === "practice" || step === "slots" || step === "questionnaire") return 0;
+  if (step === "form") return 1;
+  return 2; // payment | success
+}
+
+const BOOKING_STEPS = [
+  { label: "Choisir le créneau" },
+  { label: "Vos informations" },
+  { label: "Confirmation" },
+];
+
+function BookingStepIndicator({ currentStep }: { currentStep: number }) {
+  return (
+    <div className="flex items-center justify-center gap-0 px-4 py-3">
+      {BOOKING_STEPS.map((s, i) => {
+        const isCompleted = i < currentStep;
+        const isActive = i === currentStep;
+        return (
+          <div key={s.label} className="flex items-center">
+            {/* Circle */}
+            <div className="flex flex-col items-center gap-1.5">
+              <motion.div
+                animate={
+                  isCompleted
+                    ? { backgroundColor: "#16a34a", borderColor: "#16a34a", scale: 1 }
+                    : isActive
+                    ? { backgroundColor: "#0891B2", borderColor: "#0891B2", scale: 1.1 }
+                    : { backgroundColor: "#ffffff", borderColor: "#cbd5e1", scale: 1 }
+                }
+                transition={{ duration: 0.35, ease: "easeOut" }}
+                className="w-8 h-8 rounded-full border-2 flex items-center justify-center"
+                style={{ borderColor: "#cbd5e1" }}
+              >
+                {isCompleted ? (
+                  <Check className="w-4 h-4 text-white" strokeWidth={2.5} />
+                ) : (
+                  <span
+                    className={`text-xs font-bold ${isActive ? "text-white" : "text-slate-400"}`}
+                  >
+                    {i + 1}
+                  </span>
+                )}
+              </motion.div>
+              <span
+                className={`text-[10px] font-semibold whitespace-nowrap ${
+                  isActive
+                    ? "text-[#0891B2]"
+                    : isCompleted
+                    ? "text-green-600"
+                    : "text-slate-400"
+                }`}
+              >
+                {s.label}
+              </span>
+            </div>
+            {/* Connector line */}
+            {i < BOOKING_STEPS.length - 1 && (
+              <div className="w-12 sm:w-20 h-0.5 mb-5 mx-1">
+                <motion.div
+                  className="h-full rounded-full"
+                  animate={{ backgroundColor: i < currentStep ? "#16a34a" : "#e2e8f0" }}
+                  transition={{ duration: 0.4 }}
+                />
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// Slide animation variants for step transitions
+const slideVariants = {
+  enter: { x: 48, opacity: 0 },
+  center: { x: 0, opacity: 1 },
+  exit: { x: -48, opacity: 0 },
+};
+
+const slideTransition = { duration: 0.28, ease: [0.4, 0, 0.2, 1] as [number, number, number, number] };
 
 function generateICS(doctorName: string, date: Date, duration: number): string {
   const end = new Date(date.getTime() + duration * 60000);
@@ -335,6 +419,13 @@ export default function RdvPage({
           </div>
         </div>
 
+        {/* Step indicator — hidden on success */}
+        {step !== "success" && (
+          <div className="rounded-2xl bg-white border border-[#E6F4F1] shadow-sm overflow-hidden">
+            <BookingStepIndicator currentStep={getVisualStep(step)} />
+          </div>
+        )}
+
         {/* Sticky summary chip when slot is picked */}
         {(step === "questionnaire" || step === "form" || step === "payment") && booking && (
           <div className="rounded-2xl bg-[#0891B2] text-white shadow-md px-4 py-3 flex items-center justify-between gap-3">
@@ -365,9 +456,20 @@ export default function RdvPage({
           </div>
         )}
 
+        {/* Animated step content */}
+        <AnimatePresence mode="wait" initial={false}>
+
         {/* Step: consultation mode selection (only for doctors offering both) */}
         {step === "mode" && doctor.consultationMode === "both" && (
-          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4">
+          <motion.div
+            key="step-mode"
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={slideTransition}
+            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4"
+          >
             <div>
               <h2 className="font-heading font-black text-[#134E4A]">
                 Mode de consultation
@@ -430,12 +532,20 @@ export default function RdvPage({
                 </div>
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Step: appointment type selection */}
         {step === "type" && types.length > 0 && (
-          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4">
+          <motion.div
+            key="step-type"
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={slideTransition}
+            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4"
+          >
             <div>
               <h2 className="font-heading font-black text-[#134E4A]">
                 Motif de consultation
@@ -474,12 +584,20 @@ export default function RdvPage({
                 </button>
               ))}
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Step: practice picker — only shown when doctor has >1 active practice */}
         {step === "practice" && practices.length > 1 && (
-          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4">
+          <motion.div
+            key="step-practice"
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={slideTransition}
+            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4"
+          >
             <div>
               <h2 className="font-heading font-black text-[#134E4A]">
                 Choisir un cabinet
@@ -525,12 +643,20 @@ export default function RdvPage({
                 Changer le motif
               </button>
             )}
-          </div>
+          </motion.div>
         )}
 
         {/* Step: slot selection (Doctolib-style calendar) */}
         {step === "slots" && (
-          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5">
+          <motion.div
+            key="step-slots"
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={slideTransition}
+            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5"
+          >
             {(selectedType || selectedPractice) && (
               <div className="flex flex-col gap-1.5 pb-3 border-b border-[#E6F4F1]">
                 {selectedType && (
@@ -581,12 +707,20 @@ export default function RdvPage({
               onSelect={handleSlotSelect}
               selected={booking}
             />
-          </div>
+          </motion.div>
         )}
 
         {/* Step: questionnaire (shown ONLY if the selected type has questions) */}
         {step === "questionnaire" && booking && questions.length > 0 && (
-          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5">
+          <motion.div
+            key="step-questionnaire"
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={slideTransition}
+            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5"
+          >
             <button
               type="button"
               onClick={() => setStep("slots")}
@@ -760,12 +894,20 @@ export default function RdvPage({
             >
               Continuer
             </button>
-          </div>
+          </motion.div>
         )}
 
         {/* Step: patient info form */}
         {step === "form" && booking && (
-          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5">
+          <motion.div
+            key="step-form"
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={slideTransition}
+            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5"
+          >
             <button
               type="button"
               onClick={() => setStep("slots")}
@@ -787,7 +929,7 @@ export default function RdvPage({
               )}
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form id="booking-form" onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="name">Nom complet</Label>
                 <Input
@@ -906,20 +1048,51 @@ export default function RdvPage({
                 </p>
               )}
 
-              <Button type="submit" disabled={submitting || uploadingFiles} className="w-full">
+              {/* Hidden on mobile — shown inline on sm+ */}
+              <div className="hidden sm:block">
+                <Button type="submit" disabled={submitting || uploadingFiles} className="w-full">
+                  {uploadingFiles
+                    ? "Téléversement des documents..."
+                    : submitting
+                    ? "Réservation en cours..."
+                    : "Confirmer le rendez-vous"}
+                </Button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+
+        {/* Mobile sticky footer CTA — form step only */}
+        {step === "form" && booking && (
+          <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-safe-area-inset-bottom">
+            <div className="pb-4 pt-3 backdrop-blur-md bg-white/80 border-t border-[#E6F4F1] -mx-4 px-4">
+              <Button
+                type="submit"
+                form="booking-form"
+                disabled={submitting || uploadingFiles}
+                className="w-full shadow-lg shadow-cyan-100"
+              >
                 {uploadingFiles
                   ? "Téléversement des documents..."
                   : submitting
                   ? "Réservation en cours..."
                   : "Confirmer le rendez-vous"}
               </Button>
-            </form>
+            </div>
           </div>
         )}
 
         {/* Step: payment prompt (optional for cabinet, mandatory for teleconsult is handled by redirect) */}
         {step === "payment" && (
-          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-8 text-center space-y-4">
+          <motion.div
+            key="step-payment"
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={slideTransition}
+            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-8 text-center space-y-4"
+          >
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
               <svg
                 className="w-8 h-8 text-green-600"
@@ -973,22 +1146,90 @@ export default function RdvPage({
                 Payer sur place
               </button>
             </div>
-          </div>
+          </motion.div>
         )}
 
         {/* Step: success confirmation */}
         {step === "success" && booking && (
-          <div className="space-y-4">
+          <SuccessView
+            booking={booking}
+            doctor={doctor}
+            selectedType={selectedType}
+            selectedMode={selectedMode}
+            appointmentId={appointmentId}
+          />
+        )}
+
+        </AnimatePresence>
+        {/* bottom padding on mobile to account for sticky CTA */}
+        {step === "form" && <div className="sm:hidden h-24" />}
+      </div>
+    </div>
+  );
+}
+
+// Separated into its own component so confetti fires once on mount
+function SuccessView({
+  booking,
+  doctor,
+  selectedType,
+  selectedMode,
+  appointmentId,
+}: {
+  booking: BookingState;
+  doctor: Doctor;
+  selectedType: AppointmentType | null;
+  selectedMode: "cabinet" | "teleconsult" | null;
+  appointmentId: string | null;
+}) {
+  const confettiFired = useRef(false);
+
+  useEffect(() => {
+    if (confettiFired.current) return;
+    confettiFired.current = true;
+    // Fire confetti burst from center
+    confetti({
+      particleCount: 120,
+      spread: 80,
+      origin: { y: 0.55 },
+      colors: ["#0891B2", "#06B6D4", "#16a34a", "#4ade80", "#f0fdf4"],
+      startVelocity: 40,
+      gravity: 0.9,
+      scalar: 0.9,
+    });
+  }, []);
+
+  return (
+    <motion.div
+      key="step-success"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.3 }}
+      className="space-y-4"
+    >
             {/* Animated checkmark */}
             <motion.div
               className="flex justify-center"
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
-              transition={{ type: "spring", stiffness: 280, damping: 20, delay: 0.1 }}
+              transition={{ type: "spring", stiffness: 280, damping: 18, delay: 0.1 }}
             >
               <div className="w-20 h-20 bg-white rounded-full shadow-lg flex items-center justify-center border border-green-100">
                 <CheckCircle2 className="w-11 h-11 text-green-500" strokeWidth={1.5} />
               </div>
+            </motion.div>
+
+            {/* SMS confirmation notice */}
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.35, delay: 0.3 }}
+              className="flex items-center justify-center gap-2 rounded-2xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800 font-medium"
+            >
+              <svg className="w-4 h-4 shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
+              </svg>
+              Vous recevrez un SMS de confirmation dans quelques instants
             </motion.div>
 
             {/* Main card */}
@@ -1121,9 +1362,6 @@ export default function RdvPage({
                 </a>
               </motion.div>
             </motion.div>
-          </div>
-        )}
-      </div>
-    </div>
+          </motion.div>
   );
 }

@@ -76,7 +76,7 @@ export default function HomePage() {
 
         <div className="relative mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
           {/* Left: copy + CTA */}
-          <div className="text-center lg:text-left">
+          <div className="text-center lg:text-start">
             {/* Accreditation badge */}
             <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#0891B2]/20 bg-[#F0FDFA] px-4 py-1.5 text-xs font-semibold text-[#0E7490] shadow-sm">
               <BadgeCheck className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
@@ -431,7 +431,7 @@ export default function HomePage() {
                           <p className="text-[10px] font-semibold text-[#134E4A]">{d.name}</p>
                           <p className="text-[8px] text-[#64748B]">{d.spec}</p>
                         </div>
-                        <div className="ml-auto rounded-md bg-[#0891B2] px-2 py-0.5">
+                        <div className="ms-auto rounded-md bg-[#0891B2] px-2 py-0.5">
                           <span className="text-[7px] font-bold text-white">RDV</span>
                         </div>
                       </div>
@@ -458,7 +458,7 @@ export default function HomePage() {
           </div>
 
           {/* Text + CTA */}
-          <div className="text-center md:text-left">
+          <div className="text-center md:text-start">
             <div className="inline-flex items-center gap-2 rounded-full bg-[#0891B2]/10 px-4 py-1.5 text-xs font-semibold text-[#0891B2]">
               <Smartphone className="h-3.5 w-3.5" />
               Nouveau
@@ -588,7 +588,7 @@ function PhoneMockup({ locale }: { locale: string }) {
             {/* Search input mock */}
             <div className="mt-4 flex h-11 items-center rounded-xl border border-[#E6F4F1] bg-[#F0FDFA] px-3">
               <Search className="h-4 w-4 text-[#5E7574]" />
-              <span className="ml-2 text-xs text-[#5E7574]">{tr.searchPh}</span>
+              <span className="ms-2 text-xs text-[#5E7574]">{tr.searchPh}</span>
             </div>
 
             {/* Doctor cards mock */}
@@ -614,7 +614,7 @@ function PhoneMockup({ locale }: { locale: string }) {
                     </p>
                     <p className="truncate text-[9px] text-[#5E7574]">{d.spec}</p>
                   </div>
-                  <div className="text-right">
+                  <div className="text-end">
                     <p className="text-[11px] font-black text-[#0891B2]">{d.price}</p>
                     <p className="text-[8px] text-[#5E7574]">DT</p>
                   </div>
@@ -687,7 +687,7 @@ function DoctorDashboardMockup({ locale }: { locale: string }) {
             <p className="font-heading text-sm font-bold text-white">Dr. Sonia Trabelsi</p>
             <p className="text-xs text-[#A7F3D0]">{tr.specCity}</p>
           </div>
-          <div className="ml-auto">
+          <div className="ms-auto">
             <div className="flex items-center gap-1 rounded-full bg-[#22C55E]/20 px-2.5 py-1 text-[10px] font-bold text-[#22C55E]">
               <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>
               {tr.active}

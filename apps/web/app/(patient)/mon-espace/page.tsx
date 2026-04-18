@@ -4,10 +4,11 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
-import { format, isPast } from "date-fns";
+import { format, isPast, differenceInMinutes } from "date-fns";
 import { fr } from "date-fns/locale";
 import { SPECIALTIES } from "@doktori/shared";
 import { GuidedTour } from "@/components/guided-tour";
+import { motion } from "framer-motion";
 import {
   Search,
   FileText,
@@ -21,6 +22,8 @@ import {
   ClipboardList,
   Star,
   Clock,
+  Video,
+  Siren,
 } from "lucide-react";
 
 interface Appointment {
@@ -71,6 +74,11 @@ const TYPE_COLORS: Record<string, string> = {
   cabinet: "bg-blue-50 text-blue-700",
   domicile: "bg-amber-50 text-amber-700",
   teleconsultation: "bg-purple-50 text-purple-700",
+};
+
+const STATUS_BORDER: Record<string, string> = {
+  confirmed: "border-l-[#0891B2]",
+  pending: "border-l-orange-400",
 };
 
 const TIMELINE_ICONS: Record<TimelineItem["kind"], React.ReactNode> = {
@@ -125,6 +133,56 @@ function buildTimeline(appointments: Appointment[]): TimelineItem[] {
   // Sort chronologically descending, take top 10
   return items.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10);
 }
+
+/** True when the appointment starts within the next 30 minutes or has started but not ended. */
+function isTeleconsultJoinable(a: Appointment): boolean {
+  const now = new Date();
+  const starts = new Date(a.startsAt);
+  const ends = new Date(a.endsAt);
+  const minsUntil = differenceInMinutes(starts, now);
+  return minsUntil <= 30 && now < ends;
+}
+
+// Framer-motion helpers
+const fadeUp = {
+  hidden: { opacity: 0, y: 18 } as const,
+  visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } } as const,
+};
+
+const QUICK_ACTIONS = [
+  {
+    href: "/recherche",
+    icon: <Search className="w-5 h-5 text-[#0891B2]" />,
+    iconBg: "bg-[#0891B2]/10",
+    title: "Trouver un médecin",
+    desc: "Rechercher par spécialité",
+    hoverBorder: "hover:border-[#0891B2]/40",
+  },
+  {
+    href: "/sos",
+    icon: <Siren className="w-5 h-5 text-red-500" />,
+    iconBg: "bg-red-50",
+    title: "SOS Médecin",
+    desc: "Urgence médicale rapide",
+    hoverBorder: "hover:border-red-300",
+  },
+  {
+    href: "/mes-rdv",
+    icon: <Calendar className="w-5 h-5 text-[#0891B2]" />,
+    iconBg: "bg-[#0891B2]/10",
+    title: "Mes rendez-vous",
+    desc: "Consulter l'historique",
+    hoverBorder: "hover:border-[#0891B2]/40",
+  },
+  {
+    href: "/dossier-medical",
+    icon: <FileText className="w-5 h-5 text-[#0891B2]" />,
+    iconBg: "bg-[#0891B2]/10",
+    title: "Mon dossier",
+    desc: "Données & documents médicaux",
+    hoverBorder: "hover:border-[#0891B2]/40",
+  },
+];
 
 export default function PatientDashboardPage() {
   const t = useTranslations("monEspace");
@@ -219,6 +277,10 @@ export default function PatientDashboardPage() {
   const patientName = patient?.name ?? patient?.phone ?? "Patient";
   const timeline = buildTimeline(appointments);
 
+  // Greeting based on hour
+  const hour = new Date().getHours();
+  const greeting = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
+
   return (
     <div className="min-h-screen bg-[#F0FDFA]">
       <GuidedTour
@@ -246,7 +308,12 @@ export default function PatientDashboardPage() {
       />
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Top bar */}
-        <div className="flex items-center justify-between mb-6">
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="flex items-center justify-between mb-6"
+        >
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-[#0891B2]/10 rounded-full flex items-center justify-center">
               <User className="w-4 h-4 text-[#0891B2]" />
@@ -260,11 +327,14 @@ export default function PatientDashboardPage() {
             <LogOut className="w-4 h-4" />
             Se déconnecter
           </button>
-        </div>
+        </motion.div>
 
-        {/* Teal gradient welcome banner */}
-        <div
-          className="rounded-2xl p-6 mb-6 text-white relative overflow-hidden"
+        {/* Welcome banner */}
+        <motion.div
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="rounded-2xl p-6 mb-6 text-white relative overflow-hidden shadow-lg"
           style={{ background: "linear-gradient(135deg, #0891B2 0%, #134E4A 100%)" }}
         >
           <div
@@ -275,8 +345,18 @@ export default function PatientDashboardPage() {
             aria-hidden
             className="pointer-events-none absolute -bottom-6 -left-4 w-24 h-24 rounded-full bg-white/5"
           />
-          <p className="text-cyan-100 text-sm mb-1">{t("hello")}</p>
-          <h2 className="text-xl font-bold mb-4">{patientName}</h2>
+
+          {/* Greeting + appointment count summary */}
+          <p className="text-cyan-100 text-sm mb-0.5">{greeting},</p>
+          <h2 className="text-xl font-bold mb-1">{patientName}</h2>
+          {upcoming.length > 0 && (
+            <p className="text-cyan-200 text-xs mb-4">
+              {upcoming.length === 1
+                ? "1 rendez-vous à venir"
+                : `${upcoming.length} rendez-vous à venir`}
+            </p>
+          )}
+
           {nextAppointment ? (
             <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
               <p className="text-cyan-200 text-xs mb-1">Prochain rendez-vous</p>
@@ -288,55 +368,44 @@ export default function PatientDashboardPage() {
           ) : (
             <p className="text-cyan-100 text-sm">Aucun rendez-vous à venir</p>
           )}
-        </div>
+        </motion.div>
 
         {/* Quick actions */}
-        <section data-tour="quick-actions" className="mb-8">
+        <motion.section
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          data-tour="quick-actions"
+          className="mb-8"
+        >
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
             Actions rapides
           </h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <a
-              href="/recherche"
-              className="flex flex-col items-center gap-2 rounded-2xl border border-[#E6F4F1] bg-white p-4 text-center hover:border-[#0891B2]/40 hover:shadow-md transition-all duration-200"
-            >
-              <div className="w-10 h-10 bg-[#0891B2]/10 rounded-full flex items-center justify-center">
-                <Search className="w-5 h-5 text-[#0891B2]" />
-              </div>
-              <span className="text-xs font-medium text-[#134E4A]">Trouver un médecin</span>
-            </a>
-            <a
-              href="/dossier-medical"
-              className="flex flex-col items-center gap-2 rounded-2xl border border-[#E6F4F1] bg-white p-4 text-center hover:border-[#0891B2]/40 hover:shadow-md transition-all duration-200"
-            >
-              <div className="w-10 h-10 bg-[#0891B2]/10 rounded-full flex items-center justify-center">
-                <FileText className="w-5 h-5 text-[#0891B2]" />
-              </div>
-              <span className="text-xs font-medium text-[#134E4A]">Mon dossier médical</span>
-            </a>
-            <a
-              href="/mes-documents"
-              className="flex flex-col items-center gap-2 rounded-2xl border border-[#E6F4F1] bg-white p-4 text-center hover:border-[#0891B2]/40 hover:shadow-md transition-all duration-200"
-            >
-              <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center">
-                <ClipboardList className="w-5 h-5 text-purple-600" />
-              </div>
-              <span className="text-xs font-medium text-[#134E4A]">Mes documents</span>
-            </a>
-            <a
-              href="/sos"
-              className="flex flex-col items-center gap-2 rounded-2xl border border-[#E6F4F1] bg-white p-4 text-center hover:border-red-200 hover:shadow-md transition-all duration-200"
-            >
-              <div className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-5 h-5 text-red-500" />
-              </div>
-              <span className="text-xs font-medium text-[#134E4A]">SOS Docteur</span>
-            </a>
+            {QUICK_ACTIONS.map((action) => (
+              <a
+                key={action.href}
+                href={action.href}
+                className={`flex flex-col items-center gap-2 rounded-2xl border border-[#E6F4F1] bg-white p-4 text-center ${action.hoverBorder} hover:shadow-md transition-all duration-200`}
+              >
+                <div className={`w-10 h-10 ${action.iconBg} rounded-full flex items-center justify-center`}>
+                  {action.icon}
+                </div>
+                <span className="text-xs font-semibold text-[#134E4A] leading-snug">{action.title}</span>
+                <span className="text-[10px] text-gray-400 leading-snug">{action.desc}</span>
+              </a>
+            ))}
           </div>
-        </section>
+        </motion.section>
 
         {/* Upcoming appointments */}
-        <section data-tour="upcoming-rdv" className="mb-8">
+        <motion.section
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          data-tour="upcoming-rdv"
+          className="mb-8"
+        >
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
               Rendez-vous à venir
@@ -345,10 +414,24 @@ export default function PatientDashboardPage() {
               Voir tout
             </a>
           </div>
+
           {upcoming.length === 0 ? (
-            <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 text-center text-sm text-gray-400 shadow-sm">
-              <Calendar className="w-8 h-8 text-gray-200 mx-auto mb-2" />
-              Aucun rendez-vous à venir
+            /* Enhanced empty state */
+            <div className="rounded-2xl border border-[#E6F4F1] bg-white p-8 text-center shadow-sm">
+              <div className="w-16 h-16 bg-[#F0FDFA] rounded-full flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-8 h-8 text-[#0891B2]/40" />
+              </div>
+              <p className="text-[#134E4A] font-semibold mb-1">Pas de rendez-vous à venir</p>
+              <p className="text-sm text-gray-400 mb-5">
+                Votre agenda est vide. Trouvez un médecin et prenez rendez-vous en quelques clics.
+              </p>
+              <a
+                href="/recherche"
+                className="inline-flex items-center gap-2 rounded-xl bg-[#0891B2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0e7490] transition-colors shadow-sm"
+              >
+                <Search className="w-4 h-4" />
+                Trouver un médecin
+              </a>
             </div>
           ) : (
             <div className="space-y-3">
@@ -356,39 +439,77 @@ export default function PatientDashboardPage() {
                 const spec = SPECIALTIES.find((s) => s.id === a.doctorSpecialty);
                 const typeLabel = TYPE_LABELS[a.type] ?? a.type;
                 const typeColor = TYPE_COLORS[a.type] ?? "bg-gray-100 text-gray-600";
+                const borderColor = STATUS_BORDER[a.status] ?? "border-l-[#0891B2]";
+                const isTeleconsult = a.type === "teleconsultation";
+                const joinable = isTeleconsult && isTeleconsultJoinable(a);
+                const statusLabel = a.status === "pending" ? "En attente" : "Confirmé";
+                const statusColor =
+                  a.status === "pending"
+                    ? "bg-orange-50 text-orange-600"
+                    : "bg-teal-50 text-teal-700";
+
                 return (
                   <div
                     key={a.id}
-                    className="rounded-2xl border-l-4 border-l-[#0891B2] border border-[#E6F4F1] bg-white p-4 shadow-sm flex items-start justify-between"
+                    className={`rounded-2xl border-l-4 ${borderColor} border border-[#E6F4F1] bg-white p-4 shadow-sm`}
                   >
-                    <div>
-                      <p className="font-semibold text-[#134E4A]">{a.doctorName}</p>
-                      <p className="text-sm text-[#0891B2]">{spec?.label}</p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {format(new Date(a.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
-                      </p>
-                      <span className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-xs font-medium ${typeColor}`}>
-                        {typeLabel}
-                      </span>
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
+                          <p className="font-semibold text-[#134E4A] truncate">{a.doctorName}</p>
+                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColor}`}>
+                            {statusLabel}
+                          </span>
+                        </div>
+                        <p className="text-sm text-[#0891B2] mb-1">{spec?.label ?? a.doctorSpecialty}</p>
+                        <p className="text-sm text-gray-500 capitalize">
+                          {format(new Date(a.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
+                        </p>
+                        <div className="flex items-center gap-2 mt-2 flex-wrap">
+                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${typeColor}`}>
+                            {typeLabel}
+                          </span>
+                          {a.beneficiaryName && (
+                            <span className="rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600">
+                              Pour {a.beneficiaryName}
+                            </span>
+                          )}
+                        </div>
+                        {joinable && (
+                          <a
+                            href={`/teleconsultation/${a.id}`}
+                            className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 transition-colors"
+                          >
+                            <Video className="w-3.5 h-3.5" />
+                            Rejoindre la téléconsultation
+                          </a>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setCancelConfirm(a.id)}
+                        className="rounded-xl border-[#E6F4F1] hover:border-red-200 hover:text-red-500 text-gray-500 shrink-0"
+                      >
+                        Annuler
+                      </Button>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => setCancelConfirm(a.id)}
-                      className="rounded-xl border-[#E6F4F1] hover:border-red-200 hover:text-red-500 text-gray-500"
-                    >
-                      Annuler
-                    </Button>
                   </div>
                 );
               })}
             </div>
           )}
-        </section>
+        </motion.section>
 
         {/* Recent doctors */}
         {recentDoctors.length > 0 && (
-          <section data-tour="recent-activity" className="mb-8">
+          <motion.section
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            data-tour="recent-activity"
+            className="mb-8"
+          >
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
               Médecins récents
             </h3>
@@ -423,12 +544,17 @@ export default function PatientDashboardPage() {
                 );
               })}
             </div>
-          </section>
+          </motion.section>
         )}
 
         {/* Activity timeline */}
         {timeline.length > 0 && (
-          <section className="mb-8">
+          <motion.section
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className="mb-8"
+          >
             <div className="flex items-center gap-2 mb-3">
               <Clock className="w-4 h-4 text-[#134E4A]/40" />
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -455,7 +581,7 @@ export default function PatientDashboardPage() {
                 </div>
               ))}
             </div>
-          </section>
+          </motion.section>
         )}
 
         {/* Cancel confirmation modal */}

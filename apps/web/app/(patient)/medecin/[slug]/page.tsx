@@ -37,6 +37,11 @@ import {
   Video,
   Info,
 } from "lucide-react";
+import {
+  AnimatedSection,
+  AnimatedCTAButton,
+  TrustSignals,
+} from "@/components/doctor-profile-animated";
 
 const DAY_NAMES = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"] as const;
 const DAY_FULL_NAMES = [
@@ -311,17 +316,23 @@ export default async function DoctorProfilePage({
             {/* ═════ LEFT COLUMN ═════ */}
             <div className="space-y-6">
               {/* Header card */}
-              <div className="overflow-hidden rounded-3xl border border-[#E6F4F1] bg-white shadow-sm">
-                {/* Cover banner */}
-                <div className="relative h-24 bg-gradient-to-r from-[#0891B2] via-[#22D3EE] to-[#22C55E]">
+              <AnimatedSection index={0} className="overflow-hidden rounded-3xl border border-[#E6F4F1] bg-white shadow-sm">
+                {/* Cover banner — Doktori teal gradient */}
+                <div className="relative h-32 overflow-hidden bg-gradient-to-br from-[#134E4A] via-[#0891B2] to-[#22D3EE]">
+                  {/* Grid overlay */}
                   <div
                     aria-hidden
-                    className="absolute inset-0 opacity-20"
+                    className="absolute inset-0 opacity-10"
                     style={{
-                      backgroundImage: `linear-gradient(rgba(255,255,255,0.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.5) 1px, transparent 1px)`,
-                      backgroundSize: "20px 20px",
+                      backgroundImage: `linear-gradient(rgba(255,255,255,0.7) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.7) 1px, transparent 1px)`,
+                      backgroundSize: "28px 28px",
                     }}
                   />
+                  {/* Decorative circles */}
+                  <div aria-hidden className="absolute -top-8 -right-8 h-40 w-40 rounded-full bg-white/10" />
+                  <div aria-hidden className="absolute -bottom-10 right-24 h-28 w-28 rounded-full bg-[#134E4A]/30" />
+                  <div aria-hidden className="absolute top-4 left-1/3 h-16 w-16 rounded-full bg-white/8" />
+                  <div aria-hidden className="absolute -top-4 left-8 h-20 w-20 rounded-full bg-[#0891B2]/40" />
                 </div>
 
                 <div className="relative px-6 pb-6 sm:px-8 sm:pb-8">
@@ -437,10 +448,17 @@ export default async function DoctorProfilePage({
                     )}
                   </div>
                 </div>
-              </div>
+              </AnimatedSection>
+
+              {/* Trust signals */}
+              <TrustSignals
+                averageRating={averageRating}
+                reviewCount={reviewCount}
+                acceptsNewPatients
+              />
 
               {/* About section */}
-              <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+              <AnimatedSection index={1} className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
                     <Sparkles className="h-4 w-4" strokeWidth={2.5} />
@@ -453,11 +471,11 @@ export default async function DoctorProfilePage({
                   {doctor.bio ||
                     `${doctor.name} est ${specialtyLabel.toLowerCase()} à ${cityLabel}. Passionné(e) par la santé de ses patients, le Dr vous accueille dans un cabinet moderne et bienveillant. Réservez votre consultation en quelques clics via Doktori.`}
                 </p>
-              </div>
+              </AnimatedSection>
 
               {/* Expertises */}
               {expertise.length > 0 && (
-                <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={2} className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
                       <Sparkles className="h-4 w-4" strokeWidth={2.5} />
@@ -477,12 +495,12 @@ export default async function DoctorProfilePage({
                       </span>
                     ))}
                   </div>
-                </div>
+                </AnimatedSection>
               )}
 
               {/* Formation */}
               {educations.length > 0 && (
-                <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={3} className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
                       <GraduationCap className="h-4 w-4" strokeWidth={2.5} />
@@ -520,12 +538,12 @@ export default async function DoctorProfilePage({
                         </li>
                       ))}
                   </ol>
-                </div>
+                </AnimatedSection>
               )}
 
               {/* Expérience */}
               {experiences.length > 0 && (
-                <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={4} className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
                       <Briefcase className="h-4 w-4" strokeWidth={2.5} />
@@ -571,12 +589,12 @@ export default async function DoctorProfilePage({
                         </li>
                       ))}
                   </ol>
-                </div>
+                </AnimatedSection>
               )}
 
               {/* Langues parlées */}
               {languages.length > 0 && (
-                <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={5} className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
                       <Languages className="h-4 w-4" strokeWidth={2.5} />
@@ -596,12 +614,12 @@ export default async function DoctorProfilePage({
                       </span>
                     ))}
                   </div>
-                </div>
+                </AnimatedSection>
               )}
 
               {/* Appointment types (motifs) */}
               {appointmentTypesList.length > 0 && (
-                <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={6} className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
                       <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
@@ -633,11 +651,11 @@ export default async function DoctorProfilePage({
                       </li>
                     ))}
                   </ul>
-                </div>
+                </AnimatedSection>
               )}
 
               {/* Weekly schedule */}
-              <div className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+              <AnimatedSection index={7} className="rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
@@ -680,11 +698,11 @@ export default async function DoctorProfilePage({
                     </div>
                   ))}
                 </div>
-              </div>
+              </AnimatedSection>
 
               {/* Avis patients — on mobile, pushed below practical info via order */}
               {reviewCount > 0 && (
-                <div className="order-last lg:order-none rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={8} className="order-last lg:order-none rounded-3xl border border-[#E6F4F1] bg-white p-6 shadow-sm sm:p-8">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
@@ -773,11 +791,11 @@ export default async function DoctorProfilePage({
                       </Link>
                     </div>
                   )}
-                </div>
+                </AnimatedSection>
               )}
 
               {/* Practical info */}
-              <div className="grid gap-4 sm:grid-cols-2">
+              <AnimatedSection index={9} className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#0E7490]">
                     <MessageSquareText className="h-3.5 w-3.5" strokeWidth={2.5} />
@@ -798,7 +816,7 @@ export default async function DoctorProfilePage({
                     Espèces · Carte · CNAM
                   </p>
                 </div>
-              </div>
+              </AnimatedSection>
             </div>
 
             {/* ═════ RIGHT COLUMN — sticky CTA (hidden on mobile, shown on desktop) ═════ */}
@@ -834,23 +852,27 @@ export default async function DoctorProfilePage({
                   </ul>
 
                   {doctor.consultationMode === "teleconsult" ? (
-                    <Link
-                      href={`/rdv/${doctor.slug}`}
-                      className="group mt-6 inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-purple-600 font-heading text-base font-bold text-white shadow-lg shadow-purple-600/20 transition-all hover:bg-purple-700 active:scale-[0.98]"
-                    >
-                      <Video className="h-5 w-5" strokeWidth={2.5} />
-                      <span>Prendre un RDV vidéo</span>
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
-                    </Link>
+                    <AnimatedCTAButton className="mt-6">
+                      <Link
+                        href={`/rdv/${doctor.slug}`}
+                        className="group inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-purple-600 font-heading text-base font-bold text-white shadow-lg shadow-purple-600/20 transition-colors hover:bg-purple-700"
+                      >
+                        <Video className="h-5 w-5" strokeWidth={2.5} />
+                        <span>Prendre un RDV vidéo</span>
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
+                      </Link>
+                    </AnimatedCTAButton>
                   ) : (
-                    <Link
-                      href={`/rdv/${doctor.slug}`}
-                      className="group mt-6 inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0891B2] font-heading text-base font-bold text-white shadow-lg shadow-[#0891B2]/20 transition-all hover:bg-[#0E7490] active:scale-[0.98]"
-                    >
-                      <Calendar className="h-5 w-5" strokeWidth={2.5} />
-                      <span>Prendre rendez-vous</span>
-                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
-                    </Link>
+                    <AnimatedCTAButton className="mt-6">
+                      <Link
+                        href={`/rdv/${doctor.slug}`}
+                        className="group inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#0891B2] font-heading text-base font-bold text-white shadow-lg shadow-[#0891B2]/20 transition-colors hover:bg-[#0E7490]"
+                      >
+                        <Calendar className="h-5 w-5" strokeWidth={2.5} />
+                        <span>Prendre rendez-vous</span>
+                        <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
+                      </Link>
+                    </AnimatedCTAButton>
                   )}
 
                   <Link
