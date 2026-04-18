@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { SignJWT, jwtVerify } from "jose";
 import { db, appointments, patients } from "@doktori/db";
 import { eq, and, gte } from "drizzle-orm";
+import { auth } from "@/lib/auth";
 
 // RFC 5545 requires CRLF line endings
 const CRLF = "\r\n";
@@ -21,27 +22,18 @@ function escapeICSText(text: string): string {
 }
 
 // POST — generate a signed subscribe URL for the authenticated doctor
-// The doctor calls this once from their agenda page to get the feed URL.
-export async function POST(req: NextRequest) {
-  const authHeader = req.headers.get("authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
+export async function POST() {
+  const session = await auth();
+  if (!session?.user?.id) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
-  const sessionToken = authHeader.slice(7);
-
-  // Validate the session token to extract doctor ID
-  let doctorId: string;
-  try {
-    const { payload } = await jwtVerify(sessionToken, getSecret());
-    const sub = payload.sub;
-    if (!sub || typeof sub !== "string") {
-      return NextResponse.json({ error: "Token invalide" }, { status: 401 });
-    }
-    doctorId = sub;
-  } catch {
-    return NextResponse.json({ error: "Token invalide" }, { status: 401 });
+  const role = (session.user as any).role;
+  if (role !== "doctor") {
+    return NextResponse.json({ error: "Accès réservé aux médecins" }, { status: 403 });
   }
+
+  const doctorId = session.user.id;
 
   // Generate a feed token valid for 90 days — doctor can revoke by regenerating
   const feedToken = await new SignJWT({ sub: doctorId, type: "calendar_feed" })
@@ -99,7 +91,6 @@ export async function GET(req: NextRequest) {
     .limit(500);
 
   const events = rows.map((appt) => {
-    // Redact PII: use initials only in the .ics file (calendar reminders, synced to third-party services)
     const initials = (appt.patientName ?? "")
       .split(" ")
       .map((n) => n[0])
@@ -112,7 +103,6 @@ export async function GET(req: NextRequest) {
         : `RDV Doktori - ${initials}`;
 
     const description = [
-      // Phone intentionally omitted — PII must not be written to calendar files
       appt.reason ? `Motif: ${appt.reason}` : null,
     ]
       .filter(Boolean)
