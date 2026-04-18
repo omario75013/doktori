@@ -146,7 +146,11 @@ export const patients = pgTable(
     authMethod: varchar("auth_method", { length: 10 }).notNull().default("otp"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [uniqueIndex("patients_phone_idx").on(table.phone)]
+  (table) => [
+    uniqueIndex("patients_phone_idx").on(table.phone),
+    // NOTE: patients_email_unique_idx (partial) is defined in migration 0040_patient_email_index.sql
+    // Drizzle does not support partial (conditional) unique indexes natively, so it lives in raw SQL.
+  ]
 );
 
 // ─── Patient Medical Profile (1:1 with patients) ─────────────────────────────

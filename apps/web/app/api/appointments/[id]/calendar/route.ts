@@ -57,7 +57,13 @@ export async function GET(
     .limit(1);
 
   const patientName = patient?.name ?? "Patient";
-  const patientPhone = patient?.phone ?? "";
+  // Redact PII: use initials only in the .ics file (synced to third-party calendar services)
+  const initials = patientName
+    .split(" ")
+    .map((n) => n[0])
+    .filter(Boolean)
+    .join(".");
+
   const location =
     appt.type === "teleconsult"
       ? "Téléconsultation Doktori"
@@ -67,12 +73,11 @@ export async function GET(
 
   const summary =
     appt.type === "teleconsult"
-      ? `RDV Vidéo - ${patientName}`
-      : `RDV - ${patientName}`;
+      ? `RDV Vidéo Doktori - ${initials}`
+      : `RDV Doktori - ${initials}`;
 
   const description = [
-    `Patient: ${patientName}`,
-    patientPhone ? `Tél: ${patientPhone}` : null,
+    // Phone intentionally omitted — PII must not be written to calendar files
     appt.reason ? `Motif: ${appt.reason}` : null,
   ]
     .filter(Boolean)

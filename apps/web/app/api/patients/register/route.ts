@@ -9,7 +9,21 @@ function isValidPhone(phone: string): boolean {
   return /^\+?[\d\s\-()]{8,20}$/.test(phone);
 }
 
+const ipCounts = new Map<string, { count: number; resetAt: number }>();
+function isRateLimited(ip: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = ipCounts.get(ip);
+  if (!entry || now > entry.resetAt) { ipCounts.set(ip, { count: 1, resetAt: now + windowMs }); return false; }
+  entry.count++;
+  return entry.count > max;
+}
+
 export async function POST(req: Request) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (isRateLimited(ip, 3, 3600000)) { // 3 per hour per IP
+    return NextResponse.json({ error: "Trop de tentatives. Réessayez plus tard." }, { status: 429 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();
@@ -91,6 +105,7 @@ export async function POST(req: Request) {
 
   return NextResponse.json({
     token,
-    patient: { id: patient.id, name: patient.name, email: patient.email },
+    // Always return the submitted name to avoid exposing existing account data (enumeration fix)
+    patient: { id: patient.id, name: body.name as string, email: body.email as string },
   });
 }

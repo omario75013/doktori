@@ -43,10 +43,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Token invalide" }, { status: 401 });
   }
 
-  // Generate a long-lived read-only feed token (no expiry — doctor can revoke by regenerating)
+  // Generate a feed token valid for 90 days — doctor can revoke by regenerating
   const feedToken = await new SignJWT({ sub: doctorId, type: "calendar_feed" })
     .setProtectedHeader({ alg: "HS256" })
     .setIssuedAt()
+    .setExpirationTime("90d")
     .sign(getSecret());
 
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "https://doktori.tn";
@@ -98,14 +99,20 @@ export async function GET(req: NextRequest) {
     .limit(500);
 
   const events = rows.map((appt) => {
+    // Redact PII: use initials only in the .ics file (calendar reminders, synced to third-party services)
+    const initials = (appt.patientName ?? "")
+      .split(" ")
+      .map((n) => n[0])
+      .filter(Boolean)
+      .join(".");
+
     const summary =
       appt.type === "teleconsult"
-        ? `RDV Vidéo - ${appt.patientName}`
-        : `RDV - ${appt.patientName}`;
+        ? `RDV Vidéo Doktori - ${initials}`
+        : `RDV Doktori - ${initials}`;
 
     const description = [
-      `Patient: ${appt.patientName}`,
-      appt.patientPhone ? `Tél: ${appt.patientPhone}` : null,
+      // Phone intentionally omitted — PII must not be written to calendar files
       appt.reason ? `Motif: ${appt.reason}` : null,
     ]
       .filter(Boolean)
@@ -120,7 +127,7 @@ export async function GET(req: NextRequest) {
       `DTSTART:${formatICSDate(appt.startsAt)}`,
       `DTEND:${formatICSDate(appt.endsAt)}`,
       `SUMMARY:${escapeICSText(summary)}`,
-      `DESCRIPTION:${description}`,
+      description ? `DESCRIPTION:${description}` : "DESCRIPTION:",
       `LOCATION:${escapeICSText(location)}`,
       "STATUS:CONFIRMED",
       "END:VEVENT",

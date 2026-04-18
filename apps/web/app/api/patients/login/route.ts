@@ -4,7 +4,21 @@ import { eq } from "drizzle-orm";
 import { compare } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 
+const ipCounts = new Map<string, { count: number; resetAt: number }>();
+function isRateLimited(ip: string, max: number, windowMs: number): boolean {
+  const now = Date.now();
+  const entry = ipCounts.get(ip);
+  if (!entry || now > entry.resetAt) { ipCounts.set(ip, { count: 1, resetAt: now + windowMs }); return false; }
+  entry.count++;
+  return entry.count > max;
+}
+
 export async function POST(req: Request) {
+  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (isRateLimited(ip, 5, 900000)) { // 5 per 15 min
+    return NextResponse.json({ error: "Trop de tentatives. Réessayez dans 15 minutes." }, { status: 429 });
+  }
+
   let body: Record<string, unknown>;
   try {
     body = await req.json();
