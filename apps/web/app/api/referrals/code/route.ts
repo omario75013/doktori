@@ -19,7 +19,7 @@ export async function GET() {
     .limit(1);
 
   if (existing) {
-    return NextResponse.json({ code: existing.code });
+    return NextResponse.json({ code: existing.code, doctorId });
   }
 
   // Generate an 8-char uppercase hex code
@@ -30,5 +30,5 @@ export async function GET() {
     .values({ doctorId, code })
     .returning();
 
-  return NextResponse.json({ code: created.code });
+  return NextResponse.json({ code: created.code, doctorId });
 }

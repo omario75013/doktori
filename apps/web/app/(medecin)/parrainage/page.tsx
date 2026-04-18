@@ -3,7 +3,15 @@
 import { useEffect, useState } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Gift } from "lucide-react";
+import { Gift, Search, Copy, Check, UserRound } from "lucide-react";
+
+type DoctorResult = {
+  id: string;
+  name: string;
+  specialty: string;
+  slug: string;
+  city: string;
+};
 
 type Referral = {
   id: string;
@@ -28,9 +36,16 @@ const STATUS_STYLES: Record<string, string> = {
 
 export default function ParrainagePage() {
   const [code, setCode] = useState<string | null>(null);
+  const [doctorId, setDoctorId] = useState<string | null>(null);
   const [referrals, setReferrals] = useState<Referral[]>([]);
   const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Doctor referral search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState<DoctorResult[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [copiedLinkId, setCopiedLinkId] = useState<string | null>(null);
 
   useEffect(() => {
     async function load() {
@@ -41,6 +56,7 @@ export default function ParrainagePage() {
       if (codeRes.ok) {
         const data = await codeRes.json();
         setCode(data.code);
+        setDoctorId(data.doctorId ?? null);
       }
       if (referralsRes.ok) {
         setReferrals(await referralsRes.json());
@@ -49,6 +65,44 @@ export default function ParrainagePage() {
     }
     load();
   }, []);
+
+  useEffect(() => {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    const timer = setTimeout(async () => {
+      setSearching(true);
+      try {
+        const res = await fetch(
+          `/api/doctor/search?q=${encodeURIComponent(trimmed)}&limit=5`
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(Array.isArray(data) ? data : (data.doctors ?? []));
+        }
+      } catch {
+        // Silently ignore search errors
+      } finally {
+        setSearching(false);
+      }
+    }, 350);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+
+  function getReferralLink(targetSlug: string) {
+    if (!doctorId) return "";
+    return `https://doktori.tn/rdv/${targetSlug}?ref=${doctorId}`;
+  }
+
+  function handleCopyReferralLink(targetSlug: string, targetId: string) {
+    const link = getReferralLink(targetSlug);
+    if (!link) return;
+    navigator.clipboard.writeText(link);
+    setCopiedLinkId(targetId);
+    setTimeout(() => setCopiedLinkId(null), 2000);
+  }
 
   function handleCopy() {
     if (!code) return;
@@ -146,6 +200,68 @@ export default function ParrainagePage() {
         <p className="text-xs text-gray-400 text-center">
           Le parrainage est validé après le 1er rendez-vous confirmé du confrère parrainé.
         </p>
+      </div>
+
+      {/* Référer un patient à un confrère */}
+      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm space-y-4">
+        <h2 className="font-semibold text-[#134E4A]">Référer un patient à un confrère</h2>
+        <p className="text-sm text-gray-500">
+          Créez un lien de prise de rendez-vous personnalisé pour orienter vos patients vers un autre médecin.
+        </p>
+        <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Rechercher un médecin par nom ou spécialité..."
+            className="w-full pl-9 pr-4 py-3 rounded-xl border border-[#E6F4F1] text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2]/30 focus:border-[#0891B2]"
+          />
+          {searching && (
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin" />
+          )}
+        </div>
+
+        {searchResults.length > 0 && (
+          <div className="space-y-2">
+            {searchResults.map((doc) => (
+              <div
+                key={doc.id}
+                className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="h-9 w-9 rounded-xl bg-[#F0FDFA] flex items-center justify-center flex-shrink-0">
+                    <UserRound className="h-4 w-4 text-[#0891B2]" />
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-[#134E4A] truncate">{doc.name}</p>
+                    <p className="text-xs text-gray-500">{doc.specialty}{doc.city ? ` · ${doc.city}` : ""}</p>
+                  </div>
+                </div>
+                <button
+                  onClick={() => handleCopyReferralLink(doc.slug, doc.id)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0891B2] text-white hover:bg-[#0E7490] transition-colors flex-shrink-0"
+                >
+                  {copiedLinkId === doc.id ? (
+                    <>
+                      <Check className="h-3 w-3" />
+                      Copié !
+                    </>
+                  ) : (
+                    <>
+                      <Copy className="h-3 w-3" />
+                      Copier le lien
+                    </>
+                  )}
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {searchQuery.trim().length >= 2 && !searching && searchResults.length === 0 && (
+          <p className="text-sm text-gray-400 text-center py-2">Aucun médecin trouvé pour &quot;{searchQuery}&quot;</p>
+        )}
       </div>
 
       {/* Referrals List */}

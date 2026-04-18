@@ -165,6 +165,16 @@ export async function POST(req: Request) {
     resolvedPracticeId = practice.id;
   }
 
+  // Analytics: capture referredBy from ?ref query param in the Referer header
+  let referredBy: string | null = null;
+  const refererHeader = req.headers.get("referer") ?? "";
+  try {
+    const refUrl = new URL(refererHeader);
+    referredBy = refUrl.searchParams.get("ref");
+  } catch {
+    // Ignore malformed referer
+  }
+
   try {
     const appointment = await createAppointment({
       doctorId: parsed.data.doctorId,
@@ -177,6 +187,19 @@ export async function POST(req: Request) {
       practiceId: resolvedPracticeId,
       type: parsed.data.type || "cabinet",
     });
+
+    // Log referral source for analytics (best-effort, non-blocking)
+    if (referredBy && typeof referredBy === "string") {
+      try {
+        await db.execute(sql`
+          UPDATE appointments
+          SET referred_by = ${referredBy}
+          WHERE id = ${appointment.id}
+        `);
+      } catch {
+        // Column may not exist yet — safe to ignore
+      }
+    }
 
     // G3: save questionnaire answers (don't fail the booking on error)
     if (parsed.data.questionnaire && Object.keys(parsed.data.questionnaire).length > 0) {

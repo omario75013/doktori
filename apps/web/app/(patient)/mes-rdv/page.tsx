@@ -22,6 +22,7 @@ import {
   Star,
   RefreshCw,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Step = "phone" | "code" | "loggedIn";
 type CancelState = { id: string } | null;
@@ -132,7 +133,18 @@ function isPastAppointment(a: Appointment) {
   return (a.status === "completed" || (a.status !== "cancelled" && isPast(new Date(a.startsAt))));
 }
 
+// Returns true if appointment ended within the last 48 hours
+function isRecentlyCompleted(a: Appointment) {
+  if (a.status !== "completed" && !(a.status !== "cancelled" && isPast(new Date(a.startsAt)))) {
+    return false;
+  }
+  const endsAt = new Date(a.endsAt);
+  const hoursAgo = (Date.now() - endsAt.getTime()) / (1000 * 60 * 60);
+  return hoursAgo >= 0 && hoursAgo <= 48;
+}
+
 export default function MesRdvPage() {
+  const router = useRouter();
   const [step, setStep] = useState<Step>("phone");
   const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
@@ -143,6 +155,7 @@ export default function MesRdvPage() {
   const [sessionExpiredMsg, setSessionExpiredMsg] = useState("");
   const [cancelConfirm, setCancelConfirm] = useState<CancelState>(null);
   const [activeTab, setActiveTab] = useState<ActiveTab>("upcoming");
+  const [dismissedSatisfaction, setDismissedSatisfaction] = useState<Set<string>>(new Set());
 
   // Check if already logged in
   useEffect(() => {
@@ -231,6 +244,15 @@ export default function MesRdvPage() {
     setStep("phone");
     setPhone("");
     setCode("");
+  }
+
+  function handleSatisfaction(apptId: string) {
+    setDismissedSatisfaction((prev) => new Set([...prev, apptId]));
+    router.push(`/avis/${apptId}`);
+  }
+
+  function dismissSatisfaction(apptId: string) {
+    setDismissedSatisfaction((prev) => new Set([...prev, apptId]));
   }
 
   if (step === "phone") {
@@ -515,6 +537,44 @@ export default function MesRdvPage() {
                           {/* Cancelled reason placeholder */}
                           {a.status === "cancelled" && (
                             <p className="mt-2 text-xs text-gray-400 italic">Rendez-vous annulé</p>
+                          )}
+
+                          {/* Post-visit satisfaction prompt — shown for recently completed appointments */}
+                          {isPastAppt && isRecentlyCompleted(a) && !dismissedSatisfaction.has(a.id) && (
+                            <div className="mt-3 bg-[#F0FDFA] rounded-xl p-3 border border-[#E6F4F1]">
+                              <div className="flex items-center justify-between mb-2">
+                                <p className="text-xs font-semibold text-[#134E4A]">
+                                  Comment s&apos;est passée votre consultation ?
+                                </p>
+                                <button
+                                  onClick={() => dismissSatisfaction(a.id)}
+                                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                                  aria-label="Fermer"
+                                >
+                                  <X className="h-3 w-3" />
+                                </button>
+                              </div>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => handleSatisfaction(a.id)}
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-[#E6F4F1] text-xs font-medium text-[#134E4A] hover:bg-green-50 hover:border-green-200 transition-colors"
+                                >
+                                  😊 Bien
+                                </button>
+                                <button
+                                  onClick={() => handleSatisfaction(a.id)}
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-[#E6F4F1] text-xs font-medium text-[#134E4A] hover:bg-amber-50 hover:border-amber-200 transition-colors"
+                                >
+                                  😐 Correct
+                                </button>
+                                <button
+                                  onClick={() => handleSatisfaction(a.id)}
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-[#E6F4F1] text-xs font-medium text-[#134E4A] hover:bg-red-50 hover:border-red-200 transition-colors"
+                                >
+                                  😞 Décevant
+                                </button>
+                              </div>
+                            </div>
                           )}
                         </div>
 
