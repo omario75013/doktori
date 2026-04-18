@@ -29,6 +29,8 @@ import {
   Calendar,
   Video,
   Users,
+  Camera,
+  Upload,
 } from "lucide-react";
 
 const STEPS = [
@@ -51,6 +53,9 @@ export default function InscriptionPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -65,6 +70,17 @@ export default function InscriptionPage() {
 
   function handleChange(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  }
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setError("La photo ne doit pas dépasser 5 Mo");
+      return;
+    }
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
   }
 
   function next() {
@@ -119,6 +135,15 @@ export default function InscriptionPage() {
         password: form.password,
         redirect: false,
       });
+
+      // Upload photo if provided (after successful login so we have a session)
+      if (!loginResult?.error && photoFile && data.id) {
+        const formData = new FormData();
+        formData.append("file", photoFile);
+        formData.append("doctorId", data.id);
+        await fetch("/api/doctors/photo", { method: "POST", body: formData });
+      }
+
       if (!loginResult?.error) {
         router.push("/dashboard");
       } else {
@@ -245,6 +270,33 @@ export default function InscriptionPage() {
                       <div>
                         <h2 className="text-xl font-bold text-[#134E4A]">Vos informations personnelles</h2>
                         <p className="text-sm text-[#5E7574] mt-1">Ces informations apparaîtront sur votre profil public.</p>
+                      </div>
+
+                      {/* Photo upload */}
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="relative">
+                          {photoPreview ? (
+                            <img
+                              src={photoPreview}
+                              alt="Photo de profil"
+                              className="w-24 h-24 rounded-2xl object-cover ring-2 ring-[#E6F4F1]"
+                            />
+                          ) : (
+                            <div className="w-24 h-24 rounded-2xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+                              <Camera className="w-8 h-8" />
+                            </div>
+                          )}
+                          <label className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#0891B2] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#0E7490] transition-colors">
+                            <Upload className="w-4 h-4 text-white" />
+                            <input
+                              type="file"
+                              accept="image/jpeg,image/png,image/webp"
+                              className="hidden"
+                              onChange={handlePhotoChange}
+                            />
+                          </label>
+                        </div>
+                        <p className="text-xs text-[#5E7574]">Photo de profil (recommandé)</p>
                       </div>
 
                       <div className="space-y-1.5">
