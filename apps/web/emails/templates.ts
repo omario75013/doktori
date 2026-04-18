@@ -450,6 +450,76 @@ export function buildCnamEmail(p: {
   `);
 }
 
+// ─── Doctor welcome (trial activation) ───────────────────────────────────────
+
+export function buildDoctorWelcomeEmail(params: { doctorName: string; trialEndDate: string }): string {
+  return layout(`
+    <p style="font-size:16px;color:${DARK}">Bonjour Dr. ${params.doctorName},</p>
+    <p style="color:#5E7574">Votre espace médecin est prêt ! Vous bénéficiez de <strong>2 mois d'essai gratuit</strong> jusqu'au ${params.trialEndDate}.</p>
+    <h3 style="color:${DARK}">Pour bien démarrer :</h3>
+    <ol style="color:#5E7574;line-height:2">
+      <li>Complétez votre profil et ajoutez une photo</li>
+      <li>Configurez vos horaires dans l'Agenda</li>
+      <li>Ajoutez vos motifs de consultation</li>
+      <li>Activez la téléconsultation si vous le souhaitez</li>
+    </ol>
+    ${btn("Accéder à mon espace", "https://doktori.tn/dashboard")}
+    <p style="color:#94A3B8;font-size:13px;margin-top:24px">
+      Votre essai gratuit expire le ${params.trialEndDate}. Après cette date, choisissez un abonnement pour rester visible sur la plateforme.
+    </p>
+  `);
+}
+
+// ─── Subscription expired (doctor) ───────────────────────────────────────────
+
+export function buildSubscriptionExpiredEmail(params: { doctorName: string; planName: string }): string {
+  return layout(`
+    <p style="font-size:16px;color:${DARK}">Bonjour Dr. ${params.doctorName},</p>
+    <p style="color:#5E7574">Votre abonnement <strong>${params.planName}</strong> a expiré. Votre profil n'est plus visible pour les patients sur Doktori.</p>
+    <p style="color:#5E7574">Pour retrouver votre visibilité et continuer à recevoir des rendez-vous, renouvelez votre abonnement dès maintenant.</p>
+    ${btn("Renouveler mon abonnement", "https://doktori.tn/dashboard/abonnement")}
+    <p style="color:#94A3B8;font-size:13px;margin-top:24px">
+      Besoin d'aide ? Contactez-nous à <a href="mailto:support@doktori.tn" style="color:${TEAL}">support@doktori.tn</a>
+    </p>
+  `);
+}
+
+// ─── Trial expiry warning (doctor) ───────────────────────────────────────────
+
+export function buildTrialExpiryWarningEmail(params: { doctorName: string; trialEndDate: string; daysLeft: number }): string {
+  const urgency = params.daysLeft <= 1;
+  const subject7 = `Votre essai gratuit expire dans ${params.daysLeft} jour${params.daysLeft > 1 ? "s" : ""}`;
+  const subjectUrgent = "Dernier jour d'essai — choisissez votre abonnement";
+  void subject7; void subjectUrgent; // exported via wrapper functions below
+
+  return layout(`
+    <p style="font-size:16px;color:${DARK}">Bonjour Dr. ${params.doctorName},</p>
+    <p style="color:#5E7574">
+      ${urgency
+        ? "C'est votre <strong>dernier jour d'essai gratuit</strong>. Après aujourd'hui, votre profil ne sera plus visible sur Doktori."
+        : `Votre essai gratuit expire dans <strong>${params.daysLeft} jours</strong> (le ${params.trialEndDate}).`
+      }
+    </p>
+    <p style="color:#5E7574">Choisissez un abonnement pour continuer à être visible par les patients et recevoir des rendez-vous.</p>
+    ${btn("Choisir mon abonnement", "https://doktori.tn/dashboard/abonnement")}
+    <p style="color:#94A3B8;font-size:13px;margin-top:24px">
+      Votre essai gratuit expire le ${params.trialEndDate}.
+    </p>
+  `);
+}
+
+export function buildTrialExpiredTodayEmail(params: { doctorName: string }): string {
+  return layout(`
+    <p style="font-size:16px;color:${DARK}">Bonjour Dr. ${params.doctorName},</p>
+    <p style="color:#5E7574">Votre essai gratuit a expiré. <strong>Vos patients ne peuvent plus vous trouver</strong> sur Doktori.</p>
+    <p style="color:#5E7574">Abonnez-vous maintenant pour retrouver votre visibilité et continuer à recevoir des rendez-vous.</p>
+    ${btn("Choisir mon abonnement", "https://doktori.tn/dashboard/abonnement")}
+    <p style="color:#94A3B8;font-size:13px;margin-top:24px">
+      Besoin d'aide ? Contactez-nous à <a href="mailto:support@doktori.tn" style="color:${TEAL}">support@doktori.tn</a>
+    </p>
+  `);
+}
+
 // ─── Welcome patient ─────────────────────────────────────────────────────────
 
 export function welcomePatient(p: {
