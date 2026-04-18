@@ -8,6 +8,7 @@ import { Chatbot } from "@/components/chatbot";
 import { AppBanner } from "@/components/app-banner";
 import { PatientShell } from "@/components/patient-shell";
 import { InstallPrompt } from "@/components/install-prompt";
+import { ThemeProvider } from "@/components/theme-provider";
 import { Toaster } from "sonner";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 
@@ -88,6 +89,7 @@ export default async function RootLayout({
       lang={locale}
       dir={isRtl ? "rtl" : "ltr"}
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col">
         <script
@@ -113,19 +115,21 @@ export default async function RootLayout({
             }),
           }}
         />
-        <NextIntlClientProvider locale={locale} messages={messages}>
-          <PatientShell>
-            <AppBanner />
-            <Navbar />
-          </PatientShell>
-          {children}
-          <Toaster position="bottom-right" richColors toastOptions={{ style: { borderRadius: "16px" } }} />
-          <KeyboardShortcuts />
-          <PatientShell>
-            <Chatbot />
-            <InstallPrompt />
-          </PatientShell>
-        </NextIntlClientProvider>
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <NextIntlClientProvider locale={locale} messages={messages}>
+            <PatientShell>
+              <AppBanner />
+              <Navbar />
+            </PatientShell>
+            {children}
+            <Toaster position="bottom-right" richColors toastOptions={{ style: { borderRadius: "16px" } }} />
+            <KeyboardShortcuts />
+            <PatientShell>
+              <Chatbot />
+              <InstallPrompt />
+            </PatientShell>
+          </NextIntlClientProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

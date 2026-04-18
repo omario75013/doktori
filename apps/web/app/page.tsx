@@ -61,9 +61,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex flex-col bg-white overflow-hidden">
+    <div className="flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
       {/* ═══════════════════════════ HERO ═══════════════════════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#F0FDFA] via-white to-white px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
+      <section className="relative overflow-hidden bg-gradient-to-b from-[#F0FDFA] dark:from-gray-800 via-white dark:via-gray-900 to-white dark:to-gray-900 px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
         {/* Subtle grid background */}
         <div
           aria-hidden
@@ -83,7 +83,7 @@ export default function HomePage() {
               <span>{t("heroBadge")}</span>
             </div>
 
-            <h1 className="text-balance font-heading text-4xl font-black leading-[1.02] tracking-tight text-[#134E4A] sm:text-5xl lg:text-6xl xl:text-7xl">
+            <h1 className="text-balance font-heading text-4xl font-black leading-[1.02] tracking-tight text-[#134E4A] dark:text-white sm:text-5xl lg:text-6xl xl:text-7xl">
               {t("heroTitleLine1")}{" "}
               <span className="block">
                 {t("heroTitleLine2Prefix")}{" "}
@@ -108,13 +108,13 @@ export default function HomePage() {
             </h1>
 
             <p
-              className="mx-auto mt-6 max-w-xl text-balance text-lg leading-relaxed text-[#5E7574] lg:mx-0 lg:text-xl [&_strong]:font-bold [&_strong]:text-[#134E4A]"
+              className="mx-auto mt-6 max-w-xl text-balance text-lg leading-relaxed text-[#5E7574] dark:text-gray-400 lg:mx-0 lg:text-xl [&_strong]:font-bold [&_strong]:text-[#134E4A] dark:[&_strong]:text-white"
               dangerouslySetInnerHTML={{ __html: t.raw("heroDescription") as string }}
             />
 
             {/* Search bar */}
             <form onSubmit={handleSearch} className="mx-auto mt-8 max-w-xl lg:mx-0">
-              <div className="group flex h-16 items-center rounded-2xl border-2 border-[#E6F4F1] bg-white p-1.5 shadow-lg shadow-[#0891B2]/5 transition-all focus-within:border-[#0891B2] focus-within:shadow-xl focus-within:shadow-[#0891B2]/10">
+              <div className="group flex h-16 items-center rounded-2xl border-2 border-[#E6F4F1] dark:border-gray-700 bg-white dark:bg-gray-800 p-1.5 shadow-lg shadow-[#0891B2]/5 transition-all focus-within:border-[#0891B2] focus-within:shadow-xl focus-within:shadow-[#0891B2]/10">
                 <div className="flex h-full w-12 shrink-0 items-center justify-center text-[#5E7574]">
                   <Search className="h-5 w-5" strokeWidth={2.5} />
                 </div>
@@ -123,7 +123,7 @@ export default function HomePage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={t("heroSearchPlaceholder")}
-                  className="h-full flex-1 border-0 bg-transparent px-2 text-base text-[#134E4A] placeholder:text-[#5E7574]/60 outline-none"
+                  className="h-full flex-1 border-0 bg-transparent px-2 text-base text-[#134E4A] dark:text-white placeholder:text-[#5E7574]/60 outline-none"
                 />
                 <button
                   type="submit"

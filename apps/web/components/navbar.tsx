@@ -2,17 +2,18 @@ import Link from "next/link";
 import { getTranslations, getLocale } from "next-intl/server";
 import { Stethoscope, Search, UserRound, Siren, HelpCircle } from "lucide-react";
 import { LanguageSwitcher } from "./language-switcher";
+import { ThemeToggle } from "./theme-toggle";
 
 export async function Navbar() {
   const t = await getTranslations("nav");
   const locale = await getLocale();
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-[#E6F4F1] bg-white/90 backdrop-blur-md supports-[backdrop-filter]:bg-white/75">
+    <header className="sticky top-0 z-50 w-full border-b border-[#E6F4F1] dark:border-gray-700 bg-white/90 dark:bg-gray-900/90 backdrop-blur-md supports-[backdrop-filter]:bg-white/75 dark:supports-[backdrop-filter]:bg-gray-900/75">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
         <Link
           href="/"
-          className="group flex items-center gap-2 font-heading text-xl font-black tracking-tight text-[#134E4A]"
+          className="group flex items-center gap-2 font-heading text-xl font-black tracking-tight text-[#134E4A] dark:text-white"
         >
           <span className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-[#0891B2] text-white shadow-sm ring-1 ring-[#0891B2]/20 transition-all group-hover:bg-[#0E7490]">
             <Stethoscope className="h-5 w-5" strokeWidth={2.5} />
@@ -47,6 +48,7 @@ export async function Navbar() {
             <Siren className="h-4 w-4" strokeWidth={2.5} />
             {t("sos")}
           </Link>
+          <ThemeToggle />
           <LanguageSwitcher currentLocale={locale} />
           <Link
             href="/connexion-patient"

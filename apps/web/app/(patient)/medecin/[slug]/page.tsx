@@ -266,7 +266,7 @@ export default async function DoctorProfilePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="min-h-screen bg-[#F0FDFA]/30">
+      <div className="min-h-screen bg-[#F0FDFA]/30 dark:bg-gray-900">
         {/* Back link */}
         <div className="mx-auto max-w-5xl px-4 pt-6 sm:px-6">
           <Link

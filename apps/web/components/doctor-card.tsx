@@ -43,7 +43,7 @@ export function DoctorCard({ doctor }: Props) {
   return (
     <Link
       href={`/medecin/${doctor.slug}`}
-      className="group relative block overflow-hidden rounded-3xl border border-[#E6F4F1] bg-white p-6 transition-all hover:-translate-y-0.5 hover:border-[#0891B2]/40 hover:shadow-xl hover:shadow-[#0891B2]/8"
+      className="group relative block overflow-hidden rounded-3xl border border-[#E6F4F1] dark:border-gray-700 bg-white dark:bg-gray-800 p-6 transition-all hover:-translate-y-0.5 hover:border-[#0891B2]/40 hover:shadow-xl hover:shadow-[#0891B2]/8"
     >
       {/* Subtle teal wash on hover */}
       <div
@@ -77,7 +77,7 @@ export function DoctorCard({ doctor }: Props) {
 
         {/* Info */}
         <div className="min-w-0 flex-1">
-          <h3 className="font-heading text-lg font-bold text-[#134E4A]">{doctor.name}</h3>
+          <h3 className="font-heading text-lg font-bold text-[#134E4A] dark:text-white">{doctor.name}</h3>
           <div className="mt-0.5 flex items-center gap-2 flex-wrap">
             <p className="text-sm font-semibold text-[#0891B2]">{specialty?.label}</p>
             {hasVideo && (
@@ -119,7 +119,7 @@ export function DoctorCard({ doctor }: Props) {
       </div>
 
       {/* CTA row */}
-      <div className="relative mt-5 flex items-center justify-between border-t border-[#E6F4F1] pt-4">
+      <div className="relative mt-5 flex items-center justify-between border-t border-[#E6F4F1] dark:border-gray-700 pt-4">
         <span className="flex items-center gap-1.5 truncate text-xs text-[#5E7574]">
           <Clock className="h-3.5 w-3.5 shrink-0" />
           <span className="truncate">{doctor.address}</span>

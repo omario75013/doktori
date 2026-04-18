@@ -372,7 +372,7 @@ function RechercheInner() {
   const filterCount = activeChips.length;
 
   return (
-    <div className="min-h-screen bg-[#F0FDFA]/30 overflow-x-hidden">
+    <div className="min-h-screen bg-[#F0FDFA]/30 dark:bg-gray-900 overflow-x-hidden">
       {/* ═══════════════ SEARCH HEADER ═══════════════ */}
       <div className="sticky top-16 z-20 border-b border-[#E6F4F1] bg-white/95 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
