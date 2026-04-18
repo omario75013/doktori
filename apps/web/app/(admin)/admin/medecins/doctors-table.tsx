@@ -238,6 +238,14 @@ export function DoctorsTable({
           CSV
         </button>
         <Link
+          href="/admin/medecins/import"
+          className="inline-flex items-center gap-1.5 px-3 py-2 text-sm text-slate-600 hover:text-slate-900 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors"
+          title="Importer des médecins"
+        >
+          <Plus className="w-4 h-4" />
+          Import
+        </Link>
+        <Link
           href="/admin/medecins/nouveau"
           className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 rounded-lg transition-colors"
         >
