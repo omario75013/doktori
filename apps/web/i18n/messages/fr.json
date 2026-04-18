@@ -181,6 +181,7 @@
   "doctorCard": {
     "portraitAlt": "Portrait du {name}",
     "availableToday": "Dispo aujourd'hui",
+    "available": "Disponible",
     "consultationLabel": "Consultation",
     "bookCta": "Prendre RDV"
   },

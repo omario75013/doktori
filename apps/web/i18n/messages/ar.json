@@ -206,6 +206,7 @@
   "doctorCard": {
     "portraitAlt": "صورة {name}",
     "availableToday": "متوفر اليوم",
+    "available": "متوفر",
     "consultationLabel": "الاستشارة",
     "bookCta": "حدد موعداً"
   },

@@ -109,8 +109,11 @@ export function DoctorCard({ doctor }: Props) {
               </span>
             )}
             <span className="flex items-center gap-1 rounded-full bg-[#22C55E]/10 px-2 py-0.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>
-              <span className="font-bold text-[#16A34A]">{t("availableToday")}</span>
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22C55E] opacity-75"></span>
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>
+              </span>
+              <span className="font-bold text-[#16A34A]">{t("available")}</span>
             </span>
           </div>
         </div>
