@@ -3,8 +3,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
 import { db, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
-import { writeFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { uploadToR2 } from "@/lib/r2";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES: Record<string, string> = {
@@ -54,31 +53,33 @@ export async function POST(
     );
   }
 
-  const filename = `${id}-${Date.now()}.${ext}`;
-  const uploadsDir = join(process.cwd(), "public", "uploads", "doctors");
-  await mkdir(uploadsDir, { recursive: true });
-  await writeFile(join(uploadsDir, filename), Buffer.from(await file.arrayBuffer()));
+  try {
+    const key = `doctors/photos/${id}-${Date.now()}.${ext}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const photoUrl = await uploadToR2(buffer, key, file.type);
 
-  const photoUrl = `/uploads/doctors/${filename}`;
+    await db
+      .update(doctors)
+      .set({ photoUrl, updatedAt: new Date() })
+      .where(eq(doctors.id, id));
 
-  await db
-    .update(doctors)
-    .set({ photoUrl, updatedAt: new Date() })
-    .where(eq(doctors.id, id));
+    const meta = extractRequestMeta(req);
+    await logAudit({
+      actor: admin,
+      action: "doctors.photo_upload",
+      resourceType: "doctors",
+      resourceId: id,
+      before: { photoUrl: existing.photoUrl },
+      after: { photoUrl },
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
 
-  const meta = extractRequestMeta(req);
-  await logAudit({
-    actor: admin,
-    action: "doctors.photo_upload",
-    resourceType: "doctors",
-    resourceId: id,
-    before: { photoUrl: existing.photoUrl },
-    after: { photoUrl },
-    ip: meta.ip,
-    userAgent: meta.userAgent,
-  });
-
-  return NextResponse.json({ ok: true, photoUrl });
+    return NextResponse.json({ ok: true, photoUrl });
+  } catch (e) {
+    console.error("[r2] admin photo upload failed:", e);
+    return NextResponse.json({ error: "Erreur lors du téléversement" }, { status: 500 });
+  }
 }
 
 export async function DELETE(

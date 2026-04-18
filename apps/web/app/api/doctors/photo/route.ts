@@ -2,8 +2,7 @@ import { NextResponse } from "next/server";
 import { db, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
-import { writeFile, mkdir } from "node:fs/promises";
-import { join } from "node:path";
+import { uploadToR2 } from "@/lib/r2";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES: Record<string, string> = {
@@ -15,9 +14,7 @@ const ALLOWED_TYPES: Record<string, string> = {
 /**
  * POST /api/doctors/photo
  *
- * Public photo upload endpoint for doctor self-registration.
- * Accepts doctor-session auth only. The doctor may only update their own photo.
- * Body: multipart/form-data with fields: file (File), doctorId (string)
+ * Doctor self-photo upload. Stores in Cloudflare R2.
  */
 export async function POST(req: Request) {
   const session = await auth();
@@ -41,7 +38,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "doctorId requis" }, { status: 400 });
   }
 
-  // Doctors can only update their own photo
   if (doctorId !== session.user.id) {
     return NextResponse.json({ error: "Accès interdit" }, { status: 403 });
   }
@@ -72,17 +68,19 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
   }
 
-  const filename = `${doctorId}-${Date.now()}.${ext}`;
-  const uploadsDir = join(process.cwd(), "public", "uploads", "doctors");
-  await mkdir(uploadsDir, { recursive: true });
-  await writeFile(join(uploadsDir, filename), Buffer.from(await file.arrayBuffer()));
+  try {
+    const key = `doctors/photos/${doctorId}-${Date.now()}.${ext}`;
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const photoUrl = await uploadToR2(buffer, key, file.type);
 
-  const photoUrl = `/uploads/doctors/${filename}`;
+    await db
+      .update(doctors)
+      .set({ photoUrl, updatedAt: new Date() })
+      .where(eq(doctors.id, doctorId));
 
-  await db
-    .update(doctors)
-    .set({ photoUrl, updatedAt: new Date() })
-    .where(eq(doctors.id, doctorId));
-
-  return NextResponse.json({ ok: true, photoUrl });
+    return NextResponse.json({ ok: true, photoUrl });
+  } catch (e) {
+    console.error("[r2] photo upload failed:", e);
+    return NextResponse.json({ error: "Erreur lors du téléversement" }, { status: 500 });
+  }
 }
