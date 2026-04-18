@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
-import { db, doctors, adminUsers } from "@doktori/db";
+import { db, doctors, adminUsers, clinics } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -66,6 +66,32 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: admin.email,
           role: "admin" as const,
           adminRole: admin.role,
+        };
+      },
+    }),
+    Credentials({
+      id: "clinic-credentials",
+      name: "Clinic Login",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Mot de passe", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+        const email = (credentials.email as string).toLowerCase();
+        const [clinic] = await db
+          .select()
+          .from(clinics)
+          .where(eq(clinics.email, email))
+          .limit(1);
+        if (!clinic) return null;
+        const valid = await compare(credentials.password as string, clinic.passwordHash);
+        if (!valid) return null;
+        return {
+          id: clinic.id,
+          name: clinic.name,
+          email: clinic.email,
+          role: "clinic" as const,
         };
       },
     }),

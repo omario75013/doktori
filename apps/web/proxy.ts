@@ -2,6 +2,8 @@ import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
+const CLINIC_ROUTES = ["/clinique"];
+
 const DOCTOR_ROUTES = [
   "/dashboard",
   "/agenda",
@@ -20,6 +22,30 @@ const DOCTOR_ROUTES = [
 
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
+
+  // /clinique-login is public — but bounce already-auth'd clinics to /clinique/dashboard
+  if (pathname === "/clinique-login") {
+    const session = await auth();
+    const role = (session?.user as { role?: string } | undefined)?.role;
+    if (role === "clinic") {
+      return NextResponse.redirect(new URL("/clinique/dashboard", req.url));
+    }
+    return NextResponse.next();
+  }
+
+  // /clinique/* requires clinic session — /centre-medical/* stays public
+  const isClinic = CLINIC_ROUTES.some((r) => pathname.startsWith(r));
+  if (isClinic) {
+    const session = await auth();
+    if (!session) {
+      return NextResponse.redirect(new URL("/clinique-login", req.url));
+    }
+    const role = (session.user as { role?: string } | undefined)?.role;
+    if (role !== "clinic") {
+      return NextResponse.redirect(new URL("/clinique-login", req.url));
+    }
+    return NextResponse.next();
+  }
 
   // /admin-login is public — but bounce already-auth'd admins to /admin
   if (pathname === "/admin-login") {
@@ -61,6 +87,8 @@ export async function proxy(req: NextRequest) {
 
 export const config = {
   matcher: [
+    "/clinique/:path*",
+    "/clinique-login",
     "/admin/:path*",
     "/admin-login",
     "/dashboard/:path*",

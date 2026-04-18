@@ -1,7 +1,7 @@
 import type { DefaultSession, DefaultUser } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 
-type Role = "doctor" | "admin";
+type Role = "doctor" | "admin" | "clinic";
 type AdminRoleType =
   | "super_admin"
   | "moderator"
