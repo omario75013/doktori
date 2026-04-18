@@ -3,7 +3,7 @@ import { eq, and } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, referrals, subscriptions } from "@doktori/db";
+import { db, referrals, subscriptions, platformSettings } from "@doktori/db";
 
 export async function PATCH(
   req: Request,
@@ -36,43 +36,63 @@ export async function PATCH(
     updates.validatedAt = new Date();
   }
 
-  // When rewarded: extend the referrer's active subscription by 1 month
-  // or create a 1-month premium subscription if none exists
+  // When rewarded: extend referrer AND referee subscriptions based on platform_settings
   if (status === "rewarded") {
-    const [activeSub] = await db
-      .select({ id: subscriptions.id })
-      .from(subscriptions)
+    // Read configurable reward values from platform_settings
+    const settingsRows = await db
+      .select({ key: platformSettings.key, value: platformSettings.value })
+      .from(platformSettings)
       .where(
-        and(
-          eq(subscriptions.doctorId, existing.referrerId),
-          eq(subscriptions.status, "active"),
-        ),
-      )
-      .limit(1);
+        sql`${platformSettings.key} IN ('referral.reward_value', 'referral.referee_reward_value')`
+      );
 
-    if (activeSub) {
-      await db.execute(sql`
-        UPDATE subscriptions
-        SET ends_at = ends_at + INTERVAL '1 month',
-            updated_at = now()
-        WHERE id = ${activeSub.id}
-      `);
-    } else {
+    const settingsMap = Object.fromEntries(settingsRows.map((s) => [s.key, s.value]));
+    const referrerMonths = parseInt(settingsMap["referral.reward_value"] ?? "1", 10) || 1;
+    const refereeMonths = parseInt(settingsMap["referral.referee_reward_value"] ?? "1", 10) || 1;
+
+    // Helper to extend or create subscription for a doctor
+    async function extendOrCreate(doctorId: string, months: number, refLabel: string) {
       const now = new Date();
-      const endsAt = new Date(now);
-      endsAt.setMonth(endsAt.getMonth() + 1);
-      await db.insert(subscriptions).values({
-        doctorId: existing.referrerId,
-        plan: "premium",
-        status: "active",
-        priceMillimes: 0,
-        billingCycle: "monthly",
-        paymentProvider: "manual",
-        externalRef: `referral-reward-${id}`,
-        startsAt: now,
-        endsAt,
-      });
+      const [activeSub] = await db
+        .select({ id: subscriptions.id, endsAt: subscriptions.endsAt })
+        .from(subscriptions)
+        .where(
+          and(
+            eq(subscriptions.doctorId, doctorId),
+            eq(subscriptions.status, "active"),
+          ),
+        )
+        .limit(1);
+
+      if (activeSub) {
+        const baseDate = activeSub.endsAt ?? now;
+        const newEndsAt = new Date(baseDate);
+        newEndsAt.setMonth(newEndsAt.getMonth() + months);
+        await db
+          .update(subscriptions)
+          .set({ endsAt: newEndsAt, updatedAt: now })
+          .where(eq(subscriptions.id, activeSub.id));
+      } else {
+        const endsAt = new Date(now);
+        endsAt.setMonth(endsAt.getMonth() + months);
+        await db.insert(subscriptions).values({
+          doctorId,
+          plan: "essentiel",
+          status: "active",
+          priceMillimes: 0,
+          billingCycle: "monthly",
+          paymentProvider: "manual",
+          externalRef: refLabel,
+          startsAt: now,
+          endsAt,
+        });
+      }
     }
+
+    // Reward referrer
+    await extendOrCreate(existing.referrerId, referrerMonths, `referral-referrer-${id}`);
+    // Reward referee (new doctor)
+    await extendOrCreate(existing.referredId, refereeMonths, `referral-referee-${id}`);
   }
 
   const [updated] = await db
