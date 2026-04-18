@@ -859,3 +859,54 @@ export const platformSettings = pgTable("platform_settings", {
   options: jsonb("options"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ── Promo Codes ───────────────────────────────────────────────────────────────
+
+export const promoCodes = pgTable(
+  "promo_codes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    code: varchar("code", { length: 30 }).notNull().unique(),
+    // 'percentage' | 'fixed_amount' | 'free_months'
+    type: varchar("type", { length: 20 }).notNull(),
+    // percentage (0-100), amount in millimes, or months count
+    value: integer("value").notNull(),
+    // 'subscription' | 'teleconsult'
+    target: varchar("target", { length: 20 }).notNull().default("subscription"),
+    maxUses: integer("max_uses"),
+    currentUses: integer("current_uses").notNull().default(0),
+    validFrom: timestamp("valid_from", { withTimezone: true }).notNull().defaultNow(),
+    validUntil: timestamp("valid_until", { withTimezone: true }),
+    isActive: boolean("is_active").notNull().default(true),
+    createdBy: uuid("created_by").references(() => adminUsers.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("promo_codes_code_idx").on(table.code),
+  ]
+);
+
+// ── Promo Code Usages ─────────────────────────────────────────────────────────
+
+export const promoCodeUsages = pgTable(
+  "promo_code_usages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    promoCodeId: uuid("promo_code_id")
+      .notNull()
+      .references(() => promoCodes.id, { onDelete: "cascade" }),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    // subscription_id or appointment_id
+    appliedTo: varchar("applied_to", { length: 50 }),
+    // actual discount in millimes
+    discountAmount: integer("discount_amount").notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("promo_usages_code_idx").on(table.promoCodeId),
+    index("promo_usages_doctor_idx").on(table.doctorId),
+    uniqueIndex("promo_usages_unique_idx").on(table.promoCodeId, table.doctorId),
+  ]
+);

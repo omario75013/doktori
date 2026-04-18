@@ -27,8 +27,7 @@ import {
   FileText,
   TrendingUp,
   Receipt,
-  Mail,
-  RefreshCw,
+  Tag,
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -52,10 +51,8 @@ const orgLinks = [
   { href: "/admin/finance", label: "Finance", icon: CreditCard, exact: true },
   { href: "/admin/finance/revenue", label: "Revenus", icon: TrendingUp },
   { href: "/admin/finance/doctors", label: "Facturation médecins", icon: Receipt },
-  { href: "/admin/finance/refunds", label: "Remboursements", icon: RefreshCw },
+  { href: "/admin/promotions", label: "Promotions", icon: Tag },
   { href: "/admin/communications", label: "Communications", icon: Phone },
-  { href: "/admin/communications/emails", label: "Emails envoyés", icon: Mail },
-  { href: "/admin/communications/broadcast", label: "Diffusion", icon: Radio },
   { href: "/admin/cliniques", label: "Cliniques", icon: Building2 },
   { href: "/admin/secretaires", label: "Secrétaires", icon: UserCog },
   { href: "/admin/parrainage", label: "Parrainage", icon: Star },
