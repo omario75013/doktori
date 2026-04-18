@@ -1,6 +1,7 @@
 export const dynamic = "force-dynamic";
 
 import type { Metadata } from "next";
+import { QRCode } from "@/components/qr-code";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { getLocale, getTranslations } from "next-intl/server";
@@ -859,6 +860,11 @@ export default async function DoctorProfilePage({
                     <Phone className="h-4 w-4" strokeWidth={2.5} />
                     Visite à domicile
                   </Link>
+
+                  <div className="mt-4 pt-4 border-t border-[#E6F4F1] text-center">
+                    <p className="text-xs text-[#5E7574] mb-2">Scanner pour réserver</p>
+                    <QRCode url={`https://doktori.tn/rdv/${doctor.slug}`} size={120} />
+                  </div>
 
                   <div className="mt-5 border-t border-[#E6F4F1] pt-4">
                     <p className="text-[10px] font-bold uppercase tracking-wider text-[#5E7574]">

@@ -4,8 +4,9 @@ import { redirect } from "next/navigation";
 import { db, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
-import { User, Pencil } from "lucide-react";
+import { User, Pencil, QrCode } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
+import { QRCode } from "@/components/qr-code";
 
 export default async function ProfilPage() {
   const session = await auth();
@@ -65,6 +66,34 @@ export default async function ProfilPage() {
           <Pencil className="h-4 w-4" />
           {t("editParcours")}
         </Link>
+      </div>
+
+      {/* QR code section */}
+      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm max-w-lg">
+        <h2 className="text-base font-bold text-[#134E4A] mb-1 flex items-center gap-2">
+          <QrCode className="h-5 w-5 text-[#0891B2]" />
+          Mon QR code
+        </h2>
+        <p className="text-sm text-gray-500 mb-4">
+          Affichez ce QR code dans votre cabinet pour que vos patients puissent prendre rendez-vous directement.
+        </p>
+        <div className="flex items-start gap-6">
+          <QRCode url={`https://doktori.tn/rdv/${doctor.slug}`} size={150} />
+          <div className="space-y-3">
+            <p className="text-xs text-gray-400">
+              Ce QR code renvoie vers votre page de prise de rendez-vous en ligne.
+            </p>
+            <a
+              href={`https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(`https://doktori.tn/rdv/${doctor.slug}`)}&format=png`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 border border-[#0891B2] text-[#0891B2] hover:bg-[#F0FDFA] px-4 py-2 rounded-xl text-sm font-bold transition-colors"
+            >
+              <QrCode className="h-4 w-4" />
+              Télécharger mon QR code
+            </a>
+          </div>
+        </div>
       </div>
 
       <p className="text-xs text-gray-400">{t("editComingSoon")}</p>
