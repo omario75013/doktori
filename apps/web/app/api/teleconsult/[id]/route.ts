@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { getPatientFromRequest } from "@/lib/patient-auth";
+import { getSettingOrDefault } from "@/lib/platform-settings";
 
 // UUID v4 validation — rejects fake/malformed IDs before hitting the DB
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -59,9 +60,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       .limit(1);
 
     if (!tc) return NextResponse.json({ error: "Téléconsultation introuvable" }, { status: 404 });
+    const jitsiUrl = await getSettingOrDefault("teleconsult.jitsi_url", "https://meet.jit.si");
     return NextResponse.json({
       roomName: tc.roomName,
-      roomUrl: `https://meet.jit.si/${tc.roomName}`,
+      roomUrl: `${jitsiUrl}/${tc.roomName}`,
       startedAt: tc.startedAt,
       endedAt: tc.endedAt,
     });
