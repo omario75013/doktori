@@ -152,10 +152,28 @@ export default function SOSPage() {
   function getGeolocation(): Promise<GeolocationPosition> {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error("Géolocalisation non supportée"));
+        reject(new Error("Géolocalisation non supportée par votre navigateur"));
         return;
       }
-      navigator.geolocation.getCurrentPosition(resolve, reject);
+      navigator.geolocation.getCurrentPosition(resolve, (err) => {
+        switch (err.code) {
+          case err.PERMISSION_DENIED:
+            reject(new Error("Veuillez autoriser l'accès à votre position dans les paramètres de votre navigateur"));
+            break;
+          case err.POSITION_UNAVAILABLE:
+            reject(new Error("Position indisponible. Vérifiez que le GPS est activé sur votre appareil"));
+            break;
+          case err.TIMEOUT:
+            reject(new Error("La localisation a pris trop de temps. Réessayez"));
+            break;
+          default:
+            reject(new Error("Impossible d'obtenir votre position"));
+        }
+      }, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 60000,
+      });
     });
   }
 
@@ -166,8 +184,8 @@ export default function SOSPage() {
     let pos: GeolocationPosition;
     try {
       pos = await getGeolocation();
-    } catch {
-      setError("Impossible d'obtenir votre position");
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Impossible d'obtenir votre position");
       setStep("form");
       return;
     }
