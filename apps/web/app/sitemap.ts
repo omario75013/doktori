@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { db, doctors } from "@doktori/db";
+import { db, doctors, clinics } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 
@@ -46,6 +46,23 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ]);
 
+  // Clinic profile pages
+  let allClinics: Array<{ slug: string; updatedAt: Date }> = [];
+  try {
+    allClinics = await db
+      .select({ slug: clinics.slug, updatedAt: clinics.createdAt })
+      .from(clinics);
+  } catch {
+    // DB unreachable — skip clinic pages
+  }
+
+  const clinicPages: MetadataRoute.Sitemap = allClinics.map((c) => ({
+    url: `${baseUrl}/centre-medical/${c.slug}`,
+    lastModified: c.updatedAt,
+    changeFrequency: "weekly" as const,
+    priority: 0.7,
+  }));
+
   // SEO listing pages (all city × specialty combinations)
   const listingPages: MetadataRoute.Sitemap = [];
   for (const city of CITIES) {
@@ -59,5 +76,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  return [...staticPages, ...doctorPages, ...listingPages];
+  return [...staticPages, ...doctorPages, ...clinicPages, ...listingPages];
 }

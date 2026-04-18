@@ -90,6 +90,29 @@ export default async function RootLayout({
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "MedicalOrganization",
+              name: "Doktori",
+              url: "https://doktori.tn",
+              logo: "https://doktori.tn/logo.svg",
+              description:
+                "Plateforme de réservation médicale en ligne en Tunisie",
+              address: {
+                "@type": "PostalAddress",
+                addressCountry: "TN",
+              },
+              areaServed: {
+                "@type": "Country",
+                name: "Tunisie",
+              },
+              availableLanguage: ["fr", "ar"],
+            }),
+          }}
+        />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <PatientShell>
             <AppBanner />

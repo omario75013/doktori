@@ -30,13 +30,33 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     return { title: "Centre médical introuvable" };
   }
 
+  // Count doctors in clinic for description
+  const clinicDoctorCount = await db
+    .select({ count: clinicDoctors.id })
+    .from(clinicDoctors)
+    .where(eq(clinicDoctors.clinicId, clinic.id));
+  const doctorCount = clinicDoctorCount.length;
+
+  const cityLabel = CITIES.find((c) => c.id === clinic.city)?.label ?? clinic.city;
+
   return {
-    title: `${clinic.name} — Centre médical à ${clinic.city} | Doktori`,
-    description: `Prenez rendez-vous avec les médecins du ${clinic.name} à ${clinic.city}. Consultez les spécialités disponibles et réservez en ligne.`,
+    title: `${clinic.name} — Centre médical à ${cityLabel} | Doktori`,
+    description: `Prenez rendez-vous au ${clinic.name} à ${cityLabel}. ${doctorCount} médecins disponibles. Réservation en ligne sur Doktori.`,
+    alternates: {
+      canonical: `https://doktori.tn/centre-medical/${slug}`,
+    },
     openGraph: {
       title: clinic.name,
-      description: `Centre médical à ${clinic.city} — Réservation en ligne`,
-      images: clinic.logoUrl ? [clinic.logoUrl] : [],
+      description: `Centre médical à ${cityLabel} — ${doctorCount} praticiens`,
+      url: `https://doktori.tn/centre-medical/${clinic.slug}`,
+      siteName: "Doktori",
+      type: "website",
+      images: clinic.logoUrl ? [{ url: clinic.logoUrl }] : [],
+    },
+    twitter: {
+      card: "summary",
+      title: `${clinic.name} — Centre médical à ${cityLabel}`,
+      description: `${doctorCount} médecins disponibles — Doktori`,
     },
   };
 }
@@ -86,7 +106,34 @@ export default async function CentreMedicalPage({ params }: Props) {
 
   const cityLabel = CITIES.find((c) => c.id === clinic.city)?.label ?? clinic.city;
 
+  const clinicJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "MedicalClinic",
+    name: clinic.name,
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: clinic.address,
+      addressLocality: cityLabel,
+      addressCountry: "TN",
+    },
+    telephone: clinic.phone,
+    email: clinic.email,
+    url: `https://doktori.tn/centre-medical/${clinic.slug}`,
+    ...(clinic.logoUrl && { logo: clinic.logoUrl }),
+    department: allDoctorsInClinic.map((d) => ({
+      "@type": "Physician",
+      name: d.name,
+      medicalSpecialty:
+        SPECIALTIES.find((s) => s.id === d.specialty)?.label ?? d.specialty,
+    })),
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(clinicJsonLd) }}
+      />
     <div className="min-h-screen bg-[#F8FFFE]">
       {/* ─── Header ─── */}
       <div className="bg-gradient-to-br from-[#134E4A] via-[#0E7490] to-[#0891B2]">
@@ -274,5 +321,6 @@ export default async function CentreMedicalPage({ params }: Props) {
         </div>
       </div>
     </div>
+    </>
   );
 }

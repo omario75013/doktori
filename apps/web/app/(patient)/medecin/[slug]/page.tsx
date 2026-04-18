@@ -130,6 +130,25 @@ export async function generateMetadata({
   return {
     title: t("doctorTitle", { name: doctor.name, specialty: specialtyLabel, city: cityLabel }),
     description: t("doctorDescription", { name: doctor.name, specialty: specialtyLabel, city: cityLabel }),
+    alternates: {
+      canonical: `https://doktori.tn/medecin/${slug}`,
+    },
+    openGraph: {
+      title: `Dr. ${doctor.name} — ${specialtyLabel} à ${cityLabel}`,
+      description: `Prenez rendez-vous avec Dr. ${doctor.name}, ${specialtyLabel} à ${cityLabel}. Consultation en ligne sur Doktori.`,
+      url: `https://doktori.tn/medecin/${doctor.slug}`,
+      siteName: "Doktori",
+      type: "profile",
+      locale: locale === "ar" ? "ar_TN" : "fr_TN",
+      images: doctor.photoUrl
+        ? [{ url: doctor.photoUrl, width: 400, height: 400, alt: `Dr. ${doctor.name}` }]
+        : [],
+    },
+    twitter: {
+      card: "summary",
+      title: `Dr. ${doctor.name} — ${specialtyLabel}`,
+      description: `${specialtyLabel} à ${cityLabel} — Doktori`,
+    },
   };
 }
 
@@ -206,6 +225,8 @@ export default async function DoctorProfilePage({
     "@type": "Physician",
     name: doctor.name,
     medicalSpecialty: specialtyLabel,
+    telephone: doctor.phone,
+    ...(doctor.photoUrl && { image: doctor.photoUrl }),
     address: {
       "@type": "PostalAddress",
       streetAddress: doctor.address,
