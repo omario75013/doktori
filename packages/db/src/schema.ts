@@ -313,10 +313,13 @@ export const secretaries = pgTable("secretaries", {
   email: varchar("email", { length: 255 }).notNull(),
   passwordHash: text("password_hash").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
+  // When set, this secretary manages ALL doctors in the clinic
+  clinicId: uuid("clinic_id").references(() => clinics.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("secretaries_email_idx").on(table.email),
   index("secretaries_doctor_idx").on(table.doctorId),
+  index("secretaries_clinic_idx").on(table.clinicId),
 ]);
 
 // ── Referrals ────────────────────────────────────────────
