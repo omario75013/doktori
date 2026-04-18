@@ -12,6 +12,7 @@ import {
   ArrowRight,
   BadgeCheck,
   Users,
+  CalendarClock,
 } from "lucide-react";
 
 interface Props {
@@ -193,6 +194,29 @@ export default async function CentreMedicalPage({ params }: Props) {
 
       {/* ─── Body ─── */}
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
+        {/* ─── "Premier créneau disponible" CTA ─── */}
+        {allDoctorsInClinic.length > 0 && (
+          <div className="rounded-2xl border-2 border-[#0891B2] bg-gradient-to-r from-[#F0FDFA] to-white p-5 mb-6">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0891B2]/10 text-[#0891B2]">
+                  <CalendarClock className="h-5 w-5" strokeWidth={2} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-[#134E4A]">Premier créneau disponible</h3>
+                  <p className="text-sm text-[#5E7574]">Réservez avec le premier médecin disponible</p>
+                </div>
+              </div>
+              <Link
+                href={`/rdv-clinique/${clinic.slug}`}
+                className="shrink-0 bg-[#0891B2] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#0E7490] transition-colors text-sm"
+              >
+                Réserver
+              </Link>
+            </div>
+          </div>
+        )}
+
         {/* Doctors section */}
         <div className="mb-10">
           <div className="mb-6 flex items-center gap-3">
