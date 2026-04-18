@@ -39,7 +39,8 @@ export async function POST(req: Request) {
         JOIN patients p ON p.id = ${appt.patient_id}
         WHERE d.id = ${appt.doctor_id}
       `);
-      const doc = (doctorInfo as unknown as any[])[0];
+      interface DoctorInfoRow { name: string; phone: string; email: string | null; patient_name: string; }
+      const doc = (doctorInfo as unknown as DoctorInfoRow[])[0];
       if (doc) {
         const apptDate = new Date(appt.starts_at);
         const dateStr = apptDate.toLocaleDateString("fr-TN", {

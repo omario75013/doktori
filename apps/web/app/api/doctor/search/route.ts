@@ -15,13 +15,16 @@ export async function GET(req: NextRequest) {
     return NextResponse.json([]);
   }
 
+  // Escape LIKE metacharacters to prevent wildcard injection
+  const escapedQ = q.replace(/%/g, "\\%").replace(/_/g, "\\_");
+
   // Match on name or specialty (specialty stored as ID, check label too)
   const matchingSpecialtyIds = SPECIALTIES
     .filter((s: { id: string; label: string }) => s.label.toLowerCase().includes(q.toLowerCase()))
     .map((s: { id: string; label: string }) => s.id);
 
   const conditions = [
-    ilike(doctors.name, `%${q}%`),
+    ilike(doctors.name, `%${escapedQ}%`),
     ...(matchingSpecialtyIds.length > 0
       ? matchingSpecialtyIds.map((id) => eq(doctors.specialty, id))
       : []),

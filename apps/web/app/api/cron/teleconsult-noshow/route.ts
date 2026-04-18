@@ -30,9 +30,18 @@ export async function POST(req: Request) {
     LIMIT 20
   `);
 
+  interface NoShowRow {
+    id: string; doctor_id: string; patient_id: string;
+    starts_at: string; ends_at: string;
+    payment_amount: number; payment_ref: string | null;
+    appointment_type_id: string | null;
+    doctor_name: string; specialty: string;
+    patient_name: string; patient_phone: string; patient_email: string | null;
+  }
+
   const results = [];
 
-  for (const appt of noShows as unknown as any[]) {
+  for (const appt of noShows as unknown as NoShowRow[]) {
     // 1. Mark as doctor no-show (guard against concurrent runs with AND status check)
     const updated = await db.execute(sql`
       UPDATE appointments SET status = 'doctor_noshow', updated_at = NOW()
@@ -41,7 +50,7 @@ export async function POST(req: Request) {
     `);
 
     // Skip if another cron run already processed this appointment
-    if ((updated as unknown as any[]).length === 0) continue;
+    if ((updated as unknown as Array<{ id: string }>).length === 0) continue;
 
     // 2. Initiate refund
     let refundSuccess = false;
@@ -70,10 +79,9 @@ export async function POST(req: Request) {
       LIMIT 3
     `);
 
-    const replacementDoctor =
-      (replacements as unknown as any[]).length > 0
-        ? (replacements as unknown as any[])[0]
-        : null;
+    interface ReplacementDoctorRow { id: string; name: string; slug: string; }
+    const replacementDoctors = replacements as unknown as ReplacementDoctorRow[];
+    const replacementDoctor = replacementDoctors.length > 0 ? replacementDoctors[0] : null;
 
     // 4. Notify patient via SMS + email
     // TODO: localize SMS based on patient preference (currently French for Tunisian numbers)

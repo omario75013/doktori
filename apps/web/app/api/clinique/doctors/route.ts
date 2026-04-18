@@ -24,6 +24,8 @@ export async function GET() {
   return NextResponse.json({ doctors: rows });
 }
 
+// TODO: implement invitation flow — currently doctors are added directly without consent
+// A clinic_invitations table + acceptance flow should be added before scaling
 export async function POST(req: Request) {
   const clinic = await requireClinic();
   if (clinic instanceof NextResponse) return clinic;

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireDoctor } from "@/lib/doctor-auth";
 import { db, appointments, patients, doctors } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
-import { sql } from "drizzle-orm";
 
 // RFC 5545 requires CRLF line endings in .ics files
 const CRLF = "\r\n";
@@ -24,37 +23,31 @@ export async function GET(
 
   const { id } = await params;
 
-  const [appt] = await db
+  // Single JOIN query replaces 3 sequential queries
+  const [row] = await db
     .select({
       id: appointments.id,
       startsAt: appointments.startsAt,
       endsAt: appointments.endsAt,
       type: appointments.type,
       reason: appointments.reason,
-      patientId: appointments.patientId,
-      doctorId: appointments.doctorId,
+      patientName: patients.name,
+      doctorAddress: doctors.address,
+      doctorCity: doctors.city,
     })
     .from(appointments)
+    .innerJoin(patients, eq(appointments.patientId, patients.id))
+    .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
     .where(and(eq(appointments.id, id), eq(appointments.doctorId, doctor.id)))
     .limit(1);
 
-  if (!appt) {
+  if (!row) {
     return NextResponse.json({ error: "RDV introuvable" }, { status: 404 });
   }
 
-  // Fetch patient info
-  const [patient] = await db
-    .select({ name: patients.name, phone: patients.phone })
-    .from(patients)
-    .where(eq(patients.id, appt.patientId))
-    .limit(1);
-
-  // Fetch doctor address for in-person appointments
-  const [doctorRow] = await db
-    .select({ address: doctors.address, city: doctors.city })
-    .from(doctors)
-    .where(eq(doctors.id, doctor.id))
-    .limit(1);
+  const appt = row;
+  const patient = { name: row.patientName };
+  const doctorRow = { address: row.doctorAddress, city: row.doctorCity };
 
   const patientName = patient?.name ?? "Patient";
   // Redact PII: use initials only in the .ics file (synced to third-party calendar services)

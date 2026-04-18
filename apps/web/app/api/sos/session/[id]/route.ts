@@ -28,7 +28,13 @@ export async function GET(
     LIMIT 1
   `);
 
-  const session = (result as unknown as any[])[0];
+  interface SosSessionRow {
+    id: string; status: string; doctor_id: string | null;
+    requested_at: string; accepted_at: string | null; expires_at: string | null;
+    doctor_name: string | null; doctor_phone: string | null;
+    doctor_address: string | null; doctor_lat: string | null; doctor_lng: string | null;
+  }
+  const session = (result as unknown as SosSessionRow[])[0];
   if (!session) return NextResponse.json({ error: "Session introuvable" }, { status: 404 });
 
   return NextResponse.json(session);

@@ -49,6 +49,11 @@ export async function PUT(req: Request) {
     logoUrl?: string;
   };
 
+  if (name && name.length > 255) return NextResponse.json({ error: "Nom trop long" }, { status: 400 });
+  if (address && address.length > 500) return NextResponse.json({ error: "Adresse trop longue" }, { status: 400 });
+  if (logoUrl && !logoUrl.startsWith("https://")) return NextResponse.json({ error: "URL du logo invalide" }, { status: 400 });
+  if (phone && phone.length > 30) return NextResponse.json({ error: "Téléphone trop long" }, { status: 400 });
+
   const updates: Partial<{
     name: string;
     address: string;

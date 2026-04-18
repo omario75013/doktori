@@ -35,63 +35,93 @@ export function GuidedTour({ steps, storageKey, onComplete }: GuidedTourProps) {
 
   const highlightTarget = useCallback(() => {
     if (!active || stepIndex >= steps.length) return;
-    const el = document.querySelector(steps[stepIndex].target);
+    const el = document.querySelector(steps[stepIndex].target) as HTMLElement | null;
     if (el) {
       const r = el.getBoundingClientRect();
       setRect(r);
       el.scrollIntoView({ behavior: "smooth", block: "center" });
+      // Save original styles before modifying so cleanup can restore exactly
+      const origStyles = {
+        position: el.style.position,
+        zIndex: el.style.zIndex,
+        boxShadow: el.style.boxShadow,
+        borderRadius: el.style.borderRadius,
+        transition: el.style.transition,
+      };
       // Add highlight ring
-      (el as HTMLElement).style.position = "relative";
-      (el as HTMLElement).style.zIndex = "60";
-      (el as HTMLElement).style.boxShadow = "0 0 0 4px rgba(8, 145, 178, 0.4), 0 0 20px rgba(8, 145, 178, 0.15)";
-      (el as HTMLElement).style.borderRadius = "12px";
-      (el as HTMLElement).style.transition = "box-shadow 0.3s ease";
+      el.style.position = "relative";
+      el.style.zIndex = "60";
+      el.style.boxShadow = "0 0 0 4px rgba(8, 145, 178, 0.4), 0 0 20px rgba(8, 145, 178, 0.15)";
+      el.style.borderRadius = "12px";
+      el.style.transition = "box-shadow 0.3s ease";
+      return () => {
+        // Restore ALL original properties
+        el.style.position = origStyles.position;
+        el.style.zIndex = origStyles.zIndex;
+        el.style.boxShadow = origStyles.boxShadow;
+        el.style.borderRadius = origStyles.borderRadius;
+        el.style.transition = origStyles.transition;
+      };
     } else {
       setRect(null);
     }
-    return () => {
-      if (el) {
-        (el as HTMLElement).style.boxShadow = "";
-        (el as HTMLElement).style.zIndex = "";
-        (el as HTMLElement).style.position = "";
-      }
-    };
   }, [active, stepIndex, steps]);
 
   useEffect(() => {
     const cleanup = highlightTarget();
-    // Recompute on scroll/resize
-    const handler = () => highlightTarget();
+    // Recompute bounding rect on scroll/resize
+    const handler = () => {
+      const el = document.querySelector(steps[stepIndex]?.target);
+      if (el) setRect(el.getBoundingClientRect());
+    };
     window.addEventListener("scroll", handler, true);
     window.addEventListener("resize", handler);
     return () => {
+      // Restore element styles and remove listeners
       cleanup?.();
       window.removeEventListener("scroll", handler, true);
       window.removeEventListener("resize", handler);
     };
-  }, [highlightTarget]);
+  }, [highlightTarget, steps, stepIndex]);
+
+  // Cleanup all modified elements on component unmount
+  useEffect(() => {
+    return () => {
+      steps.forEach((step) => {
+        const el = document.querySelector(step.target) as HTMLElement | null;
+        if (el) {
+          el.style.position = "";
+          el.style.zIndex = "";
+          el.style.boxShadow = "";
+          el.style.borderRadius = "";
+          el.style.transition = "";
+        }
+      });
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function clearHighlight(selector?: string) {
+    if (!selector) return;
+    const el = document.querySelector(selector) as HTMLElement | null;
+    if (el) {
+      el.style.position = "";
+      el.style.zIndex = "";
+      el.style.boxShadow = "";
+      el.style.borderRadius = "";
+      el.style.transition = "";
+    }
+  }
 
   function dismiss() {
-    // Remove highlight from current element
-    const el = document.querySelector(steps[stepIndex]?.target);
-    if (el) {
-      (el as HTMLElement).style.boxShadow = "";
-      (el as HTMLElement).style.zIndex = "";
-      (el as HTMLElement).style.position = "";
-    }
+    clearHighlight(steps[stepIndex]?.target);
     localStorage.setItem(storageKey, "1");
     setActive(false);
     onComplete?.();
   }
 
   function next() {
-    // Remove highlight from current
-    const el = document.querySelector(steps[stepIndex]?.target);
-    if (el) {
-      (el as HTMLElement).style.boxShadow = "";
-      (el as HTMLElement).style.zIndex = "";
-      (el as HTMLElement).style.position = "";
-    }
+    clearHighlight(steps[stepIndex]?.target);
     if (stepIndex < steps.length - 1) {
       setStepIndex(stepIndex + 1);
     } else {
@@ -100,12 +130,7 @@ export function GuidedTour({ steps, storageKey, onComplete }: GuidedTourProps) {
   }
 
   function prev() {
-    const el = document.querySelector(steps[stepIndex]?.target);
-    if (el) {
-      (el as HTMLElement).style.boxShadow = "";
-      (el as HTMLElement).style.zIndex = "";
-      (el as HTMLElement).style.position = "";
-    }
+    clearHighlight(steps[stepIndex]?.target);
     if (stepIndex > 0) {
       setStepIndex(stepIndex - 1);
     }
