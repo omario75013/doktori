@@ -6,6 +6,7 @@ import { sendEmail } from "@/lib/email";
 import { appointmentReminder } from "@/emails/templates";
 import { sendWhatsApp } from "@/lib/whatsapp";
 import { signReminderToken } from "@/lib/reminder-token";
+import { sendPushToPatient } from "@/lib/push";
 import { SPECIALTIES } from "@doktori/shared";
 import { format, addDays, startOfDay, endOfDay } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -28,6 +29,7 @@ export async function POST(req: Request) {
     .select({
       id: appointments.id,
       startsAt: appointments.startsAt,
+      patientId: appointments.patientId,
       patientPhone: patients.phone,
       patientName: patients.name,
       patientEmail: patients.email,
@@ -85,6 +87,16 @@ export async function POST(req: Request) {
       );
     } catch (e) {
       console.error("WhatsApp reminder failed:", e);
+    }
+
+    // Push notification reminder (best-effort)
+    if (appt.patientId) {
+      sendPushToPatient(
+        appt.patientId,
+        "Rappel de rendez-vous",
+        `RDV demain à ${time} avec ${appt.doctorName}`,
+        { type: "reminder", appointmentId: appt.id },
+      ).catch(console.error);
     }
 
     sent++;

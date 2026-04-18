@@ -5,6 +5,7 @@ import { sql } from "drizzle-orm";
 import { broadcastSos } from "@/lib/sos-broadcast";
 import { createPhoneProxy } from "@/lib/phone-proxy";
 import { sendSMSWithRetry } from "@/lib/sos-lifecycle";
+import { sendPushToPatient } from "@/lib/push";
 
 export async function POST(req: Request) {
   const doctor = await requireDoctor();
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
 
   const displayPhone = proxy.success ? proxy.proxyNumber : info.phone;
 
-  // Parallelize: broadcasts + SMS (don't block the doctor response)
+  // Parallelize: broadcasts + SMS + push (don't block the doctor response)
   Promise.allSettled([
     broadcastSos(`session:${sessionId}`, "session-update", {
       status: "accepted",
@@ -73,6 +74,12 @@ export async function POST(req: Request) {
     sendSMSWithRetry(
       info.patient_phone,
       `Doktori SOS: ${info.name} accepte votre demande. Tel: ${displayPhone}. Adresse: ${info.address}`,
+    ),
+    sendPushToPatient(
+      info.patient_id,
+      "Médecin SOS en route",
+      `Dr. ${info.name} a accepté votre demande d'urgence et arrive.`,
+      { type: "sos_accepted", sessionId },
     ),
   ]);
 

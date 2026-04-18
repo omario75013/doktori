@@ -4,6 +4,7 @@ import { sql } from "drizzle-orm";
 import { sendSMS } from "@/lib/sms";
 import { sendEmail } from "@/lib/email";
 import { refundPayment } from "@/lib/flouci";
+import { sendPushToPatient } from "@/lib/push";
 
 export async function POST(req: Request) {
   const authHeader = req.headers.get("authorization");
@@ -117,6 +118,14 @@ export async function POST(req: Request) {
         console.error(`[noshow-cron] patient email failed for appt ${appt.id}:`, e),
       );
     }
+
+    // Push notification to patient (best-effort)
+    sendPushToPatient(
+      appt.patient_id,
+      "Téléconsultation annulée",
+      `Dr. ${appt.doctor_name} n'a pas pu assurer votre rendez-vous. ${refundSuccess ? "Remboursement effectué." : "Remboursement en cours."}`,
+      { type: "teleconsult_noshow", appointmentId: appt.id },
+    ).catch((e) => console.error(`[noshow-cron] push failed for appt ${appt.id}:`, e));
 
     results.push({
       appointmentId: appt.id,
