@@ -515,7 +515,8 @@ export function buildCancellationFollowupEmail(p: {
 export function buildTrialExpiryWarningEmail(p: {
   doctorName: string;
   daysLeft: number;
-  planUrl: string;
+  planUrl?: string;
+  trialEndDate?: string;
 }): { subject: string; html: string } {
   return {
     subject: `Votre période d'essai expire dans ${p.daysLeft} jour${p.daysLeft > 1 ? "s" : ""}`,
