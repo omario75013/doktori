@@ -626,6 +626,29 @@ export function welcomePatient(p: {
   };
 }
 
+// ── Doctor Email Verification ────────────────────────────────────────────────
+export function buildDoctorEmailVerificationEmail(p: {
+  doctorName: string;
+  verificationUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: "Vérifiez votre adresse email — Doktori",
+    html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+      <div style="background:linear-gradient(135deg,#0891B2,#134E4A);padding:32px;text-align:center;border-radius:16px 16px 0 0">
+        <h1 style="color:white;margin:0;font-size:28px">Vérifiez votre email</h1>
+      </div>
+      <div style="padding:32px;background:white;border:1px solid #E6F4F1;border-radius:0 0 16px 16px">
+        <p style="font-size:16px;color:#134E4A">Bonjour Dr. ${p.doctorName},</p>
+        <p style="color:#5E7574">Pour finaliser votre inscription sur Doktori, veuillez confirmer votre adresse email en cliquant sur le bouton ci-dessous :</p>
+        <div style="text-align:center;margin:32px 0">
+          <a href="${p.verificationUrl}" style="display:inline-block;background:#0891B2;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:16px">Confirmer mon email</a>
+        </div>
+        <p style="color:#94A3B8;font-size:13px">Ce lien est valable 48 heures. Si vous n'avez pas créé de compte sur Doktori, vous pouvez ignorer cet email.</p>
+      </div>
+    </div>`,
+  };
+}
+
 // ── Doctor Welcome (sent after registration with trial) ─────────────────────
 export function buildDoctorWelcomeEmail(p: { doctorName: string; trialEndDate: string }): string {
   return `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">

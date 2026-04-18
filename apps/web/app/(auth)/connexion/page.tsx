@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
@@ -17,6 +17,8 @@ import {
 
 export default function ConnexionPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const verified = searchParams.get("verified");
   const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -194,6 +196,20 @@ export default function ConnexionPage() {
                   />
                 </div>
               </div>
+
+              {/* Email verification banner */}
+              {verified === "success" && (
+                <div className="flex items-start gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.5} />
+                  <span>Votre email a été vérifié avec succès. Vous pouvez maintenant vous connecter.</span>
+                </div>
+              )}
+              {verified === "already" && (
+                <div className="flex items-start gap-2 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.5} />
+                  <span>Votre email est déjà vérifié. Connectez-vous ci-dessous.</span>
+                </div>
+              )}
 
               {/* Error */}
               {error && (

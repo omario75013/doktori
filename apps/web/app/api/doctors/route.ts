@@ -6,9 +6,10 @@ import { hash } from "bcryptjs";
 import { eq, sql } from "drizzle-orm";
 import { geocodeAddress } from "@/lib/geocode";
 import { sendEmail } from "@/lib/email";
-import { buildDoctorWelcomeEmail } from "@/emails/templates";
+import { buildDoctorWelcomeEmail, buildDoctorEmailVerificationEmail } from "@/emails/templates";
 import { createAdminNotification } from "@/lib/admin-notifications";
 import { dispatchWebhook } from "@/lib/webhooks";
+import crypto from "crypto";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -37,6 +38,8 @@ export async function POST(req: Request) {
   // sync route falls back to the city centroid.
   const geo = await geocodeAddress(`${parsed.data.address}, ${parsed.data.city}, Tunisie`);
 
+  const emailVerificationToken = crypto.randomBytes(32).toString("hex");
+
   const [doctor] = await db
     .insert(doctors)
     .values({
@@ -52,6 +55,7 @@ export async function POST(req: Request) {
       bio: parsed.data.bio,
       latitude: geo ? String(geo.lat) : null,
       longitude: geo ? String(geo.lng) : null,
+      emailVerificationToken,
     })
     .returning({ id: doctors.id, slug: doctors.slug });
 
@@ -86,6 +90,19 @@ export async function POST(req: Request) {
     doctorId: doctor.id,
     email,
     name: parsed.data.name,
+  }).catch(console.error);
+
+  // Send verification email (fire-and-forget)
+  const baseUrl = process.env.NEXTAUTH_URL || "https://doktori.tn";
+  const verificationUrl = `${baseUrl}/api/doctors/verify-email?token=${emailVerificationToken}`;
+  const verificationEmail = buildDoctorEmailVerificationEmail({
+    doctorName: parsed.data.name,
+    verificationUrl,
+  });
+  sendEmail({
+    to: email,
+    subject: verificationEmail.subject,
+    html: verificationEmail.html,
   }).catch(console.error);
 
   // Send welcome email (fire-and-forget)

@@ -7,15 +7,25 @@ import { Calendar, Tag, ChevronLeft, ChevronRight } from "lucide-react";
 export const dynamic = "force-dynamic";
 
 export const metadata: Metadata = {
-  title: "Blog Santé — Doktori",
+  title: "Blog Santé — Conseils médicaux en Tunisie",
   description:
-    "Conseils santé, guides pratiques et actualités médicales de la plateforme Doktori en Tunisie.",
+    "Guides pratiques, conseils médicaux et actualités santé pour les patients en Tunisie. Spécialités, traitements, prévention et bien-être.",
+  alternates: {
+    canonical: "https://doktori.tn/blog",
+  },
   openGraph: {
-    title: "Blog Santé — Doktori",
+    title: "Blog Santé — Conseils médicaux en Tunisie",
     description:
-      "Conseils santé, guides pratiques et actualités médicales de la plateforme Doktori en Tunisie.",
+      "Guides pratiques, conseils médicaux et actualités santé pour les patients en Tunisie.",
     url: "https://doktori.tn/blog",
+    siteName: "Doktori",
     type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Blog Santé — Conseils médicaux en Tunisie",
+    description:
+      "Guides pratiques, conseils médicaux et actualités santé pour les patients en Tunisie.",
   },
 };
 
