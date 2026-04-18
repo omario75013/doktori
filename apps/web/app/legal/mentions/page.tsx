@@ -39,8 +39,7 @@ export default function MentionsPage() {
                 <li><strong>Code activité (NAT) :</strong> 74 — Consultations en informatique</li>
                 <li><strong>Date début activité :</strong> 7 juin 2019</li>
                 <li><strong>Gérant :</strong> Omar Harbi</li>
-                {/* TODO: ajouter le matricule fiscal complet format 1234567/A/B/C/000 */}
-                <li><strong>Matricule fiscal :</strong> <em className="text-amber-600">[À remplir — format complet avec code TVA]</em></li>
+                <li><strong>Matricule fiscal :</strong> 1625867/B/A/M/000</li>
                 <li><strong>Email :</strong> <a href="mailto:contact@doktori.tn" className="text-[#0891B2] hover:underline">contact@doktori.tn</a></li>
               </ul>
             </section>
@@ -74,8 +73,7 @@ export default function MentionsPage() {
               <ul className="mt-3 space-y-1.5">
                 {/* TODO: renseigner le numéro de déclaration INPDP */}
                 <li><strong>N° de déclaration INPDP :</strong> <em className="text-amber-600">[À remplir]</em></li>
-                {/* TODO: désigner le DPO */}
-                <li><strong>Délégué à la Protection des Données (DPO) :</strong> <em className="text-amber-600">[À remplir]</em></li>
+                <li><strong>Délégué à la Protection des Données (DPO) :</strong> Omar Harbi</li>
                 <li><strong>Contact DPO :</strong> <a href="mailto:dpo@doktori.tn" className="text-[#0891B2] hover:underline">dpo@doktori.tn</a></li>
               </ul>
               <p className="mt-3">
