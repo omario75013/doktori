@@ -529,7 +529,7 @@ export function buildTrialExpiryWarningEmail(p: {
         <p style="margin:0;font-weight:600;color:#92400e">Ne perdez pas vos patients !</p>
         <p style="margin:8px 0 0;font-size:14px;color:#92400e">En choisissant un plan maintenant, votre profil reste visible et vos patients peuvent continuer à prendre rendez-vous.</p>
       </div>
-      ${btn("Choisir mon plan", p.planUrl)}
+      ${btn("Choisir mon plan", p.planUrl || "https://doktori.tn/abonnement")}
       <p style="font-size:13px;color:#6b7280;margin-top:24px">Des questions ? Écrivez-nous à <a href="mailto:support@doktori.tn" style="color:${TEAL}">support@doktori.tn</a></p>
     `),
   };
