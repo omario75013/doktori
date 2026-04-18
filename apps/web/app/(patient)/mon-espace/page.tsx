@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { format, isPast } from "date-fns";
 import { fr } from "date-fns/locale";
 import { SPECIALTIES } from "@doktori/shared";
+import { GuidedTour } from "@/components/guided-tour";
 import {
   Search,
   FileText,
@@ -218,6 +219,29 @@ export default function PatientDashboardPage() {
 
   return (
     <div className="min-h-screen bg-[#F0FDFA]">
+      <GuidedTour
+        storageKey="doktori_patient_tour"
+        steps={[
+          {
+            target: "[data-tour='quick-actions']",
+            title: "Actions rapides",
+            content: "Trouvez un médecin, consultez votre dossier médical, vos documents ou lancez un SOS en un clic.",
+            position: "bottom",
+          },
+          {
+            target: "[data-tour='upcoming-rdv']",
+            title: "Vos prochains rendez-vous",
+            content: "Retrouvez vos consultations à venir avec le nom du médecin, la date et le type (cabinet, vidéo). Vous pouvez annuler depuis ici.",
+            position: "bottom",
+          },
+          {
+            target: "[data-tour='recent-activity']",
+            title: "Activité récente",
+            content: "Suivez l'historique de vos actions : réservations, annulations, consultations terminées.",
+            position: "top",
+          },
+        ]}
+      />
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Top bar */}
         <div className="flex items-center justify-between mb-6">
@@ -265,7 +289,7 @@ export default function PatientDashboardPage() {
         </div>
 
         {/* Quick actions */}
-        <section className="mb-8">
+        <section data-tour="quick-actions" className="mb-8">
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
             Actions rapides
           </h3>
@@ -310,7 +334,7 @@ export default function PatientDashboardPage() {
         </section>
 
         {/* Upcoming appointments */}
-        <section className="mb-8">
+        <section data-tour="upcoming-rdv" className="mb-8">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
               Rendez-vous à venir
@@ -362,7 +386,7 @@ export default function PatientDashboardPage() {
 
         {/* Recent doctors */}
         {recentDoctors.length > 0 && (
-          <section className="mb-8">
+          <section data-tour="recent-activity" className="mb-8">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
               Médecins récents
             </h3>

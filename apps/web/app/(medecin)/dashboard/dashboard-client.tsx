@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { DoctorOnboarding } from "@/components/doctor-onboarding";
+import { GuidedTour } from "@/components/guided-tour";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -237,6 +238,37 @@ export function DashboardClient({
       {/* First-login onboarding wizard */}
       <DoctorOnboarding />
 
+      {/* Interactive guided tour — shows after onboarding is dismissed */}
+      <GuidedTour
+        storageKey="doktori_dashboard_tour"
+        steps={[
+          {
+            target: "[data-tour='kpi-grid']",
+            title: "Vos indicateurs clés",
+            content: "Suivez en un coup d'œil vos rendez-vous du jour, les confirmations en attente et vos absences. Ces chiffres se mettent à jour en temps réel.",
+            position: "bottom",
+          },
+          {
+            target: "[data-tour='today-appts']",
+            title: "Rendez-vous d'aujourd'hui",
+            content: "Retrouvez tous vos patients du jour avec l'heure, le nom et le type de consultation (cabinet ou vidéo). Cliquez sur un RDV pour accéder au dossier.",
+            position: "top",
+          },
+          {
+            target: "[data-tour='upcoming-appts']",
+            title: "Prochains 7 jours",
+            content: "Planifiez votre semaine avec la liste des rendez-vous à venir. Les badges colorés indiquent le statut de chaque consultation.",
+            position: "top",
+          },
+          {
+            target: "[data-tour='sidebar-nav']",
+            title: "Votre menu de navigation",
+            content: "Accédez à toutes vos fonctionnalités : agenda, patients, motifs, cabinets, téléconsultation, portefeuille, messages et plus encore.",
+            position: "right",
+          },
+        ]}
+      />
+
       {/* Greeting */}
       <div
         className="animate-fade-in"
@@ -252,7 +284,7 @@ export function DashboardClient({
       </div>
 
       {/* KPI grid */}
-      <div className={`grid gap-4 ${hasTeleconsult ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-3"}`}>
+      <div data-tour="kpi-grid" className={`grid gap-4 ${hasTeleconsult ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-3"}`}>
         {kpis.map((kpi) => (
           <KpiCard key={kpi.label} {...kpi} />
         ))}
@@ -301,7 +333,7 @@ export function DashboardClient({
       )}
 
       {/* Today's appointments */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div data-tour="today-appts" className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100">
           <SectionHeader>{t("todayAppointments")}</SectionHeader>
         </div>
@@ -350,7 +382,7 @@ export function DashboardClient({
       </div>
 
       {/* Upcoming appointments */}
-      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <div data-tour="upcoming-appts" className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <SectionHeader>{t("upcoming")}</SectionHeader>
           <Link href="/rendez-vous" className="text-xs font-semibold text-[#0891B2] hover:underline">

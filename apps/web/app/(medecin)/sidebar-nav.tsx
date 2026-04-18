@@ -61,6 +61,7 @@ export function SidebarNav({ userName }: { userName?: string | null }) {
 
       {/* Sidebar */}
       <aside
+        data-tour="sidebar-nav"
         className={`
           fixed md:static inset-y-0 left-0 z-40
           w-56 bg-gray-900 text-white p-4 flex flex-col
