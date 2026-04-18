@@ -91,10 +91,11 @@ export async function POST(req: Request) {
       UPDATE doctors SET is_visible = false WHERE id = ${row.doctor_id}
     `);
 
+    const expiredEmail = buildTrialExpiredTodayEmail({ doctorName: row.name });
     sendEmail({
       to: row.email,
-      subject: "Votre essai a expiré — vos patients ne peuvent plus vous trouver",
-      html: buildTrialExpiredTodayEmail({ doctorName: row.name }),
+      subject: expiredEmail.subject,
+      html: expiredEmail.html,
     }).catch(console.error);
     expiredToday++;
   }
