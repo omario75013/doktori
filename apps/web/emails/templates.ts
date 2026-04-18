@@ -648,16 +648,19 @@ export function buildDoctorWelcomeEmail(p: { doctorName: string; trialEndDate: s
 }
 
 // ── Trial expired today ─────────────────────────────────────────────────────
-export function buildTrialExpiredTodayEmail(p: { doctorName: string }): string {
-  return `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
-    <div style="background:#DC2626;padding:24px;text-align:center;border-radius:16px 16px 0 0">
-      <h1 style="color:white;margin:0;font-size:24px">Votre essai a expiré</h1>
-    </div>
-    <div style="padding:32px;background:white;border:1px solid #E6F4F1;border-radius:0 0 16px 16px">
-      <p style="color:#134E4A">Dr. ${p.doctorName},</p>
-      <p style="color:#5E7574">Votre période d'essai gratuit est terminée. Vos patients ne peuvent plus vous trouver sur Doktori.</p>
-      <p style="color:#5E7574">Pour rester visible et continuer à recevoir des rendez-vous :</p>
-      <a href="https://doktori.tn/abonnement" style="display:inline-block;background:#0891B2;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:bold;margin-top:12px">Choisir mon abonnement</a>
-    </div>
-  </div>`;
+export function buildTrialExpiredTodayEmail(p: { doctorName: string }): { subject: string; html: string } {
+  return {
+    subject: "Votre essai gratuit a expiré",
+    html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+      <div style="background:#DC2626;padding:24px;text-align:center;border-radius:16px 16px 0 0">
+        <h1 style="color:white;margin:0;font-size:24px">Votre essai a expiré</h1>
+      </div>
+      <div style="padding:32px;background:white;border:1px solid #E6F4F1;border-radius:0 0 16px 16px">
+        <p style="color:#134E4A">Dr. ${p.doctorName},</p>
+        <p style="color:#5E7574">Votre période d'essai gratuit est terminée. Vos patients ne peuvent plus vous trouver sur Doktori.</p>
+        <p style="color:#5E7574">Pour rester visible et continuer à recevoir des rendez-vous :</p>
+        <a href="https://doktori.tn/abonnement" style="display:inline-block;background:#0891B2;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:bold;margin-top:12px">Choisir mon abonnement</a>
+      </div>
+    </div>`,
+  };
 }

@@ -36,8 +36,7 @@ export async function POST(req: Request) {
     });
     sendEmail({
       to: row.email,
-      subject: "Votre essai gratuit expire dans 7 jours",
-      html: buildTrialExpiryWarningEmail({
+      ...buildTrialExpiryWarningEmail({
         doctorName: row.name,
         trialEndDate,
         daysLeft: 7,
@@ -63,8 +62,7 @@ export async function POST(req: Request) {
     });
     sendEmail({
       to: row.email,
-      subject: "Dernier jour d'essai — choisissez votre abonnement",
-      html: buildTrialExpiryWarningEmail({
+      ...buildTrialExpiryWarningEmail({
         doctorName: row.name,
         trialEndDate,
         daysLeft: 1,
