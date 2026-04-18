@@ -225,7 +225,7 @@ export default async function DoctorProfilePage({
     "@type": "Physician",
     name: doctor.name,
     medicalSpecialty: specialtyLabel,
-    telephone: doctor.phone,
+    // phone not exposed publicly
     ...(doctor.photoUrl && { image: doctor.photoUrl }),
     address: {
       "@type": "PostalAddress",
