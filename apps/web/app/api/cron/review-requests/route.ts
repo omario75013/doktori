@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db, appointments, patients, doctors, reviews } from "@doktori/db";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { sendEmail } from "@/lib/email";
-import { reviewRequest } from "@/emails/templates";
+import { reviewRequest, buildReviewReminderRetryEmail } from "@/emails/templates";
 import { subDays, startOfDay, endOfDay } from "date-fns";
 
 const PUBLIC_URL = process.env.NEXT_PUBLIC_APP_URL || "https://doktori.tn";
@@ -10,6 +10,8 @@ const PUBLIC_URL = process.env.NEXT_PUBLIC_APP_URL || "https://doktori.tn";
 /**
  * Send review request emails to patients whose appointments
  * completed yesterday and who haven't already left a review.
+ * Also retries for appointments completed 4 days ago (requested 3 days ago)
+ * that still have no review.
  * Runs daily.
  */
 export async function POST(req: Request) {
@@ -58,5 +60,41 @@ export async function POST(req: Request) {
     }
   }
 
-  return NextResponse.json({ sent, total: completedAppts.length });
+  // Second pass: retry for appointments completed 4 days ago with no review yet
+  const retries = await db.execute(sql`
+    SELECT a.id, p.email, p.phone, p.name, d.name AS doctor_name
+    FROM appointments a
+    JOIN patients p ON p.id = a.patient_id
+    JOIN doctors d ON d.id = a.doctor_id
+    LEFT JOIN reviews r ON r.appointment_id = a.id
+    WHERE a.status = 'completed'
+      AND a.completed_at::date = (CURRENT_DATE - interval '4 days')::date
+      AND r.id IS NULL
+    LIMIT 30
+  `);
+
+  let retried = 0;
+  for (const row of retries) {
+    const appt = row as { id: string; email: string | null; name: string; doctor_name: string };
+    if (!appt.email) continue;
+
+    try {
+      const email = buildReviewReminderRetryEmail({
+        patientName: appt.name || "Patient",
+        doctorName: appt.doctor_name,
+        reviewUrl: `${PUBLIC_URL}/avis/${appt.id}`,
+      });
+      await sendEmail({
+        to: appt.email,
+        subject: email.subject,
+        html: email.html,
+        appointmentId: appt.id,
+      });
+      retried++;
+    } catch (e) {
+      console.error("Review retry email failed:", e);
+    }
+  }
+
+  return NextResponse.json({ sent, total: completedAppts.length, retried, retryTotal: retries.length });
 }
