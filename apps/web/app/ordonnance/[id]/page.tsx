@@ -5,6 +5,7 @@ import { SPECIALTIES } from "@doktori/shared";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { PrintButton } from "@/components/print-button";
+import { QRCode } from "@/components/qr-code";
 
 export default async function PrescriptionPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -14,6 +15,7 @@ export default async function PrescriptionPage({ params }: { params: Promise<{ i
       id: prescriptions.id,
       content: prescriptions.content,
       createdAt: prescriptions.createdAt,
+      verificationToken: prescriptions.verificationToken,
       doctorName: doctors.name,
       doctorSpecialty: doctors.specialty,
       doctorPhone: doctors.phone,
@@ -107,6 +109,25 @@ export default async function PrescriptionPage({ params }: { params: Promise<{ i
             <p className="text-sm font-medium text-gray-700 mt-1">{result.doctorName}</p>
           </div>
         </div>
+
+        {/* QR verification */}
+        {result.verificationToken && (
+          <div className="mt-10 pt-6 border-t border-gray-200 flex items-center gap-5">
+            <QRCode
+              url={`https://doktori.tn/api/prescriptions/verify?token=${result.verificationToken}`}
+              size={80}
+            />
+            <div>
+              <p className="text-xs font-bold text-gray-600 mb-0.5">Vérification de l&apos;authenticité</p>
+              <p className="text-xs text-gray-400">
+                Scannez ce QR code pour vérifier que cette ordonnance est authentique et n&apos;a pas été falsifiée.
+              </p>
+              <p className="text-xs text-[#0891B2] mt-1 font-mono break-all">
+                doktori.tn/verification-ordonnance
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Footer branding — visible on screen and print */}
         <div className="mt-12 pt-4 border-t border-gray-200 text-xs text-center text-gray-400">

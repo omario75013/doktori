@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db, prescriptions, appointments } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
+import { randomBytes } from "crypto";
 
 export async function POST(req: Request) {
   const session = await auth();
@@ -19,11 +20,14 @@ export async function POST(req: Request) {
 
   if (!appt) return NextResponse.json({ error: "RDV introuvable" }, { status: 404 });
 
+  const verificationToken = randomBytes(32).toString("hex");
+
   const [created] = await db.insert(prescriptions).values({
     appointmentId,
     doctorId: session.user.id,
     patientId: appt.patientId,
     content,
+    verificationToken,
   }).returning();
 
   return NextResponse.json(created, { status: 201 });
