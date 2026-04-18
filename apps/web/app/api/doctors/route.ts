@@ -7,6 +7,8 @@ import { eq, sql } from "drizzle-orm";
 import { geocodeAddress } from "@/lib/geocode";
 import { sendEmail } from "@/lib/email";
 import { buildDoctorWelcomeEmail } from "@/emails/templates";
+import { createAdminNotification } from "@/lib/admin-notifications";
+import { dispatchWebhook } from "@/lib/webhooks";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -72,6 +74,19 @@ export async function POST(req: Request) {
   if (parsed.data.cguAccepted) {
     await db.execute(sql`UPDATE doctors SET cgu_accepted_at = NOW() WHERE id = ${doctor.id}`);
   }
+
+  // Notify admin + dispatch webhook (fire-and-forget)
+  createAdminNotification({
+    type: "new_doctor",
+    title: "Nouveau médecin inscrit",
+    message: parsed.data.name,
+    link: "/admin/medecins",
+  }).catch(console.error);
+  dispatchWebhook("doctor.registered", {
+    doctorId: doctor.id,
+    email,
+    name: parsed.data.name,
+  }).catch(console.error);
 
   // Send welcome email (fire-and-forget)
   sendEmail({

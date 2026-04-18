@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, subscriptions } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { verifyFlouciPayment } from "@/lib/flouci";
+import { createAdminNotification } from "@/lib/admin-notifications";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -22,6 +23,11 @@ export async function POST(req: Request) {
   // Verify with Flouci before activating the subscription
   const verification = await verifyFlouciPayment(payment_id || sub.externalRef || "");
   if (!verification.success) {
+    createAdminNotification({
+      type: "payment_failed",
+      title: "Échec de paiement",
+      link: "/admin/finance/refunds",
+    }).catch(console.error);
     return NextResponse.json({ error: "Paiement non vérifié" }, { status: 402 });
   }
 

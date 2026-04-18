@@ -910,3 +910,34 @@ export const promoCodeUsages = pgTable(
     uniqueIndex("promo_usages_unique_idx").on(table.promoCodeId, table.doctorId),
   ]
 );
+
+// ── Admin Notifications ───────────────────────────────────────────────────────
+
+export const adminNotifications = pgTable(
+  "admin_notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    type: varchar("type", { length: 30 }).notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    message: text("message"),
+    link: varchar("link", { length: 500 }),
+    isRead: boolean("is_read").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("admin_notifications_read_idx").on(table.isRead, table.createdAt),
+  ]
+);
+
+// ── Webhooks ──────────────────────────────────────────────────────────────────
+
+export const webhooks = pgTable("webhooks", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  url: varchar("url", { length: 500 }).notNull(),
+  events: jsonb("events").$type<string[]>().notNull().default([]),
+  secret: varchar("secret", { length: 64 }).notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdBy: uuid("created_by").references(() => adminUsers.id),
+  lastTriggeredAt: timestamp("last_triggered_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});

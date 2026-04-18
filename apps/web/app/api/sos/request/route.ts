@@ -4,6 +4,7 @@ import { sql, eq, and, gte, count } from "drizzle-orm";
 import { formatPhone } from "@doktori/shared";
 import { broadcastSos } from "@/lib/sos-broadcast";
 import { signSosToken } from "@/lib/sos-hmac";
+import { createAdminNotification } from "@/lib/admin-notifications";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -60,6 +61,13 @@ export async function POST(req: NextRequest) {
   `);
 
   const sessionId = (result as unknown as Array<{ id: string }>)[0]?.id;
+
+  // Notify admin (fire-and-forget)
+  createAdminNotification({
+    type: "sos_alert",
+    title: "Nouvelle demande SOS",
+    link: "/admin/sos",
+  }).catch(console.error);
 
   // Notify all available SOS doctors in real-time (they filter by location in their feed)
   await broadcastSos("doctors-all", "new-request", { sessionId });
