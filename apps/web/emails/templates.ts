@@ -450,74 +450,138 @@ export function buildCnamEmail(p: {
   `);
 }
 
-// ─── Doctor welcome (trial activation) ───────────────────────────────────────
+// ─── Doctor re-engagement ─────────────────────────────────────────────────────
 
-export function buildDoctorWelcomeEmail(params: { doctorName: string; trialEndDate: string }): string {
-  return layout(`
-    <p style="font-size:16px;color:${DARK}">Bonjour Dr. ${params.doctorName},</p>
-    <p style="color:#5E7574">Votre espace médecin est prêt ! Vous bénéficiez de <strong>2 mois d'essai gratuit</strong> jusqu'au ${params.trialEndDate}.</p>
-    <h3 style="color:${DARK}">Pour bien démarrer :</h3>
-    <ol style="color:#5E7574;line-height:2">
-      <li>Complétez votre profil et ajoutez une photo</li>
-      <li>Configurez vos horaires dans l'Agenda</li>
-      <li>Ajoutez vos motifs de consultation</li>
-      <li>Activez la téléconsultation si vous le souhaitez</li>
-    </ol>
-    ${btn("Accéder à mon espace", "https://doktori.tn/dashboard")}
-    <p style="color:#94A3B8;font-size:13px;margin-top:24px">
-      Votre essai gratuit expire le ${params.trialEndDate}. Après cette date, choisissez un abonnement pour rester visible sur la plateforme.
-    </p>
-  `);
+export function buildReengagementEmail(p: { doctorName: string }): { subject: string; html: string } {
+  return {
+    subject: "Vos patients vous attendent !",
+    html: layout(`
+      <p>Bonjour Dr. ${p.doctorName},</p>
+      <p style="font-size:18px;font-weight:700;color:${TEAL}">Vos patients vous attendent !</p>
+      <p>Vous n'avez pas reçu de rendez-vous depuis 30 jours. Voici <strong>3 astuces</strong> pour augmenter votre visibilité sur Doktori :</p>
+      <table style="width:100%;border-collapse:collapse;margin:20px 0">
+        <tr>
+          <td style="padding:12px 16px;border-left:4px solid ${TEAL};background:#f8fffe;margin-bottom:8px;display:block">
+            <strong style="color:${DARK}">1. Complétez votre profil</strong>
+            <p style="margin:4px 0 0;font-size:14px;color:#6b7280">Un profil complet avec photo obtient 3× plus de rendez-vous. Ajoutez votre biographie, vos diplômes et vos spécialités.</p>
+          </td>
+        </tr>
+        <tr><td style="height:8px"></td></tr>
+        <tr>
+          <td style="padding:12px 16px;border-left:4px solid ${TEAL};background:#f8fffe">
+            <strong style="color:${DARK}">2. Activez la téléconsultation</strong>
+            <p style="margin:4px 0 0;font-size:14px;color:#6b7280">Les médecins avec téléconsultation reçoivent 40% de demandes supplémentaires. Élargissez votre zone de couverture géographique.</p>
+          </td>
+        </tr>
+        <tr><td style="height:8px"></td></tr>
+        <tr>
+          <td style="padding:12px 16px;border-left:4px solid ${TEAL};background:#f8fffe">
+            <strong style="color:${DARK}">3. Partagez votre lien Doktori</strong>
+            <p style="margin:4px 0 0;font-size:14px;color:#6b7280">Ajoutez votre lien de réservation dans votre signature email et sur vos réseaux sociaux pour que vos patients puissent vous trouver facilement.</p>
+          </td>
+        </tr>
+      </table>
+      ${btn("Mettre à jour mon profil", "https://doktori.tn/espace-medecin")}
+      <p style="font-size:13px;color:#6b7280;margin-top:24px">Besoin d'aide ? Contactez notre équipe support à <a href="mailto:support@doktori.tn" style="color:${TEAL}">support@doktori.tn</a></p>
+    `),
+  };
 }
 
-// ─── Subscription expired (doctor) ───────────────────────────────────────────
+// ─── Cancellation follow-up (patient) ────────────────────────────────────────
 
-export function buildSubscriptionExpiredEmail(params: { doctorName: string; planName: string }): string {
-  return layout(`
-    <p style="font-size:16px;color:${DARK}">Bonjour Dr. ${params.doctorName},</p>
-    <p style="color:#5E7574">Votre abonnement <strong>${params.planName}</strong> a expiré. Votre profil n'est plus visible pour les patients sur Doktori.</p>
-    <p style="color:#5E7574">Pour retrouver votre visibilité et continuer à recevoir des rendez-vous, renouvelez votre abonnement dès maintenant.</p>
-    ${btn("Renouveler mon abonnement", "https://doktori.tn/dashboard/abonnement")}
-    <p style="color:#94A3B8;font-size:13px;margin-top:24px">
-      Besoin d'aide ? Contactez-nous à <a href="mailto:support@doktori.tn" style="color:${TEAL}">support@doktori.tn</a>
-    </p>
-  `);
+export function buildCancellationFollowupEmail(p: {
+  patientName: string;
+  doctorName: string;
+  doctorSlug: string;
+}): { subject: string; html: string } {
+  const rebookUrl = `https://doktori.tn/rdv/${p.doctorSlug}`;
+  return {
+    subject: `Souhaitez-vous reprogrammer votre RDV avec Dr. ${p.doctorName} ?`,
+    html: layout(`
+      <p>Bonjour ${p.patientName},</p>
+      <p>Nous avons remarqué que vous avez annulé votre rendez-vous avec <strong>Dr. ${p.doctorName}</strong>.</p>
+      <p>Souhaitez-vous reprogrammer ? Il est toujours disponible pour vous recevoir.</p>
+      ${btn("Reprendre rendez-vous", rebookUrl)}
+      <p style="font-size:13px;color:#6b7280;margin-top:24px">
+        Si l'annulation était intentionnelle, vous n'avez rien à faire.<br>
+        Nous restons disponibles si vous avez besoin de prendre un autre rendez-vous.
+      </p>
+    `),
+  };
 }
 
 // ─── Trial expiry warning (doctor) ───────────────────────────────────────────
 
-export function buildTrialExpiryWarningEmail(params: { doctorName: string; trialEndDate: string; daysLeft: number }): string {
-  const urgency = params.daysLeft <= 1;
-  const subject7 = `Votre essai gratuit expire dans ${params.daysLeft} jour${params.daysLeft > 1 ? "s" : ""}`;
-  const subjectUrgent = "Dernier jour d'essai — choisissez votre abonnement";
-  void subject7; void subjectUrgent; // exported via wrapper functions below
-
-  return layout(`
-    <p style="font-size:16px;color:${DARK}">Bonjour Dr. ${params.doctorName},</p>
-    <p style="color:#5E7574">
-      ${urgency
-        ? "C'est votre <strong>dernier jour d'essai gratuit</strong>. Après aujourd'hui, votre profil ne sera plus visible sur Doktori."
-        : `Votre essai gratuit expire dans <strong>${params.daysLeft} jours</strong> (le ${params.trialEndDate}).`
-      }
-    </p>
-    <p style="color:#5E7574">Choisissez un abonnement pour continuer à être visible par les patients et recevoir des rendez-vous.</p>
-    ${btn("Choisir mon abonnement", "https://doktori.tn/dashboard/abonnement")}
-    <p style="color:#94A3B8;font-size:13px;margin-top:24px">
-      Votre essai gratuit expire le ${params.trialEndDate}.
-    </p>
-  `);
+export function buildTrialExpiryWarningEmail(p: {
+  doctorName: string;
+  daysLeft: number;
+  planUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Votre période d'essai expire dans ${p.daysLeft} jour${p.daysLeft > 1 ? "s" : ""}`,
+    html: layout(`
+      <p>Bonjour Dr. ${p.doctorName},</p>
+      <p style="font-size:18px;font-weight:700;color:#f59e0b">Votre période d'essai expire bientôt</p>
+      <p>Il vous reste <strong>${p.daysLeft} jour${p.daysLeft > 1 ? "s" : ""}</strong> sur votre période d'essai gratuite.</p>
+      <p>Pour continuer à recevoir des rendez-vous et utiliser toutes les fonctionnalités de Doktori, choisissez un plan adapté à votre pratique.</p>
+      <div style="background:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:16px;margin:16px 0">
+        <p style="margin:0;font-weight:600;color:#92400e">Ne perdez pas vos patients !</p>
+        <p style="margin:8px 0 0;font-size:14px;color:#92400e">En choisissant un plan maintenant, votre profil reste visible et vos patients peuvent continuer à prendre rendez-vous.</p>
+      </div>
+      ${btn("Choisir mon plan", p.planUrl)}
+      <p style="font-size:13px;color:#6b7280;margin-top:24px">Des questions ? Écrivez-nous à <a href="mailto:support@doktori.tn" style="color:${TEAL}">support@doktori.tn</a></p>
+    `),
+  };
 }
 
-export function buildTrialExpiredTodayEmail(params: { doctorName: string }): string {
-  return layout(`
-    <p style="font-size:16px;color:${DARK}">Bonjour Dr. ${params.doctorName},</p>
-    <p style="color:#5E7574">Votre essai gratuit a expiré. <strong>Vos patients ne peuvent plus vous trouver</strong> sur Doktori.</p>
-    <p style="color:#5E7574">Abonnez-vous maintenant pour retrouver votre visibilité et continuer à recevoir des rendez-vous.</p>
-    ${btn("Choisir mon abonnement", "https://doktori.tn/dashboard/abonnement")}
-    <p style="color:#94A3B8;font-size:13px;margin-top:24px">
-      Besoin d'aide ? Contactez-nous à <a href="mailto:support@doktori.tn" style="color:${TEAL}">support@doktori.tn</a>
-    </p>
-  `);
+// ─── Subscription expired (doctor) ───────────────────────────────────────────
+
+export function buildSubscriptionExpiredEmail(p: {
+  doctorName: string;
+}): { subject: string; html: string } {
+  return {
+    subject: "Votre abonnement Doktori a expiré",
+    html: layout(`
+      <p>Bonjour Dr. ${p.doctorName},</p>
+      <p style="font-size:18px;font-weight:700;color:#ef4444">Votre abonnement a expiré</p>
+      <p>Votre abonnement Doktori n'est plus actif. Votre profil n'est plus visible par les patients.</p>
+      <p>Réactivez votre abonnement dès maintenant pour :</p>
+      <ul style="color:${DARK};line-height:1.8">
+        <li>Réapparaître dans les résultats de recherche</li>
+        <li>Recevoir de nouveaux rendez-vous</li>
+        <li>Accéder à toutes vos données patients</li>
+        <li>Utiliser la téléconsultation</li>
+      </ul>
+      ${btn("Réactiver mon abonnement", "https://doktori.tn/espace-medecin/abonnement")}
+      <p style="font-size:13px;color:#6b7280;margin-top:24px">Besoin d'aide ? Contactez <a href="mailto:support@doktori.tn" style="color:${TEAL}">support@doktori.tn</a></p>
+    `),
+  };
+}
+
+// ─── Review reminder retry (patient) ─────────────────────────────────────────
+
+export function buildReviewReminderRetryEmail(p: {
+  patientName: string;
+  doctorName: string;
+  reviewUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: `Votre avis compte ! Notez Dr. ${p.doctorName}`,
+    html: layout(`
+      <p>Bonjour ${p.patientName},</p>
+      <p style="font-size:18px;font-weight:700;color:${TEAL}">Votre avis compte !</p>
+      <p>Prenez 30 secondes pour noter votre consultation avec <strong>Dr. ${p.doctorName}</strong>.</p>
+      <p>Votre témoignage aide des milliers de patients à choisir le bon médecin. C'est simple, rapide et très utile.</p>
+      <div style="background:#f0fdfa;border:1px solid #ccfbf1;border-radius:8px;padding:16px;margin:16px 0;text-align:center">
+        <p style="margin:0;font-size:32px;letter-spacing:8px">⭐⭐⭐⭐⭐</p>
+        <p style="margin:8px 0 0;font-size:14px;color:#0f766e">Cliquez ci-dessous pour noter en 30 secondes</p>
+      </div>
+      ${btn("Donner mon avis maintenant", p.reviewUrl)}
+      <p style="font-size:13px;color:#6b7280;margin-top:24px">
+        Si vous avez déjà laissé un avis, merci et ignorez ce message.
+      </p>
+    `),
+  };
 }
 
 // ─── Welcome patient ─────────────────────────────────────────────────────────
