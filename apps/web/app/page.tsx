@@ -159,14 +159,26 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════ STATS STRIP ═══════════════════════ */}
+      {/* ═══════════════════════ PRE-LAUNCH STRIP ═══════════════════════ */}
       <section className="border-y border-[#E6F4F1] bg-[#F0FDFA]/50 py-10">
-        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 px-6 md:grid-cols-4">
+        <div className="mx-auto max-w-3xl px-6 text-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-[#0891B2]/10 px-4 py-2 text-sm font-bold text-[#0891B2] mb-4">
+            <Sparkles className="h-4 w-4" strokeWidth={2.5} />
+            {locale === "ar" ? "إطلاق 2026" : "Lancement 2026"}
+          </div>
+          <p className="text-sm text-[#5E7574] leading-relaxed max-w-lg mx-auto">
+            {locale === "ar"
+              ? "نحن نبني شبكة أطبائنا في تونس الكبرى. سجّل لتكون أول من يُبلَّغ عندما ينضم طبيب في منطقتك."
+              : "Nous constituons notre réseau de médecins dans le Grand Tunis. Inscrivez-vous pour être prévenu(e) dès qu'un médecin de votre zone rejoint la plateforme."
+            }
+          </p>
+        </div>
+        <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 px-6 md:grid-cols-4 mt-8">
           {[
-            { value: "65+", label: t("statsDoctorsLabel"), icon: Stethoscope },
-            { value: "10", label: t("statsSpecialtiesLabel"), icon: Sparkles },
-            { value: "4", label: t("statsZonesLabel"), icon: MapPin },
-            { value: "4.8/5", label: t("statsRatingLabel"), icon: Star },
+            { value: "10", label: t("statsSpecialtiesLabel"), icon: Stethoscope },
+            { value: "8", label: locale === "ar" ? "أحياء مغطاة" : "Quartiers couverts", icon: MapPin },
+            { value: "24/7", label: locale === "ar" ? "متاح" : "Disponible", icon: CalendarCheck2 },
+            { value: "🇹🇳", label: locale === "ar" ? "صنع في تونس" : "Made in Tunisia", icon: ShieldCheck },
           ].map(({ value, label, icon: Icon }) => (
             <div key={label} className="flex items-center gap-3">
               <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-[#0891B2] ring-1 ring-[#E6F4F1]">
@@ -551,7 +563,7 @@ function PhoneMockup({ locale }: { locale: string }) {
     navRdv: ar ? "مواعيدي" : "Mes RDV",
     rdvConfirmed: ar ? "موعد مؤكد" : "RDV confirmé",
     dateLabel: ar ? "15 أفريل · 14:30" : "15 avril · 14:30",
-    reviews: ar ? "1 247 تقييم" : "1 247 avis",
+    reviews: ar ? "تقييمات المرضى" : "Avis patients",
   };
   return (
     <div className="relative mx-auto aspect-[9/19] w-full max-w-[340px]">
@@ -643,7 +655,7 @@ function PhoneMockup({ locale }: { locale: string }) {
       <div className="absolute -right-4 bottom-1/4 rotate-[6deg] rounded-xl bg-white p-3 shadow-xl ring-1 ring-[#E6F4F1]">
         <div className="flex items-center gap-2">
           <Star className="h-4 w-4 fill-[#FBBF24] text-[#FBBF24]" />
-          <span className="text-xs font-black text-[#134E4A]">4.8/5</span>
+          <span className="text-xs font-black text-[#134E4A]">Doktori</span>
         </div>
         <p className="mt-0.5 text-[9px] text-[#5E7574]">{tr.reviews}</p>
       </div>
