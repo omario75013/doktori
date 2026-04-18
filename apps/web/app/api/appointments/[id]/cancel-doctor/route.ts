@@ -7,6 +7,7 @@ import { sendEmail } from "@/lib/email";
 import { cancellationConfirmation, cancellationDoctor } from "@/emails/templates";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { notifyWaitlistPatients } from "@/lib/waitlist-notify";
 
 export async function POST(
   req: NextRequest,
@@ -71,6 +72,9 @@ export async function POST(
   if (!updated) {
     return NextResponse.json({ error: "Échec de l'annulation" }, { status: 409 });
   }
+
+  // Notify waitlist patients that a slot freed up (fire-and-forget)
+  void notifyWaitlistPatients(appt.doctorId, appt.startsAt);
 
   // Fetch patient and doctor info for notifications
   const [patient] = await db

@@ -8,6 +8,7 @@ import { sendEmail } from "@/lib/email";
 import { cancellationConfirmation, cancellationDoctor } from "@/emails/templates";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { notifyWaitlistPatients } from "@/lib/waitlist-notify";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const patient = getPatientFromRequest(req);
@@ -18,6 +19,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
   // patientId comes from verified JWT, not from request body (IDOR protection)
   const result = await cancelAppointment(id, patient.id);
   if (!result) return NextResponse.json({ error: "RDV introuvable ou déjà annulé" }, { status: 404 });
+
+  // Notify waitlist patients that a slot freed up (fire-and-forget)
+  void notifyWaitlistPatients(result.doctorId, result.startsAt);
 
   // Send notifications (fire-and-forget — never block the response)
   void (async () => {

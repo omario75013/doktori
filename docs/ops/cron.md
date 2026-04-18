@@ -36,6 +36,9 @@ Host crontab on `157.90.152.204` (user `root`). Adjust `CRON_SECRET` via 1Passwo
 
 # Teleconsult no-show detection — refund + replacement suggestion
 */5 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/teleconsult-noshow
+
+# Waitlist auto-notify (every 10 min) — SMS patients when a slot frees up
+*/10 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/waitlist-notify
 ```
 
 Load `CRON_SECRET` into the shell environment via:
