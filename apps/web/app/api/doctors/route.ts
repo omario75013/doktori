@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
-import { db, doctors } from "@doktori/db";
+import { db, doctors, subscriptions } from "@doktori/db";
 import { doctorRegistrationSchema } from "@doktori/validation";
 import { generateSlug } from "@doktori/shared";
 import { hash } from "bcryptjs";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { geocodeAddress } from "@/lib/geocode";
+import { sendEmail } from "@/lib/email";
+import { buildDoctorWelcomeEmail } from "@/emails/templates";
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -50,6 +52,40 @@ export async function POST(req: Request) {
       longitude: geo ? String(geo.lng) : null,
     })
     .returning({ id: doctors.id, slug: doctors.slug });
+
+  // Create 2-month free trial subscription
+  const trialEnd = new Date();
+  trialEnd.setMonth(trialEnd.getMonth() + 2);
+
+  await db.insert(subscriptions).values({
+    doctorId: doctor.id,
+    plan: "premium",
+    status: "trial",
+    priceMillimes: 0,
+    billingCycle: "monthly",
+    paymentProvider: "trial",
+    startsAt: new Date(),
+    endsAt: trialEnd,
+  });
+
+  // Store CGU acceptance timestamp if provided
+  if (parsed.data.cguAccepted) {
+    await db.execute(sql`UPDATE doctors SET cgu_accepted_at = NOW() WHERE id = ${doctor.id}`);
+  }
+
+  // Send welcome email (fire-and-forget)
+  sendEmail({
+    to: email,
+    subject: "Bienvenue sur Doktori — votre essai gratuit est activé !",
+    html: buildDoctorWelcomeEmail({
+      doctorName: parsed.data.name,
+      trialEndDate: trialEnd.toLocaleDateString("fr-TN", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+      }),
+    }),
+  }).catch(console.error);
 
   return NextResponse.json({ id: doctor.id, slug: doctor.slug }, { status: 201 });
 }

@@ -52,6 +52,7 @@ export default function InscriptionPage() {
   const [dir, setDir] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [cguAccepted, setCguAccepted] = useState(false);
 
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
@@ -96,7 +97,7 @@ export default function InscriptionPage() {
   function canProceed(): boolean {
     if (step === 0) return !!(form.name && form.email && form.phone && form.password && form.password.length >= 8);
     if (step === 1) return !!(form.specialty && form.city && form.address);
-    return true;
+    return cguAccepted;
   }
 
   async function handleSubmit(e: React.FormEvent) {
@@ -115,6 +116,7 @@ export default function InscriptionPage() {
         address: form.address,
         consultationFee: form.consultationFee ? Number(form.consultationFee) : undefined,
         bio: form.bio || undefined,
+        cguAccepted,
       };
 
       const res = await fetch("/api/doctors", {
@@ -414,6 +416,27 @@ export default function InscriptionPage() {
                           className="w-full rounded-xl border border-[#E6F4F1] bg-white px-4 py-3 text-sm transition-colors outline-none placeholder:text-[#5E7574]/50 focus:border-[#0891B2] focus:ring-2 focus:ring-[#0891B2]/20 resize-none"
                         />
                         <p className="text-xs text-[#5E7574]">{form.bio.length}/500</p>
+                      </div>
+
+                      {/* CGU acceptance */}
+                      <div className="flex items-start gap-3">
+                        <input
+                          type="checkbox"
+                          id="cgu"
+                          checked={cguAccepted}
+                          onChange={(e) => setCguAccepted(e.target.checked)}
+                          className="mt-1 h-4 w-4 rounded border-[#E6F4F1] text-[#0891B2] focus:ring-[#0891B2]"
+                        />
+                        <label htmlFor="cgu" className="text-sm text-[#5E7574]">
+                          J&apos;accepte les{" "}
+                          <a href="/legal/cgu" target="_blank" className="text-[#0891B2] font-bold hover:underline">
+                            Conditions Générales d&apos;Utilisation
+                          </a>{" "}
+                          et la{" "}
+                          <a href="/legal/confidentialite" target="_blank" className="text-[#0891B2] font-bold hover:underline">
+                            Politique de Confidentialité
+                          </a>
+                        </label>
                       </div>
 
                       {/* Summary card */}

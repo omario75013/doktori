@@ -55,6 +55,9 @@ export const doctors = pgTable(
     consultationMode: varchar("consultation_mode", { length: 20 }).notNull().default("cabinet"),
     teleconsultFee: integer("teleconsult_fee"),
     isActive: boolean("is_active").notNull().default(true),
+    isVisible: boolean("is_visible").notNull().default(true),
+    trialEndsAt: timestamp("trial_ends_at", { withTimezone: true }),
+    cguAcceptedAt: timestamp("cgu_accepted_at", { withTimezone: true }),
     sosAvailable: boolean("sos_available").notNull().default(false),
     sosRadiusKm: integer("sos_radius_km").notNull().default(10),
     sosFee: integer("sos_fee"),
@@ -596,7 +599,7 @@ export const subscriptions = pgTable("subscriptions", {
   id: uuid("id").primaryKey().defaultRandom(),
   doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
   plan: varchar("plan", { length: 20 }).notNull(), // free | essentiel | pro | clinique
-  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending | active | expired | cancelled
+  status: varchar("status", { length: 20 }).notNull().default("pending"), // pending | active | trial | expired | cancelled
   priceMillimes: integer("price_millimes").notNull(),
   billingCycle: varchar("billing_cycle", { length: 20 }).notNull().default("monthly"), // monthly | annual
   paymentProvider: varchar("payment_provider", { length: 20 }), // flouci | paymee | manual

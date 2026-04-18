@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { db, doctors, clinics } from "@doktori/db";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { meili, DOCTORS_INDEX, CLINICS_INDEX } from "@/lib/meilisearch";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 
@@ -22,10 +22,11 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
+  // Only index doctors who are active AND visible (visibility is controlled by subscription/trial status)
   const allDoctors = await db
     .select()
     .from(doctors)
-    .where(eq(doctors.isActive, true));
+    .where(and(eq(doctors.isActive, true), eq(doctors.isVisible, true)));
 
   const documents = allDoctors.map((d) => {
     const spec = SPECIALTIES.find((s) => s.id === d.specialty);

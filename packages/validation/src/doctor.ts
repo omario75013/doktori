@@ -10,6 +10,7 @@ export const doctorRegistrationSchema = z.object({
   address: z.string().min(5, "Adresse trop courte"),
   consultationFee: z.number().min(0).optional(),
   bio: z.string().max(500).optional(),
+  cguAccepted: z.boolean().optional(),
 });
 
 export const doctorProfileUpdateSchema = doctorRegistrationSchema
