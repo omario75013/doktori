@@ -280,6 +280,13 @@ export default function MesRdvPage() {
               </Button>
             </form>
           </div>
+
+          <p className="text-center text-sm text-[#134E4A]/60 mt-4">
+            Vous avez un compte email ?{" "}
+            <a href="/connexion-patient" className="font-bold text-[#0891B2] hover:underline">
+              Se connecter par email
+            </a>
+          </p>
         </div>
       </div>
     );

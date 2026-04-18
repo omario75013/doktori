@@ -140,6 +140,10 @@ export const patients = pgTable(
     isSuspended: boolean("is_suspended").notNull().default(false),
     suspensionReason: text("suspension_reason"),
     suspendedAt: timestamp("suspended_at", { withTimezone: true }),
+    // Email-based auth (optional — OTP is still the default)
+    passwordHash: text("password_hash"),
+    emailVerified: boolean("email_verified").notNull().default(false),
+    authMethod: varchar("auth_method", { length: 10 }).notNull().default("otp"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex("patients_phone_idx").on(table.phone)]

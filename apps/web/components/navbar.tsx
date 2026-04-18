@@ -49,6 +49,13 @@ export async function Navbar() {
           </Link>
           <LanguageSwitcher currentLocale={locale} />
           <Link
+            href="/connexion-patient"
+            className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-[#5E7574] transition-colors hover:bg-[#F0FDFA] hover:text-[#0891B2] sm:inline-flex"
+          >
+            <UserRound className="h-4 w-4" strokeWidth={2.5} />
+            Mon compte
+          </Link>
+          <Link
             href="/connexion"
             className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border-2 border-[#0891B2] bg-white px-4 text-sm font-bold text-[#0891B2] transition-all hover:bg-[#0891B2] hover:text-white"
           >
