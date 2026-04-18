@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
+import Link from "next/link";
 import { DoctorCard } from "@/components/doctor-card";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 import {
@@ -24,6 +25,8 @@ import {
   Clock,
   ChevronDown,
   Video,
+  Building2,
+  ArrowRight,
 } from "lucide-react";
 
 interface Doctor {
@@ -39,8 +42,19 @@ interface Doctor {
   consultation_mode?: string; // 'cabinet' | 'teleconsult' | 'both'
 }
 
+interface ClinicResult {
+  id: string;
+  name: string;
+  slug: string;
+  city: string;
+  cityLabel: string;
+  address: string;
+  logoUrl?: string | null;
+}
+
 interface SearchResponse {
   hits: Doctor[];
+  clinics?: ClinicResult[];
   totalCount: number;
   parsed: { specialty: string | null; city: string | null; text: string };
   expanded?: boolean;
@@ -108,6 +122,7 @@ function RechercheInner() {
 
   // Results
   const [results, setResults] = useState<Doctor[]>([]);
+  const [clinicResults, setClinicResults] = useState<ClinicResult[]>([]);
   const [totalCount, setTotalCount] = useState(0);
   const [parsed, setParsed] = useState<{ specialty: string | null; city: string | null; text: string }>({
     specialty: null,
@@ -158,6 +173,7 @@ function RechercheInner() {
         if (!res.ok) throw new Error("Erreur");
         const data: SearchResponse = await res.json();
         setResults(data.hits);
+        setClinicResults(data.clinics || []);
         setTotalCount(data.totalCount);
         setParsed(data.parsed);
         setExpanded(data.expanded || false);
@@ -613,6 +629,50 @@ function RechercheInner() {
                 >
                   {t("reset")}
                 </button>
+              </div>
+            )}
+
+            {/* Clinic results */}
+            {clinicResults.length > 0 && (
+              <div className="mb-6">
+                <div className="mb-3 flex items-center gap-2">
+                  <Building2 className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
+                  <span className="text-xs font-bold uppercase tracking-wider text-[#134E4A]">
+                    Centres médicaux
+                  </span>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {clinicResults.map((clinic) => (
+                    <Link
+                      key={clinic.id}
+                      href={`/centre-medical/${clinic.slug}`}
+                      className="group flex items-center gap-3 rounded-2xl border border-[#E6F4F1] bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-[#0891B2]/40 hover:shadow-md"
+                    >
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F0FDFA] text-[#0891B2]">
+                        {clinic.logoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={clinic.logoUrl}
+                            alt={clinic.name}
+                            className="h-10 w-10 rounded-lg object-contain"
+                          />
+                        ) : (
+                          <Building2 className="h-6 w-6" strokeWidth={2} />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-heading text-sm font-bold text-[#134E4A] truncate">
+                          {clinic.name}
+                        </p>
+                        <p className="mt-0.5 flex items-center gap-1 text-xs text-[#5E7574]">
+                          <MapPin className="h-3 w-3 shrink-0" strokeWidth={2.5} />
+                          {clinic.cityLabel || clinic.city}
+                        </p>
+                      </div>
+                      <ArrowRight className="h-4 w-4 shrink-0 text-[#5E7574] transition-transform group-hover:translate-x-0.5 group-hover:text-[#0891B2]" strokeWidth={2.5} />
+                    </Link>
+                  ))}
+                </div>
               </div>
             )}
 

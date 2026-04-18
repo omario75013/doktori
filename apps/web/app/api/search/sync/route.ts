@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
-import { db, doctors } from "@doktori/db";
+import { db, doctors, clinics } from "@doktori/db";
 import { eq } from "drizzle-orm";
-import { meili, DOCTORS_INDEX } from "@/lib/meilisearch";
+import { meili, DOCTORS_INDEX, CLINICS_INDEX } from "@/lib/meilisearch";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 
 // City centroids (WGS84) — used for geo-ranking when geolocation is absent
@@ -179,8 +179,40 @@ export async function POST(req: Request) {
 
   await index.updatePagination({ maxTotalHits: 500 });
 
+  // ── Index clinics ───────────────────────────────────────────────────────────
+  const allClinics = await db.select().from(clinics);
+  const clinicDocuments = allClinics.map((c) => {
+    const cityLabel = CITIES.find((city) => city.id === c.city)?.label ?? c.city;
+    return {
+      id: `clinic-${c.id}`,
+      type: "clinic" as const,
+      name: c.name,
+      city: c.city,
+      cityLabel,
+      address: c.address,
+      slug: c.slug,
+      logoUrl: c.logoUrl,
+      searchContent: [c.name, c.city, cityLabel, c.address].filter(Boolean).join(" "),
+    };
+  });
+
+  const clinicsIndex = meili.index(CLINICS_INDEX);
+  await clinicsIndex.addDocuments(clinicDocuments, { primaryKey: "id" });
+
+  await clinicsIndex.updateSearchableAttributes([
+    "name",
+    "cityLabel",
+    "city",
+    "address",
+    "searchContent",
+  ]);
+
+  await clinicsIndex.updateFilterableAttributes(["city", "type"]);
+  await clinicsIndex.updateSortableAttributes(["name"]);
+
   return NextResponse.json({
     synced: documents.length,
+    clinicsSynced: clinicDocuments.length,
     configured: true,
   });
 }

@@ -6,3 +6,4 @@ export const meili = new Meilisearch({
 });
 
 export const DOCTORS_INDEX = "doctors";
+export const CLINICS_INDEX = "clinics";

@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { meili, DOCTORS_INDEX } from "@/lib/meilisearch";
+import { meili, DOCTORS_INDEX, CLINICS_INDEX } from "@/lib/meilisearch";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 import { db, doctorSchedules, appointments, doctors } from "@doktori/db";
 import { eq, and, gte, lte, not, inArray, sql } from "drizzle-orm";
@@ -366,8 +366,26 @@ export async function GET(req: Request) {
   const totalBeforeLimit = hits.length;
   hits = hits.slice(0, 20);
 
+  // ── Clinic search (run in parallel with doctor results) ──────────────────
+  let clinicHits: unknown[] = [];
+  if (q || city) {
+    try {
+      const clinicsIndex = meili.index(CLINICS_INDEX);
+      const clinicFilter = city ? `city = "${city}"` : undefined;
+      const clinicResult = await clinicsIndex.search(searchText || q, {
+        filter: clinicFilter,
+        limit: 5,
+        matchingStrategy: "last",
+      });
+      clinicHits = clinicResult.hits;
+    } catch {
+      // Clinics index may not exist yet — silently ignore
+    }
+  }
+
   return NextResponse.json({
     hits,
+    clinics: clinicHits,
     totalCount: totalBeforeLimit,
     parsed: { specialty, city, text: searchText },
     expanded,
