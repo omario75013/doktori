@@ -44,8 +44,9 @@ export async function sendPushToPatient(
 
     // Log the push attempt
     for (const t of tokens) {
+      const maskedToken = `...${t.token.slice(-4)}`;
       await db.insert(smsLogs).values({
-        recipient: t.token.slice(0, 20) + "...",
+        recipient: maskedToken,
         message: `[PUSH] ${title}: ${body}`,
         status: res.ok ? "sent" : "failed",
         provider: "expo-push",
