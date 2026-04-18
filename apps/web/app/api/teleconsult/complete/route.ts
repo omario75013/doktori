@@ -224,6 +224,9 @@ async function sendPostConsultationDocuments({
     }
 
     // 5. Send SMS with document links
+    if (patient.cnam_number) {
+      docs.push("Votre fiche CNAM a été initiée pour remboursement.");
+    }
     const docText = docs.length > 0 ? `\n${docs.join("\n")}` : "";
     const receiptText = `Montant: ${(fee / 1000).toFixed(0)} DT (payé via Doktori)`;
     await sendSMS(

@@ -353,6 +353,103 @@ export function buildTeleconsultReceiptEmail(p: {
   `);
 }
 
+// ─── Prescription email (patient) ────────────────────────────────────────────
+
+export function buildPrescriptionEmail(p: {
+  patientName: string;
+  doctorName: string;
+  content: string;
+  prescriptionUrl: string;
+}): string {
+  // Convert newlines to <br> for HTML display
+  const formattedContent = p.content
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br>");
+
+  return layout(`
+    <p>Bonjour ${p.patientName},</p>
+    <p style="font-size:18px;font-weight:700;color:${TEAL}">Votre ordonnance est disponible</p>
+    <p>Dr. ${p.doctorName} vous a transmis une ordonnance suite à votre consultation.</p>
+
+    <div style="background:#f8fffe;border:1px solid #e6f4f1;border-radius:8px;padding:20px;margin:20px 0;font-family:monospace;font-size:14px;line-height:1.8;color:${DARK}">
+      ${formattedContent}
+    </div>
+
+    ${btn("Voir l'ordonnance complète", p.prescriptionUrl)}
+
+    <p style="font-size:13px;color:#6b7280;margin-top:24px">
+      Conservez ce document et présentez-le en pharmacie.
+      En cas de questions, contactez votre médecin directement.
+    </p>
+  `);
+}
+
+// ─── CNAM dossier email (patient) ─────────────────────────────────────────────
+
+const CNAM_STATUS_LABELS: Record<string, string> = {
+  draft: "Brouillon",
+  submitted: "Soumis à la CNAM",
+  approved: "Approuvé",
+  reimbursed: "Remboursé",
+  rejected: "Refusé",
+};
+
+export function buildCnamEmail(p: {
+  patientName: string;
+  doctorName: string;
+  cnamNumber: string;
+  amount: number; // millimes
+  consultationDate: string;
+  status: string;
+}): string {
+  const amountDisplay = `${(p.amount / 1000).toFixed(3)} DT`;
+  const statusLabel = CNAM_STATUS_LABELS[p.status] ?? p.status;
+  const dateDisplay = new Date(p.consultationDate).toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+
+  return layout(`
+    <p>Bonjour ${p.patientName},</p>
+    <p style="font-size:18px;font-weight:700;color:${TEAL}">Votre bordereau CNAM</p>
+    <p>Dr. ${p.doctorName} vous a envoyé votre fiche CNAM pour remboursement.</p>
+
+    <table style="width:100%;border-collapse:collapse;margin:20px 0">
+      <tr style="background:#f8fffe">
+        <td style="padding:12px;color:#6b7280;border:1px solid #e6f4f1">Numéro CNAM</td>
+        <td style="padding:12px;font-weight:600;border:1px solid #e6f4f1">${p.cnamNumber}</td>
+      </tr>
+      <tr>
+        <td style="padding:12px;color:#6b7280;border:1px solid #e6f4f1">Date de consultation</td>
+        <td style="padding:12px;font-weight:600;border:1px solid #e6f4f1">${dateDisplay}</td>
+      </tr>
+      <tr style="background:#f8fffe">
+        <td style="padding:12px;color:#6b7280;border:1px solid #e6f4f1">Montant</td>
+        <td style="padding:12px;font-weight:600;border:1px solid #e6f4f1">${amountDisplay}</td>
+      </tr>
+      <tr>
+        <td style="padding:12px;color:#6b7280;border:1px solid #e6f4f1">Statut</td>
+        <td style="padding:12px;font-weight:600;border:1px solid #e6f4f1">${statusLabel}</td>
+      </tr>
+    </table>
+
+    <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:16px;margin:16px 0">
+      <p style="margin:0;font-weight:700;color:#166534">Remboursement CNAM</p>
+      <p style="margin:8px 0 0;color:#166534;font-size:14px">
+        Ce bordereau atteste de votre consultation. Votre médecin le soumettra à la CNAM pour traitement.
+        Conservez ce document comme justificatif.
+      </p>
+    </div>
+
+    <p style="font-size:13px;color:#6b7280;margin-top:24px">
+      Pour toute question sur le remboursement, rapprochez-vous de votre caisse CNAM locale.
+    </p>
+  `);
+}
+
 // ─── Welcome patient ─────────────────────────────────────────────────────────
 
 export function welcomePatient(p: {

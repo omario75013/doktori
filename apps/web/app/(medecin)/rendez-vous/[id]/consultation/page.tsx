@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { searchIcd10, type Icd10Code } from "@/lib/icd10-tn";
-import { CheckCircle2, X, ClipboardList, ArrowLeft } from "lucide-react";
+import { CheckCircle2, X, ClipboardList, ArrowLeft, Send, FileText, ExternalLink } from "lucide-react";
 
 type Vitals = {
   bp_systolic?: number | "";
@@ -206,6 +206,8 @@ function SoapSection({
   );
 }
 
+type SendStatus = "idle" | "sending" | "sent" | "error";
+
 export default function ConsultationPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -215,6 +217,11 @@ export default function ConsultationPage() {
   const [loading, setLoading] = useState(true);
   const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [appointmentDate, setAppointmentDate] = useState<string | null>(null);
+  const [appointmentStatus, setAppointmentStatus] = useState<string | null>(null);
+  const [patientId, setPatientId] = useState<string | null>(null);
+  const [patientEmail, setPatientEmail] = useState<string | null | undefined>(undefined);
+  const [sendPrescriptionStatus, setSendPrescriptionStatus] = useState<SendStatus>("idle");
+  const [sendCnamStatus, setSendCnamStatus] = useState<SendStatus>("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Load existing note
@@ -222,12 +229,26 @@ export default function ConsultationPage() {
     const load = async () => {
       setLoading(true);
       try {
-        // Fetch appointment date
+        // Fetch appointment date and status
         const apptRes = await fetch(`/api/appointments/${appointmentId}`);
         if (apptRes.ok) {
           const apptData = await apptRes.json();
           if (apptData?.startsAt) {
             setAppointmentDate(apptData.startsAt);
+          }
+          if (apptData?.status) {
+            setAppointmentStatus(apptData.status);
+          }
+          if (apptData?.patientId) {
+            setPatientId(apptData.patientId);
+            // Fetch patient email
+            const ptRes = await fetch(`/api/patients/${apptData.patientId}`);
+            if (ptRes.ok) {
+              const ptData = await ptRes.json();
+              setPatientEmail(ptData?.patient?.email ?? null);
+            } else {
+              setPatientEmail(null);
+            }
           }
         }
 
@@ -309,6 +330,28 @@ export default function ConsultationPage() {
     },
     [scheduleAutoSave]
   );
+
+  const sendDocument = async (
+    endpoint: "send-prescription" | "send-cnam",
+    setStatus: (s: SendStatus) => void
+  ) => {
+    setStatus("sending");
+    try {
+      const res = await fetch(
+        `/api/doctor/appointments/${appointmentId}/${endpoint}`,
+        { method: "POST" }
+      );
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        console.error(`[${endpoint}] failed:`, data);
+        setStatus("error");
+        return;
+      }
+      setStatus("sent");
+    } catch {
+      setStatus("error");
+    }
+  };
 
   if (loading) {
     return <p className="text-[#0891B2] text-sm p-6">Chargement de la note de consultation...</p>;
@@ -413,6 +456,87 @@ export default function ConsultationPage() {
           placeholder="Traitement prescrit, examens à effectuer, renvoi spécialiste, suivi..."
         />
       </div>
+
+      {/* Documents du patient — only for completed appointments */}
+      {appointmentStatus === "completed" && (
+        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm space-y-4">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-[#0891B2]" />
+            <h2 className="font-semibold text-[#134E4A] text-sm uppercase tracking-wide">
+              Documents du patient
+            </h2>
+          </div>
+
+          {/* Patient email info */}
+          {patientEmail === undefined ? null : patientEmail ? (
+            <p className="text-xs text-gray-500">
+              Documents envoyés à :{" "}
+              <span className="font-medium text-[#134E4A]">{patientEmail}</span>
+            </p>
+          ) : (
+            <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+              Le patient n&apos;a pas d&apos;adresse email — les documents seront envoyés par SMS uniquement.
+            </p>
+          )}
+
+          <div className="flex flex-wrap gap-3">
+            {/* Send prescription */}
+            <button
+              onClick={() => sendDocument("send-prescription", setSendPrescriptionStatus)}
+              disabled={sendPrescriptionStatus === "sending"}
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#E6F4F1] bg-white hover:bg-[#F0FDFA] text-sm font-medium text-[#134E4A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {sendPrescriptionStatus === "sending" ? (
+                <span className="h-4 w-4 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 text-[#0891B2]" />
+              )}
+              {sendPrescriptionStatus === "sent"
+                ? "Ordonnance envoyée"
+                : sendPrescriptionStatus === "error"
+                ? "Erreur — réessayer"
+                : "Envoyer l'ordonnance"}
+            </button>
+
+            {/* Send CNAM */}
+            <button
+              onClick={() => sendDocument("send-cnam", setSendCnamStatus)}
+              disabled={sendCnamStatus === "sending"}
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#E6F4F1] bg-white hover:bg-[#F0FDFA] text-sm font-medium text-[#134E4A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {sendCnamStatus === "sending" ? (
+                <span className="h-4 w-4 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <Send className="h-4 w-4 text-[#0891B2]" />
+              )}
+              {sendCnamStatus === "sent"
+                ? "Bordereau CNAM envoyé"
+                : sendCnamStatus === "error"
+                ? "Erreur — réessayer"
+                : "Envoyer le bordereau CNAM"}
+            </button>
+
+            {/* View patient dossier */}
+            {patientId && (
+              <a
+                href={`/patients/${patientId}`}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#0891B2] bg-[#F0FDFA] text-sm font-medium text-[#0891B2] hover:bg-[#E6F4F1] transition-colors"
+              >
+                <ExternalLink className="h-4 w-4" />
+                Voir le dossier patient
+              </a>
+            )}
+          </div>
+
+          {(sendPrescriptionStatus === "sent" || sendCnamStatus === "sent") && (
+            <p className="flex items-center gap-1.5 text-xs text-[#0891B2] font-medium">
+              <CheckCircle2 size={14} />
+              Document(s) envoyé(s) avec succès par SMS
+              {patientEmail ? " et email" : ""}.
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
