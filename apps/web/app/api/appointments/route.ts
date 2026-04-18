@@ -175,6 +175,7 @@ export async function POST(req: Request) {
       appointmentTypeId: parsed.data.appointmentTypeId,
       dependentId,
       practiceId: resolvedPracticeId,
+      type: parsed.data.type || "cabinet",
     });
 
     // G3: save questionnaire answers (don't fail the booking on error)
