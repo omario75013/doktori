@@ -143,13 +143,21 @@ export default async function BlogPostPage({
 
       <main className="min-h-screen bg-[#F0FDFA]">
         {/* Cover hero */}
-        {post.coverImageUrl && (
+        {post.coverImageUrl ? (
           <div className="w-full aspect-[3/1] max-h-[400px] overflow-hidden bg-[#134E4A]">
             <img
               src={post.coverImageUrl}
               alt={post.title}
               className="w-full h-full object-cover opacity-80"
             />
+          </div>
+        ) : (
+          <div className="w-full h-48 sm:h-64 bg-gradient-to-br from-[#134E4A] via-[#0e3d38] to-[#0891B2] relative overflow-hidden">
+            <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-white/5" />
+            <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/5" />
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5">
+              <div className="h-48 w-48 rounded-full border-[3px] border-white" />
+            </div>
           </div>
         )}
 
@@ -192,10 +200,18 @@ export default async function BlogPostPage({
 
                   {/* Rendered HTML content */}
                   <div
-                    className="prose prose-teal max-w-none mt-6 text-[#134E4A]
-                      prose-headings:text-[#134E4A] prose-headings:font-bold
-                      prose-a:text-[#0891B2] prose-a:no-underline hover:prose-a:underline
-                      prose-li:text-[#134E4A] prose-strong:text-[#134E4A]"
+                    className="prose prose-lg max-w-none mt-8 text-[#134E4A]
+                      prose-headings:text-[#134E4A] prose-headings:font-bold prose-headings:tracking-tight
+                      prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-[#E6F4F1]
+                      prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-[#0891B2]
+                      prose-p:text-[#334E4C] prose-p:leading-relaxed prose-p:mb-4
+                      prose-a:text-[#0891B2] prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
+                      prose-li:text-[#334E4C] prose-li:leading-relaxed
+                      prose-ul:my-4 prose-ol:my-4
+                      prose-strong:text-[#134E4A] prose-strong:font-bold
+                      prose-em:text-[#0891B2]
+                      prose-blockquote:border-l-[#0891B2] prose-blockquote:bg-[#F0FDFA] prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-xl prose-blockquote:not-italic
+                      prose-img:rounded-xl prose-img:shadow-md prose-img:border prose-img:border-[#E6F4F1]"
                     dangerouslySetInnerHTML={{ __html: post.content }}
                   />
 
