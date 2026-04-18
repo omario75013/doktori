@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   User,
@@ -18,6 +18,7 @@ import {
   Star as StarIcon,
   CheckCircle2,
   XCircle,
+  Activity,
 } from "lucide-react";
 import { ScheduleEditor } from "./schedule-editor";
 
@@ -111,6 +112,7 @@ type Tab =
   | "avis"
   | "abonnement"
   | "premium"
+  | "engagement"
   | "audit";
 
 export function DoctorDetailTabs({
@@ -147,6 +149,7 @@ export function DoctorDetailTabs({
     { id: "avis", label: "Avis", icon: MessageSquare },
     { id: "abonnement", label: "Abonnement", icon: CreditCard },
     { id: "premium", label: "Premium", icon: StarIcon },
+    { id: "engagement", label: "Engagement", icon: Activity },
     { id: "audit", label: "Audit", icon: Shield },
   ];
 
@@ -192,6 +195,7 @@ export function DoctorDetailTabs({
       {tab === "premium" && (
         <PremiumTab doctorId={doctor.id} premium={premium} />
       )}
+      {tab === "engagement" && <EngagementTab doctorId={doctor.id} />}
       {tab === "audit" && <AuditTab audit={audit} />}
     </div>
   );
@@ -1089,6 +1093,196 @@ function InfoItem({
     <div>
       <dt className="text-xs font-medium text-slate-500 mb-0.5">{label}</dt>
       <dd className="text-sm text-slate-900">{value}</dd>
+    </div>
+  );
+}
+
+// ── Engagement Tab ─────────────────────────────────────────────────────────────
+
+type EngagementData = {
+  score: number;
+  breakdown: {
+    profile: number;
+    activity: number;
+    response: number;
+    usage: number;
+  };
+  meta: {
+    recentAppointments: number;
+    confirmedCount: number;
+    totalDecisioned: number;
+  };
+} | null;
+
+function EngagementRing({ score }: { score: number }) {
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  const dashOffset = circumference - (score / 100) * circumference;
+
+  const color =
+    score >= 75 ? "#16a34a" : score >= 50 ? "#0891b2" : score >= 25 ? "#f59e0b" : "#ef4444";
+
+  return (
+    <div className="relative inline-flex items-center justify-center">
+      <svg width="128" height="128" viewBox="0 0 128 128">
+        <circle
+          cx="64"
+          cy="64"
+          r={radius}
+          stroke="#f1f5f9"
+          strokeWidth="12"
+          fill="none"
+        />
+        <circle
+          cx="64"
+          cy="64"
+          r={radius}
+          stroke={color}
+          strokeWidth="12"
+          fill="none"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={dashOffset}
+          transform="rotate(-90 64 64)"
+          style={{ transition: "stroke-dashoffset 0.6s ease" }}
+        />
+      </svg>
+      <div className="absolute text-center">
+        <div className="text-2xl font-bold" style={{ color }}>
+          {score}
+        </div>
+        <div className="text-xs text-slate-400">/100</div>
+      </div>
+    </div>
+  );
+}
+
+function EngagementTab({ doctorId }: { doctorId: string }) {
+  const [data, setData] = useState<EngagementData>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch(`/api/admin/doctors/${doctorId}/engagement`)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.error) setError(d.error);
+        else setData(d);
+        setLoading(false);
+      })
+      .catch(() => {
+        setError("Erreur lors du chargement");
+        setLoading(false);
+      });
+  }, [doctorId]);
+
+  if (loading) {
+    return (
+      <div className="p-8 flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="p-8 text-center text-sm text-red-600">
+        {error ?? "Données indisponibles"}
+      </div>
+    );
+  }
+
+  const breakdownItems = [
+    {
+      key: "profile",
+      label: "Complétude du profil",
+      value: data.breakdown.profile,
+      description: "Photo, bio, formations, tarifs",
+    },
+    {
+      key: "activity",
+      label: "Activité appointments",
+      value: data.breakdown.activity,
+      description: `${data.meta.recentAppointments} RDV sur 30 jours`,
+    },
+    {
+      key: "response",
+      label: "Taux de confirmation",
+      value: data.breakdown.response,
+      description: `${data.meta.confirmedCount} / ${data.meta.totalDecisioned} confirmés`,
+    },
+    {
+      key: "usage",
+      label: "Utilisation plateforme",
+      value: data.breakdown.usage,
+      description: "Connexions et mises à jour récentes",
+    },
+  ];
+
+  const scoreLabel =
+    data.score >= 75
+      ? "Excellent"
+      : data.score >= 50
+      ? "Bon"
+      : data.score >= 25
+      ? "Moyen"
+      : "Faible";
+
+  const scoreColor =
+    data.score >= 75
+      ? "text-green-700"
+      : data.score >= 50
+      ? "text-teal-700"
+      : data.score >= 25
+      ? "text-amber-700"
+      : "text-red-700";
+
+  return (
+    <div className="space-y-6">
+      {/* Score ring */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6 flex items-center gap-8">
+        <EngagementRing score={data.score} />
+        <div>
+          <h3 className="text-lg font-bold text-slate-900">Score d&apos;engagement</h3>
+          <p className={`text-sm font-semibold ${scoreColor} mt-1`}>{scoreLabel}</p>
+          <p className="text-xs text-slate-500 mt-2 max-w-xs">
+            Score composite basé sur la complétude du profil, l&apos;activité, le taux de
+            confirmation et l&apos;utilisation de la plateforme.
+          </p>
+        </div>
+      </div>
+
+      {/* Breakdown */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6">
+        <h3 className="font-semibold text-slate-900 mb-4">Détail par dimension (25% chacune)</h3>
+        <div className="space-y-4">
+          {breakdownItems.map((item) => (
+            <div key={item.key}>
+              <div className="flex justify-between text-sm mb-1">
+                <div>
+                  <span className="font-medium text-slate-800">{item.label}</span>
+                  <span className="text-slate-400 ml-2 text-xs">{item.description}</span>
+                </div>
+                <span className="font-semibold text-slate-900">{item.value}/100</span>
+              </div>
+              <div className="w-full bg-slate-100 rounded-full h-2">
+                <div
+                  className={`h-2 rounded-full transition-all ${
+                    item.value >= 75
+                      ? "bg-green-500"
+                      : item.value >= 50
+                      ? "bg-teal-500"
+                      : item.value >= 25
+                      ? "bg-amber-400"
+                      : "bg-red-400"
+                  }`}
+                  style={{ width: `${item.value}%` }}
+                />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
