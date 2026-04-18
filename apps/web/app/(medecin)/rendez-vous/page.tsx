@@ -161,7 +161,6 @@ export default function RendezVousPage() {
     setFollowupDialogId(id);
     setFollowupWeeks("4");
     setFollowupError(null);
-    setFollowupSuccess(null);
   };
 
   const submitFollowup = async () => {
