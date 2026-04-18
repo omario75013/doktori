@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { db, doctors, clinics } from "@doktori/db";
+import { db, doctors, clinics, blogPosts } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 
@@ -63,6 +63,45 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
+  // Blog posts
+  let publishedBlogPosts: Array<{ slug: string; updatedAt: Date }> = [];
+  try {
+    publishedBlogPosts = await db
+      .select({ slug: blogPosts.slug, updatedAt: blogPosts.updatedAt })
+      .from(blogPosts)
+      .where(eq(blogPosts.isPublished, true));
+  } catch {
+    // DB unreachable — skip blog pages
+  }
+
+  const blogPages: MetadataRoute.Sitemap = [
+    {
+      url: `${baseUrl}/blog`,
+      lastModified: new Date(),
+      changeFrequency: "daily" as const,
+      priority: 0.8,
+    },
+    ...publishedBlogPosts.map((p) => ({
+      url: `${baseUrl}/blog/${p.slug}`,
+      lastModified: p.updatedAt,
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+    })),
+  ];
+
+  // Specialty × city landing pages
+  const specialtyCityPages: MetadataRoute.Sitemap = [];
+  for (const spec of SPECIALTIES) {
+    for (const city of CITIES) {
+      specialtyCityPages.push({
+        url: `${baseUrl}/medecins/${spec.id}/${city.id}`,
+        lastModified: new Date(),
+        changeFrequency: "weekly" as const,
+        priority: 0.6,
+      });
+    }
+  }
+
   // SEO listing pages (all city × specialty combinations)
   const listingPages: MetadataRoute.Sitemap = [];
   for (const city of CITIES) {
@@ -76,5 +115,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  return [...staticPages, ...doctorPages, ...clinicPages, ...listingPages];
+  return [...staticPages, ...doctorPages, ...clinicPages, ...blogPages, ...specialtyCityPages, ...listingPages];
 }

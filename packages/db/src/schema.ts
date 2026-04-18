@@ -547,10 +547,12 @@ export const prescriptions = pgTable("prescriptions", {
   doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
   patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
+  verificationToken: varchar("verification_token", { length: 64 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("prescriptions_appointment_idx").on(table.appointmentId),
   index("prescriptions_patient_idx").on(table.patientId),
+  index("prescriptions_verification_token_idx").on(table.verificationToken),
 ]);
 
 // ── SOS Sessions ─────────────────────────────────────────
@@ -911,33 +913,27 @@ export const promoCodeUsages = pgTable(
   ]
 );
 
-// ── Admin Notifications ───────────────────────────────────────────────────────
+// ── Blog Posts ────────────────────────────────────────────────────────────────
 
-export const adminNotifications = pgTable(
-  "admin_notifications",
+export const blogPosts = pgTable(
+  "blog_posts",
   {
     id: uuid("id").primaryKey().defaultRandom(),
-    type: varchar("type", { length: 30 }).notNull(),
-    title: varchar("title", { length: 255 }).notNull(),
-    message: text("message"),
-    link: varchar("link", { length: 500 }),
-    isRead: boolean("is_read").notNull().default(false),
+    slug: varchar("slug", { length: 255 }).notNull().unique(),
+    title: varchar("title", { length: 500 }).notNull(),
+    description: text("description"),
+    content: text("content").notNull(),
+    coverImageUrl: text("cover_image_url"),
+    author: varchar("author", { length: 255 }).notNull().default("Doktori"),
+    category: varchar("category", { length: 50 }),
+    tags: jsonb("tags").$type<string[]>().notNull().default([]),
+    isPublished: boolean("is_published").notNull().default(false),
+    publishedAt: timestamp("published_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
-    index("admin_notifications_read_idx").on(table.isRead, table.createdAt),
+    index("blog_posts_slug_idx").on(table.slug),
+    index("blog_posts_published_idx").on(table.isPublished, table.publishedAt),
   ]
 );
-
-// ── Webhooks ──────────────────────────────────────────────────────────────────
-
-export const webhooks = pgTable("webhooks", {
-  id: uuid("id").primaryKey().defaultRandom(),
-  url: varchar("url", { length: 500 }).notNull(),
-  events: jsonb("events").$type<string[]>().notNull().default([]),
-  secret: varchar("secret", { length: 64 }).notNull(),
-  isActive: boolean("is_active").notNull().default(true),
-  createdBy: uuid("created_by").references(() => adminUsers.id),
-  lastTriggeredAt: timestamp("last_triggered_at", { withTimezone: true }),
-  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-});

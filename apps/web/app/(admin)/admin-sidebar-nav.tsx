@@ -28,9 +28,8 @@ import {
   TrendingUp,
   Receipt,
   Tag,
-  Webhook,
+  BookOpen,
 } from "lucide-react";
-import { NotificationBell } from "@/components/admin/notification-bell";
 
 const ROLE_LABELS: Record<string, string> = {
   super_admin: "Super admin",
@@ -47,6 +46,10 @@ const links = [
   { href: "/admin/rendez-vous", label: "Rendez-vous", icon: Calendar },
   { href: "/admin/validation", label: "Validation", icon: UserCheck },
   { href: "/admin/reviews", label: "Avis patients", icon: MessageSquare },
+];
+
+const contentLinks = [
+  { href: "/admin/blog", label: "Blog", icon: BookOpen },
 ];
 
 const orgLinks = [
@@ -76,7 +79,6 @@ const analyticsLinks = [
 const systemLinks = [
   { href: "/admin/acces/utilisateurs", label: "Accès & rôles", icon: Shield },
   { href: "/admin/acces/audit", label: "Journal d'audit", icon: FileText },
-  { href: "/admin/systeme/webhooks", label: "Webhooks", icon: Webhook },
   { href: "/admin/parametres", label: "Paramètres", icon: Settings },
 ];
 
@@ -129,13 +131,12 @@ export function AdminSidebarNav({ adminName, adminEmail, adminRole }: AdminSideb
             <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center">
               <Shield className="w-5 h-5" />
             </div>
-            <div className="flex-1">
+            <div>
               <p className="text-sm font-bold">Doktori Admin</p>
               <p className="text-[10px] text-slate-400 uppercase tracking-wider">
                 {ROLE_LABELS[adminRole] ?? adminRole}
               </p>
             </div>
-            <NotificationBell />
           </div>
         </div>
 
@@ -148,6 +149,27 @@ export function AdminSidebarNav({ adminName, adminEmail, adminRole }: AdminSideb
                 href={l.href}
                 onClick={() => setOpen(false)}
                 className={linkClass(l.href, l.exact)}
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                {l.label}
+              </Link>
+            );
+          })}
+
+          <div className="pt-3 pb-1 px-3">
+            <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
+              Contenu
+            </p>
+          </div>
+
+          {contentLinks.map((l) => {
+            const Icon = l.icon;
+            return (
+              <Link
+                key={l.href}
+                href={l.href}
+                onClick={() => setOpen(false)}
+                className={linkClass(l.href)}
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 {l.label}
