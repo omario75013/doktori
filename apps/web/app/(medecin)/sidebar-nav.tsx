@@ -13,6 +13,7 @@ export function SidebarNav({ userName }: { userName?: string | null }) {
 
   const links = [
     { href: "/dashboard", label: t("dashboard") },
+    { href: "/calendrier", label: t("calendrier") },
     { href: "/agenda", label: t("agenda") },
     { href: "/rendez-vous", label: t("rendezVous") },
     { href: "/patients", label: t("patients") },

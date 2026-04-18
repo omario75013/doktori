@@ -212,6 +212,7 @@
   "medecin": {
     "nav": {
       "dashboard": "لوحة التحكم",
+      "calendrier": "التقويم",
       "agenda": "جدول المواعيد",
       "rendezVous": "المواعيد",
       "patients": "مرضاي",

@@ -10,8 +10,14 @@ import {
   Video,
   Wallet,
   CheckCircle,
+  CalendarDays,
+  ArrowRight,
+  Stethoscope,
+  Users,
+  Phone,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { motion } from "framer-motion";
 import { DoctorOnboarding } from "@/components/doctor-onboarding";
 import { GuidedTour } from "@/components/guided-tour";
 
@@ -88,6 +94,7 @@ function KpiCard({
   icon: Icon,
   iconBg,
   href,
+  index = 0,
 }: {
   label: string;
   value: string | number;
@@ -96,9 +103,16 @@ function KpiCard({
   icon: React.ElementType;
   iconBg: string;
   href?: string;
+  index?: number;
 }) {
   const inner = (
-    <div className="relative bg-white rounded-2xl p-5 border border-slate-100 shadow-sm overflow-hidden transition-shadow hover:shadow-md">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4, delay: index * 0.08, ease: "easeOut" }}
+      whileHover={{ y: -2, boxShadow: "0 8px 25px -5px rgba(0,0,0,0.08)" }}
+      className="relative bg-white rounded-2xl p-5 border border-slate-100 shadow-sm overflow-hidden cursor-pointer"
+    >
       {/* Left accent bar */}
       <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${accentColor}`} />
       <div className="flex items-start justify-between gap-3 pl-3">
@@ -111,7 +125,7 @@ function KpiCard({
           <Icon className="h-5 w-5" strokeWidth={2.5} />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 
   if (href) {
@@ -270,25 +284,45 @@ export function DashboardClient({
       />
 
       {/* Greeting */}
-      <div
-        className="animate-fade-in"
-        style={{ animation: "fadeSlideIn 0.4s ease both" }}
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4 }}
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
-        <h1 className="text-2xl font-black text-slate-900">
-          {t("greeting")}, Dr.{" "}
-          <span className="text-[#0891B2]">{doctorName}</span>
-        </h1>
-        <p className="text-slate-500 text-sm mt-1">
-          {t("greetingSubtitle")}
-        </p>
-      </div>
+        <div>
+          <h1 className="text-2xl font-black text-slate-900">
+            {t("greeting")}, Dr.{" "}
+            <span className="text-[#0891B2]">{doctorName}</span>
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">
+            {t("greetingSubtitle")}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/calendrier"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#0891B2] px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#0e7490] transition-colors"
+          >
+            <CalendarDays className="h-4 w-4" />
+            Calendrier
+          </Link>
+          <Link
+            href="/rendez-vous"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
+          >
+            Rendez-vous
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Link>
+        </div>
+      </motion.div>
 
       {/* KPI grid */}
       <div data-tour="kpi-grid" className={`grid gap-4 ${hasTeleconsult ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-3"}`}>
-        {kpis.map((kpi) => (
-          <KpiCard key={kpi.label} {...kpi} />
+        {kpis.map((kpi, i) => (
+          <KpiCard key={kpi.label} {...kpi} index={i} />
         ))}
-        {teleconsultKpi && <KpiCard {...teleconsultKpi} />}
+        {teleconsultKpi && <KpiCard {...teleconsultKpi} index={kpis.length} />}
       </div>
 
       {/* Wallet card */}
@@ -301,6 +335,7 @@ export function DashboardClient({
           icon={Wallet}
           iconBg="bg-green-50 text-green-600"
           href="/wallet"
+          index={kpis.length + 1}
         />
       )}
 
@@ -333,7 +368,13 @@ export function DashboardClient({
       )}
 
       {/* Today's appointments */}
-      <div data-tour="today-appts" className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.3 }}
+        data-tour="today-appts"
+        className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+      >
         <div className="px-5 py-4 border-b border-slate-100">
           <SectionHeader>{t("todayAppointments")}</SectionHeader>
         </div>
@@ -379,10 +420,16 @@ export function DashboardClient({
             })
           )}
         </div>
-      </div>
+      </motion.div>
 
       {/* Upcoming appointments */}
-      <div data-tour="upcoming-appts" className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: 0.4 }}
+        data-tour="upcoming-appts"
+        className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+      >
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <SectionHeader>{t("upcoming")}</SectionHeader>
           <Link href="/rendez-vous" className="text-xs font-semibold text-[#0891B2] hover:underline">
@@ -434,14 +481,7 @@ export function DashboardClient({
             })
           )}
         </div>
-      </div>
-
-      <style>{`
-        @keyframes fadeSlideIn {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
+      </motion.div>
     </div>
   );
 }

@@ -212,6 +212,7 @@
   "medecin": {
     "nav": {
       "dashboard": "Tableau de bord",
+      "calendrier": "Calendrier",
       "agenda": "Agenda",
       "rendezVous": "Rendez-vous",
       "patients": "Mes patients",
