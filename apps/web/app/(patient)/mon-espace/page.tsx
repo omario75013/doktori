@@ -14,6 +14,11 @@ import {
   User,
   LogOut,
   ChevronRight,
+  CheckCircle,
+  XCircle,
+  ClipboardList,
+  Star,
+  Clock,
 } from "lucide-react";
 
 interface Appointment {
@@ -37,6 +42,14 @@ interface PatientInfo {
   name?: string;
 }
 
+interface TimelineItem {
+  id: string;
+  kind: "booking" | "cancelled" | "completed" | "prescription" | "review";
+  doctorName: string;
+  date: Date;
+  label: string;
+}
+
 function parsePatientFromToken(token: string): PatientInfo | null {
   try {
     const payload = JSON.parse(atob(token.split(".")[1]));
@@ -57,6 +70,59 @@ const TYPE_COLORS: Record<string, string> = {
   domicile: "bg-amber-50 text-amber-700",
   teleconsultation: "bg-purple-50 text-purple-700",
 };
+
+const TIMELINE_ICONS: Record<TimelineItem["kind"], React.ReactNode> = {
+  booking: <Calendar className="w-3.5 h-3.5 text-[#0891B2]" />,
+  cancelled: <XCircle className="w-3.5 h-3.5 text-red-500" />,
+  completed: <CheckCircle className="w-3.5 h-3.5 text-green-500" />,
+  prescription: <FileText className="w-3.5 h-3.5 text-purple-500" />,
+  review: <Star className="w-3.5 h-3.5 text-amber-500" />,
+};
+
+const TIMELINE_BG: Record<TimelineItem["kind"], string> = {
+  booking: "bg-[#0891B2]/10",
+  cancelled: "bg-red-50",
+  completed: "bg-green-50",
+  prescription: "bg-purple-50",
+  review: "bg-amber-50",
+};
+
+function buildTimeline(appointments: Appointment[]): TimelineItem[] {
+  const items: TimelineItem[] = [];
+
+  for (const a of appointments) {
+    const startsAt = new Date(a.startsAt);
+
+    if (a.status === "cancelled") {
+      items.push({
+        id: `cancelled-${a.id}`,
+        kind: "cancelled",
+        doctorName: a.doctorName,
+        date: startsAt,
+        label: `Rendez-vous annulé avec ${a.doctorName}`,
+      });
+    } else if (a.status === "completed" || (a.status !== "cancelled" && isPast(startsAt))) {
+      items.push({
+        id: `completed-${a.id}`,
+        kind: "completed",
+        doctorName: a.doctorName,
+        date: startsAt,
+        label: `Consultation terminée avec ${a.doctorName}`,
+      });
+    } else {
+      items.push({
+        id: `booking-${a.id}`,
+        kind: "booking",
+        doctorName: a.doctorName,
+        date: startsAt,
+        label: `Rendez-vous confirmé avec ${a.doctorName}`,
+      });
+    }
+  }
+
+  // Sort chronologically descending, take top 10
+  return items.sort((a, b) => b.date.getTime() - a.date.getTime()).slice(0, 10);
+}
 
 export default function PatientDashboardPage() {
   const router = useRouter();
@@ -120,7 +186,10 @@ export default function PatientDashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-[#F0FDFA]">
-        <p className="text-gray-400">Chargement...</p>
+        <div className="text-center space-y-3">
+          <div className="w-10 h-10 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-[#134E4A]/60 text-sm">Chargement...</p>
+        </div>
       </div>
     );
   }
@@ -145,6 +214,7 @@ export default function PatientDashboardPage() {
 
   const nextAppointment = upcoming[0] ?? null;
   const patientName = patient?.name ?? patient?.phone ?? "Patient";
+  const timeline = buildTimeline(appointments);
 
   return (
     <div className="min-h-screen bg-[#F0FDFA]">
@@ -199,7 +269,7 @@ export default function PatientDashboardPage() {
           <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
             Actions rapides
           </h3>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             <a
               href="/recherche"
               className="flex flex-col items-center gap-2 rounded-2xl border border-[#E6F4F1] bg-white p-4 text-center hover:border-[#0891B2]/40 hover:shadow-md transition-all duration-200"
@@ -219,6 +289,15 @@ export default function PatientDashboardPage() {
               <span className="text-xs font-medium text-[#134E4A]">Mon dossier médical</span>
             </a>
             <a
+              href="/mes-documents"
+              className="flex flex-col items-center gap-2 rounded-2xl border border-[#E6F4F1] bg-white p-4 text-center hover:border-[#0891B2]/40 hover:shadow-md transition-all duration-200"
+            >
+              <div className="w-10 h-10 bg-purple-50 rounded-full flex items-center justify-center">
+                <ClipboardList className="w-5 h-5 text-purple-600" />
+              </div>
+              <span className="text-xs font-medium text-[#134E4A]">Mes documents</span>
+            </a>
+            <a
               href="/sos"
               className="flex flex-col items-center gap-2 rounded-2xl border border-[#E6F4F1] bg-white p-4 text-center hover:border-red-200 hover:shadow-md transition-all duration-200"
             >
@@ -232,9 +311,14 @@ export default function PatientDashboardPage() {
 
         {/* Upcoming appointments */}
         <section className="mb-8">
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-            Rendez-vous à venir
-          </h3>
+          <div className="flex items-center justify-between mb-3">
+            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              Rendez-vous à venir
+            </h3>
+            <a href="/mes-rdv" className="text-xs font-semibold text-[#0891B2] hover:underline">
+              Voir tout
+            </a>
+          </div>
           {upcoming.length === 0 ? (
             <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 text-center text-sm text-gray-400 shadow-sm">
               <Calendar className="w-8 h-8 text-gray-200 mx-auto mb-2" />
@@ -278,7 +362,7 @@ export default function PatientDashboardPage() {
 
         {/* Recent doctors */}
         {recentDoctors.length > 0 && (
-          <section>
+          <section className="mb-8">
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
               Médecins récents
             </h3>
@@ -312,6 +396,38 @@ export default function PatientDashboardPage() {
                   </div>
                 );
               })}
+            </div>
+          </section>
+        )}
+
+        {/* Activity timeline */}
+        {timeline.length > 0 && (
+          <section className="mb-8">
+            <div className="flex items-center gap-2 mb-3">
+              <Clock className="w-4 h-4 text-[#134E4A]/40" />
+              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                Activité récente
+              </h3>
+            </div>
+            <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm overflow-hidden">
+              {timeline.map((item, index) => (
+                <div
+                  key={item.id}
+                  className={`flex items-start gap-3 px-4 py-3 ${
+                    index < timeline.length - 1 ? "border-b border-[#E6F4F1]" : ""
+                  }`}
+                >
+                  <div className={`w-7 h-7 rounded-full ${TIMELINE_BG[item.kind]} flex items-center justify-center flex-shrink-0 mt-0.5`}>
+                    {TIMELINE_ICONS[item.kind]}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium text-[#134E4A] leading-snug">{item.label}</p>
+                    <p className="text-xs text-[#134E4A]/40 mt-0.5 capitalize">
+                      {format(item.date, "EEEE d MMMM 'à' HH:mm", { locale: fr })}
+                    </p>
+                  </div>
+                </div>
+              ))}
             </div>
           </section>
         )}
