@@ -55,7 +55,9 @@ export async function POST(req: Request) {
     // 2. Initiate refund
     let refundSuccess = false;
     try {
-      refundSuccess = await refundPayment(appt.payment_ref, appt.payment_amount);
+      if (appt.payment_ref) {
+        refundSuccess = await refundPayment(appt.payment_ref, appt.payment_amount);
+      }
     } catch (e) {
       console.error(`[noshow-cron] refund error for appt ${appt.id}:`, e);
     }
