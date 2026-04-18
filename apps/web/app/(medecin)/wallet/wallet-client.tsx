@@ -6,6 +6,24 @@ import { fr } from "date-fns/locale";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTranslations } from "next-intl";
+import {
+  Wallet,
+  TrendingUp,
+  ArrowDownRight,
+  ArrowUpRight,
+  BadgePercent,
+  Banknote,
+  X,
+  Info,
+  Download,
+  Filter,
+  Search,
+  CreditCard,
+  RefreshCw,
+  AlertCircle,
+  CheckCircle2,
+  ArrowRight,
+} from "lucide-react";
 
 interface Transaction {
   id: string;
@@ -24,15 +42,44 @@ interface WalletClientProps {
   hasMore: boolean;
 }
 
-const TYPE_BADGE_CLASS: Record<Transaction["type"], string> = {
-  credit: "bg-green-100 text-green-700",
-  commission: "bg-orange-100 text-orange-700",
-  withdrawal: "bg-blue-100 text-blue-700",
-  refund: "bg-red-100 text-red-700",
+const TYPE_CONFIG: Record<
+  Transaction["type"],
+  { badge: string; icon: React.ElementType; sign: string; color: string }
+> = {
+  credit: {
+    badge: "bg-green-50 text-green-700 border-green-200",
+    icon: ArrowDownRight,
+    sign: "+",
+    color: "text-green-700",
+  },
+  commission: {
+    badge: "bg-amber-50 text-amber-700 border-amber-200",
+    icon: BadgePercent,
+    sign: "-",
+    color: "text-amber-600",
+  },
+  withdrawal: {
+    badge: "bg-blue-50 text-blue-700 border-blue-200",
+    icon: ArrowUpRight,
+    sign: "-",
+    color: "text-blue-600",
+  },
+  refund: {
+    badge: "bg-red-50 text-red-700 border-red-200",
+    icon: RefreshCw,
+    sign: "-",
+    color: "text-red-600",
+  },
 };
 
 function formatDT(millimes: number): string {
   return (millimes / 1000).toFixed(3) + " DT";
+}
+
+function formatDTShort(millimes: number): string {
+  const val = millimes / 1000;
+  if (val >= 1000) return (val / 1000).toFixed(1) + "k DT";
+  return val.toFixed(val < 10 ? 3 : 0) + " DT";
 }
 
 export function WalletClient({
@@ -49,6 +96,7 @@ export function WalletClient({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loadingMore, setLoadingMore] = useState(false);
   const [offset, setOffset] = useState(initialTransactions.length);
+  const [filterType, setFilterType] = useState<Transaction["type"] | "all">("all");
 
   const [modalOpen, setModalOpen] = useState(false);
   const [amount, setAmount] = useState("");
@@ -101,21 +149,41 @@ export function WalletClient({
     }
   }
 
+  const filteredTransactions =
+    filterType === "all"
+      ? transactions
+      : transactions.filter((tx) => tx.type === filterType);
+
   return (
     <div className="space-y-6">
+      {/* Success banner */}
       {withdrawSuccess && (
-        <div className="rounded-lg bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-800">
+        <div className="flex items-center gap-2 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700">
+          <CheckCircle2 className="h-4 w-4 shrink-0" />
           {t("withdrawSuccess")}
         </div>
       )}
 
-      {/* Balance + stats */}
-      <div className="space-y-4">
-        {/* Main balance card */}
-        <div className="bg-gradient-to-br from-purple-600 to-indigo-700 rounded-xl p-6 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      {/* ── Balance card ── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#134E4A] via-[#0e3d38] to-[#0891B2] p-6 sm:p-8 text-white shadow-xl">
+        {/* Decorative circles */}
+        <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-white/5" />
+        <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/5" />
+
+        <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
           <div>
-            <p className="text-white/70 text-sm uppercase tracking-wide">{t("balance")}</p>
-            <p className="text-4xl font-bold mt-1">{formatDT(balanceMillimes)}</p>
+            <div className="flex items-center gap-2 mb-2">
+              <Wallet className="h-5 w-5 text-teal-200" />
+              <p className="text-teal-200 text-sm font-medium uppercase tracking-wider">
+                {t("balance")}
+              </p>
+            </div>
+            <p className="text-4xl sm:text-5xl font-black tracking-tight">
+              {formatDT(balanceMillimes)}
+            </p>
+            <p className="text-teal-300/60 text-xs mt-2">
+              Solde disponible pour retrait
+            </p>
           </div>
           <Button
             onClick={() => {
@@ -123,85 +191,177 @@ export function WalletClient({
               setWithdrawError(null);
               setModalOpen(true);
             }}
-            className="bg-white text-purple-700 hover:bg-white/90 font-semibold shrink-0"
+            className="bg-white text-[#134E4A] hover:bg-white/90 font-bold shrink-0 rounded-xl px-6 py-5 text-sm shadow-lg"
             disabled={balanceMillimes <= 0}
           >
+            <Banknote className="mr-2 h-4 w-4" />
             {t("withdraw")}
           </Button>
         </div>
+      </div>
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="bg-white rounded-xl border p-5">
-            <div className="text-xs text-gray-500 uppercase">{t("earned")}</div>
-            <div className="text-2xl font-bold mt-1 text-green-700">
-              {formatDT(totalEarnedMillimes)}
+      {/* ── Stat cards ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="rounded-2xl border border-green-100 bg-white p-5 hover:shadow-sm transition-shadow">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-green-50 text-green-600">
+              <TrendingUp className="h-4 w-4" />
             </div>
+            <span className="text-xs text-gray-500 uppercase font-semibold tracking-wide">
+              {t("earned")}
+            </span>
           </div>
-          <div className="bg-white rounded-xl border p-5">
-            <div className="text-xs text-gray-500 uppercase">{t("commission")}</div>
-            <div className="text-2xl font-bold mt-1 text-orange-600">
-              {formatDT(totalCommissionMillimes)}
+          <p className="text-2xl font-bold text-green-700">{formatDTShort(totalEarnedMillimes)}</p>
+          <p className="text-xs text-gray-400 mt-1">
+            Revenus téléconsultations + SOS
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-amber-100 bg-white p-5 hover:shadow-sm transition-shadow">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
+              <BadgePercent className="h-4 w-4" />
             </div>
+            <span className="text-xs text-gray-500 uppercase font-semibold tracking-wide">
+              {t("commission")}
+            </span>
           </div>
-          <div className="bg-white rounded-xl border p-5">
-            <div className="text-xs text-gray-500 uppercase">{t("withdrawn")}</div>
-            <div className="text-2xl font-bold mt-1 text-blue-600">
-              {formatDT(totalWithdrawnMillimes)}
+          <p className="text-2xl font-bold text-amber-600">{formatDTShort(totalCommissionMillimes)}</p>
+          <p className="text-xs text-gray-400 mt-1">
+            15% téléconsult · 10% SOS
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-blue-100 bg-white p-5 hover:shadow-sm transition-shadow">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+              <CreditCard className="h-4 w-4" />
             </div>
+            <span className="text-xs text-gray-500 uppercase font-semibold tracking-wide">
+              {t("withdrawn")}
+            </span>
+          </div>
+          <p className="text-2xl font-bold text-blue-600">{formatDTShort(totalWithdrawnMillimes)}</p>
+          <p className="text-xs text-gray-400 mt-1">
+            Total retiré vers votre compte
+          </p>
+        </div>
+      </div>
+
+      {/* ── How it works info ── */}
+      <div className="rounded-2xl border border-[#E6F4F1] bg-[#F0FDFA] p-5">
+        <div className="flex items-start gap-3">
+          <Info className="h-5 w-5 text-[#0891B2] shrink-0 mt-0.5" />
+          <div className="text-sm text-[#134E4A] space-y-1.5">
+            <p className="font-semibold">Comment fonctionne votre portefeuille ?</p>
+            <ul className="space-y-1 text-xs text-gray-600">
+              <li className="flex items-start gap-2">
+                <ArrowRight className="h-3 w-3 text-[#0891B2] shrink-0 mt-0.5" />
+                <span>Le patient paie la <strong>téléconsultation</strong> ou l&apos;intervention <strong>SOS</strong> via Flouci.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <ArrowRight className="h-3 w-3 text-[#0891B2] shrink-0 mt-0.5" />
+                <span>Doktori prélève une commission (<strong>15%</strong> téléconsult, <strong>10%</strong> SOS) et crédite le reste sur votre portefeuille.</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <ArrowRight className="h-3 w-3 text-[#0891B2] shrink-0 mt-0.5" />
+                <span>Vous pouvez demander un <strong>retrait à tout moment</strong>. Le virement est effectué sous 3-5 jours ouvrés.</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
 
-      {/* Transaction history */}
-      <div className="bg-white rounded-xl border overflow-hidden">
-        <div className="p-4 border-b">
-          <h2 className="font-semibold">{t("transactions")}</h2>
+      {/* ── Transaction history ── */}
+      <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden shadow-sm">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-5 border-b border-gray-100">
+          <h2 className="text-base font-bold text-[#134E4A]">{t("transactions")}</h2>
+          <div className="flex items-center gap-2 flex-wrap">
+            {/* Filter pills */}
+            {(["all", "credit", "commission", "withdrawal", "refund"] as const).map((type) => {
+              const labels: Record<string, string> = {
+                all: "Tout",
+                credit: "Crédits",
+                commission: "Commissions",
+                withdrawal: "Retraits",
+                refund: "Remboursements",
+              };
+              return (
+                <button
+                  key={type}
+                  onClick={() => setFilterType(type)}
+                  className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    filterType === type
+                      ? "bg-[#134E4A] text-white"
+                      : "bg-gray-100 text-gray-500 hover:bg-gray-200"
+                  }`}
+                >
+                  {labels[type]}
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        {transactions.length === 0 ? (
-          <p className="p-6 text-center text-gray-400 text-sm">{t("noTransactions")}</p>
+        {filteredTransactions.length === 0 ? (
+          <div className="p-10 text-center">
+            <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-gray-50">
+              <Wallet className="h-6 w-6 text-gray-300" />
+            </div>
+            <p className="text-sm text-gray-400">{t("noTransactions")}</p>
+          </div>
         ) : (
           <>
-            <div className="overflow-x-auto">
+            {/* Mobile: cards. Desktop: table */}
+            <div className="hidden sm:block overflow-x-auto">
               <table className="w-full text-sm">
-                <thead className="bg-gray-50 border-b">
+                <thead className="bg-gray-50/80">
                   <tr>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t("colDate")}</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t("colType")}</th>
-                    <th className="text-right px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t("colAmount")}</th>
-                    <th className="text-left px-4 py-3 text-xs font-medium text-gray-500 uppercase">{t("colDescription")}</th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      {t("colDate")}
+                    </th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      {t("colType")}
+                    </th>
+                    <th className="text-right px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      {t("colAmount")}
+                    </th>
+                    <th className="text-left px-5 py-3 text-xs font-semibold text-gray-400 uppercase tracking-wider">
+                      {t("colDescription")}
+                    </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y">
-                  {transactions.map((tx) => {
+                <tbody className="divide-y divide-gray-50">
+                  {filteredTransactions.map((tx) => {
+                    const config = TYPE_CONFIG[tx.type];
+                    const TypeIcon = config.icon;
                     const typeLabels: Record<Transaction["type"], string> = {
                       credit: t("typeCredit"),
                       commission: t("typeCommission"),
                       withdrawal: t("typeWithdrawal"),
                       refund: t("typeRefund"),
                     };
-                    const badgeClass = TYPE_BADGE_CLASS[tx.type] ?? "bg-gray-100 text-gray-600";
-                    const badgeLabel = typeLabels[tx.type] ?? tx.type;
                     const isDebit = tx.type === "commission" || tx.type === "withdrawal";
                     return (
-                      <tr key={tx.id} className="hover:bg-gray-50 transition-colors">
-                        <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
-                          {format(new Date(tx.createdAt), "d MMM yyyy HH:mm", { locale: fr })}
+                      <tr key={tx.id} className="hover:bg-gray-50/50 transition-colors">
+                        <td className="px-5 py-4 text-gray-500 whitespace-nowrap text-xs">
+                          {format(new Date(tx.createdAt), "d MMM yyyy · HH:mm", { locale: fr })}
                         </td>
-                        <td className="px-4 py-3">
-                          <span className={`inline-flex text-xs px-2 py-0.5 rounded-full ${badgeClass}`}>
-                            {badgeLabel}
+                        <td className="px-5 py-4">
+                          <span
+                            className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-lg border font-semibold ${config.badge}`}
+                          >
+                            <TypeIcon className="h-3 w-3" />
+                            {typeLabels[tx.type]}
                           </span>
                         </td>
                         <td
-                          className={`px-4 py-3 text-right font-medium tabular-nums ${
-                            isDebit ? "text-red-600" : "text-green-700"
-                          }`}
+                          className={`px-5 py-4 text-right font-bold tabular-nums ${config.color}`}
                         >
-                          {isDebit ? "-" : "+"}{formatDT(tx.amountMillimes)}
+                          {config.sign}
+                          {formatDT(tx.amountMillimes)}
                         </td>
-                        <td className="px-4 py-3 text-gray-600 max-w-xs truncate">
+                        <td className="px-5 py-4 text-gray-500 max-w-xs truncate text-xs">
                           {tx.description}
                         </td>
                       </tr>
@@ -211,14 +371,59 @@ export function WalletClient({
               </table>
             </div>
 
+            {/* Mobile cards */}
+            <div className="sm:hidden divide-y divide-gray-50">
+              {filteredTransactions.map((tx) => {
+                const config = TYPE_CONFIG[tx.type];
+                const TypeIcon = config.icon;
+                const typeLabels: Record<Transaction["type"], string> = {
+                  credit: t("typeCredit"),
+                  commission: t("typeCommission"),
+                  withdrawal: t("typeWithdrawal"),
+                  refund: t("typeRefund"),
+                };
+                return (
+                  <div key={tx.id} className="flex items-center gap-3 px-5 py-4">
+                    <div className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${config.badge}`}>
+                      <TypeIcon className="h-4 w-4" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-[#134E4A] truncate">
+                        {typeLabels[tx.type]}
+                      </p>
+                      <p className="text-xs text-gray-400 truncate">
+                        {tx.description}
+                      </p>
+                    </div>
+                    <div className="text-right shrink-0">
+                      <p className={`text-sm font-bold ${config.color}`}>
+                        {config.sign}{formatDT(tx.amountMillimes)}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        {format(new Date(tx.createdAt), "d MMM", { locale: fr })}
+                      </p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
             {hasMore && (
-              <div className="p-4 border-t text-center">
+              <div className="p-4 border-t border-gray-50 text-center">
                 <Button
                   variant="outline"
                   onClick={loadMore}
                   disabled={loadingMore}
+                  className="rounded-xl"
                 >
-                  {loadingMore ? t("loading") : t("loadMore")}
+                  {loadingMore ? (
+                    <>
+                      <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                      {t("loading")}
+                    </>
+                  ) : (
+                    t("loadMore")
+                  )}
                 </Button>
               </div>
             )}
@@ -226,60 +431,103 @@ export function WalletClient({
         )}
       </div>
 
-      {/* Withdrawal modal */}
+      {/* ── Withdrawal modal ── */}
       {modalOpen && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 space-y-4">
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold">{t("withdrawTitle")}</h3>
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F0FDFA] text-[#0891B2]">
+                  <Banknote className="h-5 w-5" />
+                </div>
+                <h3 className="text-lg font-bold text-[#134E4A]">{t("withdrawTitle")}</h3>
+              </div>
               <button
                 onClick={() => setModalOpen(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors text-xl leading-none"
-                aria-label={t("withdrawConfirm")}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
+                aria-label="Fermer"
               >
-                ×
+                <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div>
-              <p className="text-sm text-gray-600 mb-1">
-                {t("balance")} : <span className="font-semibold">{formatDT(balanceMillimes)}</span>
-              </p>
-              <label className="block text-sm font-medium text-gray-700 mb-1" htmlFor="withdraw-amount">
-                {t("withdrawAmount")}
-              </label>
-              <Input
-                id="withdraw-amount"
-                type="number"
-                min="0.001"
-                step="0.001"
-                max={(balanceMillimes / 1000).toString()}
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder={`Max: ${(balanceMillimes / 1000).toFixed(3)}`}
-              />
+            {/* Balance reminder */}
+            <div className="rounded-xl bg-[#F0FDFA] border border-[#E6F4F1] p-4">
+              <p className="text-xs text-gray-500 mb-0.5">Solde disponible</p>
+              <p className="text-2xl font-bold text-[#134E4A]">{formatDT(balanceMillimes)}</p>
             </div>
 
-            <div className="rounded-lg bg-blue-50 border border-blue-100 px-4 py-3 text-sm text-blue-700">
-              {t("withdrawNote")}
+            <div>
+              <label className="block text-sm font-semibold text-[#134E4A] mb-2" htmlFor="withdraw-amount">
+                {t("withdrawAmount")}
+              </label>
+              <div className="relative">
+                <Input
+                  id="withdraw-amount"
+                  type="number"
+                  min="0.001"
+                  step="0.001"
+                  max={(balanceMillimes / 1000).toString()}
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder={`Max: ${(balanceMillimes / 1000).toFixed(3)} DT`}
+                  className="rounded-xl pr-12"
+                />
+                <span className="absolute right-4 top-1/2 -translate-y-1/2 text-sm text-gray-400 font-medium">
+                  DT
+                </span>
+              </div>
+              {/* Quick amount buttons */}
+              <div className="flex gap-2 mt-2">
+                {[25, 50, 100].map((pct) => {
+                  const val = ((balanceMillimes / 1000) * pct) / 100;
+                  if (val <= 0) return null;
+                  return (
+                    <button
+                      key={pct}
+                      type="button"
+                      onClick={() => setAmount(val.toFixed(3))}
+                      className="rounded-lg bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-600 hover:bg-gray-200 transition-colors"
+                    >
+                      {pct}%
+                    </button>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setAmount((balanceMillimes / 1000).toFixed(3))}
+                  className="rounded-lg bg-[#0891B2]/10 px-3 py-1.5 text-xs font-semibold text-[#0891B2] hover:bg-[#0891B2]/20 transition-colors"
+                >
+                  Tout
+                </button>
+              </div>
+            </div>
+
+            <div className="rounded-xl bg-blue-50 border border-blue-100 px-4 py-3 text-xs text-blue-700 flex items-start gap-2">
+              <Info className="h-4 w-4 shrink-0 mt-0.5 text-blue-500" />
+              <span>{t("withdrawNote")}</span>
             </div>
 
             {withdrawError && (
-              <p className="text-sm text-red-600">{withdrawError}</p>
+              <div className="flex items-center gap-2 text-sm text-red-600">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                {withdrawError}
+              </div>
             )}
 
-            <div className="flex gap-3 justify-end pt-2">
+            <div className="flex gap-3 justify-end pt-1">
               <Button
                 variant="outline"
                 onClick={() => setModalOpen(false)}
                 disabled={withdrawing}
+                className="rounded-xl"
               >
                 {tCommon("cancel")}
               </Button>
               <Button
                 onClick={handleWithdraw}
                 disabled={withdrawing || !amount}
-                className="bg-purple-600 hover:bg-purple-700 text-white"
+                className="rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold shadow-sm"
               >
                 {withdrawing ? t("withdrawProcessing") : t("withdrawConfirm")}
               </Button>
