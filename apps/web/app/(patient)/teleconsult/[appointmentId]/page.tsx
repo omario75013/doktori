@@ -3,6 +3,8 @@
 import { use, useEffect, useState, useRef } from "react";
 import { Video, PhoneOff, Clock } from "lucide-react";
 
+type WaitingStatus = "waiting" | "ready" | "joined";
+
 export default function TeleconsultPage({
   params,
 }: {
@@ -10,17 +12,55 @@ export default function TeleconsultPage({
 }) {
   const { appointmentId } = use(params);
   const [roomUrl, setRoomUrl] = useState<string | null>(null);
+  const [doctorName, setDoctorName] = useState<string>("");
   const [error, setError] = useState("");
   const [elapsed, setElapsed] = useState(0);
   const [ended, setEnded] = useState(false);
+  const [waitingStatus, setWaitingStatus] = useState<WaitingStatus>("waiting");
+  const [waitMinutes, setWaitMinutes] = useState(0);
   const startRef = useRef(Date.now());
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  // Fetch room URL
+  // Fetch room data and start waiting room poll
   useEffect(() => {
-    fetch(`/api/teleconsult/${appointmentId}`)
-      .then((r) => (r.ok ? r.json() : Promise.reject()))
-      .then((data) => setRoomUrl(data.roomUrl))
-      .catch(() => setError("Téléconsultation introuvable ou non activée."));
+    async function checkRoom() {
+      const res = await fetch(`/api/teleconsult/${appointmentId}`);
+      if (!res.ok) {
+        setError("Téléconsultation introuvable ou non activée.");
+        return;
+      }
+      const data = await res.json();
+      setRoomUrl(data.roomUrl);
+      if (data.doctorName) setDoctorName(data.doctorName);
+      if (data.startedAt) {
+        setWaitingStatus("ready");
+      }
+    }
+
+    checkRoom();
+
+    // Poll every 10 seconds to detect when doctor joins
+    pollRef.current = setInterval(async () => {
+      const elapsed = Math.floor((Date.now() - startRef.current) / 1000);
+      setWaitMinutes(Math.floor(elapsed / 60));
+
+      try {
+        const res = await fetch(`/api/teleconsult/${appointmentId}`);
+        if (res.ok) {
+          const data = await res.json();
+          if (data.startedAt) {
+            setWaitingStatus("ready");
+            if (pollRef.current) clearInterval(pollRef.current);
+          }
+        }
+      } catch {
+        // Ignore poll errors
+      }
+    }, 10_000);
+
+    return () => {
+      if (pollRef.current) clearInterval(pollRef.current);
+    };
   }, [appointmentId]);
 
   // Running timer
@@ -71,6 +111,64 @@ export default function TeleconsultPage({
     );
   }
 
+  // Waiting room: room data loaded but doctor hasn't started yet
+  if (roomUrl && waitingStatus === "waiting") {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+        <div className="text-center text-white max-w-sm">
+          {/* Pulsing ring animation */}
+          <div className="relative w-24 h-24 mx-auto mb-6">
+            <div className="absolute inset-0 rounded-full bg-[#0891B2]/20 animate-ping" />
+            <div className="absolute inset-2 rounded-full bg-[#0891B2]/30 animate-ping [animation-delay:150ms]" />
+            <div className="relative w-24 h-24 bg-[#0891B2]/20 rounded-full flex items-center justify-center">
+              <Video className="w-10 h-10 text-[#0891B2]" />
+            </div>
+          </div>
+
+          <h2 className="text-xl font-bold mb-2">Salle d&apos;attente</h2>
+          <p className="text-gray-300 mb-1">Votre médecin va vous recevoir...</p>
+          {doctorName && (
+            <p className="text-[#0891B2] font-medium mb-4">Dr. {doctorName}</p>
+          )}
+
+          {waitMinutes >= 5 && (
+            <div className="mt-4 bg-amber-900/40 border border-amber-600/30 rounded-xl px-4 py-3 text-sm text-amber-300">
+              Le médecin tarde à rejoindre. Veuillez patienter encore quelques instants ou le contacter directement.
+            </div>
+          )}
+
+          <p className="text-gray-500 text-xs mt-6">
+            Cette page se met à jour automatiquement
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Doctor is ready — invite patient to join
+  if (roomUrl && waitingStatus === "ready") {
+    return (
+      <div className="min-h-screen bg-gray-900 flex items-center justify-center px-4">
+        <div className="text-center text-white max-w-sm">
+          <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Video className="w-10 h-10 text-green-400" />
+          </div>
+          <h2 className="text-xl font-bold mb-1">
+            {doctorName ? `Dr. ${doctorName} est prêt` : "Le médecin est prêt"}
+          </h2>
+          <p className="text-gray-400 mb-6 text-sm">Vous pouvez rejoindre la consultation</p>
+          <button
+            onClick={() => setWaitingStatus("joined")}
+            className="w-full bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold px-8 py-3 rounded-xl transition-colors text-lg"
+          >
+            Rejoindre la consultation
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // Initial loading (no room URL yet)
   if (!roomUrl) {
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">

@@ -32,61 +32,88 @@ export default async function PrescriptionPage({ params }: { params: Promise<{ i
   const specialty = SPECIALTIES.find((s) => s.id === result.doctorSpecialty);
 
   return (
-    <div className="max-w-2xl mx-auto p-8 print:p-4 bg-white min-h-screen">
+    <>
       <style>{`
         @media print {
-          .no-print { display: none; }
+          /* Hide everything outside the prescription */
+          body > *:not(#prescription-root) { display: none !important; }
+          nav, header, footer, aside, .no-print { display: none !important; }
+          #prescription-root { display: block !important; }
+          @page {
+            margin: 20mm;
+            size: A4;
+          }
+          body { background: white !important; }
         }
       `}</style>
 
-      {/* Letterhead */}
-      <div className="border-b-2 border-blue-600 pb-4 mb-6">
-        <h1 className="text-2xl font-bold text-blue-600">{result.doctorName}</h1>
-        <p className="text-sm text-gray-700">{specialty?.label}</p>
-        <p className="text-sm text-gray-500 mt-1">{result.doctorAddress}</p>
-        <p className="text-sm text-gray-500">Tél: {result.doctorPhone}</p>
-      </div>
+      <div id="prescription-root" className="max-w-2xl mx-auto p-8 print:p-0 bg-white min-h-screen">
 
-      {/* Patient info */}
-      <div className="mb-6 text-sm">
-        <div className="flex justify-between">
+        {/* Print action bar — hidden on print */}
+        <div className="no-print mb-6 flex items-center justify-between bg-[#F0FDFA] border border-[#E6F4F1] rounded-xl px-5 py-3">
+          <p className="text-sm text-[#134E4A] font-medium">
+            Ordonnance — {result.patientName}
+          </p>
+          <PrintButton />
+        </div>
+
+        {/* Letterhead */}
+        <div className="border-b-2 border-[#0891B2] pb-5 mb-6">
+          <h1 className="text-2xl font-bold text-[#134E4A]">{result.doctorName}</h1>
+          {specialty && (
+            <p className="text-sm font-semibold text-[#0891B2] mt-0.5">{specialty.label}</p>
+          )}
+          {result.doctorAddress && (
+            <p className="text-sm text-gray-500 mt-2">{result.doctorAddress}</p>
+          )}
+          {result.doctorPhone && (
+            <p className="text-sm text-gray-500">Tél : {result.doctorPhone}</p>
+          )}
+        </div>
+
+        {/* Patient info + date row */}
+        <div className="mb-8 flex justify-between items-start text-sm">
           <div>
-            <span className="text-gray-500">Patient: </span>
-            <span className="font-medium">{result.patientName || "—"}</span>
+            <p className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">Patient</p>
+            <p className="font-semibold text-gray-800">{result.patientName || "—"}</p>
           </div>
-          <div>
-            <span className="text-gray-500">Date: </span>
-            <span className="font-medium">
+          <div className="text-right">
+            <p className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">Date</p>
+            <p className="font-semibold text-gray-800">
               {format(new Date(result.createdAt), "d MMMM yyyy", { locale: fr })}
-            </span>
+            </p>
           </div>
         </div>
-      </div>
 
-      {/* Prescription content */}
-      <div className="mb-12">
-        <h2 className="text-lg font-bold mb-4 text-gray-800">Ordonnance</h2>
-        <div className="whitespace-pre-wrap text-sm leading-relaxed bg-gray-50 p-6 rounded-lg border">
-          {result.content}
+        {/* Section title */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-px flex-1 bg-gray-200" />
+          <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Ordonnance médicale</span>
+          <div className="h-px flex-1 bg-gray-200" />
+        </div>
+
+        {/* Prescription content */}
+        <div className="mb-16 min-h-[200px]">
+          <div className="whitespace-pre-wrap text-sm leading-loose text-gray-800 print:text-base">
+            {result.content}
+          </div>
+        </div>
+
+        {/* Signature block */}
+        <div className="mt-12 flex justify-end">
+          <div className="text-center min-w-[200px]">
+            <div className="h-16 border-b border-gray-300 mb-2" />
+            <p className="text-xs text-gray-500">Signature et cachet du médecin</p>
+            <p className="text-sm font-medium text-gray-700 mt-1">{result.doctorName}</p>
+          </div>
+        </div>
+
+        {/* Footer branding — visible on screen and print */}
+        <div className="mt-12 pt-4 border-t border-gray-200 text-xs text-center text-gray-400">
+          Document généré via{" "}
+          <span className="font-semibold text-[#0891B2]">Doktori.tn</span>
         </div>
       </div>
-
-      {/* Signature */}
-      <div className="mt-24 text-right">
-        <p className="text-sm text-gray-500 border-t border-gray-300 pt-2 inline-block">
-          Signature et cachet
-        </p>
-      </div>
-
-      {/* Print button (hidden on print) */}
-      <div className="no-print mt-8 text-center">
-        <PrintButton />
-      </div>
-
-      {/* Footer branding */}
-      <div className="mt-8 pt-4 border-t border-gray-200 text-xs text-center text-gray-400">
-        Généré via Doktori.tn
-      </div>
-    </div>
+    </>
   );
 }

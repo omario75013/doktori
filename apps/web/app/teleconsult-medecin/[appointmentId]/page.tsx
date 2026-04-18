@@ -23,11 +23,21 @@ export default function MedecinTeleconsultPage({
   const [completing, setCompleting] = useState(false);
   const startRef = useRef(Date.now());
 
-  // Fetch room data
+  // Fetch room data and mark room as started
   useEffect(() => {
     fetch(`/api/teleconsult/${appointmentId}`)
       .then((r) => (r.ok ? r.json() : Promise.reject(r)))
-      .then((d) => setData(d))
+      .then((d) => {
+        setData(d);
+        // Mark room as started so patient waiting room detects doctor presence
+        fetch("/api/teleconsult/start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ appointmentId }),
+        }).catch(() => {
+          // Non-blocking — ignore errors
+        });
+      })
       .catch(() =>
         setError(
           "Téléconsultation introuvable. Vérifiez que la salle a bien été créée."
