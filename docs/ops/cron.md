@@ -39,6 +39,9 @@ Host crontab on `157.90.152.204` (user `root`). Adjust `CRON_SECRET` via 1Passwo
 
 # Waitlist auto-notify (every 10 min) — SMS patients when a slot frees up
 */10 * * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/waitlist-notify
+
+# Trial expiry warnings (daily 8am) — warn at 7d, 1d, expire same-day
+0 8 * * * curl -fsS -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/cron/trial-expiry
 ```
 
 Load `CRON_SECRET` into the shell environment via:
