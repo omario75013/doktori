@@ -64,6 +64,22 @@ const CATEGORY_EMOJIS: Record<string, string> = {
   specialite: "🩺",
 };
 
+const CATEGORY_GRADIENTS: Record<string, string> = {
+  guide: "from-blue-500 via-blue-600 to-indigo-700",
+  sante: "from-emerald-500 via-teal-600 to-cyan-700",
+  actualite: "from-violet-500 via-purple-600 to-indigo-700",
+  conseil: "from-amber-500 via-orange-500 to-red-500",
+  specialite: "from-rose-500 via-pink-600 to-fuchsia-700",
+};
+
+const CATEGORY_ICONS_SVG: Record<string, string> = {
+  guide: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-16 w-16"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/></svg>`,
+  sante: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-16 w-16"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z"/></svg>`,
+  actualite: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-16 w-16"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path d="M18 14h-8"/><path d="M15 18h-5"/><path d="M10 6h8v4h-8V6Z"/></svg>`,
+  conseil: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-16 w-16"><path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5"/><path d="M9 18h6"/><path d="M10 22h4"/></svg>`,
+  specialite: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="h-16 w-16"><path d="m18 2 4 4"/><path d="m17 7 3-3"/><path d="M19 9 8.7 19.3c-1 1-2.5 1-3.4 0l-.6-.6c-1-1-1-2.5 0-3.4L15 5"/><path d="m9 11 4 4"/><path d="m5 19-3 3"/><path d="m14 4 6 6"/></svg>`,
+};
+
 function formatDate(date: Date | null): string {
   if (!date) return "";
   return date.toLocaleDateString("fr-FR", {
@@ -236,12 +252,17 @@ export default async function BlogPage({
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="flex h-full min-h-[240px] items-center justify-center">
-                    <div className="text-center">
-                      <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl bg-white/80 shadow-sm">
-                        <BookOpen className="h-8 w-8 text-[#0891B2]" />
+                  <div className={`flex h-full min-h-[240px] items-center justify-center bg-gradient-to-br ${CATEGORY_GRADIENTS[featuredPost.category ?? "guide"] ?? CATEGORY_GRADIENTS.guide} relative overflow-hidden`}>
+                    {/* Decorative circles */}
+                    <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/10" />
+                    <div className="absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/5" />
+                    <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-10" style={{ width: 200, height: 200 }}>
+                      <div className="h-full w-full rounded-full border-[3px] border-white" />
+                    </div>
+                    <div className="relative text-white/30">
+                      <div className="flex h-20 w-20 items-center justify-center rounded-2xl bg-white/10 backdrop-blur-sm">
+                        <BookOpen className="h-10 w-10 text-white/60" />
                       </div>
-                      <p className="text-sm font-medium text-[#0891B2]/60">Article vedette</p>
                     </div>
                   </div>
                 )}
@@ -313,10 +334,14 @@ export default async function BlogPage({
                       className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
-                    <div className="flex h-full items-center justify-center bg-gradient-to-br from-[#0891B2]/5 via-[#134E4A]/5 to-[#0891B2]/10">
-                      <span className="text-5xl opacity-40">
-                        {CATEGORY_EMOJIS[post.category ?? "guide"] ?? "📄"}
-                      </span>
+                    <div className={`flex h-full items-center justify-center bg-gradient-to-br ${CATEGORY_GRADIENTS[post.category ?? "guide"] ?? CATEGORY_GRADIENTS.guide} relative overflow-hidden`}>
+                      <div className="absolute -top-8 -right-8 h-28 w-28 rounded-full bg-white/10" />
+                      <div className="absolute -bottom-6 -left-6 h-20 w-20 rounded-full bg-white/5" />
+                      <div className="relative flex h-14 w-14 items-center justify-center rounded-xl bg-white/15 backdrop-blur-sm text-white/70">
+                        <span className="text-3xl">
+                          {CATEGORY_EMOJIS[post.category ?? "guide"] ?? "📄"}
+                        </span>
+                      </div>
                     </div>
                   )}
 
