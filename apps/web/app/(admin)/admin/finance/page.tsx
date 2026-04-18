@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { TrendingUp, Users, UserPlus, UserMinus, CreditCard, ListOrdered } from "lucide-react";
+import { TrendingUp, Users, UserPlus, UserMinus, CreditCard, ListOrdered, BarChart3, Receipt } from "lucide-react";
 
 interface OverviewStats {
   active_subscriptions: number;
@@ -118,7 +118,7 @@ export default function AdminFinancePage() {
       )}
 
       {/* Quick links */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-4">
         <Link
           href="/admin/finance/subscriptions"
           className="bg-white rounded-xl border border-slate-200 p-6 hover:border-teal-300 hover:shadow-sm transition-all group"
@@ -150,6 +150,40 @@ export default function AdminFinancePage() {
           </div>
           <p className="text-sm text-slate-500">
             Gérer les plans tarifaires : libellés, prix, fonctionnalités et ordre d'affichage.
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/finance/revenue"
+          className="bg-white rounded-xl border border-slate-200 p-6 hover:border-teal-300 hover:shadow-sm transition-all group"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <BarChart3 className="w-5 h-5" />
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors">
+              Revenus
+            </h2>
+          </div>
+          <p className="text-sm text-slate-500">
+            Commissions SOS et téléconsultation, tendances mensuelles et top médecins.
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/finance/doctors"
+          className="bg-white rounded-xl border border-slate-200 p-6 hover:border-teal-300 hover:shadow-sm transition-all group"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
+              <Receipt className="w-5 h-5" />
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900 group-hover:text-orange-700 transition-colors">
+              Facturation médecins
+            </h2>
+          </div>
+          <p className="text-sm text-slate-500">
+            Gérer les abonnements médecins : prolonger, activer, suspendre ou réactiver.
           </p>
         </Link>
       </div>

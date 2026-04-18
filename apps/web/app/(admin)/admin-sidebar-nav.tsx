@@ -25,6 +25,8 @@ import {
   Star,
   Phone,
   FileText,
+  TrendingUp,
+  Receipt,
 } from "lucide-react";
 
 const ROLE_LABELS: Record<string, string> = {
@@ -45,7 +47,9 @@ const links = [
 ];
 
 const orgLinks = [
-  { href: "/admin/finance", label: "Finance", icon: CreditCard },
+  { href: "/admin/finance", label: "Finance", icon: CreditCard, exact: true },
+  { href: "/admin/finance/revenue", label: "Revenus", icon: TrendingUp },
+  { href: "/admin/finance/doctors", label: "Facturation médecins", icon: Receipt },
   { href: "/admin/communications", label: "Communications", icon: Phone },
   { href: "/admin/cliniques", label: "Cliniques", icon: Building2 },
   { href: "/admin/secretaires", label: "Secrétaires", icon: UserCog },
@@ -158,7 +162,7 @@ export function AdminSidebarNav({ adminName, adminEmail, adminRole }: AdminSideb
                 key={l.href}
                 href={l.href}
                 onClick={() => setOpen(false)}
-                className={linkClass(l.href)}
+                className={linkClass(l.href, l.exact)}
               >
                 <Icon className="w-4 h-4 shrink-0" />
                 {l.label}
