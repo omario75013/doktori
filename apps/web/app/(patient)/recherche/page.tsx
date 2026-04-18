@@ -120,6 +120,49 @@ function RechercheInner() {
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
 
+  // Recent searches
+  const [recentSearches, setRecentSearches] = useState<
+    Array<{ query: string; specialty: string; city: string; timestamp: number }>
+  >([]);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("doktori_recent_searches");
+      if (stored) {
+        setRecentSearches(JSON.parse(stored));
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }, []);
+
+  function saveRecentSearch(q: string, spec: string, ct: string) {
+    if (!q && !spec && !ct) return;
+    try {
+      const stored = localStorage.getItem("doktori_recent_searches");
+      const recent: Array<{ query: string; specialty: string; city: string; timestamp: number }> =
+        stored ? JSON.parse(stored) : [];
+      recent.unshift({ query: q, specialty: spec, city: ct, timestamp: Date.now() });
+      const deduped = recent.filter(
+        (item, idx, arr) =>
+          arr.findIndex(
+            (x) => x.query === item.query && x.specialty === item.specialty && x.city === item.city
+          ) === idx
+      );
+      const trimmed = deduped.slice(0, 5);
+      localStorage.setItem("doktori_recent_searches", JSON.stringify(trimmed));
+      setRecentSearches(trimmed);
+    } catch {
+      // ignore storage errors
+    }
+  }
+
+  function applyRecentSearch(item: { query: string; specialty: string; city: string }) {
+    setQuery(item.query);
+    setSpecialty(item.specialty);
+    setCity(item.city);
+  }
+
   // Results
   const [results, setResults] = useState<Doctor[]>([]);
   const [clinicResults, setClinicResults] = useState<ClinicResult[]>([]);
@@ -178,6 +221,10 @@ function RechercheInner() {
         setParsed(data.parsed);
         setExpanded(data.expanded || false);
         setFacets(data.facets || { specialty: {}, city: {} });
+        // Persist to recent searches
+        if (q || spec || ct) {
+          saveRecentSearch(q, spec, ct);
+        }
       } catch {
         setResults([]);
         setTotalCount(0);
@@ -604,6 +651,44 @@ function RechercheInner() {
                 </div>
               </div>
             </div>
+
+            {/* Recent searches — shown when search is empty and no results yet */}
+            {!searched && !loading && recentSearches.length > 0 && (
+              <div className="mb-4">
+                <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#5E7574]">
+                  <Clock className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  Recherches récentes
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {recentSearches.map((item, idx) => {
+                    const specLabel = SPECIALTIES.find((s) => s.id === item.specialty)?.label;
+                    const cityLabel = CITIES.find((c) => c.id === item.city)?.label;
+                    const parts = [item.query, specLabel, cityLabel].filter(Boolean);
+                    const label = parts.join(" · ") || "Recherche";
+                    return (
+                      <button
+                        key={idx}
+                        onClick={() => applyRecentSearch(item)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[#E6F4F1] bg-white px-3 py-1.5 text-xs font-medium text-[#134E4A] hover:border-[#0891B2] hover:bg-[#F0FDFA] transition-all"
+                      >
+                        <Search className="h-3 w-3 text-[#5E7574]" strokeWidth={2.5} />
+                        {label}
+                      </button>
+                    );
+                  })}
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("doktori_recent_searches");
+                      setRecentSearches([]);
+                    }}
+                    className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium text-[#5E7574] hover:text-red-500 transition-colors"
+                  >
+                    <X className="h-3 w-3" strokeWidth={3} />
+                    Effacer
+                  </button>
+                </div>
+              </div>
+            )}
 
             {/* Expanded banner */}
             {expanded && (
