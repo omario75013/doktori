@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Calendar } from "lucide-react";
+import { Calendar, CalendarPlus } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -348,6 +348,14 @@ export default function RendezVousPage() {
                             >
                               {t("cnamBordereau")}
                             </button>
+                            <a
+                              href={`/api/appointments/${appt.id}/calendar`}
+                              title="Ajouter au calendrier"
+                              className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl border border-[#E6F4F1] bg-[#F0FDFA] text-[#0891B2] hover:bg-[#E6F4F1] transition-colors"
+                            >
+                              <CalendarPlus className="h-3.5 w-3.5" />
+                              .ics
+                            </a>
                           </div>
                         ) : (
                           <span className="text-xs text-gray-300">—</span>
@@ -364,6 +372,14 @@ export default function RendezVousPage() {
                               {isUpdating ? "..." : action.label}
                             </button>
                           ))}
+                          <a
+                            href={`/api/appointments/${appt.id}/calendar`}
+                            title="Ajouter au calendrier"
+                            className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl border border-[#E6F4F1] bg-[#F0FDFA] text-[#0891B2] hover:bg-[#E6F4F1] transition-colors"
+                          >
+                            <CalendarPlus className="h-3.5 w-3.5" />
+                            .ics
+                          </a>
                           {["pending", "confirmed"].includes(appt.status) && (
                             <button
                               disabled={isUpdating}
