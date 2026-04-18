@@ -10,6 +10,7 @@ import { bookingConfirmation, welcomePatient, newBookingDoctor } from "@/emails/
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { createFlouciPayment } from "@/lib/flouci";
+import { dispatchWebhook } from "@/lib/webhooks";
 
 export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
@@ -313,6 +314,13 @@ export async function POST(req: Request) {
       }
       // fee is 0 or null — free teleconsult, proceed without payment
     }
+
+    // Dispatch webhook (fire-and-forget)
+    dispatchWebhook("booking.created", {
+      appointmentId: appointment.id,
+      doctorId: appointment.doctorId,
+      patientId: appointment.patientId,
+    }).catch(console.error);
 
     return NextResponse.json(appointment, { status: 201 });
   } catch (e: unknown) {
