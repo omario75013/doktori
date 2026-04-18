@@ -51,13 +51,11 @@ export async function POST(req: Request) {
       .limit(1);
 
     if (doctor) {
+      const expEmail = buildSubscriptionExpiredEmail({ doctorName: doctor.name });
       sendEmail({
         to: doctor.email,
-        subject: "Votre abonnement Doktori a expiré",
-        html: buildSubscriptionExpiredEmail({
-          doctorName: doctor.name,
-          planName: sub.plan,
-        }),
+        subject: expEmail.subject,
+        html: expEmail.html,
       }).catch(console.error);
     }
   }
