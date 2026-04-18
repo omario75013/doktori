@@ -59,7 +59,7 @@ export async function Navbar() {
           </Link>
           <Link
             href="/connexion"
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border-2 border-[#0891B2] bg-white px-4 text-sm font-bold text-[#0891B2] transition-all hover:bg-[#0891B2] hover:text-white"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border-2 border-[#0891B2] bg-white px-2 sm:px-4 text-sm font-bold text-[#0891B2] transition-all hover:bg-[#0891B2] hover:text-white"
           >
             <UserRound className="h-4 w-4" strokeWidth={2.5} />
             <span className="hidden sm:inline">{t("doctorArea")}</span>
