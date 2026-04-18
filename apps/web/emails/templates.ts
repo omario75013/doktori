@@ -624,3 +624,40 @@ export function welcomePatient(p: {
     `),
   };
 }
+
+// ── Doctor Welcome (sent after registration with trial) ─────────────────────
+export function buildDoctorWelcomeEmail(p: { doctorName: string; trialEndDate: string }): string {
+  return `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+    <div style="background:linear-gradient(135deg,#0891B2,#134E4A);padding:32px;text-align:center;border-radius:16px 16px 0 0">
+      <h1 style="color:white;margin:0;font-size:28px">Bienvenue sur Doktori !</h1>
+    </div>
+    <div style="padding:32px;background:white;border:1px solid #E6F4F1;border-radius:0 0 16px 16px">
+      <p style="font-size:16px;color:#134E4A">Bonjour Dr. ${p.doctorName},</p>
+      <p style="color:#5E7574">Votre espace médecin est prêt ! Vous bénéficiez de <strong>2 mois d'essai gratuit</strong> jusqu'au ${p.trialEndDate}.</p>
+      <h3 style="color:#134E4A">Pour bien démarrer :</h3>
+      <ol style="color:#5E7574;line-height:2">
+        <li>Complétez votre profil et ajoutez une photo</li>
+        <li>Configurez vos horaires dans l'Agenda</li>
+        <li>Ajoutez vos motifs de consultation</li>
+        <li>Activez la téléconsultation si vous le souhaitez</li>
+      </ol>
+      <a href="https://doktori.tn/dashboard" style="display:inline-block;background:#0891B2;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:bold;margin-top:16px">Accéder à mon espace</a>
+      <p style="color:#94A3B8;font-size:13px;margin-top:24px">Votre essai gratuit expire le ${p.trialEndDate}. Après cette date, choisissez un abonnement pour rester visible.</p>
+    </div>
+  </div>`;
+}
+
+// ── Trial expired today ─────────────────────────────────────────────────────
+export function buildTrialExpiredTodayEmail(p: { doctorName: string }): string {
+  return `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+    <div style="background:#DC2626;padding:24px;text-align:center;border-radius:16px 16px 0 0">
+      <h1 style="color:white;margin:0;font-size:24px">Votre essai a expiré</h1>
+    </div>
+    <div style="padding:32px;background:white;border:1px solid #E6F4F1;border-radius:0 0 16px 16px">
+      <p style="color:#134E4A">Dr. ${p.doctorName},</p>
+      <p style="color:#5E7574">Votre période d'essai gratuit est terminée. Vos patients ne peuvent plus vous trouver sur Doktori.</p>
+      <p style="color:#5E7574">Pour rester visible et continuer à recevoir des rendez-vous :</p>
+      <a href="https://doktori.tn/abonnement" style="display:inline-block;background:#0891B2;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:bold;margin-top:12px">Choisir mon abonnement</a>
+    </div>
+  </div>`;
+}
