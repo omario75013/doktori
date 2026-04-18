@@ -12,6 +12,7 @@ import {
   CheckCircle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { DoctorOnboarding } from "@/components/doctor-onboarding";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -233,6 +234,9 @@ export function DashboardClient({
 
   return (
     <div className="space-y-8">
+      {/* First-login onboarding wizard */}
+      <DoctorOnboarding />
+
       {/* Greeting */}
       <div
         className="animate-fade-in"

@@ -6,10 +6,41 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, ArrowLeft, MapPin, Video, Building } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, MapPin, Video, Building, CheckCircle2, Download, ArrowRight, Home } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { toast } from "sonner";
+import { motion } from "framer-motion";
+
+function generateICS(doctorName: string, date: Date, duration: number): string {
+  const end = new Date(date.getTime() + duration * 60000);
+  const fmt = (d: Date) =>
+    d.toISOString().replace(/[-:]/g, "").replace(".000", "");
+  return [
+    "BEGIN:VCALENDAR",
+    "VERSION:2.0",
+    "PRODID:-//Doktori//RDV//FR",
+    "BEGIN:VEVENT",
+    `DTSTART:${fmt(date)}`,
+    `DTEND:${fmt(end)}`,
+    `SUMMARY:RDV Dr. ${doctorName}`,
+    "DESCRIPTION:Rendez-vous médical via Doktori",
+    "END:VEVENT",
+    "END:VCALENDAR",
+  ].join("\r\n");
+}
+
+function downloadICS(doctorName: string, date: Date, duration: number) {
+  const ics = generateICS(doctorName, date, duration);
+  const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `rdv-doktori-${doctorName.replace(/\s+/g, "-").toLowerCase()}.ics`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
 
 interface Doctor {
   id: string;
@@ -249,12 +280,9 @@ export default function RdvPage({
         return;
       }
 
-      toast.success("Rendez-vous confirmé !");
       setStep("payment");
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erreur inattendue";
-      setFormError(msg);
-      toast.error(msg);
+      setFormError(err instanceof Error ? err.message : "Erreur inattendue");
     } finally {
       setSubmitting(false);
     }
@@ -949,54 +977,150 @@ export default function RdvPage({
         )}
 
         {/* Step: success confirmation */}
-        {step === "success" && (
-          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-8 text-center space-y-4">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
-              <svg
-                className="w-8 h-8 text-green-600"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={2}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M5 13l4 4L19 7"
-                />
-              </svg>
-            </div>
-            <div className="space-y-1">
-              <h2 className="text-lg font-heading font-black text-[#134E4A]">
-                Rendez-vous confirmé !
-              </h2>
-              <p className="text-sm text-[#134E4A]/60">
-                Votre rendez-vous avec {doctor.name} a été enregistré avec succès.
-              </p>
-              {booking && (
-                <p className="text-sm font-bold text-[#0891B2]">
-                  {format(parseISO(booking.date), "EEEE d MMMM", { locale: fr })} à{" "}
-                  {booking.startTime}
-                </p>
-              )}
-              {appointmentId && (
-                <p className="text-xs text-[#134E4A]/40 font-mono">
-                  Réf: {appointmentId}
-                </p>
-              )}
-              {selectedMode === "teleconsult" && (
-                <div className="flex items-start gap-2 rounded-xl bg-purple-50 px-4 py-3 text-sm text-purple-900 ring-1 ring-purple-200 text-left mt-2">
-                  <Video className="mt-0.5 h-4 w-4 shrink-0 text-purple-600" strokeWidth={2.5} />
-                  <p className="font-medium">Vous recevrez un lien vidéo avant votre rendez-vous.</p>
-                </div>
-              )}
-            </div>
-            <Button
-              variant="outline"
-              onClick={() => (window.location.href = "/")}
+        {step === "success" && booking && (
+          <div className="space-y-4">
+            {/* Animated checkmark */}
+            <motion.div
+              className="flex justify-center"
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 280, damping: 20, delay: 0.1 }}
             >
-              Retour à l&apos;accueil
-            </Button>
+              <div className="w-20 h-20 bg-white rounded-full shadow-lg flex items-center justify-center border border-green-100">
+                <CheckCircle2 className="w-11 h-11 text-green-500" strokeWidth={1.5} />
+              </div>
+            </motion.div>
+
+            {/* Main card */}
+            <motion.div
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.45, delay: 0.25 }}
+              className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm overflow-hidden"
+            >
+              {/* Header */}
+              <div className="bg-gradient-to-r from-green-50 to-[#F0FDFA] px-7 pt-7 pb-5 text-center border-b border-[#E6F4F1]">
+                <motion.h2
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.45 }}
+                  className="text-xl font-heading font-black text-[#134E4A]"
+                >
+                  Rendez-vous confirmé !
+                </motion.h2>
+                <motion.p
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.55 }}
+                  className="text-sm text-[#134E4A]/60 mt-1"
+                >
+                  Vous recevrez un SMS de rappel la veille.
+                </motion.p>
+              </div>
+
+              {/* Details */}
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, delay: 0.55 }}
+                className="px-7 py-5 space-y-4"
+              >
+                {/* Type badge */}
+                <div className="flex items-center justify-center gap-2 flex-wrap">
+                  <span className="inline-flex items-center gap-1.5 bg-[#F0FDFA] text-[#0E7490] text-xs font-bold px-3 py-1.5 rounded-full border border-[#E6F4F1]">
+                    <Calendar className="w-3.5 h-3.5" />
+                    {selectedType ? selectedType.name : "Consultation médicale"}
+                  </span>
+                  {selectedMode === "teleconsult" && (
+                    <span className="inline-flex items-center gap-1.5 bg-purple-50 text-purple-700 text-xs font-bold px-3 py-1.5 rounded-full border border-purple-200">
+                      <Video className="w-3.5 h-3.5" />
+                      Vidéo
+                    </span>
+                  )}
+                </div>
+
+                {/* Doctor + date */}
+                <div className="rounded-2xl bg-slate-50 p-4 space-y-2 text-sm">
+                  <div className="flex items-center gap-2 text-[#134E4A]">
+                    <span className="font-semibold text-[#134E4A]/50 w-16 shrink-0">Médecin</span>
+                    <span className="font-bold">Dr. {doctor.name}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[#134E4A]">
+                    <span className="font-semibold text-[#134E4A]/50 w-16 shrink-0">Date</span>
+                    <span className="font-bold capitalize">
+                      {format(parseISO(booking.date), "EEEE d MMMM yyyy", { locale: fr })}
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2 text-[#134E4A]">
+                    <span className="font-semibold text-[#134E4A]/50 w-16 shrink-0">Heure</span>
+                    <span className="font-bold">{booking.startTime}</span>
+                    {selectedType && (
+                      <span className="text-[#134E4A]/40 text-xs">
+                        · {selectedType.durationMinutes} min
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Teleconsult note */}
+                {selectedMode === "teleconsult" && (
+                  <div className="flex items-start gap-2 rounded-xl bg-purple-50 px-4 py-3 text-sm text-purple-900 ring-1 ring-purple-200">
+                    <Video className="mt-0.5 h-4 w-4 shrink-0 text-purple-600" strokeWidth={2.5} />
+                    <p className="font-medium">Vous recevrez un lien vidéo par SMS avant votre consultation.</p>
+                  </div>
+                )}
+
+                {/* Appointment ref */}
+                {appointmentId && (
+                  <p className="text-center text-xs text-[#134E4A]/30 font-mono">
+                    Réf : {appointmentId}
+                  </p>
+                )}
+              </motion.div>
+
+              {/* CTAs */}
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.75 }}
+                className="px-7 pb-7 space-y-3"
+              >
+                {/* Add to calendar */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const [h, m] = booking.startTime.split(":").map(Number);
+                    const apptDate = parseISO(booking.date);
+                    apptDate.setHours(h, m, 0, 0);
+                    downloadICS(
+                      doctor.name,
+                      apptDate,
+                      selectedType?.durationMinutes ?? 30
+                    );
+                  }}
+                  className="flex items-center justify-center gap-2 w-full border-2 border-[#0891B2] text-[#0891B2] hover:bg-[#F0FDFA] transition-colors font-bold text-sm py-3 rounded-xl"
+                >
+                  <Download className="w-4 h-4" strokeWidth={2.5} />
+                  Ajouter au calendrier
+                </button>
+
+                <a
+                  href="/mes-rdv"
+                  className="flex items-center justify-center gap-2 w-full bg-[#0891B2] hover:bg-[#0E7490] transition-colors text-white font-bold text-sm py-3 rounded-xl shadow-sm shadow-cyan-200"
+                >
+                  Voir mes rendez-vous
+                  <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
+                </a>
+
+                <a
+                  href="/"
+                  className="flex items-center justify-center gap-2 w-full text-[#134E4A]/50 hover:text-[#134E4A]/70 transition-colors text-sm py-2"
+                >
+                  <Home className="w-4 h-4" />
+                  Retour à l&apos;accueil
+                </a>
+              </motion.div>
+            </motion.div>
           </div>
         )}
       </div>
