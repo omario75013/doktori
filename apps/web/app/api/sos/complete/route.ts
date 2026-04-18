@@ -55,6 +55,27 @@ export async function POST(req: Request) {
     WHERE id = ${sessionId} AND doctor_id = ${doctor.id} AND status = 'accepted'
   `);
 
+  // Credit doctor wallet (fee minus commission)
+  if (fee > 0) {
+    const credit = fee - commission;
+    await db.execute(sql`
+      INSERT INTO wallet_transactions (doctor_id, type, amount, description, created_at)
+      VALUES (${doctor.id}, 'credit', ${credit}, ${'SOS consultation — ' + fee / 1000 + ' DT'}, NOW())
+    `);
+    await db.execute(sql`
+      INSERT INTO wallet_transactions (doctor_id, type, amount, description, created_at)
+      VALUES (${doctor.id}, 'commission', ${-commission}, ${'Commission SOS 10%'}, NOW())
+    `);
+    await db.execute(sql`
+      UPDATE doctor_wallets
+      SET balance = balance + ${credit},
+          total_earned = total_earned + ${fee},
+          total_commission = total_commission + ${commission},
+          updated_at = NOW()
+      WHERE doctor_id = ${doctor.id}
+    `);
+  }
+
   // Parallelize proxy cleanup + broadcast (don't block response)
   const reviewUrl = `${process.env.NEXTAUTH_URL}/avis-sos/${sessionId}?sig=${signSosToken(sessionId)}`;
   const smsText = `Doktori SOS: Consultation terminée. Donnez votre avis: ${reviewUrl}`;
