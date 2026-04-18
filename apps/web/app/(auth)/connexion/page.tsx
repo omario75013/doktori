@@ -110,7 +110,7 @@ export default function ConnexionPage() {
         </div>
 
         <p className="relative text-xs text-[#A7F3D0]">
-          Doktori © 2026 · Fait avec soin pour la santé des Tunisiens
+          © 2025–2026 Doktori · Fait avec soin pour la santé des Tunisiens
         </p>
       </div>
 
