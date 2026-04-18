@@ -486,7 +486,7 @@ export function FaqClient({
               {stillHaveTitle}
             </p>
             <a
-              href="https://wa.me/21620000000"
+              href="mailto:contact@doktori.tn"
               target="_blank"
               rel="noopener noreferrer"
               className="mt-3 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-[#22C55E] text-xs font-bold text-white transition-all hover:bg-[#16A34A]"
@@ -669,7 +669,7 @@ export function FaqClient({
             </p>
             <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
               <a
-                href="https://wa.me/21620000000"
+                href="mailto:contact@doktori.tn"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#22C55E] px-6 text-sm font-bold text-white shadow-md shadow-[#22C55E]/25 transition-all hover:bg-[#16A34A] hover:shadow-lg"

@@ -118,7 +118,7 @@ export default function AdminLoginPage() {
         </div>
 
         <p className="relative text-xs text-slate-500">
-          Doktori © 2026 · Zone d&apos;administration sécurisée
+          © 2025–2026 Doktori · Zone d&apos;administration sécurisée
         </p>
       </div>
 
