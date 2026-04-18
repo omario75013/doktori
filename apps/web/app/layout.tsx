@@ -7,6 +7,8 @@ import { Navbar } from "@/components/navbar";
 import { Chatbot } from "@/components/chatbot";
 import { AppBanner } from "@/components/app-banner";
 import { PatientShell } from "@/components/patient-shell";
+import { Toaster } from "sonner";
+import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -96,6 +98,15 @@ export default async function RootLayout({
           <PatientShell>
             <Chatbot />
           </PatientShell>
+          <Toaster
+            position="bottom-right"
+            richColors
+            toastOptions={{
+              style: { borderRadius: "16px" },
+              className: "font-sans",
+            }}
+          />
+          <KeyboardShortcuts />
         </NextIntlClientProvider>
       </body>
     </html>

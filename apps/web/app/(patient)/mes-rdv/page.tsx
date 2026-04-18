@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { SPECIALTIES } from "@doktori/shared";
+import { toast } from "sonner";
 import { format, isPast } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -217,6 +218,9 @@ export default function MesRdvPage() {
     });
     if (res.ok) {
       setAppointments((prev) => prev.map((a) => a.id === id ? { ...a, status: "cancelled" } : a));
+      toast.success("Rendez-vous annulé avec succès");
+    } else {
+      toast.error("Erreur lors de l'annulation du rendez-vous");
     }
     setCancelConfirm(null);
   }

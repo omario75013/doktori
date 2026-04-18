@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import Link from "next/link";
 import {
   Clock,
@@ -193,12 +194,17 @@ export function DetailView({
 
   const saveNotes = useCallback(async () => {
     setNotesSaving(true);
-    await fetch(`/api/admin/sos/${session.id}`, {
+    const res = await fetch(`/api/admin/sos/${session.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ adminNotes: notes }),
     });
     setNotesSaving(false);
+    if (res.ok) {
+      toast.success("Notes sauvegardées");
+    } else {
+      toast.error("Erreur lors de la sauvegarde des notes");
+    }
   }, [session.id, notes]);
 
   async function doAction(action: string, body?: Record<string, unknown>) {
@@ -212,12 +218,16 @@ export function DetailView({
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        setActionError(data.error || `Erreur ${res.status}`);
+        const errorMsg = data.error || `Erreur ${res.status}`;
+        setActionError(errorMsg);
+        toast.error(errorMsg);
         return;
       }
+      toast.success("Action effectuée avec succès");
       router.refresh();
     } catch {
       setActionError("Erreur réseau");
+      toast.error("Erreur réseau");
     } finally {
       setBusy(false);
     }

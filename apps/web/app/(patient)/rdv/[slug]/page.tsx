@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Calendar, Clock, ArrowLeft, MapPin, Video, Building } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
+import { toast } from "sonner";
 
 interface Doctor {
   id: string;
@@ -248,9 +249,12 @@ export default function RdvPage({
         return;
       }
 
+      toast.success("Rendez-vous confirmé !");
       setStep("payment");
     } catch (err: unknown) {
-      setFormError(err instanceof Error ? err.message : "Erreur inattendue");
+      const msg = err instanceof Error ? err.message : "Erreur inattendue";
+      setFormError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }

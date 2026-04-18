@@ -5,6 +5,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Calendar } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 type Appointment = {
   id: string;
@@ -52,7 +53,6 @@ export default function RendezVousPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
-  const [actionError, setActionError] = useState<string | null>(null);
 
   // CNAM modal state
   const [cnamDialogAppointmentId, setCnamDialogAppointmentId] = useState<string | null>(null);
@@ -64,7 +64,6 @@ export default function RendezVousPage() {
   const [followupDialogId, setFollowupDialogId] = useState<string | null>(null);
   const [followupWeeks, setFollowupWeeks] = useState("4");
   const [followupError, setFollowupError] = useState<string | null>(null);
-  const [followupSuccess, setFollowupSuccess] = useState<string | null>(null);
 
   // Cancel modal state
   const [cancelDialogId, setCancelDialogId] = useState<string | null>(null);
@@ -93,7 +92,6 @@ export default function RendezVousPage() {
 
   const updateStatus = async (id: string, status: string) => {
     setUpdating(id);
-    setActionError(null);
     try {
       const res = await fetch(`/api/appointments/${id}/status`, {
         method: "PATCH",
@@ -104,9 +102,10 @@ export default function RendezVousPage() {
         const data = await res.json();
         throw new Error(data.error ?? "Erreur mise à jour");
       }
+      toast.success("Statut mis à jour");
       await fetchAppointments();
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Erreur");
+      toast.error(e instanceof Error ? e.message : "Erreur lors de la mise à jour");
     } finally {
       setUpdating(null);
     }
@@ -149,9 +148,10 @@ export default function RendezVousPage() {
         throw new Error(data.error ?? "Erreur création bordereau");
       }
       const claim = await res.json();
+      toast.success("Bordereau CNAM créé");
       window.open(`/cnam/${claim.id}/print`, "_blank");
     } catch (e) {
-      setActionError(e instanceof Error ? e.message : "Erreur création bordereau");
+      toast.error(e instanceof Error ? e.message : "Erreur création bordereau");
     } finally {
       setUpdating(null);
     }
@@ -184,13 +184,10 @@ export default function RendezVousPage() {
         const data = await res.json();
         throw new Error(data.error ?? "Erreur programmation");
       }
-      setFollowupSuccess(
+      toast.success(
         `Suivi programmé dans ${weeks} semaine${weeks > 1 ? "s" : ""}. Le patient recevra un SMS.`,
       );
-      setTimeout(() => {
-        setFollowupDialogId(null);
-        setFollowupSuccess(null);
-      }, 2000);
+      setFollowupDialogId(null);
     } catch (e) {
       setFollowupError(e instanceof Error ? e.message : "Erreur");
     } finally {
@@ -219,6 +216,7 @@ export default function RendezVousPage() {
         const data = await res.json();
         throw new Error(data.error ?? "Erreur lors de l'annulation");
       }
+      toast.success("Rendez-vous annulé");
       setCancelDialogId(null);
       await fetchAppointments();
     } catch (e) {
@@ -262,19 +260,6 @@ export default function RendezVousPage() {
           {t("refresh")}
         </button>
       </div>
-
-      {actionError && (
-        <div className="flex items-center justify-between rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-          <span>{actionError}</span>
-          <button
-            onClick={() => setActionError(null)}
-            className="ml-4 text-red-400 hover:text-red-600 font-bold"
-            aria-label={t("cancel")}
-          >
-            ×
-          </button>
-        </div>
-      )}
 
       {appointments.length === 0 ? (
         <div className="rounded-2xl border border-[#E6F4F1] bg-white p-12 text-center shadow-sm">
@@ -432,29 +417,21 @@ export default function RendezVousPage() {
               <p className="text-sm text-red-600">{followupError}</p>
             )}
 
-            {followupSuccess && (
-              <p className="text-sm text-[#0891B2] bg-[#F0FDFA] border border-[#E6F4F1] rounded-xl px-3 py-2">
-                {followupSuccess}
-              </p>
-            )}
-
-            {!followupSuccess && (
-              <div className="flex gap-2 justify-end pt-1">
-                <button
-                  onClick={() => setFollowupDialogId(null)}
-                  className="px-4 py-2 text-sm rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] text-gray-600 transition-colors"
-                >
-                  {t("cancelKeep")}
-                </button>
-                <button
-                  onClick={submitFollowup}
-                  disabled={updating === followupDialogId}
-                  className="px-4 py-2 text-sm rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold disabled:opacity-40 transition-colors"
-                >
-                  {updating === followupDialogId ? "..." : t("cancelConfirm")}
-                </button>
-              </div>
-            )}
+            <div className="flex gap-2 justify-end pt-1">
+              <button
+                onClick={() => setFollowupDialogId(null)}
+                className="px-4 py-2 text-sm rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] text-gray-600 transition-colors"
+              >
+                {t("cancelKeep")}
+              </button>
+              <button
+                onClick={submitFollowup}
+                disabled={updating === followupDialogId}
+                className="px-4 py-2 text-sm rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold disabled:opacity-40 transition-colors"
+              >
+                {updating === followupDialogId ? "..." : t("cancelConfirm")}
+              </button>
+            </div>
           </div>
         </div>
       )}

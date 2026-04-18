@@ -5,6 +5,7 @@ import { Building2, Video, LayoutGrid } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTranslations } from "next-intl";
+import { toast } from "sonner";
 
 type ConsultationMode = "cabinet" | "teleconsult" | "both";
 
@@ -70,11 +71,9 @@ export function TeleconsultSettings({
         : ""
   );
   const [saving, setSaving] = useState(false);
-  const [toast, setToast] = useState<{ type: "success" | "error"; message: string } | null>(null);
 
   async function handleSave() {
     setSaving(true);
-    setToast(null);
 
     const feeInMillimes =
       useSameFee || mode === "cabinet"
@@ -84,7 +83,7 @@ export function TeleconsultSettings({
     if (!useSameFee && mode !== "cabinet") {
       const parsed = parseFloat(teleconsultFee);
       if (isNaN(parsed) || parsed < 0) {
-        setToast({ type: "error", message: t("feeInvalid") });
+        toast.error(t("feeInvalid"));
         setSaving(false);
         return;
       }
@@ -102,29 +101,15 @@ export function TeleconsultSettings({
     setSaving(false);
 
     if (res.ok) {
-      setToast({ type: "success", message: t("saveSuccess") });
-      setTimeout(() => setToast(null), 4000);
+      toast.success(t("saveSuccess"));
     } else {
       const data = await res.json().catch(() => ({}));
-      setToast({ type: "error", message: data.error ?? t("saveError") });
+      toast.error(data.error ?? t("saveError"));
     }
   }
 
   return (
     <div className="space-y-6 max-w-2xl">
-      {/* Toast */}
-      {toast && (
-        <div
-          className={`rounded-lg px-4 py-3 text-sm font-medium ${
-            toast.type === "success"
-              ? "bg-green-50 text-green-800 border border-green-200"
-              : "bg-red-50 text-red-800 border border-red-200"
-          }`}
-        >
-          {toast.message}
-        </div>
-      )}
-
       {/* Mode selector */}
       <div>
         <p className="text-sm font-medium text-gray-700 mb-3">{t("modeLabel")}</p>
