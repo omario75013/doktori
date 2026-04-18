@@ -171,7 +171,12 @@
     "footer": "Propulsé par Claude · Vos conversations ne sont pas sauvegardées",
     "welcome": "Bonjour 👋 Je suis **Dokti**, votre assistant Doktori.\n\nJe peux vous aider à :\n• Trouver un médecin par spécialité et quartier\n• Comprendre comment réserver\n• Répondre à vos questions sur Doktori\n\nQue puis-je faire pour vous ?",
     "errorGeneric": "Désolé, une erreur est survenue. Réessayez.",
-    "errorNetwork": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez."
+    "errorNetwork": "Impossible de joindre le serveur. Vérifiez votre connexion et réessayez.",
+    "patientGreeting": "👋 Bienvenue {name} !",
+    "bookWith": "Réserver avec {name}",
+    "iChoose": "Je choisis {name}",
+    "bookingConfirmedTitle": "RDV confirmé",
+    "viewMyAppointments": "Voir mes rendez-vous →"
   },
   "doctorCard": {
     "portraitAlt": "Portrait du {name}",
@@ -445,6 +450,21 @@
       "confirm": "Confirmer",
       "close": "Fermer"
     }
+  },
+  "onboarding": {
+    "welcomeBadge": "Bienvenue sur Doktori",
+    "setupTitle": "Configurez votre espace médecin",
+    "closeAriaLabel": "Fermer",
+    "stepAriaLabel": "Étape {index}",
+    "skip": "Passer →",
+    "finish": "Terminer"
+  },
+  "avis": {
+    "thankYou": "Merci pour votre avis !",
+    "recorded": "Votre évaluation a bien été enregistrée."
+  },
+  "monEspace": {
+    "hello": "Bonjour,"
   },
   "faq": {
     "metaTitle": "Questions fréquentes — Prise de rendez-vous médical en ligne en Tunisie | Doktori",

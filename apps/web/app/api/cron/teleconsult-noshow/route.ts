@@ -75,6 +75,7 @@ export async function POST(req: Request) {
         : null;
 
     // 4. Notify patient via SMS + email
+    // TODO: localize SMS based on patient preference (currently French for Tunisian numbers)
     const refundMsg = refundSuccess
       ? "Votre paiement a été remboursé immédiatement."
       : "Votre remboursement est en cours de traitement.";

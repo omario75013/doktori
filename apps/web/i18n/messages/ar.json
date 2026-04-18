@@ -196,7 +196,12 @@
     "footer": "Propulsé par Claude - محادثاتك غير محفوظة",
     "welcome": "مرحبًا 👋 أنا **دوكتي**، مساعدك دوكتوري.\n\nيمكنني مساعدتك في\n- البحث عن طبيب حسب التخصص والحي\n- فهم كيفية الحجز\n- الإجابة على أسئلتك حول دكتوري\n\nماذا يمكنني أن أفعل لك؟",
     "errorGeneric": "عذرًا، حدث خطأ ما. يرجى المحاولة مرة أخرى.",
-    "errorNetwork": "تعذر الوصول إلى الخادم. تحقق من اتصالك وحاول مرة أخرى."
+    "errorNetwork": "تعذر الوصول إلى الخادم. تحقق من اتصالك وحاول مرة أخرى.",
+    "patientGreeting": "👋 مرحباً {name}!",
+    "bookWith": "حجز مع {name}",
+    "iChoose": "أختار {name}",
+    "bookingConfirmedTitle": "تم تأكيد الموعد",
+    "viewMyAppointments": "عرض مواعيدي ←"
   },
   "doctorCard": {
     "portraitAlt": "صورة {name}",
@@ -445,6 +450,21 @@
       "confirm": "تأكيد",
       "close": "إغلاق"
     }
+  },
+  "onboarding": {
+    "welcomeBadge": "مرحباً بك في دكتوري",
+    "setupTitle": "أعدّ فضاء طبيبك",
+    "closeAriaLabel": "إغلاق",
+    "stepAriaLabel": "الخطوة {index}",
+    "skip": "تخطي ←",
+    "finish": "إنهاء"
+  },
+  "avis": {
+    "thankYou": "شكراً على تقييمك!",
+    "recorded": "تم تسجيل تقييمك بنجاح."
+  },
+  "monEspace": {
+    "hello": "مرحباً,"
   },
   "faq": {
     "metaTitle": "الأسئلة الشائعة — حجز المواعيد الطبية عبر الإنترنت في تونس | دكتوري",

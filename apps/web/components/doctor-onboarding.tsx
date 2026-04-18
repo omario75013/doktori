@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Calendar, Stethoscope, User, Video, Check } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 const STEPS = [
   {
@@ -43,6 +44,7 @@ const STEPS = [
 const STORAGE_KEY = "doktori_onboarding_done";
 
 export function DoctorOnboarding() {
+  const t = useTranslations("onboarding");
   const [visible, setVisible] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
   const [direction, setDirection] = useState(1);
@@ -108,7 +110,7 @@ export function DoctorOnboarding() {
             <button
               onClick={dismiss}
               className="absolute top-4 right-4 z-10 flex h-8 w-8 items-center justify-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition-colors"
-              aria-label="Fermer"
+              aria-label={t("closeAriaLabel")}
             >
               <X className="h-4 w-4" strokeWidth={2.5} />
             </button>
@@ -121,10 +123,10 @@ export function DoctorOnboarding() {
                 </div>
               </div>
               <p className="text-xs font-bold uppercase tracking-widest text-white/70 mb-1">
-                Bienvenue sur Doktori
+                {t("welcomeBadge")}
               </p>
               <h2 id="onboarding-title" className="text-xl font-black leading-snug">
-                Configurez votre espace médecin
+                {t("setupTitle")}
               </h2>
             </div>
 
@@ -134,7 +136,7 @@ export function DoctorOnboarding() {
                 <button
                   key={i}
                   onClick={() => goTo(i)}
-                  aria-label={`Étape ${i + 1}`}
+                  aria-label={t("stepAriaLabel", { index: i + 1 })}
                   className={`h-2 rounded-full transition-all duration-300 ${
                     i === stepIndex
                       ? "w-6 bg-[#0891B2]"
@@ -195,7 +197,7 @@ export function DoctorOnboarding() {
                   onClick={next}
                   className="text-sm text-slate-400 hover:text-slate-600 transition-colors"
                 >
-                  {isLast ? "Terminer" : "Passer →"}
+                  {isLast ? t("finish") : t("skip")}
                 </button>
                 <span className="text-xs text-slate-300">
                   {stepIndex + 1} / {STEPS.length}

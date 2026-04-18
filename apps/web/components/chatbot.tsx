@@ -187,7 +187,7 @@ export function Chatbot() {
           <div className="flex-1 overflow-y-auto bg-[#F0FDFA]/30 p-4">
             <div className="space-y-4">
               {messages.map((msg, i) => (
-                <MessageBubble key={i} message={msg} onSend={sendMessage} />
+                <MessageBubble key={i} message={msg} onSend={sendMessage} t={t} />
               ))}
               {loading && (
                 <div className="flex items-center gap-2 text-xs text-[#5E7574]">
@@ -260,7 +260,15 @@ export function Chatbot() {
 // ──────────────────────────────────────────────────────────────────────────────
 // Message bubble with basic markdown (bold + newlines) + rich metadata widgets
 // ──────────────────────────────────────────────────────────────────────────────
-function MessageBubble({ message, onSend }: { message: Message; onSend: (text: string) => void }) {
+function MessageBubble({
+  message,
+  onSend,
+  t,
+}: {
+  message: Message;
+  onSend: (text: string) => void;
+  t: ReturnType<typeof useTranslations<"chatbot">>;
+}) {
   const isUser = message.role === "user";
   const html = simpleMarkdown(message.content);
   const { metadata } = message;
@@ -276,7 +284,7 @@ function MessageBubble({ message, onSend }: { message: Message; onSend: (text: s
         {/* Patient greeting badge */}
         {!isUser && metadata?.type === "patient_greeting" && (
           <div className="text-xs text-teal-600 font-medium mb-1">
-            👋 Bienvenue {metadata.data.name} !
+            {t("patientGreeting", { name: metadata.data.name })}
           </div>
         )}
 
@@ -299,12 +307,12 @@ function MessageBubble({ message, onSend }: { message: Message; onSend: (text: s
                   href={`/rdv/${d.slug}`}
                   className="inline-flex items-center gap-1 rounded-full bg-[#0891B2] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#0E7490] transition-colors"
                 >
-                  Réserver avec {d.name}
+                  {t("bookWith", { name: d.name })}
                 </a>
               ) : (
                 <button
                   key={d.id}
-                  onClick={() => onSend(`Je choisis ${d.name}`)}
+                  onClick={() => onSend(t("iChoose", { name: d.name }))}
                   className="px-3 py-1.5 rounded-full border border-teal-200 bg-teal-50 text-xs font-medium text-teal-700 hover:bg-teal-100 transition-colors"
                 >
                   {d.name}
@@ -320,7 +328,7 @@ function MessageBubble({ message, onSend }: { message: Message; onSend: (text: s
             {metadata.data.slots.map((s: { startTime: string }) => (
               <button
                 key={s.startTime}
-                onClick={() => onSend(`Je choisis ${s.startTime}`)}
+                onClick={() => onSend(t("iChoose", { name: s.startTime }))}
                 className="shrink-0 px-3 py-2 rounded-lg border border-teal-200 bg-white text-sm font-medium text-teal-700 hover:bg-teal-50 transition-colors"
               >
                 {s.startTime}
@@ -334,7 +342,7 @@ function MessageBubble({ message, onSend }: { message: Message; onSend: (text: s
           <div className="mt-3 rounded-xl border border-green-200 bg-green-50 p-4">
             <div className="flex items-center gap-2 mb-2">
               <CheckCircle className="w-5 h-5 text-green-600" />
-              <span className="font-bold text-green-800">RDV confirmé</span>
+              <span className="font-bold text-green-800">{t("bookingConfirmedTitle")}</span>
             </div>
             <div className="text-sm text-green-700 space-y-1">
               <p><strong>{metadata.data.doctorName}</strong></p>
@@ -342,7 +350,7 @@ function MessageBubble({ message, onSend }: { message: Message; onSend: (text: s
               <p>{metadata.data.address}</p>
             </div>
             <a href="/mes-rdv" className="mt-3 inline-block text-sm font-medium text-teal-600 hover:underline">
-              Voir mes rendez-vous →
+              {t("viewMyAppointments")}
             </a>
           </div>
         )}

@@ -2,12 +2,14 @@
 
 import { useState, use } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { StarRating } from "@/components/star-rating";
 import { Star, CheckCircle } from "lucide-react";
 
 export default function SubmitReviewPage({ params }: { params: Promise<{ appointmentId: string }> }) {
+  const t = useTranslations("avis");
   const { appointmentId } = use(params);
   const router = useRouter();
   const [rating, setRating] = useState(0);
@@ -45,7 +47,7 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
           <div className="w-16 h-16 bg-[#0891B2]/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <CheckCircle className="w-8 h-8 text-[#0891B2]" strokeWidth={2} />
           </div>
-          <h1 className="text-2xl font-bold text-[#134E4A] mb-2">Merci pour votre avis !</h1>
+          <h1 className="text-2xl font-bold text-[#134E4A] mb-2">{t("thankYou")}</h1>
           <p className="text-gray-500 mb-6">Votre retour aide les autres patients à trouver le bon médecin.</p>
           <Button
             onClick={() => router.push("/")}

@@ -5,6 +5,7 @@ import { useParams, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Star, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type VerifyState =
   | { status: "loading" }
@@ -12,6 +13,7 @@ type VerifyState =
   | { status: "invalid"; error: string };
 
 export default function AvisSOSPage() {
+  const t = useTranslations("avis");
   const params = useParams();
   const searchParams = useSearchParams();
 
@@ -152,10 +154,10 @@ export default function AvisSOSPage() {
                   aria-hidden="true"
                 />
                 <p className="text-base font-semibold text-[#134E4A]">
-                  Merci pour votre avis !
+                  {t("thankYou")}
                 </p>
                 <p className="text-sm text-gray-500">
-                  Votre évaluation a bien été enregistrée.
+                  {t("recorded")}
                 </p>
               </div>
             ) : (

@@ -16,6 +16,7 @@ import { getAvailableSlots, createAppointment } from "@/lib/queries/appointments
 import { sendSMS } from "@/lib/sms";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { ar } from "date-fns/locale";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -350,11 +351,12 @@ async function runTool(
   name: string,
   input: Record<string, unknown>,
   userLocation?: UserLocation,
+  locale: string = "fr",
 ): Promise<string> {
   try {
     switch (name) {
       case "search_doctors":
-        return await toolSearchDoctors(input, userLocation);
+        return await toolSearchDoctors(input, userLocation, locale);
       case "suggest_specialty":
         return toolSuggestSpecialty(input);
       case "identify_patient":
@@ -366,9 +368,9 @@ async function runTool(
       case "get_doctor_practices":
         return await toolGetPractices(input);
       case "check_doctor_calendar":
-        return await toolCheckCalendar(input);
+        return await toolCheckCalendar(input, locale);
       case "book_appointment":
-        return await toolBookAppointment(input);
+        return await toolBookAppointment(input, locale);
       case "cancel_appointment":
         return await toolCancelAppointment(input);
       default:
@@ -391,7 +393,7 @@ function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-async function toolSearchDoctors(input: Record<string, unknown>, userLocation?: UserLocation): Promise<string> {
+async function toolSearchDoctors(input: Record<string, unknown>, userLocation?: UserLocation, locale: string = "fr"): Promise<string> {
   const specialty = typeof input.specialty === "string" ? input.specialty : null;
   const city = typeof input.city === "string" ? input.city : null;
   const query = typeof input.query === "string" ? input.query : null;
@@ -423,7 +425,8 @@ async function toolSearchDoctors(input: Record<string, unknown>, userLocation?: 
     .limit(20); // fetch more, then sort by distance and limit to 5
 
   if (results.length === 0) {
-    return JSON.stringify({ count: 0, doctors: [], message: "Aucun médecin trouvé" });
+    const noDoctorMsg = locale === "ar" ? "لم يتم العثور على طبيب" : "Aucun médecin trouvé";
+    return JSON.stringify({ count: 0, doctors: [], message: noDoctorMsg });
   }
 
   // Sort by distance if user location is available
@@ -637,7 +640,7 @@ async function toolGetPractices(input: Record<string, unknown>): Promise<string>
 }
 
 // ── check_doctor_calendar ────────────────────────────────────────────────────
-async function toolCheckCalendar(input: Record<string, unknown>): Promise<string> {
+async function toolCheckCalendar(input: Record<string, unknown>, locale: string = "fr"): Promise<string> {
   const rawDoctorId = String(input.doctorId || "");
   const doctorId = rawDoctorId ? await resolveDoctorId(rawDoctorId) : null;
   if (!doctorId) return JSON.stringify({ error: "Médecin introuvable" });
@@ -661,12 +664,13 @@ async function toolCheckCalendar(input: Record<string, unknown>): Promise<string
     closed: boolean;
   }> = [];
 
+  const dateLocale = locale === "ar" ? ar : fr;
   const today = new Date();
   for (let i = 0; i < 7; i++) {
     const d = new Date(today);
     d.setDate(d.getDate() + i);
     const dateStr = format(d, "yyyy-MM-dd");
-    const dayLabel = format(d, "EEEE d MMMM", { locale: fr });
+    const dayLabel = format(d, "EEEE d MMMM", { locale: dateLocale });
 
     const allSlots = await getAvailableSlots(doctorId, dateStr, duration);
     const free = allSlots.filter((s: { available: boolean }) => s.available);
@@ -684,7 +688,7 @@ async function toolCheckCalendar(input: Record<string, unknown>): Promise<string
 }
 
 // ── book_appointment ─────────────────────────────────────────────────────────
-async function toolBookAppointment(input: Record<string, unknown>): Promise<string> {
+async function toolBookAppointment(input: Record<string, unknown>, locale: string = "fr"): Promise<string> {
   const rawDoctorId = String(input.doctorId || "");
   const doctorId = rawDoctorId ? await resolveDoctorId(rawDoctorId) : null;
   const patientName = String(input.patientName || "");
@@ -783,6 +787,7 @@ async function toolBookAppointment(input: Record<string, unknown>): Promise<stri
     });
 
     // Send confirmation SMS (best-effort)
+    // TODO: localize SMS based on patient preference
     try {
       const specialty = SPECIALTIES.find((s) => s.id === doctor.specialty)?.label || "";
       const timeStr = format(startsAt, "HH:mm");
@@ -793,10 +798,11 @@ async function toolBookAppointment(input: Record<string, unknown>): Promise<stri
       console.error("[chat] SMS send failed:", e);
     }
 
+    const bookingDateLocale = locale === "ar" ? ar : fr;
     return JSON.stringify({
       success: true,
       appointmentId: appointment.id,
-      message: `RDV confirmé le ${format(startsAt, "EEEE d MMMM", { locale: fr })} à ${format(startsAt, "HH:mm")} avec ${doctor.name}. SMS de rappel la veille.`,
+      message: `RDV confirmé le ${format(startsAt, "EEEE d MMMM", { locale: bookingDateLocale })} à ${format(startsAt, "HH:mm")} avec ${doctor.name}. SMS de rappel la veille.`,
       doctorName: doctor.name,
       date: format(startsAt, "dd/MM/yyyy"),
       time: format(startsAt, "HH:mm"),
@@ -1047,7 +1053,7 @@ export async function POST(req: Request) {
         try {
           toolInput = JSON.parse(call.function.arguments || "{}");
         } catch {}
-        const result = await runTool(call.function.name, toolInput, userLocation);
+        const result = await runTool(call.function.name, toolInput, userLocation, locale);
         lastToolName = call.function.name;
         lastToolResult = result;
         messages.push({

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { format, isPast } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -126,6 +127,7 @@ function buildTimeline(appointments: Appointment[]): TimelineItem[] {
 }
 
 export default function PatientDashboardPage() {
+  const t = useTranslations("monEspace");
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [patient, setPatient] = useState<PatientInfo | null>(null);
@@ -273,7 +275,7 @@ export default function PatientDashboardPage() {
             aria-hidden
             className="pointer-events-none absolute -bottom-6 -left-4 w-24 h-24 rounded-full bg-white/5"
           />
-          <p className="text-cyan-100 text-sm mb-1">Bonjour,</p>
+          <p className="text-cyan-100 text-sm mb-1">{t("hello")}</p>
           <h2 className="text-xl font-bold mb-4">{patientName}</h2>
           {nextAppointment ? (
             <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
