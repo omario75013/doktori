@@ -38,7 +38,7 @@ interface Profile {
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 const selectClass =
-  "w-full h-12 rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow";
+  "w-full h-12 rounded-xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow";
 
 const labelClass = "text-foreground font-semibold text-sm";
 
@@ -153,7 +153,7 @@ export default function DossierMedicalPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-secondary/40 flex items-center justify-center">
+      <div className="min-h-screen bg-secondary/40 dark:bg-gray-900 flex items-center justify-center">
         <div className="text-center space-y-3">
           <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
           <p className="text-foreground/60 text-sm">Chargement...</p>
@@ -163,7 +163,7 @@ export default function DossierMedicalPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary/40">
+    <div className="min-h-screen bg-secondary/40 dark:bg-gray-900">
       {/* Teal gradient banner */}
       <div className="bg-gradient-to-br from-primary to-foreground px-4 py-8">
         <div className="max-w-2xl mx-auto">
@@ -181,18 +181,18 @@ export default function DossierMedicalPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         {/* Data privacy notice */}
-        <div className="rounded-2xl border border-[#0891B2]/30 bg-[#F0FDFA] p-4 flex items-start gap-3">
+        <div className="rounded-2xl border border-[#0891B2]/30 dark:border-gray-700 bg-[#F0FDFA] dark:bg-gray-800 p-4 flex items-start gap-3">
           <Lock className="h-5 w-5 text-[#0891B2] flex-shrink-0 mt-0.5" strokeWidth={2} />
           <div>
-            <p className="text-sm font-semibold text-[#134E4A]">Vos données médicales sont confidentielles et protégées</p>
-            <p className="text-xs text-[#134E4A]/70 mt-0.5">
+            <p className="text-sm font-semibold text-[#134E4A] dark:text-white">Vos données médicales sont confidentielles et protégées</p>
+            <p className="text-xs text-[#134E4A]/70 dark:text-gray-400 mt-0.5">
               Ces informations sont partagées uniquement avec le médecin que vous consultez sur Doktori.
             </p>
           </div>
         </div>
 
         {/* Context note */}
-        <div className="rounded-2xl border border-border bg-white shadow-sm p-4 flex items-start gap-3">
+        <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-4 flex items-start gap-3">
           <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" strokeWidth={2} />
           <p className="text-sm text-foreground/70">
             Ces informations sont partagées avec le médecin que vous consultez sur Doktori.
@@ -202,7 +202,7 @@ export default function DossierMedicalPage() {
 
         <form onSubmit={handleSave} className="space-y-6">
           {/* Section: Informations générales */}
-          <div className="rounded-2xl border border-border bg-white shadow-sm p-6 space-y-5">
+          <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-6 space-y-5">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
                 <User className="h-4 w-4 text-primary" strokeWidth={2} />
@@ -265,7 +265,7 @@ export default function DossierMedicalPage() {
           </div>
 
           {/* Section: Allergies */}
-          <div className="rounded-2xl border border-border bg-white shadow-sm p-6 space-y-4">
+          <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-50">
                 <Heart className="h-4 w-4 text-red-500" strokeWidth={2} />
@@ -287,7 +287,7 @@ export default function DossierMedicalPage() {
           </div>
 
           {/* Section: Traitements */}
-          <div className="rounded-2xl border border-border bg-white shadow-sm p-6 space-y-4">
+          <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50">
                 <Pill className="h-4 w-4 text-blue-500" strokeWidth={2} />
@@ -309,7 +309,7 @@ export default function DossierMedicalPage() {
           </div>
 
           {/* Section: Maladies chroniques + notes */}
-          <div className="rounded-2xl border border-border bg-white shadow-sm p-6 space-y-4">
+          <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50">
                 <Activity className="h-4 w-4 text-orange-500" strokeWidth={2} />

@@ -4,8 +4,9 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Phone, Plus, Pencil, Trash2, Star, ArrowLeft, Check, X } from "lucide-react";
+import { MapPin, Phone, Plus, Pencil, Trash2, Star, ArrowLeft, Check, X, Loader2, Building2 } from "lucide-react";
 import Link from "next/link";
+import { toast } from "sonner";
 
 interface Practice {
   id: string;
@@ -92,9 +93,12 @@ export default function CabinetsPage() {
       }
       setAddForm(emptyForm);
       setShowAddForm(false);
+      toast.success("Cabinet ajouté avec succès");
       await loadPractices();
     } catch (err: unknown) {
-      setAddError(err instanceof Error ? err.message : "Erreur inattendue");
+      const msg = err instanceof Error ? err.message : "Erreur inattendue";
+      setAddError(msg);
+      toast.error(msg);
     } finally {
       setAddSubmitting(false);
     }
@@ -131,9 +135,12 @@ export default function CabinetsPage() {
         throw new Error(typeof data.error === "string" ? data.error : "Erreur");
       }
       setEditingId(null);
+      toast.success("Cabinet mis à jour");
       await loadPractices();
     } catch (err: unknown) {
-      setEditError(err instanceof Error ? err.message : "Erreur inattendue");
+      const msg = err instanceof Error ? err.message : "Erreur inattendue";
+      setEditError(msg);
+      toast.error(msg);
     } finally {
       setEditSubmitting(false);
     }
@@ -148,9 +155,12 @@ export default function CabinetsPage() {
         const data = await res.json();
         throw new Error(typeof data.error === "string" ? data.error : "Erreur");
       }
+      toast.success("Cabinet supprimé");
       await loadPractices();
     } catch (err: unknown) {
-      setDeleteError(err instanceof Error ? err.message : "Erreur inattendue");
+      const msg = err instanceof Error ? err.message : "Erreur inattendue";
+      setDeleteError(msg);
+      toast.error(msg);
     } finally {
       setDeletingId(null);
     }
@@ -206,7 +216,7 @@ export default function CabinetsPage() {
 
       {/* Add form */}
       {showAddForm && (
-        <div className="rounded-3xl border border-border bg-white shadow-sm p-5 space-y-4">
+        <div className="rounded-3xl border border-border bg-white dark:bg-gray-900 shadow-sm p-5 space-y-4">
           <h2 className="font-heading font-black text-foreground">Nouveau cabinet</h2>
           <form onSubmit={handleAdd} className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -268,8 +278,15 @@ export default function CabinetsPage() {
               </p>
             )}
             <div className="flex gap-2 pt-1">
-              <Button type="submit" disabled={addSubmitting} size="sm" className="bg-primary hover:bg-doktori-teal-dark">
-                {addSubmitting ? "Enregistrement..." : "Enregistrer"}
+              <Button type="submit" disabled={addSubmitting} size="sm" className="bg-primary hover:bg-doktori-teal-dark gap-1.5">
+                {addSubmitting ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    Enregistrement...
+                  </>
+                ) : (
+                  "Enregistrer"
+                )}
               </Button>
               <Button
                 type="button"
@@ -290,18 +307,31 @@ export default function CabinetsPage() {
       ) : error ? (
         <div className="text-sm text-red-500 py-4">{error}</div>
       ) : practices.length === 0 ? (
-        <div className="rounded-3xl border border-border bg-white shadow-sm p-8 text-center space-y-2">
-          <MapPin className="h-8 w-8 text-primary/40 mx-auto" />
-          <p className="text-sm text-foreground/60">
-            Aucun cabinet pour l&apos;instant. Ajoutez votre premier cabinet.
-          </p>
+        <div className="rounded-3xl border border-dashed border-border bg-white dark:bg-gray-900 shadow-sm p-10 text-center space-y-3">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mx-auto">
+            <Building2 className="h-7 w-7 text-primary/60" strokeWidth={1.5} />
+          </div>
+          <div>
+            <p className="font-heading font-black text-foreground">Aucun cabinet enregistré</p>
+            <p className="text-sm text-foreground/50 mt-1">
+              Ajoutez votre premier cabinet pour que les patients puissent vous trouver.
+            </p>
+          </div>
+          <Button
+            onClick={() => { setShowAddForm(true); setAddError(null); }}
+            className="bg-primary hover:bg-doktori-teal-dark gap-1.5 mt-2"
+            size="sm"
+          >
+            <Plus className="h-4 w-4" />
+            Ajouter mon premier cabinet
+          </Button>
         </div>
       ) : (
         <div className="space-y-3">
           {practices.map((p) => (
             <div
               key={p.id}
-              className={`rounded-3xl border bg-white shadow-sm p-5 space-y-3 transition ${
+              className={`rounded-3xl border bg-white dark:bg-gray-900 shadow-sm p-5 space-y-3 transition ${
                 p.isActive ? "border-border" : "border-border opacity-60"
               }`}
             >
@@ -366,8 +396,12 @@ export default function CabinetsPage() {
                   )}
                   <div className="flex gap-2">
                     <Button type="submit" disabled={editSubmitting} size="sm" className="bg-primary hover:bg-doktori-teal-dark gap-1">
-                      <Check className="h-3.5 w-3.5" />
-                      {editSubmitting ? "..." : "Sauvegarder"}
+                      {editSubmitting ? (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      ) : (
+                        <Check className="h-3.5 w-3.5" />
+                      )}
+                      {editSubmitting ? "Sauvegarde..." : "Sauvegarder"}
                     </Button>
                     <Button type="button" variant="ghost" size="sm" onClick={() => setEditingId(null)}>
                       <X className="h-3.5 w-3.5" />
@@ -389,7 +423,7 @@ export default function CabinetsPage() {
                           </span>
                         )}
                         {!p.isActive && (
-                          <span className="rounded-full bg-gray-100 px-2 py-0.5 text-xs text-gray-500">
+                          <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400">
                             Inactif
                           </span>
                         )}

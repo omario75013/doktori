@@ -112,7 +112,7 @@ export function TeleconsultSettings({
     <div className="space-y-6 max-w-2xl">
       {/* Mode selector */}
       <div>
-        <p className="text-sm font-medium text-gray-700 mb-3">{t("modeLabel")}</p>
+        <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">{t("modeLabel")}</p>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {MODE_CARDS.map((card) => {
             const selected = mode === card.id;
@@ -127,18 +127,18 @@ export function TeleconsultSettings({
                   text-center transition-all cursor-pointer
                   ${selected
                     ? `${card.selectedBorderClass} ${card.selectedBgClass}`
-                    : "border-gray-200 bg-white hover:border-gray-300"
+                    : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-gray-300 dark:hover:border-gray-600"
                   }
                 `}
               >
-                <span className={selected ? "text-gray-800" : "text-gray-400"}>
+                <span className={selected ? "text-gray-800 dark:text-gray-200" : "text-gray-400 dark:text-gray-600"}>
                   {card.icon}
                 </span>
                 <span>
-                  <span className={`block text-sm font-semibold ${selected ? "text-gray-900" : "text-gray-700"}`}>
+                  <span className={`block text-sm font-semibold ${selected ? "text-gray-900 dark:text-white" : "text-gray-700 dark:text-gray-300"}`}>
                     {modeInfo.label}
                   </span>
-                  <span className="block text-xs text-gray-500 mt-0.5 leading-snug">
+                  <span className="block text-xs text-gray-500 dark:text-gray-400 mt-0.5 leading-snug">
                     {modeInfo.description}
                   </span>
                 </span>
@@ -157,10 +157,10 @@ export function TeleconsultSettings({
 
       {/* Fee section */}
       {(mode === "teleconsult" || mode === "both") && (
-        <div className="bg-white rounded-xl border p-5 space-y-4">
-          <p className="text-sm font-medium text-gray-700">{t("fee")}</p>
+        <div className="bg-white dark:bg-gray-900 rounded-xl border dark:border-gray-700 p-5 space-y-4">
+          <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{t("fee")}</p>
 
-          <label className="flex items-center gap-2 text-sm text-gray-600 cursor-pointer select-none">
+          <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400 cursor-pointer select-none">
             <input
               type="checkbox"
               checked={useSameFee}
@@ -169,7 +169,7 @@ export function TeleconsultSettings({
             />
             {t("sameFee")}
             {consultationFee !== null && (
-              <span className="text-gray-400">
+              <span className="text-gray-400 dark:text-gray-500">
                 ({consultationFee / 1000} DT)
               </span>
             )}

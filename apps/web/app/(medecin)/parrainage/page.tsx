@@ -131,7 +131,7 @@ export default function ParrainagePage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-foreground">Programme de parrainage</h1>
-          <p className="text-sm text-gray-500">Gagnez 1 mois gratuit pour chaque confrère inscrit</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Gagnez 1 mois gratuit pour chaque confrère inscrit</p>
         </div>
       </div>
 
@@ -149,22 +149,22 @@ export default function ParrainagePage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm text-center hover:shadow-md transition-shadow">
+        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-5 shadow-sm text-center hover:shadow-md transition-shadow">
           <div className="text-3xl font-bold text-foreground">{referrals.length}</div>
-          <div className="text-xs text-gray-500 mt-1">Parrainages envoyés</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Parrainages envoyés</div>
         </div>
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm text-center hover:shadow-md transition-shadow">
+        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-5 shadow-sm text-center hover:shadow-md transition-shadow">
           <div className="text-3xl font-bold text-primary">{validatedCount}</div>
-          <div className="text-xs text-gray-500 mt-1">Validés</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Validés</div>
         </div>
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm text-center hover:shadow-md transition-shadow">
+        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-5 shadow-sm text-center hover:shadow-md transition-shadow">
           <div className="text-3xl font-bold text-green-600">{rewardedCount}</div>
-          <div className="text-xs text-gray-500 mt-1">Mois gratuits gagnés</div>
+          <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">Mois gratuits gagnés</div>
         </div>
       </div>
 
       {/* Referral Code Card */}
-      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-4">
+      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm space-y-4">
         <h2 className="font-semibold text-foreground">Mon code de parrainage</h2>
         {loading ? (
           <div className="h-12 bg-secondary rounded-xl animate-pulse" />
@@ -197,15 +197,15 @@ export default function ParrainagePage() {
           </svg>
           Partager via WhatsApp
         </a>
-        <p className="text-xs text-gray-400 text-center">
+        <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
           Le parrainage est validé après le 1er rendez-vous confirmé du confrère parrainé.
         </p>
       </div>
 
       {/* Référer un patient à un confrère */}
-      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-4">
+      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm space-y-4">
         <h2 className="font-semibold text-foreground">Référer un patient à un confrère</h2>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400">
           Créez un lien de prise de rendez-vous personnalisé pour orienter vos patients vers un autre médecin.
         </p>
         <div className="relative">
@@ -235,7 +235,7 @@ export default function ParrainagePage() {
                   </div>
                   <div className="min-w-0">
                     <p className="text-sm font-semibold text-foreground truncate">{doc.name}</p>
-                    <p className="text-xs text-gray-500">{doc.specialty}{doc.city ? ` · ${doc.city}` : ""}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{doc.specialty}{doc.city ? ` · ${doc.city}` : ""}</p>
                   </div>
                 </div>
                 <button
@@ -260,12 +260,12 @@ export default function ParrainagePage() {
         )}
 
         {searchQuery.trim().length >= 2 && !searching && searchResults.length === 0 && (
-          <p className="text-sm text-gray-400 text-center py-2">Aucun médecin trouvé pour &quot;{searchQuery}&quot;</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 text-center py-2">Aucun médecin trouvé pour &quot;{searchQuery}&quot;</p>
         )}
       </div>
 
       {/* Referrals List */}
-      <div className="rounded-2xl border border-border bg-white shadow-sm">
+      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="font-semibold text-foreground">Mes parrainages</h2>
           {referrals.length > 0 && (
@@ -284,7 +284,7 @@ export default function ParrainagePage() {
               <Gift className="h-6 w-6 text-primary" />
             </div>
             <p className="text-foreground font-medium mb-1">Aucun parrainage pour le moment</p>
-            <p className="text-sm text-gray-400">Partagez votre code pour commencer !</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">Partagez votre code pour commencer !</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -292,7 +292,7 @@ export default function ParrainagePage() {
               <div key={r.id} className="p-4 flex items-center justify-between hover:bg-secondary transition-colors">
                 <div>
                   <div className="font-medium text-sm text-foreground">{r.referredName}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="text-xs text-gray-500 dark:text-gray-400">
                     {r.referredEmail} &middot; Inscrit le{" "}
                     {format(new Date(r.createdAt), "d MMM yyyy", { locale: fr })}
                     {r.validatedAt && (

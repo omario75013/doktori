@@ -251,9 +251,9 @@ export function FaqClient({
   }, []);
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-secondary/30">
+    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-secondary/30 dark:bg-gray-900">
       {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative overflow-hidden border-b border-border bg-white">
+      <section className="relative overflow-hidden border-b border-border dark:border-gray-700 bg-white dark:bg-gray-900">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.08]"
@@ -281,7 +281,7 @@ export function FaqClient({
           </nav>
 
           <div className="py-12 text-center sm:py-16">
-            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-1.5 shadow-sm">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-4 py-1.5 shadow-sm">
               <Sparkles className="h-3.5 w-3.5 text-primary" strokeWidth={2.5} />
               <span className="text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
                 {isRtl ? "مركز المساعدة" : "Centre d'aide"}
@@ -297,7 +297,7 @@ export function FaqClient({
 
             {/* Search */}
             <div className="mx-auto mt-10 max-w-2xl">
-              <div className="group flex h-14 items-center gap-3 rounded-2xl border-2 border-border bg-white px-5 shadow-sm transition-all focus-within:border-primary focus-within:shadow-lg focus-within:shadow-primary/10">
+              <div className="group flex h-14 items-center gap-3 rounded-2xl border-2 border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-5 shadow-sm transition-all focus-within:border-primary focus-within:shadow-lg focus-within:shadow-primary/10">
                 <Search className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={2.5} />
                 <input
                   ref={searchRef}
@@ -337,7 +337,7 @@ export function FaqClient({
                         setQuery(term);
                         searchRef.current?.focus();
                       }}
-                      className="rounded-full border border-border bg-white px-3 py-1 text-xs font-semibold text-doktori-teal-dark transition-all hover:border-primary hover:bg-secondary"
+                      className="rounded-full border border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1 text-xs font-semibold text-doktori-teal-dark transition-all hover:border-primary hover:bg-secondary dark:hover:bg-gray-700"
                     >
                       {term}
                     </button>
@@ -421,7 +421,7 @@ export function FaqClient({
               className={`inline-flex min-h-11 shrink-0 items-center justify-between gap-2 rounded-xl border px-3 py-3 text-sm font-bold transition-all lg:w-full ${
                 activeCategory === "all" && !visibleCategory
                   ? "border-primary bg-primary text-white shadow-sm"
-                  : "border-border bg-white text-foreground hover:border-primary/40"
+                  : "border-border dark:border-gray-700 bg-white dark:bg-gray-800 text-foreground hover:border-primary/40"
               }`}
             >
               <span className="flex items-center gap-2">
@@ -449,7 +449,7 @@ export function FaqClient({
                   className={`inline-flex min-h-11 shrink-0 items-center justify-between gap-2 rounded-xl border px-3 py-3 text-sm font-bold transition-all lg:w-full ${
                     isActive
                       ? "border-transparent text-white shadow-sm"
-                      : "border-border bg-white text-foreground hover:border-primary/40"
+                      : "border-border dark:border-gray-700 bg-white dark:bg-gray-800 text-foreground hover:border-primary/40"
                   }`}
                   style={
                     isActive
@@ -478,7 +478,7 @@ export function FaqClient({
           </nav>
 
           {/* Mini contact card */}
-          <div className="mt-6 hidden rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/5 via-white to-secondary p-5 lg:block">
+          <div className="mt-6 hidden rounded-2xl border border-accent/30 dark:border-gray-700 bg-gradient-to-br from-accent/5 via-white dark:via-gray-800 to-secondary dark:to-gray-800 p-5 lg:block">
             <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-white shadow-sm">
               <MessageCircle className="h-5 w-5" strokeWidth={2.5} />
             </div>
@@ -504,7 +504,7 @@ export function FaqClient({
           </p>
 
           {filtered.length === 0 ? (
-            <div className="rounded-3xl border-2 border-dashed border-border bg-white p-12 text-center">
+            <div className="rounded-3xl border-2 border-dashed border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-12 text-center">
               <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-primary">
                 <HelpCircle className="h-6 w-6" strokeWidth={2.5} />
               </div>
@@ -553,10 +553,10 @@ export function FaqClient({
                         <article
                           key={item.id}
                           id={`faq-card-${item.id}`}
-                          className={`scroll-mt-24 overflow-hidden rounded-2xl border bg-white transition-all ${
+                          className={`scroll-mt-24 overflow-hidden rounded-2xl border bg-white dark:bg-gray-800 transition-all ${
                             isOpen
                               ? "border-primary/40 shadow-lg shadow-primary/5"
-                              : "border-border hover:border-primary/20"
+                              : "border-border dark:border-gray-700 hover:border-primary/20"
                           }`}
                         >
                           <button
@@ -609,7 +609,7 @@ export function FaqClient({
                                         <button
                                           onClick={() => handleVote(item.id, "up")}
                                           aria-label={helpfulYes}
-                                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-border bg-white px-2.5 text-xs font-bold text-muted-foreground transition-all hover:border-accent hover:bg-accent/5 hover:text-doktori-green-dark"
+                                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-border dark:border-gray-700 bg-white dark:bg-gray-700 px-2.5 text-xs font-bold text-muted-foreground transition-all hover:border-accent hover:bg-accent/5 hover:text-doktori-green-dark"
                                         >
                                           <ThumbsUp className="h-3.5 w-3.5" strokeWidth={2.5} />
                                           {helpfulYes}
@@ -617,7 +617,7 @@ export function FaqClient({
                                         <button
                                           onClick={() => handleVote(item.id, "down")}
                                           aria-label={helpfulNo}
-                                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-border bg-white px-2.5 text-xs font-bold text-muted-foreground transition-all hover:border-destructive hover:bg-destructive/5 hover:text-destructive"
+                                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-border dark:border-gray-700 bg-white dark:bg-gray-700 px-2.5 text-xs font-bold text-muted-foreground transition-all hover:border-destructive hover:bg-destructive/5 hover:text-destructive"
                                         >
                                           <ThumbsDown className="h-3.5 w-3.5" strokeWidth={2.5} />
                                           {helpfulNo}
@@ -629,7 +629,7 @@ export function FaqClient({
                                   {/* Copy link */}
                                   <button
                                     onClick={() => handleCopy(item.id)}
-                                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-white px-2.5 text-xs font-bold text-muted-foreground transition-all hover:border-primary hover:bg-secondary hover:text-primary"
+                                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border dark:border-gray-700 bg-white dark:bg-gray-700 px-2.5 text-xs font-bold text-muted-foreground transition-all hover:border-primary hover:bg-secondary dark:hover:bg-gray-600 hover:text-primary"
                                   >
                                     {copied ? (
                                       <>
@@ -657,7 +657,7 @@ export function FaqClient({
           )}
 
           {/* ═══════════════ STILL HAVE A QUESTION ═══════════════ */}
-          <section className="mt-16 overflow-hidden rounded-3xl border-2 border-primary/20 bg-gradient-to-br from-secondary via-white to-secondary p-8 text-center shadow-sm sm:p-12">
+          <section className="mt-16 overflow-hidden rounded-3xl border-2 border-primary/20 bg-gradient-to-br from-secondary dark:from-gray-800 via-white dark:via-gray-800 to-secondary dark:to-gray-800 p-8 text-center shadow-sm sm:p-12">
             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/30">
               <MessageCircle className="h-8 w-8" strokeWidth={2.5} />
             </div>

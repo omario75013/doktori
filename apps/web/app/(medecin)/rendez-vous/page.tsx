@@ -231,7 +231,7 @@ export default function RendezVousPage() {
         {Array.from({ length: 5 }).map((_, i) => (
           <div
             key={i}
-            className="flex items-center gap-4 rounded-xl border border-border bg-white p-4"
+            className="flex items-center gap-4 rounded-xl border border-border bg-white dark:bg-gray-900 p-4"
           >
             <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-secondary" />
             <div className="flex-1 space-y-2">
@@ -277,15 +277,15 @@ export default function RendezVousPage() {
       </div>
 
       {appointments.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-white p-12 text-center shadow-sm">
+        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
           <div className="h-14 w-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
             <Calendar className="h-7 w-7 text-primary" />
           </div>
           <p className="text-foreground font-medium mb-1">{t("noAppointments")}</p>
-          <p className="text-sm text-gray-400">{t("noAppointmentsDesc")}</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">{t("noAppointmentsDesc")}</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-white shadow-sm overflow-x-auto">
+        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-secondary text-left">
@@ -303,7 +303,7 @@ export default function RendezVousPage() {
                 const isUpdating = updating === appt.id;
                 return (
                   <tr key={appt.id} className="hover:bg-secondary transition-colors">
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-700">
+                    <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
                       {format(new Date(appt.startsAt), "EEE d MMM yyyy HH:mm", { locale: fr })}
                     </td>
                     <td className="px-4 py-3">
@@ -327,8 +327,8 @@ export default function RendezVousPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-500">{appt.patientPhone}</td>
-                    <td className="px-4 py-3 text-gray-500">
+                    <td className="px-4 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400">{appt.patientPhone}</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
                       {appt.reason ?? <span className="text-gray-300">—</span>}
                     </td>
                     <td className="px-4 py-3">
@@ -423,7 +423,7 @@ export default function RendezVousPage() {
           onClick={() => setFollowupDialogId(null)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-border"
+            className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-xl p-6 space-y-4 border border-border"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-base font-semibold text-foreground">{t("followupTitle")}</h2>
@@ -441,7 +441,7 @@ export default function RendezVousPage() {
                 className="w-full h-12 rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 autoFocus
               />
-              <p className="text-xs text-gray-400">{t("followupNote")}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{t("followupNote")}</p>
             </div>
 
             {followupError && (
@@ -451,7 +451,7 @@ export default function RendezVousPage() {
             <div className="flex gap-2 justify-end pt-1">
               <button
                 onClick={() => setFollowupDialogId(null)}
-                className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 transition-colors"
+                className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 dark:text-gray-400 transition-colors"
               >
                 {t("cancelKeep")}
               </button>
@@ -474,7 +474,7 @@ export default function RendezVousPage() {
           onClick={() => !cancelSubmitting && setCancelDialogId(null)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-border"
+            className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-xl p-6 space-y-4 border border-border"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-base font-semibold text-foreground">{t("cancelTitle")}</h2>
@@ -491,7 +491,7 @@ export default function RendezVousPage() {
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
                 autoFocus
               />
-              <p className="text-xs text-gray-400">{t("cancelNote")}</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500">{t("cancelNote")}</p>
             </div>
 
             {cancelError && (
@@ -502,7 +502,7 @@ export default function RendezVousPage() {
               <button
                 onClick={() => setCancelDialogId(null)}
                 disabled={cancelSubmitting}
-                className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 disabled:opacity-40 transition-colors"
+                className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 dark:text-gray-400 disabled:opacity-40 transition-colors"
               >
                 {t("cancelKeep")}
               </button>
@@ -525,7 +525,7 @@ export default function RendezVousPage() {
           onClick={() => setCnamDialogAppointmentId(null)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-border"
+            className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-900 shadow-xl p-6 space-y-4 border border-border"
             onClick={(e) => e.stopPropagation()}
           >
             <h2 className="text-base font-semibold text-foreground">{t("cnamTitle")}</h2>
@@ -565,7 +565,7 @@ export default function RendezVousPage() {
             <div className="flex gap-2 justify-end pt-1">
               <button
                 onClick={() => setCnamDialogAppointmentId(null)}
-                className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 transition-colors"
+                className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 dark:text-gray-400 transition-colors"
               >
                 {t("cancel")}
               </button>

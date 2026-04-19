@@ -208,12 +208,12 @@ export default function PatientMessagesPage() {
   if (!token) return null;
 
   return (
-    <div className="flex h-[calc(100vh-2rem)] bg-white rounded-xl border border-gray-100 overflow-hidden">
+    <div className="flex h-[calc(100vh-2rem)] bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden">
       {/* Left panel — conversation list */}
-      <div className="w-[350px] flex-shrink-0 flex flex-col border-r border-gray-100">
-        <div className="px-4 py-4 border-b border-gray-100 flex items-center gap-2">
+      <div className="w-[350px] flex-shrink-0 flex flex-col border-r border-gray-100 dark:border-gray-700">
+        <div className="px-4 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
           <MessageCircle className="w-5 h-5 text-teal-600" />
-          <h1 className="text-lg font-bold text-gray-900">Messages</h1>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white">Messages</h1>
         </div>
 
         <div className="flex-1 overflow-y-auto">
@@ -221,9 +221,9 @@ export default function PatientMessagesPage() {
             <p className="text-sm text-gray-400 text-center py-8">Chargement...</p>
           ) : conversations.length === 0 ? (
             <div className="text-center py-12 px-4">
-              <MessageCircle className="w-10 h-10 text-gray-200 mx-auto mb-2" />
-              <p className="text-sm text-gray-500 font-medium">Aucune conversation</p>
-              <p className="text-xs text-gray-400 mt-1">
+              <MessageCircle className="w-10 h-10 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
+              <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">Aucune conversation</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                 Vous pouvez contacter un médecin depuis vos rendez-vous
               </p>
             </div>
@@ -232,10 +232,10 @@ export default function PatientMessagesPage() {
               <button
                 key={conv.id}
                 onClick={() => selectConversation(conv.id)}
-                className={`w-full text-left px-4 py-3 flex items-center gap-3 border-b border-gray-50 transition-colors ${
+                className={`w-full text-left px-4 py-3 flex items-center gap-3 border-b border-gray-50 dark:border-gray-800 transition-colors ${
                   selectedId === conv.id
-                    ? "bg-teal-50 border-l-2 border-l-teal-500"
-                    : "hover:bg-gray-50"
+                    ? "bg-teal-50 dark:bg-teal-900/30 border-l-2 border-l-teal-500"
+                    : "hover:bg-gray-50 dark:hover:bg-gray-800"
                 }`}
               >
                 <div className="w-10 h-10 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold flex-shrink-0">
@@ -243,11 +243,11 @@ export default function PatientMessagesPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold text-gray-900 text-sm truncate">
+                    <p className="font-semibold text-gray-900 dark:text-white text-sm truncate">
                       {conv.doctorName}
                     </p>
                     {conv.lastMessageAt && (
-                      <span className="text-[11px] text-gray-400 flex-shrink-0">
+                      <span className="text-[11px] text-gray-400 dark:text-gray-500 flex-shrink-0">
                         {formatDistanceToNow(new Date(conv.lastMessageAt), {
                           addSuffix: false,
                           locale: fr,
@@ -264,23 +264,23 @@ export default function PatientMessagesPage() {
       </div>
 
       {/* Right panel — messages */}
-      <div className="flex-1 flex flex-col bg-secondary min-w-0">
+      <div className="flex-1 flex flex-col bg-secondary dark:bg-gray-800 min-w-0">
         {!selected ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">
-              <MessageCircle className="w-12 h-12 text-gray-200 mx-auto mb-3" />
-              <p className="text-gray-500 font-medium">Sélectionnez une conversation</p>
+              <MessageCircle className="w-12 h-12 text-gray-200 dark:text-gray-700 mx-auto mb-3" />
+              <p className="text-gray-500 dark:text-gray-400 font-medium">Sélectionnez une conversation</p>
             </div>
           </div>
         ) : (
           <>
             {/* Header */}
-            <header className="bg-white border-b border-gray-100 px-5 py-3 flex items-center gap-3 flex-shrink-0">
+            <header className="bg-white dark:bg-gray-900 border-b border-gray-100 dark:border-gray-700 px-5 py-3 flex items-center gap-3 flex-shrink-0">
               <div className="w-9 h-9 rounded-full bg-teal-600 flex items-center justify-center text-white text-sm font-semibold">
                 {initials(selected.doctorName)}
               </div>
               <div>
-                <p className="font-semibold text-gray-900 text-sm">{selected.doctorName}</p>
+                <p className="font-semibold text-gray-900 dark:text-white text-sm">{selected.doctorName}</p>
                 <p className="text-xs text-teal-600">{selected.doctorSpecialty}</p>
               </div>
             </header>
@@ -288,9 +288,9 @@ export default function PatientMessagesPage() {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
               {loadingMsgs ? (
-                <p className="text-center text-gray-400 text-sm py-8">Chargement...</p>
+                <p className="text-center text-gray-400 dark:text-gray-500 text-sm py-8">Chargement...</p>
               ) : messages.length === 0 ? (
-                <p className="text-center text-gray-400 text-sm py-8">
+                <p className="text-center text-gray-400 dark:text-gray-500 text-sm py-8">
                   Aucun message. Commencez la conversation.
                 </p>
               ) : (
@@ -305,7 +305,7 @@ export default function PatientMessagesPage() {
                         className={`max-w-[70%] rounded-2xl px-4 py-2.5 ${
                           isPatient
                             ? "bg-teal-600 text-white rounded-br-sm"
-                            : "bg-white text-gray-900 rounded-bl-sm shadow-sm border border-gray-100"
+                            : "bg-white dark:bg-gray-700 text-gray-900 dark:text-white rounded-bl-sm shadow-sm border border-gray-100 dark:border-gray-600"
                         }`}
                       >
                         <p className="text-sm leading-relaxed whitespace-pre-wrap break-words">
@@ -313,7 +313,7 @@ export default function PatientMessagesPage() {
                         </p>
                         <p
                           className={`text-[10px] mt-1 ${
-                            isPatient ? "text-teal-200" : "text-gray-400"
+                            isPatient ? "text-teal-200" : "text-gray-400 dark:text-gray-500"
                           }`}
                         >
                           {new Date(msg.createdAt).toLocaleTimeString("fr-FR", {
@@ -332,7 +332,7 @@ export default function PatientMessagesPage() {
             {/* Input bar */}
             <form
               onSubmit={sendMessage}
-              className="bg-white border-t border-gray-100 px-4 py-3 flex items-end gap-3 flex-shrink-0"
+              className="bg-white dark:bg-gray-900 border-t border-gray-100 dark:border-gray-700 px-4 py-3 flex items-end gap-3 flex-shrink-0"
             >
               <textarea
                 value={input}
@@ -345,7 +345,7 @@ export default function PatientMessagesPage() {
                 }}
                 placeholder="Écrire un message..."
                 rows={1}
-                className="flex-1 resize-none rounded-xl border border-gray-200 px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent max-h-32 overflow-y-auto"
+                className="flex-1 resize-none rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-foreground dark:text-white px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent max-h-32 overflow-y-auto"
               />
               <button
                 type="submit"

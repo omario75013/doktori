@@ -171,7 +171,7 @@ export default function InscriptionPatientPage() {
       </div>
 
       {/* Right panel */}
-      <div className="flex-1 flex flex-col bg-[#F8FFFE]">
+      <div className="flex-1 flex flex-col bg-[#F8FFFE] dark:bg-gray-900">
         <div className="lg:hidden bg-gradient-to-r from-primary to-foreground px-6 py-5 text-white">
           <div className="flex items-center gap-2 mb-2">
             <Stethoscope className="h-5 w-5" />
@@ -280,7 +280,7 @@ export default function InscriptionPatientPage() {
                 {/* Password strength bar */}
                 {form.password.length > 0 && passwordStrength && (
                   <div className="space-y-1 pt-1">
-                    <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-1.5 w-full bg-gray-100 dark:bg-gray-700 rounded-full overflow-hidden">
                       <div
                         className={`h-full rounded-full transition-all duration-300 ${STRENGTH_CONFIG[passwordStrength].color} ${STRENGTH_CONFIG[passwordStrength].width}`}
                       />

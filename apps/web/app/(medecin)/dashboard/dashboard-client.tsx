@@ -111,14 +111,14 @@ function KpiCard({
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.08, ease: "easeOut" }}
       whileHover={{ y: -2, boxShadow: "0 8px 25px -5px rgba(0,0,0,0.08)" }}
-      className="relative bg-white rounded-2xl p-5 border border-slate-100 shadow-sm overflow-hidden cursor-pointer"
+      className="relative bg-white dark:bg-gray-900 rounded-2xl p-5 border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden cursor-pointer"
     >
       {/* Left accent bar */}
       <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${accentColor}`} />
       <div className="flex items-start justify-between gap-3 pl-3">
         <div className="min-w-0">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-500">{label}</div>
-          <div className="text-3xl font-black mt-1.5 text-slate-900 tabular-nums">{value}</div>
+          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">{label}</div>
+          <div className="text-3xl font-black mt-1.5 text-slate-900 dark:text-white tabular-nums">{value}</div>
           <div className="text-xs text-slate-400 mt-1">{sublabel}</div>
         </div>
         <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
@@ -176,7 +176,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2.5">
       <span className="h-5 w-1 rounded-full bg-primary" />
-      <h2 className="font-bold text-slate-800 text-base">{children}</h2>
+      <h2 className="font-bold text-slate-800 dark:text-white text-base">{children}</h2>
     </div>
   );
 }
@@ -291,11 +291,11 @@ export function DashboardClient({
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-2xl font-black text-slate-900">
+          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
             {t("greeting")}, Dr.{" "}
             <span className="text-primary">{doctorName}</span>
           </h1>
-          <p className="text-slate-500 text-sm mt-1">
+          <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">
             {t("greetingSubtitle")}
           </p>
         </div>
@@ -309,7 +309,7 @@ export function DashboardClient({
           </Link>
           <Link
             href="/rendez-vous"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-gray-300 shadow-sm hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
           >
             Rendez-vous
             <ArrowRight className="h-3.5 w-3.5" />
@@ -373,12 +373,12 @@ export function DashboardClient({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
         data-tour="today-appts"
-        className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+        className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden"
       >
-        <div className="px-5 py-4 border-b border-slate-100">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-gray-700">
           <SectionHeader>{t("todayAppointments")}</SectionHeader>
         </div>
-        <div className="divide-y divide-slate-50">
+        <div className="divide-y divide-slate-50 dark:divide-gray-800">
           {todayAppts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-slate-400">
               <CheckCircle className="h-8 w-8 mb-2 text-slate-300" strokeWidth={1.5} />
@@ -393,7 +393,7 @@ export function DashboardClient({
                   className={`flex items-center justify-between px-5 py-4 border-l-4 ${cfg.border} hover:bg-secondary transition-colors`}
                 >
                   <div className="min-w-0">
-                    <div className="font-semibold text-slate-900 flex items-center gap-2 flex-wrap text-sm">
+                    <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap text-sm">
                       <span className="text-primary font-bold tabular-nums">
                         {format(a.startsAt, "HH:mm")}
                       </span>
@@ -407,7 +407,7 @@ export function DashboardClient({
                         cabinetLabel={t("cabinet")}
                       />
                     </div>
-                    <div className="text-xs text-slate-500 mt-0.5">
+                    <div className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
                       {a.patientPhone}
                       {a.reason ? ` · ${a.reason}` : ""}
                     </div>
@@ -428,15 +428,15 @@ export function DashboardClient({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.4 }}
         data-tour="upcoming-appts"
-        className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden"
+        className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden"
       >
-        <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
           <SectionHeader>{t("upcoming")}</SectionHeader>
           <Link href="/rendez-vous" className="text-xs font-semibold text-primary hover:underline">
             {t("viewAll")} →
           </Link>
         </div>
-        <div className="divide-y divide-slate-50">
+        <div className="divide-y divide-slate-50 dark:divide-gray-800">
           {upcomingAppts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-12 text-slate-400">
               <Calendar className="h-8 w-8 mb-2 text-slate-300" strokeWidth={1.5} />
@@ -454,8 +454,8 @@ export function DashboardClient({
                     {/* Timeline dot */}
                     <div className="mt-1.5 flex h-2 w-2 shrink-0 rounded-full bg-primary/50" />
                     <div className="min-w-0">
-                      <div className="font-semibold text-slate-900 flex items-center gap-2 flex-wrap text-sm">
-                        <span className="text-slate-500 font-medium tabular-nums">
+                      <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap text-sm">
+                        <span className="text-slate-500 dark:text-gray-400 font-medium tabular-nums">
                           {format(a.startsAt, "EEE d MMM HH:mm", { locale: fr })}
                         </span>
                         <span className="text-slate-400">—</span>
@@ -469,7 +469,7 @@ export function DashboardClient({
                         />
                       </div>
                       {a.reason && (
-                        <div className="text-xs text-slate-500 mt-0.5">{a.reason}</div>
+                        <div className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{a.reason}</div>
                       )}
                     </div>
                   </div>

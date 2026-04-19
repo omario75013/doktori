@@ -61,7 +61,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-foreground">Patients</h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             {patients.length} patient{patients.length !== 1 ? "s" : ""} suivis
           </p>
         </div>
@@ -75,13 +75,13 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Rechercher par nom ou téléphone…"
-          className="w-full pl-9 pr-4 py-2.5 text-sm rounded-2xl border border-border bg-white shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+          className="w-full pl-9 pr-4 py-2.5 text-sm rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
         />
       </div>
 
       {/* Search result count */}
       {normalizedQuery && (
-        <p className="text-sm text-gray-500 -mt-2">
+        <p className="text-sm text-gray-500 dark:text-gray-400 -mt-2">
           {filtered.length === 0
             ? "Aucun résultat"
             : `${filtered.length} résultat${filtered.length !== 1 ? "s" : ""} pour « ${debouncedQuery.trim()} »`}
@@ -90,30 +90,30 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
 
       {patients.length === 0 ? (
         /* No patients at all */
-        <div className="rounded-2xl border border-border bg-white p-12 text-center shadow-sm">
+        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
           <div className="h-14 w-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
             <Users className="h-7 w-7 text-primary" />
           </div>
           <p className="text-foreground font-medium mb-1">Aucun patient pour le moment</p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-400 dark:text-gray-500">
             Les patients apparaîtront ici après leurs premiers rendez-vous.
           </p>
         </div>
       ) : filtered.length === 0 ? (
         /* Search returned nothing */
-        <div className="rounded-2xl border border-border bg-white p-12 text-center shadow-sm">
+        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
           <div className="h-14 w-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
             <Users className="h-7 w-7 text-primary" />
           </div>
           <p className="text-foreground font-medium mb-1">Aucun patient trouvé</p>
-          <p className="text-sm text-gray-400">
+          <p className="text-sm text-gray-400 dark:text-gray-500">
             Essayez un autre nom ou numéro de téléphone.
           </p>
         </div>
       ) : (
         <>
           {/* Table */}
-          <div className="rounded-2xl border border-border bg-white shadow-sm overflow-x-auto">
+          <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-secondary text-left">
@@ -134,13 +134,13 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                         {p.name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{p.phone}</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">{p.phone}</td>
                     <td className="px-4 py-3">
                       <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-secondary text-primary text-xs font-bold">
                         {p.total_visits}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
                       {format(new Date(p.last_visit), "d MMM yyyy", { locale: fr })}
                     </td>
                   </tr>
@@ -152,7 +152,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-1">
-              <p className="text-sm text-gray-500">
+              <p className="text-sm text-gray-500 dark:text-gray-400">
                 Page {safePage} sur {totalPages} —{" "}
                 {filtered.length} patient{filtered.length !== 1 ? "s" : ""}
               </p>
@@ -160,7 +160,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={safePage === 1}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-xl border border-border bg-white text-foreground hover:bg-secondary transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-xl border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary dark:hover:bg-gray-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="h-4 w-4" />
                   Précédent
@@ -168,7 +168,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={safePage === totalPages}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-xl border border-border bg-white text-foreground hover:bg-secondary transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-xl border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary dark:hover:bg-gray-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   Suivant
                   <ChevronRight className="h-4 w-4" />

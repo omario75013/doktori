@@ -77,7 +77,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-white p-6">
+    <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6">
       <div className="mb-5 border-b border-border pb-4">
         <h2 className="font-heading text-base font-bold text-foreground">{title}</h2>
         {description && (

@@ -154,7 +154,7 @@ export default function ConnexionPatientPage() {
       </div>
 
       {/* Right panel */}
-      <div className="flex-1 flex flex-col bg-[#F8FFFE]">
+      <div className="flex-1 flex flex-col bg-[#F8FFFE] dark:bg-gray-900">
         {/* Mobile top bar */}
         <div className="lg:hidden bg-gradient-to-r from-primary to-foreground px-6 py-5 text-white">
           <div className="flex items-center gap-2 mb-2">
@@ -172,13 +172,13 @@ export default function ConnexionPatientPage() {
             </div>
 
             {/* Tab switcher */}
-            <div className="flex gap-1 bg-white rounded-2xl border border-border p-1 mb-6 shadow-sm">
+            <div className="flex gap-1 bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 p-1 mb-6 shadow-sm">
               <button
                 onClick={() => { setActiveTab("phone"); clearError(); setPhoneStep("phone"); }}
                 className={`flex items-center justify-center gap-2 flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                   activeTab === "phone"
                     ? "bg-primary text-white shadow-sm"
-                    : "text-foreground/60 hover:text-foreground hover:bg-secondary"
+                    : "text-foreground/60 hover:text-foreground hover:bg-secondary dark:hover:bg-gray-700"
                 }`}
               >
                 <Phone className="h-4 w-4" />
@@ -189,7 +189,7 @@ export default function ConnexionPatientPage() {
                 className={`flex items-center justify-center gap-2 flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                   activeTab === "email"
                     ? "bg-primary text-white shadow-sm"
-                    : "text-foreground/60 hover:text-foreground hover:bg-secondary"
+                    : "text-foreground/60 hover:text-foreground hover:bg-secondary dark:hover:bg-gray-700"
                 }`}
               >
                 <Mail className="h-4 w-4" />
@@ -197,7 +197,7 @@ export default function ConnexionPatientPage() {
               </button>
             </div>
 
-            <div className="bg-white rounded-2xl border border-border shadow-sm p-6">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 shadow-sm p-6">
               {/* Error banner — visible across all steps */}
               {error && (
                 <div className="flex items-start gap-3 text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">

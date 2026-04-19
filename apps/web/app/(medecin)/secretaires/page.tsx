@@ -21,10 +21,10 @@ function SecretaryListSkeleton() {
       {[1, 2, 3].map((i) => (
         <div key={i} className="flex items-center justify-between py-3 animate-pulse">
           <div className="space-y-1.5 flex-1">
-            <div className="h-3.5 bg-gray-200 rounded w-2/5" />
-            <div className="h-3 bg-gray-100 rounded w-3/5" />
+            <div className="h-3.5 bg-gray-200 dark:bg-gray-700 rounded w-2/5" />
+            <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-3/5" />
           </div>
-          <div className="h-8 w-16 bg-gray-100 rounded-xl" />
+          <div className="h-8 w-16 bg-gray-100 dark:bg-gray-800 rounded-xl" />
         </div>
       ))}
     </div>
@@ -125,7 +125,7 @@ export default function SecretairesPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Add secretary form */}
-        <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm">
           <h2 className="text-base font-semibold text-foreground mb-4">Ajouter une secrétaire</h2>
           <form onSubmit={handleAdd} className="space-y-4">
             <div className="space-y-1">
@@ -191,7 +191,7 @@ export default function SecretairesPage() {
         </div>
 
         {/* Secretary list */}
-        <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold text-foreground">Secrétaires actives</h2>
             {!loading && active.length > 0 && (
@@ -208,8 +208,8 @@ export default function SecretairesPage() {
               <div className="h-14 w-14 rounded-2xl bg-[#134E4A]/10 flex items-center justify-center mx-auto mb-3">
                 <Users className="h-7 w-7 text-[#134E4A]" />
               </div>
-              <p className="text-sm font-medium text-gray-700 mb-1">Aucune secrétaire</p>
-              <p className="text-sm text-gray-400 mb-4">
+              <p className="text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Aucune secrétaire</p>
+              <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">
                 Ajoutez une secrétaire pour qu&apos;elle puisse gérer votre agenda.
               </p>
               <button
@@ -230,7 +230,7 @@ export default function SecretairesPage() {
                 >
                   <div>
                     <p className="text-sm font-medium text-foreground">{sec.name}</p>
-                    <p className="text-xs text-gray-500">{sec.email}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">{sec.email}</p>
                   </div>
                   <Button
                     variant="outline"
@@ -252,7 +252,7 @@ export default function SecretairesPage() {
         </div>
       </div>
 
-      <p className="text-xs text-gray-400">
+      <p className="text-xs text-gray-400 dark:text-gray-500">
         Les secrétaires peuvent consulter et gérer l&apos;agenda, mais n&apos;ont pas accès aux
         paramètres financiers ni aux réglages du compte.
       </p>

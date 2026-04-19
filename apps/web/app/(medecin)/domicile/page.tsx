@@ -61,11 +61,11 @@ export default function DomicilePage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-foreground">Visites à domicile</h1>
-          <p className="text-sm text-gray-500">Acceptez les demandes de consultation à domicile avec votre propre tarif et rayon.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Acceptez les demandes de consultation à domicile avec votre propre tarif et rayon.</p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm max-w-xl space-y-6">
+      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm max-w-xl space-y-6">
         <div
           className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-secondary transition-colors cursor-pointer"
           onClick={() => setIsAvailable((v) => !v)}
@@ -93,7 +93,7 @@ export default function DomicilePage() {
                 onChange={(e) => setRadiusKm(Number(e.target.value))}
                 className="h-12 rounded-xl border-border focus-visible:ring-primary mt-1"
               />
-              <p className="text-xs text-gray-500 mt-1">Distance maximale depuis votre cabinet</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Distance maximale depuis votre cabinet</p>
             </div>
 
             <div>
@@ -107,7 +107,7 @@ export default function DomicilePage() {
                 onChange={(e) => setFee(Number(e.target.value))}
                 className="h-12 rounded-xl border-border focus-visible:ring-primary mt-1"
               />
-              <p className="text-xs text-gray-500 mt-1">Tarif total facturé au patient. Doktori prélève une commission de 10%.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Tarif total facturé au patient. Doktori prélève une commission de 10%.</p>
             </div>
           </div>
         </div>

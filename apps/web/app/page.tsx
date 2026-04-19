@@ -160,7 +160,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════ PRE-LAUNCH STRIP ═══════════════════════ */}
-      <section className="border-y border-border bg-secondary/50 py-10">
+      <section className="border-y border-border dark:border-gray-700 bg-secondary/50 dark:bg-gray-800 py-10">
         <div className="mx-auto max-w-3xl px-6 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-primary mb-4">
             <Sparkles className="h-4 w-4" strokeWidth={2.5} />
@@ -196,7 +196,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════ SOS BANNER ═══════════════════════ */}
-      <section className="bg-white px-4 py-12 sm:px-6">
+      <section className="bg-white dark:bg-gray-900 px-4 py-12 sm:px-6">
         <div className="mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-destructive to-[#991B1B] shadow-xl">
           <div className="grid gap-8 p-8 md:grid-cols-[auto_1fr_auto] md:items-center md:p-10">
             <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur-sm">
@@ -225,10 +225,10 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════ HOW IT WORKS ═══════════════════════ */}
-      <section className="bg-white px-4 py-24 sm:px-6">
+      <section className="bg-white dark:bg-gray-900 px-4 py-24 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-1 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
+            <div className="inline-flex items-center gap-2 rounded-full bg-secondary dark:bg-gray-800 px-4 py-1 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
               <TrendingUp className="h-3.5 w-3.5" />
               {t("howItWorksBadge")}
             </div>
@@ -263,7 +263,7 @@ export default function HomePage() {
               return (
                 <div
                   key={s.step}
-                  className="group relative overflow-hidden rounded-3xl border border-border bg-white p-8 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
+                  className="group relative overflow-hidden rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-8 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
                 >
                   <div className="absolute -right-4 -top-4 font-heading text-8xl font-black leading-none text-secondary transition-colors group-hover:text-border">
                     {s.step}
@@ -287,7 +287,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════ SPECIALTIES ═══════════════════════ */}
-      <section className="bg-secondary/50 px-4 py-24 sm:px-6">
+      <section className="bg-secondary/50 dark:bg-gray-800 px-4 py-24 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark ring-1 ring-border">
@@ -307,7 +307,7 @@ export default function HomePage() {
                 <Link
                   key={specialty.id}
                   href={`/recherche?specialty=${specialty.id}`}
-                  className="group relative flex flex-col items-center gap-3 rounded-2xl border border-border bg-white p-6 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-lg hover:shadow-primary/10"
+                  className="group relative flex flex-col items-center gap-3 rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-lg hover:shadow-primary/10"
                 >
                   <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-secondary text-primary transition-all group-hover:scale-105 group-hover:bg-primary group-hover:text-white">
                     <Icon className="h-6 w-6" strokeWidth={2.5} />
@@ -492,7 +492,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════ FOOTER ═══════════════════════ */}
-      <footer className="bg-white px-4 py-16 sm:px-6">
+      <footer className="bg-white dark:bg-gray-900 px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <div className="grid gap-10 md:grid-cols-[2fr_1fr_1fr_1fr]">
             <div>
@@ -542,7 +542,7 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="mt-12 border-t border-border pt-8 text-center">
+          <div className="mt-12 border-t border-border dark:border-gray-700 pt-8 text-center">
             <p className="text-xs text-muted-foreground">{t("footerCopyright")}</p>
           </div>
         </div>

@@ -69,13 +69,13 @@ export default function ConventionsPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-foreground">Conventions & Assurances</h1>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400">
             Indiquez les mutuelles et caisses d&apos;assurance maladie que vous acceptez.
           </p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm max-w-xl space-y-4">
+      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm max-w-xl space-y-4">
         {INSURANCES.map((ins) => (
           <div
             key={ins.id}
@@ -89,7 +89,7 @@ export default function ConventionsPage() {
             />
             <Label htmlFor={ins.id} className="cursor-pointer flex flex-col">
               <span className="font-medium text-foreground">{ins.label}</span>
-              <span className="text-xs text-gray-400">{ins.labelAr}</span>
+              <span className="text-xs text-gray-400 dark:text-gray-500">{ins.labelAr}</span>
             </Label>
           </div>
         ))}

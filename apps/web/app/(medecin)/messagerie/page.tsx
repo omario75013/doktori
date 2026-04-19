@@ -19,14 +19,14 @@ interface Conversation {
 
 function ConversationSkeleton() {
   return (
-    <div className="w-full bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-4 animate-pulse">
-      <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0" />
+    <div className="w-full bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 p-4 flex items-center gap-4 animate-pulse">
+      <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0" />
       <div className="flex-1 min-w-0 space-y-2">
-        <div className="h-4 bg-gray-200 rounded w-2/5" />
-        <div className="h-3 bg-gray-100 rounded w-3/5" />
-        <div className="h-3 bg-gray-100 rounded w-1/4" />
+        <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-2/5" />
+        <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-3/5" />
+        <div className="h-3 bg-gray-100 dark:bg-gray-800 rounded w-1/4" />
       </div>
-      <div className="w-5 h-5 bg-gray-100 rounded flex-shrink-0" />
+      <div className="w-5 h-5 bg-gray-100 dark:bg-gray-800 rounded flex-shrink-0" />
     </div>
   );
 }
@@ -59,7 +59,7 @@ export default function DoctorMessageriePage() {
         <div className="p-2 bg-teal-100 rounded-lg">
           <MessageCircle className="w-6 h-6 text-teal-700" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900">Messagerie</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Messagerie</h1>
       </div>
 
       {loading ? (
@@ -71,10 +71,10 @@ export default function DoctorMessageriePage() {
       ) : error ? (
         <p className="text-red-500 text-center py-12">{error}</p>
       ) : conversations.length === 0 ? (
-        <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+        <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-700">
           <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 font-medium">Aucune conversation</p>
-          <p className="text-sm text-gray-400 mt-1">
+          <p className="text-gray-500 dark:text-gray-400 font-medium">Aucune conversation</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
             Les patients peuvent vous contacter après une consultation
           </p>
         </div>
@@ -92,7 +92,7 @@ export default function DoctorMessageriePage() {
               <button
                 key={conv.id}
                 onClick={() => router.push(`/messagerie/${conv.id}`)}
-                className="w-full text-left bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-4 hover:border-teal-200 hover:shadow-sm transition-all"
+                className="w-full text-left bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700 p-4 flex items-center gap-4 hover:border-teal-200 dark:hover:border-teal-700 hover:shadow-sm transition-all"
               >
                 <div className="relative flex-shrink-0">
                   <div className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center text-white font-semibold">
@@ -105,18 +105,18 @@ export default function DoctorMessageriePage() {
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className={`font-semibold truncate ${hasUnread ? "text-gray-900" : "text-gray-700"}`}>
+                  <p className={`font-semibold truncate ${hasUnread ? "text-gray-900 dark:text-white" : "text-gray-700 dark:text-gray-300"}`}>
                     {conv.patientName}
                   </p>
                   {conv.lastMessagePreview ? (
-                    <p className={`text-sm truncate mt-0.5 ${hasUnread ? "text-gray-700 font-medium" : "text-gray-400"}`}>
+                    <p className={`text-sm truncate mt-0.5 ${hasUnread ? "text-gray-700 dark:text-gray-300 font-medium" : "text-gray-400 dark:text-gray-500"}`}>
                       {conv.lastMessagePreview}
                     </p>
                   ) : (
-                    <p className="text-sm text-gray-400 truncate mt-0.5">{conv.patientPhone}</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500 truncate mt-0.5">{conv.patientPhone}</p>
                   )}
                   {conv.lastMessageAt && (
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                       {formatDistanceToNow(new Date(conv.lastMessageAt), {
                         addSuffix: true,
                         locale: fr,
@@ -125,7 +125,7 @@ export default function DoctorMessageriePage() {
                   )}
                 </div>
                 {conv.status === "archived" && (
-                  <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 rounded-full flex-shrink-0">
+                  <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full flex-shrink-0">
                     Archivée
                   </span>
                 )}

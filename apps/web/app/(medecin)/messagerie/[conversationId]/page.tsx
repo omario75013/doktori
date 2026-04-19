@@ -35,6 +35,8 @@ export default function DoctorConversationPage({
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [archiving, setArchiving] = useState(false);
+  // TODO: wire isTyping to Socket.IO events
+  const [isTyping, setIsTyping] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
 
   // Load conversation meta + messages
@@ -133,6 +135,27 @@ export default function DoctorConversationPage({
     }
   }
 
+  function TypingIndicator() {
+    return (
+      <div className="flex justify-start">
+        <div className="bg-white text-gray-900 rounded-2xl rounded-bl-sm shadow-sm border border-gray-100 px-4 py-3 flex items-center gap-1">
+          <style>{`
+            @keyframes typing-dot {
+              0%, 60%, 100% { transform: translateY(0); opacity: 0.4; }
+              30% { transform: translateY(-4px); opacity: 1; }
+            }
+            .typing-dot:nth-child(1) { animation: typing-dot 1.2s infinite 0s; }
+            .typing-dot:nth-child(2) { animation: typing-dot 1.2s infinite 0.2s; }
+            .typing-dot:nth-child(3) { animation: typing-dot 1.2s infinite 0.4s; }
+          `}</style>
+          <span className="typing-dot inline-block w-2 h-2 rounded-full bg-gray-400" />
+          <span className="typing-dot inline-block w-2 h-2 rounded-full bg-gray-400" />
+          <span className="typing-dot inline-block w-2 h-2 rounded-full bg-gray-400" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col h-[calc(100vh-2rem)] bg-secondary rounded-xl overflow-hidden">
       {/* Header */}
@@ -207,6 +230,7 @@ export default function DoctorConversationPage({
             );
           })
         )}
+        {isTyping && <TypingIndicator />}
         <div ref={bottomRef} />
       </div>
 

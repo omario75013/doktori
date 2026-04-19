@@ -119,11 +119,11 @@ export default function MotifsPage() {
         </div>
         <div>
           <h1 className="text-2xl font-bold text-foreground">Motifs de consultation</h1>
-          <p className="text-sm text-gray-500">Définissez les types de consultations avec leurs durées et tarifs.</p>
+          <p className="text-sm text-gray-500 dark:text-gray-400">Définissez les types de consultations avec leurs durées et tarifs.</p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm max-w-xl">
+      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm max-w-xl">
         <h2 className="font-semibold text-foreground mb-4">Ajouter un motif</h2>
         <form onSubmit={handleCreate} className="space-y-4" noValidate>
           <div>
@@ -194,7 +194,7 @@ export default function MotifsPage() {
         </form>
       </div>
 
-      <div className="rounded-2xl border border-border bg-white shadow-sm max-w-xl">
+      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm max-w-xl">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="font-semibold text-foreground">Motifs actifs</h2>
           <span className="text-xs text-primary font-semibold bg-secondary px-2.5 py-1 rounded-full">{types.length}</span>
@@ -205,7 +205,7 @@ export default function MotifsPage() {
               <Stethoscope className="h-6 w-6 text-primary" />
             </div>
             <p className="text-foreground font-medium mb-1">Aucun motif défini</p>
-            <p className="text-sm text-gray-400">Ajoutez votre premier motif de consultation ci-dessus.</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500">Ajoutez votre premier motif de consultation ci-dessus.</p>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -213,7 +213,7 @@ export default function MotifsPage() {
               <div key={t.id} className="p-4 flex items-center justify-between hover:bg-secondary transition-colors">
                 <div>
                   <div className="font-medium text-foreground">{t.name}</div>
-                  <div className="text-sm text-gray-500">
+                  <div className="text-sm text-gray-500 dark:text-gray-400">
                     {t.durationMinutes} min
                     {t.fee ? ` · ${t.fee / 1000} DT` : ""}
                   </div>

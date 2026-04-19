@@ -129,7 +129,7 @@ export default function MesDocumentsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-secondary">
+      <div className="min-h-screen bg-secondary dark:bg-gray-900">
         {/* Skeleton header */}
         <div className="bg-gradient-to-br from-primary to-foreground px-4 py-8">
           <div className="max-w-2xl mx-auto">
@@ -145,15 +145,15 @@ export default function MesDocumentsPage() {
         </div>
         <div className="max-w-2xl mx-auto px-4 py-6 space-y-3">
           {/* Skeleton tabs */}
-          <div className="h-12 bg-white rounded-2xl border border-border animate-pulse" />
+          <div className="h-12 bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 animate-pulse" />
           {/* Skeleton cards */}
           {[1, 2, 3].map((i) => (
-            <div key={i} className="bg-white rounded-2xl border border-border p-4 animate-pulse">
+            <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 p-4 animate-pulse">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 bg-gray-100 rounded-lg" />
+                <div className="w-8 h-8 bg-gray-100 dark:bg-gray-700 rounded-lg" />
                 <div className="flex-1 space-y-1.5">
-                  <div className="h-4 w-40 bg-gray-100 rounded" />
-                  <div className="h-3 w-24 bg-gray-100 rounded" />
+                  <div className="h-4 w-40 bg-gray-100 dark:bg-gray-700 rounded" />
+                  <div className="h-3 w-24 bg-gray-100 dark:bg-gray-700 rounded" />
                 </div>
               </div>
             </div>
@@ -191,7 +191,7 @@ export default function MesDocumentsPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Tabs */}
-        <div className="flex gap-1 bg-white rounded-2xl border border-border p-1 mb-6 shadow-sm overflow-x-auto">
+        <div className="flex gap-1 bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 p-1 mb-6 shadow-sm overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
@@ -199,7 +199,7 @@ export default function MesDocumentsPage() {
               className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex-1 justify-center ${
                 activeTab === tab.id
                   ? "bg-primary text-white shadow-sm"
-                  : "text-foreground/60 hover:text-foreground hover:bg-secondary"
+                  : "text-foreground/60 hover:text-foreground hover:bg-secondary dark:hover:bg-gray-700"
               }`}
             >
               {tab.icon}
@@ -232,7 +232,7 @@ export default function MesDocumentsPage() {
                 return (
                   <div
                     key={p.prescriptionId}
-                    className="block bg-white rounded-2xl border border-border border-l-4 border-l-primary shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 p-4"
+                    className="block bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 border-l-4 border-l-primary shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -291,7 +291,7 @@ export default function MesDocumentsPage() {
                 return (
                   <div
                     key={c.id}
-                    className="bg-white rounded-2xl border border-border border-l-4 border-l-teal-500 shadow-sm p-4"
+                    className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 border-l-4 border-l-teal-500 shadow-sm p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -337,7 +337,7 @@ export default function MesDocumentsPage() {
               documents.consultationNotes.map((n) => (
                 <div
                   key={n.id}
-                  className="bg-white rounded-2xl border border-border border-l-4 border-l-purple-500 shadow-sm p-4"
+                  className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 border-l-4 border-l-purple-500 shadow-sm p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
@@ -380,7 +380,7 @@ function EmptyState({
   description: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-border shadow-sm p-10 text-center">
+    <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 shadow-sm p-10 text-center">
       <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary mb-4">
         {icon}
       </div>

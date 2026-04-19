@@ -255,11 +255,11 @@ export default function AgendaPage() {
       </div>
 
       {/* Schedule grid */}
-      <div className="bg-white rounded-2xl border border-border shadow-sm divide-y divide-border">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl border border-border shadow-sm divide-y divide-border">
         {days.map((day) => (
           <div
             key={day.dayOfWeek}
-            className={`p-5 transition-colors ${day.open ? "bg-white" : "bg-secondary/30"}`}
+            className={`p-5 transition-colors ${day.open ? "bg-white dark:bg-gray-900" : "bg-secondary/30 dark:bg-gray-800/30"}`}
           >
             {/* Day header row */}
             <div className="flex items-center gap-3">
@@ -280,7 +280,7 @@ export default function AgendaPage() {
                     {DAY_LABELS[day.dayOfWeek]}
                   </span>
                 ) : (
-                  <span className="inline-flex items-center justify-center rounded-lg bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-400 min-w-[90px] text-center">
+                  <span className="inline-flex items-center justify-center rounded-lg bg-gray-100 dark:bg-gray-800 px-3 py-1 text-sm font-semibold text-gray-400 dark:text-gray-500 min-w-[90px] text-center">
                     {DAY_LABELS[day.dayOfWeek]}
                   </span>
                 )}

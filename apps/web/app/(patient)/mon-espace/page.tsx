@@ -282,7 +282,7 @@ export default function PatientDashboardPage() {
   const greeting = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
 
   return (
-    <div className="min-h-screen bg-secondary">
+    <div className="min-h-screen bg-secondary dark:bg-gray-900">
       <GuidedTour
         storageKey="doktori_patient_tour"
         steps={[
@@ -322,7 +322,7 @@ export default function PatientDashboardPage() {
           </div>
           <button
             onClick={logout}
-            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-red-500 transition-colors"
+            className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors"
           >
             <LogOut className="w-4 h-4" />
             Se déconnecter
@@ -378,7 +378,7 @@ export default function PatientDashboardPage() {
           data-tour="quick-actions"
           className="mb-8"
         >
-          <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+          <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
             Actions rapides
           </h3>
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -386,13 +386,13 @@ export default function PatientDashboardPage() {
               <a
                 key={action.href}
                 href={action.href}
-                className={`flex flex-col items-center gap-2 rounded-2xl border border-border bg-white p-4 text-center ${action.hoverBorder} hover:shadow-md transition-all duration-200`}
+                className={`flex flex-col items-center gap-2 rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-center ${action.hoverBorder} dark:hover:bg-gray-700 hover:shadow-md transition-all duration-200`}
               >
                 <div className={`w-10 h-10 ${action.iconBg} rounded-full flex items-center justify-center`}>
                   {action.icon}
                 </div>
                 <span className="text-xs font-semibold text-foreground leading-snug">{action.title}</span>
-                <span className="text-[10px] text-gray-400 leading-snug">{action.desc}</span>
+                <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-snug">{action.desc}</span>
               </a>
             ))}
           </div>
@@ -407,7 +407,7 @@ export default function PatientDashboardPage() {
           className="mb-8"
         >
           <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
               Rendez-vous à venir
             </h3>
             <a href="/mes-rdv" className="text-xs font-semibold text-primary hover:underline">
@@ -417,12 +417,12 @@ export default function PatientDashboardPage() {
 
           {upcoming.length === 0 ? (
             /* Enhanced empty state */
-            <div className="rounded-2xl border border-border bg-white p-8 text-center shadow-sm">
+            <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center shadow-sm">
               <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
                 <Calendar className="w-8 h-8 text-primary/40" />
               </div>
               <p className="text-foreground font-semibold mb-1">Pas de rendez-vous à venir</p>
-              <p className="text-sm text-gray-400 mb-5">
+              <p className="text-sm text-gray-400 dark:text-gray-500 mb-5">
                 Votre agenda est vide. Trouvez un médecin et prenez rendez-vous en quelques clics.
               </p>
               <a
@@ -451,7 +451,7 @@ export default function PatientDashboardPage() {
                 return (
                   <div
                     key={a.id}
-                    className={`rounded-2xl border-l-4 ${borderColor} border border-border bg-white p-4 shadow-sm`}
+                    className={`rounded-2xl border-l-4 ${borderColor} border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -462,7 +462,7 @@ export default function PatientDashboardPage() {
                           </span>
                         </div>
                         <p className="text-sm text-primary mb-1">{spec?.label ?? a.doctorSpecialty}</p>
-                        <p className="text-sm text-gray-500 capitalize">
+                        <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
                           {format(new Date(a.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
                         </p>
                         <div className="flex items-center gap-2 mt-2 flex-wrap">
@@ -510,7 +510,7 @@ export default function PatientDashboardPage() {
             data-tour="recent-activity"
             className="mb-8"
           >
-            <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
               Médecins récents
             </h3>
             <div className="space-y-3">
@@ -519,7 +519,7 @@ export default function PatientDashboardPage() {
                 return (
                   <div
                     key={a.doctorSlug}
-                    className="rounded-2xl border border-border bg-white p-4 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
+                    className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
@@ -527,7 +527,7 @@ export default function PatientDashboardPage() {
                       </div>
                       <div>
                         <p className="font-semibold text-foreground">{a.doctorName}</p>
-                        <p className="text-sm text-gray-500">{spec?.label}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{spec?.label}</p>
                       </div>
                     </div>
                     <a href={`/medecin/${a.doctorSlug}`}>
@@ -557,11 +557,11 @@ export default function PatientDashboardPage() {
           >
             <div className="flex items-center gap-2 mb-3">
               <Clock className="w-4 h-4 text-foreground/40" />
-              <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
                 Activité récente
               </h3>
             </div>
-            <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 shadow-sm overflow-hidden">
               {timeline.map((item, index) => (
                 <div
                   key={item.id}
@@ -587,17 +587,17 @@ export default function PatientDashboardPage() {
         {/* Cancel confirmation modal */}
         {cancelConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl border border-border">
+            <div className="mx-4 w-full max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-xl border border-border dark:border-gray-700">
               <h3 className="text-lg font-bold text-foreground">
                 Annuler ce rendez-vous ?
               </h3>
-              <p className="mt-2 text-sm text-gray-500">
+              <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
                 Cette action est irréversible. Vous devrez reprendre un nouveau rendez-vous.
               </p>
               <div className="mt-6 flex gap-3 justify-end">
                 <button
                   onClick={() => setCancelConfirm(null)}
-                  className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="rounded-xl border border-border dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
                   Non
                 </button>

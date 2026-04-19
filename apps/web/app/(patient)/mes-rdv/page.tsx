@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -25,7 +26,7 @@ import {
 import { useRouter } from "next/navigation";
 
 type Step = "phone" | "code" | "loggedIn";
-type CancelState = { id: string } | null;
+type CancelState = { id: string; doctorName: string; startsAt: string } | null;
 type ActiveTab = "upcoming" | "past" | "cancelled";
 
 const RELATION_LABELS: Record<string, string> = {
@@ -231,7 +232,7 @@ export default function MesRdvPage() {
     });
     if (res.ok) {
       setAppointments((prev) => prev.map((a) => a.id === id ? { ...a, status: "cancelled" } : a));
-      toast.success("Rendez-vous annulé avec succès");
+      toast.success("Rendez-vous annulé");
     } else {
       toast.error("Erreur lors de l'annulation du rendez-vous");
     }
@@ -257,7 +258,7 @@ export default function MesRdvPage() {
 
   if (step === "phone") {
     return (
-      <div className="min-h-screen bg-secondary/40 flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen bg-secondary/40 dark:bg-gray-900 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
@@ -273,7 +274,7 @@ export default function MesRdvPage() {
             </p>
           )}
 
-          <div className="bg-white rounded-2xl border border-border shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 shadow-sm p-6">
             <form onSubmit={requestOtp} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="phone" className="text-foreground font-semibold text-sm">
@@ -316,7 +317,7 @@ export default function MesRdvPage() {
 
   if (step === "code") {
     return (
-      <div className="min-h-screen bg-secondary/40 flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen bg-secondary/40 dark:bg-gray-900 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
@@ -328,7 +329,7 @@ export default function MesRdvPage() {
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-border shadow-sm p-6">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 shadow-sm p-6">
             <form onSubmit={verifyOtp} className="space-y-4">
               <div className="space-y-1.5">
                 <Label htmlFor="code" className="text-foreground font-semibold text-sm">
@@ -387,7 +388,7 @@ export default function MesRdvPage() {
     activeTab === "upcoming" ? upcoming : activeTab === "past" ? past : cancelled;
 
   return (
-    <div className="min-h-screen bg-secondary/40">
+    <div className="min-h-screen bg-secondary/40 dark:bg-gray-900">
       {/* Teal gradient banner */}
       <div className="bg-gradient-to-br from-primary to-foreground px-4 py-8">
         <div className="max-w-2xl mx-auto">
@@ -438,7 +439,7 @@ export default function MesRdvPage() {
         ) : (
           <>
             {/* Tabs */}
-            <div className="flex gap-1 bg-white rounded-2xl border border-border p-1 mb-6 shadow-sm">
+            <div className="flex gap-1 bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 p-1 mb-6 shadow-sm">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
@@ -446,7 +447,7 @@ export default function MesRdvPage() {
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex-1 justify-center ${
                     activeTab === tab.id
                       ? "bg-primary text-white shadow-sm"
-                      : "text-foreground/60 hover:text-foreground hover:bg-secondary"
+                      : "text-foreground/60 hover:text-foreground hover:bg-secondary dark:hover:bg-gray-700"
                   }`}
                 >
                   {tab.label}
@@ -467,7 +468,7 @@ export default function MesRdvPage() {
 
             {/* Appointment list */}
             {displayedAppointments.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-border shadow-sm p-10 text-center">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 shadow-sm p-10 text-center">
                 <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-secondary mb-4">
                   <Stethoscope className="h-7 w-7 text-primary/50" strokeWidth={1.5} />
                 </div>
@@ -501,7 +502,7 @@ export default function MesRdvPage() {
                   return (
                     <div
                       key={a.id}
-                      className={`bg-white rounded-2xl border border-border border-l-4 ${cardBorderColor(a.status, a.type)} shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 p-4 ${
+                      className={`bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 border-l-4 ${cardBorderColor(a.status, a.type)} shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 p-4 ${
                         !isUpcomingAppt ? "opacity-85" : ""
                       }`}
                     >
@@ -536,7 +537,7 @@ export default function MesRdvPage() {
                           )}
                           {/* Cancelled reason placeholder */}
                           {a.status === "cancelled" && (
-                            <p className="mt-2 text-xs text-gray-400 italic">Rendez-vous annulé</p>
+                            <p className="mt-2 text-xs text-gray-400 dark:text-gray-500 italic">Rendez-vous annulé</p>
                           )}
 
                           {/* Post-visit satisfaction prompt — shown for recently completed appointments */}
@@ -596,7 +597,7 @@ export default function MesRdvPage() {
                                 Message
                               </a>
                               <button
-                                onClick={() => setCancelConfirm({ id: a.id })}
+                                onClick={() => setCancelConfirm({ id: a.id, doctorName: a.doctorName, startsAt: a.startsAt })}
                                 className="inline-flex items-center gap-1 text-xs font-medium text-red-600 border border-red-200 bg-white hover:bg-red-50 rounded-lg px-3 py-1.5 transition-colors"
                               >
                                 <X className="h-3 w-3" />
@@ -647,33 +648,57 @@ export default function MesRdvPage() {
       </div>
 
       {/* Cancel confirmation modal */}
-      {cancelConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-border">
-            <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-red-50 mx-auto mb-4">
-              <X className="h-6 w-6 text-red-500" />
-            </div>
-            <h3 className="text-lg font-bold text-foreground text-center">Annuler ce rendez-vous ?</h3>
-            <p className="mt-2 text-sm text-foreground/60 text-center">
-              Cette action est irréversible. Vous devrez reprendre un nouveau rendez-vous.
-            </p>
-            <div className="mt-6 flex gap-3">
-              <button
-                onClick={() => setCancelConfirm(null)}
-                className="flex-1 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
-              >
-                Conserver
-              </button>
-              <button
-                onClick={() => cancelAppointment(cancelConfirm.id)}
-                className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-700 transition-colors"
-              >
-                Oui, annuler
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {cancelConfirm && (
+          <motion.div
+            key="cancel-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+            onClick={() => setCancelConfirm(null)}
+          >
+            <motion.div
+              key="cancel-card"
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-2xl border border-border dark:border-gray-700"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-red-50 mx-auto mb-4">
+                <X className="h-6 w-6 text-red-500" />
+              </div>
+              <h3 className="text-lg font-bold text-foreground text-center">Annuler ce rendez-vous ?</h3>
+              <p className="mt-2 text-sm text-foreground/60 text-center">
+                Êtes-vous sûr de vouloir annuler ce rendez-vous avec{" "}
+                <span className="font-semibold text-foreground">{cancelConfirm.doctorName}</span>{" "}
+                le{" "}
+                <span className="font-semibold text-foreground">
+                  {format(new Date(cancelConfirm.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
+                </span>{" "}
+                ?
+              </p>
+              <div className="mt-6 flex gap-3">
+                <button
+                  onClick={() => setCancelConfirm(null)}
+                  className="flex-1 rounded-xl border border-border dark:border-gray-600 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary dark:hover:bg-gray-700 transition-colors"
+                >
+                  Non, garder
+                </button>
+                <button
+                  onClick={() => cancelAppointment(cancelConfirm.id)}
+                  className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-700 transition-colors"
+                >
+                  Oui, annuler
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
