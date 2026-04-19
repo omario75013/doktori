@@ -3,9 +3,10 @@
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Calendar, CalendarPlus, X, Search } from "lucide-react";
+import { Calendar, CalendarPlus, X, Search, Phone, MessageSquare, UserCheck } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
+import { SMSModal } from "@/components/sms-modal";
 
 type Appointment = {
   id: string;
@@ -14,6 +15,7 @@ type Appointment = {
   status: string;
   type: string;
   reason: string | null;
+  checkedInAt: string | null;
   patientName: string;
   patientPhone: string;
   patientNoShowCount: number;
@@ -296,6 +298,9 @@ export default function RendezVousPage() {
   const [cancelError, setCancelError] = useState<string | null>(null);
   const [cancelSubmitting, setCancelSubmitting] = useState(false);
 
+  // SMS modal state
+  const [smsAppt, setSmsAppt] = useState<Appointment | null>(null);
+
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -333,6 +338,26 @@ export default function RendezVousPage() {
       toast.error(e instanceof Error ? e.message : "Erreur lors de la mise à jour");
     } finally {
       setUpdating(null);
+    }
+  };
+
+  const toggleCheckin = async (appt: Appointment) => {
+    const method = appt.checkedInAt ? "DELETE" : "POST";
+    try {
+      const res = await fetch(`/api/doctor/appointments/${appt.id}/checkin`, { method });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Erreur enregistrement");
+      }
+      const data = await res.json();
+      setAppointments((prev) =>
+        prev.map((a) =>
+          a.id === appt.id ? { ...a, checkedInAt: data.checkedInAt ?? null } : a
+        )
+      );
+      toast.success(appt.checkedInAt ? "Enregistrement annulé" : "Patient enregistré à l'accueil");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erreur");
     }
   };
 
@@ -561,7 +586,26 @@ export default function RendezVousPage() {
                         )}
                       </div>
                     </td>
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-500 dark:text-gray-400">{appt.patientPhone}</td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5">
+                        <a
+                          href={`tel:${appt.patientPhone}`}
+                          title={`Appeler ${appt.patientName}`}
+                          className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
+                        >
+                          <Phone className="h-3.5 w-3.5" />
+                        </a>
+                        <button
+                          type="button"
+                          title="Envoyer un SMS"
+                          onClick={() => setSmsAppt(appt)}
+                          className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
+                        >
+                          <MessageSquare className="h-3.5 w-3.5" />
+                        </button>
+                        <span className="text-xs text-gray-500 dark:text-gray-400">{appt.patientPhone}</span>
+                      </div>
+                    </td>
                     <td className="px-4 py-3 text-gray-500 dark:text-gray-400">
                       {appt.reason ?? <span className="text-gray-300">—</span>}
                     </td>
@@ -612,6 +656,22 @@ export default function RendezVousPage() {
                         )
                       ) : (
                         <div className="flex gap-1.5 flex-wrap">
+                          {appt.status === "confirmed" && (
+                            <button
+                              onClick={() => toggleCheckin(appt)}
+                              title={appt.checkedInAt ? "Annuler l'arrivée" : "Marquer comme arrivé(e)"}
+                              className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-xl border transition-colors ${
+                                appt.checkedInAt
+                                  ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
+                                  : "border-green-300 text-green-700 hover:bg-green-50"
+                              }`}
+                            >
+                              <UserCheck className="h-3.5 w-3.5" />
+                              {appt.checkedInAt
+                                ? `Arrivé(e) à ${format(new Date(appt.checkedInAt), "HH:mm")}`
+                                : "Arrivé(e)"}
+                            </button>
+                          )}
                           {ACTIONS.filter((a) => a.status !== appt.status).map((action) => (
                             <button
                               key={action.status}
@@ -758,6 +818,18 @@ export default function RendezVousPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* SMS modal */}
+      {smsAppt && (
+        <SMSModal
+          patientPhone={smsAppt.patientPhone}
+          patientName={smsAppt.patientName}
+          appointmentId={smsAppt.id}
+          appointmentDate={format(new Date(smsAppt.startsAt), "d MMMM yyyy", { locale: fr })}
+          appointmentTime={format(new Date(smsAppt.startsAt), "HH:mm")}
+          onClose={() => setSmsAppt(null)}
+        />
       )}
 
       {/* CNAM modal */}

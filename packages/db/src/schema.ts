@@ -248,6 +248,7 @@ export const appointments = pgTable(
     notes: text("notes"),
     confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
     cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+    checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -256,6 +257,23 @@ export const appointments = pgTable(
     index("appointments_patient_idx").on(table.patientId),
     index("appointments_status_idx").on(table.status),
     index("appointments_appointment_type_idx").on(table.appointmentTypeId),
+  ]
+);
+
+// ─── SMS Usage Quota ─────────────────────────────────────────────────────────
+
+export const smsUsage = pgTable(
+  "sms_usage",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+    /** Format: 'YYYY-MM' e.g. '2026-04' */
+    month: varchar("month", { length: 7 }).notNull(),
+    count: integer("count").notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex("sms_usage_doctor_month_uidx").on(table.doctorId, table.month),
+    index("sms_usage_doctor_month_idx").on(table.doctorId, table.month),
   ]
 );
 

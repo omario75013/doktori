@@ -17,6 +17,7 @@ export async function GET() {
       status: appointments.status,
       type: appointments.type,
       reason: appointments.reason,
+      checkedInAt: appointments.checkedInAt,
       patientName: patients.name,
       patientPhone: patients.phone,
       patientId: appointments.patientId,
