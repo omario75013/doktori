@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import {
   Building2,
   MapPin,
@@ -11,7 +12,6 @@ import {
   UserMinus,
   UserPlus,
   Loader2,
-  CheckCircle2,
   AlertCircle,
   Users,
   Shield,
@@ -89,32 +89,6 @@ function Section({
   );
 }
 
-// ─── Alert ────────────────────────────────────────────────────────────────────
-
-function Alert({
-  type,
-  message,
-}: {
-  type: "success" | "error";
-  message: string;
-}) {
-  const isSuccess = type === "success";
-  return (
-    <div
-      className={`flex items-center gap-2 rounded-xl px-4 py-3 text-sm ${
-        isSuccess ? "bg-green-50 text-green-700" : "bg-red-50 text-red-700"
-      }`}
-    >
-      {isSuccess ? (
-        <CheckCircle2 className="h-4 w-4 shrink-0" strokeWidth={2.5} />
-      ) : (
-        <AlertCircle className="h-4 w-4 shrink-0" strokeWidth={2.5} />
-      )}
-      {message}
-    </div>
-  );
-}
-
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function CliniqueParametresPage() {
@@ -128,20 +102,16 @@ export default function CliniqueParametresPage() {
     logoUrl: "",
   });
   const [profileSaving, setProfileSaving] = useState(false);
-  const [profileAlert, setProfileAlert] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
+  // Inline validation errors for profile form
+  const [profileErrors, setProfileErrors] = useState<{ name?: string; phone?: string }>({});
 
   // Doctors state
   const [doctors, setDoctors] = useState<ClinicDoctor[]>([]);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<"member" | "admin">("member");
   const [inviting, setInviting] = useState(false);
-  const [inviteAlert, setInviteAlert] = useState<{
-    type: "success" | "error";
-    message: string;
-  } | null>(null);
+  // Inline validation error for invite form
+  const [inviteEmailError, setInviteEmailError] = useState<string | null>(null);
   const [removingId, setRemovingId] = useState<string | null>(null);
 
   // Secretaries state
@@ -191,8 +161,17 @@ export default function CliniqueParametresPage() {
   // ── Save profile ─────────────────────────────────────────────────────────────
   async function handleProfileSave(e: React.FormEvent) {
     e.preventDefault();
+
+    // Inline validation
+    const errors: { name?: string; phone?: string } = {};
+    if (!profileForm.name.trim()) errors.name = "Le nom de l'établissement est requis.";
+    if (profileForm.phone && !/^[0-9\s\+\-\(\)]{6,20}$/.test(profileForm.phone.trim())) {
+      errors.phone = "Numéro de téléphone invalide.";
+    }
+    setProfileErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setProfileSaving(true);
-    setProfileAlert(null);
     try {
       const res = await fetch("/api/clinique/profile", {
         method: "PUT",
@@ -200,14 +179,14 @@ export default function CliniqueParametresPage() {
         body: JSON.stringify(profileForm),
       });
       if (res.ok) {
-        setProfileAlert({ type: "success", message: "Profil mis à jour avec succès." });
+        toast.success("Profil mis à jour avec succès.");
         setProfile((prev) => prev ? { ...prev, ...profileForm } : prev);
       } else {
         const data: { error: string } = await res.json();
-        setProfileAlert({ type: "error", message: data.error ?? "Erreur lors de la mise à jour." });
+        toast.error(data.error ?? "Erreur lors de la mise à jour.");
       }
     } catch {
-      setProfileAlert({ type: "error", message: "Erreur réseau. Réessayez." });
+      toast.error("Erreur réseau. Réessayez.");
     } finally {
       setProfileSaving(false);
     }
@@ -216,9 +195,20 @@ export default function CliniqueParametresPage() {
   // ── Invite doctor ────────────────────────────────────────────────────────────
   async function handleInviteDoctor(e: React.FormEvent) {
     e.preventDefault();
-    if (!inviteEmail.trim()) return;
+
+    // Inline validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!inviteEmail.trim()) {
+      setInviteEmailError("L'adresse email est requise.");
+      return;
+    }
+    if (!emailRegex.test(inviteEmail.trim())) {
+      setInviteEmailError("Adresse email invalide.");
+      return;
+    }
+    setInviteEmailError(null);
+
     setInviting(true);
-    setInviteAlert(null);
     try {
       const res = await fetch("/api/clinique/doctors", {
         method: "POST",
@@ -228,10 +218,7 @@ export default function CliniqueParametresPage() {
       const data: { success?: boolean; error?: string; doctor?: { id: string; name: string } } =
         await res.json();
       if (res.ok && data.success) {
-        setInviteAlert({
-          type: "success",
-          message: `${data.doctor?.name ?? "Médecin"} ajouté à la clinique.`,
-        });
+        toast.success(`${data.doctor?.name ?? "Médecin"} ajouté à la clinique.`);
         setInviteEmail("");
         // Reload doctors list
         const dr = await fetch("/api/clinique/doctors");
@@ -240,21 +227,18 @@ export default function CliniqueParametresPage() {
           setDoctors(updated.doctors);
         }
       } else {
-        setInviteAlert({
-          type: "error",
-          message: data.error ?? "Impossible d'ajouter ce médecin.",
-        });
+        toast.error(data.error ?? "Impossible d'ajouter ce médecin.");
       }
     } catch {
-      setInviteAlert({ type: "error", message: "Erreur réseau. Réessayez." });
+      toast.error("Erreur réseau. Réessayez.");
     } finally {
       setInviting(false);
     }
   }
 
   // ── Remove doctor ────────────────────────────────────────────────────────────
-  async function handleRemoveDoctor(doctorId: string) {
-    if (!confirm("Retirer ce médecin de la clinique ?")) return;
+  async function handleRemoveDoctor(doctorId: string, doctorName: string) {
+    if (!confirm(`Retirer ${doctorName} de la clinique ?`)) return;
     setRemovingId(doctorId);
     try {
       const res = await fetch(`/api/clinique/doctors/${doctorId}`, {
@@ -262,7 +246,12 @@ export default function CliniqueParametresPage() {
       });
       if (res.ok) {
         setDoctors((prev) => prev.filter((d) => d.id !== doctorId));
+        toast.success(`${doctorName} a été retiré de la clinique.`);
+      } else {
+        toast.error("Impossible de retirer ce médecin. Réessayez.");
       }
+    } catch {
+      toast.error("Erreur réseau. Réessayez.");
     } finally {
       setRemovingId(null);
     }
@@ -309,16 +298,25 @@ export default function CliniqueParametresPage() {
             <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
               Nom de l&apos;établissement
             </label>
-            <div className="flex h-11 items-center rounded-xl border-2 border-border px-3 focus-within:border-primary">
+            <div className={`flex h-11 items-center rounded-xl border-2 px-3 focus-within:border-primary ${profileErrors.name ? "border-red-400" : "border-border"}`}>
               <Building2 className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
               <input
                 type="text"
                 value={profileForm.name}
-                onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
+                onChange={(e) => {
+                  setProfileForm({ ...profileForm, name: e.target.value });
+                  if (profileErrors.name) setProfileErrors({ ...profileErrors, name: undefined });
+                }}
                 required
                 className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none"
               />
             </div>
+            {profileErrors.name && (
+              <p className="mt-1 flex items-center gap-1 text-xs text-red-600">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+                {profileErrors.name}
+              </p>
+            )}
           </div>
 
           {/* Address + City */}
@@ -358,15 +356,24 @@ export default function CliniqueParametresPage() {
             <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
               Téléphone
             </label>
-            <div className="flex h-11 items-center rounded-xl border-2 border-border px-3 focus-within:border-primary">
+            <div className={`flex h-11 items-center rounded-xl border-2 px-3 focus-within:border-primary ${profileErrors.phone ? "border-red-400" : "border-border"}`}>
               <Phone className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
               <input
                 type="tel"
                 value={profileForm.phone}
-                onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
+                onChange={(e) => {
+                  setProfileForm({ ...profileForm, phone: e.target.value });
+                  if (profileErrors.phone) setProfileErrors({ ...profileErrors, phone: undefined });
+                }}
                 className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none"
               />
             </div>
+            {profileErrors.phone && (
+              <p className="mt-1 flex items-center gap-1 text-xs text-red-600">
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+                {profileErrors.phone}
+              </p>
+            )}
           </div>
 
           {/* Email (read-only — used for login) */}
@@ -399,10 +406,6 @@ export default function CliniqueParametresPage() {
               />
             </div>
           </div>
-
-          {profileAlert && (
-            <Alert type={profileAlert.type} message={profileAlert.message} />
-          )}
 
           <button
             type="submit"
@@ -488,7 +491,7 @@ export default function CliniqueParametresPage() {
                       {ROLE_LABELS[doc.role] ?? doc.role}
                     </span>
                     <button
-                      onClick={() => handleRemoveDoctor(doc.id)}
+                      onClick={() => handleRemoveDoctor(doc.id, doc.name)}
                       disabled={removingId === doc.id}
                       className="flex h-8 w-8 items-center justify-center rounded-lg text-red-500 transition-colors hover:bg-red-50 disabled:opacity-40"
                       title="Retirer"
@@ -512,30 +515,37 @@ export default function CliniqueParametresPage() {
             Inviter un médecin
           </p>
           <form onSubmit={handleInviteDoctor} className="space-y-3">
-            <div className="flex gap-2">
-              <div className="flex h-11 flex-1 items-center rounded-xl border-2 border-border bg-white px-3 focus-within:border-primary">
-                <Mail className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
-                <input
-                  type="email"
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                  placeholder="email@medecin.tn"
-                  required
-                  className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
-                />
+            <div className="flex flex-col gap-2">
+              <div className="flex gap-2">
+                <div className={`flex h-11 flex-1 items-center rounded-xl border-2 bg-white px-3 focus-within:border-primary ${inviteEmailError ? "border-red-400" : "border-border"}`}>
+                  <Mail className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
+                  <input
+                    type="email"
+                    value={inviteEmail}
+                    onChange={(e) => {
+                      setInviteEmail(e.target.value);
+                      if (inviteEmailError) setInviteEmailError(null);
+                    }}
+                    placeholder="email@medecin.tn"
+                    className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
+                  />
+                </div>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value as "member" | "admin")}
+                  className="h-11 rounded-xl border-2 border-border bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-primary"
+                >
+                  <option value="member">Membre</option>
+                  <option value="admin">Responsable</option>
+                </select>
               </div>
-              <select
-                value={inviteRole}
-                onChange={(e) => setInviteRole(e.target.value as "member" | "admin")}
-                className="h-11 rounded-xl border-2 border-border bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-primary"
-              >
-                <option value="member">Membre</option>
-                <option value="admin">Responsable</option>
-              </select>
+              {inviteEmailError && (
+                <p className="flex items-center gap-1 text-xs text-red-600">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />
+                  {inviteEmailError}
+                </p>
+              )}
             </div>
-            {inviteAlert && (
-              <Alert type={inviteAlert.type} message={inviteAlert.message} />
-            )}
             <button
               type="submit"
               disabled={inviting || !inviteEmail.trim()}

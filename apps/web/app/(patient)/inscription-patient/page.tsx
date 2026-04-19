@@ -13,12 +13,44 @@ import {
   Loader2,
   Check,
   UserRound,
+  AlertCircle,
 } from "lucide-react";
+
+type PasswordStrength = "weak" | "medium" | "strong";
+
+function getPasswordStrength(password: string): PasswordStrength | null {
+  if (password.length === 0) return null;
+  const hasUpper = /[A-Z]/.test(password);
+  const hasDigit = /\d/.test(password);
+  const hasSpecial = /[^a-zA-Z0-9]/.test(password);
+  const score = [password.length >= 8, hasUpper, hasDigit, hasSpecial].filter(Boolean).length;
+  if (score <= 1) return "weak";
+  if (score <= 3) return "medium";
+  return "strong";
+}
+
+const STRENGTH_CONFIG: Record<PasswordStrength, { label: string; color: string; width: string }> = {
+  weak: { label: "Faible", color: "bg-red-500", width: "w-1/3" },
+  medium: { label: "Moyen", color: "bg-amber-400", width: "w-2/3" },
+  strong: { label: "Fort", color: "bg-green-500", width: "w-full" },
+};
+
+function validateEmail(email: string): string | null {
+  if (!email) return null;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? null : "Format d'email invalide";
+}
+
+function validatePhone(phone: string): string | null {
+  if (!phone) return null;
+  const digits = phone.replace(/\D/g, "");
+  return digits.length >= 8 ? null : "Le numéro doit contenir au moins 8 chiffres";
+}
 
 export default function InscriptionPatientPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [termsAccepted, setTermsAccepted] = useState(false);
 
   const [form, setForm] = useState({
     name: "",
@@ -27,21 +59,42 @@ export default function InscriptionPatientPage() {
     password: "",
   });
 
+  const [touched, setTouched] = useState({
+    name: false,
+    email: false,
+    phone: false,
+    password: false,
+  });
+
   function handleChange(e: React.ChangeEvent<HTMLInputElement>) {
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   }
 
+  function handleBlur(e: React.FocusEvent<HTMLInputElement>) {
+    setTouched((prev) => ({ ...prev, [e.target.name]: true }));
+  }
+
+  const emailError = touched.email ? validateEmail(form.email) : null;
+  const phoneError = touched.phone ? validatePhone(form.phone) : null;
+  const passwordStrength = getPasswordStrength(form.password);
+  const passwordTooShort = touched.password && form.password.length > 0 && form.password.length < 8;
+
   function canSubmit(): boolean {
     return !!(
       form.name.trim().length >= 2 &&
-      /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) &&
-      form.phone.trim().length >= 8 &&
-      form.password.length >= 8
+      validateEmail(form.email) === null &&
+      form.email.length > 0 &&
+      validatePhone(form.phone) === null &&
+      form.phone.length > 0 &&
+      form.password.length >= 8 &&
+      termsAccepted
     );
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    setTouched({ name: true, email: true, phone: true, password: true });
+    if (!canSubmit()) return;
     setError(null);
     setLoading(true);
 
@@ -134,9 +187,12 @@ export default function InscriptionPatientPage() {
               <p className="text-sm text-muted-foreground mt-1">Accédez à tous vos services de santé en ligne.</p>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5" noValidate>
+              {/* Full name */}
               <div className="space-y-1.5">
-                <Label htmlFor="name" className="text-foreground font-semibold">Nom complet</Label>
+                <Label htmlFor="name" className="text-foreground font-semibold">
+                  Nom complet <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="name"
                   name="name"
@@ -144,12 +200,22 @@ export default function InscriptionPatientPage() {
                   required
                   value={form.name}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   className="h-12 rounded-xl border-border focus-visible:ring-primary"
                 />
+                {touched.name && form.name.trim().length > 0 && form.name.trim().length < 2 && (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                    Le nom doit contenir au moins 2 caractères
+                  </p>
+                )}
               </div>
 
+              {/* Email */}
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-foreground font-semibold">Adresse email</Label>
+                <Label htmlFor="email" className="text-foreground font-semibold">
+                  Adresse email <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="email"
                   name="email"
@@ -159,12 +225,22 @@ export default function InscriptionPatientPage() {
                   required
                   value={form.email}
                   onChange={handleChange}
-                  className="h-12 rounded-xl border-border focus-visible:ring-primary"
+                  onBlur={handleBlur}
+                  className={`h-12 rounded-xl border-border focus-visible:ring-primary ${emailError ? "border-red-400 focus-visible:ring-red-400" : ""}`}
                 />
+                {emailError && (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                    {emailError}
+                  </p>
+                )}
               </div>
 
+              {/* Phone */}
               <div className="space-y-1.5">
-                <Label htmlFor="phone" className="text-foreground font-semibold">Numéro de téléphone</Label>
+                <Label htmlFor="phone" className="text-foreground font-semibold">
+                  Numéro de téléphone <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="phone"
                   name="phone"
@@ -173,12 +249,22 @@ export default function InscriptionPatientPage() {
                   required
                   value={form.phone}
                   onChange={handleChange}
-                  className="h-12 rounded-xl border-border focus-visible:ring-primary"
+                  onBlur={handleBlur}
+                  className={`h-12 rounded-xl border-border focus-visible:ring-primary ${phoneError ? "border-red-400 focus-visible:ring-red-400" : ""}`}
                 />
+                {phoneError && (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                    {phoneError}
+                  </p>
+                )}
               </div>
 
+              {/* Password + strength indicator */}
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-foreground font-semibold">Mot de passe</Label>
+                <Label htmlFor="password" className="text-foreground font-semibold">
+                  Mot de passe <span className="text-red-500">*</span>
+                </Label>
                 <Input
                   id="password"
                   name="password"
@@ -188,17 +274,61 @@ export default function InscriptionPatientPage() {
                   required
                   value={form.password}
                   onChange={handleChange}
+                  onBlur={handleBlur}
                   className="h-12 rounded-xl border-border focus-visible:ring-primary"
                 />
-                {form.password.length > 0 && form.password.length < 8 && (
-                  <p className="text-xs text-amber-600 mt-1">Le mot de passe doit contenir au moins 8 caractères</p>
+                {/* Password strength bar */}
+                {form.password.length > 0 && passwordStrength && (
+                  <div className="space-y-1 pt-1">
+                    <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${STRENGTH_CONFIG[passwordStrength].color} ${STRENGTH_CONFIG[passwordStrength].width}`}
+                      />
+                    </div>
+                    <p className={`text-xs font-medium ${
+                      passwordStrength === "weak" ? "text-red-600" :
+                      passwordStrength === "medium" ? "text-amber-600" :
+                      "text-green-600"
+                    }`}>
+                      Sécurité : {STRENGTH_CONFIG[passwordStrength].label}
+                    </p>
+                  </div>
+                )}
+                {passwordTooShort && (
+                  <p className="text-xs text-red-600 flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
+                    Le mot de passe doit contenir au moins 8 caractères
+                  </p>
                 )}
               </div>
 
+              {/* Terms checkbox */}
+              <div className="flex items-start gap-3 pt-1">
+                <input
+                  id="terms"
+                  type="checkbox"
+                  checked={termsAccepted}
+                  onChange={(e) => setTermsAccepted(e.target.checked)}
+                  className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-primary cursor-pointer"
+                />
+                <Label htmlFor="terms" className="text-sm text-foreground/70 leading-relaxed cursor-pointer font-normal">
+                  J'accepte les{" "}
+                  <a href="/cgu" className="text-primary font-semibold hover:underline">
+                    Conditions Générales d'Utilisation
+                  </a>{" "}
+                  et la{" "}
+                  <a href="/confidentialite" className="text-primary font-semibold hover:underline">
+                    Politique de confidentialité
+                  </a>{" "}
+                  de Doktori.
+                </Label>
+              </div>
+
               {error && (
-                <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-                  {error}
-                </p>
+                <div className="flex items-start gap-3 text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
+                  <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" strokeWidth={2} />
+                  <p className="text-sm">{error}</p>
+                </div>
               )}
 
               <Button

@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { INSURANCES } from "@doktori/shared";
-import { Shield } from "lucide-react";
+import { Shield, Loader2 } from "lucide-react";
+import { toast } from "sonner";
 
 export default function ConventionsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
@@ -42,10 +43,22 @@ export default function ConventionsPage() {
       body: JSON.stringify({ insuranceTypes: Array.from(selected) }),
     });
     setSaving(false);
-    if (res.ok) setSavedAt(new Date());
+    if (res.ok) {
+      setSavedAt(new Date());
+      toast.success("Conventions enregistrées");
+    } else {
+      toast.error("Erreur lors de l'enregistrement");
+    }
   }
 
-  if (loading) return <p className="text-primary text-sm p-6">Chargement...</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center gap-3 p-6 text-primary">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span className="text-sm font-medium">Chargement...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

@@ -4,6 +4,7 @@ import "./globals.css";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages, getTranslations } from "next-intl/server";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 import { Chatbot } from "@/components/chatbot";
 import { AppBanner } from "@/components/app-banner";
 import { PatientShell } from "@/components/patient-shell";
@@ -134,6 +135,7 @@ export default async function RootLayout({
               <Navbar />
             </PatientShell>
             {children}
+            <Footer />
             <Toaster position="bottom-right" richColors toastOptions={{ style: { borderRadius: "16px" } }} />
             <KeyboardShortcuts />
             <PatientShell>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 
 interface DoctorStat {
   doctorId: string;
@@ -26,16 +27,11 @@ const ROLE_LABELS: Record<string, string> = {
 };
 
 export default function CliniqueMedecinsPage() {
-  const [clinicId, setClinicId] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const clinicId = session?.user?.id ?? null;
   const [stats, setStats] = useState<ClinicStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Read clinicId from URL on mount (avoids useSearchParams Suspense requirement)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setClinicId(params.get("id"));
-  }, []);
 
   useEffect(() => {
     if (!clinicId) return;
@@ -52,17 +48,6 @@ export default function CliniqueMedecinsPage() {
       .catch((err: string) => setError(err ?? "Erreur inconnue"))
       .finally(() => setLoading(false));
   }, [clinicId]);
-
-  if (!clinicId) {
-    return (
-      <div className="text-center py-20 text-gray-500">
-        <p className="text-lg font-medium mb-2">Aucune clinique sélectionnée</p>
-        <p className="text-sm">
-          Ajoutez <code className="bg-gray-100 px-1 rounded">?id=&lt;clinicId&gt;</code> à l&apos;URL.
-        </p>
-      </div>
-    );
-  }
 
   if (loading) {
     return <div className="text-center py-20 text-gray-400 text-sm">Chargement…</div>;

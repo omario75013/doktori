@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Home } from "lucide-react";
+import { Home, Loader2, CheckCircle2, MapPin, Banknote } from "lucide-react";
+import { toast } from "sonner";
 
 export default function DomicilePage() {
   const [isAvailable, setIsAvailable] = useState(false);
@@ -34,10 +35,22 @@ export default function DomicilePage() {
       body: JSON.stringify({ isAvailable, radiusKm, fee: fee * 1000 }),
     });
     setSaving(false);
-    if (res.ok) setSavedAt(new Date());
+    if (res.ok) {
+      setSavedAt(new Date());
+      toast.success("Paramètres de visite à domicile enregistrés");
+    } else {
+      toast.error("Erreur lors de l'enregistrement");
+    }
   }
 
-  if (loading) return <p className="text-primary text-sm p-6">Chargement...</p>;
+  if (loading) {
+    return (
+      <div className="flex items-center gap-3 p-6 text-primary">
+        <Loader2 className="h-5 w-5 animate-spin" />
+        <span className="text-sm font-medium">Chargement...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

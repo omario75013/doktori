@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { Users, CalendarCheck, UserX } from "lucide-react";
 
 interface DoctorStat {
   doctorId: string;
@@ -23,17 +25,39 @@ interface ClinicStats {
   perDoctor: DoctorStat[];
 }
 
+// ── Skeleton ─────────────────────────────────────────────────────────────────
+
+function SkeletonCard() {
+  return (
+    <div className="bg-white rounded-2xl p-5 border border-border animate-pulse">
+      <div className="h-3 w-20 bg-gray-200 rounded mb-3" />
+      <div className="h-8 w-16 bg-gray-200 rounded mb-2" />
+      <div className="h-3 w-24 bg-gray-100 rounded" />
+    </div>
+  );
+}
+
+function SkeletonRow() {
+  return (
+    <div className="p-4 flex items-center justify-between animate-pulse">
+      <div className="space-y-2">
+        <div className="h-4 w-36 bg-gray-200 rounded" />
+        <div className="h-3 w-24 bg-gray-100 rounded" />
+      </div>
+      <div className="h-8 w-10 bg-gray-200 rounded" />
+    </div>
+  );
+}
+
+// ── Main ─────────────────────────────────────────────────────────────────────
+
 export default function CliniqueDashboardPage() {
-  const [clinicId, setClinicId] = useState<string | null>(null);
+  const { data: session, status } = useSession();
   const [stats, setStats] = useState<ClinicStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Read clinicId from URL on mount (avoids useSearchParams Suspense requirement)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setClinicId(params.get("id"));
-  }, []);
+  const clinicId = session?.user?.id ?? null;
 
   useEffect(() => {
     if (!clinicId) return;
@@ -51,20 +75,27 @@ export default function CliniqueDashboardPage() {
       .finally(() => setLoading(false));
   }, [clinicId]);
 
-  if (!clinicId) {
+  // Session still loading
+  if (status === "loading" || (status === "authenticated" && loading && !stats)) {
     return (
-      <div className="text-center py-20 text-gray-500">
-        <p className="text-lg font-medium mb-2">Aucune clinique sélectionnée</p>
-        <p className="text-sm">
-          Ajoutez <code className="bg-gray-100 px-1 rounded">?id=&lt;clinicId&gt;</code> à l&apos;URL pour charger le tableau de bord.
-        </p>
+      <div className="space-y-6">
+        <div className="animate-pulse">
+          <div className="h-7 w-56 bg-gray-200 rounded mb-2" />
+          <div className="h-4 w-40 bg-gray-100 rounded" />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
+        <div className="bg-white rounded-2xl border">
+          <div className="p-4 border-b animate-pulse">
+            <div className="h-4 w-64 bg-gray-200 rounded" />
+          </div>
+          {[1, 2, 3].map((i) => (
+            <SkeletonRow key={i} />
+          ))}
+        </div>
       </div>
-    );
-  }
-
-  if (loading) {
-    return (
-      <div className="text-center py-20 text-gray-400 text-sm">Chargement…</div>
     );
   }
 
@@ -82,54 +113,79 @@ export default function CliniqueDashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold">{clinic.name}</h1>
-        <p className="text-gray-500 text-sm mt-1">
-          {clinic.city} · Plan <span className="capitalize">{clinic.plan}</span>
+        <h1 className="text-2xl font-black text-foreground">{clinic.name}</h1>
+        <p className="text-muted-foreground text-sm mt-1">
+          {clinic.city} · Plan{" "}
+          <span className="capitalize font-medium">{clinic.plan}</span>
         </p>
       </div>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-white rounded-xl p-5 border">
-          <div className="text-xs text-gray-500 uppercase">Médecins</div>
-          <div className="text-3xl font-bold mt-1">{totalDoctors}</div>
-          <div className="text-xs text-gray-500 mt-1">dans la clinique</div>
+        <div className="bg-white rounded-2xl p-5 border border-border shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: "#F0FDFA" }}>
+              <Users className="h-4 w-4" style={{ color: "#0891B2" }} strokeWidth={2.5} />
+            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              Médecins
+            </span>
+          </div>
+          <div className="text-3xl font-black text-foreground">{totalDoctors}</div>
+          <div className="text-xs text-muted-foreground mt-1">dans la clinique</div>
         </div>
-        <div className="bg-white rounded-xl p-5 border">
-          <div className="text-xs text-gray-500 uppercase">RDV ce mois</div>
-          <div className="text-3xl font-bold mt-1">{totalAppointmentsThisMonth}</div>
-          <div className="text-xs text-gray-500 mt-1">total agrégé</div>
+
+        <div className="bg-white rounded-2xl p-5 border border-border shadow-sm">
+          <div className="flex items-center gap-2 mb-3">
+            <div className="flex h-8 w-8 items-center justify-center rounded-lg" style={{ background: "#F0FDFA" }}>
+              <CalendarCheck className="h-4 w-4" style={{ color: "#0891B2" }} strokeWidth={2.5} />
+            </div>
+            <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              RDV ce mois
+            </span>
+          </div>
+          <div className="text-3xl font-black text-foreground">{totalAppointmentsThisMonth}</div>
+          <div className="text-xs text-muted-foreground mt-1">total agrégé</div>
         </div>
       </div>
 
       {/* Per-doctor breakdown */}
-      <div className="bg-white rounded-xl border">
-        <div className="p-4 border-b">
-          <h2 className="font-semibold">Répartition par médecin — mois en cours</h2>
+      <div className="bg-white rounded-2xl border border-border shadow-sm">
+        <div className="p-4 border-b border-border">
+          <h2 className="font-bold text-foreground">
+            Répartition par médecin — mois en cours
+          </h2>
         </div>
-        <div className="divide-y">
+        <div className="divide-y divide-border">
           {perDoctor.length === 0 ? (
-            <p className="p-6 text-gray-400 text-center text-sm">
-              Aucun médecin associé à cette clinique
-            </p>
+            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+              <UserX className="h-10 w-10 mb-3 text-gray-200" strokeWidth={1.5} />
+              <p className="font-medium text-sm">Aucun médecin associé</p>
+              <p className="text-xs text-muted-foreground/70 mt-1">
+                Ajoutez des médecins dans les Paramètres.
+              </p>
+            </div>
           ) : (
             perDoctor.map((doc) => (
               <div key={doc.doctorId} className="p-4 flex items-center justify-between">
                 <div>
-                  <div className="font-medium">{doc.name}</div>
-                  <div className="text-sm text-gray-500">
-                    {doc.specialty}
+                  <div className="font-semibold text-foreground">{doc.name}</div>
+                  <div className="text-sm text-muted-foreground flex items-center gap-2">
+                    <span>{doc.specialty}</span>
                     {doc.role === "admin" && (
-                      <span className="ml-2 text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">
+                      <span className="text-xs px-1.5 py-0.5 rounded font-bold" style={{ background: "#E0F2FE", color: "#0891B2" }}>
                         Admin
                       </span>
                     )}
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-2xl font-bold">{doc.appointmentsThisMonth}</div>
-                  <div className="text-xs text-gray-500">RDV</div>
+                  <div className="text-2xl font-black text-foreground">
+                    {doc.appointmentsThisMonth}
+                  </div>
+                  <div className="text-xs text-muted-foreground">RDV</div>
                 </div>
               </div>
             ))

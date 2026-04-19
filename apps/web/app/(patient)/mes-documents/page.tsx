@@ -12,6 +12,7 @@ import {
   ExternalLink,
   ArrowLeft,
   ChevronRight,
+  Download,
 } from "lucide-react";
 
 interface Prescription {
@@ -128,10 +129,35 @@ export default function MesDocumentsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-secondary">
-        <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-foreground/60 text-sm">Chargement de vos documents...</p>
+      <div className="min-h-screen bg-secondary">
+        {/* Skeleton header */}
+        <div className="bg-gradient-to-br from-primary to-foreground px-4 py-8">
+          <div className="max-w-2xl mx-auto">
+            <div className="h-4 w-16 bg-white/30 rounded mb-4" />
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-white/20" />
+              <div className="space-y-1.5">
+                <div className="h-5 w-36 bg-white/30 rounded" />
+                <div className="h-3 w-52 bg-white/20 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+        <div className="max-w-2xl mx-auto px-4 py-6 space-y-3">
+          {/* Skeleton tabs */}
+          <div className="h-12 bg-white rounded-2xl border border-border animate-pulse" />
+          {/* Skeleton cards */}
+          {[1, 2, 3].map((i) => (
+            <div key={i} className="bg-white rounded-2xl border border-border p-4 animate-pulse">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-gray-100 rounded-lg" />
+                <div className="flex-1 space-y-1.5">
+                  <div className="h-4 w-40 bg-gray-100 rounded" />
+                  <div className="h-3 w-24 bg-gray-100 rounded" />
+                </div>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     );
@@ -204,9 +230,8 @@ export default function MesDocumentsPage() {
               documents.prescriptions.map((p) => {
                 const spec = SPECIALTIES.find((s) => s.id === p.specialty);
                 return (
-                  <a
+                  <div
                     key={p.prescriptionId}
-                    href={`/ordonnance/${p.prescriptionId}`}
                     className="block bg-white rounded-2xl border border-border border-l-4 border-l-primary shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
@@ -224,12 +249,26 @@ export default function MesDocumentsPage() {
                           {format(new Date(p.createdAt), "d MMMM yyyy", { locale: fr })}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1.5 text-primary flex-shrink-0">
-                        <span className="text-xs font-semibold">Voir</span>
-                        <ExternalLink className="h-3.5 w-3.5" />
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        <a
+                          href={`/api/patients/me/documents/prescriptions/${p.prescriptionId}/download`}
+                          download
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center gap-1 text-xs text-foreground/50 hover:text-primary transition-colors px-2 py-1 rounded-lg hover:bg-primary/5"
+                          title="Télécharger"
+                        >
+                          <Download className="h-3.5 w-3.5" />
+                        </a>
+                        <a
+                          href={`/ordonnance/${p.prescriptionId}`}
+                          className="flex items-center gap-1.5 text-primary"
+                        >
+                          <span className="text-xs font-semibold">Voir</span>
+                          <ExternalLink className="h-3.5 w-3.5" />
+                        </a>
                       </div>
                     </div>
-                  </a>
+                  </div>
                 );
               })
             )}

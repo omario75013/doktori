@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useSession } from "next-auth/react";
 import { RefreshCw, Calendar, Users, CalendarDays } from "lucide-react";
 
 type AgendaAppointment = {
@@ -67,17 +68,12 @@ function groupByDoctor(appointments: AgendaAppointment[]): DoctorColumn[] {
 }
 
 export default function ClinicAgendaPage() {
-  const [clinicId, setClinicId] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const clinicId = session?.user?.id ?? null;
   const [date, setDate] = useState<string>(getTodayDate());
   const [appointments, setAppointments] = useState<AgendaAppointment[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  // Read clinicId from URL on mount (avoids useSearchParams Suspense requirement)
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    setClinicId(params.get("id"));
-  }, []);
 
   const fetchAgenda = useCallback(async () => {
     if (!clinicId) return;
@@ -103,20 +99,6 @@ export default function ClinicAgendaPage() {
   useEffect(() => {
     fetchAgenda();
   }, [fetchAgenda]);
-
-  if (!clinicId) {
-    return (
-      <div className="text-center py-20 text-gray-500">
-        <CalendarDays className="w-10 h-10 mx-auto mb-3 text-gray-300" />
-        <p className="text-lg font-medium mb-2">Aucune clinique sélectionnée</p>
-        <p className="text-sm">
-          Ajoutez{" "}
-          <code className="bg-gray-100 px-1 rounded">?id=&lt;clinicId&gt;</code>{" "}
-          à l&apos;URL pour charger l&apos;agenda.
-        </p>
-      </div>
-    );
-  }
 
   const columns = groupByDoctor(appointments);
   const totalDoctors = columns.length;
