@@ -1,7 +1,7 @@
 import type { DefaultSession, DefaultUser } from "next-auth";
 import type { DefaultJWT } from "next-auth/jwt";
 
-type Role = "doctor" | "admin" | "clinic";
+type Role = "doctor" | "admin" | "clinic" | "secretary";
 type AdminRoleType =
   | "super_admin"
   | "moderator"
@@ -13,6 +13,8 @@ declare module "next-auth" {
   interface User extends DefaultUser {
     role?: Role;
     adminRole?: AdminRoleType;
+    doctorId?: string;
+    clinicId?: string | null;
   }
 
   interface Session extends DefaultSession {
@@ -20,6 +22,10 @@ declare module "next-auth" {
       id: string;
       role?: Role;
       adminRole?: AdminRoleType;
+      /** Set when role === "secretary" — the doctor this secretary manages */
+      doctorId?: string;
+      /** Set when role === "secretary" — the clinic this secretary manages (if applicable) */
+      clinicId?: string | null;
     };
   }
 }
@@ -29,5 +35,9 @@ declare module "next-auth/jwt" {
     id: string;
     role?: Role;
     adminRole?: AdminRoleType;
+    /** Set when role === "secretary" — the doctor this secretary manages */
+    doctorId?: string;
+    /** Set when role === "secretary" — the clinic this secretary manages (if applicable) */
+    clinicId?: string | null;
   }
 }

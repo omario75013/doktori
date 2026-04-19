@@ -70,6 +70,10 @@ export const doctors = pgTable(
     reviewCount: integer("review_count").default(0),
     /** Per-doctor configurable no-show threshold. Defaults to 3 (platform default). */
     noShowThreshold: integer("no_show_threshold").notNull().default(3),
+    /** Verification workflow: pending | documents_submitted | approved | rejected */
+    verificationStatus: varchar("verification_status", { length: 20 }).notNull().default("pending"),
+    verificationNote: text("verification_note"),
+    verifiedAt: timestamp("verified_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -967,3 +971,23 @@ export const webhooks = pgTable("webhooks", {
   lastTriggeredAt: timestamp("last_triggered_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
+
+// ── Doctor Documents (verification) ─────────────────────────────────────────
+export const doctorDocuments = pgTable(
+  "doctor_documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    /** 'diplome' | 'carte_cnom' | 'cin' | 'autre' */
+    type: varchar("type", { length: 50 }).notNull(),
+    fileUrl: text("file_url").notNull(),
+    fileName: varchar("file_name", { length: 255 }).notNull(),
+    uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("doctor_documents_doctor_idx").on(table.doctorId),
+  ]
+);
+

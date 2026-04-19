@@ -1,7 +1,7 @@
-import { db, doctors } from "@doktori/db";
-import { eq, desc } from "drizzle-orm";
-import { DoctorsTable } from "../medecins/doctors-table";
+import { db, doctors, doctorDocuments } from "@doktori/db";
+import { inArray, desc, eq } from "drizzle-orm";
 import { Clock } from "lucide-react";
+import { ValidationTable } from "./validation-table";
 
 export const dynamic = "force-dynamic";
 
@@ -16,13 +16,55 @@ export default async function AdminValidationPage() {
       city: doctors.city,
       isActive: doctors.isActive,
       createdAt: doctors.createdAt,
-      yearsOfExperience: doctors.yearsOfExperience,
-      consultationFee: doctors.consultationFee,
-      consultationMode: doctors.consultationMode,
+      verificationStatus: doctors.verificationStatus,
+      verificationNote: doctors.verificationNote,
     })
     .from(doctors)
-    .where(eq(doctors.isActive, false))
+    .where(
+      inArray(doctors.verificationStatus, ["pending", "documents_submitted"])
+    )
     .orderBy(desc(doctors.createdAt));
+
+  // Fetch all documents for these doctors in one query
+  const doctorIds = pending.map((d) => d.id);
+  const allDocs =
+    doctorIds.length > 0
+      ? await db
+          .select()
+          .from(doctorDocuments)
+          .where(inArray(doctorDocuments.doctorId, doctorIds))
+          .orderBy(doctorDocuments.uploadedAt)
+      : [];
+
+  // Group documents by doctor id
+  const docsByDoctor = allDocs.reduce<Record<string, typeof allDocs>>(
+    (acc, doc) => {
+      if (!acc[doc.doctorId]) acc[doc.doctorId] = [];
+      acc[doc.doctorId].push(doc);
+      return acc;
+    },
+    {}
+  );
+
+  const rows = pending.map((d) => ({
+    id: d.id,
+    name: d.name,
+    email: d.email,
+    phone: d.phone,
+    specialty: d.specialty,
+    city: d.city,
+    isActive: d.isActive,
+    createdAt: d.createdAt.toISOString(),
+    verificationStatus: d.verificationStatus,
+    verificationNote: d.verificationNote,
+    documents: (docsByDoctor[d.id] ?? []).map((doc) => ({
+      id: doc.id,
+      type: doc.type,
+      fileName: doc.fileName,
+      fileUrl: doc.fileUrl,
+      uploadedAt: doc.uploadedAt.toISOString(),
+    })),
+  }));
 
   return (
     <div className="p-4 sm:p-8 max-w-7xl mx-auto overflow-x-hidden">
@@ -33,32 +75,20 @@ export default async function AdminValidationPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Validation</h1>
           <p className="text-slate-500 mt-1">
-            {pending.length} médecin{pending.length > 1 ? "s" : ""} en attente
-            d&apos;approbation
+            {rows.length} médecin{rows.length > 1 ? "s" : ""} en attente de
+            vérification
           </p>
         </div>
       </div>
-      {pending.length === 0 ? (
+
+      {rows.length === 0 ? (
         <div className="bg-white rounded-xl border border-slate-200 p-12 text-center">
           <p className="text-slate-500">
             ✨ Aucun médecin en attente. Tout est à jour.
           </p>
         </div>
       ) : (
-        <DoctorsTable
-          doctors={pending.map((d) => ({
-            ...d,
-            createdAt: d.createdAt.toISOString(),
-            apptCount: 0,
-            reviewCount: 0,
-            avgRating: null,
-            yearsOfExperience: d.yearsOfExperience,
-            consultationFee: d.consultationFee,
-            consultationMode: d.consultationMode,
-          }))}
-          specialties={Array.from(new Set(pending.map((d) => d.specialty))).sort()}
-          cities={Array.from(new Set(pending.map((d) => d.city))).sort()}
-        />
+        <ValidationTable doctors={rows} />
       )}
     </div>
   );

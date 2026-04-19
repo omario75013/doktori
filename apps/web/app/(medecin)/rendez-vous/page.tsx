@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Calendar, CalendarPlus, Settings2 } from "lucide-react";
+import { Calendar, CalendarPlus, X, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -20,7 +20,11 @@ type Appointment = {
   patientLastMinuteCancelCount: number;
 };
 
-// STATUS_LABELS resolved at render time via t() inside component
+type PatientOption = {
+  id: string;
+  name: string;
+  phone: string;
+};
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-orange-100 text-orange-700",
@@ -31,6 +35,225 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 const TERMINAL_STATUSES = ["cancelled", "completed", "no_show"];
+
+// ─── New appointment modal ────────────────────────────────────────────────────
+
+function NewAppointmentModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [patientOptions, setPatientOptions] = useState<PatientOption[]>([]);
+  const [patientsLoading, setPatientsLoading] = useState(true);
+  const [patientSearch, setPatientSearch] = useState("");
+  const [selectedPatientId, setSelectedPatientId] = useState("");
+  const [date, setDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
+  const [startTime, setStartTime] = useState("09:00");
+  const [type, setType] = useState<"cabinet" | "teleconsult" | "domicile">("cabinet");
+  const [reason, setReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/doctor/patients")
+      .then((r) => r.json())
+      .then((data: PatientOption[]) => setPatientOptions(Array.isArray(data) ? data : []))
+      .catch(() => setPatientOptions([]))
+      .finally(() => setPatientsLoading(false));
+  }, []);
+
+  const filteredPatients = patientOptions.filter(
+    (p) =>
+      p.name.toLowerCase().includes(patientSearch.toLowerCase()) ||
+      p.phone.includes(patientSearch)
+  );
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!selectedPatientId) {
+      setError("Veuillez sélectionner un patient.");
+      return;
+    }
+    setSubmitting(true);
+    try {
+      const startsAt = new Date(`${date}T${startTime}:00`);
+      const res = await fetch("/api/doctor/appointments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          patientId: selectedPatientId,
+          startsAt: startsAt.toISOString(),
+          type,
+          reason: reason.trim() || undefined,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Erreur lors de la création");
+      toast.success("Rendez-vous créé avec succès.");
+      onCreated();
+      onClose();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur inconnue");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-lg rounded-2xl bg-white dark:bg-gray-900 shadow-xl p-6 space-y-4 border border-border max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold text-foreground">Nouveau rendez-vous</h2>
+          <button
+            onClick={onClose}
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-secondary hover:text-foreground transition-colors"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Patient selection */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+              Patient <span className="text-red-500">*</span>
+            </label>
+            <div className="relative mb-2">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+              <input
+                type="text"
+                value={patientSearch}
+                onChange={(e) => setPatientSearch(e.target.value)}
+                placeholder="Rechercher un patient…"
+                className="w-full h-9 pl-8 pr-3 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
+              />
+            </div>
+            {patientsLoading ? (
+              <p className="text-xs text-gray-400">Chargement des patients…</p>
+            ) : (
+              <div className="max-h-40 overflow-y-auto rounded-xl border border-border divide-y divide-border">
+                {filteredPatients.length === 0 ? (
+                  <p className="p-3 text-xs text-gray-400 text-center">Aucun patient trouvé</p>
+                ) : (
+                  filteredPatients.map((p) => (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => setSelectedPatientId(p.id)}
+                      className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                        selectedPatientId === p.id
+                          ? "bg-primary text-white"
+                          : "hover:bg-secondary text-foreground"
+                      }`}
+                    >
+                      <span className="font-medium">{p.name}</span>
+                      <span className="ml-2 text-xs opacity-70">{p.phone}</span>
+                    </button>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Date + Time */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+                Date <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+                className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+                Heure <span className="text-red-500">*</span>
+              </label>
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                required
+                className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
+              />
+            </div>
+          </div>
+
+          {/* Type */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+              Type de consultation
+            </label>
+            <div className="flex gap-2">
+              {(["cabinet", "teleconsult", "domicile"] as const).map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  onClick={() => setType(t)}
+                  className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-colors ${
+                    type === t
+                      ? "bg-primary text-white border-primary"
+                      : "border-border text-gray-600 hover:bg-secondary"
+                  }`}
+                >
+                  {t === "cabinet" ? "Cabinet" : t === "teleconsult" ? "Téléconsult" : "Domicile"}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Reason */}
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+              Motif <span className="text-gray-300 font-normal normal-case">(optionnel)</span>
+            </label>
+            <input
+              type="text"
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              placeholder="Ex : Suivi tension, douleurs abdominales…"
+              className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
+            />
+          </div>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <div className="flex gap-2 justify-end pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 dark:text-gray-400 transition-colors"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={submitting}
+              className="px-4 py-2 text-sm rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold disabled:opacity-40 transition-colors"
+            >
+              {submitting ? "Création…" : "Créer le RDV"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
+// ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function RendezVousPage() {
   const t = useTranslations("medecin.appointments");
@@ -49,55 +272,12 @@ export default function RendezVousPage() {
     { status: "completed", label: t("actionComplete") },
     { status: "no_show", label: t("actionNoShow") },
   ];
+
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
-
-  // No-show threshold settings
-  const [showThresholdPanel, setShowThresholdPanel] = useState(false);
-  const [noShowThreshold, setNoShowThreshold] = useState(3);
-  const [thresholdInput, setThresholdInput] = useState("3");
-  const [thresholdSaving, setThresholdSaving] = useState(false);
-
-  useEffect(() => {
-    fetch("/api/doctor/profile/noshow-threshold")
-      .then((r) => r.json())
-      .then((data) => {
-        if (typeof data?.noShowThreshold === "number") {
-          setNoShowThreshold(data.noShowThreshold);
-          setThresholdInput(String(data.noShowThreshold));
-        }
-      })
-      .catch(() => {});
-  }, []);
-
-  const saveThreshold = async () => {
-    const val = Number(thresholdInput);
-    if (!Number.isInteger(val) || val < 1 || val > 10) {
-      toast.error("Le seuil doit être entre 1 et 10.");
-      return;
-    }
-    setThresholdSaving(true);
-    try {
-      const res = await fetch("/api/doctor/profile/noshow-threshold", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ noShowThreshold: val }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.error ?? "Erreur sauvegarde");
-      }
-      setNoShowThreshold(val);
-      toast.success("Seuil d'absences mis à jour.");
-      setShowThresholdPanel(false);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur");
-    } finally {
-      setThresholdSaving(false);
-    }
-  };
+  const [showNewRdvModal, setShowNewRdvModal] = useState(false);
 
   // CNAM modal state
   const [cnamDialogAppointmentId, setCnamDialogAppointmentId] = useState<string | null>(null);
@@ -315,12 +495,11 @@ export default function RendezVousPage() {
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={() => setShowThresholdPanel((v) => !v)}
-            title="Paramètres absences"
-            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary font-medium border border-border hover:bg-secondary rounded-xl px-3 py-2 transition-colors"
+            onClick={() => setShowNewRdvModal(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white text-sm font-medium transition-colors shadow-sm"
           >
-            <Settings2 className="h-4 w-4" />
-            <span className="hidden sm:inline">Absences ({noShowThreshold})</span>
+            <CalendarPlus className="h-4 w-4" />
+            Nouveau RDV
           </button>
           <button
             onClick={fetchAppointments}
@@ -330,49 +509,6 @@ export default function RendezVousPage() {
           </button>
         </div>
       </div>
-
-      {/* No-show threshold settings panel */}
-      {showThresholdPanel && (
-        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-3">
-          <div className="flex items-center gap-2">
-            <Settings2 className="h-4 w-4 text-amber-600" />
-            <h2 className="text-sm font-semibold text-amber-800">Seuil de suspension automatique</h2>
-          </div>
-          <p className="text-xs text-amber-700">
-            Un patient sera automatiquement suspendu après ce nombre d&apos;absences non justifiées.
-            Il sera notifié par SMS et email, et pourra à nouveau réserver après 30 jours.
-          </p>
-          <div className="flex items-center gap-3">
-            <input
-              type="number"
-              min={1}
-              max={10}
-              value={thresholdInput}
-              onChange={(e) => setThresholdInput(e.target.value)}
-              className="w-20 h-10 rounded-xl border border-amber-300 px-3 text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
-            />
-            <span className="text-sm text-amber-700">absence(s) (entre 1 et 10)</span>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={saveThreshold}
-              disabled={thresholdSaving}
-              className="text-sm px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold disabled:opacity-40 transition-colors"
-            >
-              {thresholdSaving ? "Enregistrement..." : "Enregistrer"}
-            </button>
-            <button
-              onClick={() => {
-                setShowThresholdPanel(false);
-                setThresholdInput(String(noShowThreshold));
-              }}
-              className="text-sm px-4 py-2 rounded-xl border border-amber-300 text-amber-700 hover:bg-amber-100 transition-colors"
-            >
-              Annuler
-            </button>
-          </div>
-        </div>
-      )}
 
       {appointments.length === 0 ? (
         <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
@@ -407,12 +543,12 @@ export default function RendezVousPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-foreground">{appt.patientName}</span>
-                        {appt.patientNoShowCount > 0 && (
+                        {appt.patientNoShowCount >= 2 && (
                           <span
                             className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700"
-                            title={`${appt.patientNoShowCount} absence(s) non justifiée(s) enregistrée(s)`}
+                            title={`${appt.patientNoShowCount} absences enregistrées`}
                           >
-                            {appt.patientNoShowCount} abs.
+                            ⚠ {appt.patientNoShowCount}
                           </span>
                         )}
                         {appt.patientLastMinuteCancelCount >= 2 && (
@@ -512,6 +648,14 @@ export default function RendezVousPage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* New appointment modal */}
+      {showNewRdvModal && (
+        <NewAppointmentModal
+          onClose={() => setShowNewRdvModal(false)}
+          onCreated={fetchAppointments}
+        />
       )}
 
       {/* Followup modal */}

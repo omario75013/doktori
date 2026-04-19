@@ -15,6 +15,8 @@ import {
   Stethoscope,
   Users,
   Phone,
+  Shield,
+  XCircle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
@@ -53,6 +55,8 @@ type DashboardClientProps = {
   consultationMode: string;
   todayAppts: TodayAppt[];
   upcomingAppts: UpcomingAppt[];
+  verificationStatus?: string;
+  verificationNote?: string | null;
 };
 
 // ─── Status badge/border config (labels resolved at render time via t()) ───────
@@ -194,6 +198,8 @@ export function DashboardClient({
   consultationMode,
   todayAppts,
   upcomingAppts,
+  verificationStatus,
+  verificationNote,
 }: DashboardClientProps) {
   const t = useTranslations("medecin.dashboard");
   const tStatus = useTranslations("medecin.appointments.status");
@@ -249,6 +255,64 @@ export function DashboardClient({
 
   return (
     <div className="space-y-8">
+      {/* Verification status banners */}
+      {verificationStatus === "pending" && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 px-4 py-3 bg-amber-50 border border-amber-200 rounded-xl"
+        >
+          <Shield className="w-5 h-5 text-amber-600 shrink-0" />
+          <div className="flex-1 min-w-0">
+            <span className="text-sm font-medium text-amber-800">
+              Complétez votre vérification pour apparaître dans les résultats de recherche.
+            </span>
+          </div>
+          <Link
+            href="/verification"
+            className="shrink-0 text-xs font-semibold text-amber-700 hover:text-amber-900 border border-amber-300 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors"
+          >
+            Vérifier mon compte
+          </Link>
+        </motion.div>
+      )}
+
+      {verificationStatus === "documents_submitted" && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-center gap-3 px-4 py-3 bg-blue-50 border border-blue-200 rounded-xl"
+        >
+          <Clock className="w-5 h-5 text-blue-600 shrink-0" />
+          <span className="text-sm font-medium text-blue-800">
+            Vos documents sont en cours de vérification par notre équipe. Vous serez notifié par
+            email.
+          </span>
+        </motion.div>
+      )}
+
+      {verificationStatus === "rejected" && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="flex items-start gap-3 px-4 py-3 bg-red-50 border border-red-200 rounded-xl"
+        >
+          <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-0">
+            <span className="text-sm font-medium text-red-800">
+              Vos documents ont été refusés
+              {verificationNote ? ` : ${verificationNote}` : "."}
+            </span>
+          </div>
+          <Link
+            href="/verification"
+            className="shrink-0 text-xs font-semibold text-red-700 hover:text-red-900 border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors"
+          >
+            Resoumettre
+          </Link>
+        </motion.div>
+      )}
+
       {/* First-login onboarding wizard */}
       <DoctorOnboarding />
 

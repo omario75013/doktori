@@ -1,6 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { db, appointments, patients } from "@doktori/db";
+import { db, appointments, patients, doctors } from "@doktori/db";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { DashboardClient } from "./dashboard-client";
 
@@ -72,10 +72,10 @@ export default async function DashboardPage() {
 
   const toConfirm = todayAppts.filter((a) => a.status === "pending").length;
 
-  // Fetch doctor consultation mode + teleconsult stats using raw SQL (new columns)
+  // Fetch doctor consultation mode, verification status + teleconsult stats
   const [doctorRow, teleconsultCountRow, walletRow] = await Promise.all([
     db.execute(
-      sql`SELECT consultation_mode FROM doctors WHERE id = ${doctorId} LIMIT 1`
+      sql`SELECT consultation_mode, verification_status, verification_note FROM doctors WHERE id = ${doctorId} LIMIT 1`
     ),
     db.execute(
       sql`SELECT COUNT(*) AS count FROM appointments WHERE doctor_id = ${doctorId} AND type = 'teleconsult' AND starts_at >= ${monthStart.toISOString()}`
@@ -85,9 +85,11 @@ export default async function DashboardPage() {
     ),
   ]);
 
-  const consultationMode =
-    ((doctorRow as unknown as Array<{ consultation_mode: string | null }>)[0])
-      ?.consultation_mode ?? "cabinet";
+  type DoctorRowType = { consultation_mode: string | null; verification_status: string | null; verification_note: string | null };
+  const drRow = ((doctorRow as unknown as DoctorRowType[])[0]);
+  const consultationMode = drRow?.consultation_mode ?? "cabinet";
+  const verificationStatus = drRow?.verification_status ?? "pending";
+  const verificationNote = drRow?.verification_note ?? null;
 
   const teleconsultCount = Number(
     ((teleconsultCountRow as unknown as Array<{ count: string }>)[0])?.count ?? 0
@@ -111,6 +113,8 @@ export default async function DashboardPage() {
       consultationMode={consultationMode}
       todayAppts={todayAppts}
       upcomingAppts={upcomingAppts}
+      verificationStatus={verificationStatus}
+      verificationNote={verificationNote}
     />
   );
 }

@@ -237,7 +237,8 @@
       "factures": "الفواتير",
       "profil": "ملفي الشخصي",
       "openMenu": "فتح القائمة",
-      "closeMenu": "إغلاق القائمة"
+      "closeMenu": "إغلاق القائمة",
+      "verification": "التحقق"
     },
     "dashboard": {
       "title": "لوحة التحكم",

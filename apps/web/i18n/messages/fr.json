@@ -237,7 +237,8 @@
       "factures": "Factures",
       "profil": "Mon profil",
       "openMenu": "Ouvrir le menu",
-      "closeMenu": "Fermer le menu"
+      "closeMenu": "Fermer le menu",
+      "verification": "Vérification"
     },
     "dashboard": {
       "title": "Tableau de bord",
@@ -491,7 +492,13 @@
     "breadcrumbCurrent": "Centre d'aide",
     "featuredLabel": "Questions populaires",
     "popularSearchesLabel": "Recherches populaires :",
-    "popularSearches": ["CNAM", "annuler", "SOS", "paiement", "géolocalisation"],
+    "popularSearches": [
+      "CNAM",
+      "annuler",
+      "SOS",
+      "paiement",
+      "géolocalisation"
+    ],
     "shortcutHint": "/",
     "copyLink": "Copier le lien",
     "linkCopied": "Lien copié",

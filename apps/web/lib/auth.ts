@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
-import { db, doctors, adminUsers, clinics } from "@doktori/db";
+import { db, doctors, adminUsers, clinics, secretaries } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -95,6 +95,34 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         };
       },
     }),
+    Credentials({
+      id: "secretary-credentials",
+      name: "Secretary Login",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Mot de passe", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+        const email = (credentials.email as string).toLowerCase();
+        const [secretary] = await db
+          .select()
+          .from(secretaries)
+          .where(and(eq(secretaries.email, email), eq(secretaries.isActive, true)))
+          .limit(1);
+        if (!secretary) return null;
+        const valid = await compare(credentials.password as string, secretary.passwordHash);
+        if (!valid) return null;
+        return {
+          id: secretary.id,
+          name: secretary.name,
+          email: secretary.email,
+          role: "secretary" as const,
+          doctorId: secretary.doctorId,
+          clinicId: secretary.clinicId ?? null,
+        };
+      },
+    }),
   ],
   callbacks: {
     jwt({ token, user }) {
@@ -102,6 +130,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (user.id) token.id = user.id;
         if (user.role) token.role = user.role;
         if (user.adminRole) token.adminRole = user.adminRole;
+        if (user.doctorId) token.doctorId = user.doctorId;
+        if ("clinicId" in user) token.clinicId = user.clinicId;
       }
       return token;
     },
@@ -110,6 +140,8 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         session.user.id = token.id;
         if (token.role) session.user.role = token.role;
         if (token.adminRole) session.user.adminRole = token.adminRole;
+        if (token.doctorId) session.user.doctorId = token.doctorId;
+        if ("clinicId" in token) session.user.clinicId = token.clinicId;
       }
       return session;
     },

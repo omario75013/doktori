@@ -5,14 +5,24 @@ import { useState, useEffect } from "react";
 import { Menu, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 
-export function SidebarNav({ userName }: { userName?: string | null }) {
+export function SidebarNav({
+  userName,
+  verificationStatus,
+}: {
+  userName?: string | null;
+  verificationStatus?: string;
+}) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const t = useTranslations("medecin.nav");
 
+  const showVerificationDot =
+    verificationStatus === "pending" || verificationStatus === "rejected";
+
   const links = [
     { href: "/dashboard", label: t("dashboard") },
+    { href: "/verification", label: "Vérification", dot: showVerificationDot },
     { href: "/calendrier", label: t("calendrier") },
     { href: "/agenda", label: t("agenda") },
     { href: "/rendez-vous", label: t("rendezVous") },
@@ -93,6 +103,9 @@ export function SidebarNav({ userName }: { userName?: string | null }) {
                   <span className="ml-2 inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold">
                     {unreadCount > 99 ? "99+" : unreadCount}
                   </span>
+                )}
+                {"dot" in l && l.dot && !showBadge && (
+                  <span className="ml-2 w-2 h-2 rounded-full bg-red-500 shrink-0" />
                 )}
               </Link>
             );

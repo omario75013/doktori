@@ -6,7 +6,7 @@ import { hash } from "bcryptjs";
 import { eq, sql } from "drizzle-orm";
 import { geocodeAddress } from "@/lib/geocode";
 import { sendEmail } from "@/lib/email";
-import { buildDoctorWelcomeEmail, buildDoctorEmailVerificationEmail } from "@/emails/templates";
+import { buildDoctorWelcomeEmail, buildDoctorEmailVerificationEmail, buildVerificationPendingEmail } from "@/emails/templates";
 import { createAdminNotification } from "@/lib/admin-notifications";
 import { dispatchWebhook } from "@/lib/webhooks";
 import { rateLimit } from "@/lib/rate-limit";
@@ -68,6 +68,9 @@ export async function POST(req: NextRequest) {
         latitude: geo ? String(geo.lat) : null,
         longitude: geo ? String(geo.lng) : null,
         emailVerificationToken,
+        // New doctors start invisible and pending verification
+        isVisible: false,
+        verificationStatus: "pending",
       })
       .returning({ id: doctors.id, slug: doctors.slug });
 
@@ -125,18 +128,15 @@ export async function POST(req: NextRequest) {
       html: verificationEmail.html,
     }).catch(console.error);
 
-    // Send welcome email (fire-and-forget)
+    // Send verification-pending welcome email (fire-and-forget)
+    const pendingEmail = buildVerificationPendingEmail({
+      doctorName: parsed.data.name,
+      uploadUrl: `${baseUrl}/verification`,
+    });
     sendEmail({
       to: email,
-      subject: "Bienvenue sur Doktori — votre essai gratuit est activé !",
-      html: buildDoctorWelcomeEmail({
-        doctorName: parsed.data.name,
-        trialEndDate: trialEnd.toLocaleDateString("fr-TN", {
-          day: "numeric",
-          month: "long",
-          year: "numeric",
-        }),
-      }),
+      subject: pendingEmail.subject,
+      html: pendingEmail.html,
     }).catch(console.error);
 
     return NextResponse.json({ id: doctor.id, slug: doctor.slug }, { status: 201 });

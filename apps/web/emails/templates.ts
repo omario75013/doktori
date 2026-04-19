@@ -805,3 +805,77 @@ export function buildNoShowSuspensionEmail(p: {
     `),
   };
 }
+
+// ── Doctor Verification: Pending ────────────────────────────────────────────
+
+export function buildVerificationPendingEmail(p: {
+  doctorName: string;
+  uploadUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: "Bienvenue sur Doktori — Activez votre profil",
+    html: layout(`
+      <p>Bonjour Dr. ${p.doctorName},</p>
+      <p>Votre compte Doktori a été créé avec succès !</p>
+      <p>Pour activer votre profil et apparaître dans les résultats de recherche, vous devez téléverser vos documents de vérification :</p>
+      <ul style="color:#5E7574;line-height:2;padding-left:20px">
+        <li>Diplôme de médecine</li>
+        <li>Carte d'inscription au CNOM</li>
+        <li>CIN ou passeport</li>
+      </ul>
+      <p>Votre profil sera activé après vérification de vos documents par notre équipe (généralement sous 24-48h).</p>
+      ${btn("Téléverser mes documents", p.uploadUrl)}
+      <p style="font-size:13px;color:#6b7280;margin-top:24px">En attendant, vous pouvez configurer votre agenda, ajouter vos motifs de consultation et explorer votre espace médecin.</p>
+    `),
+  };
+}
+
+// ── Doctor Verification: Approved ──────────────────────────────────────────
+
+export function buildVerificationApprovedEmail(p: {
+  doctorName: string;
+  profileUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: "Votre compte Doktori est vérifié !",
+    html: layout(`
+      <p>Bonjour Dr. ${p.doctorName},</p>
+      <p style="font-size:18px;font-weight:700;color:${TEAL}">Félicitations ! Votre compte est maintenant vérifié.</p>
+      <p>Votre profil est désormais visible sur doktori.tn et vous pouvez recevoir des demandes de rendez-vous de vos patients.</p>
+      <ul style="color:#5E7574;line-height:2;padding-left:20px">
+        <li>Votre profil apparaît dans les résultats de recherche</li>
+        <li>Les patients peuvent prendre rendez-vous en ligne</li>
+        <li>Vous profitez de 2 mois d'essai gratuit</li>
+      </ul>
+      ${btn("Voir mon profil", p.profileUrl)}
+      <p style="font-size:13px;color:#6b7280;margin-top:24px">Merci de faire confiance à Doktori pour le développement de votre pratique médicale.</p>
+    `),
+  };
+}
+
+// ── Doctor Verification: Rejected ──────────────────────────────────────────
+
+export function buildVerificationRejectedEmail(p: {
+  doctorName: string;
+  reason: string;
+  uploadUrl: string;
+}): { subject: string; html: string } {
+  return {
+    subject: "Documents refusés — Action requise",
+    html: layout(`
+      <p>Bonjour Dr. ${p.doctorName},</p>
+      <p>Nous avons examiné vos documents et malheureusement nous ne pouvons pas les accepter pour la raison suivante :</p>
+      <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:16px;margin:16px 0">
+        <p style="margin:0;color:#991b1b;font-weight:600">${p.reason}</p>
+      </div>
+      <p>Pour activer votre profil, veuillez soumettre de nouveaux documents conformes à nos exigences :</p>
+      <ul style="color:#5E7574;line-height:2;padding-left:20px">
+        <li>Diplôme de médecine lisible et complet</li>
+        <li>Carte d'inscription au CNOM en cours de validité</li>
+        <li>CIN ou passeport valide</li>
+      </ul>
+      ${btn("Soumettre de nouveaux documents", p.uploadUrl)}
+      <p style="font-size:13px;color:#6b7280;margin-top:24px">Pour toute question, contactez-nous à <a href="mailto:contact@doktori.tn" style="color:${TEAL}">contact@doktori.tn</a>.</p>
+    `),
+  };
+}
