@@ -5,8 +5,19 @@ import { formatPhone } from "@doktori/shared";
 import { broadcastSos } from "@/lib/sos-broadcast";
 import { signSosToken } from "@/lib/sos-hmac";
 import { createAdminNotification } from "@/lib/admin-notifications";
+import { rateLimit } from "@/lib/rate-limit";
 
 export async function POST(req: NextRequest) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rl = rateLimit(`sos:request:${ip}`, 3, 10 * 60 * 1000);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Trop de tentatives. Réessayez dans quelques minutes." },
+      { status: 429 }
+    );
+  }
+
   const body = await req.json();
   const { patientName, patientPhone, latitude, longitude, symptomCategory, description } = body;
 

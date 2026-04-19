@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db, doctors, subscriptions } from "@doktori/db";
 import { doctorRegistrationSchema } from "@doktori/validation";
 import { generateSlug } from "@doktori/shared";
@@ -9,9 +9,20 @@ import { sendEmail } from "@/lib/email";
 import { buildDoctorWelcomeEmail, buildDoctorEmailVerificationEmail } from "@/emails/templates";
 import { createAdminNotification } from "@/lib/admin-notifications";
 import { dispatchWebhook } from "@/lib/webhooks";
+import { rateLimit } from "@/lib/rate-limit";
 import crypto from "crypto";
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
+  const ip =
+    req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  const rl = rateLimit(`doctors:register:${ip}`, 5, 15 * 60 * 1000);
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Trop de tentatives. Réessayez dans quelques minutes." },
+      { status: 429 }
+    );
+  }
+
   const body = await req.json();
   const parsed = doctorRegistrationSchema.safeParse(body);
   if (!parsed.success) {
@@ -79,6 +90,8 @@ export async function POST(req: Request) {
     await db.execute(sql`UPDATE doctors SET cgu_accepted_at = NOW() WHERE id = ${doctor.id}`);
   }
 
+  const baseUrl = process.env.NEXTAUTH_URL || "https://doktori.tn";
+
   // Notify admin + dispatch webhook (fire-and-forget)
   createAdminNotification({
     type: "new_doctor",
@@ -92,8 +105,14 @@ export async function POST(req: Request) {
     name: parsed.data.name,
   }).catch(console.error);
 
+  // Trigger Meilisearch re-sync so the new doctor appears in patient search results
+  // immediately after registration (fire-and-forget, non-blocking).
+  fetch(`${baseUrl}/api/search/sync`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${process.env.CRON_SECRET}` },
+  }).catch((err) => console.error("[search-sync] post-registration sync failed:", err));
+
   // Send verification email (fire-and-forget)
-  const baseUrl = process.env.NEXTAUTH_URL || "https://doktori.tn";
   const verificationUrl = `${baseUrl}/api/doctors/verify-email?token=${emailVerificationToken}`;
   const verificationEmail = buildDoctorEmailVerificationEmail({
     doctorName: parsed.data.name,

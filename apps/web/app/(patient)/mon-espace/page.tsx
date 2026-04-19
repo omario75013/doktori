@@ -24,6 +24,8 @@ import {
   Clock,
   Video,
   Siren,
+  Bell,
+  X,
 } from "lucide-react";
 
 interface Appointment {
@@ -39,6 +41,7 @@ interface Appointment {
   doctorSlug: string;
   beneficiaryName: string | null;
   beneficiaryRelation: string | null;
+  hasReview?: boolean;
 }
 
 interface PatientInfo {
@@ -192,6 +195,8 @@ export default function PatientDashboardPage() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [cancelConfirm, setCancelConfirm] = useState<string | null>(null);
+  const [reviewBannerDismissed, setReviewBannerDismissed] = useState(true);
+  const [pushBannerDismissed, setPushBannerDismissed] = useState(true);
 
   useEffect(() => {
     const stored = localStorage.getItem("doktori_patient_token");
@@ -202,6 +207,13 @@ export default function PatientDashboardPage() {
     setToken(stored);
     const info = parsePatientFromToken(stored);
     setPatient(info);
+    // Read banner dismissal flags from localStorage
+    setReviewBannerDismissed(
+      localStorage.getItem("doktori_review_banner_dismissed") === "true",
+    );
+    setPushBannerDismissed(
+      localStorage.getItem("doktori_push_banner_dismissed") === "true",
+    );
   }, [router]);
 
   useEffect(() => {
@@ -244,6 +256,16 @@ export default function PatientDashboardPage() {
     router.replace("/mes-rdv");
   }
 
+  function dismissReviewBanner() {
+    localStorage.setItem("doktori_review_banner_dismissed", "true");
+    setReviewBannerDismissed(true);
+  }
+
+  function dismissPushBanner() {
+    localStorage.setItem("doktori_push_banner_dismissed", "true");
+    setPushBannerDismissed(true);
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen bg-secondary">
@@ -276,6 +298,16 @@ export default function PatientDashboardPage() {
   const nextAppointment = upcoming[0] ?? null;
   const patientName = patient?.name ?? patient?.phone ?? "Patient";
   const timeline = buildTimeline(appointments);
+
+  // Unreviewed completed appointments in the last 30 days (for banners)
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+  const unreviewedCompleted = appointments.filter(
+    (a) =>
+      (a.status === "completed" || (a.status !== "cancelled" && isPast(new Date(a.startsAt)))) &&
+      !a.hasReview &&
+      new Date(a.startsAt) >= thirtyDaysAgo,
+  );
+  const firstUnreviewed = unreviewedCompleted[0] ?? null;
 
   // Greeting based on hour
   const hour = new Date().getHours();
@@ -328,6 +360,71 @@ export default function PatientDashboardPage() {
             Se déconnecter
           </button>
         </motion.div>
+
+        {/* Review reminder banner */}
+        {!reviewBannerDismissed && unreviewedCompleted.length > 0 && (
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className="mb-4 rounded-2xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 dark:border-amber-700 px-4 py-3 flex items-center gap-3"
+          >
+            <Star className="w-5 h-5 text-amber-500 shrink-0" />
+            <p className="flex-1 text-sm text-amber-800 dark:text-amber-200">
+              Vous avez{" "}
+              <span className="font-bold">{unreviewedCompleted.length}</span>{" "}
+              consultation{unreviewedCompleted.length > 1 ? "s" : ""} sans avis.
+              Votre retour aide les autres patients&nbsp;!
+            </p>
+            <div className="flex items-center gap-2 shrink-0">
+              {firstUnreviewed && (
+                <a
+                  href={`/avis/${firstUnreviewed.id}`}
+                  className="text-xs font-bold text-white bg-[#0891B2] hover:bg-[#0e7490] rounded-xl px-3 py-1.5 transition-colors"
+                >
+                  Laisser un avis
+                </a>
+              )}
+              <button
+                onClick={dismissReviewBanner}
+                aria-label="Fermer"
+                className="text-amber-400 hover:text-amber-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Push notification opt-in banner */}
+        {!pushBannerDismissed && (
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className="mb-4 rounded-2xl border border-[#0891B2]/30 bg-cyan-50 dark:bg-cyan-900/20 dark:border-cyan-700 px-4 py-3 flex items-center gap-3"
+          >
+            <Bell className="w-5 h-5 text-[#0891B2] shrink-0" />
+            <p className="flex-1 text-sm text-cyan-800 dark:text-cyan-200">
+              Activez les notifications pour recevoir des rappels de rendez-vous
+            </p>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href="/mon-espace/notifications"
+                className="text-xs font-bold text-white bg-[#0891B2] hover:bg-[#0e7490] rounded-xl px-3 py-1.5 transition-colors"
+              >
+                Activer
+              </a>
+              <button
+                onClick={dismissPushBanner}
+                aria-label="Fermer"
+                className="text-cyan-400 hover:text-cyan-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
 
         {/* Welcome banner */}
         <motion.div

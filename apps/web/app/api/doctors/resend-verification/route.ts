@@ -1,14 +1,29 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/email";
 import { buildDoctorEmailVerificationEmail } from "@/emails/templates";
+import { rateLimit } from "@/lib/rate-limit";
 
-export async function POST(req: Request) {
-  const { email } = await req.json();
+export async function POST(req: NextRequest) {
+  const body = await req.json();
+  const { email } = body;
   if (!email) {
     return NextResponse.json({ error: "Email requis" }, { status: 400 });
+  }
+
+  // Rate limit: 3 resend attempts per email per hour
+  const rl = rateLimit(
+    `doctors:resend-verification:${(email as string).toLowerCase()}`,
+    3,
+    60 * 60 * 1000
+  );
+  if (!rl.success) {
+    return NextResponse.json(
+      { error: "Trop de tentatives. Réessayez dans quelques minutes." },
+      { status: 429 }
+    );
   }
 
   const [doctor] = await db

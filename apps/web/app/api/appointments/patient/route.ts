@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, appointments, doctors, patientDependents } from "@doktori/db";
+import { db, appointments, doctors, patientDependents, reviews } from "@doktori/db";
 import { eq, desc } from "drizzle-orm";
 import { getPatientFromRequest } from "@/lib/patient-auth";
 
@@ -24,13 +24,17 @@ export async function GET(req: NextRequest) {
       doctorSlug: doctors.slug,
       beneficiaryName: patientDependents.name,
       beneficiaryRelation: patientDependents.relation,
+      reviewId: reviews.id,
     })
     .from(appointments)
     .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
     .leftJoin(patientDependents, eq(appointments.dependentId, patientDependents.id))
+    .leftJoin(reviews, eq(reviews.appointmentId, appointments.id))
     .where(eq(appointments.patientId, patientId))
     .orderBy(desc(appointments.startsAt))
     .limit(50);
 
-  return NextResponse.json(results);
+  return NextResponse.json(
+    results.map((r) => ({ ...r, hasReview: r.reviewId !== null, reviewId: undefined })),
+  );
 }

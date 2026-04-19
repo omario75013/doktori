@@ -19,7 +19,7 @@ export async function requireDoctor(): Promise<DoctorSession | NextResponse> {
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
-  const role = (session.user as any).role;
+  const role = session.user.role;
   if (role !== "doctor") {
     return NextResponse.json({ error: "Accès réservé aux médecins" }, { status: 403 });
   }

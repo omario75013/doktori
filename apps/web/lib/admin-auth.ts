@@ -18,7 +18,7 @@ export async function getAdminSession(): Promise<AdminSession | null> {
   const session = await auth();
   const email = session?.user?.email;
   if (!email) return null;
-  const sessionRole = (session.user as { role?: string }).role;
+  const sessionRole = session.user.role;
   if (sessionRole !== "admin") return null;
 
   const [row] = await db
