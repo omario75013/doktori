@@ -1,10 +1,11 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus } from "lucide-react";
+import { UserPlus, Users, Loader2 } from "lucide-react";
 
 type Secretary = {
   id: string;
@@ -13,6 +14,22 @@ type Secretary = {
   isActive: boolean;
   createdAt: string;
 };
+
+function SecretaryListSkeleton() {
+  return (
+    <div className="space-y-3">
+      {[1, 2, 3].map((i) => (
+        <div key={i} className="flex items-center justify-between py-3 animate-pulse">
+          <div className="space-y-1.5 flex-1">
+            <div className="h-3.5 bg-gray-200 rounded w-2/5" />
+            <div className="h-3 bg-gray-100 rounded w-3/5" />
+          </div>
+          <div className="h-8 w-16 bg-gray-100 rounded-xl" />
+        </div>
+      ))}
+    </div>
+  );
+}
 
 export default function SecretairesPage() {
   const [secretaries, setSecretaries] = useState<Secretary[]>([]);
@@ -24,7 +41,10 @@ export default function SecretairesPage() {
   const [password, setPassword] = useState("");
   const [adding, setAdding] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState<string | null>(null);
+
+  const nameInputRef = useCallback((el: HTMLInputElement | null) => {
+    if (el && !adding) el.focus();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const loadSecretaries = useCallback(async () => {
     setLoading(true);
@@ -47,7 +67,6 @@ export default function SecretairesPage() {
     e.preventDefault();
     setAdding(true);
     setError(null);
-    setSuccess(null);
 
     try {
       const res = await fetch("/api/secretaries", {
@@ -63,23 +82,30 @@ export default function SecretairesPage() {
         return;
       }
 
-      setSuccess(`Secrétaire "${data.name}" ajoutée avec succès`);
+      toast.success(`Secrétaire "${data.name}" ajoutée avec succès`);
       setName("");
       setEmail("");
       setPassword("");
       await loadSecretaries();
+    } catch {
+      toast.error("Une erreur est survenue");
     } finally {
       setAdding(false);
     }
   }
 
-  async function handleRemove(id: string) {
+  async function handleRemove(id: string, secName: string) {
     setRemoving(id);
     try {
       const res = await fetch(`/api/secretaries/${id}`, { method: "DELETE" });
       if (res.ok) {
+        toast.success(`Secrétaire "${secName}" retirée`);
         await loadSecretaries();
+      } else {
+        toast.error("Erreur lors de la suppression");
       }
+    } catch {
+      toast.error("Une erreur est survenue");
     } finally {
       setRemoving(null);
     }
@@ -106,6 +132,7 @@ export default function SecretairesPage() {
               <Label htmlFor="sec-name" className="text-foreground font-medium">Nom complet</Label>
               <Input
                 id="sec-name"
+                ref={nameInputRef}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="ex: Fatma Ben Ali"
@@ -145,16 +172,20 @@ export default function SecretairesPage() {
             {error && (
               <p className="text-sm text-red-600 bg-red-50 rounded-xl px-3 py-2">{error}</p>
             )}
-            {success && (
-              <p className="text-sm text-primary bg-secondary border border-border rounded-xl px-3 py-2">{success}</p>
-            )}
 
             <Button
               type="submit"
               disabled={adding}
-              className="w-full bg-primary hover:bg-doktori-teal-dark h-12 rounded-xl font-bold text-white"
+              className="w-full bg-primary hover:bg-doktori-teal-dark h-12 rounded-xl font-bold text-white flex items-center justify-center gap-2"
             >
-              {adding ? "Ajout en cours…" : "Ajouter la secrétaire"}
+              {adding ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Ajout en cours…
+                </>
+              ) : (
+                "Ajouter la secrétaire"
+              )}
             </Button>
           </form>
         </div>
@@ -163,7 +194,7 @@ export default function SecretairesPage() {
         <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-base font-semibold text-foreground">Secrétaires actives</h2>
-            {active.length > 0 && (
+            {!loading && active.length > 0 && (
               <span className="text-xs text-primary font-semibold bg-secondary px-2.5 py-1 rounded-full">
                 {active.length}
               </span>
@@ -171,19 +202,24 @@ export default function SecretairesPage() {
           </div>
 
           {loading ? (
-            <div className="space-y-3">
-              {[1, 2].map((i) => (
-                <div key={i} className="h-12 bg-secondary rounded-xl animate-pulse" />
-              ))}
-            </div>
+            <SecretaryListSkeleton />
           ) : active.length === 0 ? (
-            <div className="py-8 text-center">
-              <div className="h-12 w-12 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
-                <UserPlus className="h-6 w-6 text-primary" />
+            <div className="py-10 text-center">
+              <div className="h-14 w-14 rounded-2xl bg-[#134E4A]/10 flex items-center justify-center mx-auto mb-3">
+                <Users className="h-7 w-7 text-[#134E4A]" />
               </div>
-              <p className="text-sm text-gray-400">
-                Aucune secrétaire configurée pour le moment.
+              <p className="text-sm font-medium text-gray-700 mb-1">Aucune secrétaire</p>
+              <p className="text-sm text-gray-400 mb-4">
+                Ajoutez une secrétaire pour qu&apos;elle puisse gérer votre agenda.
               </p>
+              <button
+                type="button"
+                onClick={() => document.getElementById("sec-name")?.focus()}
+                className="inline-flex items-center gap-2 text-sm font-semibold text-[#0891B2] hover:underline"
+              >
+                <UserPlus className="h-4 w-4" />
+                Ajouter une secrétaire
+              </button>
             </div>
           ) : (
             <div className="divide-y divide-border">
@@ -200,10 +236,14 @@ export default function SecretairesPage() {
                     variant="outline"
                     size="sm"
                     disabled={removing === sec.id}
-                    onClick={() => handleRemove(sec.id)}
-                    className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 rounded-xl shrink-0"
+                    onClick={() => handleRemove(sec.id, sec.name)}
+                    className="text-red-600 border-red-200 hover:bg-red-50 hover:text-red-700 rounded-xl shrink-0 min-w-[68px]"
                   >
-                    {removing === sec.id ? "Suppression…" : "Retirer"}
+                    {removing === sec.id ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      "Retirer"
+                    )}
                   </Button>
                 </div>
               ))}

@@ -13,6 +13,22 @@ interface Conversation {
   patientId: string;
   patientName: string;
   patientPhone: string;
+  lastMessagePreview?: string;
+  unreadCount?: number;
+}
+
+function ConversationSkeleton() {
+  return (
+    <div className="w-full bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-4 animate-pulse">
+      <div className="w-12 h-12 rounded-full bg-gray-200 flex-shrink-0" />
+      <div className="flex-1 min-w-0 space-y-2">
+        <div className="h-4 bg-gray-200 rounded w-2/5" />
+        <div className="h-3 bg-gray-100 rounded w-3/5" />
+        <div className="h-3 bg-gray-100 rounded w-1/4" />
+      </div>
+      <div className="w-5 h-5 bg-gray-100 rounded flex-shrink-0" />
+    </div>
+  );
 }
 
 export default function DoctorMessageriePage() {
@@ -47,7 +63,11 @@ export default function DoctorMessageriePage() {
       </div>
 
       {loading ? (
-        <p className="text-gray-400 text-center py-12">Chargement...</p>
+        <div className="space-y-2">
+          <ConversationSkeleton />
+          <ConversationSkeleton />
+          <ConversationSkeleton />
+        </div>
       ) : error ? (
         <p className="text-red-500 text-center py-12">{error}</p>
       ) : conversations.length === 0 ? (
@@ -67,18 +87,34 @@ export default function DoctorMessageriePage() {
               .join("")
               .toUpperCase()
               .slice(0, 2);
+            const hasUnread = typeof conv.unreadCount === "number" && conv.unreadCount > 0;
             return (
               <button
                 key={conv.id}
                 onClick={() => router.push(`/messagerie/${conv.id}`)}
                 className="w-full text-left bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-4 hover:border-teal-200 hover:shadow-sm transition-all"
               >
-                <div className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center text-white font-semibold flex-shrink-0">
-                  {initials}
+                <div className="relative flex-shrink-0">
+                  <div className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center text-white font-semibold">
+                    {initials}
+                  </div>
+                  {hasUnread && (
+                    <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] bg-[#0891B2] text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 leading-none">
+                      {conv.unreadCount! > 99 ? "99+" : conv.unreadCount}
+                    </span>
+                  )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-gray-900 truncate">{conv.patientName}</p>
-                  <p className="text-sm text-gray-500 truncate">{conv.patientPhone}</p>
+                  <p className={`font-semibold truncate ${hasUnread ? "text-gray-900" : "text-gray-700"}`}>
+                    {conv.patientName}
+                  </p>
+                  {conv.lastMessagePreview ? (
+                    <p className={`text-sm truncate mt-0.5 ${hasUnread ? "text-gray-700 font-medium" : "text-gray-400"}`}>
+                      {conv.lastMessagePreview}
+                    </p>
+                  ) : (
+                    <p className="text-sm text-gray-400 truncate mt-0.5">{conv.patientPhone}</p>
+                  )}
                   {conv.lastMessageAt && (
                     <p className="text-xs text-gray-400 mt-0.5">
                       {formatDistanceToNow(new Date(conv.lastMessageAt), {
