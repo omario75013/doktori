@@ -134,7 +134,7 @@ export default function DoctorConversationPage({
   }
 
   return (
-    <div className="flex flex-col h-[calc(100vh-2rem)] bg-[#F0FDFA] rounded-xl overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-2rem)] bg-secondary rounded-xl overflow-hidden">
       {/* Header */}
       <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 flex-shrink-0">
         <button
@@ -182,7 +182,7 @@ export default function DoctorConversationPage({
                 <div
                   className={`max-w-[75%] rounded-2xl px-4 py-2.5 ${
                     isDoctor
-                      ? "bg-[#0891B2] text-white rounded-br-sm"
+                      ? "bg-primary text-white rounded-br-sm"
                       : "bg-white text-gray-900 rounded-bl-sm shadow-sm border border-gray-100"
                   }`}
                 >
@@ -231,7 +231,7 @@ export default function DoctorConversationPage({
         <button
           type="submit"
           disabled={!input.trim() || sending}
-          className="p-2.5 rounded-xl bg-[#0891B2] text-white hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
+          className="p-2.5 rounded-xl bg-primary text-white hover:bg-cyan-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex-shrink-0"
         >
           <Send className="w-4 h-4" />
         </button>

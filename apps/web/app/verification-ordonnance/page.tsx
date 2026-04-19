@@ -43,18 +43,18 @@ export default async function VerificationOrdonnancePage({
 
   if (!token) {
     return (
-      <main className="min-h-screen bg-[#F0FDFA] flex items-center justify-center px-4">
-        <div className="max-w-md w-full bg-white rounded-2xl border border-[#E6F4F1] shadow-sm p-8 text-center">
-          <ShieldCheck className="w-12 h-12 text-[#0891B2] mx-auto mb-4" />
-          <h1 className="text-xl font-bold text-[#134E4A] mb-2">
+      <main className="min-h-screen bg-secondary flex items-center justify-center px-4">
+        <div className="max-w-md w-full bg-white rounded-2xl border border-border shadow-sm p-8 text-center">
+          <ShieldCheck className="w-12 h-12 text-primary mx-auto mb-4" />
+          <h1 className="text-xl font-bold text-foreground mb-2">
             Vérification d&apos;ordonnance
           </h1>
-          <p className="text-sm text-[#5E7574] mb-6">
+          <p className="text-sm text-muted-foreground mb-6">
             Cette page permet de vérifier l&apos;authenticité d&apos;une ordonnance médicale émise via Doktori. Scannez le QR code présent sur l&apos;ordonnance pour être redirigé ici automatiquement.
           </p>
           <Link
             href="/"
-            className="inline-flex items-center gap-2 bg-[#0891B2] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-[#0E7490] transition-colors"
+            className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-doktori-teal-dark transition-colors"
           >
             Retour à l&apos;accueil
           </Link>
@@ -74,7 +74,7 @@ export default async function VerificationOrdonnancePage({
     : null;
 
   return (
-    <main className="min-h-screen bg-[#F0FDFA] flex items-center justify-center px-4 py-12">
+    <main className="min-h-screen bg-secondary flex items-center justify-center px-4 py-12">
       <div className="max-w-lg w-full">
         {result.valid ? (
           <div className="bg-white rounded-2xl border-2 border-green-400 shadow-sm overflow-hidden">
@@ -89,35 +89,35 @@ export default async function VerificationOrdonnancePage({
             <div className="p-6 space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-xs font-semibold text-[#5E7574] uppercase tracking-wide mb-1">Médecin</p>
-                  <p className="text-sm font-bold text-[#134E4A]">{result.doctorName}</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Médecin</p>
+                  <p className="text-sm font-bold text-foreground">{result.doctorName}</p>
                   {specialtyLabel && (
-                    <p className="text-xs text-[#0891B2]">{specialtyLabel}</p>
+                    <p className="text-xs text-primary">{specialtyLabel}</p>
                   )}
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-[#5E7574] uppercase tracking-wide mb-1">Patient</p>
-                  <p className="text-sm font-bold text-[#134E4A]">{result.patientName}</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Patient</p>
+                  <p className="text-sm font-bold text-foreground">{result.patientName}</p>
                 </div>
                 <div>
-                  <p className="text-xs font-semibold text-[#5E7574] uppercase tracking-wide mb-1">Date</p>
-                  <p className="text-sm font-bold text-[#134E4A]">{formattedDate}</p>
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1">Date</p>
+                  <p className="text-sm font-bold text-foreground">{formattedDate}</p>
                 </div>
               </div>
 
               {result.content && (
-                <div className="mt-4 pt-4 border-t border-[#E6F4F1]">
-                  <p className="text-xs font-semibold text-[#5E7574] uppercase tracking-wide mb-2">Contenu</p>
-                  <div className="bg-[#F0FDFA] rounded-xl p-4 text-sm text-[#134E4A] whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
+                <div className="mt-4 pt-4 border-t border-border">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Contenu</p>
+                  <div className="bg-secondary rounded-xl p-4 text-sm text-foreground whitespace-pre-wrap leading-relaxed max-h-48 overflow-y-auto">
                     {result.content}
                   </div>
                 </div>
               )}
 
-              <div className="mt-4 pt-4 border-t border-[#E6F4F1] text-center">
-                <p className="text-xs text-[#5E7574]">
+              <div className="mt-4 pt-4 border-t border-border text-center">
+                <p className="text-xs text-muted-foreground">
                   Vérification effectuée via{" "}
-                  <span className="font-bold text-[#0891B2]">Doktori.tn</span>
+                  <span className="font-bold text-primary">Doktori.tn</span>
                 </p>
               </div>
             </div>
@@ -135,12 +135,12 @@ export default async function VerificationOrdonnancePage({
             </div>
 
             <div className="p-6">
-              <p className="text-sm text-[#5E7574] mb-4">
+              <p className="text-sm text-muted-foreground mb-4">
                 Cela peut signifier que l&apos;ordonnance a été falsifiée ou que le QR code est endommagé. Si vous pensez qu&apos;il s&apos;agit d&apos;une erreur, veuillez contacter le médecin directement.
               </p>
               <Link
                 href="/"
-                className="inline-flex items-center gap-2 bg-[#0891B2] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-[#0E7490] transition-colors"
+                className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-doktori-teal-dark transition-colors"
               >
                 Retour à l&apos;accueil
               </Link>

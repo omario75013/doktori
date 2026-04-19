@@ -141,10 +141,10 @@ export default async function BlogPostPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
-      <main className="min-h-screen bg-[#F0FDFA]">
+      <main className="min-h-screen bg-secondary">
         {/* Cover hero */}
         {post.coverImageUrl ? (
-          <div className="w-full aspect-[3/1] max-h-[400px] overflow-hidden bg-[#134E4A]">
+          <div className="w-full aspect-[3/1] max-h-[400px] overflow-hidden bg-foreground">
             <img
               src={post.coverImageUrl}
               alt={post.title}
@@ -152,7 +152,7 @@ export default async function BlogPostPage({
             />
           </div>
         ) : (
-          <div className="w-full h-48 sm:h-64 bg-gradient-to-br from-[#134E4A] via-[#0e3d38] to-[#0891B2] relative overflow-hidden">
+          <div className="w-full h-48 sm:h-64 bg-gradient-to-br from-foreground via-[#0e3d38] to-primary relative overflow-hidden">
             <div className="absolute -top-20 -right-20 h-60 w-60 rounded-full bg-white/5" />
             <div className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full bg-white/5" />
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 opacity-5">
@@ -163,33 +163,33 @@ export default async function BlogPostPage({
 
         <div className="max-w-6xl mx-auto px-4 py-8">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1 text-sm text-[#5E7574] mb-6">
-            <Link href="/" className="hover:text-[#0891B2] transition-colors">Accueil</Link>
+          <nav className="flex items-center gap-1 text-sm text-muted-foreground mb-6">
+            <Link href="/" className="hover:text-primary transition-colors">Accueil</Link>
             <ChevronRight className="w-4 h-4" />
-            <Link href="/blog" className="hover:text-[#0891B2] transition-colors">Blog</Link>
+            <Link href="/blog" className="hover:text-primary transition-colors">Blog</Link>
             <ChevronRight className="w-4 h-4" />
-            <span className="text-[#134E4A] font-medium line-clamp-1">{post.title}</span>
+            <span className="text-foreground font-medium line-clamp-1">{post.title}</span>
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main content */}
             <article className="lg:col-span-2">
-              <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm overflow-hidden">
+              <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
                 <div className="p-6 sm:p-8">
                   {post.category && (
                     <div className="flex items-center gap-1.5 mb-3">
-                      <Tag className="w-3.5 h-3.5 text-[#0891B2]" />
-                      <span className="text-xs font-semibold text-[#0891B2] uppercase tracking-wide">
+                      <Tag className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-xs font-semibold text-primary uppercase tracking-wide">
                         {CATEGORY_LABELS[post.category] ?? post.category}
                       </span>
                     </div>
                   )}
 
-                  <h1 className="text-2xl sm:text-3xl font-black text-[#134E4A] leading-tight mb-4">
+                  <h1 className="text-2xl sm:text-3xl font-black text-foreground leading-tight mb-4">
                     {post.title}
                   </h1>
 
-                  <div className="flex items-center gap-4 text-sm text-[#5E7574] pb-6 border-b border-[#E6F4F1]">
+                  <div className="flex items-center gap-4 text-sm text-muted-foreground pb-6 border-b border-border">
                     <div className="flex items-center gap-1.5">
                       <Calendar className="w-4 h-4" />
                       <span>{formatDate(post.publishedAt)}</span>
@@ -200,24 +200,24 @@ export default async function BlogPostPage({
 
                   {/* Rendered HTML content */}
                   <div
-                    className="prose prose-lg max-w-none mt-8 text-[#134E4A]
-                      prose-headings:text-[#134E4A] prose-headings:font-bold prose-headings:tracking-tight
-                      prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-[#E6F4F1]
-                      prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-[#0891B2]
+                    className="prose prose-lg max-w-none mt-8 text-foreground
+                      prose-headings:text-foreground prose-headings:font-bold prose-headings:tracking-tight
+                      prose-h2:text-2xl prose-h2:mt-10 prose-h2:mb-4 prose-h2:pb-2 prose-h2:border-b prose-h2:border-border
+                      prose-h3:text-xl prose-h3:mt-8 prose-h3:mb-3 prose-h3:text-primary
                       prose-p:text-[#334E4C] prose-p:leading-relaxed prose-p:mb-4
-                      prose-a:text-[#0891B2] prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
+                      prose-a:text-primary prose-a:font-semibold prose-a:no-underline hover:prose-a:underline
                       prose-li:text-[#334E4C] prose-li:leading-relaxed
                       prose-ul:my-4 prose-ol:my-4
-                      prose-strong:text-[#134E4A] prose-strong:font-bold
-                      prose-em:text-[#0891B2]
-                      prose-blockquote:border-l-[#0891B2] prose-blockquote:bg-[#F0FDFA] prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-xl prose-blockquote:not-italic
-                      prose-img:rounded-xl prose-img:shadow-md prose-img:border prose-img:border-[#E6F4F1]"
+                      prose-strong:text-foreground prose-strong:font-bold
+                      prose-em:text-primary
+                      prose-blockquote:border-l-primary prose-blockquote:bg-secondary prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:rounded-r-xl prose-blockquote:not-italic
+                      prose-img:rounded-xl prose-img:shadow-md prose-img:border prose-img:border-border"
                     dangerouslySetInnerHTML={{ __html: post.content }}
                   />
 
                   {/* Share buttons */}
-                  <div className="mt-8 pt-6 border-t border-[#E6F4F1]">
-                    <p className="text-sm font-semibold text-[#5E7574] mb-3">Partager cet article :</p>
+                  <div className="mt-8 pt-6 border-t border-border">
+                    <p className="text-sm font-semibold text-muted-foreground mb-3">Partager cet article :</p>
                     <ShareButtons url={postUrl} title={post.title} />
                   </div>
                 </div>
@@ -227,8 +227,8 @@ export default async function BlogPostPage({
             {/* Sidebar: related posts */}
             <aside className="space-y-4">
               {relatedPosts.length > 0 && (
-                <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm p-5">
-                  <h2 className="text-base font-bold text-[#134E4A] mb-4">Articles similaires</h2>
+                <div className="bg-white rounded-2xl border border-border shadow-sm p-5">
+                  <h2 className="text-base font-bold text-foreground mb-4">Articles similaires</h2>
                   <div className="space-y-4">
                     {relatedPosts.map((related) => (
                       <Link
@@ -243,15 +243,15 @@ export default async function BlogPostPage({
                             className="w-16 h-16 rounded-lg object-cover shrink-0"
                           />
                         ) : (
-                          <div className="w-16 h-16 rounded-lg bg-[#F0FDFA] flex items-center justify-center shrink-0 text-xl">
+                          <div className="w-16 h-16 rounded-lg bg-secondary flex items-center justify-center shrink-0 text-xl">
                             🩺
                           </div>
                         )}
                         <div>
-                          <p className="text-sm font-semibold text-[#134E4A] group-hover:text-[#0891B2] transition-colors line-clamp-2">
+                          <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors line-clamp-2">
                             {related.title}
                           </p>
-                          <p className="text-xs text-[#5E7574] mt-1">
+                          <p className="text-xs text-muted-foreground mt-1">
                             {formatDate(related.publishedAt)}
                           </p>
                         </div>
@@ -260,21 +260,21 @@ export default async function BlogPostPage({
                   </div>
                   <Link
                     href="/blog"
-                    className="mt-4 block text-center text-sm font-semibold text-[#0891B2] hover:underline"
+                    className="mt-4 block text-center text-sm font-semibold text-primary hover:underline"
                   >
                     Voir tous les articles →
                   </Link>
                 </div>
               )}
 
-              <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm p-5">
-                <h2 className="text-base font-bold text-[#134E4A] mb-2">Prendre rendez-vous</h2>
-                <p className="text-sm text-[#5E7574] mb-4">
+              <div className="bg-white rounded-2xl border border-border shadow-sm p-5">
+                <h2 className="text-base font-bold text-foreground mb-2">Prendre rendez-vous</h2>
+                <p className="text-sm text-muted-foreground mb-4">
                   Consultez un médecin en ligne ou en cabinet dès aujourd&apos;hui.
                 </p>
                 <Link
                   href="/recherche"
-                  className="block w-full text-center py-3 rounded-xl bg-[#0891B2] text-white text-sm font-bold hover:bg-[#0E7490] transition-colors"
+                  className="block w-full text-center py-3 rounded-xl bg-primary text-white text-sm font-bold hover:bg-doktori-teal-dark transition-colors"
                 >
                   Trouver un médecin
                 </Link>

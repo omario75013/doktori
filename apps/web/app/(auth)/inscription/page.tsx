@@ -161,7 +161,7 @@ export default function InscriptionPage() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* ═══ Left panel — brand + benefits ═══ */}
-      <div className="hidden lg:flex lg:w-[480px] xl:w-[520px] flex-col justify-between bg-gradient-to-br from-[#0891B2] via-[#0E7490] to-[#134E4A] text-white p-10 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[480px] xl:w-[520px] flex-col justify-between bg-gradient-to-br from-primary via-doktori-teal-dark to-foreground text-white p-10 relative overflow-hidden">
         {/* Decorative grid */}
         <div
           aria-hidden
@@ -206,13 +206,13 @@ export default function InscriptionPage() {
 
         {/* Decorative circles */}
         <div aria-hidden className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-white/5" />
-        <div aria-hidden className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-[#22C55E]/10" />
+        <div aria-hidden className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-accent/10" />
       </div>
 
       {/* ═══ Right panel — form ═══ */}
       <div className="flex-1 flex flex-col bg-[#F8FFFE]">
         {/* Mobile header */}
-        <div className="lg:hidden bg-gradient-to-r from-[#0891B2] to-[#134E4A] px-6 py-5 text-white">
+        <div className="lg:hidden bg-gradient-to-r from-primary to-foreground px-6 py-5 text-white">
           <div className="flex items-center gap-2 mb-2">
             <Stethoscope className="h-5 w-5" />
             <span className="font-bold">Doktori</span>
@@ -233,22 +233,22 @@ export default function InscriptionPage() {
                     <motion.div
                       className={`h-9 w-9 rounded-xl flex items-center justify-center text-sm font-bold shrink-0 transition-colors ${
                         done
-                          ? "bg-[#22C55E] text-white"
+                          ? "bg-accent text-white"
                           : active
-                            ? "bg-[#0891B2] text-white shadow-lg shadow-[#0891B2]/25"
-                            : "bg-[#E6F4F1] text-[#5E7574]"
+                            ? "bg-primary text-white shadow-lg shadow-primary/25"
+                            : "bg-border text-muted-foreground"
                       }`}
                       animate={{ scale: active ? 1.05 : 1 }}
                     >
                       {done ? <Check className="h-4 w-4" /> : <Icon className="h-4 w-4" />}
                     </motion.div>
                     <div className="hidden sm:block">
-                      <div className={`text-xs font-bold ${active ? "text-[#134E4A]" : "text-[#5E7574]"}`}>
+                      <div className={`text-xs font-bold ${active ? "text-foreground" : "text-muted-foreground"}`}>
                         {s.label}
                       </div>
                     </div>
                     {i < STEPS.length - 1 && (
-                      <div className={`flex-1 h-0.5 rounded-full mx-1 ${done ? "bg-[#22C55E]" : "bg-[#E6F4F1]"}`} />
+                      <div className={`flex-1 h-0.5 rounded-full mx-1 ${done ? "bg-accent" : "bg-border"}`} />
                     )}
                   </div>
                 );
@@ -270,8 +270,8 @@ export default function InscriptionPage() {
                   {step === 0 && (
                     <div className="space-y-5">
                       <div>
-                        <h2 className="text-xl font-bold text-[#134E4A]">Vos informations personnelles</h2>
-                        <p className="text-sm text-[#5E7574] mt-1">Ces informations apparaîtront sur votre profil public.</p>
+                        <h2 className="text-xl font-bold text-foreground">Vos informations personnelles</h2>
+                        <p className="text-sm text-muted-foreground mt-1">Ces informations apparaîtront sur votre profil public.</p>
                       </div>
 
                       {/* Photo upload */}
@@ -281,14 +281,14 @@ export default function InscriptionPage() {
                             <img
                               src={photoPreview}
                               alt="Photo de profil"
-                              className="w-24 h-24 rounded-2xl object-cover ring-2 ring-[#E6F4F1]"
+                              className="w-24 h-24 rounded-2xl object-cover ring-2 ring-border"
                             />
                           ) : (
-                            <div className="w-24 h-24 rounded-2xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+                            <div className="w-24 h-24 rounded-2xl bg-secondary flex items-center justify-center text-primary">
                               <Camera className="w-8 h-8" />
                             </div>
                           )}
-                          <label className="absolute -bottom-1 -right-1 w-8 h-8 bg-[#0891B2] rounded-full flex items-center justify-center cursor-pointer hover:bg-[#0E7490] transition-colors">
+                          <label className="absolute -bottom-1 -right-1 w-8 h-8 bg-primary rounded-full flex items-center justify-center cursor-pointer hover:bg-doktori-teal-dark transition-colors">
                             <Upload className="w-4 h-4 text-white" />
                             <input
                               type="file"
@@ -298,43 +298,43 @@ export default function InscriptionPage() {
                             />
                           </label>
                         </div>
-                        <p className="text-xs text-[#5E7574]">Photo de profil (recommandé)</p>
+                        <p className="text-xs text-muted-foreground">Photo de profil (recommandé)</p>
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="name" className="text-[#134E4A] font-semibold">{t("fullName")}</Label>
+                        <Label htmlFor="name" className="text-foreground font-semibold">{t("fullName")}</Label>
                         <Input
                           id="name" name="name" placeholder="Dr. Prénom Nom" required
                           value={form.name} onChange={handleChange}
-                          className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                          className="h-12 rounded-xl border-border focus-visible:ring-primary"
                         />
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <Label htmlFor="email" className="text-[#134E4A] font-semibold">{t("email")}</Label>
+                          <Label htmlFor="email" className="text-foreground font-semibold">{t("email")}</Label>
                           <Input
                             id="email" name="email" type="email" placeholder="votre@email.com"
                             autoComplete="email" required value={form.email} onChange={handleChange}
-                            className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                            className="h-12 rounded-xl border-border focus-visible:ring-primary"
                           />
                         </div>
                         <div className="space-y-1.5">
-                          <Label htmlFor="phone" className="text-[#134E4A] font-semibold">{t("phone")}</Label>
+                          <Label htmlFor="phone" className="text-foreground font-semibold">{t("phone")}</Label>
                           <Input
                             id="phone" name="phone" type="tel" placeholder="+216 XX XXX XXX"
                             required value={form.phone} onChange={handleChange}
-                            className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                            className="h-12 rounded-xl border-border focus-visible:ring-primary"
                           />
                         </div>
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="password" className="text-[#134E4A] font-semibold">{t("password")}</Label>
+                        <Label htmlFor="password" className="text-foreground font-semibold">{t("password")}</Label>
                         <Input
                           id="password" name="password" type="password" placeholder="Minimum 8 caractères"
                           autoComplete="new-password" required value={form.password} onChange={handleChange}
-                          className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                          className="h-12 rounded-xl border-border focus-visible:ring-primary"
                         />
                         {form.password.length > 0 && form.password.length < 8 && (
                           <p className="text-xs text-amber-600 mt-1">Le mot de passe doit contenir au moins 8 caractères</p>
@@ -347,18 +347,18 @@ export default function InscriptionPage() {
                   {step === 1 && (
                     <div className="space-y-5">
                       <div>
-                        <h2 className="text-xl font-bold text-[#134E4A]">Votre cabinet</h2>
-                        <p className="text-sm text-[#5E7574] mt-1">Ces informations aident les patients à vous trouver.</p>
+                        <h2 className="text-xl font-bold text-foreground">Votre cabinet</h2>
+                        <p className="text-sm text-muted-foreground mt-1">Ces informations aident les patients à vous trouver.</p>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="space-y-1.5">
-                          <Label className="text-[#134E4A] font-semibold">{t("specialty")}</Label>
+                          <Label className="text-foreground font-semibold">{t("specialty")}</Label>
                           <Select
                             value={form.specialty}
                             onValueChange={(v) => setForm((p) => ({ ...p, specialty: v ?? "" }))}
                           >
-                            <SelectTrigger className="h-12 rounded-xl border-[#E6F4F1]">
+                            <SelectTrigger className="h-12 rounded-xl border-border">
                               <SelectValue placeholder="Choisir..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -369,12 +369,12 @@ export default function InscriptionPage() {
                           </Select>
                         </div>
                         <div className="space-y-1.5">
-                          <Label className="text-[#134E4A] font-semibold">{t("city")}</Label>
+                          <Label className="text-foreground font-semibold">{t("city")}</Label>
                           <Select
                             value={form.city}
                             onValueChange={(v) => setForm((p) => ({ ...p, city: v ?? "" }))}
                           >
-                            <SelectTrigger className="h-12 rounded-xl border-[#E6F4F1]">
+                            <SelectTrigger className="h-12 rounded-xl border-border">
                               <SelectValue placeholder="Choisir..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -387,11 +387,11 @@ export default function InscriptionPage() {
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="address" className="text-[#134E4A] font-semibold">{t("address")}</Label>
+                        <Label htmlFor="address" className="text-foreground font-semibold">{t("address")}</Label>
                         <Input
                           id="address" name="address" placeholder="Rue, numéro, quartier"
                           required value={form.address} onChange={handleChange}
-                          className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                          className="h-12 rounded-xl border-border focus-visible:ring-primary"
                         />
                       </div>
                     </div>
@@ -401,21 +401,21 @@ export default function InscriptionPage() {
                   {step === 2 && (
                     <div className="space-y-5">
                       <div>
-                        <h2 className="text-xl font-bold text-[#134E4A]">Derniers détails</h2>
-                        <p className="text-sm text-[#5E7574] mt-1">Optionnel — vous pouvez compléter plus tard.</p>
+                        <h2 className="text-xl font-bold text-foreground">Derniers détails</h2>
+                        <p className="text-sm text-muted-foreground mt-1">Optionnel — vous pouvez compléter plus tard.</p>
                       </div>
 
                       <div className="space-y-1.5">
-                        <Label htmlFor="bio" className="text-[#134E4A] font-semibold">
-                          Biographie <span className="text-[#5E7574] font-normal">(optionnel)</span>
+                        <Label htmlFor="bio" className="text-foreground font-semibold">
+                          Biographie <span className="text-muted-foreground font-normal">(optionnel)</span>
                         </Label>
                         <textarea
                           id="bio" name="bio" rows={4} maxLength={500}
                           placeholder="Présentez-vous en quelques mots : parcours, spécialités, approche..."
                           value={form.bio} onChange={handleChange}
-                          className="w-full rounded-xl border border-[#E6F4F1] bg-white px-4 py-3 text-sm transition-colors outline-none placeholder:text-[#5E7574]/50 focus:border-[#0891B2] focus:ring-2 focus:ring-[#0891B2]/20 resize-none"
+                          className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm transition-colors outline-none placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
                         />
-                        <p className="text-xs text-[#5E7574]">{form.bio.length}/500</p>
+                        <p className="text-xs text-muted-foreground">{form.bio.length}/500</p>
                       </div>
 
                       {/* CGU acceptance */}
@@ -425,31 +425,31 @@ export default function InscriptionPage() {
                           id="cgu"
                           checked={cguAccepted}
                           onChange={(e) => setCguAccepted(e.target.checked)}
-                          className="mt-1 h-4 w-4 rounded border-[#E6F4F1] text-[#0891B2] focus:ring-[#0891B2]"
+                          className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
                         />
-                        <label htmlFor="cgu" className="text-sm text-[#5E7574]">
+                        <label htmlFor="cgu" className="text-sm text-muted-foreground">
                           J&apos;accepte les{" "}
-                          <a href="/legal/cgu" target="_blank" className="text-[#0891B2] font-bold hover:underline">
+                          <a href="/legal/cgu" target="_blank" className="text-primary font-bold hover:underline">
                             Conditions Générales d&apos;Utilisation
                           </a>{" "}
                           et la{" "}
-                          <a href="/legal/confidentialite" target="_blank" className="text-[#0891B2] font-bold hover:underline">
+                          <a href="/legal/confidentialite" target="_blank" className="text-primary font-bold hover:underline">
                             Politique de Confidentialité
                           </a>
                         </label>
                       </div>
 
                       {/* Summary card */}
-                      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 space-y-3">
-                        <h3 className="text-sm font-bold text-[#134E4A] flex items-center gap-2">
-                          <BadgeCheck className="h-4 w-4 text-[#22C55E]" />
+                      <div className="rounded-2xl border border-border bg-white p-5 space-y-3">
+                        <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
+                          <BadgeCheck className="h-4 w-4 text-accent" />
                           Récapitulatif
                         </h3>
                         <div className="grid grid-cols-2 gap-3 text-sm">
-                          <div><span className="text-[#5E7574]">Nom:</span> <span className="font-medium text-[#134E4A]">{form.name || "—"}</span></div>
-                          <div><span className="text-[#5E7574]">Email:</span> <span className="font-medium text-[#134E4A]">{form.email || "—"}</span></div>
-                          <div><span className="text-[#5E7574]">Spécialité:</span> <span className="font-medium text-[#134E4A]">{SPECIALTIES.find((s) => s.id === form.specialty)?.label || "—"}</span></div>
-                          <div><span className="text-[#5E7574]">Ville:</span> <span className="font-medium text-[#134E4A]">{CITIES.find((c) => c.id === form.city)?.label || "—"}</span></div>
+                          <div><span className="text-muted-foreground">Nom:</span> <span className="font-medium text-foreground">{form.name || "—"}</span></div>
+                          <div><span className="text-muted-foreground">Email:</span> <span className="font-medium text-foreground">{form.email || "—"}</span></div>
+                          <div><span className="text-muted-foreground">Spécialité:</span> <span className="font-medium text-foreground">{SPECIALTIES.find((s) => s.id === form.specialty)?.label || "—"}</span></div>
+                          <div><span className="text-muted-foreground">Ville:</span> <span className="font-medium text-foreground">{CITIES.find((c) => c.id === form.city)?.label || "—"}</span></div>
                         </div>
                       </div>
                     </div>
@@ -473,7 +473,7 @@ export default function InscriptionPage() {
                   <button
                     type="button"
                     onClick={prev}
-                    className="flex items-center gap-1 text-sm font-semibold text-[#5E7574] hover:text-[#134E4A] transition-colors"
+                    className="flex items-center gap-1 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
                   >
                     <ChevronLeft className="h-4 w-4" />
                     Retour
@@ -487,7 +487,7 @@ export default function InscriptionPage() {
                     type="button"
                     onClick={next}
                     disabled={!canProceed()}
-                    className="h-12 px-8 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold shadow-lg shadow-[#0891B2]/20 disabled:opacity-40"
+                    className="h-12 px-8 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold shadow-lg shadow-primary/20 disabled:opacity-40"
                   >
                     Continuer
                     <ChevronRight className="h-4 w-4 ml-1" />
@@ -496,7 +496,7 @@ export default function InscriptionPage() {
                   <Button
                     type="submit"
                     disabled={loading}
-                    className="h-12 px-8 rounded-xl bg-[#22C55E] hover:bg-[#16A34A] text-white font-bold shadow-lg shadow-[#22C55E]/20"
+                    className="h-12 px-8 rounded-xl bg-accent hover:bg-doktori-green-dark text-white font-bold shadow-lg shadow-accent/20"
                   >
                     {loading ? (
                       <>
@@ -514,9 +514,9 @@ export default function InscriptionPage() {
               </div>
             </form>
 
-            <p className="text-center text-sm text-[#5E7574] mt-8">
+            <p className="text-center text-sm text-muted-foreground mt-8">
               Déjà inscrit ?{" "}
-              <a href="/connexion" className="font-bold text-[#0891B2] hover:underline">
+              <a href="/connexion" className="font-bold text-primary hover:underline">
                 Se connecter
               </a>
             </p>

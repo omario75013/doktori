@@ -31,13 +31,13 @@ export default async function DoctorReviewsPage({ params }: Props) {
   const city = CITIES.find((c) => c.id === doctor.city);
 
   return (
-    <div className="min-h-screen bg-[#F0FDFA]">
+    <div className="min-h-screen bg-secondary">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Back link */}
         <div className="mb-6">
           <Link
             href={`/medecin/${slug}`}
-            className="inline-flex items-center gap-1.5 text-sm text-[#0891B2] hover:text-[#0E7490] font-medium transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-primary hover:text-doktori-teal-dark font-medium transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Retour au profil
@@ -45,14 +45,14 @@ export default async function DoctorReviewsPage({ params }: Props) {
         </div>
 
         {/* Doctor summary card */}
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm mb-6">
+        <div className="rounded-2xl border border-border bg-white p-6 shadow-sm mb-6">
           <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-[#0891B2]/10 rounded-full flex items-center justify-center shrink-0">
-              <Star className="w-6 h-6 text-[#0891B2]" />
+            <div className="w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+              <Star className="w-6 h-6 text-primary" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-[#134E4A]">{doctor.name}</h1>
-              <p className="text-[#0891B2] font-medium">{spec?.label}</p>
+              <h1 className="text-xl font-bold text-foreground">{doctor.name}</h1>
+              <p className="text-primary font-medium">{spec?.label}</p>
               {city && (
                 <p className="text-sm text-gray-500 mt-0.5 flex items-center gap-1">
                   <MapPin className="w-3 h-3" />
@@ -63,10 +63,10 @@ export default async function DoctorReviewsPage({ params }: Props) {
           </div>
 
           {/* Star bar summary header */}
-          <div className="mt-5 pt-5 border-t border-[#E6F4F1]">
+          <div className="mt-5 pt-5 border-t border-border">
             <div className="flex items-center gap-2 mb-3">
-              <Quote className="w-4 h-4 text-[#0891B2]" />
-              <h2 className="text-sm font-semibold text-[#134E4A] uppercase tracking-wide">
+              <Quote className="w-4 h-4 text-primary" />
+              <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide">
                 Avis des patients
               </h2>
             </div>
@@ -83,7 +83,7 @@ export default async function DoctorReviewsPage({ params }: Props) {
                       />
                     ))}
                   </div>
-                  <div className="flex-1 h-2 bg-[#F0FDFA] rounded-full overflow-hidden border border-[#E6F4F1]">
+                  <div className="flex-1 h-2 bg-secondary rounded-full overflow-hidden border border-border">
                     <div
                       className="h-full bg-yellow-400 rounded-full"
                       style={{ width: stars === 5 ? "65%" : stars === 4 ? "20%" : stars === 3 ? "10%" : stars === 2 ? "3%" : "2%" }}

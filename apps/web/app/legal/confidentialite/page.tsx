@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function ConfidentialitePage() {
   return (
-    <div className="min-h-screen bg-[#F0FDFA]">
+    <div className="min-h-screen bg-secondary">
       {/* Teal header banner */}
       <div
         className="py-10 px-4 text-white"
@@ -27,10 +27,10 @@ export default function ConfidentialitePage() {
 
       {/* Content card */}
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-8 shadow-sm">
+        <div className="rounded-2xl border border-border bg-white p-8 shadow-sm">
           <div className="space-y-6 text-sm leading-relaxed text-gray-700">
             <section>
-              <h2 className="text-lg font-bold text-[#134E4A] mb-3">1. Engagement de Doktori</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">1. Engagement de Doktori</h2>
               <p>
                 Doktori s'engage à protéger la vie privée de ses utilisateurs et à traiter leurs données personnelles
                 dans le respect de la loi organique n°2004-63 du 27 juillet 2004 relative à la protection des
@@ -39,7 +39,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-[#134E4A] mb-3">2. Données collectées</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">2. Données collectées</h2>
               <p><strong>Pour les patients :</strong></p>
               <ul className="list-disc pl-6 space-y-1 mt-2">
                 <li>Nom, prénom</li>
@@ -58,7 +58,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-[#134E4A] mb-3">3. Ce que nous ne stockons JAMAIS</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">3. Ce que nous ne stockons JAMAIS</h2>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Diagnostics médicaux, pathologies, antécédents</li>
                 <li>Allergies, traitements en cours, médicaments</li>
@@ -66,13 +66,13 @@ export default function ConfidentialitePage() {
                 <li>Résultats d'examens, imagerie médicale</li>
                 <li>Données de carte bancaire (gérées par nos partenaires de paiement Flouci et Paymee)</li>
               </ul>
-              <p className="mt-3 font-semibold text-[#134E4A]">
+              <p className="mt-3 font-semibold text-foreground">
                 Doktori est un outil de gestion de rendez-vous, pas un dossier médical électronique.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-[#134E4A] mb-3">4. Finalités du traitement</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">4. Finalités du traitement</h2>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Permettre la prise de rendez-vous et leur gestion</li>
                 <li>Envoyer des rappels SMS et WhatsApp</li>
@@ -83,7 +83,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-[#134E4A] mb-3">5. Sécurité</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">5. Sécurité</h2>
               <p>
                 Les données sont stockées sur des serveurs sécurisés. Les mots de passe sont chiffrés (bcrypt).
                 Les communications transitent via HTTPS. Des sauvegardes chiffrées sont effectuées quotidiennement.
@@ -91,7 +91,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-[#134E4A] mb-3">6. Vos droits</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">6. Vos droits</h2>
               <p>Conformément à la loi, vous disposez des droits suivants :</p>
               <ul className="list-disc pl-6 space-y-1 mt-2">
                 <li><strong>Droit d'accès</strong> : obtenir une copie de vos données</li>
@@ -101,12 +101,12 @@ export default function ConfidentialitePage() {
                 <li><strong>Droit à la portabilité</strong> : récupérer vos données dans un format lisible</li>
               </ul>
               <p className="mt-3">
-                Pour exercer ces droits : <a href="mailto:privacy@doktori.tn" className="text-[#0891B2] hover:text-[#0E7490] hover:underline">privacy@doktori.tn</a>
+                Pour exercer ces droits : <a href="mailto:privacy@doktori.tn" className="text-primary hover:text-doktori-teal-dark hover:underline">privacy@doktori.tn</a>
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-[#134E4A] mb-3">7. Cookies</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">7. Cookies</h2>
               <p>
                 Doktori utilise uniquement des cookies essentiels au fonctionnement (authentification, préférences
                 linguistiques). Aucun cookie publicitaire ou de tracking tiers.
@@ -114,7 +114,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-[#134E4A] mb-3">8. Conservation des données</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">8. Conservation des données</h2>
               <p>
                 Les données des rendez-vous sont conservées tant que le compte est actif. En cas de suppression
                 de compte, les données sont effacées sous 30 jours, à l'exception des données comptables et
@@ -123,7 +123,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-[#134E4A] mb-3">9. Partage avec des tiers</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">9. Partage avec des tiers</h2>
               <p>
                 Doktori ne vend ni ne loue aucune donnée personnelle. Les données sont partagées uniquement avec :
               </p>
@@ -136,13 +136,13 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-[#134E4A] mb-3">10. Contact</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">10. Contact</h2>
               <p>
-                Délégué à la protection des données : <a href="mailto:privacy@doktori.tn" className="text-[#0891B2] hover:text-[#0E7490] hover:underline">privacy@doktori.tn</a>
+                Délégué à la protection des données : <a href="mailto:privacy@doktori.tn" className="text-primary hover:text-doktori-teal-dark hover:underline">privacy@doktori.tn</a>
               </p>
               <p className="mt-2">
                 Vous pouvez également saisir l'Instance Nationale de Protection des Données Personnelles (INPDP) :
-                <a href="https://www.inpdp.nat.tn" className="text-[#0891B2] hover:text-[#0E7490] hover:underline" target="_blank" rel="noopener"> www.inpdp.nat.tn</a>
+                <a href="https://www.inpdp.nat.tn" className="text-primary hover:text-doktori-teal-dark hover:underline" target="_blank" rel="noopener"> www.inpdp.nat.tn</a>
               </p>
             </section>
           </div>

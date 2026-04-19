@@ -126,35 +126,35 @@ export function Chatbot() {
       {!open && (
         <button
           onClick={() => setOpen(true)}
-          className="group fixed bottom-6 right-6 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-[#0891B2] text-white shadow-xl shadow-[#0891B2]/30 transition-all hover:scale-110 hover:bg-[#0E7490] sm:bottom-8 sm:right-8"
+          className="group fixed bottom-6 right-6 z-40 flex h-16 w-16 items-center justify-center rounded-full bg-primary text-white shadow-xl shadow-primary/30 transition-all hover:scale-110 hover:bg-doktori-teal-dark sm:bottom-8 sm:right-8"
           aria-label={t("openAriaLabel")}
         >
           <MessageCircle className="h-7 w-7" strokeWidth={2.5} />
           <span className="absolute -right-0.5 -top-0.5 flex h-4 w-4">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22C55E] opacity-75"></span>
-            <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-[#22C55E] text-[10px] font-bold text-[#134E4A] ring-2 ring-white">
+            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75"></span>
+            <span className="relative inline-flex h-4 w-4 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-foreground ring-2 ring-white">
               !
             </span>
           </span>
           {/* Tooltip */}
-          <span className="absolute right-full top-1/2 mr-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg bg-[#134E4A] px-3 py-1.5 text-xs font-semibold text-white shadow-lg group-hover:block">
+          <span className="absolute right-full top-1/2 mr-3 hidden -translate-y-1/2 whitespace-nowrap rounded-lg bg-foreground px-3 py-1.5 text-xs font-semibold text-white shadow-lg group-hover:block">
             {t("tooltip")}
-            <span className="absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-[#134E4A]"></span>
+            <span className="absolute left-full top-1/2 -translate-y-1/2 border-4 border-transparent border-l-foreground"></span>
           </span>
         </button>
       )}
 
       {/* Chat panel */}
       {open && (
-        <div className="fixed inset-x-0 bottom-0 z-50 flex h-full w-full flex-col bg-white shadow-2xl sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[640px] sm:w-[400px] sm:rounded-3xl sm:border sm:border-[#E6F4F1]">
+        <div className="fixed inset-x-0 bottom-0 z-50 flex h-full w-full flex-col bg-white shadow-2xl sm:inset-auto sm:bottom-6 sm:right-6 sm:h-[640px] sm:w-[400px] sm:rounded-3xl sm:border sm:border-border">
           {/* Header */}
-          <div className="flex shrink-0 items-center justify-between bg-gradient-to-br from-[#0891B2] to-[#0E7490] px-5 py-4 sm:rounded-t-3xl">
+          <div className="flex shrink-0 items-center justify-between bg-gradient-to-br from-primary to-doktori-teal-dark px-5 py-4 sm:rounded-t-3xl">
             <div className="flex items-center gap-3">
               <div className="relative flex h-10 w-10 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/20">
                 <Stethoscope className="h-5 w-5 text-white" strokeWidth={2.5} />
                 <span className="absolute -right-0.5 -top-0.5 flex h-2.5 w-2.5">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#22C55E]"></span>
-                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-[#22C55E] ring-2 ring-[#0891B2]"></span>
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent"></span>
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-accent ring-2 ring-primary"></span>
                 </span>
               </div>
               <div>
@@ -184,17 +184,17 @@ export function Chatbot() {
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto bg-[#F0FDFA]/30 p-4">
+          <div className="flex-1 overflow-y-auto bg-secondary/30 p-4">
             <div className="space-y-4">
               {messages.map((msg, i) => (
                 <MessageBubble key={i} message={msg} onSend={sendMessage} t={t} />
               ))}
               {loading && (
-                <div className="flex items-center gap-2 text-xs text-[#5E7574]">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0891B2] text-white">
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-white">
                     <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
                   </div>
-                  <Loader2 className="h-4 w-4 animate-spin text-[#0891B2]" />
+                  <Loader2 className="h-4 w-4 animate-spin text-primary" />
                   <span>{t("thinking")}</span>
                 </div>
               )}
@@ -204,8 +204,8 @@ export function Chatbot() {
 
           {/* Quick replies (only on first message) */}
           {messages.length === 1 && !loading && (
-            <div className="shrink-0 border-t border-[#E6F4F1] bg-white px-4 py-3">
-              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-[#5E7574]">
+            <div className="shrink-0 border-t border-border bg-white px-4 py-3">
+              <p className="mb-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                 {t("suggestionsLabel")}
               </p>
               <div className="flex flex-wrap gap-2">
@@ -213,7 +213,7 @@ export function Chatbot() {
                   <button
                     key={q}
                     onClick={() => sendMessage(q)}
-                    className="rounded-full border border-[#E6F4F1] bg-[#F0FDFA] px-3 py-1.5 text-xs font-semibold text-[#0E7490] transition-all hover:border-[#0891B2] hover:bg-[#0891B2] hover:text-white"
+                    className="rounded-full border border-border bg-secondary px-3 py-1.5 text-xs font-semibold text-doktori-teal-dark transition-all hover:border-primary hover:bg-primary hover:text-white"
                   >
                     {q}
                   </button>
@@ -228,7 +228,7 @@ export function Chatbot() {
               e.preventDefault();
               sendMessage(input);
             }}
-            className="shrink-0 border-t border-[#E6F4F1] bg-white p-4 sm:rounded-b-3xl"
+            className="shrink-0 border-t border-border bg-white p-4 sm:rounded-b-3xl"
           >
             <div className="flex items-center gap-2">
               <input
@@ -238,18 +238,18 @@ export function Chatbot() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={t("inputPlaceholder")}
                 disabled={loading}
-                className="h-12 flex-1 rounded-xl border-2 border-[#E6F4F1] bg-[#F0FDFA]/50 px-4 text-sm text-[#134E4A] placeholder:text-[#5E7574]/60 outline-none transition-colors focus:border-[#0891B2] focus:bg-white disabled:opacity-60"
+                className="h-12 flex-1 rounded-xl border-2 border-border bg-secondary/50 px-4 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none transition-colors focus:border-primary focus:bg-white disabled:opacity-60"
               />
               <button
                 type="submit"
                 disabled={!input.trim() || loading}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#0891B2] text-white transition-all hover:bg-[#0E7490] disabled:opacity-40"
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white transition-all hover:bg-doktori-teal-dark disabled:opacity-40"
                 aria-label={t("sendAriaLabel")}
               >
                 <Send className="h-5 w-5" strokeWidth={2.5} />
               </button>
             </div>
-            <p className="mt-2 text-center text-[9px] text-[#5E7574]">{t("footer")}</p>
+            <p className="mt-2 text-center text-[9px] text-muted-foreground">{t("footer")}</p>
           </form>
         </div>
       )}
@@ -276,7 +276,7 @@ function MessageBubble({
   return (
     <div className={`flex items-start gap-2 ${isUser ? "flex-row-reverse" : ""}`}>
       {!isUser && (
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0891B2] text-white ring-1 ring-[#0891B2]/20">
+        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary text-white ring-1 ring-primary/20">
           <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
         </div>
       )}
@@ -291,8 +291,8 @@ function MessageBubble({
         <div
           className={`rounded-2xl px-4 py-2.5 text-sm leading-relaxed ${
             isUser
-              ? "rounded-br-sm bg-[#0891B2] text-white"
-              : "rounded-bl-sm bg-white text-[#134E4A] shadow-sm ring-1 ring-[#E6F4F1]"
+              ? "rounded-br-sm bg-primary text-white"
+              : "rounded-bl-sm bg-white text-foreground shadow-sm ring-1 ring-border"
           }`}
           dangerouslySetInnerHTML={{ __html: html }}
         />
@@ -305,7 +305,7 @@ function MessageBubble({
                 <a
                   key={d.id}
                   href={`/rdv/${d.slug}`}
-                  className="inline-flex items-center gap-1 rounded-full bg-[#0891B2] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#0E7490] transition-colors"
+                  className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-doktori-teal-dark transition-colors"
                 >
                   {t("bookWith", { name: d.name })}
                 </a>

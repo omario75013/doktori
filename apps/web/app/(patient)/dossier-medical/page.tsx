@@ -35,9 +35,9 @@ interface Profile {
 const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
 
 const selectClass =
-  "w-full h-12 rounded-xl border border-[#E6F4F1] bg-white px-3 py-2 text-sm text-[#134E4A] focus:outline-none focus:ring-2 focus:ring-[#0891B2] focus:border-transparent transition-shadow";
+  "w-full h-12 rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow";
 
-const labelClass = "text-[#134E4A] font-semibold text-sm";
+const labelClass = "text-foreground font-semibold text-sm";
 
 export default function DossierMedicalPage() {
   const router = useRouter();
@@ -112,19 +112,19 @@ export default function DossierMedicalPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#F0FDFA]/40 flex items-center justify-center">
+      <div className="min-h-screen bg-secondary/40 flex items-center justify-center">
         <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-[#134E4A]/60 text-sm">Chargement...</p>
+          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-foreground/60 text-sm">Chargement...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F0FDFA]/40">
+    <div className="min-h-screen bg-secondary/40">
       {/* Teal gradient banner */}
-      <div className="bg-gradient-to-br from-[#0891B2] to-[#134E4A] px-4 py-8">
+      <div className="bg-gradient-to-br from-primary to-foreground px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20">
@@ -140,9 +140,9 @@ export default function DossierMedicalPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         {/* Context note */}
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm p-4 flex items-start gap-3">
-          <ShieldCheck className="h-5 w-5 text-[#0891B2] flex-shrink-0 mt-0.5" strokeWidth={2} />
-          <p className="text-sm text-[#134E4A]/70">
+        <div className="rounded-2xl border border-border bg-white shadow-sm p-4 flex items-start gap-3">
+          <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" strokeWidth={2} />
+          <p className="text-sm text-foreground/70">
             Ces informations sont partagées avec le médecin que vous consultez sur Doktori.
             Elles sont strictement confidentielles.
           </p>
@@ -150,12 +150,12 @@ export default function DossierMedicalPage() {
 
         <form onSubmit={handleSave} className="space-y-6">
           {/* Section: Informations générales */}
-          <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-5">
+          <div className="rounded-2xl border border-border bg-white shadow-sm p-6 space-y-5">
             <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0891B2]/10">
-                <User className="h-4 w-4 text-[#0891B2]" strokeWidth={2} />
+              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                <User className="h-4 w-4 text-primary" strokeWidth={2} />
               </div>
-              <h2 className="font-bold text-[#134E4A]">Informations générales</h2>
+              <h2 className="font-bold text-foreground">Informations générales</h2>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -166,7 +166,7 @@ export default function DossierMedicalPage() {
                   type="date"
                   value={dob}
                   onChange={(e) => setDob(e.target.value)}
-                  className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                  className="h-12 rounded-xl border-border focus-visible:ring-primary"
                 />
               </div>
               <div className="space-y-1.5">
@@ -207,12 +207,12 @@ export default function DossierMedicalPage() {
           </div>
 
           {/* Section: Allergies */}
-          <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-4">
+          <div className="rounded-2xl border border-border bg-white shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-50">
                 <Heart className="h-4 w-4 text-red-500" strokeWidth={2} />
               </div>
-              <h2 className="font-bold text-[#134E4A]">Allergies</h2>
+              <h2 className="font-bold text-foreground">Allergies</h2>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="allergies" className={labelClass}>Allergies connues</Label>
@@ -223,18 +223,18 @@ export default function DossierMedicalPage() {
                 onChange={(e) => setAllergies(e.target.value)}
                 maxLength={2000}
                 rows={2}
-                className="rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] resize-none"
+                className="rounded-xl border-border focus-visible:ring-primary resize-none"
               />
             </div>
           </div>
 
           {/* Section: Traitements */}
-          <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-4">
+          <div className="rounded-2xl border border-border bg-white shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50">
                 <Pill className="h-4 w-4 text-blue-500" strokeWidth={2} />
               </div>
-              <h2 className="font-bold text-[#134E4A]">Traitements en cours</h2>
+              <h2 className="font-bold text-foreground">Traitements en cours</h2>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="meds" className={labelClass}>Médicaments et posologie</Label>
@@ -245,18 +245,18 @@ export default function DossierMedicalPage() {
                 onChange={(e) => setMeds(e.target.value)}
                 maxLength={2000}
                 rows={2}
-                className="rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] resize-none"
+                className="rounded-xl border-border focus-visible:ring-primary resize-none"
               />
             </div>
           </div>
 
           {/* Section: Maladies chroniques + notes */}
-          <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-4">
+          <div className="rounded-2xl border border-border bg-white shadow-sm p-6 space-y-4">
             <div className="flex items-center gap-2">
               <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50">
                 <Activity className="h-4 w-4 text-orange-500" strokeWidth={2} />
               </div>
-              <h2 className="font-bold text-[#134E4A]">Antécédents médicaux</h2>
+              <h2 className="font-bold text-foreground">Antécédents médicaux</h2>
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="chronic" className={labelClass}>Maladies chroniques</Label>
@@ -267,7 +267,7 @@ export default function DossierMedicalPage() {
                 onChange={(e) => setChronic(e.target.value)}
                 maxLength={2000}
                 rows={2}
-                className="rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] resize-none"
+                className="rounded-xl border-border focus-visible:ring-primary resize-none"
               />
             </div>
             <div className="space-y-1.5">
@@ -279,7 +279,7 @@ export default function DossierMedicalPage() {
                 onChange={(e) => setNotes(e.target.value)}
                 maxLength={2000}
                 rows={3}
-                className="rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] resize-none"
+                className="rounded-xl border-border focus-visible:ring-primary resize-none"
               />
             </div>
           </div>
@@ -289,12 +289,12 @@ export default function DossierMedicalPage() {
             <Button
               type="submit"
               disabled={saving}
-              className="w-full h-12 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] font-bold text-white text-base transition-colors"
+              className="w-full h-12 rounded-xl bg-primary hover:bg-doktori-teal-dark font-bold text-white text-base transition-colors"
             >
               {saving ? "Enregistrement..." : "Enregistrer le dossier"}
             </Button>
             {savedAt && (
-              <div className="flex items-center justify-center gap-2 text-sm font-semibold text-[#16A34A] bg-green-50 border border-green-200 rounded-xl py-2.5">
+              <div className="flex items-center justify-center gap-2 text-sm font-semibold text-doktori-green-dark bg-green-50 border border-green-200 rounded-xl py-2.5">
                 <ShieldCheck className="h-4 w-4" strokeWidth={2.5} />
                 Dossier enregistré avec succès
               </div>
@@ -303,7 +303,7 @@ export default function DossierMedicalPage() {
         </form>
 
         <div className="text-center pb-4">
-          <a href="/mes-rdv" className="text-sm font-semibold text-[#0891B2] hover:underline">
+          <a href="/mes-rdv" className="text-sm font-semibold text-primary hover:underline">
             ← Retour à mes rendez-vous
           </a>
         </div>

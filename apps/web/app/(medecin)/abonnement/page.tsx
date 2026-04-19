@@ -103,7 +103,7 @@ export default function AbonnementPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <div className="flex items-center gap-3 text-[#0891B2]">
+        <div className="flex items-center gap-3 text-primary">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
           <span className="text-sm font-medium">Chargement des plans...</span>
         </div>
@@ -120,11 +120,11 @@ export default function AbonnementPage() {
     <div className="space-y-6 max-w-4xl">
       {/* Page header */}
       <div className="flex items-center gap-3 mb-2">
-        <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+        <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary">
           <CreditCard className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-[#134E4A]">Abonnement</h1>
+          <h1 className="text-2xl font-bold text-foreground">Abonnement</h1>
           <p className="text-sm text-gray-500">
             Gérez votre plan Doktori et accédez aux fonctionnalités premium.
           </p>
@@ -137,19 +137,19 @@ export default function AbonnementPage() {
           className={`rounded-2xl border p-5 flex items-start gap-4 ${
             isTrial
               ? "border-amber-200 bg-amber-50"
-              : "border-[#E6F4F1] bg-[#F0FDFA]"
+              : "border-border bg-secondary"
           }`}
         >
           <div
             className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 ${
-              isTrial ? "bg-amber-100 text-amber-600" : "bg-[#0891B2]/10 text-[#0891B2]"
+              isTrial ? "bg-amber-100 text-amber-600" : "bg-primary/10 text-primary"
             }`}
           >
             {isTrial ? <Clock className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
           </div>
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-sm font-bold text-[#134E4A]">
+              <span className="text-sm font-bold text-foreground">
                 {isTrial ? "Essai gratuit" : `Plan ${current.plan}`}
               </span>
               <span
@@ -210,10 +210,10 @@ export default function AbonnementPage() {
       )}
 
       {/* ── Promo Code ── */}
-      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5">
+      <div className="rounded-2xl border border-border bg-white p-5">
         <div className="flex items-center gap-2 mb-3">
-          <Tag className="h-4 w-4 text-[#0891B2]" />
-          <h2 className="font-semibold text-[#134E4A] text-sm">Code promo</h2>
+          <Tag className="h-4 w-4 text-primary" />
+          <h2 className="font-semibold text-foreground text-sm">Code promo</h2>
         </div>
 
         {promoSuccess && (
@@ -235,7 +235,7 @@ export default function AbonnementPage() {
               setPromoSuccess(null);
             }}
             placeholder="Entrez votre code promo"
-            className="flex-1 border border-[#E6F4F1] rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2]/30 focus:border-[#0891B2] uppercase"
+            className="flex-1 border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary uppercase"
             onKeyDown={(e) => {
               if (e.key === "Enter") applyPromo();
             }}
@@ -243,7 +243,7 @@ export default function AbonnementPage() {
           <button
             onClick={applyPromo}
             disabled={promoLoading || !promoCode.trim()}
-            className="px-5 py-2.5 bg-[#0891B2] text-white rounded-xl text-sm font-bold hover:bg-[#0E7490] transition-colors disabled:opacity-60 whitespace-nowrap"
+            className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-doktori-teal-dark transition-colors disabled:opacity-60 whitespace-nowrap"
           >
             {promoLoading ? "..." : "Appliquer"}
           </button>
@@ -261,14 +261,14 @@ export default function AbonnementPage() {
               key={plan.id}
               className={`relative rounded-2xl border p-6 shadow-sm transition-all hover:shadow-md ${
                 isPopular
-                  ? "border-[#0891B2] ring-1 ring-[#0891B2]/20"
-                  : "border-[#E6F4F1]"
-              } ${isCurrent ? "bg-[#F0FDFA]" : "bg-white"}`}
+                  ? "border-primary ring-1 ring-primary/20"
+                  : "border-border"
+              } ${isCurrent ? "bg-secondary" : "bg-white"}`}
             >
               {/* Popular badge */}
               {isPopular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#0891B2] px-3 py-1 text-xs font-bold text-white shadow-sm">
+                  <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-bold text-white shadow-sm">
                     <Sparkles className="h-3 w-3" />
                     Recommandé
                   </span>
@@ -279,14 +279,14 @@ export default function AbonnementPage() {
               <div className="flex items-start justify-between mb-1">
                 <div className="flex items-center gap-2">
                   {isPopular ? (
-                    <Crown className="h-5 w-5 text-[#0891B2]" />
+                    <Crown className="h-5 w-5 text-primary" />
                   ) : (
-                    <Shield className="h-5 w-5 text-[#5E7574]" />
+                    <Shield className="h-5 w-5 text-muted-foreground" />
                   )}
-                  <h2 className="text-xl font-bold text-[#134E4A]">{plan.name}</h2>
+                  <h2 className="text-xl font-bold text-foreground">{plan.name}</h2>
                 </div>
                 {isCurrent && (
-                  <span className="inline-flex items-center gap-1 rounded-lg bg-[#0891B2]/10 px-2.5 py-1 text-xs font-bold text-[#0891B2]">
+                  <span className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
                     <CheckCircle2 className="h-3 w-3" />
                     Votre plan
                   </span>
@@ -300,7 +300,7 @@ export default function AbonnementPage() {
 
               {/* Price */}
               <div className="mb-5 pb-5 border-b border-gray-100">
-                <span className="text-4xl font-black text-[#134E4A]">
+                <span className="text-4xl font-black text-foreground">
                   {plan.priceMillimes / 1000}
                 </span>
                 <span className="text-gray-500 text-sm"> DT/mois</span>
@@ -311,13 +311,13 @@ export default function AbonnementPage() {
 
               {/* Features */}
               <div className="mb-5">
-                <p className="text-xs font-bold text-[#134E4A] uppercase tracking-wide mb-3">
+                <p className="text-xs font-bold text-foreground uppercase tracking-wide mb-3">
                   Inclus dans ce plan
                 </p>
                 <ul className="space-y-2.5 text-sm">
                   {plan.features.map((f, i) => (
                     <li key={i} className="flex items-start gap-2.5">
-                      <CheckCircle2 className="h-4 w-4 text-[#0891B2] shrink-0 mt-0.5" />
+                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0 mt-0.5" />
                       <span className="text-gray-700">{f}</span>
                     </li>
                   ))}
@@ -353,10 +353,10 @@ export default function AbonnementPage() {
               <Button
                 className={`w-full h-12 rounded-xl font-bold text-sm transition-all ${
                   isCurrent
-                    ? "bg-[#E6F4F1] text-[#0891B2] cursor-default hover:bg-[#E6F4F1]"
+                    ? "bg-border text-primary cursor-default hover:bg-border"
                     : isPopular
-                    ? "bg-[#0891B2] hover:bg-[#0E7490] text-white shadow-md shadow-[#0891B2]/20 hover:shadow-lg"
-                    : "bg-[#134E4A] hover:bg-[#0e3d38] text-white"
+                    ? "bg-primary hover:bg-doktori-teal-dark text-white shadow-md shadow-primary/20 hover:shadow-lg"
+                    : "bg-foreground hover:bg-[#0e3d38] text-white"
                 }`}
                 onClick={() => subscribe(plan.id)}
                 disabled={isCurrent || checkingOut !== null}
@@ -374,8 +374,8 @@ export default function AbonnementPage() {
 
       {/* ── Payment footer ── */}
       <div className="rounded-2xl bg-gray-50 border border-gray-100 p-5 text-sm text-gray-500 space-y-2">
-        <div className="flex items-center gap-2 font-semibold text-[#134E4A] mb-2">
-          <Shield className="h-4 w-4 text-[#0891B2]" />
+        <div className="flex items-center gap-2 font-semibold text-foreground mb-2">
+          <Shield className="h-4 w-4 text-primary" />
           Informations de facturation
         </div>
         <ul className="space-y-1.5 text-xs leading-relaxed">

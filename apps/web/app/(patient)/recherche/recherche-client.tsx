@@ -90,6 +90,10 @@ function toISODate(date: Date): string {
   return date.toISOString().slice(0, 10);
 }
 
+function getLabel(item: { label: string; labelAr?: string }, locale: string): string {
+  return locale === "ar" && item.labelAr ? item.labelAr : item.label;
+}
+
 function RechercheInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -302,7 +306,7 @@ function RechercheInner() {
   if (parsedSpecialty) {
     activeChips.push({
       key: "spec",
-      label: SPECIALTIES.find((s) => s.id === parsedSpecialty)?.label || parsedSpecialty,
+      label: (() => { const s = SPECIALTIES.find((s) => s.id === parsedSpecialty); return s ? getLabel(s, locale) : parsedSpecialty; })(),
       onRemove: () => setSpecialty(""),
     });
   }
@@ -372,33 +376,33 @@ function RechercheInner() {
   const filterCount = activeChips.length;
 
   return (
-    <div className="min-h-screen bg-[#F0FDFA]/30 dark:bg-gray-900 overflow-x-hidden">
+    <div className="min-h-screen bg-secondary/30 dark:bg-gray-900 overflow-x-hidden">
       {/* ═══════════════ SEARCH HEADER ═══════════════ */}
-      <div className="sticky top-16 z-20 border-b border-[#E6F4F1] bg-white/95 backdrop-blur-md">
+      <div className="sticky top-16 z-20 border-b border-border bg-white/95 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
           {/* Search input */}
           <div className="flex items-center gap-3">
-            <div className="group flex h-12 flex-1 items-center rounded-xl border-2 border-[#E6F4F1] bg-white px-3 shadow-sm transition-all focus-within:border-[#0891B2]">
-              <Search className="h-4 w-4 shrink-0 text-[#5E7574]" strokeWidth={2.5} />
+            <div className="group flex h-12 flex-1 items-center rounded-xl border-2 border-border bg-white px-3 shadow-sm transition-all focus-within:border-primary">
+              <Search className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2.5} />
               <input
                 type="text"
                 placeholder={t("inputPlaceholder")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="h-full flex-1 border-0 bg-transparent px-2 text-sm text-[#134E4A] placeholder:text-[#5E7574]/60 outline-none focus-visible:ring-2 focus-visible:ring-[#0891B2]/30 focus-visible:rounded-lg"
+                className="h-full flex-1 border-0 bg-transparent px-2 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:rounded-lg"
               />
-              {loading && <Loader2 className="h-4 w-4 animate-spin text-[#0891B2]" />}
+              {loading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
             </div>
 
             {/* Mobile filter toggle */}
             <button
               onClick={() => setMobileFiltersOpen(true)}
-              className="relative flex h-12 w-12 items-center justify-center rounded-xl border-2 border-[#E6F4F1] bg-white text-[#0891B2] lg:hidden"
+              className="relative flex h-12 w-12 items-center justify-center rounded-xl border-2 border-border bg-white text-primary lg:hidden"
               aria-label={t("filtersAriaLabel")}
             >
               <SlidersHorizontal className="h-5 w-5" strokeWidth={2.5} />
               {filterCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-[#22C55E] text-[10px] font-bold text-white ring-2 ring-white">
+                <span className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white ring-2 ring-white">
                   {filterCount}
                 </span>
               )}
@@ -408,14 +412,14 @@ function RechercheInner() {
           {/* Active filter chips */}
           {activeChips.length > 0 && (
             <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#5E7574]">
+              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
                 {t("activeFiltersLabel")}
               </span>
               {activeChips.map((chip) => (
                 <button
                   key={chip.key}
                   onClick={chip.onRemove}
-                  className="group inline-flex items-center gap-1.5 rounded-full bg-[#0891B2] px-3 py-1 text-xs font-bold text-white shadow-sm transition-all hover:bg-[#0E7490]"
+                  className="group inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-bold text-white shadow-sm transition-all hover:bg-doktori-teal-dark"
                 >
                   <span>{chip.label}</span>
                   <X className="h-3 w-3 transition-transform group-hover:scale-110" strokeWidth={3} />
@@ -423,7 +427,7 @@ function RechercheInner() {
               ))}
               <button
                 onClick={resetAll}
-                className="text-xs font-bold text-[#5E7574] hover:text-[#134E4A] hover:underline"
+                className="text-xs font-bold text-muted-foreground hover:text-foreground hover:underline"
               >
                 {t("clearAll")}
               </button>
@@ -439,7 +443,7 @@ function RechercheInner() {
           <aside className={`${mobileFiltersOpen ? "fixed inset-0 z-50 overflow-y-auto bg-white p-4 lg:static lg:p-0" : "hidden lg:block"}`}>
             {mobileFiltersOpen && (
               <div className="mb-4 flex items-center justify-between border-b pb-3 lg:hidden">
-                <h2 className="font-heading text-lg font-bold text-[#134E4A]">{t("mobileFiltersTitle")}</h2>
+                <h2 className="font-heading text-lg font-bold text-foreground">{t("mobileFiltersTitle")}</h2>
                 <button
                   onClick={() => setMobileFiltersOpen(false)}
                   className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-gray-100"
@@ -456,13 +460,13 @@ function RechercheInner() {
                   <button
                     onClick={requestGeolocation}
                     disabled={geoLoading}
-                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border-2 border-[#0891B2] bg-white px-3 text-xs font-bold text-[#0891B2] transition-all hover:bg-[#F0FDFA] disabled:opacity-60"
+                    className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-xl border-2 border-primary bg-white px-3 text-xs font-bold text-primary transition-all hover:bg-secondary disabled:opacity-60"
                   >
                     {geoLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crosshair className="h-4 w-4" strokeWidth={2.5} />}
                     {geoLoading ? t("locating") : t("findNearMe")}
                   </button>
                 ) : (
-                  <div className="flex items-center justify-between gap-2 rounded-xl bg-[#22C55E]/10 px-3 py-2 text-xs font-bold text-[#16A34A] ring-1 ring-[#22C55E]/30">
+                  <div className="flex items-center justify-between gap-2 rounded-xl bg-accent/10 px-3 py-2 text-xs font-bold text-doktori-green-dark ring-1 ring-accent/30">
                     <span className="flex items-center gap-1.5">
                       <Navigation className="h-4 w-4" strokeWidth={2.5} />
                       {t("positionActive")}
@@ -496,7 +500,7 @@ function RechercheInner() {
 
               {/* Specialty with counts */}
               <FilterGroup icon={Stethoscope} label={t("specialtyLabel")}>
-                <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                <div className="max-h-64 space-y-1 overflow-y-auto pe-1">
                   <FilterOption
                     label={t("specialtyAll")}
                     selected={!specialty}
@@ -507,7 +511,7 @@ function RechercheInner() {
                     return (
                       <FilterOption
                         key={s.id}
-                        label={s.label}
+                        label={getLabel(s, locale)}
                         count={count}
                         selected={specialty === s.id}
                         onClick={() => setSpecialty(s.id === specialty ? "" : s.id)}
@@ -519,7 +523,7 @@ function RechercheInner() {
 
               {/* City with counts */}
               <FilterGroup icon={MapPin} label={t("cityLabel")}>
-                <div className="max-h-64 space-y-1 overflow-y-auto pr-1">
+                <div className="max-h-64 space-y-1 overflow-y-auto pe-1">
                   <FilterOption
                     label={t("cityAll")}
                     selected={!city}
@@ -530,7 +534,7 @@ function RechercheInner() {
                     return (
                       <FilterOption
                         key={c.id}
-                        label={c.label}
+                        label={getLabel(c, locale)}
                         count={count}
                         selected={city === c.id}
                         onClick={() => setCity(c.id === city ? "" : c.id)}
@@ -566,7 +570,7 @@ function RechercheInner() {
             {mobileFiltersOpen && (
               <button
                 onClick={() => setMobileFiltersOpen(false)}
-                className="mt-6 h-12 w-full rounded-xl bg-[#0891B2] font-bold text-white lg:hidden"
+                className="mt-6 h-12 w-full rounded-xl bg-primary font-bold text-white lg:hidden"
               >
                 {t("apply", { count: results.length })}
               </button>
@@ -581,7 +585,7 @@ function RechercheInner() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => setModeFilter(modeFilter === "teleconsult" ? "" : "teleconsult")}
-                  className={`inline-flex items-center gap-1.5 rounded-full border-2 px-3 py-1.5 text-xs font-bold transition-all ${
+                  className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border-2 px-4 py-2 text-xs font-bold transition-all ${
                     modeFilter === "teleconsult"
                       ? "border-purple-600 bg-purple-600 text-white shadow-sm"
                       : "border-purple-200 bg-white text-purple-700 hover:border-purple-400 hover:bg-purple-50"
@@ -594,15 +598,15 @@ function RechercheInner() {
 
               {/* Date picker */}
               <div>
-                <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#5E7574]">
+                <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   <Calendar className="h-3.5 w-3.5" strokeWidth={2.5} />
                   {t("dateLabel")}
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   <button
                     onClick={() => setDate("")}
-                    className={`shrink-0 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
-                      !date ? "bg-[#0891B2] text-white shadow-sm" : "bg-white text-[#5E7574] ring-1 ring-[#E6F4F1]"
+                    className={`min-h-11 shrink-0 rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
+                      !date ? "bg-primary text-white shadow-sm" : "bg-white text-muted-foreground ring-1 ring-border"
                     }`}
                   >
                     {t("dateAll")}
@@ -611,8 +615,8 @@ function RechercheInner() {
                     <button
                       key={d.value}
                       onClick={() => setDate(d.value === date ? "" : d.value)}
-                      className={`shrink-0 rounded-xl px-3 py-2 text-xs font-bold transition-all ${
-                        date === d.value ? "bg-[#0891B2] text-white shadow-sm" : "bg-white text-[#5E7574] ring-1 ring-[#E6F4F1]"
+                      className={`min-h-11 shrink-0 rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
+                        date === d.value ? "bg-primary text-white shadow-sm" : "bg-white text-muted-foreground ring-1 ring-border"
                       }`}
                     >
                       {d.isToday ? t("availabilityToday") : d.isTomorrow ? t("availabilityTomorrow") : d.label}
@@ -623,24 +627,24 @@ function RechercheInner() {
 
               {/* Sort dropdown */}
               <div className="flex items-center justify-between">
-                <div className="text-sm text-[#5E7574]">
+                <div className="text-sm text-muted-foreground">
                   {loading ? (
                     t("searching")
                   ) : (
                     <>
-                      <span className="font-bold text-[#134E4A]">{results.length}</span>{" "}
+                      <span className="font-bold text-foreground">{results.length}</span>{" "}
                       {results.length === 1 ? t("resultSingular") : t("resultPlural")}
                       {totalCount > results.length ? ` ${t("totalSuffix", { total: totalCount })}` : ""}
                     </>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <ArrowUpDown className="h-3.5 w-3.5 text-[#5E7574]" strokeWidth={2.5} />
+                  <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2.5} />
                   <select
                     value={sort}
                     onChange={(e) => setSort(e.target.value as SortKey)}
                     aria-label={t("sortLabel")}
-                    className="h-9 rounded-lg border border-[#E6F4F1] bg-white px-3 pr-8 text-xs font-bold text-[#134E4A] outline-none focus-visible:ring-2 focus-visible:ring-[#0891B2]/30 focus-visible:border-[#0891B2]"
+                    className="h-11 rounded-lg border border-border bg-white px-3 pe-8 text-xs font-bold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary sm:h-9"
                   >
                     <option value="relevance">{t("sortRelevance")}</option>
                     {(userLocation || parsedCity) && <option value="proximity">{t("sortProximity")}</option>}
@@ -655,7 +659,7 @@ function RechercheInner() {
             {/* Recent searches — shown when search is empty and no results yet */}
             {!searched && !loading && recentSearches.length > 0 && (
               <div className="mb-4">
-                <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#5E7574]">
+                <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
                   <Clock className="h-3.5 w-3.5" strokeWidth={2.5} />
                   Recherches récentes
                 </div>
@@ -669,9 +673,9 @@ function RechercheInner() {
                       <button
                         key={idx}
                         onClick={() => applyRecentSearch(item)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-[#E6F4F1] bg-white px-3 py-1.5 text-xs font-medium text-[#134E4A] hover:border-[#0891B2] hover:bg-[#F0FDFA] transition-all"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary hover:bg-secondary transition-all"
                       >
-                        <Search className="h-3 w-3 text-[#5E7574]" strokeWidth={2.5} />
+                        <Search className="h-3 w-3 text-muted-foreground" strokeWidth={2.5} />
                         {label}
                       </button>
                     );
@@ -681,7 +685,7 @@ function RechercheInner() {
                       localStorage.removeItem("doktori_recent_searches");
                       setRecentSearches([]);
                     }}
-                    className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium text-[#5E7574] hover:text-red-500 transition-colors"
+                    className="inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-xs font-medium text-muted-foreground hover:text-red-500 transition-colors"
                   >
                     <X className="h-3 w-3" strokeWidth={3} />
                     Effacer
@@ -702,15 +706,15 @@ function RechercheInner() {
 
             {/* Empty state */}
             {!loading && searched && results.length === 0 && (
-              <div className="rounded-2xl border border-[#E6F4F1] bg-white py-16 text-center">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F0FDFA] text-[#5E7574]">
+              <div className="rounded-2xl border border-border bg-white py-16 text-center">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
                   <SearchX className="h-8 w-8" strokeWidth={2} />
                 </div>
-                <h3 className="mt-4 font-heading text-lg font-bold text-[#134E4A]">{t("emptyTitle")}</h3>
-                <p className="mt-2 text-sm text-[#5E7574]">{t("emptyDesc")}</p>
+                <h3 className="mt-4 font-heading text-lg font-bold text-foreground">{t("emptyTitle")}</h3>
+                <p className="mt-2 text-sm text-muted-foreground">{t("emptyDesc")}</p>
                 <button
                   onClick={resetAll}
-                  className="mt-6 inline-flex h-10 items-center rounded-lg border border-[#E6F4F1] bg-white px-4 text-sm font-medium text-[#134E4A] hover:bg-[#F0FDFA]"
+                  className="mt-6 inline-flex h-10 items-center rounded-lg border border-border bg-white px-4 text-sm font-medium text-foreground hover:bg-secondary"
                 >
                   {t("reset")}
                 </button>
@@ -721,8 +725,8 @@ function RechercheInner() {
             {clinicResults.length > 0 && (
               <div className="mb-6">
                 <div className="mb-3 flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
-                  <span className="text-xs font-bold uppercase tracking-wider text-[#134E4A]">
+                  <Building2 className="h-4 w-4 text-primary" strokeWidth={2.5} />
+                  <span className="text-xs font-bold uppercase tracking-wider text-foreground">
                     Centres médicaux
                   </span>
                 </div>
@@ -731,9 +735,9 @@ function RechercheInner() {
                     <Link
                       key={clinic.id}
                       href={`/centre-medical/${clinic.slug}`}
-                      className="group flex items-center gap-3 rounded-2xl border border-[#E6F4F1] bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-[#0891B2]/40 hover:shadow-md"
+                      className="group flex items-center gap-3 rounded-2xl border border-border bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
                     >
-                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#F0FDFA] text-[#0891B2]">
+                      <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
                         {clinic.logoUrl ? (
                           // eslint-disable-next-line @next/next/no-img-element
                           <img
@@ -746,18 +750,37 @@ function RechercheInner() {
                         )}
                       </div>
                       <div className="min-w-0 flex-1">
-                        <p className="font-heading text-sm font-bold text-[#134E4A] truncate">
+                        <p className="font-heading text-sm font-bold text-foreground truncate">
                           {clinic.name}
                         </p>
-                        <p className="mt-0.5 flex items-center gap-1 text-xs text-[#5E7574]">
+                        <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                           <MapPin className="h-3 w-3 shrink-0" strokeWidth={2.5} />
                           {clinic.cityLabel || clinic.city}
                         </p>
                       </div>
-                      <ArrowRight className="h-4 w-4 shrink-0 text-[#5E7574] transition-transform group-hover:translate-x-0.5 group-hover:text-[#0891B2]" strokeWidth={2.5} />
+                      <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" strokeWidth={2.5} />
                     </Link>
                   ))}
                 </div>
+              </div>
+            )}
+
+            {/* Loading skeletons — reserved height prevents CLS */}
+            {loading && results.length === 0 && (
+              <div className="grid gap-3" aria-hidden>
+                {Array.from({ length: 4 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="flex items-start gap-4 rounded-2xl border border-border bg-white p-5"
+                  >
+                    <div className="h-20 w-20 shrink-0 animate-pulse rounded-2xl bg-secondary" />
+                    <div className="flex-1 space-y-2">
+                      <div className="h-4 w-1/2 animate-pulse rounded bg-secondary" />
+                      <div className="h-3 w-1/3 animate-pulse rounded bg-secondary" />
+                      <div className="mt-3 h-3 w-3/4 animate-pulse rounded bg-secondary" />
+                    </div>
+                  </div>
+                ))}
               </div>
             )}
 
@@ -789,17 +812,17 @@ function FilterGroup({
 }) {
   const [open, setOpen] = useState(true);
   return (
-    <div className="rounded-2xl border border-[#E6F4F1] bg-white p-4">
+    <div className="rounded-2xl border border-border bg-white p-4">
       <button
         onClick={() => setOpen(!open)}
-        className="flex w-full items-center justify-between text-left"
+        className="flex w-full items-center justify-between text-start"
       >
         <div className="flex items-center gap-2">
-          <Icon className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
-          <span className="text-xs font-bold uppercase tracking-wider text-[#134E4A]">{label}</span>
+          <Icon className="h-4 w-4 text-primary" strokeWidth={2.5} />
+          <span className="text-xs font-bold uppercase tracking-wider text-foreground">{label}</span>
         </div>
         <ChevronDown
-          className={`h-4 w-4 text-[#5E7574] transition-transform ${open ? "" : "-rotate-90"}`}
+          className={`h-4 w-4 text-muted-foreground transition-transform ${open ? "" : "-rotate-90"}`}
           strokeWidth={2.5}
         />
       </button>
@@ -822,10 +845,10 @@ function FilterOption({
   return (
     <button
       onClick={onClick}
-      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-left text-xs font-medium transition-all ${
+      className={`flex w-full items-center justify-between rounded-lg px-3 py-2 text-start text-xs font-medium transition-all ${
         selected
-          ? "bg-[#0891B2] text-white"
-          : "text-[#134E4A] hover:bg-[#F0FDFA]"
+          ? "bg-primary text-white"
+          : "text-foreground hover:bg-secondary"
       }`}
     >
       <span className="flex items-center gap-2">
@@ -835,7 +858,7 @@ function FilterOption({
       {count !== undefined && count > 0 && (
         <span
           className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
-            selected ? "bg-white/20 text-white" : "bg-[#F0FDFA] text-[#0E7490]"
+            selected ? "bg-white/20 text-white" : "bg-secondary text-doktori-teal-dark"
           }`}
         >
           {count}

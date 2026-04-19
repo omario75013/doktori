@@ -20,7 +20,7 @@ export function AppBanner() {
   if (dismissed) return null;
 
   return (
-    <div className="relative bg-gradient-to-r from-[#0891B2] to-[#0E7490] text-white px-4 py-2.5 text-center text-sm font-medium sm:text-xs">
+    <div className="relative bg-gradient-to-r from-primary to-doktori-teal-dark text-white px-4 py-2.5 text-center text-sm font-medium sm:text-xs">
       <div className="flex items-center justify-center gap-2">
         <Smartphone className="h-4 w-4 shrink-0" strokeWidth={2.5} />
         <span>

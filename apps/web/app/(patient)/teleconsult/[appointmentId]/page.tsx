@@ -80,7 +80,7 @@ export default function TeleconsultPage({
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
-          <div className="w-16 h-16 bg-[#0891B2]/20 rounded-full flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
             <Video className="w-8 h-8 text-red-400" />
           </div>
           <p className="text-lg text-gray-300">{error}</p>
@@ -93,7 +93,7 @@ export default function TeleconsultPage({
     return (
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white space-y-4">
-          <div className="w-16 h-16 bg-[#0891B2] rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
+          <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center mx-auto text-2xl font-bold">
             ✓
           </div>
           <h1 className="text-2xl font-bold">Consultation terminée</h1>
@@ -102,7 +102,7 @@ export default function TeleconsultPage({
           </p>
           <a
             href={`/avis/${appointmentId}`}
-            className="inline-block bg-[#0891B2] hover:bg-[#0E7490] text-white px-6 py-3 rounded-xl font-medium transition-colors"
+            className="inline-block bg-primary hover:bg-doktori-teal-dark text-white px-6 py-3 rounded-xl font-medium transition-colors"
           >
             Laisser un avis
           </a>
@@ -118,17 +118,17 @@ export default function TeleconsultPage({
         <div className="text-center text-white max-w-sm">
           {/* Pulsing ring animation */}
           <div className="relative w-24 h-24 mx-auto mb-6">
-            <div className="absolute inset-0 rounded-full bg-[#0891B2]/20 animate-ping" />
-            <div className="absolute inset-2 rounded-full bg-[#0891B2]/30 animate-ping [animation-delay:150ms]" />
-            <div className="relative w-24 h-24 bg-[#0891B2]/20 rounded-full flex items-center justify-center">
-              <Video className="w-10 h-10 text-[#0891B2]" />
+            <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
+            <div className="absolute inset-2 rounded-full bg-primary/30 animate-ping [animation-delay:150ms]" />
+            <div className="relative w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center">
+              <Video className="w-10 h-10 text-primary" />
             </div>
           </div>
 
           <h2 className="text-xl font-bold mb-2">Salle d&apos;attente</h2>
           <p className="text-gray-300 mb-1">Votre médecin va vous recevoir...</p>
           {doctorName && (
-            <p className="text-[#0891B2] font-medium mb-4">Dr. {doctorName}</p>
+            <p className="text-primary font-medium mb-4">Dr. {doctorName}</p>
           )}
 
           {waitMinutes >= 5 && (
@@ -159,7 +159,7 @@ export default function TeleconsultPage({
           <p className="text-gray-400 mb-6 text-sm">Vous pouvez rejoindre la consultation</p>
           <button
             onClick={() => setWaitingStatus("joined")}
-            className="w-full bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold px-8 py-3 rounded-xl transition-colors text-lg"
+            className="w-full bg-primary hover:bg-doktori-teal-dark text-white font-bold px-8 py-3 rounded-xl transition-colors text-lg"
           >
             Rejoindre la consultation
           </button>
@@ -174,8 +174,8 @@ export default function TeleconsultPage({
       <div className="min-h-screen bg-gray-900 flex items-center justify-center">
         <div className="text-center text-white">
           <div className="animate-pulse">
-            <div className="w-16 h-16 bg-[#0891B2]/20 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Video className="w-8 h-8 text-[#0891B2]" />
+            <div className="w-16 h-16 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Video className="w-8 h-8 text-primary" />
             </div>
           </div>
           <p className="text-gray-300">Connexion à la salle...</p>
@@ -187,15 +187,15 @@ export default function TeleconsultPage({
   return (
     <div className="h-screen flex flex-col bg-gray-900">
       {/* Header bar — teal accent */}
-      <div className="flex items-center justify-between px-4 py-3 bg-gray-950 border-b border-[#0891B2]/30 shrink-0">
+      <div className="flex items-center justify-between px-4 py-3 bg-gray-950 border-b border-primary/30 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-[#0891B2] rounded-full flex items-center justify-center">
+          <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center">
             <Video className="w-4 h-4 text-white" strokeWidth={2.5} />
           </div>
           <span className="text-white font-medium">Téléconsultation</span>
         </div>
 
-        <div className="flex items-center gap-2 text-[#0891B2]">
+        <div className="flex items-center gap-2 text-primary">
           <Clock className="w-4 h-4" strokeWidth={2.5} />
           <span className="font-mono text-sm text-gray-200">
             {String(mins).padStart(2, "0")}:{String(secs).padStart(2, "0")}

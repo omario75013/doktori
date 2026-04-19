@@ -71,7 +71,7 @@ export default function InscriptionPatientPage() {
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
       {/* Left panel */}
-      <div className="hidden lg:flex lg:w-[480px] xl:w-[520px] flex-col justify-between bg-gradient-to-br from-[#0891B2] via-[#0E7490] to-[#134E4A] text-white p-10 relative overflow-hidden">
+      <div className="hidden lg:flex lg:w-[480px] xl:w-[520px] flex-col justify-between bg-gradient-to-br from-primary via-doktori-teal-dark to-foreground text-white p-10 relative overflow-hidden">
         <div
           aria-hidden
           className="absolute inset-0 opacity-10"
@@ -114,12 +114,12 @@ export default function InscriptionPatientPage() {
         </div>
 
         <div aria-hidden className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-white/5" />
-        <div aria-hidden className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-[#22C55E]/10" />
+        <div aria-hidden className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-accent/10" />
       </div>
 
       {/* Right panel */}
       <div className="flex-1 flex flex-col bg-[#F8FFFE]">
-        <div className="lg:hidden bg-gradient-to-r from-[#0891B2] to-[#134E4A] px-6 py-5 text-white">
+        <div className="lg:hidden bg-gradient-to-r from-primary to-foreground px-6 py-5 text-white">
           <div className="flex items-center gap-2 mb-2">
             <Stethoscope className="h-5 w-5" />
             <span className="font-bold">Doktori</span>
@@ -130,13 +130,13 @@ export default function InscriptionPatientPage() {
         <div className="flex-1 flex items-center justify-center px-4 py-8 sm:px-8 lg:px-12">
           <div className="w-full max-w-md">
             <div className="mb-8">
-              <h2 className="text-2xl font-black text-[#134E4A]">Créer mon compte</h2>
-              <p className="text-sm text-[#5E7574] mt-1">Accédez à tous vos services de santé en ligne.</p>
+              <h2 className="text-2xl font-black text-foreground">Créer mon compte</h2>
+              <p className="text-sm text-muted-foreground mt-1">Accédez à tous vos services de santé en ligne.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-1.5">
-                <Label htmlFor="name" className="text-[#134E4A] font-semibold">Nom complet</Label>
+                <Label htmlFor="name" className="text-foreground font-semibold">Nom complet</Label>
                 <Input
                   id="name"
                   name="name"
@@ -144,12 +144,12 @@ export default function InscriptionPatientPage() {
                   required
                   value={form.name}
                   onChange={handleChange}
-                  className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                  className="h-12 rounded-xl border-border focus-visible:ring-primary"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-[#134E4A] font-semibold">Adresse email</Label>
+                <Label htmlFor="email" className="text-foreground font-semibold">Adresse email</Label>
                 <Input
                   id="email"
                   name="email"
@@ -159,12 +159,12 @@ export default function InscriptionPatientPage() {
                   required
                   value={form.email}
                   onChange={handleChange}
-                  className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                  className="h-12 rounded-xl border-border focus-visible:ring-primary"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="phone" className="text-[#134E4A] font-semibold">Numéro de téléphone</Label>
+                <Label htmlFor="phone" className="text-foreground font-semibold">Numéro de téléphone</Label>
                 <Input
                   id="phone"
                   name="phone"
@@ -173,12 +173,12 @@ export default function InscriptionPatientPage() {
                   required
                   value={form.phone}
                   onChange={handleChange}
-                  className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                  className="h-12 rounded-xl border-border focus-visible:ring-primary"
                 />
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-[#134E4A] font-semibold">Mot de passe</Label>
+                <Label htmlFor="password" className="text-foreground font-semibold">Mot de passe</Label>
                 <Input
                   id="password"
                   name="password"
@@ -188,7 +188,7 @@ export default function InscriptionPatientPage() {
                   required
                   value={form.password}
                   onChange={handleChange}
-                  className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                  className="h-12 rounded-xl border-border focus-visible:ring-primary"
                 />
                 {form.password.length > 0 && form.password.length < 8 && (
                   <p className="text-xs text-amber-600 mt-1">Le mot de passe doit contenir au moins 8 caractères</p>
@@ -204,7 +204,7 @@ export default function InscriptionPatientPage() {
               <Button
                 type="submit"
                 disabled={loading || !canSubmit()}
-                className="w-full h-12 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold shadow-lg shadow-[#0891B2]/20 disabled:opacity-40"
+                className="w-full h-12 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold shadow-lg shadow-primary/20 disabled:opacity-40"
               >
                 {loading ? (
                   <>
@@ -220,9 +220,9 @@ export default function InscriptionPatientPage() {
               </Button>
             </form>
 
-            <p className="text-center text-sm text-[#5E7574] mt-6">
+            <p className="text-center text-sm text-muted-foreground mt-6">
               Déjà inscrit ?{" "}
-              <a href="/connexion-patient" className="font-bold text-[#0891B2] hover:underline">
+              <a href="/connexion-patient" className="font-bold text-primary hover:underline">
                 Se connecter
               </a>
             </p>

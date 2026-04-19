@@ -67,12 +67,12 @@ export function TrustSignals({
 }) {
   const badges = [
     {
-      icon: <ShieldCheck className="h-5 w-5 text-[#0891B2]" strokeWidth={2} />,
+      icon: <ShieldCheck className="h-5 w-5 text-primary" strokeWidth={2} />,
       label: "Profil vérifié",
       sub: "par Doktori",
-      bg: "bg-[#F0FDFA]",
+      bg: "bg-secondary",
       border: "border-[#CCFBF1]",
-      text: "text-[#134E4A]",
+      text: "text-foreground",
     },
     {
       icon: <Clock className="h-5 w-5 text-amber-500" strokeWidth={2} />,
@@ -97,7 +97,7 @@ export function TrustSignals({
     ...(reviewCount > 0
       ? [
           {
-            icon: <Star className="h-5 w-5 fill-[#F59E0B] text-[#F59E0B]" strokeWidth={0} />,
+            icon: <Star className="h-5 w-5 fill-doktori-amber text-doktori-amber" strokeWidth={0} />,
             label: `${averageRating.toFixed(1)} / 5`,
             sub: `${reviewCount} avis vérifiés`,
             bg: "bg-[#FFFBEB]",

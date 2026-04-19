@@ -42,16 +42,16 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#F0FDFA] flex items-center justify-center px-4">
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-10 shadow-sm text-center max-w-md w-full">
-          <div className="w-16 h-16 bg-[#0891B2]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-[#0891B2]" strokeWidth={2} />
+      <div className="min-h-screen bg-secondary flex items-center justify-center px-4">
+        <div className="rounded-2xl border border-border bg-white p-10 shadow-sm text-center max-w-md w-full">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-primary" strokeWidth={2} />
           </div>
-          <h1 className="text-2xl font-bold text-[#134E4A] mb-2">{t("thankYou")}</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{t("thankYou")}</h1>
           <p className="text-gray-500 mb-6">Votre retour aide les autres patients à trouver le bon médecin.</p>
           <Button
             onClick={() => router.push("/")}
-            className="bg-[#0891B2] hover:bg-[#0E7490] h-12 rounded-xl w-full text-white"
+            className="bg-primary hover:bg-doktori-teal-dark h-12 rounded-xl w-full text-white"
           >
             Retour à l'accueil
           </Button>
@@ -61,25 +61,25 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
   }
 
   return (
-    <div className="min-h-screen bg-[#F0FDFA] flex items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-secondary flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-[#0891B2]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Star className="w-7 h-7 text-[#0891B2]" strokeWidth={2} />
+          <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Star className="w-7 h-7 text-primary" strokeWidth={2} />
           </div>
-          <h1 className="text-2xl font-bold text-[#134E4A]">Votre avis compte</h1>
+          <h1 className="text-2xl font-bold text-foreground">Votre avis compte</h1>
           <p className="text-gray-500 mt-1">Comment s'est passée votre consultation ?</p>
         </div>
 
-        <form onSubmit={handleSubmit} className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm space-y-6">
+        <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-6">
           <div>
-            <p className="text-sm font-medium text-[#134E4A] mb-3">Votre note</p>
+            <p className="text-sm font-medium text-foreground mb-3">Votre note</p>
             <StarRating value={rating} onChange={setRating} size="lg" />
           </div>
 
           <div>
-            <label htmlFor="comment" className="block text-sm font-medium text-[#134E4A] mb-2">
+            <label htmlFor="comment" className="block text-sm font-medium text-foreground mb-2">
               Commentaire (optionnel)
             </label>
             <Textarea
@@ -88,7 +88,7 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
               onChange={(e) => setComment(e.target.value)}
               placeholder="Partagez votre expérience..."
               rows={4}
-              className="rounded-xl border-[#E6F4F1] focus:border-[#0891B2] focus:ring-[#0891B2]/20 resize-none"
+              className="rounded-xl border-border focus:border-primary focus:ring-primary/20 resize-none"
             />
           </div>
 
@@ -98,7 +98,7 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
 
           <Button
             type="submit"
-            className="w-full bg-[#0891B2] hover:bg-[#0E7490] h-12 rounded-xl text-white font-medium"
+            className="w-full bg-primary hover:bg-doktori-teal-dark h-12 rounded-xl text-white font-medium"
             disabled={loading}
           >
             {loading ? "Envoi..." : "Publier mon avis"}

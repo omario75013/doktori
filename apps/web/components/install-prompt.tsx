@@ -110,27 +110,27 @@ export function InstallPrompt() {
           transition={{ type: "spring", stiffness: 320, damping: 28 }}
           className="fixed bottom-4 left-4 right-4 z-40 sm:left-auto sm:right-4 sm:max-w-sm"
         >
-          <div className="rounded-2xl bg-white shadow-xl border border-[#E6F4F1] p-4">
+          <div className="rounded-2xl bg-white shadow-xl border border-border p-4">
             <div className="flex items-start gap-3">
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0891B2] text-white">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary text-white">
                 <Smartphone className="h-5 w-5" strokeWidth={2} />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="font-bold text-sm text-[#134E4A]">
+                <p className="font-bold text-sm text-foreground">
                   Installer Doktori sur votre téléphone
                 </p>
 
                 {platform === "ios" ? (
-                  <p className="text-xs text-[#134E4A]/60 mt-1 leading-relaxed">
+                  <p className="text-xs text-foreground/60 mt-1 leading-relaxed">
                     Appuyez sur{" "}
                     <span className="inline-flex items-center gap-0.5 align-middle">
-                      <Share className="h-3.5 w-3.5 text-[#0891B2]" strokeWidth={2.5} />
+                      <Share className="h-3.5 w-3.5 text-primary" strokeWidth={2.5} />
                     </span>{" "}
                     <strong>Partager</strong>, puis{" "}
                     <strong>Ajouter à l&apos;écran d&apos;accueil</strong>.
                   </p>
                 ) : (
-                  <p className="text-xs text-[#134E4A]/60 mt-1 leading-relaxed">
+                  <p className="text-xs text-foreground/60 mt-1 leading-relaxed">
                     Accédez rapidement à vos rendez-vous depuis votre écran d&apos;accueil.
                   </p>
                 )}
@@ -139,7 +139,7 @@ export function InstallPrompt() {
                   <button
                     onClick={handleAndroidInstall}
                     disabled={installing}
-                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-[#0891B2] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#0E7490] transition-colors disabled:opacity-60"
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white hover:bg-doktori-teal-dark transition-colors disabled:opacity-60"
                   >
                     {installing ? "Installation..." : "Installer l'application"}
                   </button>

@@ -175,13 +175,13 @@ export default function CabinetsPage() {
         <div className="flex items-center gap-3">
           <Link
             href="/profil"
-            className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0891B2] hover:underline"
+            className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"
           >
             <ArrowLeft className="h-4 w-4" />
             Profil
           </Link>
-          <span className="text-[#134E4A]/30">/</span>
-          <h1 className="text-xl font-heading font-black text-[#134E4A]">
+          <span className="text-foreground/30">/</span>
+          <h1 className="text-xl font-heading font-black text-foreground">
             Mes cabinets
           </h1>
         </div>
@@ -190,7 +190,7 @@ export default function CabinetsPage() {
             setShowAddForm((v) => !v);
             setAddError(null);
           }}
-          className="bg-[#0891B2] hover:bg-[#0E7490] gap-1.5"
+          className="bg-primary hover:bg-doktori-teal-dark gap-1.5"
           size="sm"
         >
           <Plus className="h-4 w-4" />
@@ -206,8 +206,8 @@ export default function CabinetsPage() {
 
       {/* Add form */}
       {showAddForm && (
-        <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4">
-          <h2 className="font-heading font-black text-[#134E4A]">Nouveau cabinet</h2>
+        <div className="rounded-3xl border border-border bg-white shadow-sm p-5 space-y-4">
+          <h2 className="font-heading font-black text-foreground">Nouveau cabinet</h2>
           <form onSubmit={handleAdd} className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
@@ -258,9 +258,9 @@ export default function CabinetsPage() {
                 type="checkbox"
                 checked={addForm.isPrimary}
                 onChange={(e) => setAddForm((f) => ({ ...f, isPrimary: e.target.checked }))}
-                className="rounded border-[#E6F4F1] text-[#0891B2]"
+                className="rounded border-border text-primary"
               />
-              <span className="text-sm text-[#134E4A]">Cabinet principal</span>
+              <span className="text-sm text-foreground">Cabinet principal</span>
             </label>
             {addError && (
               <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
@@ -268,7 +268,7 @@ export default function CabinetsPage() {
               </p>
             )}
             <div className="flex gap-2 pt-1">
-              <Button type="submit" disabled={addSubmitting} size="sm" className="bg-[#0891B2] hover:bg-[#0E7490]">
+              <Button type="submit" disabled={addSubmitting} size="sm" className="bg-primary hover:bg-doktori-teal-dark">
                 {addSubmitting ? "Enregistrement..." : "Enregistrer"}
               </Button>
               <Button
@@ -286,13 +286,13 @@ export default function CabinetsPage() {
 
       {/* Practices list */}
       {loading ? (
-        <div className="text-sm text-[#134E4A]/40 py-8 text-center">Chargement...</div>
+        <div className="text-sm text-foreground/40 py-8 text-center">Chargement...</div>
       ) : error ? (
         <div className="text-sm text-red-500 py-4">{error}</div>
       ) : practices.length === 0 ? (
-        <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-8 text-center space-y-2">
-          <MapPin className="h-8 w-8 text-[#0891B2]/40 mx-auto" />
-          <p className="text-sm text-[#134E4A]/60">
+        <div className="rounded-3xl border border-border bg-white shadow-sm p-8 text-center space-y-2">
+          <MapPin className="h-8 w-8 text-primary/40 mx-auto" />
+          <p className="text-sm text-foreground/60">
             Aucun cabinet pour l&apos;instant. Ajoutez votre premier cabinet.
           </p>
         </div>
@@ -302,7 +302,7 @@ export default function CabinetsPage() {
             <div
               key={p.id}
               className={`rounded-3xl border bg-white shadow-sm p-5 space-y-3 transition ${
-                p.isActive ? "border-[#E6F4F1]" : "border-[#E6F4F1] opacity-60"
+                p.isActive ? "border-border" : "border-border opacity-60"
               }`}
             >
               {editingId === p.id ? (
@@ -354,9 +354,9 @@ export default function CabinetsPage() {
                         type="checkbox"
                         checked={editForm.isPrimary}
                         onChange={(e) => setEditForm((f) => ({ ...f, isPrimary: e.target.checked }))}
-                        className="rounded border-[#E6F4F1] text-[#0891B2]"
+                        className="rounded border-border text-primary"
                       />
-                      <span className="text-sm text-[#134E4A]">Définir comme cabinet principal</span>
+                      <span className="text-sm text-foreground">Définir comme cabinet principal</span>
                     </label>
                   )}
                   {editError && (
@@ -365,7 +365,7 @@ export default function CabinetsPage() {
                     </p>
                   )}
                   <div className="flex gap-2">
-                    <Button type="submit" disabled={editSubmitting} size="sm" className="bg-[#0891B2] hover:bg-[#0E7490] gap-1">
+                    <Button type="submit" disabled={editSubmitting} size="sm" className="bg-primary hover:bg-doktori-teal-dark gap-1">
                       <Check className="h-3.5 w-3.5" />
                       {editSubmitting ? "..." : "Sauvegarder"}
                     </Button>
@@ -381,10 +381,10 @@ export default function CabinetsPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-heading font-black text-[#134E4A]">{p.name}</span>
+                        <span className="font-heading font-black text-foreground">{p.name}</span>
                         {p.isPrimary && (
-                          <span className="inline-flex items-center gap-1 rounded-full bg-[#0891B2]/10 px-2 py-0.5 text-xs font-bold text-[#0891B2]">
-                            <Star className="h-3 w-3 fill-[#0891B2]" />
+                          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                            <Star className="h-3 w-3 fill-primary" />
                             Principal
                           </span>
                         )}
@@ -395,13 +395,13 @@ export default function CabinetsPage() {
                         )}
                       </div>
                       <div className="mt-1 space-y-0.5">
-                        <div className="flex items-center gap-1.5 text-sm text-[#134E4A]/70">
-                          <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-[#0891B2]/60" />
+                        <div className="flex items-center gap-1.5 text-sm text-foreground/70">
+                          <MapPin className="h-3.5 w-3.5 flex-shrink-0 text-primary/60" />
                           <span className="truncate">{p.address}, {p.city}</span>
                         </div>
                         {p.phone && (
-                          <div className="flex items-center gap-1.5 text-sm text-[#134E4A]/70">
-                            <Phone className="h-3.5 w-3.5 flex-shrink-0 text-[#0891B2]/60" />
+                          <div className="flex items-center gap-1.5 text-sm text-foreground/70">
+                            <Phone className="h-3.5 w-3.5 flex-shrink-0 text-primary/60" />
                             <span>{p.phone}</span>
                           </div>
                         )}
@@ -412,7 +412,7 @@ export default function CabinetsPage() {
                         <button
                           title="Définir comme principal"
                           onClick={() => void handleSetPrimary(p.id)}
-                          className="rounded-lg border border-[#E6F4F1] p-1.5 text-[#134E4A]/40 hover:border-[#0891B2] hover:text-[#0891B2] transition"
+                          className="rounded-lg border border-border p-1.5 text-foreground/40 hover:border-primary hover:text-primary transition"
                         >
                           <Star className="h-3.5 w-3.5" />
                         </button>
@@ -420,7 +420,7 @@ export default function CabinetsPage() {
                       <button
                         title="Modifier"
                         onClick={() => startEdit(p)}
-                        className="rounded-lg border border-[#E6F4F1] p-1.5 text-[#134E4A]/40 hover:border-[#0891B2] hover:text-[#0891B2] transition"
+                        className="rounded-lg border border-border p-1.5 text-foreground/40 hover:border-primary hover:text-primary transition"
                       >
                         <Pencil className="h-3.5 w-3.5" />
                       </button>
@@ -429,7 +429,7 @@ export default function CabinetsPage() {
                           title="Supprimer"
                           disabled={deletingId === p.id}
                           onClick={() => void handleDelete(p.id)}
-                          className="rounded-lg border border-[#E6F4F1] p-1.5 text-[#134E4A]/40 hover:border-red-400 hover:text-red-500 transition disabled:opacity-50"
+                          className="rounded-lg border border-border p-1.5 text-foreground/40 hover:border-red-400 hover:text-red-500 transition disabled:opacity-50"
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>

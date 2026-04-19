@@ -56,7 +56,7 @@ interface ClinicSecretary {
 const PLAN_LABELS: Record<string, { label: string; color: string }> = {
   free: { label: "Gratuit", color: "bg-gray-100 text-gray-600" },
   starter: { label: "Starter", color: "bg-blue-100 text-blue-700" },
-  pro: { label: "Pro", color: "bg-[#0891B2]/10 text-[#0891B2]" },
+  pro: { label: "Pro", color: "bg-primary/10 text-primary" },
   enterprise: { label: "Entreprise", color: "bg-purple-100 text-purple-700" },
 };
 
@@ -77,11 +77,11 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6">
-      <div className="mb-5 border-b border-[#E6F4F1] pb-4">
-        <h2 className="font-heading text-base font-bold text-[#134E4A]">{title}</h2>
+    <div className="rounded-2xl border border-border bg-white p-6">
+      <div className="mb-5 border-b border-border pb-4">
+        <h2 className="font-heading text-base font-bold text-foreground">{title}</h2>
         {description && (
-          <p className="mt-1 text-sm text-[#5E7574]">{description}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{description}</p>
         )}
       </div>
       {children}
@@ -272,7 +272,7 @@ export default function CliniqueParametresPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
-        <Loader2 className="h-8 w-8 animate-spin text-[#0891B2]" strokeWidth={2} />
+        <Loader2 className="h-8 w-8 animate-spin text-primary" strokeWidth={2} />
       </div>
     );
   }
@@ -282,8 +282,8 @@ export default function CliniqueParametresPage() {
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-heading text-2xl font-black text-[#134E4A]">Paramètres</h1>
-          <p className="mt-1 text-sm text-[#5E7574]">
+          <h1 className="font-heading text-2xl font-black text-foreground">Paramètres</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
             Gérez le profil et les accès de votre établissement.
           </p>
         </div>
@@ -306,17 +306,17 @@ export default function CliniqueParametresPage() {
         <form onSubmit={handleProfileSave} className="space-y-4">
           {/* Name */}
           <div>
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#0E7490]">
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
               Nom de l&apos;établissement
             </label>
-            <div className="flex h-11 items-center rounded-xl border-2 border-[#E6F4F1] px-3 focus-within:border-[#0891B2]">
-              <Building2 className="mr-2 h-4 w-4 shrink-0 text-[#5E7574]" strokeWidth={2} />
+            <div className="flex h-11 items-center rounded-xl border-2 border-border px-3 focus-within:border-primary">
+              <Building2 className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
               <input
                 type="text"
                 value={profileForm.name}
                 onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
                 required
-                className="h-full flex-1 border-0 bg-transparent text-sm text-[#134E4A] outline-none"
+                className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none"
               />
             </div>
           </div>
@@ -324,30 +324,30 @@ export default function CliniqueParametresPage() {
           {/* Address + City */}
           <div className="grid gap-4 sm:grid-cols-2">
             <div>
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#0E7490]">
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
                 Adresse
               </label>
-              <div className="flex h-11 items-center rounded-xl border-2 border-[#E6F4F1] px-3 focus-within:border-[#0891B2]">
-                <MapPin className="mr-2 h-4 w-4 shrink-0 text-[#5E7574]" strokeWidth={2} />
+              <div className="flex h-11 items-center rounded-xl border-2 border-border px-3 focus-within:border-primary">
+                <MapPin className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
                 <input
                   type="text"
                   value={profileForm.address}
                   onChange={(e) => setProfileForm({ ...profileForm, address: e.target.value })}
-                  className="h-full flex-1 border-0 bg-transparent text-sm text-[#134E4A] outline-none"
+                  className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none"
                 />
               </div>
             </div>
             <div>
-              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#0E7490]">
+              <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
                 Ville
               </label>
-              <div className="flex h-11 items-center rounded-xl border-2 border-[#E6F4F1] px-3 focus-within:border-[#0891B2]">
-                <MapPin className="mr-2 h-4 w-4 shrink-0 text-[#5E7574]" strokeWidth={2} />
+              <div className="flex h-11 items-center rounded-xl border-2 border-border px-3 focus-within:border-primary">
+                <MapPin className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
                 <input
                   type="text"
                   value={profileForm.city}
                   onChange={(e) => setProfileForm({ ...profileForm, city: e.target.value })}
-                  className="h-full flex-1 border-0 bg-transparent text-sm text-[#134E4A] outline-none"
+                  className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none"
                 />
               </div>
             </div>
@@ -355,47 +355,47 @@ export default function CliniqueParametresPage() {
 
           {/* Phone */}
           <div>
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#0E7490]">
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
               Téléphone
             </label>
-            <div className="flex h-11 items-center rounded-xl border-2 border-[#E6F4F1] px-3 focus-within:border-[#0891B2]">
-              <Phone className="mr-2 h-4 w-4 shrink-0 text-[#5E7574]" strokeWidth={2} />
+            <div className="flex h-11 items-center rounded-xl border-2 border-border px-3 focus-within:border-primary">
+              <Phone className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
               <input
                 type="tel"
                 value={profileForm.phone}
                 onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                className="h-full flex-1 border-0 bg-transparent text-sm text-[#134E4A] outline-none"
+                className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none"
               />
             </div>
           </div>
 
           {/* Email (read-only — used for login) */}
           <div>
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#0E7490]">
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
               Email de connexion
             </label>
-            <div className="flex h-11 items-center rounded-xl border-2 border-[#E6F4F1] bg-gray-50 px-3">
-              <Mail className="mr-2 h-4 w-4 shrink-0 text-[#5E7574]" strokeWidth={2} />
-              <span className="text-sm text-[#5E7574]">{profile?.email}</span>
+            <div className="flex h-11 items-center rounded-xl border-2 border-border bg-gray-50 px-3">
+              <Mail className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
+              <span className="text-sm text-muted-foreground">{profile?.email}</span>
             </div>
-            <p className="mt-1 text-xs text-[#5E7574]">
+            <p className="mt-1 text-xs text-muted-foreground">
               Pour modifier l&apos;email, contactez le support.
             </p>
           </div>
 
           {/* Logo URL */}
           <div>
-            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#0E7490]">
+            <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
               URL du logo
             </label>
-            <div className="flex h-11 items-center rounded-xl border-2 border-[#E6F4F1] px-3 focus-within:border-[#0891B2]">
-              <Image className="mr-2 h-4 w-4 shrink-0 text-[#5E7574]" strokeWidth={2} />
+            <div className="flex h-11 items-center rounded-xl border-2 border-border px-3 focus-within:border-primary">
+              <Image className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
               <input
                 type="url"
                 value={profileForm.logoUrl}
                 onChange={(e) => setProfileForm({ ...profileForm, logoUrl: e.target.value })}
                 placeholder="https://..."
-                className="h-full flex-1 border-0 bg-transparent text-sm text-[#134E4A] outline-none placeholder:text-[#5E7574]/60"
+                className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
               />
             </div>
           </div>
@@ -407,7 +407,7 @@ export default function CliniqueParametresPage() {
           <button
             type="submit"
             disabled={profileSaving}
-            className="inline-flex h-11 items-center gap-2 rounded-xl bg-[#0891B2] px-5 text-sm font-bold text-white transition-all hover:bg-[#0E7490] disabled:opacity-60"
+            className="inline-flex h-11 items-center gap-2 rounded-xl bg-primary px-5 text-sm font-bold text-white transition-all hover:bg-doktori-teal-dark disabled:opacity-60"
           >
             {profileSaving ? (
               <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} />
@@ -427,9 +427,9 @@ export default function CliniqueParametresPage() {
         {/* Doctor list */}
         <div className="mb-6 space-y-2">
           {doctors.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-[#E6F4F1] py-8 text-center">
-              <Users className="mx-auto h-8 w-8 text-[#5E7574]/40" strokeWidth={1.5} />
-              <p className="mt-2 text-sm text-[#5E7574]">
+            <div className="rounded-xl border border-dashed border-border py-8 text-center">
+              <Users className="mx-auto h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
+              <p className="mt-2 text-sm text-muted-foreground">
                 Aucun médecin associé pour le moment.
               </p>
             </div>
@@ -447,13 +447,13 @@ export default function CliniqueParametresPage() {
               return (
                 <div
                   key={doc.id}
-                  className="flex items-center justify-between gap-3 rounded-xl border border-[#E6F4F1] p-3"
+                  className="flex items-center justify-between gap-3 rounded-xl border border-border p-3"
                 >
                   <div className="flex items-center gap-3">
                     {/* Avatar */}
                     <div className="relative shrink-0">
                       {doc.photoUrl ? (
-                        <div className="h-10 w-10 overflow-hidden rounded-xl ring-1 ring-[#E6F4F1]">
+                        <div className="h-10 w-10 overflow-hidden rounded-xl ring-1 ring-border">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
                             src={doc.photoUrl}
@@ -462,18 +462,18 @@ export default function CliniqueParametresPage() {
                           />
                         </div>
                       ) : (
-                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0891B2] text-xs font-black text-white">
+                        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-xs font-black text-white">
                           {initials}
                         </div>
                       )}
                       <div className="absolute -bottom-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-white ring-1 ring-white">
-                        <BadgeCheck className="h-3.5 w-3.5 fill-[#22C55E] text-white" strokeWidth={2.5} />
+                        <BadgeCheck className="h-3.5 w-3.5 fill-accent text-white" strokeWidth={2.5} />
                       </div>
                     </div>
 
                     <div>
-                      <p className="text-sm font-bold text-[#134E4A]">{doc.name}</p>
-                      <p className="text-xs text-[#5E7574]">{spec?.label ?? doc.specialty}</p>
+                      <p className="text-sm font-bold text-foreground">{doc.name}</p>
+                      <p className="text-xs text-muted-foreground">{spec?.label ?? doc.specialty}</p>
                     </div>
                   </div>
 
@@ -481,7 +481,7 @@ export default function CliniqueParametresPage() {
                     <span
                       className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${
                         doc.role === "admin"
-                          ? "bg-[#0891B2]/10 text-[#0891B2]"
+                          ? "bg-primary/10 text-primary"
                           : "bg-gray-100 text-gray-600"
                       }`}
                     >
@@ -507,27 +507,27 @@ export default function CliniqueParametresPage() {
         </div>
 
         {/* Invite form */}
-        <div className="rounded-xl bg-[#F0FDFA] p-4">
-          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#0E7490]">
+        <div className="rounded-xl bg-secondary p-4">
+          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
             Inviter un médecin
           </p>
           <form onSubmit={handleInviteDoctor} className="space-y-3">
             <div className="flex gap-2">
-              <div className="flex h-11 flex-1 items-center rounded-xl border-2 border-[#E6F4F1] bg-white px-3 focus-within:border-[#0891B2]">
-                <Mail className="mr-2 h-4 w-4 shrink-0 text-[#5E7574]" strokeWidth={2} />
+              <div className="flex h-11 flex-1 items-center rounded-xl border-2 border-border bg-white px-3 focus-within:border-primary">
+                <Mail className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
                 <input
                   type="email"
                   value={inviteEmail}
                   onChange={(e) => setInviteEmail(e.target.value)}
                   placeholder="email@medecin.tn"
                   required
-                  className="h-full flex-1 border-0 bg-transparent text-sm text-[#134E4A] outline-none placeholder:text-[#5E7574]/60"
+                  className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
                 />
               </div>
               <select
                 value={inviteRole}
                 onChange={(e) => setInviteRole(e.target.value as "member" | "admin")}
-                className="h-11 rounded-xl border-2 border-[#E6F4F1] bg-white px-3 text-sm font-medium text-[#134E4A] outline-none focus:border-[#0891B2]"
+                className="h-11 rounded-xl border-2 border-border bg-white px-3 text-sm font-medium text-foreground outline-none focus:border-primary"
               >
                 <option value="member">Membre</option>
                 <option value="admin">Responsable</option>
@@ -539,7 +539,7 @@ export default function CliniqueParametresPage() {
             <button
               type="submit"
               disabled={inviting || !inviteEmail.trim()}
-              className="inline-flex h-10 items-center gap-2 rounded-xl bg-[#0891B2] px-4 text-sm font-bold text-white transition-all hover:bg-[#0E7490] disabled:opacity-60"
+              className="inline-flex h-10 items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white transition-all hover:bg-doktori-teal-dark disabled:opacity-60"
             >
               {inviting ? (
                 <Loader2 className="h-4 w-4 animate-spin" strokeWidth={2.5} />
@@ -558,12 +558,12 @@ export default function CliniqueParametresPage() {
         description="Ces secrétaires peuvent gérer tous les médecins de la clinique."
       >
         {secretaries.length === 0 ? (
-          <div className="rounded-xl border border-dashed border-[#E6F4F1] py-8 text-center">
-            <Shield className="mx-auto h-8 w-8 text-[#5E7574]/40" strokeWidth={1.5} />
-            <p className="mt-2 text-sm text-[#5E7574]">
+          <div className="rounded-xl border border-dashed border-border py-8 text-center">
+            <Shield className="mx-auto h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
+            <p className="mt-2 text-sm text-muted-foreground">
               Aucune secrétaire associée à la clinique.
             </p>
-            <p className="mt-1 text-xs text-[#5E7574]">
+            <p className="mt-1 text-xs text-muted-foreground">
               Les secrétaires clinique sont créées par l&apos;administration.
             </p>
           </div>
@@ -572,11 +572,11 @@ export default function CliniqueParametresPage() {
             {secretaries.map((sec) => (
               <div
                 key={sec.id}
-                className="flex items-center justify-between rounded-xl border border-[#E6F4F1] p-3"
+                className="flex items-center justify-between rounded-xl border border-border p-3"
               >
                 <div>
-                  <p className="text-sm font-bold text-[#134E4A]">{sec.name}</p>
-                  <p className="text-xs text-[#5E7574]">{sec.email}</p>
+                  <p className="text-sm font-bold text-foreground">{sec.name}</p>
+                  <p className="text-xs text-muted-foreground">{sec.email}</p>
                 </div>
                 <span
                   className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${

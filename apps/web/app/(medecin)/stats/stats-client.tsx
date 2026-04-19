@@ -80,9 +80,9 @@ const fadeUp = {
 function SectionHeader({ title, subtitle }: { title: string; subtitle?: string }) {
   return (
     <div className="flex items-center gap-3 mb-5">
-      <div className="h-6 w-1 rounded-full bg-[#0891B2]" />
+      <div className="h-6 w-1 rounded-full bg-primary" />
       <div>
-        <h2 className="font-semibold text-[#134E4A] text-base">{title}</h2>
+        <h2 className="font-semibold text-foreground text-base">{title}</h2>
         {subtitle && <p className="text-xs text-gray-400 mt-0.5">{subtitle}</p>}
       </div>
     </div>
@@ -98,8 +98,8 @@ function DoktoriTooltip({ active, payload, label }: {
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="bg-white border border-[#E6F4F1] rounded-xl shadow-lg px-4 py-3 text-sm min-w-[140px]">
-      {label && <p className="font-semibold text-[#134E4A] mb-2">{label}</p>}
+    <div className="bg-white border border-border rounded-xl shadow-lg px-4 py-3 text-sm min-w-[140px]">
+      {label && <p className="font-semibold text-foreground mb-2">{label}</p>}
       {payload.map((entry) => (
         <div key={entry.name} className="flex items-center gap-2 mb-1">
           <span
@@ -107,7 +107,7 @@ function DoktoriTooltip({ active, payload, label }: {
             style={{ background: entry.color }}
           />
           <span className="text-gray-500">{entry.name}</span>
-          <span className="ml-auto font-semibold text-[#134E4A]">{entry.value}</span>
+          <span className="ml-auto font-semibold text-foreground">{entry.value}</span>
         </div>
       ))}
     </div>
@@ -119,7 +119,7 @@ function DoktoriTooltip({ active, payload, label }: {
 type KpiColor = "teal" | "green" | "orange" | "red" | "purple";
 
 const kpiColorMap: Record<KpiColor, { text: string; bg: string; iconBg: string }> = {
-  teal:   { text: "text-[#0891B2]", bg: "bg-[#F0FDFA]", iconBg: "bg-[#CFFAFE]" },
+  teal:   { text: "text-primary", bg: "bg-secondary", iconBg: "bg-[#CFFAFE]" },
   green:  { text: "text-green-600",  bg: "bg-green-50",  iconBg: "bg-green-100" },
   orange: { text: "text-orange-600", bg: "bg-orange-50", iconBg: "bg-orange-100" },
   red:    { text: "text-red-600",    bg: "bg-red-50",    iconBg: "bg-red-100" },
@@ -148,7 +148,7 @@ function KpiCard({
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
+      className="rounded-2xl border border-border bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
     >
       <div className="flex items-start justify-between">
         <div>
@@ -180,7 +180,7 @@ function MonthlyChart({ monthly }: { monthly: MonthlyRow[] }) {
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm"
+      className="rounded-2xl border border-border bg-white p-5 shadow-sm"
     >
       <SectionHeader title="Rendez-vous mensuels" subtitle="Répartition des statuts sur 6 mois" />
       {monthly.length === 0 ? (
@@ -235,7 +235,7 @@ function PeakHoursChart({ peaks }: { peaks: PeakRow[] }) {
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm"
+      className="rounded-2xl border border-border bg-white p-5 shadow-sm"
     >
       <SectionHeader title="Créneaux horaires" subtitle="Distribution des RDV par heure" />
       {peaks.length === 0 ? (
@@ -263,9 +263,9 @@ function PeakHoursChart({ peaks }: { peaks: PeakRow[] }) {
                 content={({ active, payload, label }) => {
                   if (!active || !payload?.length) return null;
                   return (
-                    <div className="bg-white border border-[#E6F4F1] rounded-xl shadow-lg px-3 py-2 text-sm">
-                      <p className="font-semibold text-[#134E4A]">{label}</p>
-                      <p className="text-[#0891B2]">{payload[0].value} RDV</p>
+                    <div className="bg-white border border-border rounded-xl shadow-lg px-3 py-2 text-sm">
+                      <p className="font-semibold text-foreground">{label}</p>
+                      <p className="text-primary">{payload[0].value} RDV</p>
                     </div>
                   );
                 }}
@@ -284,9 +284,9 @@ function PeakHoursChart({ peaks }: { peaks: PeakRow[] }) {
           {busiest && (
             <p className="mt-3 text-xs text-gray-500">
               Créneau le plus chargé :{" "}
-              <span className="font-semibold text-[#134E4A]">{busiest.hour}h</span>
+              <span className="font-semibold text-foreground">{busiest.hour}h</span>
               {" "}avec{" "}
-              <span className="font-semibold text-[#134E4A]">{busiest.count}</span>{" "}RDV
+              <span className="font-semibold text-foreground">{busiest.count}</span>{" "}RDV
             </p>
           )}
         </>
@@ -321,7 +321,7 @@ function StatusDonut({ monthly }: { monthly: MonthlyRow[] }) {
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm"
+      className="rounded-2xl border border-border bg-white p-5 shadow-sm"
     >
       <SectionHeader title="Répartition des statuts" subtitle="6 derniers mois — total cumulé" />
       {total === 0 ? (
@@ -350,8 +350,8 @@ function StatusDonut({ monthly }: { monthly: MonthlyRow[] }) {
                   const entry = payload[0];
                   const pct = total > 0 ? Math.round(((entry.value as number) / total) * 100) : 0;
                   return (
-                    <div className="bg-white border border-[#E6F4F1] rounded-xl shadow-lg px-3 py-2 text-sm">
-                      <p className="font-semibold text-[#134E4A]">{entry.name}</p>
+                    <div className="bg-white border border-border rounded-xl shadow-lg px-3 py-2 text-sm">
+                      <p className="font-semibold text-foreground">{entry.name}</p>
                       <p className="text-gray-500">{entry.value} ({pct}%)</p>
                     </div>
                   );
@@ -384,7 +384,7 @@ function PatientTypeSection({
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm"
+      className="rounded-2xl border border-border bg-white p-5 shadow-sm"
     >
       <SectionHeader title="Patients (30 derniers jours)" subtitle="Nouveaux vs récurrents" />
       {total === 0 ? (
@@ -395,25 +395,25 @@ function PatientTypeSection({
             label="Nouveaux patients"
             count={newPatients}
             total={total}
-            colorClass="bg-[#0891B2]"
+            colorClass="bg-primary"
           />
           <AnimatedBar
             label="Patients récurrents"
             count={returningPatients}
             total={total}
-            colorClass="bg-[#134E4A]"
+            colorClass="bg-foreground"
           />
           <div className="flex gap-6 pt-1 text-sm">
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[#0891B2] inline-block" />
+              <span className="h-2 w-2 rounded-full bg-primary inline-block" />
               <span className="text-gray-500">
-                <span className="font-semibold text-[#134E4A]">{newPatients}</span> nouveaux
+                <span className="font-semibold text-foreground">{newPatients}</span> nouveaux
               </span>
             </div>
             <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-[#134E4A] inline-block" />
+              <span className="h-2 w-2 rounded-full bg-foreground inline-block" />
               <span className="text-gray-500">
-                <span className="font-semibold text-[#134E4A]">{returningPatients}</span> récurrents
+                <span className="font-semibold text-foreground">{returningPatients}</span> récurrents
               </span>
             </div>
           </div>
@@ -438,12 +438,12 @@ function AnimatedBar({
   return (
     <div className="space-y-1.5">
       <div className="flex justify-between text-sm">
-        <span className="text-[#134E4A] font-medium">{label}</span>
+        <span className="text-foreground font-medium">{label}</span>
         <span className="text-gray-500">
           {count} <span className="text-gray-400">({pct}%)</span>
         </span>
       </div>
-      <div className="h-2.5 bg-[#F0FDFA] rounded-full overflow-hidden">
+      <div className="h-2.5 bg-secondary rounded-full overflow-hidden">
         <motion.div
           className={`h-full ${colorClass} rounded-full`}
           initial={{ width: 0 }}
@@ -467,7 +467,7 @@ function TopReasons({ reasons }: { reasons: ReasonRow[] }) {
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm"
+      className="rounded-2xl border border-border bg-white p-5 shadow-sm"
     >
       <SectionHeader title="Motifs les plus fréquents" subtitle="Top 5 raisons de consultation" />
       {reasons.length === 0 ? (
@@ -484,14 +484,14 @@ function TopReasons({ reasons }: { reasons: ReasonRow[] }) {
                   {i + 1}
                 </span>
                 <span
-                  className="text-[#134E4A] font-medium truncate flex-1"
+                  className="text-foreground font-medium truncate flex-1"
                   title={r.reason}
                 >
                   {r.reason}
                 </span>
                 <span className="text-gray-500 shrink-0 ml-2 tabular-nums">{r.count}</span>
               </div>
-              <div className="ml-7 h-2 bg-[#F0FDFA] rounded-full overflow-hidden">
+              <div className="ml-7 h-2 bg-secondary rounded-full overflow-hidden">
                 <motion.div
                   className="h-full rounded-full"
                   style={{ background: rankColors[i] ?? TEAL }}

@@ -264,7 +264,7 @@ export default function PatientMessagesPage() {
       </div>
 
       {/* Right panel — messages */}
-      <div className="flex-1 flex flex-col bg-[#F0FDFA] min-w-0">
+      <div className="flex-1 flex flex-col bg-secondary min-w-0">
         {!selected ? (
           <div className="flex-1 flex items-center justify-center">
             <div className="text-center">

@@ -125,7 +125,7 @@ function TimeAxis() {
             style={{ height: HOUR_HEIGHT / 2 }}
           >
             {isHour && (
-              <span className="text-[10px] text-[#134E4A]/40 font-medium w-12 pr-2 text-right leading-none -mt-2">
+              <span className="text-[10px] text-foreground/40 font-medium w-12 pr-2 text-right leading-none -mt-2">
                 {String(hour).padStart(2, "0")}:00
               </span>
             )}
@@ -145,7 +145,7 @@ function GridLines() {
       {Array.from({ length: TOTAL_HOURS * 2 }, (_, i) => (
         <div
           key={i}
-          className={`absolute left-0 right-0 ${i % 2 === 0 ? "border-t border-[#E6F4F1]" : "border-t border-[#E6F4F1]/40 border-dashed"}`}
+          className={`absolute left-0 right-0 ${i % 2 === 0 ? "border-t border-border" : "border-t border-border/40 border-dashed"}`}
           style={{ top: (i * HOUR_HEIGHT) / 2 }}
         />
       ))}
@@ -259,15 +259,15 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
         exit={{ scale: 0.95, opacity: 0 }}
         transition={{ type: "spring", stiffness: 300, damping: 25 }}
         onClick={(e) => e.stopPropagation()}
-        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-[#E6F4F1]"
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-lg border border-border"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-[#E6F4F1]">
+        <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-border">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-[#0891B2]/10 flex items-center justify-center">
-              <RefreshCw className="h-4 w-4 text-[#0891B2]" />
+            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+              <RefreshCw className="h-4 w-4 text-primary" />
             </div>
-            <h2 className="text-lg font-black text-[#134E4A]">Synchroniser mon calendrier</h2>
+            <h2 className="text-lg font-black text-foreground">Synchroniser mon calendrier</h2>
           </div>
           <button
             onClick={onClose}
@@ -279,15 +279,15 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
 
         <div className="px-6 py-5 space-y-5">
           {/* Generate URL */}
-          <div className="bg-[#F0FDFA] rounded-xl p-4 border border-[#E6F4F1]">
-            <p className="text-sm text-[#134E4A]/70 mb-3">
+          <div className="bg-secondary rounded-xl p-4 border border-border">
+            <p className="text-sm text-foreground/70 mb-3">
               Générez un lien d'abonnement unique pour synchroniser vos rendez-vous Doktori avec votre application de calendrier préférée.
             </p>
             {!feedUrl ? (
               <Button
                 onClick={generateUrl}
                 disabled={generating}
-                className="h-9 px-4 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-semibold text-sm"
+                className="h-9 px-4 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-semibold text-sm"
               >
                 {generating ? (
                   <>
@@ -303,17 +303,17 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
                 <input
                   readOnly
                   value={feedUrl}
-                  className="flex-1 text-xs rounded-lg border border-[#E6F4F1] bg-white px-3 py-2 font-mono text-[#134E4A]/80 truncate"
+                  className="flex-1 text-xs rounded-lg border border-border bg-white px-3 py-2 font-mono text-foreground/80 truncate"
                 />
                 <button
                   onClick={copyUrl}
-                  className="px-3 py-2 rounded-lg border border-[#E6F4F1] bg-white hover:bg-[#F0FDFA] transition-colors flex-shrink-0"
+                  className="px-3 py-2 rounded-lg border border-border bg-white hover:bg-secondary transition-colors flex-shrink-0"
                   title="Copier"
                 >
                   {copied ? (
                     <Check className="h-4 w-4 text-green-600" />
                   ) : (
-                    <Copy className="h-4 w-4 text-[#0891B2]" />
+                    <Copy className="h-4 w-4 text-primary" />
                   )}
                 </button>
               </div>
@@ -324,18 +324,18 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
                 {error}
               </p>
             )}
-            <p className="mt-2 text-[10px] text-[#134E4A]/50">
+            <p className="mt-2 text-[10px] text-foreground/50">
               Synchronisation en lecture seule — vos rendez-vous Doktori apparaîtront dans votre calendrier.
             </p>
           </div>
 
           {/* Google Calendar */}
-          <div className="border border-[#E6F4F1] rounded-xl p-4">
+          <div className="border border-border rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Globe className="h-4 w-4 text-blue-500" />
-              <span className="font-bold text-sm text-[#134E4A]">Google Agenda</span>
+              <span className="font-bold text-sm text-foreground">Google Agenda</span>
             </div>
-            <ol className="space-y-1 text-xs text-[#134E4A]/70 list-decimal list-inside">
+            <ol className="space-y-1 text-xs text-foreground/70 list-decimal list-inside">
               <li>Copiez l'URL ci-dessus</li>
               <li>Ouvrez <strong>Google Agenda</strong></li>
               <li>Cliquez sur <strong>Autres agendas</strong> → <strong>À partir de l'URL</strong></li>
@@ -344,12 +344,12 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
           </div>
 
           {/* Apple / Outlook */}
-          <div className="border border-[#E6F4F1] rounded-xl p-4">
+          <div className="border border-border rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Apple className="h-4 w-4 text-gray-700" />
-              <span className="font-bold text-sm text-[#134E4A]">Apple Calendrier / Outlook</span>
+              <span className="font-bold text-sm text-foreground">Apple Calendrier / Outlook</span>
             </div>
-            <ol className="space-y-1 text-xs text-[#134E4A]/70 list-decimal list-inside">
+            <ol className="space-y-1 text-xs text-foreground/70 list-decimal list-inside">
               <li>Copiez l'URL ci-dessus</li>
               <li>Ouvrez <strong>Calendrier</strong> → <strong>Fichier</strong> → <strong>Nouvel abonnement à un calendrier</strong></li>
               <li>Collez l'URL et confirmez</li>
@@ -360,12 +360,12 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
           <a
             href="/api/doctor/calendar/export"
             download="rendez-vous.ics"
-            className="flex items-center gap-3 border border-[#E6F4F1] rounded-xl p-4 hover:bg-[#F0FDFA] transition-colors group"
+            className="flex items-center gap-3 border border-border rounded-xl p-4 hover:bg-secondary transition-colors group"
           >
-            <Download className="h-4 w-4 text-[#0891B2] group-hover:scale-110 transition-transform" />
+            <Download className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
             <div>
-              <p className="font-bold text-sm text-[#134E4A]">Télécharger .ics</p>
-              <p className="text-xs text-[#134E4A]/60">Exporter les rendez-vous du mois en cours</p>
+              <p className="font-bold text-sm text-foreground">Télécharger .ics</p>
+              <p className="text-xs text-foreground/60">Exporter les rendez-vous du mois en cours</p>
             </div>
           </a>
         </div>
@@ -393,7 +393,7 @@ function AppointmentPanel({
       animate={{ x: 0, opacity: 1 }}
       exit={{ x: "100%", opacity: 0 }}
       transition={{ type: "spring", stiffness: 300, damping: 30 }}
-      className="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-2xl z-40 border-l border-[#E6F4F1] flex flex-col"
+      className="fixed right-0 top-0 bottom-0 w-80 bg-white shadow-2xl z-40 border-l border-border flex flex-col"
     >
       {/* Header */}
       <div className={`p-5 ${config.bg} flex items-start justify-between`}>
@@ -419,37 +419,37 @@ function AppointmentPanel({
       {/* Details */}
       <div className="flex-1 overflow-y-auto p-5 space-y-4">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#F0FDFA] flex items-center justify-center flex-shrink-0">
-            <Clock className="h-4 w-4 text-[#0891B2]" />
+          <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+            <Clock className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="text-xs text-[#134E4A]/50 font-medium">Horaire</p>
-            <p className="text-sm font-bold text-[#134E4A]">
+            <p className="text-xs text-foreground/50 font-medium">Horaire</p>
+            <p className="text-sm font-bold text-foreground">
               {format(starts, "HH:mm")} – {format(ends, "HH:mm")}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#F0FDFA] flex items-center justify-center flex-shrink-0">
-            <User className="h-4 w-4 text-[#0891B2]" />
+          <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+            <User className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="text-xs text-[#134E4A]/50 font-medium">Patient</p>
-            <p className="text-sm font-bold text-[#134E4A]">{appt.patientName}</p>
+            <p className="text-xs text-foreground/50 font-medium">Patient</p>
+            <p className="text-sm font-bold text-foreground">{appt.patientName}</p>
           </div>
         </div>
 
         {appt.patientPhone && (
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#F0FDFA] flex items-center justify-center flex-shrink-0">
-              <Phone className="h-4 w-4 text-[#0891B2]" />
+            <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
+              <Phone className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-[#134E4A]/50 font-medium">Téléphone</p>
+              <p className="text-xs text-foreground/50 font-medium">Téléphone</p>
               <a
                 href={`tel:${appt.patientPhone}`}
-                className="text-sm font-bold text-[#0891B2] hover:underline"
+                className="text-sm font-bold text-primary hover:underline"
               >
                 {appt.patientPhone}
               </a>
@@ -458,16 +458,16 @@ function AppointmentPanel({
         )}
 
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-[#F0FDFA] flex items-center justify-center flex-shrink-0">
+          <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0">
             {appt.type === "teleconsult" ? (
               <Video className="h-4 w-4 text-purple-500" />
             ) : (
-              <CalendarDays className="h-4 w-4 text-[#0891B2]" />
+              <CalendarDays className="h-4 w-4 text-primary" />
             )}
           </div>
           <div>
-            <p className="text-xs text-[#134E4A]/50 font-medium">Type</p>
-            <p className="text-sm font-bold text-[#134E4A]">
+            <p className="text-xs text-foreground/50 font-medium">Type</p>
+            <p className="text-sm font-bold text-foreground">
               {appt.type === "teleconsult" ? "Téléconsultation" : "Cabinet"}
             </p>
           </div>
@@ -475,12 +475,12 @@ function AppointmentPanel({
 
         {appt.reason && (
           <div className="flex items-start gap-3">
-            <div className="w-8 h-8 rounded-lg bg-[#F0FDFA] flex items-center justify-center flex-shrink-0 mt-0.5">
-              <FileText className="h-4 w-4 text-[#0891B2]" />
+            <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center flex-shrink-0 mt-0.5">
+              <FileText className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-[#134E4A]/50 font-medium">Motif</p>
-              <p className="text-sm text-[#134E4A]">{appt.reason}</p>
+              <p className="text-xs text-foreground/50 font-medium">Motif</p>
+              <p className="text-sm text-foreground">{appt.reason}</p>
             </div>
           </div>
         )}
@@ -497,9 +497,9 @@ function AppointmentPanel({
       </div>
 
       {/* Actions */}
-      <div className="p-5 border-t border-[#E6F4F1] space-y-2">
+      <div className="p-5 border-t border-border space-y-2">
         {appt.status === "pending" && (
-          <Button className="w-full h-10 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold text-sm">
+          <Button className="w-full h-10 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold text-sm">
             <CheckCircle2 className="h-4 w-4 mr-2" />
             Confirmer le RDV
           </Button>
@@ -539,30 +539,30 @@ function MiniCalendar({
   );
 
   return (
-    <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm p-4 w-64 flex-shrink-0">
+    <div className="bg-white rounded-2xl border border-border shadow-sm p-4 w-64 flex-shrink-0">
       {/* Month nav */}
       <div className="flex items-center justify-between mb-3">
         <button
           onClick={() => setMonthRef((m) => subMonths(m, 1))}
-          className="p-1 rounded-lg hover:bg-[#F0FDFA] transition-colors"
+          className="p-1 rounded-lg hover:bg-secondary transition-colors"
         >
-          <ChevronLeft className="h-4 w-4 text-[#134E4A]/60" />
+          <ChevronLeft className="h-4 w-4 text-foreground/60" />
         </button>
-        <span className="text-sm font-bold text-[#134E4A] capitalize">
+        <span className="text-sm font-bold text-foreground capitalize">
           {format(monthRef, "MMMM yyyy", { locale: fr })}
         </span>
         <button
           onClick={() => setMonthRef((m) => addMonths(m, 1))}
-          className="p-1 rounded-lg hover:bg-[#F0FDFA] transition-colors"
+          className="p-1 rounded-lg hover:bg-secondary transition-colors"
         >
-          <ChevronRight className="h-4 w-4 text-[#134E4A]/60" />
+          <ChevronRight className="h-4 w-4 text-foreground/60" />
         </button>
       </div>
 
       {/* Day headers */}
       <div className="grid grid-cols-7 mb-1">
         {["L", "M", "M", "J", "V", "S", "D"].map((d, i) => (
-          <div key={i} className="text-center text-[10px] font-bold text-[#134E4A]/40 py-1">
+          <div key={i} className="text-center text-[10px] font-bold text-foreground/40 py-1">
             {d}
           </div>
         ))}
@@ -585,15 +585,15 @@ function MiniCalendar({
                 onSelectDay(day);
               }}
               className={`relative aspect-square flex items-center justify-center rounded-lg text-[11px] font-medium transition-colors
-                ${!isCurrentMonth ? "text-gray-300" : "text-[#134E4A]"}
-                ${isSelected ? "bg-[#0891B2] text-white font-bold" : ""}
-                ${isCurrentDay && !isSelected ? "ring-1 ring-[#0891B2]" : ""}
-                ${!isSelected ? "hover:bg-[#F0FDFA]" : ""}
+                ${!isCurrentMonth ? "text-gray-300" : "text-foreground"}
+                ${isSelected ? "bg-primary text-white font-bold" : ""}
+                ${isCurrentDay && !isSelected ? "ring-1 ring-primary" : ""}
+                ${!isSelected ? "hover:bg-secondary" : ""}
               `}
             >
               {format(day, "d")}
               {hasAppt && !isSelected && (
-                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-[#0891B2]" />
+                <span className="absolute bottom-0.5 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-primary" />
               )}
             </button>
           );
@@ -624,21 +624,21 @@ function WeekView({
   return (
     <div className="flex-1 overflow-auto">
       {/* Day headers */}
-      <div className="flex sticky top-0 z-20 bg-white border-b border-[#E6F4F1]">
+      <div className="flex sticky top-0 z-20 bg-white border-b border-border">
         <div className="w-12 flex-shrink-0" />
         {days.map((day) => (
           <div
             key={day.toISOString()}
-            className={`flex-1 py-2 text-center border-l border-[#E6F4F1] ${isToday(day) ? "bg-[#F0FDFA]" : ""}`}
+            className={`flex-1 py-2 text-center border-l border-border ${isToday(day) ? "bg-secondary" : ""}`}
           >
-            <p className="text-[10px] font-bold uppercase text-[#134E4A]/50 tracking-wider">
+            <p className="text-[10px] font-bold uppercase text-foreground/50 tracking-wider">
               {format(day, "EEE", { locale: fr })}
             </p>
             <p
               className={`text-sm font-black mt-0.5 ${
                 isToday(day)
-                  ? "w-7 h-7 rounded-full bg-[#0891B2] text-white flex items-center justify-center mx-auto"
-                  : "text-[#134E4A]"
+                  ? "w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center mx-auto"
+                  : "text-foreground"
               }`}
             >
               {format(day, "d")}
@@ -663,7 +663,7 @@ function WeekView({
           return (
             <div
               key={day.toISOString()}
-              className={`flex-1 relative border-l border-[#E6F4F1] ${isToday(day) ? "bg-[#F0FDFA]/40" : ""}`}
+              className={`flex-1 relative border-l border-border ${isToday(day) ? "bg-secondary/40" : ""}`}
               style={{ height: containerHeight }}
             >
               <GridLines />
@@ -714,14 +714,14 @@ function DayView({
 
       {/* Day column */}
       <div className="flex-1 overflow-auto">
-        <div className="sticky top-0 z-20 bg-white border-b border-[#E6F4F1] py-3 px-4">
-          <p className="text-xs font-bold uppercase text-[#134E4A]/50 tracking-wider">
+        <div className="sticky top-0 z-20 bg-white border-b border-border py-3 px-4">
+          <p className="text-xs font-bold uppercase text-foreground/50 tracking-wider">
             {format(currentDay, "EEEE", { locale: fr })}
           </p>
-          <p className="text-xl font-black text-[#134E4A]">
+          <p className="text-xl font-black text-foreground">
             {format(currentDay, "d MMMM yyyy", { locale: fr })}
           </p>
-          <p className="text-xs text-[#134E4A]/50 mt-0.5">
+          <p className="text-xs text-foreground/50 mt-0.5">
             {dayAppts.length} rendez-vous
           </p>
         </div>
@@ -732,7 +732,7 @@ function DayView({
           </div>
 
           <div
-            className={`flex-1 relative border-l border-[#E6F4F1] ${isToday(currentDay) ? "bg-[#F0FDFA]/30" : ""}`}
+            className={`flex-1 relative border-l border-border ${isToday(currentDay) ? "bg-secondary/30" : ""}`}
             style={{ height: containerHeight }}
           >
             <GridLines />
@@ -797,20 +797,20 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
       {/* ── Page header ── */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 flex-shrink-0">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-[#0891B2]/10 flex items-center justify-center">
-            <CalendarDays className="h-4 w-4 text-[#0891B2]" strokeWidth={2} />
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <CalendarDays className="h-4 w-4 text-primary" strokeWidth={2} />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-[#134E4A] leading-tight">Calendrier</h1>
-            <p className="text-xs text-[#134E4A]/50">Visualisez vos rendez-vous</p>
+            <h1 className="text-2xl font-black text-foreground leading-tight">Calendrier</h1>
+            <p className="text-xs text-foreground/50">Visualisez vos rendez-vous</p>
           </div>
         </div>
 
         <button
           onClick={() => setShowSync(true)}
-          className="inline-flex items-center gap-2 px-4 h-9 rounded-xl border border-[#E6F4F1] bg-white hover:bg-[#F0FDFA] text-sm font-semibold text-[#134E4A] transition-colors shadow-sm"
+          className="inline-flex items-center gap-2 px-4 h-9 rounded-xl border border-border bg-white hover:bg-secondary text-sm font-semibold text-foreground transition-colors shadow-sm"
         >
-          <RefreshCw className="h-3.5 w-3.5 text-[#0891B2]" />
+          <RefreshCw className="h-3.5 w-3.5 text-primary" />
           Synchroniser
         </button>
       </div>
@@ -821,21 +821,21 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
         <div className="flex items-center gap-1.5">
           <button
             onClick={goBack}
-            className="p-1.5 rounded-lg border border-[#E6F4F1] bg-white hover:bg-[#F0FDFA] transition-colors"
+            className="p-1.5 rounded-lg border border-border bg-white hover:bg-secondary transition-colors"
           >
-            <ChevronLeft className="h-4 w-4 text-[#134E4A]" />
+            <ChevronLeft className="h-4 w-4 text-foreground" />
           </button>
           <button
             onClick={goForward}
-            className="p-1.5 rounded-lg border border-[#E6F4F1] bg-white hover:bg-[#F0FDFA] transition-colors"
+            className="p-1.5 rounded-lg border border-border bg-white hover:bg-secondary transition-colors"
           >
-            <ChevronRight className="h-4 w-4 text-[#134E4A]" />
+            <ChevronRight className="h-4 w-4 text-foreground" />
           </button>
           <motion.span
             key={headerLabel}
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-sm font-bold text-[#134E4A] ml-1 capitalize"
+            className="text-sm font-bold text-foreground ml-1 capitalize"
           >
             {headerLabel}
           </motion.span>
@@ -845,21 +845,21 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
           {/* Today button */}
           <button
             onClick={goToday}
-            className="px-3 h-8 rounded-lg border border-[#E6F4F1] bg-white hover:bg-[#F0FDFA] text-xs font-semibold text-[#134E4A] transition-colors"
+            className="px-3 h-8 rounded-lg border border-border bg-white hover:bg-secondary text-xs font-semibold text-foreground transition-colors"
           >
             Aujourd&apos;hui
           </button>
 
           {/* View toggle */}
-          <div className="flex rounded-lg border border-[#E6F4F1] overflow-hidden bg-white">
+          <div className="flex rounded-lg border border-border overflow-hidden bg-white">
             {(["week", "day"] as const).map((v) => (
               <button
                 key={v}
                 onClick={() => setView(v)}
                 className={`px-3 h-8 text-xs font-semibold transition-colors ${
                   view === v
-                    ? "bg-[#0891B2] text-white"
-                    : "text-[#134E4A]/60 hover:bg-[#F0FDFA]"
+                    ? "bg-primary text-white"
+                    : "text-foreground/60 hover:bg-secondary"
                 }`}
               >
                 {v === "week" ? "Semaine" : "Jour"}
@@ -870,7 +870,7 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
       </div>
 
       {/* ── Calendar body ── */}
-      <div className="flex-1 bg-white rounded-2xl border border-[#E6F4F1] shadow-sm overflow-hidden flex flex-col">
+      <div className="flex-1 bg-white rounded-2xl border border-border shadow-sm overflow-hidden flex flex-col">
         <AnimatePresence mode="wait">
           <motion.div
             key={`${view}-${currentDate.toDateString()}`}
@@ -905,12 +905,12 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
           .map(([, cfg]) => (
             <div key={cfg.label} className="flex items-center gap-1.5">
               <span className={`w-2.5 h-2.5 rounded-sm ${cfg.bg}`} />
-              <span className="text-[10px] text-[#134E4A]/60 font-medium">{cfg.label}</span>
+              <span className="text-[10px] text-foreground/60 font-medium">{cfg.label}</span>
             </div>
           ))}
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-sm bg-purple-500" />
-          <span className="text-[10px] text-[#134E4A]/60 font-medium">Téléconsult</span>
+          <span className="text-[10px] text-foreground/60 font-medium">Téléconsult</span>
         </div>
       </div>
 

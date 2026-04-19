@@ -166,9 +166,9 @@ export default async function SpecialiteCityPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
-      <main className="min-h-screen bg-[#F0FDFA]">
+      <main className="min-h-screen bg-secondary">
         {/* Hero */}
-        <div className="bg-[#134E4A] py-12 px-4">
+        <div className="bg-foreground py-12 px-4">
           <div className="max-w-5xl mx-auto">
             {/* Breadcrumb */}
             <nav className="flex items-center gap-1 text-sm text-teal-300 mb-4">
@@ -198,29 +198,29 @@ export default async function SpecialiteCityPage({
 
         <div className="max-w-5xl mx-auto px-4 py-10 space-y-10">
           {/* Intro */}
-          <section className="bg-white rounded-2xl border border-[#E6F4F1] p-6 shadow-sm">
-            <div className="prose prose-teal max-w-none text-[#134E4A] text-sm leading-relaxed whitespace-pre-line">
+          <section className="bg-white rounded-2xl border border-border p-6 shadow-sm">
+            <div className="prose prose-teal max-w-none text-foreground text-sm leading-relaxed whitespace-pre-line">
               {getIntroText(spec.label, city.label)}
             </div>
           </section>
 
           {/* Doctors list */}
           <section>
-            <h2 className="text-xl font-bold text-[#134E4A] mb-4">
+            <h2 className="text-xl font-bold text-foreground mb-4">
               {spec.label}s à {city.label}
             </h2>
 
             {matchingDoctors.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-[#E6F4F1] p-10 text-center shadow-sm">
-                <p className="text-lg font-semibold text-[#134E4A] mb-2">
+              <div className="bg-white rounded-2xl border border-border p-10 text-center shadow-sm">
+                <p className="text-lg font-semibold text-foreground mb-2">
                   Aucun {spec.label.toLowerCase()} à {city.label} pour le moment.
                 </p>
-                <p className="text-sm text-[#5E7574] mb-6">
+                <p className="text-sm text-muted-foreground mb-6">
                   Inscrivez-vous pour être prévenu dès qu&apos;un médecin rejoint la plateforme dans votre zone.
                 </p>
                 <Link
                   href="/recherche"
-                  className="inline-flex items-center gap-2 bg-[#0891B2] text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-[#0E7490] transition-colors"
+                  className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-doktori-teal-dark transition-colors"
                 >
                   <Calendar className="w-4 h-4" />
                   Chercher dans toute la Tunisie
@@ -232,9 +232,9 @@ export default async function SpecialiteCityPage({
                   <Link
                     key={doctor.id}
                     href={`/medecin/${doctor.slug}`}
-                    className="group bg-white rounded-2xl border border-[#E6F4F1] p-5 shadow-sm hover:shadow-md transition-shadow flex gap-4"
+                    className="group bg-white rounded-2xl border border-border p-5 shadow-sm hover:shadow-md transition-shadow flex gap-4"
                   >
-                    <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-[#F0FDFA]">
+                    <div className="w-16 h-16 rounded-xl overflow-hidden shrink-0 bg-secondary">
                       {doctor.photoUrl ? (
                         <img
                           src={doctor.photoUrl}
@@ -246,20 +246,20 @@ export default async function SpecialiteCityPage({
                       )}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-[#134E4A] group-hover:text-[#0891B2] transition-colors truncate">
+                      <h3 className="font-bold text-foreground group-hover:text-primary transition-colors truncate">
                         Dr {doctor.name}
                       </h3>
-                      <p className="text-sm text-[#5E7574] truncate">{doctor.address}</p>
+                      <p className="text-sm text-muted-foreground truncate">{doctor.address}</p>
                       <div className="flex items-center gap-3 mt-2">
                         {doctor.averageRating ? (
                           <div className="flex items-center gap-1 text-xs text-amber-500">
                             <Star className="w-3.5 h-3.5 fill-current" />
                             <span className="font-semibold">{Number(doctor.averageRating).toFixed(1)}</span>
-                            <span className="text-[#5E7574]">({doctor.reviewCount ?? 0})</span>
+                            <span className="text-muted-foreground">({doctor.reviewCount ?? 0})</span>
                           </div>
                         ) : null}
                         {doctor.consultationFee && (
-                          <span className="text-xs font-semibold text-[#0891B2]">
+                          <span className="text-xs font-semibold text-primary">
                             {(doctor.consultationFee / 1000).toFixed(0)} DT
                           </span>
                         )}
@@ -272,15 +272,15 @@ export default async function SpecialiteCityPage({
           </section>
 
           {/* FAQ */}
-          <section className="bg-white rounded-2xl border border-[#E6F4F1] p-6 shadow-sm">
-            <h2 className="text-xl font-bold text-[#134E4A] mb-5">
+          <section className="bg-white rounded-2xl border border-border p-6 shadow-sm">
+            <h2 className="text-xl font-bold text-foreground mb-5">
               Questions fréquentes
             </h2>
             <div className="space-y-5">
               {faqItems.map((item, i) => (
                 <div key={i}>
-                  <h3 className="font-semibold text-[#134E4A] mb-1.5">{item.q}</h3>
-                  <p className="text-sm text-[#5E7574] leading-relaxed">{item.a}</p>
+                  <h3 className="font-semibold text-foreground mb-1.5">{item.q}</h3>
+                  <p className="text-sm text-muted-foreground leading-relaxed">{item.a}</p>
                 </div>
               ))}
             </div>
@@ -290,8 +290,8 @@ export default async function SpecialiteCityPage({
           <section>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Same specialty, other cities */}
-              <div className="bg-white rounded-2xl border border-[#E6F4F1] p-5 shadow-sm">
-                <h3 className="font-bold text-[#134E4A] mb-3 text-sm">
+              <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
+                <h3 className="font-bold text-foreground mb-3 text-sm">
                   {spec.label} dans d&apos;autres villes
                 </h3>
                 <ul className="space-y-2">
@@ -299,7 +299,7 @@ export default async function SpecialiteCityPage({
                     <li key={c.id}>
                       <Link
                         href={`/medecins/${specialite}/${c.id}`}
-                        className="text-sm text-[#0891B2] hover:underline"
+                        className="text-sm text-primary hover:underline"
                       >
                         {spec.label} à {c.label} →
                       </Link>
@@ -309,8 +309,8 @@ export default async function SpecialiteCityPage({
               </div>
 
               {/* Other specialties, same city */}
-              <div className="bg-white rounded-2xl border border-[#E6F4F1] p-5 shadow-sm">
-                <h3 className="font-bold text-[#134E4A] mb-3 text-sm">
+              <div className="bg-white rounded-2xl border border-border p-5 shadow-sm">
+                <h3 className="font-bold text-foreground mb-3 text-sm">
                   Autres spécialités à {city.label}
                 </h3>
                 <ul className="space-y-2">
@@ -318,7 +318,7 @@ export default async function SpecialiteCityPage({
                     <li key={s.id}>
                       <Link
                         href={`/medecins/${s.id}/${quartier}`}
-                        className="text-sm text-[#0891B2] hover:underline"
+                        className="text-sm text-primary hover:underline"
                       >
                         {s.label} à {city.label} →
                       </Link>

@@ -55,38 +55,38 @@ export default function MotifsPage() {
     await refresh();
   }
 
-  if (loading) return <p className="text-[#0891B2] text-sm p-6">Chargement...</p>;
+  if (loading) return <p className="text-primary text-sm p-6">Chargement...</p>;
 
   return (
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+        <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary">
           <Stethoscope className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-[#134E4A]">Motifs de consultation</h1>
+          <h1 className="text-2xl font-bold text-foreground">Motifs de consultation</h1>
           <p className="text-sm text-gray-500">Définissez les types de consultations avec leurs durées et tarifs.</p>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm max-w-xl">
-        <h2 className="font-semibold text-[#134E4A] mb-4">Ajouter un motif</h2>
+      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm max-w-xl">
+        <h2 className="font-semibold text-foreground mb-4">Ajouter un motif</h2>
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
-            <Label htmlFor="name" className="text-[#134E4A] font-medium">Nom</Label>
+            <Label htmlFor="name" className="text-foreground font-medium">Nom</Label>
             <Input
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="ex: Première consultation"
               required
-              className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] mt-1"
+              className="h-12 rounded-xl border-border focus-visible:ring-primary mt-1"
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="duration" className="text-[#134E4A] font-medium">Durée (minutes)</Label>
+              <Label htmlFor="duration" className="text-foreground font-medium">Durée (minutes)</Label>
               <Input
                 id="duration"
                 type="number"
@@ -95,11 +95,11 @@ export default function MotifsPage() {
                 value={duration}
                 onChange={(e) => setDuration(e.target.value)}
                 required
-                className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] mt-1"
+                className="h-12 rounded-xl border-border focus-visible:ring-primary mt-1"
               />
             </div>
             <div>
-              <Label htmlFor="fee" className="text-[#134E4A] font-medium">Tarif (DT)</Label>
+              <Label htmlFor="fee" className="text-foreground font-medium">Tarif (DT)</Label>
               <Input
                 id="fee"
                 type="number"
@@ -107,14 +107,14 @@ export default function MotifsPage() {
                 value={fee}
                 onChange={(e) => setFee(e.target.value)}
                 placeholder="optionnel"
-                className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] mt-1"
+                className="h-12 rounded-xl border-border focus-visible:ring-primary mt-1"
               />
             </div>
           </div>
           <Button
             type="submit"
             disabled={saving}
-            className="bg-[#0891B2] hover:bg-[#0E7490] h-12 rounded-xl font-bold text-white flex items-center gap-2"
+            className="bg-primary hover:bg-doktori-teal-dark h-12 rounded-xl font-bold text-white flex items-center gap-2"
           >
             <Plus className="h-4 w-4" />
             {saving ? "Ajout en cours..." : "Ajouter"}
@@ -122,25 +122,25 @@ export default function MotifsPage() {
         </form>
       </div>
 
-      <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm max-w-xl">
-        <div className="p-4 border-b border-[#E6F4F1] flex items-center justify-between">
-          <h2 className="font-semibold text-[#134E4A]">Motifs actifs</h2>
-          <span className="text-xs text-[#0891B2] font-semibold bg-[#F0FDFA] px-2.5 py-1 rounded-full">{types.length}</span>
+      <div className="rounded-2xl border border-border bg-white shadow-sm max-w-xl">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <h2 className="font-semibold text-foreground">Motifs actifs</h2>
+          <span className="text-xs text-primary font-semibold bg-secondary px-2.5 py-1 rounded-full">{types.length}</span>
         </div>
         {types.length === 0 ? (
           <div className="p-10 text-center">
-            <div className="h-12 w-12 rounded-2xl bg-[#F0FDFA] flex items-center justify-center mx-auto mb-3">
-              <Stethoscope className="h-6 w-6 text-[#0891B2]" />
+            <div className="h-12 w-12 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
+              <Stethoscope className="h-6 w-6 text-primary" />
             </div>
-            <p className="text-[#134E4A] font-medium mb-1">Aucun motif défini</p>
+            <p className="text-foreground font-medium mb-1">Aucun motif défini</p>
             <p className="text-sm text-gray-400">Ajoutez votre premier motif de consultation ci-dessus.</p>
           </div>
         ) : (
-          <div className="divide-y divide-[#E6F4F1]">
+          <div className="divide-y divide-border">
             {types.map((t) => (
-              <div key={t.id} className="p-4 flex items-center justify-between hover:bg-[#F0FDFA] transition-colors">
+              <div key={t.id} className="p-4 flex items-center justify-between hover:bg-secondary transition-colors">
                 <div>
-                  <div className="font-medium text-[#134E4A]">{t.name}</div>
+                  <div className="font-medium text-foreground">{t.name}</div>
                   <div className="text-sm text-gray-500">
                     {t.durationMinutes} min
                     {t.fee ? ` · ${t.fee / 1000} DT` : ""}
@@ -149,7 +149,7 @@ export default function MotifsPage() {
                 <div className="flex items-center gap-2">
                   <Link
                     href={`/motifs/${t.id}/questions`}
-                    className="text-xs font-semibold text-[#0891B2] hover:bg-[#E6F4F1] border border-[#E6F4F1] rounded-xl px-3 py-1.5 transition-colors"
+                    className="text-xs font-semibold text-primary hover:bg-border border border-border rounded-xl px-3 py-1.5 transition-colors"
                   >
                     Questions
                   </Link>
@@ -157,7 +157,7 @@ export default function MotifsPage() {
                     variant="outline"
                     size="sm"
                     onClick={() => handleDelete(t.id)}
-                    className="border border-[#E6F4F1] hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-xl text-xs transition-colors"
+                    className="border border-border hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-xl text-xs transition-colors"
                   >
                     Supprimer
                   </Button>

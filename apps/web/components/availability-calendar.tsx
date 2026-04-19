@@ -112,17 +112,17 @@ export function AvailabilityCalendar({ doctorSlug, typeId, onSelect, selected }:
           type="button"
           disabled={!canGoPrev || loading}
           onClick={() => setOffset((o) => Math.max(0, o - PAGE_SIZE))}
-          className="inline-flex items-center justify-center h-10 w-10 rounded-full border border-[#E6F4F1] bg-white text-[#0891B2] hover:bg-[#F0FDFA] hover:border-[#0891B2] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center h-10 w-10 rounded-full border border-border bg-white text-primary hover:bg-secondary hover:border-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           aria-label="Semaine précédente"
         >
           <ChevronLeft className="h-5 w-5" />
         </button>
 
         <div className="text-center">
-          <p className="text-xs uppercase tracking-wider text-[#0E7490]/60 font-semibold">
+          <p className="text-xs uppercase tracking-wider text-doktori-teal-dark/60 font-semibold">
             Disponibilités
           </p>
-          <p className="text-sm font-bold text-[#134E4A]">
+          <p className="text-sm font-bold text-foreground">
             {visibleDays.length > 0
               ? `${format(parseISO(visibleDays[0].date), "d MMM", { locale: fr })} – ${format(
                   parseISO(visibleDays[visibleDays.length - 1].date),
@@ -137,7 +137,7 @@ export function AvailabilityCalendar({ doctorSlug, typeId, onSelect, selected }:
           type="button"
           disabled={loading}
           onClick={() => setOffset((o) => o + PAGE_SIZE)}
-          className="inline-flex items-center justify-center h-10 w-10 rounded-full border border-[#E6F4F1] bg-white text-[#0891B2] hover:bg-[#F0FDFA] hover:border-[#0891B2] transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+          className="inline-flex items-center justify-center h-10 w-10 rounded-full border border-border bg-white text-primary hover:bg-secondary hover:border-primary transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
           aria-label="Semaine suivante"
         >
           <ChevronRight className="h-5 w-5" />
@@ -150,7 +150,7 @@ export function AvailabilityCalendar({ doctorSlug, typeId, onSelect, selected }:
           ? Array.from({ length: 7 }).map((_, i) => (
               <div
                 key={i}
-                className="flex-1 min-w-[72px] h-[84px] rounded-2xl bg-[#F0FDFA] animate-pulse snap-start"
+                className="flex-1 min-w-[72px] h-[84px] rounded-2xl bg-secondary animate-pulse snap-start"
               />
             ))
           : visibleDays.map((day) => {
@@ -166,15 +166,15 @@ export function AvailabilityCalendar({ doctorSlug, typeId, onSelect, selected }:
                   disabled={disabled}
                   className={`flex-1 min-w-[72px] snap-start rounded-2xl px-2 py-3 flex flex-col items-center justify-center gap-0.5 transition-all ${
                     isSelected
-                      ? "bg-[#0891B2] text-white shadow-md border border-[#0891B2]"
+                      ? "bg-primary text-white shadow-md border border-primary"
                       : disabled
-                        ? "bg-white border border-[#E6F4F1] text-[#134E4A]/30 cursor-not-allowed"
-                        : "bg-white border border-[#E6F4F1] hover:border-[#0891B2] text-[#134E4A]"
+                        ? "bg-white border border-border text-foreground/30 cursor-not-allowed"
+                        : "bg-white border border-border hover:border-primary text-foreground"
                   }`}
                 >
                   <span
                     className={`text-[10px] uppercase font-bold tracking-wider ${
-                      isSelected ? "text-white/80" : "text-[#0E7490]/70"
+                      isSelected ? "text-white/80" : "text-doktori-teal-dark/70"
                     }`}
                   >
                     {format(d, "EEE", { locale: fr }).replace(".", "")}
@@ -184,7 +184,7 @@ export function AvailabilityCalendar({ doctorSlug, typeId, onSelect, selected }:
                   </span>
                   <span
                     className={`text-[10px] font-semibold ${
-                      isSelected ? "text-white/80" : "text-[#0E7490]/60"
+                      isSelected ? "text-white/80" : "text-doktori-teal-dark/60"
                     }`}
                   >
                     {format(d, "MMM", { locale: fr }).replace(".", "")}
@@ -194,14 +194,14 @@ export function AvailabilityCalendar({ doctorSlug, typeId, onSelect, selected }:
                       isSelected
                         ? "text-white"
                         : count > 0
-                          ? "text-[#22C55E]"
-                          : "text-[#134E4A]/30"
+                          ? "text-accent"
+                          : "text-foreground/30"
                     }`}
                   >
                     {count > 0 ? `${count} créneau${count > 1 ? "x" : ""}` : "—"}
                   </span>
                   {isToday(d) && !isSelected && (
-                    <span className="text-[9px] uppercase text-[#0891B2] font-bold">
+                    <span className="text-[9px] uppercase text-primary font-bold">
                       Aujourd&apos;hui
                     </span>
                   )}
@@ -217,11 +217,11 @@ export function AvailabilityCalendar({ doctorSlug, typeId, onSelect, selected }:
         </div>
       ) : loading ? (
         <div className="text-center py-10">
-          <p className="text-sm text-[#134E4A]/40">Chargement des créneaux...</p>
+          <p className="text-sm text-foreground/40">Chargement des créneaux...</p>
         </div>
       ) : !selectedDay || selectedDay.slots.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-[#E6F4F1] bg-[#F0FDFA]/40 py-10 px-4 text-center space-y-3">
-          <p className="text-sm font-semibold text-[#134E4A]">
+        <div className="rounded-2xl border border-dashed border-border bg-secondary/40 py-10 px-4 text-center space-y-3">
+          <p className="text-sm font-semibold text-foreground">
             Aucun créneau disponible ce jour
           </p>
           <button
@@ -233,7 +233,7 @@ export function AvailabilityCalendar({ doctorSlug, typeId, onSelect, selected }:
               if (next) setSelectedDate(next.date);
               else setOffset((o) => o + PAGE_SIZE);
             }}
-            className="text-sm font-bold text-[#0891B2] hover:underline"
+            className="text-sm font-bold text-primary hover:underline"
           >
             Voir le prochain créneau disponible →
           </button>
@@ -287,15 +287,15 @@ function SlotSection({
 }) {
   return (
     <div>
-      <div className="flex items-center gap-2 mb-2.5 text-[#0E7490]">
+      <div className="flex items-center gap-2 mb-2.5 text-doktori-teal-dark">
         {icon}
         <h3 className="text-xs uppercase tracking-wider font-bold">{label}</h3>
-        <span className="text-xs font-semibold text-[#134E4A]/40">
+        <span className="text-xs font-semibold text-foreground/40">
           ({slots.length})
         </span>
       </div>
       {slots.length === 0 ? (
-        <p className="text-xs text-[#134E4A]/40 italic pl-6">Aucun créneau</p>
+        <p className="text-xs text-foreground/40 italic pl-6">Aucun créneau</p>
       ) : (
         <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2">
           {slots.map((slot) => {
@@ -308,8 +308,8 @@ function SlotSection({
                 onClick={() => onSelect(selectedDate, slot.startTime)}
                 className={`min-h-[44px] rounded-xl px-4 py-2.5 text-sm font-bold transition-colors border ${
                   isSelected
-                    ? "bg-[#0891B2] text-white border-[#0891B2] shadow-md"
-                    : "border-[#E6F4F1] text-[#0891B2] hover:bg-[#F0FDFA] hover:border-[#0891B2] bg-white"
+                    ? "bg-primary text-white border-primary shadow-md"
+                    : "border-border text-primary hover:bg-secondary hover:border-primary bg-white"
                 }`}
               >
                 {slot.startTime}

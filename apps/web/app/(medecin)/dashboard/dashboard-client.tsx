@@ -175,7 +175,7 @@ function TypeBadge({
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2.5">
-      <span className="h-5 w-1 rounded-full bg-[#0891B2]" />
+      <span className="h-5 w-1 rounded-full bg-primary" />
       <h2 className="font-bold text-slate-800 text-base">{children}</h2>
     </div>
   );
@@ -203,7 +203,7 @@ export function DashboardClient({
       label: t("today"),
       value: todayCount,
       sublabel: t("appointments"),
-      accentColor: "bg-[#0891B2]",
+      accentColor: "bg-primary",
       icon: Calendar,
       iconBg: "bg-cyan-50 text-cyan-600",
     },
@@ -293,7 +293,7 @@ export function DashboardClient({
         <div>
           <h1 className="text-2xl font-black text-slate-900">
             {t("greeting")}, Dr.{" "}
-            <span className="text-[#0891B2]">{doctorName}</span>
+            <span className="text-primary">{doctorName}</span>
           </h1>
           <p className="text-slate-500 text-sm mt-1">
             {t("greetingSubtitle")}
@@ -302,7 +302,7 @@ export function DashboardClient({
         <div className="flex items-center gap-2">
           <Link
             href="/calendrier"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#0891B2] px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#0e7490] transition-colors"
+            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-doktori-teal-dark transition-colors"
           >
             <CalendarDays className="h-4 w-4" />
             Calendrier
@@ -390,11 +390,11 @@ export function DashboardClient({
               return (
                 <div
                   key={a.id}
-                  className={`flex items-center justify-between px-5 py-4 border-l-4 ${cfg.border} hover:bg-[#F0FDFA] transition-colors`}
+                  className={`flex items-center justify-between px-5 py-4 border-l-4 ${cfg.border} hover:bg-secondary transition-colors`}
                 >
                   <div className="min-w-0">
                     <div className="font-semibold text-slate-900 flex items-center gap-2 flex-wrap text-sm">
-                      <span className="text-[#0891B2] font-bold tabular-nums">
+                      <span className="text-primary font-bold tabular-nums">
                         {format(a.startsAt, "HH:mm")}
                       </span>
                       <span className="text-slate-400">—</span>
@@ -432,7 +432,7 @@ export function DashboardClient({
       >
         <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
           <SectionHeader>{t("upcoming")}</SectionHeader>
-          <Link href="/rendez-vous" className="text-xs font-semibold text-[#0891B2] hover:underline">
+          <Link href="/rendez-vous" className="text-xs font-semibold text-primary hover:underline">
             {t("viewAll")} →
           </Link>
         </div>
@@ -448,11 +448,11 @@ export function DashboardClient({
               return (
                 <div
                   key={a.id}
-                  className={`flex items-center justify-between px-5 py-4 border-l-4 ${cfg.border} hover:bg-[#F0FDFA] transition-colors`}
+                  className={`flex items-center justify-between px-5 py-4 border-l-4 ${cfg.border} hover:bg-secondary transition-colors`}
                 >
                   <div className="flex items-start gap-3 min-w-0">
                     {/* Timeline dot */}
-                    <div className="mt-1.5 flex h-2 w-2 shrink-0 rounded-full bg-[#0891B2]/50" />
+                    <div className="mt-1.5 flex h-2 w-2 shrink-0 rounded-full bg-primary/50" />
                     <div className="min-w-0">
                       <div className="font-semibold text-slate-900 flex items-center gap-2 flex-wrap text-sm">
                         <span className="text-slate-500 font-medium tabular-nums">

@@ -52,18 +52,18 @@ export default async function PrescriptionPage({ params }: { params: Promise<{ i
       <div id="prescription-root" className="max-w-2xl mx-auto p-8 print:p-0 bg-white min-h-screen">
 
         {/* Print action bar — hidden on print */}
-        <div className="no-print mb-6 flex items-center justify-between bg-[#F0FDFA] border border-[#E6F4F1] rounded-xl px-5 py-3">
-          <p className="text-sm text-[#134E4A] font-medium">
+        <div className="no-print mb-6 flex items-center justify-between bg-secondary border border-border rounded-xl px-5 py-3">
+          <p className="text-sm text-foreground font-medium">
             Ordonnance — {result.patientName}
           </p>
           <PrintButton />
         </div>
 
         {/* Letterhead */}
-        <div className="border-b-2 border-[#0891B2] pb-5 mb-6">
-          <h1 className="text-2xl font-bold text-[#134E4A]">{result.doctorName}</h1>
+        <div className="border-b-2 border-primary pb-5 mb-6">
+          <h1 className="text-2xl font-bold text-foreground">{result.doctorName}</h1>
           {specialty && (
-            <p className="text-sm font-semibold text-[#0891B2] mt-0.5">{specialty.label}</p>
+            <p className="text-sm font-semibold text-primary mt-0.5">{specialty.label}</p>
           )}
           {result.doctorAddress && (
             <p className="text-sm text-gray-500 mt-2">{result.doctorAddress}</p>
@@ -122,7 +122,7 @@ export default async function PrescriptionPage({ params }: { params: Promise<{ i
               <p className="text-xs text-gray-400">
                 Scannez ce QR code pour vérifier que cette ordonnance est authentique et n&apos;a pas été falsifiée.
               </p>
-              <p className="text-xs text-[#0891B2] mt-1 font-mono break-all">
+              <p className="text-xs text-primary mt-1 font-mono break-all">
                 doktori.tn/verification-ordonnance
               </p>
             </div>
@@ -132,7 +132,7 @@ export default async function PrescriptionPage({ params }: { params: Promise<{ i
         {/* Footer branding — visible on screen and print */}
         <div className="mt-12 pt-4 border-t border-gray-200 text-xs text-center text-gray-400">
           Document généré via{" "}
-          <span className="font-semibold text-[#0891B2]">Doktori.tn</span>
+          <span className="font-semibold text-primary">Doktori.tn</span>
         </div>
       </div>
     </>

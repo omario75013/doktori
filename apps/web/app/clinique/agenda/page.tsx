@@ -127,7 +127,7 @@ export default function ClinicAgendaPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-[#134E4A]">Agenda équipe</h1>
+          <h1 className="text-2xl font-bold text-foreground">Agenda équipe</h1>
           <p className="text-sm text-gray-500 mt-0.5">
             Vue agrégée de tous les rendez-vous par médecin
           </p>
@@ -137,12 +137,12 @@ export default function ClinicAgendaPage() {
             type="date"
             value={date}
             onChange={(e) => setDate(e.target.value)}
-            className="border border-[#E6F4F1] rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] bg-white"
+            className="border border-border rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white"
           />
           <button
             onClick={fetchAgenda}
             disabled={loading}
-            className="flex items-center gap-1.5 px-4 py-2 bg-[#0891B2] text-white rounded-lg text-sm font-medium hover:bg-[#0e7490] disabled:opacity-50 transition-colors"
+            className="flex items-center gap-1.5 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-doktori-teal-dark disabled:opacity-50 transition-colors"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
             Actualiser
@@ -152,16 +152,16 @@ export default function ClinicAgendaPage() {
 
       {/* Summary bar */}
       <div className="flex gap-4">
-        <div className="flex items-center gap-2 bg-[#F0FDFA] border border-[#E6F4F1] rounded-lg px-4 py-2.5">
-          <Calendar className="w-4 h-4 text-[#0891B2]" />
-          <span className="text-sm font-semibold text-[#134E4A]">
+        <div className="flex items-center gap-2 bg-secondary border border-border rounded-lg px-4 py-2.5">
+          <Calendar className="w-4 h-4 text-primary" />
+          <span className="text-sm font-semibold text-foreground">
             {totalAppointments} RDV
           </span>
           <span className="text-xs text-gray-500">ce jour</span>
         </div>
-        <div className="flex items-center gap-2 bg-[#F0FDFA] border border-[#E6F4F1] rounded-lg px-4 py-2.5">
-          <Users className="w-4 h-4 text-[#0891B2]" />
-          <span className="text-sm font-semibold text-[#134E4A]">
+        <div className="flex items-center gap-2 bg-secondary border border-border rounded-lg px-4 py-2.5">
+          <Users className="w-4 h-4 text-primary" />
+          <span className="text-sm font-semibold text-foreground">
             {totalDoctors} médecin{totalDoctors !== 1 ? "s" : ""}
           </span>
           <span className="text-xs text-gray-500">avec RDV</span>
@@ -182,7 +182,7 @@ export default function ClinicAgendaPage() {
 
       {/* Empty state (no doctors have RDVs that day) */}
       {!loading && !error && appointments.length === 0 && (
-        <div className="text-center py-16 bg-white border border-[#E6F4F1] rounded-xl">
+        <div className="text-center py-16 bg-white border border-border rounded-xl">
           <CalendarDays className="w-10 h-10 mx-auto mb-3 text-gray-200" />
           <p className="text-gray-400 font-medium">Aucun rendez-vous ce jour</p>
           <p className="text-xs text-gray-300 mt-1">
@@ -204,7 +204,7 @@ export default function ClinicAgendaPage() {
             {columns.map((col) => (
               <div key={col.doctorId} className="flex flex-col gap-3">
                 {/* Doctor header */}
-                <div className="bg-[#0891B2] text-white rounded-xl px-4 py-3">
+                <div className="bg-primary text-white rounded-xl px-4 py-3">
                   <div className="font-semibold text-sm truncate">{col.doctorName}</div>
                   <div className="text-xs text-cyan-100 mt-0.5 truncate">
                     {col.doctorSpecialty}
@@ -216,7 +216,7 @@ export default function ClinicAgendaPage() {
 
                 {/* Appointment tiles */}
                 {col.appointments.length === 0 ? (
-                  <div className="flex-1 flex items-center justify-center border border-dashed border-[#E6F4F1] rounded-xl py-8 text-gray-300 text-xs">
+                  <div className="flex-1 flex items-center justify-center border border-dashed border-border rounded-xl py-8 text-gray-300 text-xs">
                     Aucun RDV
                   </div>
                 ) : (
@@ -224,15 +224,15 @@ export default function ClinicAgendaPage() {
                     {col.appointments.map((appt) => (
                       <div
                         key={appt.id}
-                        className="bg-white border border-[#E6F4F1] rounded-xl px-3 py-3 shadow-sm"
+                        className="bg-white border border-border rounded-xl px-3 py-3 shadow-sm"
                       >
                         {/* Time range */}
-                        <div className="text-xs font-semibold text-[#0891B2] mb-1">
+                        <div className="text-xs font-semibold text-primary mb-1">
                           {formatTime(appt.startsAt)} – {formatTime(appt.endsAt)}
                         </div>
 
                         {/* Patient name */}
-                        <div className="text-sm font-medium text-[#134E4A] truncate">
+                        <div className="text-sm font-medium text-foreground truncate">
                           {appt.patientName}
                         </div>
 

@@ -37,11 +37,11 @@ export default async function PatientsPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+        <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary">
           <Users className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-[#134E4A]">Patients</h1>
+          <h1 className="text-2xl font-bold text-foreground">Patients</h1>
           <p className="text-sm text-gray-500">
             {patientList.length} patient{patientList.length !== 1 ? "s" : ""} suivis
           </p>
@@ -49,38 +49,38 @@ export default async function PatientsPage() {
       </div>
 
       {patientList.length === 0 ? (
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-12 text-center shadow-sm">
-          <div className="h-14 w-14 rounded-2xl bg-[#F0FDFA] flex items-center justify-center mx-auto mb-3">
-            <Users className="h-7 w-7 text-[#0891B2]" />
+        <div className="rounded-2xl border border-border bg-white p-12 text-center shadow-sm">
+          <div className="h-14 w-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
+            <Users className="h-7 w-7 text-primary" />
           </div>
-          <p className="text-[#134E4A] font-medium mb-1">Aucun patient pour le moment</p>
+          <p className="text-foreground font-medium mb-1">Aucun patient pour le moment</p>
           <p className="text-sm text-gray-400">Les patients apparaîtront ici après leurs premiers rendez-vous.</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm overflow-x-auto">
+        <div className="rounded-2xl border border-border bg-white shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#E6F4F1] bg-[#F0FDFA] text-left">
-                <th className="px-4 py-3 font-medium text-[#134E4A]">Patient</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">Téléphone</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">Visites</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">Dernière visite</th>
+              <tr className="border-b border-border bg-secondary text-left">
+                <th className="px-4 py-3 font-medium text-foreground">Patient</th>
+                <th className="px-4 py-3 font-medium text-foreground">Téléphone</th>
+                <th className="px-4 py-3 font-medium text-foreground">Visites</th>
+                <th className="px-4 py-3 font-medium text-foreground">Dernière visite</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E6F4F1]">
+            <tbody className="divide-y divide-border">
               {patientList.map((p) => (
-                <tr key={p.id} className="hover:bg-[#F0FDFA] transition-colors">
+                <tr key={p.id} className="hover:bg-secondary transition-colors">
                   <td className="px-4 py-3">
                     <Link
                       href={`/patients/${p.id}`}
-                      className="font-medium text-[#0891B2] hover:text-[#0E7490] hover:underline"
+                      className="font-medium text-primary hover:text-doktori-teal-dark hover:underline"
                     >
                       {p.name}
                     </Link>
                   </td>
                   <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{p.phone}</td>
                   <td className="px-4 py-3">
-                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-[#F0FDFA] text-[#0891B2] text-xs font-bold">
+                    <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-secondary text-primary text-xs font-bold">
                       {p.total_visits}
                     </span>
                   </td>

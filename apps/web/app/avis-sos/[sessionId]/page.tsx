@@ -107,7 +107,7 @@ export default function AvisSOSPage() {
         {/* Loading state */}
         {verify.status === "loading" && (
           <div className="flex flex-col items-center py-12 gap-4">
-            <Loader2 className="w-10 h-10 animate-spin text-[#0891B2]" aria-hidden="true" />
+            <Loader2 className="w-10 h-10 animate-spin text-primary" aria-hidden="true" />
             <p className="text-sm text-gray-500">Vérification du lien…</p>
           </div>
         )}
@@ -119,7 +119,7 @@ export default function AvisSOSPage() {
               className="w-12 h-12 mx-auto text-red-500"
               aria-hidden="true"
             />
-            <p className="text-base font-semibold text-[#134E4A]">
+            <p className="text-base font-semibold text-foreground">
               Lien invalide
             </p>
             <p className="text-sm text-gray-500">{verify.error}</p>
@@ -135,7 +135,7 @@ export default function AvisSOSPage() {
                 ⭐
               </div>
               <div>
-                <h1 className="text-lg font-bold text-[#134E4A]">
+                <h1 className="text-lg font-bold text-foreground">
                   Évaluer la consultation
                 </h1>
                 <p className="text-xs text-gray-500">
@@ -150,10 +150,10 @@ export default function AvisSOSPage() {
             {submitted ? (
               <div className="text-center py-8 space-y-3">
                 <CheckCircle
-                  className="w-12 h-12 mx-auto text-[#22C55E]"
+                  className="w-12 h-12 mx-auto text-accent"
                   aria-hidden="true"
                 />
-                <p className="text-base font-semibold text-[#134E4A]">
+                <p className="text-base font-semibold text-foreground">
                   {t("thankYou")}
                 </p>
                 <p className="text-sm text-gray-500">
@@ -183,7 +183,7 @@ export default function AvisSOSPage() {
                           onClick={() => setRating(star)}
                           onMouseEnter={() => setHovered(star)}
                           onMouseLeave={() => setHovered(0)}
-                          className="p-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#0891B2] rounded"
+                          className="p-0.5 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary rounded"
                         >
                           <Star
                             className="w-8 h-8 transition-colors"
@@ -238,7 +238,7 @@ export default function AvisSOSPage() {
                 <Button
                   type="submit"
                   disabled={rating === 0 || submitting}
-                  className="w-full bg-[#0891B2] hover:bg-[#0e7490] disabled:opacity-50"
+                  className="w-full bg-primary hover:bg-doktori-teal-dark disabled:opacity-50"
                 >
                   {submitting ? "Envoi en cours..." : "Envoyer mon avis"}
                 </Button>

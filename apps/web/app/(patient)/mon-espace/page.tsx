@@ -77,12 +77,12 @@ const TYPE_COLORS: Record<string, string> = {
 };
 
 const STATUS_BORDER: Record<string, string> = {
-  confirmed: "border-l-[#0891B2]",
+  confirmed: "border-l-primary",
   pending: "border-l-orange-400",
 };
 
 const TIMELINE_ICONS: Record<TimelineItem["kind"], React.ReactNode> = {
-  booking: <Calendar className="w-3.5 h-3.5 text-[#0891B2]" />,
+  booking: <Calendar className="w-3.5 h-3.5 text-primary" />,
   cancelled: <XCircle className="w-3.5 h-3.5 text-red-500" />,
   completed: <CheckCircle className="w-3.5 h-3.5 text-green-500" />,
   prescription: <FileText className="w-3.5 h-3.5 text-purple-500" />,
@@ -90,7 +90,7 @@ const TIMELINE_ICONS: Record<TimelineItem["kind"], React.ReactNode> = {
 };
 
 const TIMELINE_BG: Record<TimelineItem["kind"], string> = {
-  booking: "bg-[#0891B2]/10",
+  booking: "bg-primary/10",
   cancelled: "bg-red-50",
   completed: "bg-green-50",
   prescription: "bg-purple-50",
@@ -152,11 +152,11 @@ const fadeUp = {
 const QUICK_ACTIONS = [
   {
     href: "/recherche",
-    icon: <Search className="w-5 h-5 text-[#0891B2]" />,
-    iconBg: "bg-[#0891B2]/10",
+    icon: <Search className="w-5 h-5 text-primary" />,
+    iconBg: "bg-primary/10",
     title: "Trouver un médecin",
     desc: "Rechercher par spécialité",
-    hoverBorder: "hover:border-[#0891B2]/40",
+    hoverBorder: "hover:border-primary/40",
   },
   {
     href: "/sos",
@@ -168,19 +168,19 @@ const QUICK_ACTIONS = [
   },
   {
     href: "/mes-rdv",
-    icon: <Calendar className="w-5 h-5 text-[#0891B2]" />,
-    iconBg: "bg-[#0891B2]/10",
+    icon: <Calendar className="w-5 h-5 text-primary" />,
+    iconBg: "bg-primary/10",
     title: "Mes rendez-vous",
     desc: "Consulter l'historique",
-    hoverBorder: "hover:border-[#0891B2]/40",
+    hoverBorder: "hover:border-primary/40",
   },
   {
     href: "/dossier-medical",
-    icon: <FileText className="w-5 h-5 text-[#0891B2]" />,
-    iconBg: "bg-[#0891B2]/10",
+    icon: <FileText className="w-5 h-5 text-primary" />,
+    iconBg: "bg-primary/10",
     title: "Mon dossier",
     desc: "Données & documents médicaux",
-    hoverBorder: "hover:border-[#0891B2]/40",
+    hoverBorder: "hover:border-primary/40",
   },
 ];
 
@@ -246,10 +246,10 @@ export default function PatientDashboardPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#F0FDFA]">
+      <div className="flex items-center justify-center min-h-screen bg-secondary">
         <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-[#134E4A]/60 text-sm">Chargement...</p>
+          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-foreground/60 text-sm">Chargement...</p>
         </div>
       </div>
     );
@@ -282,7 +282,7 @@ export default function PatientDashboardPage() {
   const greeting = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
 
   return (
-    <div className="min-h-screen bg-[#F0FDFA]">
+    <div className="min-h-screen bg-secondary">
       <GuidedTour
         storageKey="doktori_patient_tour"
         steps={[
@@ -315,10 +315,10 @@ export default function PatientDashboardPage() {
           className="flex items-center justify-between mb-6"
         >
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-[#0891B2]/10 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-[#0891B2]" />
+            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
+              <User className="w-4 h-4 text-primary" />
             </div>
-            <span className="text-sm font-medium text-[#134E4A]">Mon espace</span>
+            <span className="text-sm font-medium text-foreground">Mon espace</span>
           </div>
           <button
             onClick={logout}
@@ -386,12 +386,12 @@ export default function PatientDashboardPage() {
               <a
                 key={action.href}
                 href={action.href}
-                className={`flex flex-col items-center gap-2 rounded-2xl border border-[#E6F4F1] bg-white p-4 text-center ${action.hoverBorder} hover:shadow-md transition-all duration-200`}
+                className={`flex flex-col items-center gap-2 rounded-2xl border border-border bg-white p-4 text-center ${action.hoverBorder} hover:shadow-md transition-all duration-200`}
               >
                 <div className={`w-10 h-10 ${action.iconBg} rounded-full flex items-center justify-center`}>
                   {action.icon}
                 </div>
-                <span className="text-xs font-semibold text-[#134E4A] leading-snug">{action.title}</span>
+                <span className="text-xs font-semibold text-foreground leading-snug">{action.title}</span>
                 <span className="text-[10px] text-gray-400 leading-snug">{action.desc}</span>
               </a>
             ))}
@@ -410,24 +410,24 @@ export default function PatientDashboardPage() {
             <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
               Rendez-vous à venir
             </h3>
-            <a href="/mes-rdv" className="text-xs font-semibold text-[#0891B2] hover:underline">
+            <a href="/mes-rdv" className="text-xs font-semibold text-primary hover:underline">
               Voir tout
             </a>
           </div>
 
           {upcoming.length === 0 ? (
             /* Enhanced empty state */
-            <div className="rounded-2xl border border-[#E6F4F1] bg-white p-8 text-center shadow-sm">
-              <div className="w-16 h-16 bg-[#F0FDFA] rounded-full flex items-center justify-center mx-auto mb-4">
-                <Calendar className="w-8 h-8 text-[#0891B2]/40" />
+            <div className="rounded-2xl border border-border bg-white p-8 text-center shadow-sm">
+              <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                <Calendar className="w-8 h-8 text-primary/40" />
               </div>
-              <p className="text-[#134E4A] font-semibold mb-1">Pas de rendez-vous à venir</p>
+              <p className="text-foreground font-semibold mb-1">Pas de rendez-vous à venir</p>
               <p className="text-sm text-gray-400 mb-5">
                 Votre agenda est vide. Trouvez un médecin et prenez rendez-vous en quelques clics.
               </p>
               <a
                 href="/recherche"
-                className="inline-flex items-center gap-2 rounded-xl bg-[#0891B2] px-4 py-2 text-sm font-semibold text-white hover:bg-[#0e7490] transition-colors shadow-sm"
+                className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-doktori-teal-dark transition-colors shadow-sm"
               >
                 <Search className="w-4 h-4" />
                 Trouver un médecin
@@ -439,7 +439,7 @@ export default function PatientDashboardPage() {
                 const spec = SPECIALTIES.find((s) => s.id === a.doctorSpecialty);
                 const typeLabel = TYPE_LABELS[a.type] ?? a.type;
                 const typeColor = TYPE_COLORS[a.type] ?? "bg-gray-100 text-gray-600";
-                const borderColor = STATUS_BORDER[a.status] ?? "border-l-[#0891B2]";
+                const borderColor = STATUS_BORDER[a.status] ?? "border-l-primary";
                 const isTeleconsult = a.type === "teleconsultation";
                 const joinable = isTeleconsult && isTeleconsultJoinable(a);
                 const statusLabel = a.status === "pending" ? "En attente" : "Confirmé";
@@ -451,17 +451,17 @@ export default function PatientDashboardPage() {
                 return (
                   <div
                     key={a.id}
-                    className={`rounded-2xl border-l-4 ${borderColor} border border-[#E6F4F1] bg-white p-4 shadow-sm`}
+                    className={`rounded-2xl border-l-4 ${borderColor} border border-border bg-white p-4 shadow-sm`}
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                          <p className="font-semibold text-[#134E4A] truncate">{a.doctorName}</p>
+                          <p className="font-semibold text-foreground truncate">{a.doctorName}</p>
                           <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColor}`}>
                             {statusLabel}
                           </span>
                         </div>
-                        <p className="text-sm text-[#0891B2] mb-1">{spec?.label ?? a.doctorSpecialty}</p>
+                        <p className="text-sm text-primary mb-1">{spec?.label ?? a.doctorSpecialty}</p>
                         <p className="text-sm text-gray-500 capitalize">
                           {format(new Date(a.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
                         </p>
@@ -489,7 +489,7 @@ export default function PatientDashboardPage() {
                         variant="outline"
                         size="sm"
                         onClick={() => setCancelConfirm(a.id)}
-                        className="rounded-xl border-[#E6F4F1] hover:border-red-200 hover:text-red-500 text-gray-500 shrink-0"
+                        className="rounded-xl border-border hover:border-red-200 hover:text-red-500 text-gray-500 shrink-0"
                       >
                         Annuler
                       </Button>
@@ -519,14 +519,14 @@ export default function PatientDashboardPage() {
                 return (
                   <div
                     key={a.doctorSlug}
-                    className="rounded-2xl border border-[#E6F4F1] bg-white p-4 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
+                    className="rounded-2xl border border-border bg-white p-4 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
                   >
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-[#0891B2]/10 rounded-full flex items-center justify-center shrink-0">
-                        <User className="w-5 h-5 text-[#0891B2]" />
+                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+                        <User className="w-5 h-5 text-primary" />
                       </div>
                       <div>
-                        <p className="font-semibold text-[#134E4A]">{a.doctorName}</p>
+                        <p className="font-semibold text-foreground">{a.doctorName}</p>
                         <p className="text-sm text-gray-500">{spec?.label}</p>
                       </div>
                     </div>
@@ -534,7 +534,7 @@ export default function PatientDashboardPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        className="rounded-xl border-[#0891B2]/30 text-[#0891B2] hover:bg-[#0891B2] hover:text-white transition-colors gap-1"
+                        className="rounded-xl border-primary/30 text-primary hover:bg-primary hover:text-white transition-colors gap-1"
                       >
                         Reprendre RDV
                         <ChevronRight className="w-3 h-3" />
@@ -556,25 +556,25 @@ export default function PatientDashboardPage() {
             className="mb-8"
           >
             <div className="flex items-center gap-2 mb-3">
-              <Clock className="w-4 h-4 text-[#134E4A]/40" />
+              <Clock className="w-4 h-4 text-foreground/40" />
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
                 Activité récente
               </h3>
             </div>
-            <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm overflow-hidden">
+            <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
               {timeline.map((item, index) => (
                 <div
                   key={item.id}
                   className={`flex items-start gap-3 px-4 py-3 ${
-                    index < timeline.length - 1 ? "border-b border-[#E6F4F1]" : ""
+                    index < timeline.length - 1 ? "border-b border-border" : ""
                   }`}
                 >
                   <div className={`w-7 h-7 rounded-full ${TIMELINE_BG[item.kind]} flex items-center justify-center flex-shrink-0 mt-0.5`}>
                     {TIMELINE_ICONS[item.kind]}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-[#134E4A] leading-snug">{item.label}</p>
-                    <p className="text-xs text-[#134E4A]/40 mt-0.5 capitalize">
+                    <p className="text-sm font-medium text-foreground leading-snug">{item.label}</p>
+                    <p className="text-xs text-foreground/40 mt-0.5 capitalize">
                       {format(item.date, "EEEE d MMMM 'à' HH:mm", { locale: fr })}
                     </p>
                   </div>
@@ -587,8 +587,8 @@ export default function PatientDashboardPage() {
         {/* Cancel confirmation modal */}
         {cancelConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-            <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl border border-[#E6F4F1]">
-              <h3 className="text-lg font-bold text-[#134E4A]">
+            <div className="mx-4 w-full max-w-sm rounded-2xl bg-white p-6 shadow-xl border border-border">
+              <h3 className="text-lg font-bold text-foreground">
                 Annuler ce rendez-vous ?
               </h3>
               <p className="mt-2 text-sm text-gray-500">
@@ -597,7 +597,7 @@ export default function PatientDashboardPage() {
               <div className="mt-6 flex gap-3 justify-end">
                 <button
                   onClick={() => setCancelConfirm(null)}
-                  className="rounded-xl border border-[#E6F4F1] px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+                  className="rounded-xl border border-border px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
                 >
                   Non
                 </button>

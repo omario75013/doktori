@@ -60,7 +60,7 @@ function BookingStepIndicator({ currentStep }: { currentStep: number }) {
               <span
                 className={`text-[10px] font-semibold whitespace-nowrap ${
                   isActive
-                    ? "text-[#0891B2]"
+                    ? "text-primary"
                     : isCompleted
                     ? "text-green-600"
                     : "text-slate-400"
@@ -374,17 +374,17 @@ export default function RdvPage({
 
   if (doctorLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F0FDFA]/40">
-        <p className="text-[#134E4A]/40 text-sm">Chargement...</p>
+      <div className="min-h-screen flex items-center justify-center bg-secondary/40">
+        <p className="text-foreground/40 text-sm">Chargement...</p>
       </div>
     );
   }
 
   if (doctorError || !doctor) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F0FDFA]/40">
+      <div className="min-h-screen flex items-center justify-center bg-secondary/40">
         <div className="text-center space-y-3">
-          <p className="text-[#134E4A]">Médecin introuvable.</p>
+          <p className="text-foreground">Médecin introuvable.</p>
           <Button onClick={() => (window.location.href = "/")}>
             Retour à l&apos;accueil
           </Button>
@@ -396,10 +396,10 @@ export default function RdvPage({
   const slotDurationMin = selectedType?.durationMinutes ?? 20;
 
   return (
-    <div className="min-h-screen bg-[#F0FDFA]/40 px-4 py-8">
+    <div className="min-h-screen bg-secondary/40 px-4 py-8">
       <div className="mx-auto max-w-2xl space-y-6">
         {/* Doctor summary card */}
-        <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 flex items-center gap-4">
+        <div className="rounded-3xl border border-border bg-white shadow-sm p-5 flex items-center gap-4">
           {doctor.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -408,27 +408,27 @@ export default function RdvPage({
               className="w-16 h-16 rounded-full object-cover flex-shrink-0"
             />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-[#F0FDFA] flex items-center justify-center flex-shrink-0 text-[#0891B2] font-black text-xl">
+            <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 text-primary font-black text-xl">
               {doctor.name.charAt(0)}
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <h1 className="font-heading font-black text-[#134E4A]">{doctor.name}</h1>
-            <p className="text-sm text-[#0E7490]">{doctor.specialty}</p>
-            <p className="text-xs text-[#134E4A]/50">{doctor.city}</p>
+            <h1 className="font-heading font-black text-foreground">{doctor.name}</h1>
+            <p className="text-sm text-doktori-teal-dark">{doctor.specialty}</p>
+            <p className="text-xs text-foreground/50">{doctor.city}</p>
           </div>
         </div>
 
         {/* Step indicator — hidden on success */}
         {step !== "success" && (
-          <div className="rounded-2xl bg-white border border-[#E6F4F1] shadow-sm overflow-hidden">
+          <div className="rounded-2xl bg-white border border-border shadow-sm overflow-hidden">
             <BookingStepIndicator currentStep={getVisualStep(step)} />
           </div>
         )}
 
         {/* Sticky summary chip when slot is picked */}
         {(step === "questionnaire" || step === "form" || step === "payment") && booking && (
-          <div className="rounded-2xl bg-[#0891B2] text-white shadow-md px-4 py-3 flex items-center justify-between gap-3">
+          <div className="rounded-2xl bg-primary text-white shadow-md px-4 py-3 flex items-center justify-between gap-3">
             <div className="flex items-center gap-3 min-w-0">
               <div className="h-9 w-9 rounded-full bg-white/15 flex items-center justify-center flex-shrink-0">
                 <Calendar className="h-4 w-4" />
@@ -468,13 +468,13 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4"
+            className="rounded-3xl border border-border bg-white shadow-sm p-5 space-y-4"
           >
             <div>
-              <h2 className="font-heading font-black text-[#134E4A]">
+              <h2 className="font-heading font-black text-foreground">
                 Mode de consultation
               </h2>
-              <p className="text-sm text-[#134E4A]/60 mt-1">
+              <p className="text-sm text-foreground/60 mt-1">
                 Choisissez comment vous souhaitez consulter ce médecin.
               </p>
             </div>
@@ -491,14 +491,14 @@ export default function RdvPage({
                     setStep("slots");
                   }
                 }}
-                className="flex flex-col items-center gap-3 rounded-2xl border-2 border-[#E6F4F1] bg-white p-5 text-center hover:border-[#0891B2] hover:bg-[#F0FDFA]/40 transition-colors"
+                className="flex flex-col items-center gap-3 rounded-2xl border-2 border-border bg-white p-5 text-center hover:border-primary hover:bg-secondary/40 transition-colors"
               >
-                <div className="h-12 w-12 rounded-2xl bg-[#F0FDFA] flex items-center justify-center">
-                  <Building className="h-6 w-6 text-[#0891B2]" strokeWidth={2} />
+                <div className="h-12 w-12 rounded-2xl bg-secondary flex items-center justify-center">
+                  <Building className="h-6 w-6 text-primary" strokeWidth={2} />
                 </div>
                 <div>
-                  <div className="font-bold text-[#134E4A]">Au cabinet</div>
-                  <div className="text-xs text-[#134E4A]/60 mt-1">
+                  <div className="font-bold text-foreground">Au cabinet</div>
+                  <div className="text-xs text-foreground/60 mt-1">
                     Rendez-vous en présentiel dans le cabinet du médecin.
                   </div>
                 </div>
@@ -514,14 +514,14 @@ export default function RdvPage({
                     setStep("slots");
                   }
                 }}
-                className="flex flex-col items-center gap-3 rounded-2xl border-2 border-[#E6F4F1] bg-white p-5 text-center hover:border-purple-400 hover:bg-purple-50/40 transition-colors"
+                className="flex flex-col items-center gap-3 rounded-2xl border-2 border-border bg-white p-5 text-center hover:border-purple-400 hover:bg-purple-50/40 transition-colors"
               >
                 <div className="h-12 w-12 rounded-2xl bg-purple-100 flex items-center justify-center">
                   <Video className="h-6 w-6 text-purple-600" strokeWidth={2} />
                 </div>
                 <div>
-                  <div className="font-bold text-[#134E4A]">En vidéo</div>
-                  <div className="text-xs text-[#134E4A]/60 mt-1">
+                  <div className="font-bold text-foreground">En vidéo</div>
+                  <div className="text-xs text-foreground/60 mt-1">
                     Consultation à distance par vidéo.
                   </div>
                   {doctor.teleconsultFee != null && (
@@ -544,13 +544,13 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4"
+            className="rounded-3xl border border-border bg-white shadow-sm p-5 space-y-4"
           >
             <div>
-              <h2 className="font-heading font-black text-[#134E4A]">
+              <h2 className="font-heading font-black text-foreground">
                 Motif de consultation
               </h2>
-              <p className="text-sm text-[#134E4A]/60 mt-1">
+              <p className="text-sm text-foreground/60 mt-1">
                 Sélectionnez le type de consultation. La durée et le tarif s&apos;adaptent
                 automatiquement.
               </p>
@@ -560,7 +560,7 @@ export default function RdvPage({
                 <button
                   key={t.id}
                   onClick={() => handleTypeSelected(t)}
-                  className="w-full flex items-center justify-between gap-3 rounded-2xl border border-[#E6F4F1] bg-white px-4 py-3 text-left hover:border-[#0891B2] hover:bg-[#F0FDFA]/40 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 rounded-2xl border border-border bg-white px-4 py-3 text-start hover:border-primary hover:bg-secondary/40 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <span
@@ -569,15 +569,15 @@ export default function RdvPage({
                       aria-hidden
                     />
                     <div>
-                      <div className="font-bold text-[#134E4A]">{t.name}</div>
-                      <div className="text-xs text-[#134E4A]/50 flex items-center gap-1">
+                      <div className="font-bold text-foreground">{t.name}</div>
+                      <div className="text-xs text-foreground/50 flex items-center gap-1">
                         <Clock className="h-3 w-3" />
                         {t.durationMinutes} min
                       </div>
                     </div>
                   </div>
                   {t.fee != null && selectedMode === "teleconsult" && (
-                    <div className="text-sm font-bold text-[#0891B2]">
+                    <div className="text-sm font-bold text-primary">
                       {(t.fee / 1000).toFixed(0)} DT
                     </div>
                   )}
@@ -596,13 +596,13 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 space-y-4"
+            className="rounded-3xl border border-border bg-white shadow-sm p-5 space-y-4"
           >
             <div>
-              <h2 className="font-heading font-black text-[#134E4A]">
+              <h2 className="font-heading font-black text-foreground">
                 Choisir un cabinet
               </h2>
-              <p className="text-sm text-[#134E4A]/60 mt-1">
+              <p className="text-sm text-foreground/60 mt-1">
                 Ce médecin exerce dans plusieurs lieux. Sélectionnez le cabinet souhaité.
               </p>
             </div>
@@ -611,24 +611,24 @@ export default function RdvPage({
                 <button
                   key={p.id}
                   onClick={() => handlePracticeSelected(p)}
-                  className="w-full flex items-start gap-3 rounded-2xl border border-[#E6F4F1] bg-white px-4 py-3 text-left hover:border-[#0891B2] hover:bg-[#F0FDFA]/40 transition-colors"
+                  className="w-full flex items-start gap-3 rounded-2xl border border-border bg-white px-4 py-3 text-start hover:border-primary hover:bg-secondary/40 transition-colors"
                 >
-                  <div className="h-8 w-8 rounded-full bg-[#F0FDFA] flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <MapPin className="h-4 w-4 text-[#0891B2]" />
+                  <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <MapPin className="h-4 w-4 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <div className="font-bold text-[#134E4A] flex items-center gap-2">
+                    <div className="font-bold text-foreground flex items-center gap-2">
                       {p.name}
                       {p.isPrimary && (
-                        <span className="text-xs font-normal text-[#0891B2] bg-[#F0FDFA] px-1.5 py-0.5 rounded-full">
+                        <span className="text-xs font-normal text-primary bg-secondary px-1.5 py-0.5 rounded-full">
                           Principal
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-[#134E4A]/60 truncate">{p.address}</div>
-                    <div className="text-xs text-[#134E4A]/40">{p.city}</div>
+                    <div className="text-sm text-foreground/60 truncate">{p.address}</div>
+                    <div className="text-xs text-foreground/40">{p.city}</div>
                     {p.phone && (
-                      <div className="text-xs text-[#0891B2] mt-0.5">{p.phone}</div>
+                      <div className="text-xs text-primary mt-0.5">{p.phone}</div>
                     )}
                   </div>
                 </button>
@@ -637,7 +637,7 @@ export default function RdvPage({
             {types.length > 0 && (
               <button
                 onClick={() => setStep("type")}
-                className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0891B2] hover:underline pt-1"
+                className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline pt-1"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Changer le motif
@@ -655,26 +655,26 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5"
+            className="rounded-3xl border border-border bg-white shadow-sm p-5 sm:p-6 space-y-5"
           >
             {(selectedType || selectedPractice) && (
-              <div className="flex flex-col gap-1.5 pb-3 border-b border-[#E6F4F1]">
+              <div className="flex flex-col gap-1.5 pb-3 border-b border-border">
                 {selectedType && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#134E4A]/60 flex items-center gap-2">
+                    <span className="text-foreground/60 flex items-center gap-2">
                       <span
                         className="h-2.5 w-2.5 rounded-full"
                         style={{ backgroundColor: selectedType.color }}
                       />
-                      <span className="font-bold text-[#134E4A]">{selectedType.name}</span>
-                      <span className="text-[#134E4A]/40">·</span>
-                      <span className="text-[#134E4A]/60">
+                      <span className="font-bold text-foreground">{selectedType.name}</span>
+                      <span className="text-foreground/40">·</span>
+                      <span className="text-foreground/60">
                         {selectedType.durationMinutes} min
                       </span>
                     </span>
                     <button
                       onClick={() => setStep("type")}
-                      className="text-[#0891B2] font-bold hover:underline"
+                      className="text-primary font-bold hover:underline"
                     >
                       Changer
                     </button>
@@ -682,15 +682,15 @@ export default function RdvPage({
                 )}
                 {selectedPractice && practices.length > 1 && (
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-[#134E4A]/60 flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 text-[#0891B2]/60" />
-                      <span className="font-bold text-[#134E4A]">{selectedPractice.name}</span>
-                      <span className="text-[#134E4A]/40">·</span>
-                      <span className="text-[#134E4A]/60">{selectedPractice.city}</span>
+                    <span className="text-foreground/60 flex items-center gap-2">
+                      <MapPin className="h-3.5 w-3.5 text-primary/60" />
+                      <span className="font-bold text-foreground">{selectedPractice.name}</span>
+                      <span className="text-foreground/40">·</span>
+                      <span className="text-foreground/60">{selectedPractice.city}</span>
                     </span>
                     <button
                       onClick={() => setStep("practice")}
-                      className="text-[#0891B2] font-bold hover:underline"
+                      className="text-primary font-bold hover:underline"
                     >
                       Changer
                     </button>
@@ -698,7 +698,7 @@ export default function RdvPage({
                 )}
               </div>
             )}
-            <h2 className="font-heading font-black text-[#134E4A] text-lg">
+            <h2 className="font-heading font-black text-foreground text-lg">
               Choisir un créneau
             </h2>
             <AvailabilityCalendar
@@ -719,22 +719,22 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5"
+            className="rounded-3xl border border-border bg-white shadow-sm p-5 sm:p-6 space-y-5"
           >
             <button
               type="button"
               onClick={() => setStep("slots")}
-              className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0891B2] hover:underline"
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"
             >
               <ArrowLeft className="h-4 w-4" />
               Changer de créneau
             </button>
 
             <div>
-              <h2 className="font-heading font-black text-[#134E4A]">
+              <h2 className="font-heading font-black text-foreground">
                 Quelques questions
               </h2>
-              <p className="text-sm text-[#134E4A]/60 mt-1">
+              <p className="text-sm text-foreground/60 mt-1">
                 Aidez le médecin à préparer votre consultation en répondant aux questions ci-dessous.
               </p>
             </div>
@@ -747,10 +747,10 @@ export default function RdvPage({
 
                 return (
                   <div key={q.id} className="space-y-1.5">
-                    <label className="block text-sm font-semibold text-[#134E4A]">
+                    <label className="block text-sm font-semibold text-foreground">
                       {q.label}
                       {q.required && (
-                        <span className="text-red-500 ml-1" aria-label="obligatoire">*</span>
+                        <span className="text-red-500 ms-1" aria-label="obligatoire">*</span>
                       )}
                     </label>
 
@@ -761,7 +761,7 @@ export default function RdvPage({
                         required={q.required}
                         rows={3}
                         placeholder="Votre réponse..."
-                        className="w-full rounded-xl border border-[#E6F4F1] bg-white px-3 py-2 text-sm text-[#134E4A] focus:outline-none focus:ring-2 focus:ring-[#0891B2] resize-none"
+                        className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                       />
                     )}
 
@@ -774,8 +774,8 @@ export default function RdvPage({
                             onClick={() => setAnswer(opt)}
                             className={`flex-1 rounded-xl border-2 py-2 text-sm font-semibold transition ${
                               value === opt
-                                ? "border-[#0891B2] bg-[#F0FDFA] text-[#0891B2]"
-                                : "border-[#E6F4F1] bg-white text-[#134E4A]/70"
+                                ? "border-primary bg-secondary text-primary"
+                                : "border-border bg-white text-foreground/70"
                             }`}
                           >
                             {opt}
@@ -791,10 +791,10 @@ export default function RdvPage({
                             key={choice}
                             type="button"
                             onClick={() => setAnswer(choice)}
-                            className={`w-full text-left rounded-xl border-2 px-3 py-2 text-sm font-medium transition ${
+                            className={`w-full text-start rounded-xl border-2 px-3 py-2 text-sm font-medium transition ${
                               value === choice
-                                ? "border-[#0891B2] bg-[#F0FDFA] text-[#0891B2]"
-                                : "border-[#E6F4F1] bg-white text-[#134E4A]/70"
+                                ? "border-primary bg-secondary text-primary"
+                                : "border-border bg-white text-foreground/70"
                             }`}
                           >
                             {choice}
@@ -809,32 +809,32 @@ export default function RdvPage({
                           htmlFor={`file-${q.id}`}
                           className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-5 cursor-pointer transition-colors ${
                             value
-                              ? "border-[#0891B2] bg-[#F0FDFA]"
-                              : "border-[#E6F4F1] bg-white hover:border-[#0891B2] hover:bg-[#F0FDFA]/40"
+                              ? "border-primary bg-secondary"
+                              : "border-border bg-white hover:border-primary hover:bg-secondary/40"
                           }`}
                         >
                           {value ? (
                             <>
-                              <svg className="h-6 w-6 text-[#0891B2]" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <svg className="h-6 w-6 text-primary" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                               </svg>
-                              <span className="text-sm font-semibold text-[#0891B2]">{value}</span>
-                              <span className="text-xs text-[#134E4A]/50">
+                              <span className="text-sm font-semibold text-primary">{value}</span>
+                              <span className="text-xs text-foreground/50">
                                 {fileUploads.get(q.id)
                                   ? `${(fileUploads.get(q.id)!.size / 1024 / 1024).toFixed(2)} Mo`
                                   : ""}
                               </span>
-                              <span className="text-xs text-[#0891B2] underline underline-offset-2">Changer le fichier</span>
+                              <span className="text-xs text-primary underline underline-offset-2">Changer le fichier</span>
                             </>
                           ) : (
                             <>
-                              <svg className="h-6 w-6 text-[#134E4A]/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                              <svg className="h-6 w-6 text-foreground/30" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5" />
                               </svg>
-                              <span className="text-sm font-semibold text-[#134E4A]/60">
+                              <span className="text-sm font-semibold text-foreground/60">
                                 Cliquez pour choisir un fichier
                               </span>
-                              <span className="text-xs text-[#134E4A]/40">PDF, JPG, PNG · 5 Mo max</span>
+                              <span className="text-xs text-foreground/40">PDF, JPG, PNG · 5 Mo max</span>
                             </>
                           )}
                         </label>
@@ -858,7 +858,7 @@ export default function RdvPage({
                             setAnswer(file.name);
                           }}
                         />
-                        <p className="text-xs text-[#134E4A]/40">
+                        <p className="text-xs text-foreground/40">
                           Le fichier sera partagé avec le médecin après confirmation du rendez-vous.
                         </p>
                       </div>
@@ -890,7 +890,7 @@ export default function RdvPage({
                 setQuestionError(null);
                 setStep("form");
               }}
-              className="w-full rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold py-3 text-sm transition-colors"
+              className="w-full rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold py-3 text-sm transition-colors"
             >
               Continuer
             </button>
@@ -906,19 +906,19 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-5 sm:p-6 space-y-5"
+            className="rounded-3xl border border-border bg-white shadow-sm p-5 sm:p-6 space-y-5"
           >
             <button
               type="button"
               onClick={() => setStep("slots")}
-              className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0891B2] hover:underline"
+              className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"
             >
               <ArrowLeft className="h-4 w-4" />
               Changer de créneau
             </button>
 
             <div className="flex items-center gap-3">
-              <h2 className="font-heading font-black text-[#134E4A]">
+              <h2 className="font-heading font-black text-foreground">
                 Vos informations
               </h2>
               {selectedMode === "teleconsult" && (
@@ -954,16 +954,16 @@ export default function RdvPage({
                 />
               </div>
 
-              <div className="space-y-2 rounded-2xl border border-[#E6F4F1] bg-[#F0FDFA]/40 p-4">
-                <div className="text-sm font-bold text-[#134E4A]">Pour qui est ce rendez-vous ?</div>
+              <div className="space-y-2 rounded-2xl border border-border bg-secondary/40 p-4">
+                <div className="text-sm font-bold text-foreground">Pour qui est ce rendez-vous ?</div>
                 <div className="grid grid-cols-2 gap-2">
                   <button
                     type="button"
                     onClick={() => setForSelf(true)}
                     className={`rounded-xl border-2 px-3 py-2 text-sm font-semibold transition ${
                       forSelf
-                        ? "border-[#0891B2] bg-white text-[#0891B2]"
-                        : "border-[#E6F4F1] bg-white text-[#134E4A]/70"
+                        ? "border-primary bg-white text-primary"
+                        : "border-border bg-white text-foreground/70"
                     }`}
                   >
                     Pour moi
@@ -973,8 +973,8 @@ export default function RdvPage({
                     onClick={() => setForSelf(false)}
                     className={`rounded-xl border-2 px-3 py-2 text-sm font-semibold transition ${
                       !forSelf
-                        ? "border-[#0891B2] bg-white text-[#0891B2]"
-                        : "border-[#E6F4F1] bg-white text-[#134E4A]/70"
+                        ? "border-primary bg-white text-primary"
+                        : "border-border bg-white text-foreground/70"
                     }`}
                   >
                     Pour un proche
@@ -1014,7 +1014,7 @@ export default function RdvPage({
                               e.target.value as "child" | "parent" | "spouse" | "other",
                             )
                           }
-                          className="w-full rounded-md border border-[#E6F4F1] bg-white px-3 py-2 text-sm text-[#134E4A]"
+                          className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground"
                         >
                           <option value="child">Enfant</option>
                           <option value="parent">Parent</option>
@@ -1023,7 +1023,7 @@ export default function RdvPage({
                         </select>
                       </div>
                     </div>
-                    <p className="text-xs text-[#134E4A]/60">
+                    <p className="text-xs text-foreground/60">
                       Votre numéro reste le point de contact pour les rappels SMS.
                     </p>
                   </div>
@@ -1064,8 +1064,8 @@ export default function RdvPage({
 
         {/* Mobile sticky footer CTA — form step only */}
         {step === "form" && booking && (
-          <div className="sm:hidden fixed bottom-0 left-0 right-0 z-50 px-4 pb-safe-area-inset-bottom">
-            <div className="pb-4 pt-3 backdrop-blur-md bg-white/80 border-t border-[#E6F4F1] -mx-4 px-4">
+          <div className="sm:hidden fixed bottom-0 start-0 end-0 z-50 px-4 pb-safe-area-inset-bottom">
+            <div className="pb-4 pt-3 backdrop-blur-md bg-white/80 border-t border-border -mx-4 px-4">
               <Button
                 type="submit"
                 form="booking-form"
@@ -1091,7 +1091,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-8 text-center space-y-4"
+            className="rounded-3xl border border-border bg-white shadow-sm p-8 text-center space-y-4"
           >
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
               <svg
@@ -1105,10 +1105,10 @@ export default function RdvPage({
               </svg>
             </div>
             <div className="space-y-1">
-              <h2 className="font-heading font-black text-[#134E4A]">
+              <h2 className="font-heading font-black text-foreground">
                 Rendez-vous réservé !
               </h2>
-              <p className="text-sm text-[#134E4A]/60 mb-4">
+              <p className="text-sm text-foreground/60 mb-4">
                 Voulez-vous payer votre consultation maintenant pour garantir votre place ?
               </p>
             </div>
@@ -1135,13 +1135,13 @@ export default function RdvPage({
                     setPayingNow(false);
                   }
                 }}
-                className="w-full bg-[#0891B2] hover:bg-[#0E7490]"
+                className="w-full bg-primary hover:bg-doktori-teal-dark"
               >
                 {payingNow ? "Redirection..." : "Payer maintenant (sécurisé)"}
               </Button>
               <button
                 onClick={() => setStep("success")}
-                className="w-full text-sm text-[#134E4A]/60 hover:underline py-2"
+                className="w-full text-sm text-foreground/60 hover:underline py-2"
               >
                 Payer sur place
               </button>
@@ -1237,15 +1237,15 @@ function SuccessView({
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.25 }}
-              className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm overflow-hidden"
+              className="rounded-3xl border border-border bg-white shadow-sm overflow-hidden"
             >
               {/* Header */}
-              <div className="bg-gradient-to-r from-green-50 to-[#F0FDFA] px-7 pt-7 pb-5 text-center border-b border-[#E6F4F1]">
+              <div className="bg-gradient-to-r from-green-50 to-secondary px-7 pt-7 pb-5 text-center border-b border-border">
                 <motion.h2
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.45 }}
-                  className="text-xl font-heading font-black text-[#134E4A]"
+                  className="text-xl font-heading font-black text-foreground"
                 >
                   Rendez-vous confirmé !
                 </motion.h2>
@@ -1253,7 +1253,7 @@ function SuccessView({
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: 0.55 }}
-                  className="text-sm text-[#134E4A]/60 mt-1"
+                  className="text-sm text-foreground/60 mt-1"
                 >
                   Vous recevrez un SMS de rappel la veille.
                 </motion.p>
@@ -1268,7 +1268,7 @@ function SuccessView({
               >
                 {/* Type badge */}
                 <div className="flex items-center justify-center gap-2 flex-wrap">
-                  <span className="inline-flex items-center gap-1.5 bg-[#F0FDFA] text-[#0E7490] text-xs font-bold px-3 py-1.5 rounded-full border border-[#E6F4F1]">
+                  <span className="inline-flex items-center gap-1.5 bg-secondary text-doktori-teal-dark text-xs font-bold px-3 py-1.5 rounded-full border border-border">
                     <Calendar className="w-3.5 h-3.5" />
                     {selectedType ? selectedType.name : "Consultation médicale"}
                   </span>
@@ -1282,21 +1282,21 @@ function SuccessView({
 
                 {/* Doctor + date */}
                 <div className="rounded-2xl bg-slate-50 p-4 space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-[#134E4A]">
-                    <span className="font-semibold text-[#134E4A]/50 w-16 shrink-0">Médecin</span>
+                  <div className="flex items-center gap-2 text-foreground">
+                    <span className="font-semibold text-foreground/50 w-16 shrink-0">Médecin</span>
                     <span className="font-bold">Dr. {doctor.name}</span>
                   </div>
-                  <div className="flex items-center gap-2 text-[#134E4A]">
-                    <span className="font-semibold text-[#134E4A]/50 w-16 shrink-0">Date</span>
+                  <div className="flex items-center gap-2 text-foreground">
+                    <span className="font-semibold text-foreground/50 w-16 shrink-0">Date</span>
                     <span className="font-bold capitalize">
                       {format(parseISO(booking.date), "EEEE d MMMM yyyy", { locale: fr })}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-[#134E4A]">
-                    <span className="font-semibold text-[#134E4A]/50 w-16 shrink-0">Heure</span>
+                  <div className="flex items-center gap-2 text-foreground">
+                    <span className="font-semibold text-foreground/50 w-16 shrink-0">Heure</span>
                     <span className="font-bold">{booking.startTime}</span>
                     {selectedType && (
-                      <span className="text-[#134E4A]/40 text-xs">
+                      <span className="text-foreground/40 text-xs">
                         · {selectedType.durationMinutes} min
                       </span>
                     )}
@@ -1313,7 +1313,7 @@ function SuccessView({
 
                 {/* Appointment ref */}
                 {appointmentId && (
-                  <p className="text-center text-xs text-[#134E4A]/30 font-mono">
+                  <p className="text-center text-xs text-foreground/30 font-mono">
                     Réf : {appointmentId}
                   </p>
                 )}
@@ -1339,7 +1339,7 @@ function SuccessView({
                       selectedType?.durationMinutes ?? 30
                     );
                   }}
-                  className="flex items-center justify-center gap-2 w-full border-2 border-[#0891B2] text-[#0891B2] hover:bg-[#F0FDFA] transition-colors font-bold text-sm py-3 rounded-xl"
+                  className="flex items-center justify-center gap-2 w-full border-2 border-primary text-primary hover:bg-secondary transition-colors font-bold text-sm py-3 rounded-xl"
                 >
                   <Download className="w-4 h-4" strokeWidth={2.5} />
                   Ajouter au calendrier
@@ -1347,7 +1347,7 @@ function SuccessView({
 
                 <a
                   href="/mes-rdv"
-                  className="flex items-center justify-center gap-2 w-full bg-[#0891B2] hover:bg-[#0E7490] transition-colors text-white font-bold text-sm py-3 rounded-xl shadow-sm shadow-cyan-200"
+                  className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-doktori-teal-dark transition-colors text-white font-bold text-sm py-3 rounded-xl shadow-sm shadow-cyan-200"
                 >
                   Voir mes rendez-vous
                   <ArrowRight className="w-4 h-4" strokeWidth={2.5} />
@@ -1355,7 +1355,7 @@ function SuccessView({
 
                 <a
                   href="/"
-                  className="flex items-center justify-center gap-2 w-full text-[#134E4A]/50 hover:text-[#134E4A]/70 transition-colors text-sm py-2"
+                  className="flex items-center justify-center gap-2 w-full text-foreground/50 hover:text-foreground/70 transition-colors text-sm py-2"
                 >
                   <Home className="w-4 h-4" />
                   Retour à l&apos;accueil

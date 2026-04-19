@@ -88,11 +88,11 @@ function ProcessStep({
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25 transition-transform duration-300 group-hover:scale-110">
           <Icon className="h-7 w-7" strokeWidth={2} />
         </div>
-        <div className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-[#134E4A] text-xs font-bold text-white ring-2 ring-white">
+        <div className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white ring-2 ring-white">
           {number}
         </div>
       </div>
-      <h3 className="mb-1.5 text-base font-bold text-[#134E4A]">{title}</h3>
+      <h3 className="mb-1.5 text-base font-bold text-foreground">{title}</h3>
       <p className="text-sm text-gray-500 leading-relaxed max-w-[200px]">
         {description}
       </p>
@@ -112,11 +112,11 @@ function TrustBadge({
 }) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-100 px-4 py-3 shadow-sm">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0891B2]">
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-primary">
         <Icon className="h-5 w-5" strokeWidth={2.5} />
       </div>
       <div>
-        <p className="text-sm font-bold text-[#134E4A]">{value}</p>
+        <p className="text-sm font-bold text-foreground">{value}</p>
         <p className="text-xs text-gray-500">{label}</p>
       </div>
     </div>
@@ -418,7 +418,7 @@ export default function SOSPage() {
   const color = ringColor(countdown);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-red-50 via-white to-[#F0FDFA]">
+    <div className="min-h-screen bg-gradient-to-b from-red-50 via-white to-secondary">
       {/* ── Cancel confirmation modal ── */}
       <AnimatePresence>
         {showCancelConfirm && (
@@ -474,7 +474,7 @@ export default function SOSPage() {
           <section className="relative overflow-hidden">
             {/* Background decorations */}
             <div className="pointer-events-none absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-red-100/50 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 h-[300px] w-[300px] rounded-full bg-[#0891B2]/5 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -left-20 h-[300px] w-[300px] rounded-full bg-primary/5 blur-3xl" />
 
             <div className="relative mx-auto max-w-5xl px-4 pb-12 pt-12 sm:pt-20 sm:pb-20">
               <div className="flex flex-col items-center text-center">
@@ -497,7 +497,7 @@ export default function SOSPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.1 }}
-                  className="mb-4 text-4xl font-black tracking-tight text-[#134E4A] sm:text-5xl lg:text-6xl"
+                  className="mb-4 text-4xl font-black tracking-tight text-foreground sm:text-5xl lg:text-6xl"
                 >
                   Un médecin chez vous
                   <br />
@@ -562,14 +562,14 @@ export default function SOSPage() {
               <span className="mb-2 inline-block text-sm font-semibold uppercase tracking-widest text-red-500">
                 Comment ça marche
               </span>
-              <h2 className="text-3xl font-bold text-[#134E4A] sm:text-4xl">
+              <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
                 4 étapes simples
               </h2>
             </motion.div>
 
             {/* Connecting line (desktop) */}
             <div className="relative">
-              <div className="absolute top-8 left-[12.5%] right-[12.5%] hidden h-0.5 bg-gradient-to-r from-red-200 via-red-300 to-[#0891B2]/30 sm:block" />
+              <div className="absolute top-8 left-[12.5%] right-[12.5%] hidden h-0.5 bg-gradient-to-r from-red-200 via-red-300 to-primary/30 sm:block" />
               <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
                 <ProcessStep
                   number={1}
@@ -623,7 +623,7 @@ export default function SOSPage() {
               viewport={{ once: true }}
               className="mt-12 rounded-2xl bg-white border border-gray-100 p-6 shadow-sm"
             >
-              <h3 className="text-lg font-bold text-[#134E4A] mb-4">Questions fréquentes</h3>
+              <h3 className="text-lg font-bold text-foreground mb-4">Questions fréquentes</h3>
               <div className="space-y-4 text-sm">
                 <div>
                   <p className="font-semibold text-gray-800">Combien coûte une consultation SOS ?</p>
@@ -659,7 +659,7 @@ export default function SOSPage() {
                 <Siren className="h-6 w-6 text-red-600" strokeWidth={2.5} />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-[#134E4A]">Demande SOS</h2>
+                <h2 className="text-xl font-bold text-foreground">Demande SOS</h2>
                 <p className="text-xs text-gray-500">Consultation urgente non-vitale</p>
               </div>
             </div>
@@ -797,11 +797,11 @@ export default function SOSPage() {
             className="text-center"
           >
             <div className="relative mx-auto mb-6 flex h-24 w-24 items-center justify-center">
-              <span className="absolute inset-0 rounded-full bg-[#0891B2]/10 animate-ping" />
-              <span className="absolute inset-2 rounded-full bg-[#0891B2]/20 animate-pulse" />
-              <MapPin className="relative h-10 w-10 text-[#0891B2]" strokeWidth={2} />
+              <span className="absolute inset-0 rounded-full bg-primary/10 animate-ping" />
+              <span className="absolute inset-2 rounded-full bg-primary/20 animate-pulse" />
+              <MapPin className="relative h-10 w-10 text-primary" strokeWidth={2} />
             </div>
-            <p className="text-lg font-semibold text-[#134E4A]">Obtention de votre position...</p>
+            <p className="text-lg font-semibold text-foreground">Obtention de votre position...</p>
             <p className="mt-2 text-sm text-gray-500">
               Veuillez autoriser l&apos;accès à votre localisation
             </p>
@@ -875,8 +875,8 @@ export default function SOSPage() {
 
             {/* Status */}
             <div className="mb-2 flex items-center justify-center gap-2">
-              <Loader2 className="h-4 w-4 animate-spin text-[#0891B2]" />
-              <p className="text-base font-semibold text-[#134E4A]">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <p className="text-base font-semibold text-foreground">
                 Recherche en cours...
               </p>
             </div>
@@ -891,7 +891,7 @@ export default function SOSPage() {
                   key={i}
                   animate={{ opacity: [0.3, 1, 0.3] }}
                   transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.3 }}
-                  className="h-1.5 w-8 rounded-full bg-[#0891B2]"
+                  className="h-1.5 w-8 rounded-full bg-primary"
                 />
               ))}
             </div>
@@ -934,7 +934,7 @@ export default function SOSPage() {
             >
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </motion.div>
-            <h2 className="text-center text-xl font-bold text-[#134E4A] mb-1">
+            <h2 className="text-center text-xl font-bold text-foreground mb-1">
               Médecin trouvé !
             </h2>
             <p className="text-center text-sm text-gray-500 mb-6">
@@ -942,23 +942,23 @@ export default function SOSPage() {
             </p>
 
             {/* Doctor info card */}
-            <div className="rounded-xl bg-gradient-to-br from-[#F0FDFA] to-green-50 border border-green-200 p-5 mb-4 space-y-3">
+            <div className="rounded-xl bg-gradient-to-br from-secondary to-green-50 border border-green-200 p-5 mb-4 space-y-3">
               <div className="flex items-center gap-3">
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white shadow-sm">
-                  <Stethoscope className="h-6 w-6 text-[#0891B2]" />
+                  <Stethoscope className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <p className="font-bold text-[#134E4A] text-lg">{sessionData.doctor_name}</p>
+                  <p className="font-bold text-foreground text-lg">{sessionData.doctor_name}</p>
                   <p className="text-sm text-gray-500">Médecin généraliste</p>
                 </div>
               </div>
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2 text-gray-600">
-                  <Phone className="h-4 w-4 text-[#0891B2]" />
+                  <Phone className="h-4 w-4 text-primary" />
                   <span>{sessionData.doctor_phone}</span>
                 </div>
                 <div className="flex items-center gap-2 text-gray-600">
-                  <MapPin className="h-4 w-4 text-[#0891B2]" />
+                  <MapPin className="h-4 w-4 text-primary" />
                   <span>{sessionData.doctor_address}</span>
                 </div>
               </div>
@@ -970,7 +970,7 @@ export default function SOSPage() {
                 href={`tel:${sessionData.doctor_phone}`}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
-                className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-[#0891B2] to-[#0e7490] text-white font-bold py-4 text-base shadow-lg shadow-[#0891B2]/20 transition-shadow hover:shadow-xl hover:shadow-[#0891B2]/30"
+                className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-primary to-doktori-teal-dark text-white font-bold py-4 text-base shadow-lg shadow-primary/20 transition-shadow hover:shadow-xl hover:shadow-primary/30"
               >
                 <Phone className="w-5 h-5" />
                 Appeler Dr. {sessionData.doctor_name?.split(" ").slice(-1)[0]}
@@ -1006,7 +1006,7 @@ export default function SOSPage() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
               <Timer className="h-8 w-8 text-amber-600" />
             </div>
-            <h2 className="text-xl font-bold text-[#134E4A] mb-2">
+            <h2 className="text-xl font-bold text-foreground mb-2">
               Aucun médecin disponible
             </h2>
             <p className="text-sm text-gray-500 mb-6">
@@ -1018,7 +1018,7 @@ export default function SOSPage() {
             <div className="space-y-3">
               <Button
                 onClick={retryRequest}
-                className="w-full rounded-xl bg-[#0891B2] hover:bg-[#0e7490] py-5 text-base font-bold"
+                className="w-full rounded-xl bg-primary hover:bg-doktori-teal-dark py-5 text-base font-bold"
               >
                 Réessayer
               </Button>
@@ -1047,13 +1047,13 @@ export default function SOSPage() {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
               <XCircle className="h-8 w-8 text-gray-400" />
             </div>
-            <h2 className="text-xl font-bold text-[#134E4A] mb-2">Demande annulée</h2>
+            <h2 className="text-xl font-bold text-foreground mb-2">Demande annulée</h2>
             <p className="text-sm text-gray-500 mb-6">
               Votre demande SOS a été annulée. Vous pouvez en créer une nouvelle à tout moment.
             </p>
             <Button
               onClick={resetAll}
-              className="w-full rounded-xl bg-[#0891B2] hover:bg-[#0e7490] py-5 text-base font-bold"
+              className="w-full rounded-xl bg-primary hover:bg-doktori-teal-dark py-5 text-base font-bold"
             >
               Nouvelle demande
             </Button>

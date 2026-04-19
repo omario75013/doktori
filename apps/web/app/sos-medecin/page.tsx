@@ -380,7 +380,7 @@ export default function SOSPage() {
       {showCancelConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
-            <h3 className="font-semibold text-[#134E4A]">Annuler la consultation ?</h3>
+            <h3 className="font-semibold text-foreground">Annuler la consultation ?</h3>
             <p className="text-sm text-gray-600">
               Cette action annulera la consultation en cours. Le patient sera notifié.
             </p>
@@ -404,7 +404,7 @@ export default function SOSPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-[#134E4A]">SOS Docteur</h1>
+        <h1 className="text-2xl font-bold text-foreground">SOS Docteur</h1>
         <p className="text-sm text-gray-500 mt-1">
           Activez le mode urgence pour recevoir des demandes de consultation rapide dans votre zone.
         </p>
@@ -462,7 +462,7 @@ export default function SOSPage() {
                   type="checkbox"
                   checked={allDay}
                   onChange={(e) => setAllDay(e.target.checked)}
-                  className="h-4 w-4 rounded border-gray-300 text-[#0891B2] focus:ring-[#0891B2]"
+                  className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <Label htmlFor="allday" className="cursor-pointer">
                   24h/24 (toujours disponible)
@@ -478,7 +478,7 @@ export default function SOSPage() {
                       type="time"
                       value={availableFrom}
                       onChange={(e) => setAvailableFrom(e.target.value)}
-                      className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0891B2]"
+                      className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     />
                   </div>
                   <div className="flex-1">
@@ -488,7 +488,7 @@ export default function SOSPage() {
                       type="time"
                       value={availableTo}
                       onChange={(e) => setAvailableTo(e.target.value)}
-                      className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0891B2]"
+                      className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     />
                   </div>
                 </div>
@@ -501,7 +501,7 @@ export default function SOSPage() {
 
         <Button
           onClick={toggleSOS}
-          className={sosAvailable ? "bg-red-600 hover:bg-red-700" : "bg-[#0891B2] hover:bg-[#0891B2]/90"}
+          className={sosAvailable ? "bg-red-600 hover:bg-red-700" : "bg-primary hover:bg-primary/90"}
         >
           {sosAvailable ? "Désactiver le mode SOS" : "Activer le mode SOS"}
         </Button>
@@ -509,10 +509,10 @@ export default function SOSPage() {
 
       {/* Active session card */}
       {sosAvailable && activeSession && (
-        <div className="bg-white rounded-xl border border-[#0891B2] p-6 space-y-4">
+        <div className="bg-white rounded-xl border border-primary p-6 space-y-4">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <h2 className="font-semibold text-[#134E4A]">Consultation en cours</h2>
+            <h2 className="font-semibold text-foreground">Consultation en cours</h2>
           </div>
 
           <div className="space-y-1 text-sm">
@@ -538,7 +538,7 @@ export default function SOSPage() {
             <div className="flex gap-3">
               <Button
                 onClick={() => setShowCompleteForm(true)}
-                className="bg-[#0891B2] hover:bg-[#0891B2]/90"
+                className="bg-primary hover:bg-primary/90"
               >
                 Consultation terminée
               </Button>
@@ -569,7 +569,7 @@ export default function SOSPage() {
                 <Button
                   onClick={completeSession}
                   disabled={completing}
-                  className="bg-[#0891B2] hover:bg-[#0891B2]/90"
+                  className="bg-primary hover:bg-primary/90"
                 >
                   {completing ? "Enregistrement..." : "Confirmer et clôturer"}
                 </Button>
@@ -586,7 +586,7 @@ export default function SOSPage() {
       {sosAvailable && !activeSession && (
         <div className="bg-white rounded-xl border">
           <div className="p-4 border-b flex items-center justify-between">
-            <h2 className="font-semibold text-[#134E4A]">
+            <h2 className="font-semibold text-foreground">
               Demandes en cours ({visibleFeed.length})
             </h2>
             <span className="text-xs text-gray-400">Mise à jour en temps réel</span>
@@ -613,7 +613,7 @@ export default function SOSPage() {
 
       {/* History */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-[#134E4A]">Historique SOS</h2>
+        <h2 className="text-lg font-semibold text-foreground">Historique SOS</h2>
 
         {/* Earnings KPI strip */}
         {earnings && (
@@ -717,7 +717,7 @@ function FeedCard({
     <div className="p-4 space-y-3">
       <div className="flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <div className="font-medium text-[#134E4A]">{request.patient_name}</div>
+          <div className="font-medium text-foreground">{request.patient_name}</div>
           <div className="text-xs text-gray-500 mt-0.5">
             {(request.distance_m / 1000).toFixed(1)} km &middot;{" "}
             {request.symptom_category || "Non spécifié"}
@@ -731,7 +731,7 @@ function FeedCard({
         <Button
           size="sm"
           onClick={onAccept}
-          className="shrink-0 bg-[#0891B2] hover:bg-[#0891B2]/90"
+          className="shrink-0 bg-primary hover:bg-primary/90"
         >
           Accepter
         </Button>
@@ -742,7 +742,7 @@ function FeedCard({
         <select
           value={selectedReason}
           onChange={(e) => setSelectedReason(e.target.value)}
-          className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-[#0891B2]"
+          className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <option value="">Décliner — choisir une raison</option>
           {DECLINE_REASONS.map((r) => (
@@ -770,7 +770,7 @@ function FeedCard({
 function KpiCard({ label, value }: { label: string; value: string }) {
   return (
     <div className="bg-white rounded-xl border p-4 text-center">
-      <div className="text-xl font-bold text-[#134E4A]">{value}</div>
+      <div className="text-xl font-bold text-foreground">{value}</div>
       <div className="text-xs text-gray-500 mt-1">{label}</div>
     </div>
   );

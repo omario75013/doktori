@@ -63,7 +63,7 @@ const STATUS_LABELS: Record<string, string> = {
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-orange-100 text-orange-700",
-  confirmed: "bg-[#F0FDFA] text-[#0891B2]",
+  confirmed: "bg-secondary text-primary",
   cancelled: "bg-gray-100 text-gray-500",
   completed: "bg-blue-100 text-blue-700",
   no_show: "bg-red-100 text-red-700",
@@ -73,7 +73,7 @@ const HIGHLIGHT_STYLES: Record<string, string> = {
   red: "bg-red-50 border-red-200 text-red-900",
   orange: "bg-orange-50 border-orange-200 text-orange-900",
   blue: "bg-blue-50 border-blue-200 text-blue-900",
-  gray: "bg-[#F0FDFA] border-[#E6F4F1] text-[#134E4A]",
+  gray: "bg-secondary border-border text-foreground",
 };
 
 function MedBlock({
@@ -144,7 +144,7 @@ function NotesCell({ appointment }: { appointment: Appointment }) {
           onBlur={handleSave}
           maxLength={2000}
           rows={3}
-          className="w-full text-sm border border-[#E6F4F1] rounded-xl px-2 py-1 resize-none focus:outline-none focus:ring-2 focus:ring-[#0891B2]"
+          className="w-full text-sm border border-border rounded-xl px-2 py-1 resize-none focus:outline-none focus:ring-2 focus:ring-primary"
           placeholder="Notes privées..."
           disabled={saving}
         />
@@ -156,7 +156,7 @@ function NotesCell({ appointment }: { appointment: Appointment }) {
   return (
     <button
       onClick={() => setEditing(true)}
-      className="text-left w-full min-h-[2rem] text-sm text-gray-600 hover:bg-[#F0FDFA] rounded-xl px-2 py-1 border border-transparent hover:border-[#E6F4F1] transition-colors"
+      className="text-left w-full min-h-[2rem] text-sm text-gray-600 hover:bg-secondary rounded-xl px-2 py-1 border border-transparent hover:border-border transition-colors"
       title="Cliquer pour modifier"
     >
       {notes ? (
@@ -243,7 +243,7 @@ export default function PatientDetailPage() {
   };
 
   if (loading) {
-    return <p className="text-[#0891B2] text-sm p-6">Chargement...</p>;
+    return <p className="text-primary text-sm p-6">Chargement...</p>;
   }
 
   if (error || !patient) {
@@ -252,7 +252,7 @@ export default function PatientDetailPage() {
         <p className="text-red-500 text-sm">{error ?? "Patient introuvable"}</p>
         <button
           onClick={() => router.back()}
-          className="text-sm text-[#0891B2] hover:underline flex items-center gap-1"
+          className="text-sm text-primary hover:underline flex items-center gap-1"
         >
           <ArrowLeft className="h-4 w-4" />
           Retour
@@ -267,16 +267,16 @@ export default function PatientDetailPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.back()}
-          className="h-9 w-9 rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] flex items-center justify-center text-gray-500 hover:text-[#0891B2] transition-colors"
+          className="h-9 w-9 rounded-xl border border-border hover:bg-secondary flex items-center justify-center text-gray-500 hover:text-primary transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+        <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary">
           <User className="h-5 w-5" />
         </div>
         <div className="flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold text-[#134E4A]">{patient.name}</h1>
+            <h1 className="text-2xl font-bold text-foreground">{patient.name}</h1>
             {patient.noShowCount > 0 && (
               <span
                 className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700"
@@ -302,31 +302,31 @@ export default function PatientDetailPage() {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
           <div className="text-xs text-gray-500 uppercase tracking-wide">Total visites</div>
-          <div className="text-3xl font-bold mt-1 text-[#134E4A]">{appointments.length}</div>
+          <div className="text-3xl font-bold mt-1 text-foreground">{appointments.length}</div>
         </div>
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm hover:shadow-md transition-shadow">
           <div className="text-xs text-gray-500 uppercase tracking-wide">Patient depuis</div>
-          <div className="text-lg font-semibold mt-1 text-[#134E4A]">
+          <div className="text-lg font-semibold mt-1 text-foreground">
             {format(new Date(patient.createdAt), "d MMM yyyy", { locale: fr })}
           </div>
         </div>
       </div>
 
-      <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm">
-        <div className="p-4 border-b border-[#E6F4F1] flex items-center justify-between">
-          <h2 className="font-semibold text-[#134E4A]">Dossier médical</h2>
+      <div className="rounded-2xl border border-border bg-white shadow-sm">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <h2 className="font-semibold text-foreground">Dossier médical</h2>
           {medical?.updatedAt && (
             <span className="text-xs text-gray-400">
               Mis à jour le {format(new Date(medical.updatedAt), "d MMM yyyy", { locale: fr })}
             </span>
           )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5 border-b border-[#E6F4F1] text-sm">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 p-5 border-b border-border text-sm">
           <div>
             <div className="text-xs text-gray-500 uppercase tracking-wide">Date de naissance</div>
-            <div className="font-medium text-[#134E4A] mt-1">
+            <div className="font-medium text-foreground mt-1">
               {patient.dateOfBirth
                 ? format(new Date(patient.dateOfBirth), "d MMM yyyy", { locale: fr })
                 : "—"}
@@ -334,13 +334,13 @@ export default function PatientDetailPage() {
           </div>
           <div>
             <div className="text-xs text-gray-500 uppercase tracking-wide">Sexe</div>
-            <div className="font-medium text-[#134E4A] mt-1">
+            <div className="font-medium text-foreground mt-1">
               {patient.gender === "M" ? "Homme" : patient.gender === "F" ? "Femme" : "—"}
             </div>
           </div>
           <div>
             <div className="text-xs text-gray-500 uppercase tracking-wide">Groupe sanguin</div>
-            <div className="font-medium text-[#134E4A] mt-1">{patient.bloodType ?? "—"}</div>
+            <div className="font-medium text-foreground mt-1">{patient.bloodType ?? "—"}</div>
           </div>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-5 text-sm">
@@ -353,14 +353,14 @@ export default function PatientDetailPage() {
 
       {/* SOAP Consultation History */}
       {consultNotes.length > 0 && (
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm">
-          <div className="p-4 border-b border-[#E6F4F1]">
-            <h2 className="font-semibold text-[#134E4A]">Historique de consultations (SOAP)</h2>
+        <div className="rounded-2xl border border-border bg-white shadow-sm">
+          <div className="p-4 border-b border-border">
+            <h2 className="font-semibold text-foreground">Historique de consultations (SOAP)</h2>
             <p className="text-xs text-gray-400 mt-0.5">
               Cliquer sur une consultation pour voir la note complète
             </p>
           </div>
-          <div className="divide-y divide-[#E6F4F1]">
+          <div className="divide-y divide-border">
             {consultNotes.map((cn) => {
               const isExpanded = expandedNotes.has(cn.id);
               return (
@@ -370,7 +370,7 @@ export default function PatientDetailPage() {
                     className="w-full text-left flex items-center justify-between gap-3 hover:opacity-80 transition-opacity"
                   >
                     <div className="flex items-center gap-3 flex-wrap">
-                      <span className="text-sm font-medium text-[#134E4A]">
+                      <span className="text-sm font-medium text-foreground">
                         {format(new Date(cn.startsAt), "d MMM yyyy", { locale: fr })}
                       </span>
                       {cn.icd10Codes && cn.icd10Codes.length > 0 && (
@@ -378,7 +378,7 @@ export default function PatientDetailPage() {
                           {cn.icd10Codes.map((c) => (
                             <span
                               key={c.code}
-                              className="inline-flex items-center gap-1 bg-[#E6F4F1] text-[#0891B2] text-xs px-2 py-0.5 rounded-full font-mono font-bold"
+                              className="inline-flex items-center gap-1 bg-border text-primary text-xs px-2 py-0.5 rounded-full font-mono font-bold"
                             >
                               {c.code}
                             </span>
@@ -405,7 +405,7 @@ export default function PatientDetailPage() {
                               return (
                                 <span
                                   key={k}
-                                  className="bg-[#F0FDFA] border border-[#E6F4F1] rounded-xl px-2 py-1 text-xs text-[#134E4A]"
+                                  className="bg-secondary border border-border rounded-xl px-2 py-1 text-xs text-foreground"
                                 >
                                   <span className="font-medium">{meta.label}</span>{" "}
                                   {v} {meta.unit}
@@ -422,9 +422,9 @@ export default function PatientDetailPage() {
                             {cn.icd10Codes.map((c) => (
                               <span
                                 key={c.code}
-                                className="inline-flex items-center gap-1.5 bg-[#E6F4F1] text-[#134E4A] text-xs px-2 py-1 rounded-full"
+                                className="inline-flex items-center gap-1.5 bg-border text-foreground text-xs px-2 py-1 rounded-full"
                               >
-                                <span className="font-mono font-bold text-[#0891B2]">{c.code}</span>
+                                <span className="font-mono font-bold text-primary">{c.code}</span>
                                 {c.label}
                               </span>
                             ))}
@@ -440,7 +440,7 @@ export default function PatientDetailPage() {
                         cn[key] ? (
                           <div key={key}>
                             <div className="flex items-center gap-1.5 mb-1">
-                              <span className="w-5 h-5 rounded-full bg-[#0891B2] text-white flex items-center justify-center text-xs font-bold shrink-0">
+                              <span className="w-5 h-5 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
                                 {letter}
                               </span>
                               <span className="text-xs text-gray-500 uppercase tracking-wide">{label}</span>
@@ -458,9 +458,9 @@ export default function PatientDetailPage() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm">
-        <div className="p-4 border-b border-[#E6F4F1]">
-          <h2 className="font-semibold text-[#134E4A]">Historique des rendez-vous</h2>
+      <div className="rounded-2xl border border-border bg-white shadow-sm">
+        <div className="p-4 border-b border-border">
+          <h2 className="font-semibold text-foreground">Historique des rendez-vous</h2>
           <p className="text-xs text-gray-400 mt-0.5">
             Cliquer sur une note pour la modifier — sauvegarde automatique
           </p>
@@ -471,16 +471,16 @@ export default function PatientDetailPage() {
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-[#E6F4F1] bg-[#F0FDFA] text-left">
-                  <th className="px-4 py-3 font-medium text-[#134E4A]">Date</th>
-                  <th className="px-4 py-3 font-medium text-[#134E4A]">Statut</th>
-                  <th className="px-4 py-3 font-medium text-[#134E4A]">Motif</th>
-                  <th className="px-4 py-3 font-medium text-[#134E4A] w-64">Notes privées</th>
+                <tr className="border-b border-border bg-secondary text-left">
+                  <th className="px-4 py-3 font-medium text-foreground">Date</th>
+                  <th className="px-4 py-3 font-medium text-foreground">Statut</th>
+                  <th className="px-4 py-3 font-medium text-foreground">Motif</th>
+                  <th className="px-4 py-3 font-medium text-foreground w-64">Notes privées</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#E6F4F1]">
+              <tbody className="divide-y divide-border">
                 {appointments.map((appt) => (
-                  <tr key={appt.id} className="hover:bg-[#F0FDFA] transition-colors align-top">
+                  <tr key={appt.id} className="hover:bg-secondary transition-colors align-top">
                     <td className="px-4 py-3 whitespace-nowrap text-gray-700">
                       {format(new Date(appt.startsAt), "d MMM yyyy HH:mm", { locale: fr })}
                     </td>

@@ -82,7 +82,7 @@ export default function AdminLoginPage() {
           </div>
           <div>
             <span className="text-2xl font-black text-white">Doktori</span>
-            <span className="text-2xl font-black text-[#22D3EE]">.tn</span>
+            <span className="text-2xl font-black text-doktori-teal-light">.tn</span>
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mt-0.5">
               Administration
             </p>
@@ -92,13 +92,13 @@ export default function AdminLoginPage() {
         {/* Body */}
         <div className="relative">
           <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 py-1.5 text-xs font-bold text-slate-300 backdrop-blur">
-            <Shield className="h-3.5 w-3.5 text-[#22D3EE]" strokeWidth={2.5} />
+            <Shield className="h-3.5 w-3.5 text-doktori-teal-light" strokeWidth={2.5} />
             ACCÈS SÉCURISÉ
           </div>
           <h2 className="mt-6 text-4xl font-black leading-tight tracking-tight text-white xl:text-5xl">
             Gérez votre
             <br />
-            <span className="text-[#22D3EE]">plateforme.</span>
+            <span className="text-doktori-teal-light">plateforme.</span>
           </h2>
           <p className="mt-4 max-w-md text-base leading-relaxed text-slate-400">
             Espace réservé aux administrateurs Doktori. Toutes les actions
@@ -108,8 +108,8 @@ export default function AdminLoginPage() {
           <ul className="mt-8 space-y-3">
             {benefits.map(({ icon: Icon, label }) => (
               <li key={label} className="flex items-center gap-3 text-sm text-slate-300">
-                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#0891B2]/20 border border-[#0891B2]/30">
-                  <Icon className="h-3.5 w-3.5 text-[#22D3EE]" strokeWidth={2.5} />
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/20 border border-primary/30">
+                  <Icon className="h-3.5 w-3.5 text-doktori-teal-light" strokeWidth={2.5} />
                 </span>
                 {label}
               </li>
@@ -132,7 +132,7 @@ export default function AdminLoginPage() {
             </div>
             <div>
               <span className="text-xl font-black text-slate-900">Doktori</span>
-              <span className="text-xl font-black text-[#0891B2]">.tn</span>
+              <span className="text-xl font-black text-primary">.tn</span>
               <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
                 Administration
               </p>
@@ -158,9 +158,9 @@ export default function AdminLoginPage() {
                 >
                   Email
                 </label>
-                <div className="group flex h-12 items-center rounded-xl border-2 border-slate-200 bg-white px-4 transition-colors focus-within:border-[#0891B2]">
+                <div className="group flex h-12 items-center rounded-xl border-2 border-slate-200 bg-white px-4 transition-colors focus-within:border-primary">
                   <Mail
-                    className="mr-3 h-4 w-4 shrink-0 text-slate-400 transition-colors group-focus-within:text-[#0891B2]"
+                    className="mr-3 h-4 w-4 shrink-0 text-slate-400 transition-colors group-focus-within:text-primary"
                     strokeWidth={2.5}
                   />
                   <input
@@ -184,9 +184,9 @@ export default function AdminLoginPage() {
                 >
                   Mot de passe
                 </label>
-                <div className="group flex h-12 items-center rounded-xl border-2 border-slate-200 bg-white px-4 transition-colors focus-within:border-[#0891B2]">
+                <div className="group flex h-12 items-center rounded-xl border-2 border-slate-200 bg-white px-4 transition-colors focus-within:border-primary">
                   <Lock
-                    className="mr-3 h-4 w-4 shrink-0 text-slate-400 transition-colors group-focus-within:text-[#0891B2]"
+                    className="mr-3 h-4 w-4 shrink-0 text-slate-400 transition-colors group-focus-within:text-primary"
                     strokeWidth={2.5}
                   />
                   <input

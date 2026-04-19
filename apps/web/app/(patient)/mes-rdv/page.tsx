@@ -257,14 +257,14 @@ export default function MesRdvPage() {
 
   if (step === "phone") {
     return (
-      <div className="min-h-screen bg-[#F0FDFA]/40 flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen bg-secondary/40 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#0891B2]/10 mb-4">
-              <Calendar className="h-7 w-7 text-[#0891B2]" strokeWidth={2} />
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
+              <Calendar className="h-7 w-7 text-primary" strokeWidth={2} />
             </div>
-            <h1 className="text-2xl font-black text-[#134E4A]">Mes rendez-vous</h1>
-            <p className="text-sm text-[#134E4A]/60 mt-1">Entrez votre numéro de téléphone pour accéder à vos RDV</p>
+            <h1 className="text-2xl font-black text-foreground">Mes rendez-vous</h1>
+            <p className="text-sm text-foreground/60 mt-1">Entrez votre numéro de téléphone pour accéder à vos RDV</p>
           </div>
 
           {sessionExpiredMsg && (
@@ -273,10 +273,10 @@ export default function MesRdvPage() {
             </p>
           )}
 
-          <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm p-6">
+          <div className="bg-white rounded-2xl border border-border shadow-sm p-6">
             <form onSubmit={requestOtp} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="phone" className="text-[#134E4A] font-semibold text-sm">
+                <Label htmlFor="phone" className="text-foreground font-semibold text-sm">
                   Numéro de téléphone
                 </Label>
                 <Input
@@ -285,7 +285,7 @@ export default function MesRdvPage() {
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+216 XX XXX XXX"
                   required
-                  className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                  className="h-12 rounded-xl border-border focus-visible:ring-primary"
                 />
               </div>
               {error && (
@@ -295,7 +295,7 @@ export default function MesRdvPage() {
               )}
               <Button
                 type="submit"
-                className="w-full h-12 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] font-bold text-white"
+                className="w-full h-12 rounded-xl bg-primary hover:bg-doktori-teal-dark font-bold text-white"
                 disabled={loading}
               >
                 {loading ? "Envoi..." : "Recevoir le code par SMS"}
@@ -303,9 +303,9 @@ export default function MesRdvPage() {
             </form>
           </div>
 
-          <p className="text-center text-sm text-[#134E4A]/60 mt-4">
+          <p className="text-center text-sm text-foreground/60 mt-4">
             Vous avez un compte email ?{" "}
-            <a href="/connexion-patient" className="font-bold text-[#0891B2] hover:underline">
+            <a href="/connexion-patient" className="font-bold text-primary hover:underline">
               Se connecter par email
             </a>
           </p>
@@ -316,22 +316,22 @@ export default function MesRdvPage() {
 
   if (step === "code") {
     return (
-      <div className="min-h-screen bg-[#F0FDFA]/40 flex items-center justify-center px-4 py-12">
+      <div className="min-h-screen bg-secondary/40 flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#0891B2]/10 mb-4">
-              <Calendar className="h-7 w-7 text-[#0891B2]" strokeWidth={2} />
+            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
+              <Calendar className="h-7 w-7 text-primary" strokeWidth={2} />
             </div>
-            <h1 className="text-2xl font-black text-[#134E4A]">Code de vérification</h1>
-            <p className="text-sm text-[#134E4A]/60 mt-1">
+            <h1 className="text-2xl font-black text-foreground">Code de vérification</h1>
+            <p className="text-sm text-foreground/60 mt-1">
               Entrez le code à 6 chiffres reçu par SMS au <span className="font-semibold">{phone}</span>
             </p>
           </div>
 
-          <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm p-6">
+          <div className="bg-white rounded-2xl border border-border shadow-sm p-6">
             <form onSubmit={verifyOtp} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="code" className="text-[#134E4A] font-semibold text-sm">
+                <Label htmlFor="code" className="text-foreground font-semibold text-sm">
                   Code SMS
                 </Label>
                 <Input
@@ -341,7 +341,7 @@ export default function MesRdvPage() {
                   placeholder="123456"
                   maxLength={6}
                   required
-                  className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] text-center text-xl tracking-widest font-bold"
+                  className="h-12 rounded-xl border-border focus-visible:ring-primary text-center text-xl tracking-widest font-bold"
                 />
               </div>
               {error && (
@@ -351,7 +351,7 @@ export default function MesRdvPage() {
               )}
               <Button
                 type="submit"
-                className="w-full h-12 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] font-bold text-white"
+                className="w-full h-12 rounded-xl bg-primary hover:bg-doktori-teal-dark font-bold text-white"
                 disabled={loading}
               >
                 {loading ? "Vérification..." : "Valider"}
@@ -359,7 +359,7 @@ export default function MesRdvPage() {
               <button
                 type="button"
                 onClick={() => setStep("phone")}
-                className="w-full text-sm text-[#134E4A]/60 hover:text-[#0891B2] transition-colors"
+                className="w-full text-sm text-foreground/60 hover:text-primary transition-colors"
               >
                 Changer de numéro
               </button>
@@ -387,9 +387,9 @@ export default function MesRdvPage() {
     activeTab === "upcoming" ? upcoming : activeTab === "past" ? past : cancelled;
 
   return (
-    <div className="min-h-screen bg-[#F0FDFA]/40">
+    <div className="min-h-screen bg-secondary/40">
       {/* Teal gradient banner */}
-      <div className="bg-gradient-to-br from-[#0891B2] to-[#134E4A] px-4 py-8">
+      <div className="bg-gradient-to-br from-primary to-foreground px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -431,22 +431,22 @@ export default function MesRdvPage() {
         {loading ? (
           <div className="flex items-center justify-center py-16">
             <div className="text-center space-y-3">
-              <div className="w-10 h-10 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-[#134E4A]/60 text-sm">Chargement de vos rendez-vous...</p>
+              <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+              <p className="text-foreground/60 text-sm">Chargement de vos rendez-vous...</p>
             </div>
           </div>
         ) : (
           <>
             {/* Tabs */}
-            <div className="flex gap-1 bg-white rounded-2xl border border-[#E6F4F1] p-1 mb-6 shadow-sm">
+            <div className="flex gap-1 bg-white rounded-2xl border border-border p-1 mb-6 shadow-sm">
               {tabs.map((tab) => (
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
                   className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all flex-1 justify-center ${
                     activeTab === tab.id
-                      ? "bg-[#0891B2] text-white shadow-sm"
-                      : "text-[#134E4A]/60 hover:text-[#134E4A] hover:bg-[#F0FDFA]"
+                      ? "bg-primary text-white shadow-sm"
+                      : "text-foreground/60 hover:text-foreground hover:bg-secondary"
                   }`}
                 >
                   {tab.label}
@@ -455,7 +455,7 @@ export default function MesRdvPage() {
                       className={`inline-flex items-center justify-center min-w-[18px] h-[18px] rounded-full text-xs font-bold px-1 ${
                         activeTab === tab.id
                           ? "bg-white/30 text-white"
-                          : "bg-[#0891B2]/10 text-[#0891B2]"
+                          : "bg-primary/10 text-primary"
                       }`}
                     >
                       {tabCounts[tab.id]}
@@ -467,11 +467,11 @@ export default function MesRdvPage() {
 
             {/* Appointment list */}
             {displayedAppointments.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm p-10 text-center">
-                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#F0FDFA] mb-4">
-                  <Stethoscope className="h-7 w-7 text-[#0891B2]/50" strokeWidth={1.5} />
+              <div className="bg-white rounded-2xl border border-border shadow-sm p-10 text-center">
+                <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-secondary mb-4">
+                  <Stethoscope className="h-7 w-7 text-primary/50" strokeWidth={1.5} />
                 </div>
-                <p className="font-semibold text-[#134E4A] mb-1">
+                <p className="font-semibold text-foreground mb-1">
                   {activeTab === "upcoming"
                     ? "Vous n'avez aucun rendez-vous à venir"
                     : activeTab === "past"
@@ -480,10 +480,10 @@ export default function MesRdvPage() {
                 </p>
                 {activeTab === "upcoming" && (
                   <>
-                    <p className="text-sm text-[#134E4A]/50 mb-4">Prenez rendez-vous avec un médecin dès maintenant</p>
+                    <p className="text-sm text-foreground/50 mb-4">Prenez rendez-vous avec un médecin dès maintenant</p>
                     <a
                       href="/"
-                      className="inline-flex items-center gap-2 bg-[#0891B2] hover:bg-[#0E7490] text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors"
+                      className="inline-flex items-center gap-2 bg-primary hover:bg-doktori-teal-dark text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors"
                     >
                       Trouver un médecin
                     </a>
@@ -501,26 +501,26 @@ export default function MesRdvPage() {
                   return (
                     <div
                       key={a.id}
-                      className={`bg-white rounded-2xl border border-[#E6F4F1] border-l-4 ${cardBorderColor(a.status, a.type)} shadow-sm hover:shadow-md hover:border-[#0891B2]/30 transition-all duration-200 p-4 ${
+                      className={`bg-white rounded-2xl border border-border border-l-4 ${cardBorderColor(a.status, a.type)} shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 p-4 ${
                         !isUpcomingAppt ? "opacity-85" : ""
                       }`}
                     >
                       <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap mb-1">
-                            <span className="font-bold text-[#0891B2] truncate">{a.doctorName}</span>
+                            <span className="font-bold text-primary truncate">{a.doctorName}</span>
                             <TypeBadge type={a.type} />
                             <StatusBadge status={a.status} />
                           </div>
-                          <p className="text-sm text-[#134E4A]/70 mb-2">{spec?.label}</p>
-                          <div className="flex items-center gap-1.5 text-sm text-[#134E4A]/60 mb-1">
+                          <p className="text-sm text-foreground/70 mb-2">{spec?.label}</p>
+                          <div className="flex items-center gap-1.5 text-sm text-foreground/60 mb-1">
                             <Clock className="h-3.5 w-3.5 flex-shrink-0" />
                             <span className="capitalize">
                               {format(new Date(a.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
                             </span>
                           </div>
                           {a.type !== "teleconsult" && a.doctorAddress && (
-                            <div className="flex items-center gap-1.5 text-xs text-[#134E4A]/50">
+                            <div className="flex items-center gap-1.5 text-xs text-foreground/50">
                               <MapPin className="h-3 w-3 flex-shrink-0" />
                               <span>{a.doctorAddress}</span>
                             </div>
@@ -541,9 +541,9 @@ export default function MesRdvPage() {
 
                           {/* Post-visit satisfaction prompt — shown for recently completed appointments */}
                           {isPastAppt && isRecentlyCompleted(a) && !dismissedSatisfaction.has(a.id) && (
-                            <div className="mt-3 bg-[#F0FDFA] rounded-xl p-3 border border-[#E6F4F1]">
+                            <div className="mt-3 bg-secondary rounded-xl p-3 border border-border">
                               <div className="flex items-center justify-between mb-2">
-                                <p className="text-xs font-semibold text-[#134E4A]">
+                                <p className="text-xs font-semibold text-foreground">
                                   Comment s&apos;est passée votre consultation ?
                                 </p>
                                 <button
@@ -557,19 +557,19 @@ export default function MesRdvPage() {
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => handleSatisfaction(a.id)}
-                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-[#E6F4F1] text-xs font-medium text-[#134E4A] hover:bg-green-50 hover:border-green-200 transition-colors"
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-border text-xs font-medium text-foreground hover:bg-green-50 hover:border-green-200 transition-colors"
                                 >
                                   😊 Bien
                                 </button>
                                 <button
                                   onClick={() => handleSatisfaction(a.id)}
-                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-[#E6F4F1] text-xs font-medium text-[#134E4A] hover:bg-amber-50 hover:border-amber-200 transition-colors"
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-border text-xs font-medium text-foreground hover:bg-amber-50 hover:border-amber-200 transition-colors"
                                 >
                                   😐 Correct
                                 </button>
                                 <button
                                   onClick={() => handleSatisfaction(a.id)}
-                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-[#E6F4F1] text-xs font-medium text-[#134E4A] hover:bg-red-50 hover:border-red-200 transition-colors"
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-border text-xs font-medium text-foreground hover:bg-red-50 hover:border-red-200 transition-colors"
                                 >
                                   😞 Décevant
                                 </button>
@@ -617,7 +617,7 @@ export default function MesRdvPage() {
                               </a>
                               <a
                                 href={`/mes-documents`}
-                                className="inline-flex items-center gap-1 text-xs font-medium text-[#0891B2] bg-[#0891B2]/5 hover:bg-[#0891B2]/10 border border-[#0891B2]/20 rounded-lg px-3 py-1.5 transition-colors"
+                                className="inline-flex items-center gap-1 text-xs font-medium text-primary bg-primary/5 hover:bg-primary/10 border border-primary/20 rounded-lg px-3 py-1.5 transition-colors"
                               >
                                 <FileText className="h-3 w-3" />
                                 Ordonnance
@@ -649,18 +649,18 @@ export default function MesRdvPage() {
       {/* Cancel confirmation modal */}
       {cancelConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4">
-          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-[#E6F4F1]">
+          <div className="w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl border border-border">
             <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-red-50 mx-auto mb-4">
               <X className="h-6 w-6 text-red-500" />
             </div>
-            <h3 className="text-lg font-bold text-[#134E4A] text-center">Annuler ce rendez-vous ?</h3>
-            <p className="mt-2 text-sm text-[#134E4A]/60 text-center">
+            <h3 className="text-lg font-bold text-foreground text-center">Annuler ce rendez-vous ?</h3>
+            <p className="mt-2 text-sm text-foreground/60 text-center">
               Cette action est irréversible. Vous devrez reprendre un nouveau rendez-vous.
             </p>
             <div className="mt-6 flex gap-3">
               <button
                 onClick={() => setCancelConfirm(null)}
-                className="flex-1 rounded-xl border border-[#E6F4F1] px-4 py-2.5 text-sm font-semibold text-[#134E4A] hover:bg-[#F0FDFA] transition-colors"
+                className="flex-1 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
               >
                 Conserver
               </button>

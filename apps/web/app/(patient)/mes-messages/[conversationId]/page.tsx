@@ -134,7 +134,7 @@ export default function PatientConversationPage({
   }
 
   return (
-    <div className="flex flex-col h-screen max-h-screen bg-[#F0FDFA]">
+    <div className="flex flex-col h-screen max-h-screen bg-secondary">
       {/* Header */}
       <header className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3 flex-shrink-0">
         <button

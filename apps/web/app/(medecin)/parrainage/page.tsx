@@ -31,7 +31,7 @@ const STATUS_LABELS: Record<string, string> = {
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-orange-100 text-orange-700",
   validated: "bg-blue-100 text-blue-700",
-  rewarded: "bg-[#F0FDFA] text-[#0891B2]",
+  rewarded: "bg-secondary text-primary",
 };
 
 export default function ParrainagePage() {
@@ -126,17 +126,17 @@ export default function ParrainagePage() {
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+        <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary">
           <Gift className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-[#134E4A]">Programme de parrainage</h1>
+          <h1 className="text-2xl font-bold text-foreground">Programme de parrainage</h1>
           <p className="text-sm text-gray-500">Gagnez 1 mois gratuit pour chaque confrère inscrit</p>
         </div>
       </div>
 
       {/* CTA Banner */}
-      <div className="rounded-2xl bg-gradient-to-r from-[#0891B2] to-[#134E4A] p-6 text-white shadow-sm">
+      <div className="rounded-2xl bg-gradient-to-r from-primary to-foreground p-6 text-white shadow-sm">
         <h2 className="text-lg font-semibold mb-1">
           Parrainez vos confrères, gagnez des mois gratuits
         </h2>
@@ -149,33 +149,33 @@ export default function ParrainagePage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm text-center hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-[#134E4A]">{referrals.length}</div>
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm text-center hover:shadow-md transition-shadow">
+          <div className="text-3xl font-bold text-foreground">{referrals.length}</div>
           <div className="text-xs text-gray-500 mt-1">Parrainages envoyés</div>
         </div>
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm text-center hover:shadow-md transition-shadow">
-          <div className="text-3xl font-bold text-[#0891B2]">{validatedCount}</div>
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm text-center hover:shadow-md transition-shadow">
+          <div className="text-3xl font-bold text-primary">{validatedCount}</div>
           <div className="text-xs text-gray-500 mt-1">Validés</div>
         </div>
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm text-center hover:shadow-md transition-shadow">
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm text-center hover:shadow-md transition-shadow">
           <div className="text-3xl font-bold text-green-600">{rewardedCount}</div>
           <div className="text-xs text-gray-500 mt-1">Mois gratuits gagnés</div>
         </div>
       </div>
 
       {/* Referral Code Card */}
-      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm space-y-4">
-        <h2 className="font-semibold text-[#134E4A]">Mon code de parrainage</h2>
+      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-4">
+        <h2 className="font-semibold text-foreground">Mon code de parrainage</h2>
         {loading ? (
-          <div className="h-12 bg-[#F0FDFA] rounded-xl animate-pulse" />
+          <div className="h-12 bg-secondary rounded-xl animate-pulse" />
         ) : (
           <div className="flex items-center gap-3">
-            <div className="flex-1 bg-[#F0FDFA] border border-[#E6F4F1] rounded-xl px-4 py-3 font-mono text-xl tracking-widest font-bold text-center select-all text-[#134E4A]">
+            <div className="flex-1 bg-secondary border border-border rounded-xl px-4 py-3 font-mono text-xl tracking-widest font-bold text-center select-all text-foreground">
               {code}
             </div>
             <button
               onClick={handleCopy}
-              className="px-4 py-3 bg-[#0891B2] text-white rounded-xl text-sm font-bold hover:bg-[#0E7490] transition-colors min-w-24 h-12"
+              className="px-4 py-3 bg-primary text-white rounded-xl text-sm font-bold hover:bg-doktori-teal-dark transition-colors min-w-24 h-12"
             >
               {copied ? "Copié !" : "Copier"}
             </button>
@@ -203,8 +203,8 @@ export default function ParrainagePage() {
       </div>
 
       {/* Référer un patient à un confrère */}
-      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm space-y-4">
-        <h2 className="font-semibold text-[#134E4A]">Référer un patient à un confrère</h2>
+      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-4">
+        <h2 className="font-semibold text-foreground">Référer un patient à un confrère</h2>
         <p className="text-sm text-gray-500">
           Créez un lien de prise de rendez-vous personnalisé pour orienter vos patients vers un autre médecin.
         </p>
@@ -215,10 +215,10 @@ export default function ParrainagePage() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Rechercher un médecin par nom ou spécialité..."
-            className="w-full pl-9 pr-4 py-3 rounded-xl border border-[#E6F4F1] text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2]/30 focus:border-[#0891B2]"
+            className="w-full pl-9 pr-4 py-3 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary"
           />
           {searching && (
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin" />
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
           )}
         </div>
 
@@ -227,20 +227,20 @@ export default function ParrainagePage() {
             {searchResults.map((doc) => (
               <div
                 key={doc.id}
-                className="flex items-center justify-between gap-3 p-3 rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] transition-colors"
+                className="flex items-center justify-between gap-3 p-3 rounded-xl border border-border hover:bg-secondary transition-colors"
               >
                 <div className="flex items-center gap-3 min-w-0">
-                  <div className="h-9 w-9 rounded-xl bg-[#F0FDFA] flex items-center justify-center flex-shrink-0">
-                    <UserRound className="h-4 w-4 text-[#0891B2]" />
+                  <div className="h-9 w-9 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0">
+                    <UserRound className="h-4 w-4 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[#134E4A] truncate">{doc.name}</p>
+                    <p className="text-sm font-semibold text-foreground truncate">{doc.name}</p>
                     <p className="text-xs text-gray-500">{doc.specialty}{doc.city ? ` · ${doc.city}` : ""}</p>
                   </div>
                 </div>
                 <button
                   onClick={() => handleCopyReferralLink(doc.slug, doc.id)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0891B2] text-white hover:bg-[#0E7490] transition-colors flex-shrink-0"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-white hover:bg-doktori-teal-dark transition-colors flex-shrink-0"
                 >
                   {copiedLinkId === doc.id ? (
                     <>
@@ -265,33 +265,33 @@ export default function ParrainagePage() {
       </div>
 
       {/* Referrals List */}
-      <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm">
-        <div className="p-4 border-b border-[#E6F4F1] flex items-center justify-between">
-          <h2 className="font-semibold text-[#134E4A]">Mes parrainages</h2>
+      <div className="rounded-2xl border border-border bg-white shadow-sm">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <h2 className="font-semibold text-foreground">Mes parrainages</h2>
           {referrals.length > 0 && (
-            <span className="text-xs text-[#0891B2] font-semibold bg-[#F0FDFA] px-2.5 py-1 rounded-full">{referrals.length}</span>
+            <span className="text-xs text-primary font-semibold bg-secondary px-2.5 py-1 rounded-full">{referrals.length}</span>
           )}
         </div>
         {loading ? (
           <div className="p-6 space-y-3">
             {[1, 2].map((i) => (
-              <div key={i} className="h-10 bg-[#F0FDFA] rounded-xl animate-pulse" />
+              <div key={i} className="h-10 bg-secondary rounded-xl animate-pulse" />
             ))}
           </div>
         ) : referrals.length === 0 ? (
           <div className="p-10 text-center">
-            <div className="h-12 w-12 rounded-2xl bg-[#F0FDFA] flex items-center justify-center mx-auto mb-3">
-              <Gift className="h-6 w-6 text-[#0891B2]" />
+            <div className="h-12 w-12 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
+              <Gift className="h-6 w-6 text-primary" />
             </div>
-            <p className="text-[#134E4A] font-medium mb-1">Aucun parrainage pour le moment</p>
+            <p className="text-foreground font-medium mb-1">Aucun parrainage pour le moment</p>
             <p className="text-sm text-gray-400">Partagez votre code pour commencer !</p>
           </div>
         ) : (
-          <div className="divide-y divide-[#E6F4F1]">
+          <div className="divide-y divide-border">
             {referrals.map((r) => (
-              <div key={r.id} className="p-4 flex items-center justify-between hover:bg-[#F0FDFA] transition-colors">
+              <div key={r.id} className="p-4 flex items-center justify-between hover:bg-secondary transition-colors">
                 <div>
-                  <div className="font-medium text-sm text-[#134E4A]">{r.referredName}</div>
+                  <div className="font-medium text-sm text-foreground">{r.referredName}</div>
                   <div className="text-xs text-gray-500">
                     {r.referredEmail} &middot; Inscrit le{" "}
                     {format(new Date(r.createdAt), "d MMM yyyy", { locale: fr })}

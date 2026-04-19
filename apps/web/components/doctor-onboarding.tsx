@@ -116,7 +116,7 @@ export function DoctorOnboarding() {
             </button>
 
             {/* Header gradient */}
-            <div className="bg-gradient-to-br from-[#0891B2] to-[#0E7490] px-6 pt-8 pb-6 text-white text-center">
+            <div className="bg-gradient-to-br from-primary to-doktori-teal-dark px-6 pt-8 pb-6 text-white text-center">
               <div className="flex justify-center mb-4">
                 <div className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center">
                   <Icon className="h-7 w-7" strokeWidth={1.8} />
@@ -139,9 +139,9 @@ export function DoctorOnboarding() {
                   aria-label={t("stepAriaLabel", { index: i + 1 })}
                   className={`h-2 rounded-full transition-all duration-300 ${
                     i === stepIndex
-                      ? "w-6 bg-[#0891B2]"
+                      ? "w-6 bg-primary"
                       : i < stepIndex
-                      ? "w-2 bg-[#0891B2]/40"
+                      ? "w-2 bg-primary/40"
                       : "w-2 bg-slate-200"
                   }`}
                 />
@@ -161,7 +161,7 @@ export function DoctorOnboarding() {
                   className="space-y-2"
                 >
                   <div className="flex items-center gap-3">
-                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-[#F0FDFA] text-[#0891B2]">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-secondary text-primary">
                       <Icon className="h-4 w-4" strokeWidth={2} />
                     </span>
                     <h3 className="font-bold text-slate-900 text-base">{step.title}</h3>
@@ -176,7 +176,7 @@ export function DoctorOnboarding() {
             {/* Progress bar */}
             <div className="mx-6 h-1 bg-slate-100 rounded-full overflow-hidden">
               <motion.div
-                className="h-full bg-[#0891B2] rounded-full"
+                className="h-full bg-primary rounded-full"
                 animate={{ width: `${((stepIndex + 1) / STEPS.length) * 100}%` }}
                 transition={{ duration: 0.3 }}
               />
@@ -187,7 +187,7 @@ export function DoctorOnboarding() {
               <Link
                 href={step.href}
                 onClick={dismiss}
-                className="flex items-center justify-center gap-2 w-full bg-[#0891B2] hover:bg-[#0E7490] transition-colors text-white font-bold text-sm py-3 rounded-xl shadow-sm shadow-cyan-200"
+                className="flex items-center justify-center gap-2 w-full bg-primary hover:bg-doktori-teal-dark transition-colors text-white font-bold text-sm py-3 rounded-xl shadow-sm shadow-cyan-200"
               >
                 <Check className="h-4 w-4" strokeWidth={2.5} />
                 {step.cta}

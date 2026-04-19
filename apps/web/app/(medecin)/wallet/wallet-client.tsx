@@ -165,7 +165,7 @@ export function WalletClient({
       )}
 
       {/* ── Balance card ── */}
-      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#134E4A] via-[#0e3d38] to-[#0891B2] p-6 sm:p-8 text-white shadow-xl">
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-foreground via-[#0e3d38] to-primary p-6 sm:p-8 text-white shadow-xl">
         {/* Decorative circles */}
         <div className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full bg-white/5" />
         <div className="pointer-events-none absolute -bottom-10 -left-10 h-32 w-32 rounded-full bg-white/5" />
@@ -191,7 +191,7 @@ export function WalletClient({
               setWithdrawError(null);
               setModalOpen(true);
             }}
-            className="bg-white text-[#134E4A] hover:bg-white/90 font-bold shrink-0 rounded-xl px-6 py-5 text-sm shadow-lg"
+            className="bg-white text-foreground hover:bg-white/90 font-bold shrink-0 rounded-xl px-6 py-5 text-sm shadow-lg"
             disabled={balanceMillimes <= 0}
           >
             <Banknote className="mr-2 h-4 w-4" />
@@ -249,22 +249,22 @@ export function WalletClient({
       </div>
 
       {/* ── How it works info ── */}
-      <div className="rounded-2xl border border-[#E6F4F1] bg-[#F0FDFA] p-5">
+      <div className="rounded-2xl border border-border bg-secondary p-5">
         <div className="flex items-start gap-3">
-          <Info className="h-5 w-5 text-[#0891B2] shrink-0 mt-0.5" />
-          <div className="text-sm text-[#134E4A] space-y-1.5">
+          <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
+          <div className="text-sm text-foreground space-y-1.5">
             <p className="font-semibold">Comment fonctionne votre portefeuille ?</p>
             <ul className="space-y-1 text-xs text-gray-600">
               <li className="flex items-start gap-2">
-                <ArrowRight className="h-3 w-3 text-[#0891B2] shrink-0 mt-0.5" />
+                <ArrowRight className="h-3 w-3 text-primary shrink-0 mt-0.5" />
                 <span>Le patient paie la <strong>téléconsultation</strong> ou l&apos;intervention <strong>SOS</strong> via Flouci.</span>
               </li>
               <li className="flex items-start gap-2">
-                <ArrowRight className="h-3 w-3 text-[#0891B2] shrink-0 mt-0.5" />
+                <ArrowRight className="h-3 w-3 text-primary shrink-0 mt-0.5" />
                 <span>Doktori prélève une commission (<strong>15%</strong> téléconsult, <strong>10%</strong> SOS) et crédite le reste sur votre portefeuille.</span>
               </li>
               <li className="flex items-start gap-2">
-                <ArrowRight className="h-3 w-3 text-[#0891B2] shrink-0 mt-0.5" />
+                <ArrowRight className="h-3 w-3 text-primary shrink-0 mt-0.5" />
                 <span>Vous pouvez demander un <strong>retrait à tout moment</strong>. Le virement est effectué sous 3-5 jours ouvrés.</span>
               </li>
             </ul>
@@ -275,7 +275,7 @@ export function WalletClient({
       {/* ── Transaction history ── */}
       <div className="rounded-2xl border border-gray-100 bg-white overflow-hidden shadow-sm">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-5 border-b border-gray-100">
-          <h2 className="text-base font-bold text-[#134E4A]">{t("transactions")}</h2>
+          <h2 className="text-base font-bold text-foreground">{t("transactions")}</h2>
           <div className="flex items-center gap-2 flex-wrap">
             {/* Filter pills */}
             {(["all", "credit", "commission", "withdrawal", "refund"] as const).map((type) => {
@@ -292,7 +292,7 @@ export function WalletClient({
                   onClick={() => setFilterType(type)}
                   className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors ${
                     filterType === type
-                      ? "bg-[#134E4A] text-white"
+                      ? "bg-foreground text-white"
                       : "bg-gray-100 text-gray-500 hover:bg-gray-200"
                   }`}
                 >
@@ -388,7 +388,7 @@ export function WalletClient({
                       <TypeIcon className="h-4 w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-[#134E4A] truncate">
+                      <p className="text-sm font-semibold text-foreground truncate">
                         {typeLabels[tx.type]}
                       </p>
                       <p className="text-xs text-gray-400 truncate">
@@ -437,10 +437,10 @@ export function WalletClient({
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md p-6 space-y-5">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#F0FDFA] text-[#0891B2]">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-secondary text-primary">
                   <Banknote className="h-5 w-5" />
                 </div>
-                <h3 className="text-lg font-bold text-[#134E4A]">{t("withdrawTitle")}</h3>
+                <h3 className="text-lg font-bold text-foreground">{t("withdrawTitle")}</h3>
               </div>
               <button
                 onClick={() => setModalOpen(false)}
@@ -452,13 +452,13 @@ export function WalletClient({
             </div>
 
             {/* Balance reminder */}
-            <div className="rounded-xl bg-[#F0FDFA] border border-[#E6F4F1] p-4">
+            <div className="rounded-xl bg-secondary border border-border p-4">
               <p className="text-xs text-gray-500 mb-0.5">Solde disponible</p>
-              <p className="text-2xl font-bold text-[#134E4A]">{formatDT(balanceMillimes)}</p>
+              <p className="text-2xl font-bold text-foreground">{formatDT(balanceMillimes)}</p>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-[#134E4A] mb-2" htmlFor="withdraw-amount">
+              <label className="block text-sm font-semibold text-foreground mb-2" htmlFor="withdraw-amount">
                 {t("withdrawAmount")}
               </label>
               <div className="relative">
@@ -496,7 +496,7 @@ export function WalletClient({
                 <button
                   type="button"
                   onClick={() => setAmount((balanceMillimes / 1000).toFixed(3))}
-                  className="rounded-lg bg-[#0891B2]/10 px-3 py-1.5 text-xs font-semibold text-[#0891B2] hover:bg-[#0891B2]/20 transition-colors"
+                  className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
                 >
                   Tout
                 </button>
@@ -527,7 +527,7 @@ export function WalletClient({
               <Button
                 onClick={handleWithdraw}
                 disabled={withdrawing || !amount}
-                className="rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold shadow-sm"
+                className="rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold shadow-sm"
               >
                 {withdrawing ? t("withdrawProcessing") : t("withdrawConfirm")}
               </Button>

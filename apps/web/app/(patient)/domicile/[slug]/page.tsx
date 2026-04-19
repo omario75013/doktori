@@ -53,16 +53,16 @@ export default function HomeVisitRequestPage({ params }: { params: Promise<{ slu
 
   if (success) {
     return (
-      <div className="min-h-screen bg-[#F0FDFA] flex items-center justify-center px-4">
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-10 shadow-sm text-center max-w-md w-full">
-          <div className="w-16 h-16 bg-[#0891B2]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <CheckCircle className="w-8 h-8 text-[#0891B2]" strokeWidth={2} />
+      <div className="min-h-screen bg-secondary flex items-center justify-center px-4">
+        <div className="rounded-2xl border border-border bg-white p-10 shadow-sm text-center max-w-md w-full">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CheckCircle className="w-8 h-8 text-primary" strokeWidth={2} />
           </div>
-          <h1 className="text-2xl font-bold text-[#134E4A] mb-2">Demande envoyée</h1>
+          <h1 className="text-2xl font-bold text-foreground mb-2">Demande envoyée</h1>
           <p className="text-gray-500 mb-6">Le médecin va vous contacter pour confirmer la visite.</p>
           <Button
             onClick={() => router.push("/")}
-            className="bg-[#0891B2] hover:bg-[#0E7490] h-12 rounded-xl w-full text-white"
+            className="bg-primary hover:bg-doktori-teal-dark h-12 rounded-xl w-full text-white"
           >
             Retour à l'accueil
           </Button>
@@ -73,82 +73,82 @@ export default function HomeVisitRequestPage({ params }: { params: Promise<{ slu
 
   if (!doctor) {
     return (
-      <div className="min-h-screen bg-[#F0FDFA] flex items-center justify-center">
+      <div className="min-h-screen bg-secondary flex items-center justify-center">
         <p className="text-gray-400">Chargement...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F0FDFA] py-10 px-4">
+    <div className="min-h-screen bg-secondary py-10 px-4">
       <div className="max-w-lg mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="w-14 h-14 bg-[#0891B2]/10 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Home className="w-7 h-7 text-[#0891B2]" strokeWidth={2} />
+          <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Home className="w-7 h-7 text-primary" strokeWidth={2} />
           </div>
-          <h1 className="text-2xl font-bold text-[#134E4A]">Visite à domicile</h1>
+          <h1 className="text-2xl font-bold text-foreground">Visite à domicile</h1>
           <p className="text-gray-500 mt-1">Avec {doctor.name}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {/* Patient info card */}
-          <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-sm font-semibold text-[#134E4A] uppercase tracking-wide flex items-center gap-2">
-              <span className="w-5 h-5 rounded-full bg-[#0891B2]/10 flex items-center justify-center text-[#0891B2] text-xs font-bold">1</span>
+          <div className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-4">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2">
+              <span className="w-5 h-5 rounded-full bg-primary/10 flex items-center justify-center text-primary text-xs font-bold">1</span>
               Vos informations
             </h2>
             <div>
-              <Label htmlFor="name" className="text-[#134E4A] font-medium">Nom complet</Label>
-              <Input id="name" name="name" required className="mt-1 h-12 rounded-xl border-[#E6F4F1] focus:border-[#0891B2]" />
+              <Label htmlFor="name" className="text-foreground font-medium">Nom complet</Label>
+              <Input id="name" name="name" required className="mt-1 h-12 rounded-xl border-border focus:border-primary" />
             </div>
             <div>
-              <Label htmlFor="phone" className="text-[#134E4A] font-medium">Téléphone</Label>
-              <Input id="phone" name="phone" placeholder="+216 XX XXX XXX" required className="mt-1 h-12 rounded-xl border-[#E6F4F1] focus:border-[#0891B2]" />
+              <Label htmlFor="phone" className="text-foreground font-medium">Téléphone</Label>
+              <Input id="phone" name="phone" placeholder="+216 XX XXX XXX" required className="mt-1 h-12 rounded-xl border-border focus:border-primary" />
             </div>
           </div>
 
           {/* Address card */}
-          <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-sm font-semibold text-[#134E4A] uppercase tracking-wide flex items-center gap-2">
-              <MapPin className="w-4 h-4 text-[#0891B2]" />
+          <div className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-4">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2">
+              <MapPin className="w-4 h-4 text-primary" />
               Adresse de la visite
             </h2>
             <div>
-              <Label htmlFor="address" className="text-[#134E4A] font-medium">Adresse complète</Label>
+              <Label htmlFor="address" className="text-foreground font-medium">Adresse complète</Label>
               <Textarea
                 id="address"
                 name="address"
                 placeholder="Numéro, rue, quartier, ville"
                 required
-                className="mt-1 rounded-xl border-[#E6F4F1] focus:border-[#0891B2] resize-none"
+                className="mt-1 rounded-xl border-border focus:border-primary resize-none"
               />
             </div>
           </div>
 
           {/* Date/time card */}
-          <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6 shadow-sm space-y-4">
-            <h2 className="text-sm font-semibold text-[#134E4A] uppercase tracking-wide flex items-center gap-2">
-              <CalendarDays className="w-4 h-4 text-[#0891B2]" />
+          <div className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-4">
+            <h2 className="text-sm font-semibold text-foreground uppercase tracking-wide flex items-center gap-2">
+              <CalendarDays className="w-4 h-4 text-primary" />
               Date souhaitée
             </h2>
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <Label htmlFor="date" className="text-[#134E4A] font-medium">Date</Label>
-                <Input id="date" name="date" type="date" required className="mt-1 h-12 rounded-xl border-[#E6F4F1] focus:border-[#0891B2]" />
+                <Label htmlFor="date" className="text-foreground font-medium">Date</Label>
+                <Input id="date" name="date" type="date" required className="mt-1 h-12 rounded-xl border-border focus:border-primary" />
               </div>
               <div>
-                <Label htmlFor="time" className="text-[#134E4A] font-medium">Heure</Label>
-                <Input id="time" name="time" type="time" required className="mt-1 h-12 rounded-xl border-[#E6F4F1] focus:border-[#0891B2]" />
+                <Label htmlFor="time" className="text-foreground font-medium">Heure</Label>
+                <Input id="time" name="time" type="time" required className="mt-1 h-12 rounded-xl border-border focus:border-primary" />
               </div>
             </div>
             <div>
-              <Label htmlFor="reason" className="text-[#134E4A] font-medium">Motif de la visite</Label>
+              <Label htmlFor="reason" className="text-foreground font-medium">Motif de la visite</Label>
               <Textarea
                 id="reason"
                 name="reason"
                 placeholder="Symptômes, contexte..."
-                className="mt-1 rounded-xl border-[#E6F4F1] focus:border-[#0891B2] resize-none"
+                className="mt-1 rounded-xl border-border focus:border-primary resize-none"
               />
             </div>
           </div>
@@ -159,7 +159,7 @@ export default function HomeVisitRequestPage({ params }: { params: Promise<{ slu
 
           <Button
             type="submit"
-            className="w-full bg-[#0891B2] hover:bg-[#0E7490] h-12 rounded-xl text-white font-medium"
+            className="w-full bg-primary hover:bg-doktori-teal-dark h-12 rounded-xl text-white font-medium"
             disabled={loading}
           >
             {loading ? "Envoi..." : "Envoyer la demande"}

@@ -59,7 +59,7 @@ function VitalsGrid({
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       {fields.map(({ key, label, unit, placeholder }) => (
         <div key={key}>
-          <label className="block text-xs text-[#134E4A] font-medium mb-1">
+          <label className="block text-xs text-foreground font-medium mb-1">
             {label}
             <span className="ml-1 text-gray-400 font-normal">({unit})</span>
           </label>
@@ -75,7 +75,7 @@ function VitalsGrid({
                 [key]: val === "" ? "" : parseFloat(val),
               });
             }}
-            className="w-full h-10 border border-[#E6F4F1] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] focus:border-transparent bg-white"
+            className="w-full h-10 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-white"
           />
         </div>
       ))}
@@ -129,18 +129,18 @@ function IcdTagger({
           onChange={(e) => setQuery(e.target.value)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
           placeholder="Rechercher un code CIM-10 (ex: diabète, I10...)"
-          className="w-full h-10 border border-[#E6F4F1] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] bg-white"
+          className="w-full h-10 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white"
         />
         {open && results.length > 0 && (
-          <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-[#E6F4F1] rounded-xl shadow-lg max-h-60 overflow-y-auto">
+          <div className="absolute z-10 top-full left-0 right-0 mt-1 bg-white border border-border rounded-xl shadow-lg max-h-60 overflow-y-auto">
             {results.map((r) => (
               <button
                 key={r.code}
                 type="button"
                 onMouseDown={() => addCode(r)}
-                className="w-full text-left px-3 py-2 hover:bg-[#F0FDFA] text-sm flex items-center gap-2 transition-colors"
+                className="w-full text-left px-3 py-2 hover:bg-secondary text-sm flex items-center gap-2 transition-colors"
               >
-                <span className="font-mono text-xs bg-[#E6F4F1] text-[#0891B2] px-1.5 py-0.5 rounded-lg font-bold shrink-0">
+                <span className="font-mono text-xs bg-border text-primary px-1.5 py-0.5 rounded-lg font-bold shrink-0">
                   {r.code}
                 </span>
                 <span className="text-gray-700">{r.label}</span>
@@ -155,9 +155,9 @@ function IcdTagger({
           {selected.map((c) => (
             <span
               key={c.code}
-              className="inline-flex items-center gap-1.5 bg-[#E6F4F1] text-[#134E4A] text-xs px-2 py-1 rounded-full font-medium"
+              className="inline-flex items-center gap-1.5 bg-border text-foreground text-xs px-2 py-1 rounded-full font-medium"
             >
-              <span className="font-mono font-bold text-[#0891B2]">{c.code}</span>
+              <span className="font-mono font-bold text-primary">{c.code}</span>
               {c.label}
               <button
                 type="button"
@@ -190,17 +190,17 @@ function SoapSection({
   return (
     <div>
       <div className="flex items-center gap-2 mb-2">
-        <span className="w-7 h-7 rounded-full bg-[#0891B2] text-white flex items-center justify-center text-xs font-bold shrink-0">
+        <span className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
           {letter}
         </span>
-        <label className="font-medium text-[#134E4A] text-sm">{label}</label>
+        <label className="font-medium text-foreground text-sm">{label}</label>
       </div>
       <textarea
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={4}
-        className="w-full border border-[#E6F4F1] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] resize-y bg-white text-gray-800"
+        className="w-full border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y bg-white text-gray-800"
       />
     </div>
   );
@@ -354,7 +354,7 @@ export default function ConsultationPage() {
   };
 
   if (loading) {
-    return <p className="text-[#0891B2] text-sm p-6">Chargement de la note de consultation...</p>;
+    return <p className="text-primary text-sm p-6">Chargement de la note de consultation...</p>;
   }
 
   return (
@@ -363,15 +363,15 @@ export default function ConsultationPage() {
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push("/rendez-vous")}
-          className="h-9 w-9 rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] flex items-center justify-center text-gray-500 hover:text-[#0891B2] transition-colors"
+          className="h-9 w-9 rounded-xl border border-border hover:bg-secondary flex items-center justify-center text-gray-500 hover:text-primary transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
         </button>
-        <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+        <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary">
           <ClipboardList className="h-5 w-5" />
         </div>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-[#134E4A]">Note de consultation SOAP</h1>
+          <h1 className="text-xl font-bold text-foreground">Note de consultation SOAP</h1>
           {appointmentDate && (
             <p className="text-sm text-gray-500 mt-0.5">
               RDV du {format(new Date(appointmentDate), "d MMMM yyyy à HH:mm", { locale: fr })}
@@ -383,7 +383,7 @@ export default function ConsultationPage() {
             <span className="text-gray-400">Enregistrement...</span>
           )}
           {saveStatus === "saved" && (
-            <span className="flex items-center gap-1 text-[#0891B2] font-medium">
+            <span className="flex items-center gap-1 text-primary font-medium">
               <CheckCircle2 size={15} />
               Enregistré
             </span>
@@ -395,8 +395,8 @@ export default function ConsultationPage() {
       </div>
 
       {/* Vitals */}
-      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm space-y-4">
-        <h2 className="font-semibold text-[#134E4A] text-sm uppercase tracking-wide">
+      <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
+        <h2 className="font-semibold text-foreground text-sm uppercase tracking-wide">
           Constantes vitales
         </h2>
         <VitalsGrid
@@ -406,7 +406,7 @@ export default function ConsultationPage() {
       </div>
 
       {/* SOAP Sections */}
-      <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm space-y-6">
+      <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-6">
         <SoapSection
           letter="S"
           label="Subjectif — Ce que rapporte le patient"
@@ -425,10 +425,10 @@ export default function ConsultationPage() {
         {/* Assessment with ICD-10 tagger */}
         <div>
           <div className="flex items-center gap-2 mb-2">
-            <span className="w-7 h-7 rounded-full bg-[#0891B2] text-white flex items-center justify-center text-xs font-bold shrink-0">
+            <span className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
               A
             </span>
-            <label className="font-medium text-[#134E4A] text-sm">
+            <label className="font-medium text-foreground text-sm">
               Assessment — Diagnostic
             </label>
           </div>
@@ -437,10 +437,10 @@ export default function ConsultationPage() {
             onChange={(e) => updateNote({ assessment: e.target.value })}
             placeholder="Diagnostic principal, diagnostics différentiels..."
             rows={3}
-            className="w-full border border-[#E6F4F1] rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2] resize-y bg-white text-gray-800 mb-3"
+            className="w-full border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y bg-white text-gray-800 mb-3"
           />
           <div className="space-y-1.5">
-            <div className="text-xs text-[#134E4A] font-medium">Codes CIM-10</div>
+            <div className="text-xs text-foreground font-medium">Codes CIM-10</div>
             <IcdTagger
               selected={note.icd10Codes}
               onChange={(icd10Codes) => updateNote({ icd10Codes })}
@@ -459,10 +459,10 @@ export default function ConsultationPage() {
 
       {/* Documents du patient — only for completed appointments */}
       {appointmentStatus === "completed" && (
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-5 shadow-sm space-y-4">
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-[#0891B2]" />
-            <h2 className="font-semibold text-[#134E4A] text-sm uppercase tracking-wide">
+            <FileText className="h-4 w-4 text-primary" />
+            <h2 className="font-semibold text-foreground text-sm uppercase tracking-wide">
               Documents du patient
             </h2>
           </div>
@@ -471,7 +471,7 @@ export default function ConsultationPage() {
           {patientEmail === undefined ? null : patientEmail ? (
             <p className="text-xs text-gray-500">
               Documents envoyés à :{" "}
-              <span className="font-medium text-[#134E4A]">{patientEmail}</span>
+              <span className="font-medium text-foreground">{patientEmail}</span>
             </p>
           ) : (
             <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
@@ -484,12 +484,12 @@ export default function ConsultationPage() {
             <button
               onClick={() => sendDocument("send-prescription", setSendPrescriptionStatus)}
               disabled={sendPrescriptionStatus === "sending"}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#E6F4F1] bg-white hover:bg-[#F0FDFA] text-sm font-medium text-[#134E4A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-border bg-white hover:bg-secondary text-sm font-medium text-foreground transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {sendPrescriptionStatus === "sending" ? (
-                <span className="h-4 w-4 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin" />
+                <span className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Send className="h-4 w-4 text-[#0891B2]" />
+                <Send className="h-4 w-4 text-primary" />
               )}
               {sendPrescriptionStatus === "sent"
                 ? "Ordonnance envoyée"
@@ -502,12 +502,12 @@ export default function ConsultationPage() {
             <button
               onClick={() => sendDocument("send-cnam", setSendCnamStatus)}
               disabled={sendCnamStatus === "sending"}
-              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#E6F4F1] bg-white hover:bg-[#F0FDFA] text-sm font-medium text-[#134E4A] transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-border bg-white hover:bg-secondary text-sm font-medium text-foreground transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {sendCnamStatus === "sending" ? (
-                <span className="h-4 w-4 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin" />
+                <span className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
               ) : (
-                <Send className="h-4 w-4 text-[#0891B2]" />
+                <Send className="h-4 w-4 text-primary" />
               )}
               {sendCnamStatus === "sent"
                 ? "Bordereau CNAM envoyé"
@@ -520,7 +520,7 @@ export default function ConsultationPage() {
             {patientId && (
               <a
                 href={`/patients/${patientId}`}
-                className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-[#0891B2] bg-[#F0FDFA] text-sm font-medium text-[#0891B2] hover:bg-[#E6F4F1] transition-colors"
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-primary bg-secondary text-sm font-medium text-primary hover:bg-border transition-colors"
               >
                 <ExternalLink className="h-4 w-4" />
                 Voir le dossier patient
@@ -529,7 +529,7 @@ export default function ConsultationPage() {
           </div>
 
           {(sendPrescriptionStatus === "sent" || sendCnamStatus === "sent") && (
-            <p className="flex items-center gap-1.5 text-xs text-[#0891B2] font-medium">
+            <p className="flex items-center gap-1.5 text-xs text-primary font-medium">
               <CheckCircle2 size={14} />
               Document(s) envoyé(s) avec succès par SMS
               {patientEmail ? " et email" : ""}.

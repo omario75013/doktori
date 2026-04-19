@@ -50,7 +50,7 @@ export default function CliniqueLoginPage() {
   return (
     <div className="flex min-h-screen">
       {/* ═════ LEFT: hero ═════ */}
-      <div className="relative hidden overflow-hidden bg-[#134E4A] lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:p-12">
+      <div className="relative hidden overflow-hidden bg-foreground lg:flex lg:w-1/2 lg:flex-col lg:justify-between lg:p-12">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.08]"
@@ -61,31 +61,31 @@ export default function CliniqueLoginPage() {
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -left-32 top-0 h-[500px] w-[500px] rounded-full bg-[#0891B2]/20 blur-3xl"
+          className="pointer-events-none absolute -left-32 top-0 h-[500px] w-[500px] rounded-full bg-primary/20 blur-3xl"
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -right-32 bottom-0 h-[500px] w-[500px] rounded-full bg-[#22C55E]/15 blur-3xl"
+          className="pointer-events-none absolute -right-32 bottom-0 h-[500px] w-[500px] rounded-full bg-accent/15 blur-3xl"
         />
 
         <Link href="/" className="relative flex items-center gap-3">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-[#0891B2]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white text-primary">
             <Building2 className="h-6 w-6" strokeWidth={2.5} />
           </div>
           <span className="font-heading text-2xl font-black text-white">
-            Doktori<span className="text-[#22D3EE]">.tn</span>
+            Doktori<span className="text-doktori-teal-light">.tn</span>
           </span>
         </Link>
 
         <div className="relative">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#22C55E]/40 bg-[#22C55E]/10 px-4 py-1.5 text-xs font-bold text-[#22C55E]">
+          <div className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-bold text-accent">
             <Building2 className="h-3.5 w-3.5" strokeWidth={2.5} />
             ESPACE ÉTABLISSEMENT
           </div>
           <h2 className="mt-6 font-heading text-4xl font-black leading-tight tracking-tight text-white xl:text-5xl">
             Gérez votre centre
             <br />
-            <span className="text-[#22D3EE]">en équipe.</span>
+            <span className="text-doktori-teal-light">en équipe.</span>
           </h2>
           <p className="mt-6 max-w-md text-base leading-relaxed text-[#A7F3D0]">
             Agenda partagé, gestion multi-médecins, et statistiques globales pour votre établissement de santé.
@@ -99,7 +99,7 @@ export default function CliniqueLoginPage() {
               { icon: ShieldCheck, label: "Accès sécurisé par rôle" },
             ].map(({ icon: Icon, label }) => (
               <li key={label} className="flex items-center gap-3 text-sm text-white">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-[#22C55E] text-[#134E4A]">
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-accent text-foreground">
                   <Icon className="h-3.5 w-3.5" strokeWidth={3} />
                 </span>
                 {label}
@@ -114,30 +114,30 @@ export default function CliniqueLoginPage() {
       </div>
 
       {/* ═════ RIGHT: form ═════ */}
-      <div className="flex w-full items-center justify-center bg-[#F0FDFA]/30 px-4 py-12 sm:px-6 lg:w-1/2">
+      <div className="flex w-full items-center justify-center bg-secondary/30 px-4 py-12 sm:px-6 lg:w-1/2">
         <div className="w-full max-w-md">
           {/* Mobile logo */}
           <Link
             href="/"
             className="mb-8 flex items-center justify-center gap-2 lg:hidden"
           >
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0891B2] text-white">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white">
               <Building2 className="h-5 w-5" strokeWidth={2.5} />
             </div>
-            <span className="font-heading text-xl font-black text-[#134E4A]">
-              Doktori<span className="text-[#0891B2]">.tn</span>
+            <span className="font-heading text-xl font-black text-foreground">
+              Doktori<span className="text-primary">.tn</span>
             </span>
           </Link>
 
-          <div className="rounded-3xl border border-[#E6F4F1] bg-white p-8 shadow-xl shadow-[#0891B2]/5 sm:p-10">
+          <div className="rounded-3xl border border-border bg-white p-8 shadow-xl shadow-primary/5 sm:p-10">
             <div className="mb-8">
-              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0FDFA] text-[#0891B2]">
+              <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-primary">
                 <Building2 className="h-7 w-7" strokeWidth={2} />
               </div>
-              <h1 className="font-heading text-3xl font-black tracking-tight text-[#134E4A]">
+              <h1 className="font-heading text-3xl font-black tracking-tight text-foreground">
                 Espace Clinique
               </h1>
-              <p className="mt-2 text-sm text-[#5E7574]">
+              <p className="mt-2 text-sm text-muted-foreground">
                 Connectez-vous à l&apos;espace de gestion de votre établissement.
               </p>
             </div>
@@ -147,13 +147,13 @@ export default function CliniqueLoginPage() {
               <div>
                 <label
                   htmlFor="email"
-                  className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#0E7490]"
+                  className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark"
                 >
                   Adresse e-mail
                 </label>
-                <div className="group flex h-12 items-center rounded-xl border-2 border-[#E6F4F1] bg-white px-4 transition-colors focus-within:border-[#0891B2]">
+                <div className="group flex h-12 items-center rounded-xl border-2 border-border bg-white px-4 transition-colors focus-within:border-primary">
                   <Mail
-                    className="mr-3 h-4 w-4 shrink-0 text-[#5E7574] transition-colors group-focus-within:text-[#0891B2]"
+                    className="mr-3 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-focus-within:text-primary"
                     strokeWidth={2.5}
                   />
                   <input
@@ -164,7 +164,7 @@ export default function CliniqueLoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    className="h-full flex-1 border-0 bg-transparent text-sm text-[#134E4A] outline-none placeholder:text-[#5E7574]/60"
+                    className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
                   />
                 </div>
               </div>
@@ -173,13 +173,13 @@ export default function CliniqueLoginPage() {
               <div>
                 <label
                   htmlFor="password"
-                  className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-[#0E7490]"
+                  className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark"
                 >
                   Mot de passe
                 </label>
-                <div className="group flex h-12 items-center rounded-xl border-2 border-[#E6F4F1] bg-white px-4 transition-colors focus-within:border-[#0891B2]">
+                <div className="group flex h-12 items-center rounded-xl border-2 border-border bg-white px-4 transition-colors focus-within:border-primary">
                   <Lock
-                    className="mr-3 h-4 w-4 shrink-0 text-[#5E7574] transition-colors group-focus-within:text-[#0891B2]"
+                    className="mr-3 h-4 w-4 shrink-0 text-muted-foreground transition-colors group-focus-within:text-primary"
                     strokeWidth={2.5}
                   />
                   <input
@@ -190,7 +190,7 @@ export default function CliniqueLoginPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="h-full flex-1 border-0 bg-transparent text-sm text-[#134E4A] outline-none placeholder:text-[#5E7574]/60"
+                    className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
                   />
                 </div>
               </div>
@@ -207,7 +207,7 @@ export default function CliniqueLoginPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-[#0891B2] font-heading text-base font-bold text-white shadow-lg shadow-[#0891B2]/20 transition-all hover:bg-[#0E7490] disabled:opacity-60"
+                className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary font-heading text-base font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-doktori-teal-dark disabled:opacity-60"
               >
                 {loading ? (
                   "Connexion en cours…"
@@ -223,9 +223,9 @@ export default function CliniqueLoginPage() {
               </button>
             </form>
 
-            <p className="mt-6 text-center text-sm text-[#5E7574]">
+            <p className="mt-6 text-center text-sm text-muted-foreground">
               Vous êtes médecin ?{" "}
-              <Link href="/connexion" className="font-bold text-[#0891B2] hover:underline">
+              <Link href="/connexion" className="font-bold text-primary hover:underline">
                 Espace médecin
               </Link>
             </p>

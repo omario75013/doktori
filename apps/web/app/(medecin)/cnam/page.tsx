@@ -34,7 +34,7 @@ const STATUS_LABELS: Record<Claim["status"], string> = {
 const STATUS_STYLES: Record<Claim["status"], string> = {
   draft: "bg-gray-100 text-gray-700",
   submitted: "bg-blue-100 text-blue-700",
-  reimbursed: "bg-[#F0FDFA] text-[#0891B2]",
+  reimbursed: "bg-secondary text-primary",
   rejected: "bg-red-100 text-red-700",
 };
 
@@ -86,11 +86,11 @@ export default function CnamPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-3">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+          <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary">
             <FileText className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-[#134E4A]">Bordereaux CNAM</h1>
+            <h1 className="text-2xl font-bold text-foreground">Bordereaux CNAM</h1>
             <p className="text-sm text-gray-500">Tiers-payant — {monthLabel}</p>
           </div>
         </div>
@@ -99,11 +99,11 @@ export default function CnamPage() {
             type="month"
             value={month}
             onChange={(e) => setMonth(e.target.value)}
-            className="h-10 rounded-xl border border-[#E6F4F1] bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2]"
+            className="h-10 rounded-xl border border-border bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
           <a
             href={`/api/cnam/claims/export?month=${month}`}
-            className="inline-flex items-center gap-1.5 rounded-xl bg-[#0891B2] text-white px-4 py-2 text-sm font-semibold hover:bg-[#0E7490] transition-colors h-10"
+            className="inline-flex items-center gap-1.5 rounded-xl bg-primary text-white px-4 py-2 text-sm font-semibold hover:bg-doktori-teal-dark transition-colors h-10"
           >
             <Download className="w-4 h-4" />
             CSV
@@ -112,11 +112,11 @@ export default function CnamPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-        <StatCard label="Bordereaux" value={totals.count.toString()} valueColor="text-[#134E4A]" />
+        <StatCard label="Bordereaux" value={totals.count.toString()} valueColor="text-foreground" />
         <StatCard
           label="Montant total"
           value={`${((totals.amount || 0) / 1000).toFixed(0)} DT`}
-          valueColor="text-[#0891B2]"
+          valueColor="text-primary"
         />
         <StatCard
           label="Remboursés"
@@ -133,42 +133,42 @@ export default function CnamPage() {
       {loading ? (
         <p className="text-gray-400 text-sm">Chargement...</p>
       ) : rows.length === 0 ? (
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-12 text-center shadow-sm">
-          <div className="h-14 w-14 rounded-2xl bg-[#F0FDFA] flex items-center justify-center mx-auto mb-3">
-            <FileText className="w-7 h-7 text-[#0891B2]" />
+        <div className="rounded-2xl border border-border bg-white p-12 text-center shadow-sm">
+          <div className="h-14 w-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
+            <FileText className="w-7 h-7 text-primary" />
           </div>
-          <p className="text-[#134E4A] font-medium mb-1">Aucun bordereau pour {monthLabel}</p>
+          <p className="text-foreground font-medium mb-1">Aucun bordereau pour {monthLabel}</p>
           <p className="text-gray-400 text-sm">Créez-en un depuis un rendez-vous terminé.</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm overflow-x-auto">
+        <div className="rounded-2xl border border-border bg-white shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#E6F4F1] bg-[#F0FDFA] text-left">
-                <th className="px-4 py-3 font-medium text-[#134E4A]">Date</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">Patient</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">N° CNAM</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">Montant</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">Statut</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">Actions</th>
+              <tr className="border-b border-border bg-secondary text-left">
+                <th className="px-4 py-3 font-medium text-foreground">Date</th>
+                <th className="px-4 py-3 font-medium text-foreground">Patient</th>
+                <th className="px-4 py-3 font-medium text-foreground">N° CNAM</th>
+                <th className="px-4 py-3 font-medium text-foreground">Montant</th>
+                <th className="px-4 py-3 font-medium text-foreground">Statut</th>
+                <th className="px-4 py-3 font-medium text-foreground">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E6F4F1]">
+            <tbody className="divide-y divide-border">
               {rows.map((r) => {
                 const Icon = STATUS_ICONS[r.status];
                 return (
-                  <tr key={r.id} className="hover:bg-[#F0FDFA] transition-colors">
+                  <tr key={r.id} className="hover:bg-secondary transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap text-gray-700">
                       {format(parseISO(r.consultationDate), "d MMM yyyy", { locale: fr })}
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-medium text-[#134E4A]">{r.patientName}</div>
+                      <div className="font-medium text-foreground">{r.patientName}</div>
                       <div className="text-xs text-gray-400">
                         {r.patientRole === "assure" ? "Assuré" : "Ayant-droit"}
                       </div>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-gray-700">{r.cnamNumber}</td>
-                    <td className="px-4 py-3 font-semibold text-[#134E4A]">
+                    <td className="px-4 py-3 font-semibold text-foreground">
                       {(r.amount / 1000).toFixed(0)} DT
                     </td>
                     <td className="px-4 py-3">
@@ -185,7 +185,7 @@ export default function CnamPage() {
                           href={`/cnam/${r.id}/print`}
                           target="_blank"
                           rel="noopener"
-                          className="text-xs px-2.5 py-1.5 rounded-xl border border-[#E6F4F1] bg-white hover:bg-[#F0FDFA] inline-flex items-center gap-1 transition-colors"
+                          className="text-xs px-2.5 py-1.5 rounded-xl border border-border bg-white hover:bg-secondary inline-flex items-center gap-1 transition-colors"
                         >
                           <Printer className="w-3 h-3" />
                           Imprimer
@@ -203,7 +203,7 @@ export default function CnamPage() {
                           <button
                             disabled={updating === r.id}
                             onClick={() => updateStatus(r.id, "reimbursed")}
-                            className="text-xs px-2.5 py-1.5 rounded-xl border border-[#E6F4F1] bg-[#F0FDFA] text-[#0891B2] hover:bg-[#E6F4F1] disabled:opacity-40 transition-colors"
+                            className="text-xs px-2.5 py-1.5 rounded-xl border border-border bg-secondary text-primary hover:bg-border disabled:opacity-40 transition-colors"
                           >
                             Marquer remboursé
                           </button>
@@ -223,7 +223,7 @@ export default function CnamPage() {
 
 function StatCard({ label, value, valueColor }: { label: string; value: string; valueColor: string }) {
   return (
-    <div className="rounded-2xl border border-[#E6F4F1] bg-white p-4 shadow-sm">
+    <div className="rounded-2xl border border-border bg-white p-4 shadow-sm">
       <div className="text-xs text-gray-500 uppercase tracking-wider">{label}</div>
       <div className={`mt-1 text-2xl font-bold ${valueColor}`}>{value}</div>
     </div>

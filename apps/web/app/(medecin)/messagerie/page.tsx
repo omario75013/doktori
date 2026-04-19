@@ -73,7 +73,7 @@ export default function DoctorMessageriePage() {
                 onClick={() => router.push(`/messagerie/${conv.id}`)}
                 className="w-full text-left bg-white rounded-xl border border-gray-100 p-4 flex items-center gap-4 hover:border-teal-200 hover:shadow-sm transition-all"
               >
-                <div className="w-12 h-12 rounded-full bg-[#134E4A] flex items-center justify-center text-white font-semibold flex-shrink-0">
+                <div className="w-12 h-12 rounded-full bg-foreground flex items-center justify-center text-white font-semibold flex-shrink-0">
                   {initials}
                 </div>
                 <div className="flex-1 min-w-0">

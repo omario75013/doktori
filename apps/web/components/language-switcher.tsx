@@ -19,7 +19,7 @@ export function LanguageSwitcher({ currentLocale }: { currentLocale: string }) {
         disabled={isPending || currentLocale === "fr"}
         aria-label="Passer en français"
         aria-pressed={currentLocale === "fr"}
-        className={`min-h-[36px] min-w-[36px] px-3 py-1.5 rounded font-semibold transition-colors ${currentLocale === "fr" ? "bg-[#0891B2] text-white" : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"}`}
+        className={`min-h-[36px] min-w-[36px] px-3 py-1.5 rounded font-semibold transition-colors ${currentLocale === "fr" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"}`}
       >
         FR
       </button>
@@ -28,7 +28,7 @@ export function LanguageSwitcher({ currentLocale }: { currentLocale: string }) {
         disabled={isPending || currentLocale === "ar"}
         aria-label="التبديل إلى العربية"
         aria-pressed={currentLocale === "ar"}
-        className={`min-h-[36px] min-w-[36px] px-3 py-1.5 rounded font-semibold transition-colors ${currentLocale === "ar" ? "bg-[#0891B2] text-white" : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"}`}
+        className={`min-h-[36px] min-w-[36px] px-3 py-1.5 rounded font-semibold transition-colors ${currentLocale === "ar" ? "bg-primary text-white" : "text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800"}`}
       >
         AR
       </button>

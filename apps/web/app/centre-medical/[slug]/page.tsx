@@ -137,7 +137,7 @@ export default async function CentreMedicalPage({ params }: Props) {
       />
     <div className="min-h-screen bg-[#F8FFFE]">
       {/* ─── Header ─── */}
-      <div className="bg-gradient-to-br from-[#134E4A] via-[#0E7490] to-[#0891B2]">
+      <div className="bg-gradient-to-br from-foreground via-doktori-teal-dark to-primary">
         <div className="mx-auto max-w-5xl px-4 py-12 sm:px-6">
           <div className="flex items-start gap-6">
             {/* Logo / icon */}
@@ -156,7 +156,7 @@ export default async function CentreMedicalPage({ params }: Props) {
 
             {/* Info */}
             <div className="min-w-0 flex-1">
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-[#22D3EE]">
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-bold text-doktori-teal-light">
                 <BadgeCheck className="h-3.5 w-3.5" strokeWidth={2.5} />
                 Centre médical agréé
               </div>
@@ -196,20 +196,20 @@ export default async function CentreMedicalPage({ params }: Props) {
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
         {/* ─── "Premier créneau disponible" CTA ─── */}
         {allDoctorsInClinic.length > 0 && (
-          <div className="rounded-2xl border-2 border-[#0891B2] bg-gradient-to-r from-[#F0FDFA] to-white p-5 mb-6">
+          <div className="rounded-2xl border-2 border-primary bg-gradient-to-r from-secondary to-white p-5 mb-6">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#0891B2]/10 text-[#0891B2]">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <CalendarClock className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <div>
-                  <h3 className="font-bold text-[#134E4A]">Premier créneau disponible</h3>
-                  <p className="text-sm text-[#5E7574]">Réservez avec le premier médecin disponible</p>
+                  <h3 className="font-bold text-foreground">Premier créneau disponible</h3>
+                  <p className="text-sm text-muted-foreground">Réservez avec le premier médecin disponible</p>
                 </div>
               </div>
               <Link
                 href={`/rdv-clinique/${clinic.slug}`}
-                className="shrink-0 bg-[#0891B2] text-white px-6 py-3 rounded-xl font-bold hover:bg-[#0E7490] transition-colors text-sm"
+                className="shrink-0 bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-doktori-teal-dark transition-colors text-sm"
               >
                 Réserver
               </Link>
@@ -220,14 +220,14 @@ export default async function CentreMedicalPage({ params }: Props) {
         {/* Doctors section */}
         <div className="mb-10">
           <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0891B2]/10 text-[#0891B2]">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
               <Users className="h-5 w-5" strokeWidth={2} />
             </div>
             <div>
-              <h2 className="font-heading text-xl font-black text-[#134E4A]">
+              <h2 className="font-heading text-xl font-black text-foreground">
                 Nos médecins
               </h2>
-              <p className="text-sm text-[#5E7574]">
+              <p className="text-sm text-muted-foreground">
                 {allDoctorsInClinic.length} praticien
                 {allDoctorsInClinic.length !== 1 ? "s" : ""} disponible
                 {allDoctorsInClinic.length !== 1 ? "s" : ""}
@@ -236,9 +236,9 @@ export default async function CentreMedicalPage({ params }: Props) {
           </div>
 
           {allDoctorsInClinic.length === 0 ? (
-            <div className="rounded-2xl border border-[#E6F4F1] bg-white p-10 text-center">
-              <Building2 className="mx-auto h-10 w-10 text-[#5E7574]/40" strokeWidth={1.5} />
-              <p className="mt-3 text-sm text-[#5E7574]">
+            <div className="rounded-2xl border border-border bg-white p-10 text-center">
+              <Building2 className="mx-auto h-10 w-10 text-muted-foreground/40" strokeWidth={1.5} />
+              <p className="mt-3 text-sm text-muted-foreground">
                 Aucun médecin associé pour le moment.
               </p>
             </div>
@@ -258,11 +258,11 @@ export default async function CentreMedicalPage({ params }: Props) {
                 return (
                   <div
                     key={doctor.id}
-                    className="group relative overflow-hidden rounded-2xl border border-[#E6F4F1] bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-[#0891B2]/40 hover:shadow-lg hover:shadow-[#0891B2]/8"
+                    className="group relative overflow-hidden rounded-2xl border border-border bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg hover:shadow-primary/8"
                   >
                     {/* Role badge */}
                     {role === "admin" && (
-                      <div className="absolute right-3 top-3 rounded-full bg-[#0891B2]/10 px-2 py-0.5 text-[10px] font-bold text-[#0891B2]">
+                      <div className="absolute right-3 top-3 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
                         Responsable
                       </div>
                     )}
@@ -271,7 +271,7 @@ export default async function CentreMedicalPage({ params }: Props) {
                       {/* Avatar */}
                       <div className="relative shrink-0">
                         {doctor.photoUrl ? (
-                          <div className="h-14 w-14 overflow-hidden rounded-xl ring-1 ring-[#E6F4F1]">
+                          <div className="h-14 w-14 overflow-hidden rounded-xl ring-1 ring-border">
                             {/* eslint-disable-next-line @next/next/no-img-element */}
                             <img
                               src={doctor.photoUrl}
@@ -281,21 +281,21 @@ export default async function CentreMedicalPage({ params }: Props) {
                             />
                           </div>
                         ) : (
-                          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#0891B2] font-heading text-sm font-black text-white">
+                          <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-primary font-heading text-sm font-black text-white">
                             {initials}
                           </div>
                         )}
                         <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white ring-2 ring-white">
-                          <BadgeCheck className="h-4 w-4 fill-[#22C55E] text-white" strokeWidth={2.5} />
+                          <BadgeCheck className="h-4 w-4 fill-accent text-white" strokeWidth={2.5} />
                         </div>
                       </div>
 
                       {/* Info */}
                       <div className="min-w-0 flex-1">
-                        <p className="font-heading text-sm font-bold text-[#134E4A] truncate">
+                        <p className="font-heading text-sm font-bold text-foreground truncate">
                           {doctor.name}
                         </p>
-                        <p className="mt-0.5 text-xs font-semibold text-[#0891B2]">
+                        <p className="mt-0.5 text-xs font-semibold text-primary">
                           {spec?.label ?? doctor.specialty}
                         </p>
                       </div>
@@ -304,7 +304,7 @@ export default async function CentreMedicalPage({ params }: Props) {
                     {/* CTA */}
                     <Link
                       href={`/medecin/${doctor.slug}`}
-                      className="mt-4 flex h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-[#0891B2] text-xs font-bold text-white transition-all hover:bg-[#0E7490] group-hover:gap-2"
+                      className="mt-4 flex h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-bold text-white transition-all hover:bg-doktori-teal-dark group-hover:gap-2"
                     >
                       Prendre rendez-vous
                       <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
@@ -317,25 +317,25 @@ export default async function CentreMedicalPage({ params }: Props) {
         </div>
 
         {/* Address / map placeholder */}
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-6">
-          <h3 className="mb-4 font-heading text-base font-bold text-[#134E4A]">
+        <div className="rounded-2xl border border-border bg-white p-6">
+          <h3 className="mb-4 font-heading text-base font-bold text-foreground">
             Localisation
           </h3>
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0FDFA] text-[#0891B2]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
               <MapPin className="h-5 w-5" strokeWidth={2} />
             </div>
             <div>
-              <p className="font-semibold text-[#134E4A]">{clinic.name}</p>
-              <p className="mt-0.5 text-sm text-[#5E7574]">
+              <p className="font-semibold text-foreground">{clinic.name}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">
                 {clinic.address}
               </p>
-              <p className="text-sm text-[#5E7574]">{cityLabel}, Tunisie</p>
+              <p className="text-sm text-muted-foreground">{cityLabel}, Tunisie</p>
               <a
                 href={`https://www.google.com/maps/search/${encodeURIComponent(`${clinic.name} ${clinic.address} ${cityLabel} Tunisie`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-[#0891B2] hover:underline"
+                className="mt-2 inline-flex items-center gap-1.5 text-xs font-bold text-primary hover:underline"
               >
                 Voir sur Google Maps
                 <ArrowRight className="h-3 w-3" strokeWidth={3} />

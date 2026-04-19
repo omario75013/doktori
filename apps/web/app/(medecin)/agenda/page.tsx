@@ -82,7 +82,7 @@ function mergeApiSlots(defaults: DaySchedule[], apiSlots: ApiSlot[]): DaySchedul
 }
 
 const timeInputClass =
-  "w-28 h-10 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] text-sm";
+  "w-28 h-10 rounded-xl border-border focus-visible:ring-primary text-sm";
 
 export default function AgendaPage() {
   const t = useTranslations("medecin.agenda");
@@ -204,8 +204,8 @@ export default function AgendaPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-[#134E4A]/60 text-sm">{t("loading")}</p>
+          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-foreground/60 text-sm">{t("loading")}</p>
         </div>
       </div>
     );
@@ -218,12 +218,12 @@ export default function AgendaPage() {
       {/* Page header */}
       <div>
         <div className="flex items-center gap-2 mb-1">
-          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-[#0891B2]/10">
-            <CalendarDays className="h-4 w-4 text-[#0891B2]" strokeWidth={2} />
+          <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+            <CalendarDays className="h-4 w-4 text-primary" strokeWidth={2} />
           </div>
-          <h1 className="text-2xl font-black text-[#134E4A]">{t("title")}</h1>
+          <h1 className="text-2xl font-black text-foreground">{t("title")}</h1>
         </div>
-        <p className="text-sm text-[#134E4A]/60 ml-10">
+        <p className="text-sm text-foreground/60 ml-10">
           {t("subtitle")}
         </p>
       </div>
@@ -248,18 +248,18 @@ export default function AgendaPage() {
 
       {/* Summary pill */}
       <div className="flex items-center gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-[#0891B2]/10 px-3 py-1 text-xs font-semibold text-[#0891B2]">
+        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
           <Clock className="h-3 w-3" />
           {openDaysCount !== 1 ? t("openDaysPlural", { count: openDaysCount }) : t("openDays", { count: openDaysCount })}
         </span>
       </div>
 
       {/* Schedule grid */}
-      <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm divide-y divide-[#E6F4F1]">
+      <div className="bg-white rounded-2xl border border-border shadow-sm divide-y divide-border">
         {days.map((day) => (
           <div
             key={day.dayOfWeek}
-            className={`p-5 transition-colors ${day.open ? "bg-white" : "bg-[#F0FDFA]/30"}`}
+            className={`p-5 transition-colors ${day.open ? "bg-white" : "bg-secondary/30"}`}
           >
             {/* Day header row */}
             <div className="flex items-center gap-3">
@@ -269,14 +269,14 @@ export default function AgendaPage() {
                 onCheckedChange={(checked) =>
                   updateDay(day.dayOfWeek, { open: Boolean(checked) })
                 }
-                className="data-[state=checked]:bg-[#0891B2] data-[state=checked]:border-[#0891B2]"
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
               />
               <Label
                 htmlFor={`day-${day.dayOfWeek}`}
                 className="cursor-pointer select-none"
               >
                 {day.open ? (
-                  <span className="inline-flex items-center justify-center rounded-lg bg-[#0891B2] px-3 py-1 text-sm font-bold text-white min-w-[90px] text-center">
+                  <span className="inline-flex items-center justify-center rounded-lg bg-primary px-3 py-1 text-sm font-bold text-white min-w-[90px] text-center">
                     {DAY_LABELS[day.dayOfWeek]}
                   </span>
                 ) : (
@@ -297,7 +297,7 @@ export default function AgendaPage() {
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
                     <Sun className="h-3.5 w-3.5 text-amber-400" />
-                    <span className="text-xs font-semibold text-[#134E4A]/70">{t("morning")}</span>
+                    <span className="text-xs font-semibold text-foreground/70">{t("morning")}</span>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <Label htmlFor={`ms-${day.dayOfWeek}`} className="sr-only">
@@ -312,7 +312,7 @@ export default function AgendaPage() {
                       }
                       className={timeInputClass}
                     />
-                    <span className="text-[#134E4A]/40 font-bold">—</span>
+                    <span className="text-foreground/40 font-bold">—</span>
                     <Label htmlFor={`me-${day.dayOfWeek}`} className="sr-only">
                       Fin matin
                     </Label>
@@ -332,7 +332,7 @@ export default function AgendaPage() {
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
                     <Sunset className="h-3.5 w-3.5 text-orange-400" />
-                    <span className="text-xs font-semibold text-[#134E4A]/70">{t("afternoon")}</span>
+                    <span className="text-xs font-semibold text-foreground/70">{t("afternoon")}</span>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <Label htmlFor={`as-${day.dayOfWeek}`} className="sr-only">
@@ -347,7 +347,7 @@ export default function AgendaPage() {
                       }
                       className={timeInputClass}
                     />
-                    <span className="text-[#134E4A]/40 font-bold">—</span>
+                    <span className="text-foreground/40 font-bold">—</span>
                     <Label htmlFor={`ae-${day.dayOfWeek}`} className="sr-only">
                       Fin après-midi
                     </Label>
@@ -366,8 +366,8 @@ export default function AgendaPage() {
                 {/* Slot duration */}
                 <div className="flex items-center gap-3 flex-wrap">
                   <div className="flex items-center gap-1.5 w-24 flex-shrink-0">
-                    <Clock className="h-3.5 w-3.5 text-[#0891B2]" />
-                    <span className="text-xs font-semibold text-[#134E4A]/70">{t("duration")}</span>
+                    <Clock className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-xs font-semibold text-foreground/70">{t("duration")}</span>
                   </div>
                   <Select
                     value={String(day.slotDuration)}
@@ -375,7 +375,7 @@ export default function AgendaPage() {
                       if (val) updateDay(day.dayOfWeek, { slotDuration: Number(val) });
                     }}
                   >
-                    <SelectTrigger className="w-32 h-10 rounded-xl border-[#E6F4F1] focus:ring-[#0891B2]">
+                    <SelectTrigger className="w-32 h-10 rounded-xl border-border focus:ring-primary">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -398,7 +398,7 @@ export default function AgendaPage() {
         <Button
           onClick={handleSave}
           disabled={saving}
-          className="h-12 px-8 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] font-bold text-white text-base transition-colors"
+          className="h-12 px-8 rounded-xl bg-primary hover:bg-doktori-teal-dark font-bold text-white text-base transition-colors"
           size="lg"
         >
           {saving ? t("saving") : t("save")}

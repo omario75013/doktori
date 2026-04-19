@@ -147,11 +147,11 @@ export default async function BlogPage({
   const gridPosts = featuredPost ? posts.slice(1) : posts;
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-[#F0FDFA] via-white to-[#F0FDFA]">
+    <main className="min-h-screen bg-gradient-to-b from-secondary via-white to-secondary">
       {/* ── Hero ── */}
-      <section className="relative overflow-hidden bg-[#134E4A]">
+      <section className="relative overflow-hidden bg-foreground">
         {/* Decorative elements */}
-        <div className="pointer-events-none absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-[#0891B2]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-primary/10 blur-3xl" />
         <div className="pointer-events-none absolute -bottom-20 -left-20 h-[300px] w-[300px] rounded-full bg-white/5 blur-3xl" />
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.03]"
@@ -187,8 +187,8 @@ export default async function BlogPage({
               href="/blog"
               className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                 !categorie || categorie === "all"
-                  ? "bg-[#134E4A] text-white shadow-sm"
-                  : "bg-white text-[#5E7574] border border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                  ? "bg-foreground text-white shadow-sm"
+                  : "bg-white text-muted-foreground border border-gray-200 hover:bg-gray-50 hover:border-gray-300"
               }`}
             >
               Tous les articles
@@ -202,7 +202,7 @@ export default async function BlogPage({
                   href={`/blog?categorie=${cat}`}
                   className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                     categorie === cat
-                      ? "bg-[#134E4A] text-white shadow-sm"
+                      ? "bg-foreground text-white shadow-sm"
                       : `bg-white ${colors.text} border ${colors.border} hover:${colors.bg}`
                   }`}
                 >
@@ -217,10 +217,10 @@ export default async function BlogPage({
         {/* ── Empty state ── */}
         {posts.length === 0 && (
           <div className="text-center py-24">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-[#F0FDFA]">
-              <Stethoscope className="h-10 w-10 text-[#0891B2]" />
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-secondary">
+              <Stethoscope className="h-10 w-10 text-primary" />
             </div>
-            <h2 className="text-2xl font-bold text-[#134E4A] mb-2">
+            <h2 className="text-2xl font-bold text-foreground mb-2">
               Aucun article pour le moment
             </h2>
             <p className="text-gray-500 mb-6">
@@ -228,7 +228,7 @@ export default async function BlogPage({
             </p>
             <Link
               href="/recherche"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#0891B2] px-6 py-3 text-sm font-bold text-white hover:bg-[#0e7490] transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-doktori-teal-dark transition-colors"
             >
               <Search className="h-4 w-4" />
               Trouver un médecin
@@ -244,7 +244,7 @@ export default async function BlogPage({
           >
             <div className="grid grid-cols-1 md:grid-cols-2">
               {/* Image */}
-              <div className="aspect-video md:aspect-auto overflow-hidden bg-gradient-to-br from-[#0891B2]/10 via-[#134E4A]/10 to-[#0891B2]/5">
+              <div className="aspect-video md:aspect-auto overflow-hidden bg-gradient-to-br from-primary/10 via-foreground/10 to-primary/5">
                 {featuredPost.coverImageUrl ? (
                   <img
                     src={featuredPost.coverImageUrl}
@@ -286,7 +286,7 @@ export default async function BlogPage({
                   </span>
                 </div>
 
-                <h2 className="text-2xl font-bold text-[#134E4A] group-hover:text-[#0891B2] transition-colors mb-3 sm:text-3xl">
+                <h2 className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors mb-3 sm:text-3xl">
                   {featuredPost.title}
                 </h2>
 
@@ -303,7 +303,7 @@ export default async function BlogPage({
                     <span className="mx-1">·</span>
                     <span className="font-medium text-gray-500">{featuredPost.author}</span>
                   </div>
-                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-[#0891B2] opacity-0 translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">
+                  <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary opacity-0 translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">
                     Lire
                     <ArrowRight className="h-4 w-4" />
                   </span>
@@ -361,7 +361,7 @@ export default async function BlogPage({
 
                 {/* Content */}
                 <div className="flex flex-1 flex-col p-5">
-                  <h2 className="mb-2 text-base font-bold text-[#134E4A] leading-snug group-hover:text-[#0891B2] transition-colors line-clamp-2">
+                  <h2 className="mb-2 text-base font-bold text-foreground leading-snug group-hover:text-primary transition-colors line-clamp-2">
                     {post.title}
                   </h2>
 
@@ -392,13 +392,13 @@ export default async function BlogPage({
             {page > 1 && (
               <Link
                 href={`/blog?page=${page - 1}${categorie ? `&categorie=${categorie}` : ""}`}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-[#134E4A] shadow-sm hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-foreground shadow-sm hover:bg-gray-50 transition-colors"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Précédent
               </Link>
             )}
-            <span className="rounded-xl bg-[#134E4A] px-4 py-2.5 text-sm font-bold text-white">
+            <span className="rounded-xl bg-foreground px-4 py-2.5 text-sm font-bold text-white">
               {page}
             </span>
             {totalPages > 1 && (
@@ -407,7 +407,7 @@ export default async function BlogPage({
             {page < totalPages && (
               <Link
                 href={`/blog?page=${page + 1}${categorie ? `&categorie=${categorie}` : ""}`}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-[#134E4A] shadow-sm hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-foreground shadow-sm hover:bg-gray-50 transition-colors"
               >
                 Suivant
                 <ChevronRight className="h-4 w-4" />
@@ -417,8 +417,8 @@ export default async function BlogPage({
         )}
 
         {/* ── Newsletter CTA ── */}
-        <section className="mt-16 mb-8 rounded-2xl bg-gradient-to-br from-[#134E4A] to-[#0e3d38] p-8 sm:p-12 text-center relative overflow-hidden">
-          <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-[#0891B2]/10 blur-3xl" />
+        <section className="mt-16 mb-8 rounded-2xl bg-gradient-to-br from-foreground to-[#0e3d38] p-8 sm:p-12 text-center relative overflow-hidden">
+          <div className="pointer-events-none absolute -top-20 -right-20 h-[300px] w-[300px] rounded-full bg-primary/10 blur-3xl" />
           <div className="relative">
             <h3 className="text-2xl font-bold text-white mb-2 sm:text-3xl">
               Restez informé
@@ -430,9 +430,9 @@ export default async function BlogPage({
               <input
                 type="email"
                 placeholder="votre@email.com"
-                className="flex-1 rounded-xl border-0 bg-white/10 px-5 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2]"
+                className="flex-1 rounded-xl border-0 bg-white/10 px-5 py-3 text-sm text-white placeholder:text-white/40 backdrop-blur-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
-              <button className="rounded-xl bg-[#0891B2] px-6 py-3 text-sm font-bold text-white hover:bg-[#0e7490] transition-colors shadow-lg shadow-[#0891B2]/20">
+              <button className="rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-doktori-teal-dark transition-colors shadow-lg shadow-primary/20">
                 S&apos;abonner
               </button>
             </div>

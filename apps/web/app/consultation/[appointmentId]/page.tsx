@@ -123,24 +123,24 @@ export default async function ConsultationSummaryPage({
   };
 
   return (
-    <div className="min-h-screen bg-[#F0FDFA]/40 px-4 py-8">
+    <div className="min-h-screen bg-secondary/40 px-4 py-8">
       <div className="mx-auto max-w-2xl space-y-5">
 
         {/* Header */}
-        <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-1">
-          <h1 className="text-xl font-black text-[#134E4A]">
+        <div className="rounded-3xl border border-border bg-white shadow-sm p-6 space-y-1">
+          <h1 className="text-xl font-black text-foreground">
             Compte-rendu de consultation
           </h1>
-          <p className="text-sm text-[#0E7490] font-semibold">Dr. {appt.doctor_name}</p>
-          <p className="text-sm text-[#134E4A]/60">{dateStr}</p>
+          <p className="text-sm text-doktori-teal-dark font-semibold">Dr. {appt.doctor_name}</p>
+          <p className="text-sm text-foreground/60">{dateStr}</p>
         </div>
 
         {/* Payment receipt */}
-        <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-3">
-          <h2 className="font-bold text-[#134E4A]">Reçu de paiement</h2>
+        <div className="rounded-3xl border border-border bg-white shadow-sm p-6 space-y-3">
+          <h2 className="font-bold text-foreground">Reçu de paiement</h2>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between">
-              <span className="text-[#134E4A]/60">Statut</span>
+              <span className="text-foreground/60">Statut</span>
               <span
                 className={`font-semibold ${
                   appt.payment_status === "paid"
@@ -153,16 +153,16 @@ export default async function ConsultationSummaryPage({
             </div>
             {appt.payment_amount != null && (
               <div className="flex justify-between">
-                <span className="text-[#134E4A]/60">Montant</span>
-                <span className="font-bold text-[#0891B2]">
+                <span className="text-foreground/60">Montant</span>
+                <span className="font-bold text-primary">
                   {(appt.payment_amount / 1000).toFixed(0)} DT
                 </span>
               </div>
             )}
             {appt.payment_ref && (
               <div className="flex justify-between">
-                <span className="text-[#134E4A]/60">Référence</span>
-                <span className="font-mono text-xs text-[#134E4A]/50">{appt.payment_ref}</span>
+                <span className="text-foreground/60">Référence</span>
+                <span className="font-mono text-xs text-foreground/50">{appt.payment_ref}</span>
               </div>
             )}
           </div>
@@ -170,39 +170,39 @@ export default async function ConsultationSummaryPage({
 
         {/* Documents */}
         {(prescription || note) && (
-          <div className="rounded-3xl border border-[#E6F4F1] bg-white shadow-sm p-6 space-y-3">
-            <h2 className="font-bold text-[#134E4A]">Vos documents</h2>
+          <div className="rounded-3xl border border-border bg-white shadow-sm p-6 space-y-3">
+            <h2 className="font-bold text-foreground">Vos documents</h2>
             <div className="space-y-2">
               {prescription && (
                 <a
                   href={`${baseUrl}/ordonnance/${prescription.id}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="flex items-center justify-between w-full rounded-2xl border border-[#E6F4F1] px-4 py-3 hover:border-[#0891B2] hover:bg-[#F0FDFA]/40 transition-colors"
+                  className="flex items-center justify-between w-full rounded-2xl border border-border px-4 py-3 hover:border-primary hover:bg-secondary/40 transition-colors"
                 >
-                  <span className="text-sm font-semibold text-[#134E4A]">Ordonnance</span>
-                  <span className="text-xs text-[#0891B2] font-bold">Voir →</span>
+                  <span className="text-sm font-semibold text-foreground">Ordonnance</span>
+                  <span className="text-xs text-primary font-bold">Voir →</span>
                 </a>
               )}
               {note && (
-                <div className="rounded-2xl border border-[#E6F4F1] px-4 py-4 space-y-3">
-                  <p className="text-sm font-semibold text-[#134E4A]">Compte-rendu médical</p>
+                <div className="rounded-2xl border border-border px-4 py-4 space-y-3">
+                  <p className="text-sm font-semibold text-foreground">Compte-rendu médical</p>
                   {note.assessment && (
                     <div>
-                      <p className="text-xs font-bold text-[#0891B2] uppercase tracking-wider mb-1">
+                      <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
                         Diagnostic
                       </p>
-                      <p className="text-sm text-[#134E4A]/80 whitespace-pre-line">
+                      <p className="text-sm text-foreground/80 whitespace-pre-line">
                         {note.assessment}
                       </p>
                     </div>
                   )}
                   {note.plan && (
                     <div>
-                      <p className="text-xs font-bold text-[#0891B2] uppercase tracking-wider mb-1">
+                      <p className="text-xs font-bold text-primary uppercase tracking-wider mb-1">
                         Plan de traitement
                       </p>
-                      <p className="text-sm text-[#134E4A]/80 whitespace-pre-line">
+                      <p className="text-sm text-foreground/80 whitespace-pre-line">
                         {note.plan}
                       </p>
                     </div>

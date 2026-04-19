@@ -126,7 +126,7 @@ export default async function RdvCliniqueePage({ params }: Props) {
   return (
     <div className="min-h-screen bg-[#F8FFFE]">
       {/* Header */}
-      <div className="bg-gradient-to-br from-[#134E4A] via-[#0E7490] to-[#0891B2]">
+      <div className="bg-gradient-to-br from-foreground via-doktori-teal-dark to-primary">
         <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
           <Link
             href={`/centre-medical/${clinic.slug}`}
@@ -156,17 +156,17 @@ export default async function RdvCliniqueePage({ params }: Props) {
 
       <div className="mx-auto max-w-3xl px-4 py-10 sm:px-6">
         {available.length === 0 ? (
-          <div className="rounded-2xl border border-[#E6F4F1] bg-white p-10 text-center">
-            <CalendarClock className="mx-auto h-12 w-12 text-[#5E7574]/40" strokeWidth={1.5} />
-            <h2 className="mt-4 font-heading text-lg font-bold text-[#134E4A]">
+          <div className="rounded-2xl border border-border bg-white p-10 text-center">
+            <CalendarClock className="mx-auto h-12 w-12 text-muted-foreground/40" strokeWidth={1.5} />
+            <h2 className="mt-4 font-heading text-lg font-bold text-foreground">
               Aucun créneau disponible
             </h2>
-            <p className="mt-2 text-sm text-[#5E7574]">
+            <p className="mt-2 text-sm text-muted-foreground">
               Aucun médecin n'a de disponibilité dans les 7 prochains jours. Consultez les profils individuels.
             </p>
             <Link
               href={`/centre-medical/${clinic.slug}`}
-              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-[#0891B2] px-6 py-3 text-sm font-bold text-white hover:bg-[#0E7490] transition-colors"
+              className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-doktori-teal-dark transition-colors"
             >
               Voir les médecins
               <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
@@ -177,10 +177,10 @@ export default async function RdvCliniqueePage({ params }: Props) {
             {/* Recommended slot */}
             {recommended && (
               <div className="mb-6">
-                <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#0891B2]">
+                <p className="mb-3 text-xs font-bold uppercase tracking-widest text-primary">
                   Créneau recommandé
                 </p>
-                <div className="rounded-2xl border-2 border-[#0891B2] bg-white p-6 shadow-md shadow-[#0891B2]/10">
+                <div className="rounded-2xl border-2 border-primary bg-white p-6 shadow-md shadow-primary/10">
                   <DoctorSlotCard slot={recommended} clinicSlug={clinic.slug} isPrimary />
                 </div>
               </div>
@@ -189,14 +189,14 @@ export default async function RdvCliniqueePage({ params }: Props) {
             {/* Alternative slots */}
             {alternatives.length > 0 && (
               <div>
-                <p className="mb-3 text-xs font-bold uppercase tracking-widest text-[#5E7574]">
+                <p className="mb-3 text-xs font-bold uppercase tracking-widest text-muted-foreground">
                   Autres disponibilités
                 </p>
                 <div className="grid gap-4 sm:grid-cols-2">
                   {alternatives.slice(0, 4).map((slot) => (
                     <div
                       key={slot.doctorId}
-                      className="rounded-2xl border border-[#E6F4F1] bg-white p-5 hover:border-[#0891B2]/40 hover:shadow-md transition-all"
+                      className="rounded-2xl border border-border bg-white p-5 hover:border-primary/40 hover:shadow-md transition-all"
                     >
                       <DoctorSlotCard slot={slot} clinicSlug={clinic.slug} isPrimary={false} />
                     </div>
@@ -208,19 +208,19 @@ export default async function RdvCliniqueePage({ params }: Props) {
         )}
 
         {/* Clinic address */}
-        <div className="mt-8 rounded-2xl border border-[#E6F4F1] bg-white p-5">
+        <div className="mt-8 rounded-2xl border border-border bg-white p-5">
           <div className="flex items-start gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#F0FDFA] text-[#0891B2]">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
               <MapPin className="h-5 w-5" strokeWidth={2} />
             </div>
             <div>
-              <p className="font-semibold text-[#134E4A]">{clinic.name}</p>
-              <p className="mt-0.5 text-sm text-[#5E7574]">{clinic.address}</p>
+              <p className="font-semibold text-foreground">{clinic.name}</p>
+              <p className="mt-0.5 text-sm text-muted-foreground">{clinic.address}</p>
               <a
                 href={`https://www.google.com/maps/search/${encodeURIComponent(`${clinic.name} ${clinic.address}`)}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-[#0891B2] hover:underline"
+                className="mt-1.5 inline-flex items-center gap-1 text-xs font-bold text-primary hover:underline"
               >
                 Voir sur Google Maps
                 <ArrowRight className="h-3 w-3" strokeWidth={3} />
@@ -255,33 +255,33 @@ function DoctorSlotCard({
       {/* Avatar */}
       <div className="relative shrink-0">
         {slot.doctorPhotoUrl ? (
-          <div className={`${isPrimary ? "h-16 w-16" : "h-14 w-14"} overflow-hidden rounded-xl ring-1 ring-[#E6F4F1]`}>
+          <div className={`${isPrimary ? "h-16 w-16" : "h-14 w-14"} overflow-hidden rounded-xl ring-1 ring-border`}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={slot.doctorPhotoUrl} alt={slot.doctorName} className="h-full w-full object-cover" />
           </div>
         ) : (
-          <div className={`${isPrimary ? "h-16 w-16" : "h-14 w-14"} flex items-center justify-center rounded-xl bg-[#0891B2] font-heading text-sm font-black text-white`}>
+          <div className={`${isPrimary ? "h-16 w-16" : "h-14 w-14"} flex items-center justify-center rounded-xl bg-primary font-heading text-sm font-black text-white`}>
             {initials}
           </div>
         )}
         <div className="absolute -bottom-1 -right-1 flex h-5 w-5 items-center justify-center rounded-full bg-white ring-2 ring-white">
-          <BadgeCheck className="h-4 w-4 fill-[#22C55E] text-white" strokeWidth={2.5} />
+          <BadgeCheck className="h-4 w-4 fill-accent text-white" strokeWidth={2.5} />
         </div>
       </div>
 
       {/* Info */}
       <div className="min-w-0 flex-1">
-        <p className={`font-heading font-bold text-[#134E4A] ${isPrimary ? "text-base" : "text-sm"}`}>
+        <p className={`font-heading font-bold text-foreground ${isPrimary ? "text-base" : "text-sm"}`}>
           {slot.doctorName}
         </p>
-        <p className="mt-0.5 text-xs font-semibold text-[#0891B2]">{slot.specialty}</p>
+        <p className="mt-0.5 text-xs font-semibold text-primary">{slot.specialty}</p>
 
         <div className="mt-3 flex flex-wrap gap-2">
-          <span className="inline-flex items-center gap-1 rounded-lg bg-[#F0FDFA] px-2.5 py-1 text-xs font-semibold text-[#0E7490]">
+          <span className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2.5 py-1 text-xs font-semibold text-doktori-teal-dark">
             <CalendarClock className="h-3.5 w-3.5" strokeWidth={2.5} />
             {slot.dateLabel}
           </span>
-          <span className="inline-flex items-center gap-1 rounded-lg bg-[#F0FDFA] px-2.5 py-1 text-xs font-semibold text-[#0E7490]">
+          <span className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2.5 py-1 text-xs font-semibold text-doktori-teal-dark">
             <Clock className="h-3.5 w-3.5" strokeWidth={2.5} />
             {slot.startTime}
           </span>
@@ -289,10 +289,10 @@ function DoctorSlotCard({
 
         <Link
           href={`/rdv/${slot.doctorSlug}?date=${slot.date}&time=${slot.startTime}&from=clinique&clinic=${clinicSlug}`}
-          className={`mt-4 inline-flex items-center gap-1.5 rounded-xl font-bold text-white transition-all hover:bg-[#0E7490] ${
+          className={`mt-4 inline-flex items-center gap-1.5 rounded-xl font-bold text-white transition-all hover:bg-doktori-teal-dark ${
             isPrimary
-              ? "bg-[#0891B2] px-6 py-3 text-sm"
-              : "bg-[#0891B2] px-4 py-2 text-xs"
+              ? "bg-primary px-6 py-3 text-sm"
+              : "bg-primary px-4 py-2 text-xs"
           }`}
         >
           Réserver ce créneau

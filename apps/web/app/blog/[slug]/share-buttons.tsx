@@ -22,7 +22,7 @@ export function ShareButtons({ url, title }: { url: string; title: string }) {
     <div className="flex items-center gap-3">
       <button
         onClick={handleCopy}
-        className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#E6F4F1] bg-white text-sm font-semibold text-[#134E4A] hover:bg-[#F0FDFA] transition-colors"
+        className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-white text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
         aria-label="Copier le lien"
       >
         {copied ? (

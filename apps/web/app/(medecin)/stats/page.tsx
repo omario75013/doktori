@@ -138,11 +138,11 @@ export default async function StatsPage() {
     <div className="space-y-6">
       {/* Page header */}
       <div className="flex items-center gap-3 mb-6">
-        <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+        <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary">
           <BarChart3 className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-[#134E4A]">Statistiques</h1>
+          <h1 className="text-2xl font-bold text-foreground">Statistiques</h1>
           <p className="text-sm text-gray-500">Analyse des 6 derniers mois</p>
         </div>
       </div>

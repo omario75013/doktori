@@ -84,7 +84,7 @@ function highlight(text: string, q: string): React.ReactNode {
     re.test(part) ? (
       <mark
         key={i}
-        className="rounded-sm bg-[#FBBF24]/40 px-0.5 text-[#134E4A]"
+        className="rounded-sm bg-[#FBBF24]/40 px-0.5 text-foreground"
       >
         {part}
       </mark>
@@ -251,9 +251,9 @@ export function FaqClient({
   }, []);
 
   return (
-    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-[#F0FDFA]/30">
+    <div dir={isRtl ? "rtl" : "ltr"} className="min-h-screen bg-secondary/30">
       {/* ═══════════════ HERO ═══════════════ */}
-      <section className="relative overflow-hidden border-b border-[#E6F4F1] bg-white">
+      <section className="relative overflow-hidden border-b border-border bg-white">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.08]"
@@ -266,39 +266,39 @@ export function FaqClient({
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute -top-48 left-1/2 h-96 w-[44rem] -translate-x-1/2 rounded-full bg-[#22D3EE]/20 blur-3xl"
+          className="pointer-events-none absolute -top-48 start-1/2 h-96 w-[44rem] -translate-x-1/2 rounded-full bg-doktori-teal-light/20 blur-3xl"
         />
 
         <div className="relative mx-auto max-w-5xl px-4 pt-8 sm:px-6 sm:pt-12">
           {/* Breadcrumb */}
-          <nav className="flex items-center gap-1.5 text-xs font-semibold text-[#5E7574]">
-            <Link href="/" className="inline-flex items-center gap-1 hover:text-[#0891B2]">
+          <nav className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+            <Link href="/" className="inline-flex items-center gap-1 hover:text-primary">
               <Home className="h-3.5 w-3.5" strokeWidth={2.5} />
               {breadcrumbHome}
             </Link>
             <span className="opacity-50">/</span>
-            <span className="text-[#0891B2]">{breadcrumbCurrent}</span>
+            <span className="text-primary">{breadcrumbCurrent}</span>
           </nav>
 
           <div className="py-12 text-center sm:py-16">
-            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[#E6F4F1] bg-white px-4 py-1.5 shadow-sm">
-              <Sparkles className="h-3.5 w-3.5 text-[#0891B2]" strokeWidth={2.5} />
-              <span className="text-xs font-bold uppercase tracking-wider text-[#0E7490]">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-border bg-white px-4 py-1.5 shadow-sm">
+              <Sparkles className="h-3.5 w-3.5 text-primary" strokeWidth={2.5} />
+              <span className="text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
                 {isRtl ? "مركز المساعدة" : "Centre d'aide"}
               </span>
             </div>
 
-            <h1 className="mt-6 font-heading text-4xl font-black tracking-tight text-[#134E4A] sm:text-5xl md:text-6xl">
+            <h1 className="mt-6 font-heading text-4xl font-black tracking-tight text-foreground sm:text-5xl md:text-6xl">
               {heading}
             </h1>
-            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-[#5E7574] sm:text-lg">
+            <p className="mx-auto mt-5 max-w-2xl text-base leading-relaxed text-muted-foreground sm:text-lg">
               {subheading}
             </p>
 
             {/* Search */}
             <div className="mx-auto mt-10 max-w-2xl">
-              <div className="group flex h-14 items-center gap-3 rounded-2xl border-2 border-[#E6F4F1] bg-white px-5 shadow-sm transition-all focus-within:border-[#0891B2] focus-within:shadow-lg focus-within:shadow-[#0891B2]/10">
-                <Search className="h-5 w-5 shrink-0 text-[#5E7574]" strokeWidth={2.5} />
+              <div className="group flex h-14 items-center gap-3 rounded-2xl border-2 border-border bg-white px-5 shadow-sm transition-all focus-within:border-primary focus-within:shadow-lg focus-within:shadow-primary/10">
+                <Search className="h-5 w-5 shrink-0 text-muted-foreground" strokeWidth={2.5} />
                 <input
                   ref={searchRef}
                   type="search"
@@ -306,18 +306,18 @@ export function FaqClient({
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={searchPlaceholder}
                   aria-label={searchPlaceholder}
-                  className="flex-1 bg-transparent text-[15px] font-medium text-[#134E4A] placeholder:text-[#5E7574]/70 focus:outline-none"
+                  className="flex-1 bg-transparent text-[15px] font-medium text-foreground placeholder:text-muted-foreground/70 focus:outline-none"
                 />
                 {query ? (
                   <button
                     onClick={() => setQuery("")}
                     aria-label="Effacer"
-                    className="flex h-7 w-7 items-center justify-center rounded-full bg-[#F0FDFA] text-[#0E7490] transition-colors hover:bg-[#E6F4F1]"
+                    className="flex h-7 w-7 items-center justify-center rounded-full bg-secondary text-doktori-teal-dark transition-colors hover:bg-border"
                   >
                     <X className="h-4 w-4" strokeWidth={2.5} />
                   </button>
                 ) : (
-                  <kbd className="hidden items-center gap-1 rounded-md border border-[#E6F4F1] bg-[#F0FDFA] px-2 py-0.5 text-[10px] font-bold text-[#0E7490] sm:inline-flex">
+                  <kbd className="hidden items-center gap-1 rounded-md border border-border bg-secondary px-2 py-0.5 text-[10px] font-bold text-doktori-teal-dark sm:inline-flex">
                     <Command className="h-3 w-3" strokeWidth={3} />
                     {shortcutHint}
                   </kbd>
@@ -327,7 +327,7 @@ export function FaqClient({
               {/* Popular searches */}
               {!query && popularSearches.length > 0 && (
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                  <span className="text-xs font-semibold text-[#5E7574]">
+                  <span className="text-xs font-semibold text-muted-foreground">
                     {popularSearchesLabel}
                   </span>
                   {popularSearches.map((term) => (
@@ -337,7 +337,7 @@ export function FaqClient({
                         setQuery(term);
                         searchRef.current?.focus();
                       }}
-                      className="rounded-full border border-[#E6F4F1] bg-white px-3 py-1 text-xs font-semibold text-[#0E7490] transition-all hover:border-[#0891B2] hover:bg-[#F0FDFA]"
+                      className="rounded-full border border-border bg-white px-3 py-1 text-xs font-semibold text-doktori-teal-dark transition-all hover:border-primary hover:bg-secondary"
                     >
                       {term}
                     </button>
@@ -353,8 +353,8 @@ export function FaqClient({
       {!query && activeCategory === "all" && (
         <section className="mx-auto max-w-6xl px-4 py-10 sm:px-6">
           <div className="mb-6 flex items-center gap-2">
-            <Flame className="h-5 w-5 text-[#F59E0B]" strokeWidth={2.5} />
-            <h2 className="font-heading text-lg font-black uppercase tracking-wider text-[#134E4A]">
+            <Flame className="h-5 w-5 text-doktori-amber" strokeWidth={2.5} />
+            <h2 className="font-heading text-lg font-black uppercase tracking-wider text-foreground">
               {featuredLabel}
             </h2>
           </div>
@@ -375,11 +375,11 @@ export function FaqClient({
                         ?.scrollIntoView({ behavior: "smooth", block: "center" });
                     });
                   }}
-                  className="group relative overflow-hidden rounded-2xl border border-[#E6F4F1] bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-[#0891B2]/40 hover:shadow-xl hover:shadow-[#0891B2]/5"
+                  className="group relative overflow-hidden rounded-2xl border border-border bg-white p-5 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5"
                 >
                   <div
                     aria-hidden
-                    className="absolute -right-8 -top-8 h-24 w-24 rounded-full opacity-[0.06] blur-2xl transition-opacity group-hover:opacity-[0.12]"
+                    className="absolute -end-8 -top-8 h-24 w-24 rounded-full opacity-[0.06] blur-2xl transition-opacity group-hover:opacity-[0.12]"
                     style={{ backgroundColor: color }}
                   />
                   <div className="relative">
@@ -389,10 +389,10 @@ export function FaqClient({
                     >
                       {categories.find((c) => c.id === item.category)?.label}
                     </span>
-                    <h3 className="mt-3 font-heading text-[15px] font-bold leading-snug text-[#134E4A]">
+                    <h3 className="mt-3 font-heading text-[15px] font-bold leading-snug text-foreground">
                       {item.question}
                     </h3>
-                    <div className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-[#0891B2]">
+                    <div className="mt-4 inline-flex items-center gap-1 text-xs font-bold text-primary">
                       {isRtl ? "اقرأ" : "Lire la réponse"}
                       <ArrowRight className={`h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5 ${isRtl ? "rotate-180" : ""}`} strokeWidth={3} />
                     </div>
@@ -408,7 +408,7 @@ export function FaqClient({
       <div className="mx-auto max-w-6xl px-4 pb-16 sm:px-6 lg:grid lg:grid-cols-[260px_1fr] lg:gap-10">
         {/* ─── Sticky sidebar ─── */}
         <aside className="mb-8 lg:sticky lg:top-24 lg:mb-0 lg:max-h-[calc(100vh-6rem)] lg:overflow-y-auto lg:pb-8">
-          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-[#5E7574]">
+          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-muted-foreground">
             {browseCategory}
           </p>
           <nav className="flex gap-2 overflow-x-auto lg:flex-col lg:gap-1 lg:overflow-visible">
@@ -418,10 +418,10 @@ export function FaqClient({
                 setQuery("");
                 window.scrollTo({ top: 0, behavior: "smooth" });
               }}
-              className={`inline-flex shrink-0 items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition-all lg:w-full ${
+              className={`inline-flex min-h-11 shrink-0 items-center justify-between gap-2 rounded-xl border px-3 py-3 text-sm font-bold transition-all lg:w-full ${
                 activeCategory === "all" && !visibleCategory
-                  ? "border-[#0891B2] bg-[#0891B2] text-white shadow-sm"
-                  : "border-[#E6F4F1] bg-white text-[#134E4A] hover:border-[#0891B2]/40"
+                  ? "border-primary bg-primary text-white shadow-sm"
+                  : "border-border bg-white text-foreground hover:border-primary/40"
               }`}
             >
               <span className="flex items-center gap-2">
@@ -432,7 +432,7 @@ export function FaqClient({
                 className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${
                   activeCategory === "all" && !visibleCategory
                     ? "bg-white/25 text-white"
-                    : "bg-[#F0FDFA] text-[#0E7490]"
+                    : "bg-secondary text-doktori-teal-dark"
                 }`}
               >
                 {items.length}
@@ -446,10 +446,10 @@ export function FaqClient({
                 <button
                   key={c.id}
                   onClick={() => scrollToCategory(c.id)}
-                  className={`inline-flex shrink-0 items-center justify-between gap-2 rounded-xl border px-3 py-2.5 text-sm font-bold transition-all lg:w-full ${
+                  className={`inline-flex min-h-11 shrink-0 items-center justify-between gap-2 rounded-xl border px-3 py-3 text-sm font-bold transition-all lg:w-full ${
                     isActive
                       ? "border-transparent text-white shadow-sm"
-                      : "border-[#E6F4F1] bg-white text-[#134E4A] hover:border-[#0891B2]/40"
+                      : "border-border bg-white text-foreground hover:border-primary/40"
                   }`}
                   style={
                     isActive
@@ -463,11 +463,11 @@ export function FaqClient({
                       style={{ backgroundColor: isActive ? "rgba(255,255,255,0.95)" : c.color }}
                       aria-hidden
                     />
-                    <span className="text-left">{c.label}</span>
+                    <span className="text-start">{c.label}</span>
                   </span>
                   <span
                     className={`rounded-full px-1.5 py-0.5 text-[10px] font-black ${
-                      isActive ? "bg-white/25 text-white" : "bg-[#F0FDFA] text-[#0E7490]"
+                      isActive ? "bg-white/25 text-white" : "bg-secondary text-doktori-teal-dark"
                     }`}
                   >
                     {c.count}
@@ -478,18 +478,18 @@ export function FaqClient({
           </nav>
 
           {/* Mini contact card */}
-          <div className="mt-6 hidden rounded-2xl border border-[#22C55E]/30 bg-gradient-to-br from-[#22C55E]/5 via-white to-[#F0FDFA] p-5 lg:block">
-            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-[#22C55E] text-white shadow-sm">
+          <div className="mt-6 hidden rounded-2xl border border-accent/30 bg-gradient-to-br from-accent/5 via-white to-secondary p-5 lg:block">
+            <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-xl bg-accent text-white shadow-sm">
               <MessageCircle className="h-5 w-5" strokeWidth={2.5} />
             </div>
-            <p className="font-heading text-sm font-black text-[#134E4A]">
+            <p className="font-heading text-sm font-black text-foreground">
               {stillHaveTitle}
             </p>
             <a
               href="mailto:contact@doktori.tn"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-3 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-[#22C55E] text-xs font-bold text-white transition-all hover:bg-[#16A34A]"
+              className="mt-3 inline-flex h-9 w-full items-center justify-center gap-1.5 rounded-lg bg-accent text-xs font-bold text-white transition-all hover:bg-doktori-green-dark"
             >
               <MessageCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
               {whatsappCta}
@@ -499,19 +499,19 @@ export function FaqClient({
 
         {/* ─── Content ─── */}
         <main className="min-w-0">
-          <p className="mb-4 text-xs font-bold uppercase tracking-wider text-[#5E7574]">
+          <p className="mb-4 text-xs font-bold uppercase tracking-wider text-muted-foreground">
             {resultsCount}
           </p>
 
           {filtered.length === 0 ? (
-            <div className="rounded-3xl border-2 border-dashed border-[#E6F4F1] bg-white p-12 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0FDFA] text-[#0891B2]">
+            <div className="rounded-3xl border-2 border-dashed border-border bg-white p-12 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-secondary text-primary">
                 <HelpCircle className="h-6 w-6" strokeWidth={2.5} />
               </div>
-              <h3 className="mt-4 font-heading text-lg font-black text-[#134E4A]">
+              <h3 className="mt-4 font-heading text-lg font-black text-foreground">
                 {emptyTitle}
               </h3>
-              <p className="mt-2 text-sm text-[#5E7574]">{emptyDesc}</p>
+              <p className="mt-2 text-sm text-muted-foreground">{emptyDesc}</p>
             </div>
           ) : (
             <div className="space-y-12">
@@ -534,10 +534,10 @@ export function FaqClient({
                       <HelpCircle className="h-5 w-5" strokeWidth={2.5} />
                     </span>
                     <div>
-                      <h2 className="font-heading text-xl font-black text-[#134E4A]">
+                      <h2 className="font-heading text-xl font-black text-foreground">
                         {group.label}
                       </h2>
-                      <p className="text-xs font-semibold text-[#5E7574]">
+                      <p className="text-xs font-semibold text-muted-foreground">
                         {group.items.length} {isRtl ? "سؤال" : "question(s)"}
                       </p>
                     </div>
@@ -555,8 +555,8 @@ export function FaqClient({
                           id={`faq-card-${item.id}`}
                           className={`scroll-mt-24 overflow-hidden rounded-2xl border bg-white transition-all ${
                             isOpen
-                              ? "border-[#0891B2]/40 shadow-lg shadow-[#0891B2]/5"
-                              : "border-[#E6F4F1] hover:border-[#0891B2]/20"
+                              ? "border-primary/40 shadow-lg shadow-primary/5"
+                              : "border-border hover:border-primary/20"
                           }`}
                         >
                           <button
@@ -570,11 +570,11 @@ export function FaqClient({
                               style={{ backgroundColor: color }}
                               aria-hidden
                             />
-                            <h3 className="flex-1 font-heading text-[15px] font-bold leading-snug text-[#134E4A] sm:text-base">
+                            <h3 className="flex-1 font-heading text-[15px] font-bold leading-snug text-foreground sm:text-base">
                               {highlight(item.question, query)}
                             </h3>
                             <ChevronDown
-                              className={`h-5 w-5 shrink-0 text-[#0891B2] transition-transform duration-300 ${
+                              className={`h-5 w-5 shrink-0 text-primary transition-transform duration-300 ${
                                 isOpen ? "rotate-180" : ""
                               }`}
                               strokeWidth={2.5}
@@ -588,28 +588,28 @@ export function FaqClient({
                             }`}
                           >
                             <div className="min-h-0">
-                              <div className="border-t border-[#E6F4F1] px-5 py-5 sm:px-6 sm:py-6">
-                                <p className="whitespace-pre-line text-[14px] leading-relaxed text-[#5E7574] sm:text-[15px]">
+                              <div className="border-t border-border px-5 py-5 sm:px-6 sm:py-6">
+                                <p className="whitespace-pre-line text-[14px] leading-relaxed text-muted-foreground sm:text-[15px]">
                                   {highlight(item.answer, query)}
                                 </p>
 
                                 {/* Action row */}
-                                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-dashed border-[#E6F4F1] pt-4">
+                                <div className="mt-5 flex flex-wrap items-center justify-between gap-3 border-t border-dashed border-border pt-4">
                                   {/* Helpful vote */}
                                   <div className="flex items-center gap-2">
                                     {voted ? (
-                                      <span className="text-xs font-bold text-[#16A34A]">
+                                      <span className="text-xs font-bold text-doktori-green-dark">
                                         {feedbackThanks}
                                       </span>
                                     ) : (
                                       <>
-                                        <span className="text-xs font-semibold text-[#5E7574]">
+                                        <span className="text-xs font-semibold text-muted-foreground">
                                           {helpful}
                                         </span>
                                         <button
                                           onClick={() => handleVote(item.id, "up")}
                                           aria-label={helpfulYes}
-                                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#E6F4F1] bg-white px-2.5 text-xs font-bold text-[#5E7574] transition-all hover:border-[#22C55E] hover:bg-[#22C55E]/5 hover:text-[#16A34A]"
+                                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-border bg-white px-2.5 text-xs font-bold text-muted-foreground transition-all hover:border-accent hover:bg-accent/5 hover:text-doktori-green-dark"
                                         >
                                           <ThumbsUp className="h-3.5 w-3.5" strokeWidth={2.5} />
                                           {helpfulYes}
@@ -617,7 +617,7 @@ export function FaqClient({
                                         <button
                                           onClick={() => handleVote(item.id, "down")}
                                           aria-label={helpfulNo}
-                                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-[#E6F4F1] bg-white px-2.5 text-xs font-bold text-[#5E7574] transition-all hover:border-[#DC2626] hover:bg-[#DC2626]/5 hover:text-[#DC2626]"
+                                          className="inline-flex h-8 items-center gap-1 rounded-lg border border-border bg-white px-2.5 text-xs font-bold text-muted-foreground transition-all hover:border-destructive hover:bg-destructive/5 hover:text-destructive"
                                         >
                                           <ThumbsDown className="h-3.5 w-3.5" strokeWidth={2.5} />
                                           {helpfulNo}
@@ -629,12 +629,12 @@ export function FaqClient({
                                   {/* Copy link */}
                                   <button
                                     onClick={() => handleCopy(item.id)}
-                                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[#E6F4F1] bg-white px-2.5 text-xs font-bold text-[#5E7574] transition-all hover:border-[#0891B2] hover:bg-[#F0FDFA] hover:text-[#0891B2]"
+                                    className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-border bg-white px-2.5 text-xs font-bold text-muted-foreground transition-all hover:border-primary hover:bg-secondary hover:text-primary"
                                   >
                                     {copied ? (
                                       <>
-                                        <Check className="h-3.5 w-3.5 text-[#16A34A]" strokeWidth={3} />
-                                        <span className="text-[#16A34A]">{linkCopied}</span>
+                                        <Check className="h-3.5 w-3.5 text-doktori-green-dark" strokeWidth={3} />
+                                        <span className="text-doktori-green-dark">{linkCopied}</span>
                                       </>
                                     ) : (
                                       <>
@@ -657,14 +657,14 @@ export function FaqClient({
           )}
 
           {/* ═══════════════ STILL HAVE A QUESTION ═══════════════ */}
-          <section className="mt-16 overflow-hidden rounded-3xl border-2 border-[#0891B2]/20 bg-gradient-to-br from-[#F0FDFA] via-white to-[#F0FDFA] p-8 text-center shadow-sm sm:p-12">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#0891B2] text-white shadow-lg shadow-[#0891B2]/30">
+          <section className="mt-16 overflow-hidden rounded-3xl border-2 border-primary/20 bg-gradient-to-br from-secondary via-white to-secondary p-8 text-center shadow-sm sm:p-12">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/30">
               <MessageCircle className="h-8 w-8" strokeWidth={2.5} />
             </div>
-            <h2 className="mt-6 font-heading text-2xl font-black text-[#134E4A] sm:text-3xl">
+            <h2 className="mt-6 font-heading text-2xl font-black text-foreground sm:text-3xl">
               {stillHaveTitle}
             </h2>
-            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#5E7574] sm:text-base">
+            <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
               {stillHaveDesc}
             </p>
             <div className="mt-7 flex flex-col items-center justify-center gap-3 sm:flex-row">
@@ -672,14 +672,14 @@ export function FaqClient({
                 href="mailto:contact@doktori.tn"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-[#22C55E] px-6 text-sm font-bold text-white shadow-md shadow-[#22C55E]/25 transition-all hover:bg-[#16A34A] hover:shadow-lg"
+                className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-accent px-6 text-sm font-bold text-white shadow-md shadow-accent/25 transition-all hover:bg-doktori-green-dark hover:shadow-lg"
               >
                 <MessageCircle className="h-4 w-4" strokeWidth={2.5} />
                 {whatsappCta}
               </a>
               <Link
                 href="/recherche"
-                className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl border-2 border-[#0891B2] bg-white px-6 text-sm font-bold text-[#0891B2] transition-all hover:bg-[#F0FDFA]"
+                className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl border-2 border-primary bg-white px-6 text-sm font-bold text-primary transition-all hover:bg-secondary"
               >
                 <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
                 {searchDoctorCta}

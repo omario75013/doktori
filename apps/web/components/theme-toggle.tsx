@@ -21,7 +21,7 @@ export function ThemeToggle() {
     <button
       onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
       aria-label={theme === "dark" ? "Passer en mode clair" : "Passer en mode sombre"}
-      className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-[#5E7574] transition-colors hover:bg-[#F0FDFA] hover:text-[#0891B2] dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
+      className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary hover:text-primary dark:text-gray-400 dark:hover:bg-gray-800 dark:hover:text-white"
     >
       {theme === "dark" ? (
         <Sun className="h-5 w-5" strokeWidth={2} />

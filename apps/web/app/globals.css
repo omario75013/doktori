@@ -52,6 +52,19 @@
   --radius-2xl: calc(var(--radius) * 1.8);
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
+  /* Doktori brand accents exposed to Tailwind (text-doktori-teal, bg-doktori-amber, …) */
+  --color-doktori-teal: var(--doktori-teal);
+  --color-doktori-teal-dark: var(--doktori-teal-dark);
+  --color-doktori-teal-light: var(--doktori-teal-light);
+  --color-doktori-green: var(--doktori-green);
+  --color-doktori-green-dark: var(--doktori-green-dark);
+  --color-doktori-ink: var(--doktori-ink);
+  --color-doktori-mist: var(--doktori-mist);
+  --color-doktori-cream: var(--doktori-cream);
+  --color-doktori-amber: var(--doktori-amber);
+  --color-doktori-amber-dark: var(--doktori-amber-dark);
+  --color-doktori-purple: var(--doktori-purple);
+  --color-doktori-border: var(--doktori-border);
 }
 
 :root {
@@ -69,6 +82,10 @@
   --doktori-ink: #134E4A;
   --doktori-mist: #F0FDFA;
   --doktori-cream: #FAFDFC;
+  --doktori-amber: #F59E0B;
+  --doktori-amber-dark: #B45309;
+  --doktori-purple: #7C3AED;
+  --doktori-border: #E6F4F1;
 
   --background: #FFFFFF;
   --foreground: #134E4A;
@@ -105,22 +122,22 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
+  --background: oklch(0.06 0 0);
+  --foreground: oklch(0.95 0 0);
+  --card: oklch(0.10 0 0);
+  --card-foreground: oklch(0.95 0 0);
+  --popover: oklch(0.10 0 0);
+  --popover-foreground: oklch(0.95 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
   --secondary: oklch(0.269 0 0);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.15 0 0);
+  --muted-foreground: oklch(0.60 0 0);
+  --accent: oklch(0.15 0 0);
+  --accent-foreground: oklch(0.95 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
+  --border: oklch(1 0 0 / 15%);
   --input: oklch(1 0 0 / 15%);
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.87 0 0);

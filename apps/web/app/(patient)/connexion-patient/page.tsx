@@ -105,21 +105,21 @@ export default function ConnexionPatientPage() {
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#0891B2]/10 mb-4">
-            <Stethoscope className="h-7 w-7 text-[#0891B2]" strokeWidth={2} />
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary/10 mb-4">
+            <Stethoscope className="h-7 w-7 text-primary" strokeWidth={2} />
           </div>
-          <h1 className="text-2xl font-black text-[#134E4A]">Mon espace patient</h1>
-          <p className="text-sm text-[#134E4A]/60 mt-1">Connectez-vous pour accéder à vos rendez-vous</p>
+          <h1 className="text-2xl font-black text-foreground">Mon espace patient</h1>
+          <p className="text-sm text-foreground/60 mt-1">Connectez-vous pour accéder à vos rendez-vous</p>
         </div>
 
         {/* Tab switcher */}
-        <div className="flex gap-1 bg-white rounded-2xl border border-[#E6F4F1] p-1 mb-6 shadow-sm">
+        <div className="flex gap-1 bg-white rounded-2xl border border-border p-1 mb-6 shadow-sm">
           <button
             onClick={() => { setActiveTab("phone"); clearError(); setPhoneStep("phone"); }}
             className={`flex items-center justify-center gap-2 flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               activeTab === "phone"
-                ? "bg-[#0891B2] text-white shadow-sm"
-                : "text-[#134E4A]/60 hover:text-[#134E4A] hover:bg-[#F0FDFA]"
+                ? "bg-primary text-white shadow-sm"
+                : "text-foreground/60 hover:text-foreground hover:bg-secondary"
             }`}
           >
             <Phone className="h-4 w-4" />
@@ -129,8 +129,8 @@ export default function ConnexionPatientPage() {
             onClick={() => { setActiveTab("email"); clearError(); }}
             className={`flex items-center justify-center gap-2 flex-1 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
               activeTab === "email"
-                ? "bg-[#0891B2] text-white shadow-sm"
-                : "text-[#134E4A]/60 hover:text-[#134E4A] hover:bg-[#F0FDFA]"
+                ? "bg-primary text-white shadow-sm"
+                : "text-foreground/60 hover:text-foreground hover:bg-secondary"
             }`}
           >
             <Mail className="h-4 w-4" />
@@ -138,12 +138,12 @@ export default function ConnexionPatientPage() {
           </button>
         </div>
 
-        <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm p-6">
+        <div className="bg-white rounded-2xl border border-border shadow-sm p-6">
           {/* Phone OTP tab */}
           {activeTab === "phone" && phoneStep === "phone" && (
             <form onSubmit={requestOtp} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="phone" className="text-[#134E4A] font-semibold text-sm">
+                <Label htmlFor="phone" className="text-foreground font-semibold text-sm">
                   Numéro de téléphone
                 </Label>
                 <Input
@@ -152,7 +152,7 @@ export default function ConnexionPatientPage() {
                   onChange={(e) => setPhone(e.target.value)}
                   placeholder="+216 XX XXX XXX"
                   required
-                  className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                  className="h-12 rounded-xl border-border focus-visible:ring-primary"
                 />
               </div>
               {error && (
@@ -162,7 +162,7 @@ export default function ConnexionPatientPage() {
               )}
               <Button
                 type="submit"
-                className="w-full h-12 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] font-bold text-white"
+                className="w-full h-12 rounded-xl bg-primary hover:bg-doktori-teal-dark font-bold text-white"
                 disabled={loading}
               >
                 {loading ? (
@@ -177,10 +177,10 @@ export default function ConnexionPatientPage() {
           {activeTab === "phone" && phoneStep === "code" && (
             <form onSubmit={verifyOtp} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="code" className="text-[#134E4A] font-semibold text-sm">
+                <Label htmlFor="code" className="text-foreground font-semibold text-sm">
                   Code SMS
                 </Label>
-                <p className="text-xs text-[#5E7574]">
+                <p className="text-xs text-muted-foreground">
                   Code envoyé au <span className="font-semibold">{phone}</span>
                 </p>
                 <Input
@@ -190,7 +190,7 @@ export default function ConnexionPatientPage() {
                   placeholder="123456"
                   maxLength={6}
                   required
-                  className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2] text-center text-xl tracking-widest font-bold"
+                  className="h-12 rounded-xl border-border focus-visible:ring-primary text-center text-xl tracking-widest font-bold"
                 />
               </div>
               {error && (
@@ -200,7 +200,7 @@ export default function ConnexionPatientPage() {
               )}
               <Button
                 type="submit"
-                className="w-full h-12 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] font-bold text-white"
+                className="w-full h-12 rounded-xl bg-primary hover:bg-doktori-teal-dark font-bold text-white"
                 disabled={loading}
               >
                 {loading ? (
@@ -212,7 +212,7 @@ export default function ConnexionPatientPage() {
               <button
                 type="button"
                 onClick={() => { setPhoneStep("phone"); setCode(""); clearError(); }}
-                className="w-full text-sm text-[#134E4A]/60 hover:text-[#0891B2] transition-colors"
+                className="w-full text-sm text-foreground/60 hover:text-primary transition-colors"
               >
                 Changer de numéro
               </button>
@@ -223,7 +223,7 @@ export default function ConnexionPatientPage() {
           {activeTab === "email" && (
             <form onSubmit={loginWithEmail} className="space-y-4">
               <div className="space-y-1.5">
-                <Label htmlFor="email" className="text-[#134E4A] font-semibold text-sm">
+                <Label htmlFor="email" className="text-foreground font-semibold text-sm">
                   Adresse email
                 </Label>
                 <Input
@@ -234,11 +234,11 @@ export default function ConnexionPatientPage() {
                   placeholder="votre@email.com"
                   autoComplete="email"
                   required
-                  className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                  className="h-12 rounded-xl border-border focus-visible:ring-primary"
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="password" className="text-[#134E4A] font-semibold text-sm">
+                <Label htmlFor="password" className="text-foreground font-semibold text-sm">
                   Mot de passe
                 </Label>
                 <Input
@@ -249,7 +249,7 @@ export default function ConnexionPatientPage() {
                   placeholder="Votre mot de passe"
                   autoComplete="current-password"
                   required
-                  className="h-12 rounded-xl border-[#E6F4F1] focus-visible:ring-[#0891B2]"
+                  className="h-12 rounded-xl border-border focus-visible:ring-primary"
                 />
               </div>
               {error && (
@@ -259,7 +259,7 @@ export default function ConnexionPatientPage() {
               )}
               <Button
                 type="submit"
-                className="w-full h-12 rounded-xl bg-[#0891B2] hover:bg-[#0E7490] font-bold text-white"
+                className="w-full h-12 rounded-xl bg-primary hover:bg-doktori-teal-dark font-bold text-white"
                 disabled={loading}
               >
                 {loading ? (
@@ -272,9 +272,9 @@ export default function ConnexionPatientPage() {
           )}
         </div>
 
-        <p className="text-center text-sm text-[#5E7574] mt-6">
+        <p className="text-center text-sm text-muted-foreground mt-6">
           Pas encore de compte ?{" "}
-          <a href="/inscription-patient" className="font-bold text-[#0891B2] hover:underline">
+          <a href="/inscription-patient" className="font-bold text-primary hover:underline">
             Créer un compte
           </a>
         </p>

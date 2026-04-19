@@ -63,7 +63,7 @@ export default function HomePage() {
   return (
     <div className="flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
       {/* ═══════════════════════════ HERO ═══════════════════════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-[#F0FDFA] dark:from-gray-800 via-white dark:via-gray-900 to-white dark:to-gray-900 px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
+      <section className="relative overflow-hidden bg-gradient-to-b from-secondary dark:from-gray-800 via-white dark:via-gray-900 to-white dark:to-gray-900 px-4 pb-20 pt-16 sm:px-6 sm:pb-28 sm:pt-24">
         {/* Subtle grid background */}
         <div
           aria-hidden
@@ -78,16 +78,16 @@ export default function HomePage() {
           {/* Left: copy + CTA */}
           <div className="text-center lg:text-start">
             {/* Accreditation badge */}
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-[#0891B2]/20 bg-[#F0FDFA] px-4 py-1.5 text-xs font-semibold text-[#0E7490] shadow-sm">
-              <BadgeCheck className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/20 bg-secondary px-4 py-1.5 text-xs font-semibold text-doktori-teal-dark shadow-sm">
+              <BadgeCheck className="h-4 w-4 text-primary" strokeWidth={2.5} />
               <span>{t("heroBadge")}</span>
             </div>
 
-            <h1 className="text-balance font-heading text-4xl font-black leading-[1.02] tracking-tight text-[#134E4A] dark:text-white sm:text-5xl lg:text-6xl xl:text-7xl">
+            <h1 className="text-balance font-heading text-4xl font-black leading-[1.02] tracking-tight text-foreground dark:text-white sm:text-5xl lg:text-6xl xl:text-7xl">
               {t("heroTitleLine1")}{" "}
               <span className="block">
                 {t("heroTitleLine2Prefix")}{" "}
-                <span className="relative inline-block text-[#0891B2]">
+                <span className="relative inline-block text-primary">
                   {t("heroTitleHighlight")}
                   <svg
                     aria-hidden
@@ -108,14 +108,14 @@ export default function HomePage() {
             </h1>
 
             <p
-              className="mx-auto mt-6 max-w-xl text-balance text-lg leading-relaxed text-[#5E7574] dark:text-gray-400 lg:mx-0 lg:text-xl [&_strong]:font-bold [&_strong]:text-[#134E4A] dark:[&_strong]:text-white"
+              className="mx-auto mt-6 max-w-xl text-balance text-lg leading-relaxed text-muted-foreground dark:text-gray-400 lg:mx-0 lg:text-xl [&_strong]:font-bold [&_strong]:text-foreground dark:[&_strong]:text-white"
               dangerouslySetInnerHTML={{ __html: t.raw("heroDescription") as string }}
             />
 
             {/* Search bar */}
             <form onSubmit={handleSearch} className="mx-auto mt-8 max-w-xl lg:mx-0">
-              <div className="group flex h-16 items-center rounded-2xl border-2 border-[#E6F4F1] dark:border-gray-700 bg-white dark:bg-gray-800 p-1.5 shadow-lg shadow-[#0891B2]/5 transition-all focus-within:border-[#0891B2] focus-within:shadow-xl focus-within:shadow-[#0891B2]/10">
-                <div className="flex h-full w-12 shrink-0 items-center justify-center text-[#5E7574]">
+              <div className="group flex h-16 items-center rounded-2xl border-2 border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-1.5 shadow-lg shadow-primary/5 transition-all focus-within:border-primary focus-within:shadow-xl focus-within:shadow-primary/10">
+                <div className="flex h-full w-12 shrink-0 items-center justify-center text-muted-foreground">
                   <Search className="h-5 w-5" strokeWidth={2.5} />
                 </div>
                 <input
@@ -123,11 +123,11 @@ export default function HomePage() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder={t("heroSearchPlaceholder")}
-                  className="h-full flex-1 border-0 bg-transparent px-2 text-base text-[#134E4A] dark:text-white placeholder:text-[#5E7574]/60 outline-none"
+                  className="h-full flex-1 border-0 bg-transparent px-2 text-base text-foreground dark:text-white placeholder:text-muted-foreground/60 outline-none"
                 />
                 <button
                   type="submit"
-                  className="group/btn inline-flex h-full items-center gap-2 rounded-xl bg-[#0891B2] px-4 sm:px-6 text-sm font-bold text-white shadow-sm transition-all hover:bg-[#0E7490] active:scale-[0.98]"
+                  className="group/btn inline-flex h-full items-center gap-2 rounded-xl bg-primary px-4 sm:px-6 text-sm font-bold text-white shadow-sm transition-all hover:bg-doktori-teal-dark active:scale-[0.98]"
                 >
                   <span>{t("searchButton")}</span>
                   <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-0.5" strokeWidth={3} />
@@ -136,17 +136,17 @@ export default function HomePage() {
             </form>
 
             {/* Trust chips */}
-            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-[#5E7574] lg:justify-start">
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-xs text-muted-foreground lg:justify-start">
               <div className="flex items-center gap-1.5">
-                <ShieldCheck className="h-4 w-4 text-[#22C55E]" strokeWidth={2.5} />
+                <ShieldCheck className="h-4 w-4 text-accent" strokeWidth={2.5} />
                 <span className="font-medium">{t("trustSecure")}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Clock className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
+                <Clock className="h-4 w-4 text-primary" strokeWidth={2.5} />
                 <span className="font-medium">{t("trustAvailable")}</span>
               </div>
               <div className="flex items-center gap-1.5">
-                <Users className="h-4 w-4 text-[#0891B2]" strokeWidth={2.5} />
+                <Users className="h-4 w-4 text-primary" strokeWidth={2.5} />
                 <span className="font-medium">{t("trustPatients")}</span>
               </div>
             </div>
@@ -160,13 +160,13 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════ PRE-LAUNCH STRIP ═══════════════════════ */}
-      <section className="border-y border-[#E6F4F1] bg-[#F0FDFA]/50 py-10">
+      <section className="border-y border-border bg-secondary/50 py-10">
         <div className="mx-auto max-w-3xl px-6 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full bg-[#0891B2]/10 px-4 py-2 text-sm font-bold text-[#0891B2] mb-4">
+          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-bold text-primary mb-4">
             <Sparkles className="h-4 w-4" strokeWidth={2.5} />
             {locale === "ar" ? "إطلاق 2026" : "Lancement 2026"}
           </div>
-          <p className="text-sm text-[#5E7574] leading-relaxed max-w-lg mx-auto">
+          <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
             {locale === "ar"
               ? "نحن نبني شبكة أطبائنا في تونس الكبرى. سجّل لتكون أول من يُبلَّغ عندما ينضم طبيب في منطقتك."
               : "Nous constituons notre réseau de médecins dans le Grand Tunis. Inscrivez-vous pour être prévenu(e) dès qu'un médecin de votre zone rejoint la plateforme."
@@ -181,14 +181,14 @@ export default function HomePage() {
             { value: "🇹🇳", label: locale === "ar" ? "صنع في تونس" : "Made in Tunisia", icon: ShieldCheck },
           ].map(({ value, label, icon: Icon }) => (
             <div key={label} className="flex items-center gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-[#0891B2] ring-1 ring-[#E6F4F1]">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-white text-primary ring-1 ring-border">
                 <Icon className="h-5 w-5" strokeWidth={2.5} />
               </div>
               <div>
-                <div className="font-heading text-2xl font-black text-[#134E4A]">
+                <div className="font-heading text-2xl font-black text-foreground">
                   {value}
                 </div>
-                <div className="text-xs font-medium text-[#5E7574]">{label}</div>
+                <div className="text-xs font-medium text-muted-foreground">{label}</div>
               </div>
             </div>
           ))}
@@ -197,13 +197,13 @@ export default function HomePage() {
 
       {/* ═══════════════════════ SOS BANNER ═══════════════════════ */}
       <section className="bg-white px-4 py-12 sm:px-6">
-        <div className="mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-[#DC2626] to-[#991B1B] shadow-xl">
+        <div className="mx-auto max-w-5xl overflow-hidden rounded-3xl bg-gradient-to-br from-destructive to-[#991B1B] shadow-xl">
           <div className="grid gap-8 p-8 md:grid-cols-[auto_1fr_auto] md:items-center md:p-10">
             <div className="relative flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20 backdrop-blur-sm">
               <Siren className="h-8 w-8 text-white" strokeWidth={2.5} />
               <span className="absolute -right-1 -top-1 flex h-3.5 w-3.5">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-white/40"></span>
-                <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-white ring-2 ring-[#DC2626]"></span>
+                <span className="relative inline-flex h-3.5 w-3.5 rounded-full bg-white ring-2 ring-destructive"></span>
               </span>
             </div>
             <div className="min-w-0">
@@ -214,7 +214,7 @@ export default function HomePage() {
             </div>
             <Link
               href="/sos"
-              className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-[#DC2626] shadow-sm transition-all hover:bg-red-50 active:scale-[0.98]"
+              className="group inline-flex h-12 items-center justify-center gap-2 rounded-xl bg-white px-6 text-sm font-bold text-destructive shadow-sm transition-all hover:bg-red-50 active:scale-[0.98]"
             >
               <Zap className="h-4 w-4" strokeWidth={3} />
               <span>{t("sosCta")}</span>
@@ -228,14 +228,14 @@ export default function HomePage() {
       <section className="bg-white px-4 py-24 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#F0FDFA] px-4 py-1 text-xs font-bold uppercase tracking-wider text-[#0E7490]">
+            <div className="inline-flex items-center gap-2 rounded-full bg-secondary px-4 py-1 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
               <TrendingUp className="h-3.5 w-3.5" />
               {t("howItWorksBadge")}
             </div>
-            <h2 className="mt-4 text-balance font-heading text-3xl font-black tracking-tight text-[#134E4A] sm:text-4xl">
+            <h2 className="mt-4 text-balance font-heading text-3xl font-black tracking-tight text-foreground sm:text-4xl">
               {t("howItWorksTitle")}
             </h2>
-            <p className="mt-4 text-base text-[#5E7574]">{t("howItWorksSubtitle")}</p>
+            <p className="mt-4 text-base text-muted-foreground">{t("howItWorksSubtitle")}</p>
           </div>
 
           <div className="mt-16 grid gap-6 md:grid-cols-3">
@@ -263,19 +263,19 @@ export default function HomePage() {
               return (
                 <div
                   key={s.step}
-                  className="group relative overflow-hidden rounded-3xl border border-[#E6F4F1] bg-white p-8 transition-all hover:-translate-y-1 hover:border-[#0891B2]/30 hover:shadow-xl hover:shadow-[#0891B2]/5"
+                  className="group relative overflow-hidden rounded-3xl border border-border bg-white p-8 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
                 >
-                  <div className="absolute -right-4 -top-4 font-heading text-8xl font-black leading-none text-[#F0FDFA] transition-colors group-hover:text-[#E6F4F1]">
+                  <div className="absolute -right-4 -top-4 font-heading text-8xl font-black leading-none text-secondary transition-colors group-hover:text-border">
                     {s.step}
                   </div>
                   <div className="relative">
-                    <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0891B2] text-white shadow-lg shadow-[#0891B2]/20">
+                    <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20">
                       <Icon className="h-7 w-7" strokeWidth={2.5} />
                     </div>
-                    <h3 className="font-heading text-xl font-bold text-[#134E4A]">
+                    <h3 className="font-heading text-xl font-bold text-foreground">
                       {s.title}
                     </h3>
-                    <p className="mt-3 text-sm leading-relaxed text-[#5E7574]">
+                    <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
                       {s.desc}
                     </p>
                   </div>
@@ -287,17 +287,17 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════ SPECIALTIES ═══════════════════════ */}
-      <section className="bg-[#F0FDFA]/50 px-4 py-24 sm:px-6">
+      <section className="bg-secondary/50 px-4 py-24 sm:px-6">
         <div className="mx-auto max-w-6xl">
           <div className="mx-auto max-w-2xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1 text-xs font-bold uppercase tracking-wider text-[#0E7490] ring-1 ring-[#E6F4F1]">
+            <div className="inline-flex items-center gap-2 rounded-full bg-white px-4 py-1 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark ring-1 ring-border">
               <Stethoscope className="h-3.5 w-3.5" />
               {t("specialtiesBadge")}
             </div>
-            <h2 className="mt-4 text-balance font-heading text-3xl font-black tracking-tight text-[#134E4A] sm:text-4xl">
+            <h2 className="mt-4 text-balance font-heading text-3xl font-black tracking-tight text-foreground sm:text-4xl">
               {t("bySpecialty")}
             </h2>
-            <p className="mt-4 text-base text-[#5E7574]">{t("specialtiesSubtitle")}</p>
+            <p className="mt-4 text-base text-muted-foreground">{t("specialtiesSubtitle")}</p>
           </div>
 
           <div className="mt-12 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
@@ -307,12 +307,12 @@ export default function HomePage() {
                 <Link
                   key={specialty.id}
                   href={`/recherche?specialty=${specialty.id}`}
-                  className="group relative flex flex-col items-center gap-3 rounded-2xl border border-[#E6F4F1] bg-white p-6 text-center transition-all hover:-translate-y-0.5 hover:border-[#0891B2] hover:shadow-lg hover:shadow-[#0891B2]/10"
+                  className="group relative flex flex-col items-center gap-3 rounded-2xl border border-border bg-white p-6 text-center transition-all hover:-translate-y-0.5 hover:border-primary hover:shadow-lg hover:shadow-primary/10"
                 >
-                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-[#F0FDFA] text-[#0891B2] transition-all group-hover:scale-105 group-hover:bg-[#0891B2] group-hover:text-white">
+                  <div className="flex h-14 w-14 items-center justify-center rounded-xl bg-secondary text-primary transition-all group-hover:scale-105 group-hover:bg-primary group-hover:text-white">
                     <Icon className="h-6 w-6" strokeWidth={2.5} />
                   </div>
-                  <span className="text-xs font-bold text-[#134E4A] group-hover:text-[#0891B2] sm:text-sm">
+                  <span className="text-xs font-bold text-foreground group-hover:text-primary sm:text-sm">
                     {locale === "ar" ? specialty.labelAr : specialty.label}
                   </span>
                 </Link>
@@ -323,7 +323,7 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════ FOR DOCTORS ═══════════════════════ */}
-      <section className="relative overflow-hidden bg-[#134E4A] px-4 py-24 sm:px-6">
+      <section className="relative overflow-hidden bg-foreground px-4 py-24 sm:px-6">
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-[0.07]"
@@ -334,18 +334,18 @@ export default function HomePage() {
         />
         <div
           aria-hidden
-          className="pointer-events-none absolute right-0 top-0 h-[600px] w-[600px] rounded-full bg-[#22C55E]/10 blur-3xl"
+          className="pointer-events-none absolute right-0 top-0 h-[600px] w-[600px] rounded-full bg-accent/10 blur-3xl"
         />
 
         <div className="relative mx-auto grid max-w-6xl items-center gap-16 md:grid-cols-2">
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#22C55E]/40 bg-[#22C55E]/10 px-4 py-1.5 text-xs font-bold text-[#22C55E]">
+            <div className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-bold text-accent">
               <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
               {t("forDoctorsBadge")}
             </div>
             <h2 className="mt-6 font-heading text-4xl font-black leading-tight tracking-tight text-white sm:text-5xl">
               {t("forDoctors")}{" "}
-              <span className="text-[#22D3EE]">{t("forDoctorsHighlight")}</span>
+              <span className="text-doktori-teal-light">{t("forDoctorsHighlight")}</span>
             </h2>
             <p
               className="mt-6 text-lg leading-relaxed text-[#A7F3D0] [&_strong]:font-bold [&_strong]:text-white"
@@ -362,7 +362,7 @@ export default function HomePage() {
                 const Icon = b.icon;
                 return (
                   <li key={b.text} className="flex items-start gap-4">
-                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-[#22C55E] text-[#134E4A]">
+                    <span className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-accent text-foreground">
                       <Icon className="h-4 w-4" strokeWidth={3} />
                     </span>
                     <span className="text-base leading-7 text-white">{b.text}</span>
@@ -374,7 +374,7 @@ export default function HomePage() {
             <div className="mt-10 flex flex-col gap-3 sm:flex-row">
               <Link
                 href="/inscription"
-                className="group inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-[#22C55E] px-8 font-heading text-base font-bold text-[#134E4A] shadow-lg shadow-[#22C55E]/20 transition-all hover:bg-[#4ADE80] active:scale-[0.98]"
+                className="group inline-flex h-14 items-center justify-center gap-2 rounded-xl bg-accent px-8 font-heading text-base font-bold text-foreground shadow-lg shadow-accent/20 transition-all hover:bg-[#4ADE80] active:scale-[0.98]"
               >
                 <span>{t("forDoctorsCta")}</span>
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
@@ -395,25 +395,25 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════ APP DOWNLOAD ═══════════════════════ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#F0FDFA] via-white to-[#F0FDFA] px-4 py-20 sm:px-6 sm:py-28">
+      <section className="relative overflow-hidden bg-gradient-to-br from-secondary via-white to-secondary px-4 py-20 sm:px-6 sm:py-28">
         <div className="absolute inset-0 opacity-30">
-          <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-[#0891B2]/10 blur-3xl" />
-          <div className="absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-[#22C55E]/10 blur-3xl" />
+          <div className="absolute -left-20 top-10 h-72 w-72 rounded-full bg-primary/10 blur-3xl" />
+          <div className="absolute -right-20 bottom-10 h-72 w-72 rounded-full bg-accent/10 blur-3xl" />
         </div>
         <div className="relative mx-auto flex max-w-5xl flex-col items-center gap-12 md:flex-row md:gap-16">
           {/* Phone mockup */}
           <div className="flex shrink-0 items-center justify-center">
             <div className="relative">
-              <div className="h-[420px] w-[210px] rounded-[2.5rem] border-[6px] border-[#134E4A] bg-white p-3 shadow-2xl sm:h-[480px] sm:w-[240px]">
-                <div className="h-full w-full overflow-hidden rounded-[2rem] bg-[#F0FDFA]">
-                  <div className="flex h-10 items-center justify-center bg-[#0891B2]">
+              <div className="h-[420px] w-[210px] rounded-[2.5rem] border-[6px] border-foreground bg-white p-3 shadow-2xl sm:h-[480px] sm:w-[240px]">
+                <div className="h-full w-full overflow-hidden rounded-[2rem] bg-secondary">
+                  <div className="flex h-10 items-center justify-center bg-primary">
                     <span className="text-xs font-bold text-white">Doktori</span>
                   </div>
                   <div className="space-y-3 p-3">
                     <div className="rounded-xl bg-white p-3 shadow-sm">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-[#0891B2]/10">
-                          <Search className="h-4 w-4 text-[#0891B2]" />
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                          <Search className="h-4 w-4 text-primary" />
                         </div>
                         <span className="text-[10px] text-[#64748B]">Rechercher un médecin...</span>
                       </div>
@@ -428,16 +428,16 @@ export default function HomePage() {
                           {d.name.charAt(4)}
                         </div>
                         <div>
-                          <p className="text-[10px] font-semibold text-[#134E4A]">{d.name}</p>
+                          <p className="text-[10px] font-semibold text-foreground">{d.name}</p>
                           <p className="text-[8px] text-[#64748B]">{d.spec}</p>
                         </div>
-                        <div className="ms-auto rounded-md bg-[#0891B2] px-2 py-0.5">
+                        <div className="ms-auto rounded-md bg-primary px-2 py-0.5">
                           <span className="text-[7px] font-bold text-white">RDV</span>
                         </div>
                       </div>
                     ))}
                     <div className="flex items-center justify-around rounded-xl bg-white py-2 shadow-sm">
-                      <Search className="h-4 w-4 text-[#0891B2]" />
+                      <Search className="h-4 w-4 text-primary" />
                       <Siren className="h-4 w-4 text-red-500" />
                       <CalendarCheck2 className="h-4 w-4 text-[#64748B]" />
                       <Users className="h-4 w-4 text-[#64748B]" />
@@ -448,10 +448,10 @@ export default function HomePage() {
               {/* Floating badge */}
               <div className="absolute -right-4 top-8 rounded-xl bg-white px-3 py-2 shadow-lg ring-1 ring-black/5 sm:-right-8">
                 <div className="flex items-center gap-1.5">
-                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-[#22C55E]">
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent">
                     <CheckCircle2 className="h-3.5 w-3.5 text-white" />
                   </div>
-                  <span className="text-[10px] font-semibold text-[#134E4A]">RDV confirmé !</span>
+                  <span className="text-[10px] font-semibold text-foreground">RDV confirmé !</span>
                 </div>
               </div>
             </div>
@@ -459,18 +459,18 @@ export default function HomePage() {
 
           {/* Text + CTA */}
           <div className="text-center md:text-start">
-            <div className="inline-flex items-center gap-2 rounded-full bg-[#0891B2]/10 px-4 py-1.5 text-xs font-semibold text-[#0891B2]">
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary">
               <Smartphone className="h-3.5 w-3.5" />
               Nouveau
             </div>
-            <h2 className="mt-4 font-heading text-3xl font-black leading-tight text-[#134E4A] sm:text-4xl">
+            <h2 className="mt-4 font-heading text-3xl font-black leading-tight text-foreground sm:text-4xl">
               Doktori dans<br />
-              <span className="text-[#0891B2]">votre poche</span>
+              <span className="text-primary">votre poche</span>
             </h2>
-            <p className="mt-4 max-w-md text-base leading-relaxed text-[#5E7574]">
+            <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
               Prenez rendez-vous en 2 clics, recevez des rappels automatiques et accédez à SOS Docteur — le tout depuis votre téléphone.
             </p>
-            <ul className="mt-6 space-y-2.5 text-sm text-[#134E4A]">
+            <ul className="mt-6 space-y-2.5 text-sm text-foreground">
               {[
                 "Réservation instantanée 24/7",
                 "Rappels SMS avant chaque RDV",
@@ -478,7 +478,7 @@ export default function HomePage() {
                 "100% gratuit pour les patients",
               ].map((item) => (
                 <li key={item} className="flex items-center gap-2 justify-center md:justify-start">
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-[#22C55E]" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-accent" />
                   {item}
                 </li>
               ))}
@@ -497,14 +497,14 @@ export default function HomePage() {
           <div className="grid gap-10 md:grid-cols-[2fr_1fr_1fr_1fr]">
             <div>
               <div className="flex items-center gap-2">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0891B2] text-white">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-white">
                   <Stethoscope className="h-5 w-5" strokeWidth={2.5} />
                 </div>
-                <span className="font-heading text-xl font-black text-[#134E4A]">
-                  Doktori<span className="text-[#0891B2]">.tn</span>
+                <span className="font-heading text-xl font-black text-foreground">
+                  Doktori<span className="text-primary">.tn</span>
                 </span>
               </div>
-              <p className="mt-4 max-w-xs text-sm leading-relaxed text-[#5E7574]">
+              <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
                 {t("footerTagline")}
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-2">
@@ -514,36 +514,36 @@ export default function HomePage() {
             </div>
 
             <div>
-              <h4 className="font-heading text-sm font-bold text-[#134E4A]">{t("footerProduct")}</h4>
+              <h4 className="font-heading text-sm font-bold text-foreground">{t("footerProduct")}</h4>
               <ul className="mt-4 space-y-2 text-sm">
-                <li><Link href="/recherche" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerProductSearch")}</Link></li>
-                <li><Link href="/sos" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerProductSos")}</Link></li>
-                <li><Link href="/inscription" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerProductDoctors")}</Link></li>
-                <li><Link href="/faq" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerProductFaq")}</Link></li>
+                <li><Link href="/recherche" className="text-muted-foreground hover:text-primary">{t("footerProductSearch")}</Link></li>
+                <li><Link href="/sos" className="text-muted-foreground hover:text-primary">{t("footerProductSos")}</Link></li>
+                <li><Link href="/inscription" className="text-muted-foreground hover:text-primary">{t("footerProductDoctors")}</Link></li>
+                <li><Link href="/faq" className="text-muted-foreground hover:text-primary">{t("footerProductFaq")}</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-heading text-sm font-bold text-[#134E4A]">{t("footerLegal")}</h4>
+              <h4 className="font-heading text-sm font-bold text-foreground">{t("footerLegal")}</h4>
               <ul className="mt-4 space-y-2 text-sm">
-                <li><Link href="/legal/cgu" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerLegalCgu")}</Link></li>
-                <li><Link href="/legal/confidentialite" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerLegalPrivacy")}</Link></li>
-                <li><Link href="/legal/mentions" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerLegalMentions")}</Link></li>
+                <li><Link href="/legal/cgu" className="text-muted-foreground hover:text-primary">{t("footerLegalCgu")}</Link></li>
+                <li><Link href="/legal/confidentialite" className="text-muted-foreground hover:text-primary">{t("footerLegalPrivacy")}</Link></li>
+                <li><Link href="/legal/mentions" className="text-muted-foreground hover:text-primary">{t("footerLegalMentions")}</Link></li>
               </ul>
             </div>
 
             <div>
-              <h4 className="font-heading text-sm font-bold text-[#134E4A]">{t("footerContact")}</h4>
+              <h4 className="font-heading text-sm font-bold text-foreground">{t("footerContact")}</h4>
               <ul className="mt-4 space-y-2 text-sm">
-                <li><a href="mailto:contact@doktori.tn" className="text-[#5E7574] hover:text-[#0891B2]">{t("footerContactEmail")}</a></li>
-                <li><span className="text-[#5E7574]">{t("footerContactSupport")}</span></li>
-                <li><span className="text-[#5E7574]">{t("footerContactLocation")}</span></li>
+                <li><a href="mailto:contact@doktori.tn" className="text-muted-foreground hover:text-primary">{t("footerContactEmail")}</a></li>
+                <li><span className="text-muted-foreground">{t("footerContactSupport")}</span></li>
+                <li><span className="text-muted-foreground">{t("footerContactLocation")}</span></li>
               </ul>
             </div>
           </div>
 
-          <div className="mt-12 border-t border-[#E6F4F1] pt-8 text-center">
-            <p className="text-xs text-[#5E7574]">{t("footerCopyright")}</p>
+          <div className="mt-12 border-t border-border pt-8 text-center">
+            <p className="text-xs text-muted-foreground">{t("footerCopyright")}</p>
           </div>
         </div>
       </footer>
@@ -568,10 +568,10 @@ function PhoneMockup({ locale }: { locale: string }) {
   return (
     <div className="relative mx-auto aspect-[9/19] w-full max-w-[340px]">
       {/* Phone frame */}
-      <div className="absolute inset-0 rounded-[3rem] bg-[#134E4A] p-3 shadow-2xl shadow-[#0891B2]/20">
+      <div className="absolute inset-0 rounded-[3rem] bg-foreground p-3 shadow-2xl shadow-primary/20">
         <div className="h-full w-full overflow-hidden rounded-[2.5rem] bg-white">
           {/* Status bar */}
-          <div className="flex items-center justify-between px-6 py-3 text-[10px] font-bold text-[#134E4A]">
+          <div className="flex items-center justify-between px-6 py-3 text-[10px] font-bold text-foreground">
             <span>9:41</span>
             <span>●●● ●●</span>
           </div>
@@ -579,16 +579,16 @@ function PhoneMockup({ locale }: { locale: string }) {
           {/* Mock app header */}
           <div className="px-4">
             <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#0891B2] text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
                 <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
               </div>
-              <span className="text-sm font-black text-[#134E4A]">Doktori</span>
+              <span className="text-sm font-black text-foreground">Doktori</span>
             </div>
 
             {/* Search input mock */}
-            <div className="mt-4 flex h-11 items-center rounded-xl border border-[#E6F4F1] bg-[#F0FDFA] px-3">
-              <Search className="h-4 w-4 text-[#5E7574]" />
-              <span className="ms-2 text-xs text-[#5E7574]">{tr.searchPh}</span>
+            <div className="mt-4 flex h-11 items-center rounded-xl border border-border bg-secondary px-3">
+              <Search className="h-4 w-4 text-muted-foreground" />
+              <span className="ms-2 text-xs text-muted-foreground">{tr.searchPh}</span>
             </div>
 
             {/* Doctor cards mock */}
@@ -600,7 +600,7 @@ function PhoneMockup({ locale }: { locale: string }) {
               ].map((d, i) => (
                 <div
                   key={i}
-                  className="flex items-center gap-3 rounded-xl border border-[#E6F4F1] bg-white p-3"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-white p-3"
                 >
                   <div
                     className="flex h-10 w-10 items-center justify-center rounded-lg text-xs font-bold text-white"
@@ -609,55 +609,55 @@ function PhoneMockup({ locale }: { locale: string }) {
                     {d.name.split(" ")[1][0]}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="truncate text-[11px] font-bold text-[#134E4A]">
+                    <p className="truncate text-[11px] font-bold text-foreground">
                       {d.name}
                     </p>
-                    <p className="truncate text-[9px] text-[#5E7574]">{d.spec}</p>
+                    <p className="truncate text-[9px] text-muted-foreground">{d.spec}</p>
                   </div>
                   <div className="text-end">
-                    <p className="text-[11px] font-black text-[#0891B2]">{d.price}</p>
-                    <p className="text-[8px] text-[#5E7574]">DT</p>
+                    <p className="text-[11px] font-black text-primary">{d.price}</p>
+                    <p className="text-[8px] text-muted-foreground">DT</p>
                   </div>
                 </div>
               ))}
             </div>
 
             {/* Bottom nav */}
-            <div className="mt-4 flex items-center justify-around border-t border-[#E6F4F1] pt-3">
+            <div className="mt-4 flex items-center justify-around border-t border-border pt-3">
               <div className="flex flex-col items-center gap-0.5">
-                <Search className="h-4 w-4 text-[#0891B2]" />
-                <span className="text-[8px] font-bold text-[#0891B2]">{tr.navSearch}</span>
+                <Search className="h-4 w-4 text-primary" />
+                <span className="text-[8px] font-bold text-primary">{tr.navSearch}</span>
               </div>
               <div className="flex flex-col items-center gap-0.5">
-                <Siren className="h-4 w-4 text-[#DC2626]" />
-                <span className="text-[8px] font-bold text-[#DC2626]">{tr.navSos}</span>
+                <Siren className="h-4 w-4 text-destructive" />
+                <span className="text-[8px] font-bold text-destructive">{tr.navSos}</span>
               </div>
               <div className="flex flex-col items-center gap-0.5">
-                <CalendarCheck2 className="h-4 w-4 text-[#5E7574]" />
-                <span className="text-[8px] font-bold text-[#5E7574]">{tr.navRdv}</span>
+                <CalendarCheck2 className="h-4 w-4 text-muted-foreground" />
+                <span className="text-[8px] font-bold text-muted-foreground">{tr.navRdv}</span>
               </div>
             </div>
           </div>
         </div>
       </div>
       {/* Floating badge */}
-      <div className="absolute -left-8 top-1/3 rotate-[-8deg] rounded-xl bg-white p-4 shadow-xl ring-1 ring-[#E6F4F1]">
+      <div className="absolute -left-8 top-1/3 rotate-[-8deg] rounded-xl bg-white p-4 shadow-xl ring-1 ring-border">
         <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#22C55E]">
+          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
             <CheckCircle2 className="h-4 w-4 text-white" strokeWidth={3} />
           </div>
           <div>
-            <p className="text-xs font-bold text-[#134E4A]">{tr.rdvConfirmed}</p>
-            <p className="text-[10px] text-[#5E7574]">{tr.dateLabel}</p>
+            <p className="text-xs font-bold text-foreground">{tr.rdvConfirmed}</p>
+            <p className="text-[10px] text-muted-foreground">{tr.dateLabel}</p>
           </div>
         </div>
       </div>
-      <div className="absolute -right-4 bottom-1/4 rotate-[6deg] rounded-xl bg-white p-3 shadow-xl ring-1 ring-[#E6F4F1]">
+      <div className="absolute -right-4 bottom-1/4 rotate-[6deg] rounded-xl bg-white p-3 shadow-xl ring-1 ring-border">
         <div className="flex items-center gap-2">
           <Star className="h-4 w-4 fill-[#FBBF24] text-[#FBBF24]" />
-          <span className="text-xs font-black text-[#134E4A]">Doktori</span>
+          <span className="text-xs font-black text-foreground">Doktori</span>
         </div>
-        <p className="mt-0.5 text-[9px] text-[#5E7574]">{tr.reviews}</p>
+        <p className="mt-0.5 text-[9px] text-muted-foreground">{tr.reviews}</p>
       </div>
     </div>
   );
@@ -688,8 +688,8 @@ function DoctorDashboardMockup({ locale }: { locale: string }) {
             <p className="text-xs text-[#A7F3D0]">{tr.specCity}</p>
           </div>
           <div className="ms-auto">
-            <div className="flex items-center gap-1 rounded-full bg-[#22C55E]/20 px-2.5 py-1 text-[10px] font-bold text-[#22C55E]">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#22C55E]"></span>
+            <div className="flex items-center gap-1 rounded-full bg-accent/20 px-2.5 py-1 text-[10px] font-bold text-accent">
+              <span className="h-1.5 w-1.5 rounded-full bg-accent"></span>
               {tr.active}
             </div>
           </div>
@@ -728,7 +728,7 @@ function DoctorDashboardMockup({ locale }: { locale: string }) {
               <span
                 className={`rounded-full px-2 py-0.5 text-[9px] font-bold ${
                   slot.status === "confirmed"
-                    ? "bg-[#22C55E]/20 text-[#22C55E]"
+                    ? "bg-accent/20 text-accent"
                     : "bg-yellow-400/20 text-yellow-300"
                 }`}
               >

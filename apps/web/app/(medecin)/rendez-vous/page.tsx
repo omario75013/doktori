@@ -24,7 +24,7 @@ type Appointment = {
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-orange-100 text-orange-700",
-  confirmed: "bg-[#F0FDFA] text-[#0891B2]",
+  confirmed: "bg-secondary text-primary",
   cancelled: "bg-gray-100 text-gray-500",
   completed: "bg-blue-100 text-blue-700",
   no_show: "bg-red-100 text-red-700",
@@ -226,7 +226,23 @@ export default function RendezVousPage() {
   };
 
   if (loading) {
-    return <p className="text-[#0891B2] text-sm p-6">{t("retry")}...</p>;
+    return (
+      <div className="space-y-3 p-6" aria-hidden>
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="flex items-center gap-4 rounded-xl border border-border bg-white p-4"
+          >
+            <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-secondary" />
+            <div className="flex-1 space-y-2">
+              <div className="h-4 w-1/3 animate-pulse rounded bg-secondary" />
+              <div className="h-3 w-1/2 animate-pulse rounded bg-secondary" />
+            </div>
+            <div className="h-8 w-24 shrink-0 animate-pulse rounded-lg bg-secondary" />
+          </div>
+        ))}
+      </div>
+    );
   }
 
   if (error) {
@@ -235,7 +251,7 @@ export default function RendezVousPage() {
         <p className="text-red-500 text-sm">{error}</p>
         <button
           onClick={fetchAppointments}
-          className="text-sm text-[#0891B2] hover:underline"
+          className="text-sm text-primary hover:underline"
         >
           {t("retry")}
         </button>
@@ -247,52 +263,52 @@ export default function RendezVousPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="h-10 w-10 rounded-xl bg-[#F0FDFA] flex items-center justify-center text-[#0891B2]">
+          <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary">
             <Calendar className="h-5 w-5" />
           </div>
-          <h1 className="text-2xl font-bold text-[#134E4A]">{t("title")}</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
         </div>
         <button
           onClick={fetchAppointments}
-          className="text-sm text-[#0891B2] hover:text-[#0E7490] font-medium border border-[#E6F4F1] hover:bg-[#F0FDFA] rounded-xl px-3 py-2 transition-colors"
+          className="text-sm text-primary hover:text-doktori-teal-dark font-medium border border-border hover:bg-secondary rounded-xl px-3 py-2 transition-colors"
         >
           {t("refresh")}
         </button>
       </div>
 
       {appointments.length === 0 ? (
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white p-12 text-center shadow-sm">
-          <div className="h-14 w-14 rounded-2xl bg-[#F0FDFA] flex items-center justify-center mx-auto mb-3">
-            <Calendar className="h-7 w-7 text-[#0891B2]" />
+        <div className="rounded-2xl border border-border bg-white p-12 text-center shadow-sm">
+          <div className="h-14 w-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
+            <Calendar className="h-7 w-7 text-primary" />
           </div>
-          <p className="text-[#134E4A] font-medium mb-1">{t("noAppointments")}</p>
+          <p className="text-foreground font-medium mb-1">{t("noAppointments")}</p>
           <p className="text-sm text-gray-400">{t("noAppointmentsDesc")}</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm overflow-x-auto">
+        <div className="rounded-2xl border border-border bg-white shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-[#E6F4F1] bg-[#F0FDFA] text-left">
-                <th className="px-4 py-3 font-medium text-[#134E4A]">{t("colDate")}</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">{t("colPatient")}</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">{t("colPhone")}</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">{t("colMotif")}</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">{t("colStatus")}</th>
-                <th className="px-4 py-3 font-medium text-[#134E4A]">{t("colActions")}</th>
+              <tr className="border-b border-border bg-secondary text-left">
+                <th className="px-4 py-3 font-medium text-foreground">{t("colDate")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{t("colPatient")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{t("colPhone")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{t("colMotif")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{t("colStatus")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{t("colActions")}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#E6F4F1]">
+            <tbody className="divide-y divide-border">
               {appointments.map((appt) => {
                 const isTerminal = TERMINAL_STATUSES.includes(appt.status);
                 const isUpdating = updating === appt.id;
                 return (
-                  <tr key={appt.id} className="hover:bg-[#F0FDFA] transition-colors">
+                  <tr key={appt.id} className="hover:bg-secondary transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap text-gray-700">
                       {format(new Date(appt.startsAt), "EEE d MMM yyyy HH:mm", { locale: fr })}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-[#134E4A]">{appt.patientName}</span>
+                        <span className="font-medium text-foreground">{appt.patientName}</span>
                         {appt.patientNoShowCount >= 2 && (
                           <span
                             className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700"
@@ -344,14 +360,14 @@ export default function RendezVousPage() {
                             <button
                               onClick={() => openCnamDialog(appt.id)}
                               disabled={isUpdating}
-                              className="text-xs px-2.5 py-1.5 rounded-xl border border-[#E6F4F1] bg-[#F0FDFA] text-[#0891B2] hover:bg-[#E6F4F1] disabled:opacity-40 transition-colors"
+                              className="text-xs px-2.5 py-1.5 rounded-xl border border-border bg-secondary text-primary hover:bg-border disabled:opacity-40 transition-colors"
                             >
                               {t("cnamBordereau")}
                             </button>
                             <a
                               href={`/api/appointments/${appt.id}/calendar`}
                               title="Ajouter au calendrier"
-                              className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl border border-[#E6F4F1] bg-[#F0FDFA] text-[#0891B2] hover:bg-[#E6F4F1] transition-colors"
+                              className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl border border-border bg-secondary text-primary hover:bg-border transition-colors"
                             >
                               <CalendarPlus className="h-3.5 w-3.5" />
                               .ics
@@ -367,7 +383,7 @@ export default function RendezVousPage() {
                               key={action.status}
                               disabled={isUpdating}
                               onClick={() => updateStatus(appt.id, action.status)}
-                              className="text-xs px-2.5 py-1.5 rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                              className="text-xs px-2.5 py-1.5 rounded-xl border border-border hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                             >
                               {isUpdating ? "..." : action.label}
                             </button>
@@ -375,7 +391,7 @@ export default function RendezVousPage() {
                           <a
                             href={`/api/appointments/${appt.id}/calendar`}
                             title="Ajouter au calendrier"
-                            className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl border border-[#E6F4F1] bg-[#F0FDFA] text-[#0891B2] hover:bg-[#E6F4F1] transition-colors"
+                            className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl border border-border bg-secondary text-primary hover:bg-border transition-colors"
                           >
                             <CalendarPlus className="h-3.5 w-3.5" />
                             .ics
@@ -407,13 +423,13 @@ export default function RendezVousPage() {
           onClick={() => setFollowupDialogId(null)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-[#E6F4F1]"
+            className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-border"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-base font-semibold text-[#134E4A]">{t("followupTitle")}</h2>
+            <h2 className="text-base font-semibold text-foreground">{t("followupTitle")}</h2>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-[#134E4A]">
+              <label className="block text-sm font-medium text-foreground">
                 {t("followupWeeks")}
               </label>
               <input
@@ -422,7 +438,7 @@ export default function RendezVousPage() {
                 max="104"
                 value={followupWeeks}
                 onChange={(e) => setFollowupWeeks(e.target.value)}
-                className="w-full h-12 rounded-xl border border-[#E6F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2]"
+                className="w-full h-12 rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 autoFocus
               />
               <p className="text-xs text-gray-400">{t("followupNote")}</p>
@@ -435,14 +451,14 @@ export default function RendezVousPage() {
             <div className="flex gap-2 justify-end pt-1">
               <button
                 onClick={() => setFollowupDialogId(null)}
-                className="px-4 py-2 text-sm rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] text-gray-600 transition-colors"
+                className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 transition-colors"
               >
                 {t("cancelKeep")}
               </button>
               <button
                 onClick={submitFollowup}
                 disabled={updating === followupDialogId}
-                className="px-4 py-2 text-sm rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold disabled:opacity-40 transition-colors"
+                className="px-4 py-2 text-sm rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold disabled:opacity-40 transition-colors"
               >
                 {updating === followupDialogId ? "..." : t("cancelConfirm")}
               </button>
@@ -458,13 +474,13 @@ export default function RendezVousPage() {
           onClick={() => !cancelSubmitting && setCancelDialogId(null)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-[#E6F4F1]"
+            className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-border"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-base font-semibold text-[#134E4A]">{t("cancelTitle")}</h2>
+            <h2 className="text-base font-semibold text-foreground">{t("cancelTitle")}</h2>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-[#134E4A]">
+              <label className="block text-sm font-medium text-foreground">
                 {t("cancelReason")}
               </label>
               <textarea
@@ -472,7 +488,7 @@ export default function RendezVousPage() {
                 onChange={(e) => setCancelReason(e.target.value)}
                 placeholder={t("cancelReasonPlaceholder")}
                 rows={3}
-                className="w-full rounded-xl border border-[#E6F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
+                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 resize-none"
                 autoFocus
               />
               <p className="text-xs text-gray-400">{t("cancelNote")}</p>
@@ -486,7 +502,7 @@ export default function RendezVousPage() {
               <button
                 onClick={() => setCancelDialogId(null)}
                 disabled={cancelSubmitting}
-                className="px-4 py-2 text-sm rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] text-gray-600 disabled:opacity-40 transition-colors"
+                className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 disabled:opacity-40 transition-colors"
               >
                 {t("cancelKeep")}
               </button>
@@ -509,13 +525,13 @@ export default function RendezVousPage() {
           onClick={() => setCnamDialogAppointmentId(null)}
         >
           <div
-            className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-[#E6F4F1]"
+            className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-border"
             onClick={(e) => e.stopPropagation()}
           >
-            <h2 className="text-base font-semibold text-[#134E4A]">{t("cnamTitle")}</h2>
+            <h2 className="text-base font-semibold text-foreground">{t("cnamTitle")}</h2>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-[#134E4A]">
+              <label className="block text-sm font-medium text-foreground">
                 {t("cnamNumber")}
               </label>
               <input
@@ -523,13 +539,13 @@ export default function RendezVousPage() {
                 value={cnamNumber}
                 onChange={(e) => setCnamNumber(e.target.value)}
                 placeholder="Ex : 12345678"
-                className="w-full h-12 rounded-xl border border-[#E6F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2]"
+                className="w-full h-12 rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                 autoFocus
               />
             </div>
 
             <div className="space-y-1">
-              <label className="block text-sm font-medium text-[#134E4A]">
+              <label className="block text-sm font-medium text-foreground">
                 {t("cnamAmount")}
               </label>
               <input
@@ -538,7 +554,7 @@ export default function RendezVousPage() {
                 step="0.5"
                 value={cnamAmount}
                 onChange={(e) => setCnamAmount(e.target.value)}
-                className="w-full h-12 rounded-xl border border-[#E6F4F1] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#0891B2]"
+                className="w-full h-12 rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
 
@@ -549,13 +565,13 @@ export default function RendezVousPage() {
             <div className="flex gap-2 justify-end pt-1">
               <button
                 onClick={() => setCnamDialogAppointmentId(null)}
-                className="px-4 py-2 text-sm rounded-xl border border-[#E6F4F1] hover:bg-[#F0FDFA] text-gray-600 transition-colors"
+                className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 transition-colors"
               >
                 {t("cancel")}
               </button>
               <button
                 onClick={submitCnamClaim}
-                className="px-4 py-2 text-sm rounded-xl bg-[#0891B2] hover:bg-[#0E7490] text-white font-bold transition-colors"
+                className="px-4 py-2 text-sm rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold transition-colors"
               >
                 {t("cnamCreate")}
               </button>

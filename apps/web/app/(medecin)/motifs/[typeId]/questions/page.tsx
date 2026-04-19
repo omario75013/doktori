@@ -138,15 +138,15 @@ export default function QuestionsPage({
       <div className="mb-6 flex items-center gap-3">
         <Link
           href="/motifs"
-          className="inline-flex items-center gap-1.5 text-sm font-bold text-[#0891B2] hover:underline"
+          className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"
         >
           <ArrowLeft className="h-4 w-4" />
           Retour aux motifs
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-[#134E4A] mb-1">Questionnaire pré-consultation</h1>
-      <p className="text-sm text-[#134E4A]/60 mb-6">
+      <h1 className="text-2xl font-bold text-foreground mb-1">Questionnaire pré-consultation</h1>
+      <p className="text-sm text-foreground/60 mb-6">
         Ces questions seront posées au patient lors de la prise de rendez-vous pour ce motif.
       </p>
 
@@ -157,9 +157,9 @@ export default function QuestionsPage({
       )}
 
       {/* Add question form */}
-      <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm p-5 mb-6">
-        <h2 className="font-semibold text-[#134E4A] mb-4 flex items-center gap-2">
-          <Plus className="h-4 w-4 text-[#0891B2]" />
+      <div className="rounded-2xl border border-border bg-white shadow-sm p-5 mb-6">
+        <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
+          <Plus className="h-4 w-4 text-primary" />
           Ajouter une question
         </h2>
         <form onSubmit={handleAdd} className="space-y-4">
@@ -183,7 +183,7 @@ export default function QuestionsPage({
                 id="kind"
                 value={kind}
                 onChange={(e) => setKind(e.target.value as QuestionKind)}
-                className="mt-1 w-full rounded-md border border-[#E6F4F1] bg-white px-3 py-2 text-sm text-[#134E4A] focus:outline-none focus:ring-2 focus:ring-[#0891B2]"
+                className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 {Object.entries(KIND_LABELS).map(([k, l]) => (
                   <option key={k} value={k}>
@@ -193,12 +193,12 @@ export default function QuestionsPage({
               </select>
             </div>
             <div className="flex items-end pb-1">
-              <label className="flex items-center gap-2 text-sm text-[#134E4A] cursor-pointer">
+              <label className="flex items-center gap-2 text-sm text-foreground cursor-pointer">
                 <input
                   type="checkbox"
                   checked={required}
                   onChange={(e) => setRequired(e.target.checked)}
-                  className="h-4 w-4 rounded border-[#E6F4F1] text-[#0891B2] focus:ring-[#0891B2]"
+                  className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 />
                 Obligatoire
               </label>
@@ -216,7 +216,7 @@ export default function QuestionsPage({
                 onChange={(e) => setChoicesRaw(e.target.value)}
                 placeholder={"Option A\nOption B\nOption C"}
                 rows={4}
-                className="mt-1 w-full rounded-md border border-[#E6F4F1] bg-white px-3 py-2 text-sm text-[#134E4A] focus:outline-none focus:ring-2 focus:ring-[#0891B2] resize-none"
+                className="mt-1 w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                 required
               />
             </div>
@@ -228,27 +228,27 @@ export default function QuestionsPage({
             </div>
           )}
 
-          <Button type="submit" disabled={saving} className="bg-[#0891B2] hover:bg-[#0E7490]">
+          <Button type="submit" disabled={saving} className="bg-primary hover:bg-doktori-teal-dark">
             {saving ? "Ajout..." : "Ajouter la question"}
           </Button>
         </form>
       </div>
 
       {/* Questions list */}
-      <div className="rounded-2xl border border-[#E6F4F1] bg-white shadow-sm">
-        <div className="p-4 border-b border-[#E6F4F1]">
-          <h2 className="font-semibold text-[#134E4A]">
+      <div className="rounded-2xl border border-border bg-white shadow-sm">
+        <div className="p-4 border-b border-border">
+          <h2 className="font-semibold text-foreground">
             Questions ({loading ? "…" : questions.length})
           </h2>
         </div>
         {loading ? (
-          <p className="p-6 text-center text-sm text-[#134E4A]/40">Chargement...</p>
+          <p className="p-6 text-center text-sm text-foreground/40">Chargement...</p>
         ) : questions.length === 0 ? (
-          <p className="p-6 text-center text-sm text-[#134E4A]/40">
+          <p className="p-6 text-center text-sm text-foreground/40">
             Aucune question — ajoutez-en une ci-dessus.
           </p>
         ) : (
-          <ul className="divide-y divide-[#E6F4F1]">
+          <ul className="divide-y divide-border">
             {questions.map((q, idx) => (
               <li key={q.id} className="p-4 flex items-start gap-3">
                 <div className="flex flex-col gap-0.5">
@@ -256,7 +256,7 @@ export default function QuestionsPage({
                     type="button"
                     onClick={() => handleReorder(q.id, "up")}
                     disabled={idx === 0}
-                    className="rounded p-0.5 hover:bg-[#F0FDFA] disabled:opacity-20 text-[#0891B2]"
+                    className="rounded p-0.5 hover:bg-secondary disabled:opacity-20 text-primary"
                     title="Monter"
                   >
                     <ChevronUp className="h-4 w-4" />
@@ -265,7 +265,7 @@ export default function QuestionsPage({
                     type="button"
                     onClick={() => handleReorder(q.id, "down")}
                     disabled={idx === questions.length - 1}
-                    className="rounded p-0.5 hover:bg-[#F0FDFA] disabled:opacity-20 text-[#0891B2]"
+                    className="rounded p-0.5 hover:bg-secondary disabled:opacity-20 text-primary"
                     title="Descendre"
                   >
                     <ChevronDown className="h-4 w-4" />
@@ -273,9 +273,9 @@ export default function QuestionsPage({
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-[#134E4A] text-sm">{q.label}</div>
-                  <div className="text-xs text-[#134E4A]/50 mt-0.5 flex items-center gap-2">
-                    <span className="rounded-full bg-[#F0FDFA] border border-[#E6F4F1] px-2 py-0.5">
+                  <div className="font-medium text-foreground text-sm">{q.label}</div>
+                  <div className="text-xs text-foreground/50 mt-0.5 flex items-center gap-2">
+                    <span className="rounded-full bg-secondary border border-border px-2 py-0.5">
                       {KIND_LABELS[q.kind]}
                     </span>
                     {q.required && (
@@ -289,7 +289,7 @@ export default function QuestionsPage({
                       {q.choices.map((c, i) => (
                         <span
                           key={i}
-                          className="text-xs rounded bg-[#F0FDFA] border border-[#E6F4F1] px-1.5 py-0.5 text-[#0891B2]"
+                          className="text-xs rounded bg-secondary border border-border px-1.5 py-0.5 text-primary"
                         >
                           {c}
                         </span>

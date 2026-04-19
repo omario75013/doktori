@@ -184,11 +184,11 @@ export function GuidedTour({ steps, storageKey, onComplete }: GuidedTourProps) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -8 }}
           transition={{ duration: 0.2 }}
-          className="fixed z-[60] bg-white rounded-2xl shadow-2xl border border-[#E6F4F1] overflow-hidden"
+          className="fixed z-[60] bg-white rounded-2xl shadow-2xl border border-border overflow-hidden"
           style={tooltipStyle}
         >
           {/* Header */}
-          <div className="bg-gradient-to-r from-[#0891B2] to-[#0E7490] px-5 py-3 flex items-center justify-between">
+          <div className="bg-gradient-to-r from-primary to-doktori-teal-dark px-5 py-3 flex items-center justify-between">
             <div className="flex items-center gap-2 text-white">
               <Sparkles className="h-4 w-4" />
               <span className="text-xs font-bold uppercase tracking-wider">
@@ -206,8 +206,8 @@ export function GuidedTour({ steps, storageKey, onComplete }: GuidedTourProps) {
 
           {/* Content */}
           <div className="px-5 py-4">
-            <h3 className="font-bold text-[#134E4A] text-base mb-1">{step.title}</h3>
-            <p className="text-sm text-[#5E7574] leading-relaxed">{step.content}</p>
+            <h3 className="font-bold text-foreground text-base mb-1">{step.title}</h3>
+            <p className="text-sm text-muted-foreground leading-relaxed">{step.content}</p>
           </div>
 
           {/* Progress + navigation */}
@@ -217,7 +217,7 @@ export function GuidedTour({ steps, storageKey, onComplete }: GuidedTourProps) {
                 <div
                   key={i}
                   className={`h-1.5 rounded-full transition-all ${
-                    i === stepIndex ? "w-5 bg-[#0891B2]" : i < stepIndex ? "w-1.5 bg-[#0891B2]/40" : "w-1.5 bg-slate-200"
+                    i === stepIndex ? "w-5 bg-primary" : i < stepIndex ? "w-1.5 bg-primary/40" : "w-1.5 bg-slate-200"
                   }`}
                 />
               ))}
@@ -226,7 +226,7 @@ export function GuidedTour({ steps, storageKey, onComplete }: GuidedTourProps) {
               {!isFirst && (
                 <button
                   onClick={prev}
-                  className="flex items-center gap-1 text-xs font-medium text-[#5E7574] hover:text-[#134E4A] transition-colors"
+                  className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <ChevronLeft className="h-3 w-3" />
                   Retour
@@ -234,7 +234,7 @@ export function GuidedTour({ steps, storageKey, onComplete }: GuidedTourProps) {
               )}
               <button
                 onClick={next}
-                className="flex items-center gap-1 bg-[#0891B2] hover:bg-[#0E7490] text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
+                className="flex items-center gap-1 bg-primary hover:bg-doktori-teal-dark text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors"
               >
                 {isLast ? "Terminer" : "Suivant"}
                 {!isLast && <ChevronRight className="h-3 w-3" />}

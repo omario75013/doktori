@@ -128,19 +128,19 @@ export default function MesDocumentsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-[#F0FDFA]">
+      <div className="flex items-center justify-center min-h-screen bg-secondary">
         <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-2 border-[#0891B2] border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-[#134E4A]/60 text-sm">Chargement de vos documents...</p>
+          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-foreground/60 text-sm">Chargement de vos documents...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F0FDFA]">
+    <div className="min-h-screen bg-secondary">
       {/* Header */}
-      <div className="bg-gradient-to-br from-[#0891B2] to-[#134E4A] px-4 py-8">
+      <div className="bg-gradient-to-br from-primary to-foreground px-4 py-8">
         <div className="max-w-2xl mx-auto">
           <button
             onClick={() => router.back()}
@@ -165,15 +165,15 @@ export default function MesDocumentsPage() {
 
       <div className="max-w-2xl mx-auto px-4 py-6">
         {/* Tabs */}
-        <div className="flex gap-1 bg-white rounded-2xl border border-[#E6F4F1] p-1 mb-6 shadow-sm overflow-x-auto">
+        <div className="flex gap-1 bg-white rounded-2xl border border-border p-1 mb-6 shadow-sm overflow-x-auto">
           {tabs.map((tab) => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold transition-all whitespace-nowrap flex-1 justify-center ${
                 activeTab === tab.id
-                  ? "bg-[#0891B2] text-white shadow-sm"
-                  : "text-[#134E4A]/60 hover:text-[#134E4A] hover:bg-[#F0FDFA]"
+                  ? "bg-primary text-white shadow-sm"
+                  : "text-foreground/60 hover:text-foreground hover:bg-secondary"
               }`}
             >
               {tab.icon}
@@ -181,7 +181,7 @@ export default function MesDocumentsPage() {
               {tab.count > 0 && (
                 <span
                   className={`inline-flex items-center justify-center w-4 h-4 rounded-full text-xs font-bold ${
-                    activeTab === tab.id ? "bg-white/30 text-white" : "bg-[#0891B2]/10 text-[#0891B2]"
+                    activeTab === tab.id ? "bg-white/30 text-white" : "bg-primary/10 text-primary"
                   }`}
                 >
                   {tab.count}
@@ -196,7 +196,7 @@ export default function MesDocumentsPage() {
           <section className="space-y-3">
             {!documents?.prescriptions.length ? (
               <EmptyState
-                icon={<FileText className="h-8 w-8 text-[#0891B2]/40" />}
+                icon={<FileText className="h-8 w-8 text-primary/40" />}
                 title="Aucune ordonnance"
                 description="Vos ordonnances apparaîtront ici après vos consultations"
               />
@@ -207,24 +207,24 @@ export default function MesDocumentsPage() {
                   <a
                     key={p.prescriptionId}
                     href={`/ordonnance/${p.prescriptionId}`}
-                    className="block bg-white rounded-2xl border border-[#E6F4F1] border-l-4 border-l-[#0891B2] shadow-sm hover:shadow-md hover:border-[#0891B2]/30 transition-all duration-200 p-4"
+                    className="block bg-white rounded-2xl border border-border border-l-4 border-l-primary shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200 p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <div className="w-8 h-8 bg-[#0891B2]/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                            <FileText className="h-4 w-4 text-[#0891B2]" />
+                          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                            <FileText className="h-4 w-4 text-primary" />
                           </div>
                           <div>
-                            <p className="font-bold text-[#134E4A] text-sm">{p.doctorName}</p>
-                            <p className="text-xs text-[#134E4A]/50">{spec?.label ?? p.specialty}</p>
+                            <p className="font-bold text-foreground text-sm">{p.doctorName}</p>
+                            <p className="text-xs text-foreground/50">{spec?.label ?? p.specialty}</p>
                           </div>
                         </div>
-                        <p className="text-xs text-[#134E4A]/40 mt-2 capitalize">
+                        <p className="text-xs text-foreground/40 mt-2 capitalize">
                           {format(new Date(p.createdAt), "d MMMM yyyy", { locale: fr })}
                         </p>
                       </div>
-                      <div className="flex items-center gap-1.5 text-[#0891B2] flex-shrink-0">
+                      <div className="flex items-center gap-1.5 text-primary flex-shrink-0">
                         <span className="text-xs font-semibold">Voir</span>
                         <ExternalLink className="h-3.5 w-3.5" />
                       </div>
@@ -241,7 +241,7 @@ export default function MesDocumentsPage() {
           <section className="space-y-3">
             {!documents?.cnamClaims.length ? (
               <EmptyState
-                icon={<Receipt className="h-8 w-8 text-[#0891B2]/40" />}
+                icon={<Receipt className="h-8 w-8 text-primary/40" />}
                 title="Aucun bordereau CNAM"
                 description="Vos bordereaux de remboursement CNAM apparaîtront ici"
               />
@@ -252,7 +252,7 @@ export default function MesDocumentsPage() {
                 return (
                   <div
                     key={c.id}
-                    className="bg-white rounded-2xl border border-[#E6F4F1] border-l-4 border-l-teal-500 shadow-sm p-4"
+                    className="bg-white rounded-2xl border border-border border-l-4 border-l-teal-500 shadow-sm p-4"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1 min-w-0">
@@ -261,18 +261,18 @@ export default function MesDocumentsPage() {
                             <Receipt className="h-4 w-4 text-teal-600" />
                           </div>
                           <div>
-                            <p className="font-bold text-[#134E4A] text-sm">{c.doctorName}</p>
-                            <p className="text-xs text-[#134E4A]/50 font-mono">{c.cnamNumber}</p>
+                            <p className="font-bold text-foreground text-sm">{c.doctorName}</p>
+                            <p className="text-xs text-foreground/50 font-mono">{c.cnamNumber}</p>
                           </div>
                         </div>
                         <div className="flex items-center gap-3 flex-wrap">
-                          <span className="text-sm font-bold text-[#134E4A]">
+                          <span className="text-sm font-bold text-foreground">
                             {formatMillimes(c.amount)}
                           </span>
                           <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${statusColor}`}>
                             {statusLabel}
                           </span>
-                          <span className="text-xs text-[#134E4A]/40 capitalize">
+                          <span className="text-xs text-foreground/40 capitalize">
                             {format(new Date(c.consultationDate), "d MMMM yyyy", { locale: fr })}
                           </span>
                         </div>
@@ -290,7 +290,7 @@ export default function MesDocumentsPage() {
           <section className="space-y-3">
             {!documents?.consultationNotes.length ? (
               <EmptyState
-                icon={<ClipboardList className="h-8 w-8 text-[#0891B2]/40" />}
+                icon={<ClipboardList className="h-8 w-8 text-primary/40" />}
                 title="Aucun compte-rendu"
                 description="Vos comptes-rendus de consultation apparaîtront ici"
               />
@@ -298,7 +298,7 @@ export default function MesDocumentsPage() {
               documents.consultationNotes.map((n) => (
                 <div
                   key={n.id}
-                  className="bg-white rounded-2xl border border-[#E6F4F1] border-l-4 border-l-purple-500 shadow-sm p-4"
+                  className="bg-white rounded-2xl border border-border border-l-4 border-l-purple-500 shadow-sm p-4"
                 >
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
@@ -307,19 +307,19 @@ export default function MesDocumentsPage() {
                           <ClipboardList className="h-4 w-4 text-purple-600" />
                         </div>
                         <div>
-                          <p className="font-bold text-[#134E4A] text-sm">{n.doctorName}</p>
-                          <p className="text-xs text-[#134E4A]/40 capitalize">
+                          <p className="font-bold text-foreground text-sm">{n.doctorName}</p>
+                          <p className="text-xs text-foreground/40 capitalize">
                             {format(new Date(n.startsAt), "d MMMM yyyy", { locale: fr })}
                           </p>
                         </div>
                       </div>
                       {n.assessment && (
-                        <p className="text-xs text-[#134E4A]/70 line-clamp-2 mt-1 bg-[#F0FDFA] rounded-lg px-3 py-2">
+                        <p className="text-xs text-foreground/70 line-clamp-2 mt-1 bg-secondary rounded-lg px-3 py-2">
                           {n.assessment}
                         </p>
                       )}
                     </div>
-                    <ChevronRight className="h-4 w-4 text-[#134E4A]/30 flex-shrink-0 mt-1" />
+                    <ChevronRight className="h-4 w-4 text-foreground/30 flex-shrink-0 mt-1" />
                   </div>
                 </div>
               ))
@@ -341,12 +341,12 @@ function EmptyState({
   description: string;
 }) {
   return (
-    <div className="bg-white rounded-2xl border border-[#E6F4F1] shadow-sm p-10 text-center">
-      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-[#F0FDFA] mb-4">
+    <div className="bg-white rounded-2xl border border-border shadow-sm p-10 text-center">
+      <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-secondary mb-4">
         {icon}
       </div>
-      <p className="font-semibold text-[#134E4A] mb-1">{title}</p>
-      <p className="text-sm text-[#134E4A]/50">{description}</p>
+      <p className="font-semibold text-foreground mb-1">{title}</p>
+      <p className="text-sm text-foreground/50">{description}</p>
     </div>
   );
 }
