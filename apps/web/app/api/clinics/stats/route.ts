@@ -1,16 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, clinics, clinicDoctors, doctors, appointments } from "@doktori/db";
 import { eq, and, gte, lte, count, inArray } from "drizzle-orm";
-import { requireAdmin } from "@/lib/admin-auth";
+import { auth } from "@/lib/auth";
 
 export async function GET(req: NextRequest) {
-  const admin = await requireAdmin();
-  if (admin instanceof NextResponse) return admin;
+  const session = await auth();
+  if (!session?.user?.id) {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  }
+
+  const role = (session.user as any).role;
   const { searchParams } = new URL(req.url);
 
-  // MVP: accept clinicId from query param or x-clinic-id header
-  const clinicId =
-    searchParams.get("id") ?? req.headers.get("x-clinic-id");
+  // Clinic users use their own ID; admins pass ?id= param
+  let clinicId: string;
+  if (role === "clinic") {
+    clinicId = session.user.id;
+  } else if (role === "admin") {
+    clinicId = searchParams.get("id") ?? "";
+  } else {
+    return NextResponse.json({ error: "Non autorisé" }, { status: 403 });
+  }
 
   if (!clinicId) {
     return NextResponse.json(
