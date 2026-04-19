@@ -12,14 +12,14 @@ export const SPECIALTIES = [
 ] as const;
 
 export const CITIES = [
-  { id: "tunis", label: "Tunis", governorate: "Tunis" },
-  { id: "la-marsa", label: "La Marsa", governorate: "Tunis" },
-  { id: "lac-1", label: "Lac 1", governorate: "Tunis" },
-  { id: "lac-2", label: "Lac 2", governorate: "Tunis" },
-  { id: "ariana", label: "Ariana", governorate: "Ariana" },
-  { id: "la-soukra", label: "La Soukra", governorate: "Ariana" },
-  { id: "raoued", label: "Raoued", governorate: "Ariana" },
-  { id: "manouba", label: "Manouba", governorate: "Manouba" },
+  { id: "tunis", label: "Tunis", labelAr: "تونس", governorate: "Tunis" },
+  { id: "la-marsa", label: "La Marsa", labelAr: "المرسى", governorate: "Tunis" },
+  { id: "lac-1", label: "Lac 1", labelAr: "البحيرة 1", governorate: "Tunis" },
+  { id: "lac-2", label: "Lac 2", labelAr: "البحيرة 2", governorate: "Tunis" },
+  { id: "ariana", label: "Ariana", labelAr: "أريانة", governorate: "Ariana" },
+  { id: "la-soukra", label: "La Soukra", labelAr: "السكرة", governorate: "Ariana" },
+  { id: "raoued", label: "Raoued", labelAr: "رواد", governorate: "Ariana" },
+  { id: "manouba", label: "Manouba", labelAr: "منوبة", governorate: "Manouba" },
 ] as const;
 
 export const APPOINTMENT_STATUSES = [

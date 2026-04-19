@@ -3,7 +3,9 @@
     "search": "ابحث عن طبيب",
     "doctorArea": "فضاء الطبيب",
     "sos": "استغاثة",
-    "faq": "مساعدة"
+    "faq": "مساعدة",
+    "blog": "المدونة",
+    "myAccount": "حسابي"
   },
   "landing": {
     "heroTitle": "احجز طبيبك بنقرتين",
@@ -134,6 +136,7 @@
     "filtersAriaLabel": "الفلاتر",
     "activeFiltersLabel": "النشطة :",
     "clearAll": "حذف الكل",
+    "videoMode": "عبر الفيديو",
     "mobileFiltersTitle": "الفلاتر",
     "apply": "تطبيق ({count})",
     "locationLabel": "الموقع",

@@ -16,7 +16,9 @@
     "search": "Rechercher un médecin",
     "doctorArea": "Espace médecin",
     "sos": "SOS",
-    "faq": "Aide"
+    "faq": "Aide",
+    "blog": "Blog",
+    "myAccount": "Mon compte"
   },
   "landing": {
     "heroTitle": "Réservez votre médecin en 2 clics",
@@ -109,6 +111,7 @@
     "filtersAriaLabel": "Filtres",
     "activeFiltersLabel": "Actifs :",
     "clearAll": "Tout effacer",
+    "videoMode": "En vidéo",
     "mobileFiltersTitle": "Filtres",
     "apply": "Appliquer ({count})",
     "locationLabel": "Localisation",

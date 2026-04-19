@@ -357,7 +357,7 @@ function RechercheInner() {
   if (modeFilter === "teleconsult") {
     activeChips.push({
       key: "mode",
-      label: "En vidéo",
+      label: t("videoMode"),
       onRemove: () => setModeFilter(""),
     });
   }
@@ -592,7 +592,7 @@ function RechercheInner() {
                   }`}
                 >
                   <Video className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  En vidéo
+                  {t("videoMode")}
                 </button>
               </div>
 
