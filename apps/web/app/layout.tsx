@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { NextIntlClientProvider } from "next-intl";
@@ -9,6 +9,7 @@ import { AppBanner } from "@/components/app-banner";
 import { PatientShell } from "@/components/patient-shell";
 import { InstallPrompt } from "@/components/install-prompt";
 import { ThemeProvider } from "@/components/theme-provider";
+import { MotionProvider } from "@/components/motion-provider";
 import { Toaster } from "sonner";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 
@@ -21,6 +22,16 @@ const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
 });
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 5,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+};
 
 export async function generateMetadata(): Promise<Metadata> {
   const locale = await getLocale();
@@ -116,6 +127,7 @@ export default async function RootLayout({
           }}
         />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+          <MotionProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <PatientShell>
               <AppBanner />
@@ -129,6 +141,7 @@ export default async function RootLayout({
               <InstallPrompt />
             </PatientShell>
           </NextIntlClientProvider>
+          </MotionProvider>
         </ThemeProvider>
       </body>
     </html>

@@ -385,7 +385,7 @@ function RechercheInner() {
                 placeholder={t("inputPlaceholder")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="h-full flex-1 border-0 bg-transparent px-2 text-sm text-[#134E4A] placeholder:text-[#5E7574]/60 outline-none"
+                className="h-full flex-1 border-0 bg-transparent px-2 text-sm text-[#134E4A] placeholder:text-[#5E7574]/60 outline-none focus-visible:ring-2 focus-visible:ring-[#0891B2]/30 focus-visible:rounded-lg"
               />
               {loading && <Loader2 className="h-4 w-4 animate-spin text-[#0891B2]" />}
             </div>
@@ -640,7 +640,7 @@ function RechercheInner() {
                     value={sort}
                     onChange={(e) => setSort(e.target.value as SortKey)}
                     aria-label={t("sortLabel")}
-                    className="h-9 rounded-lg border border-[#E6F4F1] bg-white px-3 pr-8 text-xs font-bold text-[#134E4A] outline-none focus:border-[#0891B2]"
+                    className="h-9 rounded-lg border border-[#E6F4F1] bg-white px-3 pr-8 text-xs font-bold text-[#134E4A] outline-none focus-visible:ring-2 focus-visible:ring-[#0891B2]/30 focus-visible:border-[#0891B2]"
                   >
                     <option value="relevance">{t("sortRelevance")}</option>
                     {(userLocation || parsedCity) && <option value="proximity">{t("sortProximity")}</option>}
