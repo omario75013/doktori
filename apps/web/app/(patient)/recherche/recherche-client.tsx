@@ -378,11 +378,11 @@ function RechercheInner() {
   return (
     <div className="min-h-screen bg-secondary/30 dark:bg-gray-900 overflow-x-hidden">
       {/* ═══════════════ SEARCH HEADER ═══════════════ */}
-      <div className="sticky top-16 z-20 border-b border-border bg-white/95 backdrop-blur-md">
+      <div className="sticky top-16 z-20 border-b border-border dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md">
         <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
           {/* Search input */}
           <div className="flex items-center gap-3">
-            <div className="group flex h-12 flex-1 items-center rounded-xl border-2 border-border bg-white px-3 shadow-sm transition-all focus-within:border-primary">
+            <div className="group flex h-12 flex-1 items-center rounded-xl border-2 border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-3 shadow-sm transition-all focus-within:border-primary">
               <Search className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2.5} />
               <input
                 type="text"
@@ -440,13 +440,13 @@ function RechercheInner() {
       <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
         <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
           {/* ═══════════════ SIDEBAR FILTERS ═══════════════ */}
-          <aside className={`${mobileFiltersOpen ? "fixed inset-0 z-50 overflow-y-auto bg-white p-4 lg:static lg:p-0" : "hidden lg:block"}`}>
+          <aside className={`${mobileFiltersOpen ? "fixed inset-0 z-50 overflow-y-auto bg-white dark:bg-gray-900 p-4 lg:static lg:p-0" : "hidden lg:block"}`}>
             {mobileFiltersOpen && (
-              <div className="mb-4 flex items-center justify-between border-b pb-3 lg:hidden">
+              <div className="mb-4 flex items-center justify-between border-b dark:border-gray-700 pb-3 lg:hidden">
                 <h2 className="font-heading text-lg font-bold text-foreground">{t("mobileFiltersTitle")}</h2>
                 <button
                   onClick={() => setMobileFiltersOpen(false)}
-                  className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-gray-100"
+                  className="flex h-10 w-10 items-center justify-center rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
                 >
                   <X className="h-5 w-5" />
                 </button>
@@ -606,7 +606,7 @@ function RechercheInner() {
                   <button
                     onClick={() => setDate("")}
                     className={`min-h-11 shrink-0 rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
-                      !date ? "bg-primary text-white shadow-sm" : "bg-white text-muted-foreground ring-1 ring-border"
+                      !date ? "bg-primary text-white shadow-sm" : "bg-white dark:bg-gray-800 text-muted-foreground ring-1 ring-border dark:ring-gray-700"
                     }`}
                   >
                     {t("dateAll")}
@@ -616,7 +616,7 @@ function RechercheInner() {
                       key={d.value}
                       onClick={() => setDate(d.value === date ? "" : d.value)}
                       className={`min-h-11 shrink-0 rounded-xl px-4 py-2.5 text-xs font-bold transition-all ${
-                        date === d.value ? "bg-primary text-white shadow-sm" : "bg-white text-muted-foreground ring-1 ring-border"
+                        date === d.value ? "bg-primary text-white shadow-sm" : "bg-white dark:bg-gray-800 text-muted-foreground ring-1 ring-border dark:ring-gray-700"
                       }`}
                     >
                       {d.isToday ? t("availabilityToday") : d.isTomorrow ? t("availabilityTomorrow") : d.label}
@@ -644,7 +644,7 @@ function RechercheInner() {
                     value={sort}
                     onChange={(e) => setSort(e.target.value as SortKey)}
                     aria-label={t("sortLabel")}
-                    className="h-11 rounded-lg border border-border bg-white px-3 pe-8 text-xs font-bold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary sm:h-9"
+                    className="h-11 rounded-lg border border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-3 pe-8 text-xs font-bold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary sm:h-9"
                   >
                     <option value="relevance">{t("sortRelevance")}</option>
                     {(userLocation || parsedCity) && <option value="proximity">{t("sortProximity")}</option>}
@@ -673,7 +673,7 @@ function RechercheInner() {
                       <button
                         key={idx}
                         onClick={() => applyRecentSearch(item)}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary hover:bg-secondary transition-all"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-1.5 text-xs font-medium text-foreground hover:border-primary hover:bg-secondary dark:hover:bg-gray-700 transition-all"
                       >
                         <Search className="h-3 w-3 text-muted-foreground" strokeWidth={2.5} />
                         {label}
@@ -706,7 +706,7 @@ function RechercheInner() {
 
             {/* Empty state */}
             {!loading && searched && results.length === 0 && (
-              <div className="rounded-2xl border border-border bg-white py-16 text-center">
+              <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 py-16 text-center">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
                   <SearchX className="h-8 w-8" strokeWidth={2} />
                 </div>
@@ -735,7 +735,7 @@ function RechercheInner() {
                     <Link
                       key={clinic.id}
                       href={`/centre-medical/${clinic.slug}`}
-                      className="group flex items-center gap-3 rounded-2xl border border-border bg-white p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                      className="group flex items-center gap-3 rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
                     >
                       <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
                         {clinic.logoUrl ? (
@@ -771,7 +771,7 @@ function RechercheInner() {
                 {Array.from({ length: 4 }).map((_, i) => (
                   <div
                     key={i}
-                    className="flex items-start gap-4 rounded-2xl border border-border bg-white p-5"
+                    className="flex items-start gap-4 rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-5"
                   >
                     <div className="h-20 w-20 shrink-0 animate-pulse rounded-2xl bg-secondary" />
                     <div className="flex-1 space-y-2">
@@ -812,7 +812,7 @@ function FilterGroup({
 }) {
   const [open, setOpen] = useState(true);
   return (
-    <div className="rounded-2xl border border-border bg-white p-4">
+    <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-4">
       <button
         onClick={() => setOpen(!open)}
         className="flex w-full items-center justify-between text-start"

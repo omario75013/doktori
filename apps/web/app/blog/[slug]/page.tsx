@@ -141,7 +141,7 @@ export default async function BlogPostPage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
-      <main className="min-h-screen bg-secondary">
+      <main className="min-h-screen bg-secondary dark:bg-gray-900">
         {/* Cover hero */}
         {post.coverImageUrl ? (
           <div className="w-full aspect-[3/1] max-h-[400px] overflow-hidden bg-foreground">
@@ -174,7 +174,7 @@ export default async function BlogPostPage({
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Main content */}
             <article className="lg:col-span-2">
-              <div className="bg-white rounded-2xl border border-border shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 shadow-sm overflow-hidden">
                 <div className="p-6 sm:p-8">
                   {post.category && (
                     <div className="flex items-center gap-1.5 mb-3">
@@ -227,7 +227,7 @@ export default async function BlogPostPage({
             {/* Sidebar: related posts */}
             <aside className="space-y-4">
               {relatedPosts.length > 0 && (
-                <div className="bg-white rounded-2xl border border-border shadow-sm p-5">
+                <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 shadow-sm p-5">
                   <h2 className="text-base font-bold text-foreground mb-4">Articles similaires</h2>
                   <div className="space-y-4">
                     {relatedPosts.map((related) => (

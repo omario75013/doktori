@@ -188,7 +188,7 @@ export default async function BlogPage({
               className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                 !categorie || categorie === "all"
                   ? "bg-foreground text-white shadow-sm"
-                  : "bg-white text-muted-foreground border border-gray-200 hover:bg-gray-50 hover:border-gray-300"
+                  : "bg-white dark:bg-gray-800 text-muted-foreground border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 hover:border-gray-300"
               }`}
             >
               Tous les articles
@@ -203,7 +203,7 @@ export default async function BlogPage({
                   className={`inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
                     categorie === cat
                       ? "bg-foreground text-white shadow-sm"
-                      : `bg-white ${colors.text} border ${colors.border} hover:${colors.bg}`
+                      : `bg-white dark:bg-gray-800 ${colors.text} border ${colors.border} dark:border-gray-700 hover:${colors.bg}`
                   }`}
                 >
                   <span>{emoji}</span>
@@ -223,7 +223,7 @@ export default async function BlogPage({
             <h2 className="text-2xl font-bold text-foreground mb-2">
               Aucun article pour le moment
             </h2>
-            <p className="text-gray-500 mb-6">
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
               Nos médecins préparent de nouveaux contenus. Revenez bientôt !
             </p>
             <Link
@@ -240,7 +240,7 @@ export default async function BlogPage({
         {featuredPost && (
           <Link
             href={`/blog/${featuredPost.slug}`}
-            className="group mb-10 block overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-lg transition-all"
+            className="group mb-10 block overflow-hidden rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-lg transition-all"
           >
             <div className="grid grid-cols-1 md:grid-cols-2">
               {/* Image */}
@@ -291,17 +291,17 @@ export default async function BlogPage({
                 </h2>
 
                 {featuredPost.description && (
-                  <p className="text-gray-500 leading-relaxed mb-4 line-clamp-3">
+                  <p className="text-gray-500 dark:text-gray-400 leading-relaxed mb-4 line-clamp-3">
                     {featuredPost.description}
                   </p>
                 )}
 
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-sm text-gray-400">
+                  <div className="flex items-center gap-2 text-sm text-gray-400 dark:text-gray-500">
                     <Calendar className="h-4 w-4" />
                     <span>{formatDate(featuredPost.publishedAt)}</span>
                     <span className="mx-1">·</span>
-                    <span className="font-medium text-gray-500">{featuredPost.author}</span>
+                    <span className="font-medium text-gray-500 dark:text-gray-400">{featuredPost.author}</span>
                   </div>
                   <span className="inline-flex items-center gap-1 text-sm font-semibold text-primary opacity-0 translate-x-2 transition-all group-hover:opacity-100 group-hover:translate-x-0">
                     Lire
@@ -320,7 +320,7 @@ export default async function BlogPage({
               <Link
                 key={post.id}
                 href={`/blog/${post.slug}`}
-                className="group flex flex-col overflow-hidden rounded-2xl bg-white border border-gray-100 shadow-sm hover:shadow-md hover:border-gray-200 transition-all"
+                className="group flex flex-col overflow-hidden rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm hover:shadow-md hover:border-gray-200 dark:hover:border-gray-600 transition-all"
                 style={{
                   animationDelay: `${index * 50}ms`,
                 }}
@@ -366,17 +366,17 @@ export default async function BlogPage({
                   </h2>
 
                   {post.description && (
-                    <p className="mb-4 flex-1 text-sm text-gray-500 leading-relaxed line-clamp-2">
+                    <p className="mb-4 flex-1 text-sm text-gray-500 dark:text-gray-400 leading-relaxed line-clamp-2">
                       {post.description}
                     </p>
                   )}
 
-                  <div className="flex items-center justify-between border-t border-gray-100 pt-3 mt-auto">
-                    <div className="flex items-center gap-1.5 text-xs text-gray-400">
+                  <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-700 pt-3 mt-auto">
+                    <div className="flex items-center gap-1.5 text-xs text-gray-400 dark:text-gray-500">
                       <Calendar className="h-3.5 w-3.5" />
                       <span>{formatDate(post.publishedAt)}</span>
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-gray-400 dark:text-gray-500">
                       {readTime(post.content)}
                     </span>
                   </div>
@@ -392,7 +392,7 @@ export default async function BlogPage({
             {page > 1 && (
               <Link
                 href={`/blog?page=${page - 1}${categorie ? `&categorie=${categorie}` : ""}`}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-foreground shadow-sm hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-5 py-2.5 text-sm font-semibold text-foreground shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 <ChevronLeft className="h-4 w-4" />
                 Précédent
@@ -407,7 +407,7 @@ export default async function BlogPage({
             {page < totalPages && (
               <Link
                 href={`/blog?page=${page + 1}${categorie ? `&categorie=${categorie}` : ""}`}
-                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-5 py-2.5 text-sm font-semibold text-foreground shadow-sm hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-5 py-2.5 text-sm font-semibold text-foreground shadow-sm hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Suivant
                 <ChevronRight className="h-4 w-4" />

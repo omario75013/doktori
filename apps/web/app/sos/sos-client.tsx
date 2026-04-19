@@ -93,7 +93,7 @@ function ProcessStep({
         </div>
       </div>
       <h3 className="mb-1.5 text-base font-bold text-foreground">{title}</h3>
-      <p className="text-sm text-gray-500 leading-relaxed max-w-[200px]">
+      <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed max-w-[200px]">
         {description}
       </p>
     </motion.div>
@@ -111,13 +111,13 @@ function TrustBadge({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-white/80 backdrop-blur-sm border border-gray-100 px-4 py-3 shadow-sm">
-      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary text-primary">
+    <div className="flex items-center gap-3 rounded-xl bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border border-gray-100 dark:border-gray-700 px-4 py-3 shadow-sm">
+      <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-secondary dark:bg-gray-700 text-primary">
         <Icon className="h-5 w-5" strokeWidth={2.5} />
       </div>
       <div>
         <p className="text-sm font-bold text-foreground">{value}</p>
-        <p className="text-xs text-gray-500">{label}</p>
+        <p className="text-xs text-gray-500 dark:text-gray-400">{label}</p>
       </div>
     </div>
   );
@@ -170,7 +170,7 @@ function SymptomOption({
       className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left text-sm font-medium transition-all ${
         selected
           ? "border-red-500 bg-red-50 text-red-700 shadow-sm"
-          : "border-gray-200 bg-white text-gray-700 hover:border-gray-300 hover:bg-gray-50"
+          : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
       }`}
     >
       <span className="text-xl">{emoji}</span>
@@ -418,7 +418,7 @@ export default function SOSPage() {
   const color = ringColor(countdown);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-red-50 via-white to-secondary">
+    <div className="min-h-screen bg-gradient-to-b from-red-50 dark:from-gray-900 via-white dark:via-gray-900 to-secondary dark:to-gray-900">
       {/* ── Cancel confirmation modal ── */}
       <AnimatePresence>
         {showCancelConfirm && (
@@ -432,15 +432,15 @@ export default function SOSPage() {
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="bg-white rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 space-y-4"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl p-6 max-w-sm w-full mx-4 space-y-4"
             >
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
                   <AlertTriangle className="h-5 w-5 text-red-600" />
                 </div>
-                <h3 className="font-bold text-gray-800">Confirmer l&apos;annulation</h3>
+                <h3 className="font-bold text-gray-800 dark:text-white">Confirmer l&apos;annulation</h3>
               </div>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-gray-400">
                 {pendingCancelByDoctor
                   ? `${sessionData?.doctor_name ?? "Le médecin"} a déjà accepté votre demande. Êtes-vous sûr de vouloir annuler ?`
                   : "Voulez-vous vraiment annuler votre demande SOS ?"}
@@ -511,7 +511,7 @@ export default function SOSPage() {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ duration: 0.5, delay: 0.2 }}
-                  className="mb-8 max-w-xl text-lg text-gray-600"
+                  className="mb-8 max-w-xl text-lg text-gray-600 dark:text-gray-400"
                 >
                   Fièvre, douleur aiguë, enfant malade... Doktori localise et contacte automatiquement le médecin le plus proche disponible pour une visite à domicile.
                 </motion.p>
@@ -621,21 +621,21 @@ export default function SOSPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="mt-12 rounded-2xl bg-white border border-gray-100 p-6 shadow-sm"
+              className="mt-12 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-6 shadow-sm"
             >
               <h3 className="text-lg font-bold text-foreground mb-4">Questions fréquentes</h3>
               <div className="space-y-4 text-sm">
                 <div>
-                  <p className="font-semibold text-gray-800">Combien coûte une consultation SOS ?</p>
-                  <p className="text-gray-500 mt-1">Le tarif est fixé par le médecin (généralement entre 50 et 100 DT). Vous serez informé du montant avant de confirmer.</p>
+                  <p className="font-semibold text-gray-800 dark:text-white">Combien coûte une consultation SOS ?</p>
+                  <p className="text-gray-500 dark:text-gray-400 mt-1">Le tarif est fixé par le médecin (généralement entre 50 et 100 DT). Vous serez informé du montant avant de confirmer.</p>
                 </div>
-                <div className="border-t pt-4">
-                  <p className="font-semibold text-gray-800">Et si aucun médecin n&apos;est disponible ?</p>
-                  <p className="text-gray-500 mt-1">Vous pouvez relancer une recherche ou contacter le SAMU (190) pour les urgences vitales. Notre réseau de médecins s&apos;agrandit chaque jour.</p>
+                <div className="border-t dark:border-gray-700 pt-4">
+                  <p className="font-semibold text-gray-800 dark:text-white">Et si aucun médecin n&apos;est disponible ?</p>
+                  <p className="text-gray-500 dark:text-gray-400 mt-1">Vous pouvez relancer une recherche ou contacter le SAMU (190) pour les urgences vitales. Notre réseau de médecins s&apos;agrandit chaque jour.</p>
                 </div>
-                <div className="border-t pt-4">
-                  <p className="font-semibold text-gray-800">Le médecin vient à domicile ?</p>
-                  <p className="text-gray-500 mt-1">Selon la disponibilité, le médecin peut vous recevoir à son cabinet, se déplacer chez vous, ou proposer une téléconsultation.</p>
+                <div className="border-t dark:border-gray-700 pt-4">
+                  <p className="font-semibold text-gray-800 dark:text-white">Le médecin vient à domicile ?</p>
+                  <p className="text-gray-500 dark:text-gray-400 mt-1">Selon la disponibilité, le médecin peut vous recevoir à son cabinet, se déplacer chez vous, ou proposer une téléconsultation.</p>
                 </div>
               </div>
             </motion.div>
@@ -651,7 +651,7 @@ export default function SOSPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="rounded-2xl bg-white border border-gray-100 shadow-xl p-6 sm:p-8"
+            className="rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl p-6 sm:p-8"
           >
             {/* Header */}
             <div className="flex items-center gap-3 mb-6">
@@ -660,7 +660,7 @@ export default function SOSPage() {
               </div>
               <div>
                 <h2 className="text-xl font-bold text-foreground">Demande SOS</h2>
-                <p className="text-xs text-gray-500">Consultation urgente non-vitale</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">Consultation urgente non-vitale</p>
               </div>
             </div>
 
@@ -668,7 +668,7 @@ export default function SOSPage() {
               {/* Name + Phone row */}
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <Label htmlFor="name" className="text-sm font-semibold text-gray-700">
+                  <Label htmlFor="name" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Votre nom
                   </Label>
                   <Input
@@ -681,7 +681,7 @@ export default function SOSPage() {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="phone" className="text-sm font-semibold text-gray-700">
+                  <Label htmlFor="phone" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                     Téléphone
                   </Label>
                   <Input
@@ -697,7 +697,7 @@ export default function SOSPage() {
 
               {/* Symptom cards */}
               <div>
-                <Label className="text-sm font-semibold text-gray-700 mb-2 block">
+                <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
                   Type de symptôme
                 </Label>
                 <div className="grid grid-cols-2 gap-3">
@@ -734,7 +734,7 @@ export default function SOSPage() {
 
               {/* Description */}
               <div>
-                <Label htmlFor="desc" className="text-sm font-semibold text-gray-700">
+                <Label htmlFor="desc" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
                   Description <span className="font-normal text-gray-400">(optionnel)</span>
                 </Label>
                 <Textarea
@@ -817,7 +817,7 @@ export default function SOSPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-md rounded-2xl bg-white border border-gray-100 shadow-xl p-8 text-center"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl p-8 text-center"
           >
             {/* Countdown ring */}
             <div className="flex justify-center mb-6">
@@ -880,7 +880,7 @@ export default function SOSPage() {
                 Recherche en cours...
               </p>
             </div>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
               Nous contactons les médecins disponibles dans votre quartier. Vous serez notifié dès qu&apos;un médecin accepte.
             </p>
 
@@ -923,7 +923,7 @@ export default function SOSPage() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md rounded-2xl bg-white border border-gray-100 shadow-xl p-8"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl p-8"
           >
             {/* Success header */}
             <motion.div
@@ -937,7 +937,7 @@ export default function SOSPage() {
             <h2 className="text-center text-xl font-bold text-foreground mb-1">
               Médecin trouvé !
             </h2>
-            <p className="text-center text-sm text-gray-500 mb-6">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-6">
               Un médecin a accepté votre demande
             </p>
 
@@ -953,11 +953,11 @@ export default function SOSPage() {
                 </div>
               </div>
               <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                   <Phone className="h-4 w-4 text-primary" />
                   <span>{sessionData.doctor_phone}</span>
                 </div>
-                <div className="flex items-center gap-2 text-gray-600">
+                <div className="flex items-center gap-2 text-gray-600 dark:text-gray-300">
                   <MapPin className="h-4 w-4 text-primary" />
                   <span>{sessionData.doctor_address}</span>
                 </div>
@@ -977,7 +977,7 @@ export default function SOSPage() {
               </motion.a>
             )}
 
-            <p className="text-xs text-gray-400 text-center mt-4 mb-4">
+            <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-4 mb-4">
               Vous recevrez un SMS de confirmation. Convenez de la modalité (cabinet, domicile ou téléconsultation) directement avec le médecin.
             </p>
 
@@ -1001,7 +1001,7 @@ export default function SOSPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-md rounded-2xl bg-white border border-gray-100 shadow-xl p-8 text-center"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl p-8 text-center"
           >
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100">
               <Timer className="h-8 w-8 text-amber-600" />
@@ -1009,7 +1009,7 @@ export default function SOSPage() {
             <h2 className="text-xl font-bold text-foreground mb-2">
               Aucun médecin disponible
             </h2>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
               Aucun médecin n&apos;a pu répondre à votre demande dans le délai imparti. Vous pouvez réessayer ou contacter le SAMU (190).
             </p>
             {error && (
@@ -1042,13 +1042,13 @@ export default function SOSPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="w-full max-w-md rounded-2xl bg-white border border-gray-100 shadow-xl p-8 text-center"
+            className="w-full max-w-md rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-xl p-8 text-center"
           >
-            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100">
+            <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
               <XCircle className="h-8 w-8 text-gray-400" />
             </div>
             <h2 className="text-xl font-bold text-foreground mb-2">Demande annulée</h2>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
               Votre demande SOS a été annulée. Vous pouvez en créer une nouvelle à tout moment.
             </p>
             <Button
