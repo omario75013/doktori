@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Download, Printer, FileText, CheckCircle2, Clock, XCircle } from "lucide-react";
+import { toast } from "sonner";
+import { Download, Printer, FileText, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
 
 type Claim = {
   id: string;
@@ -75,7 +76,12 @@ export default function CnamPage() {
       body: JSON.stringify({ status }),
     });
     setUpdating(null);
-    if (res.ok) load();
+    if (res.ok) {
+      toast.success(status === "submitted" ? "Bordereau marqué soumis" : "Bordereau marqué remboursé");
+      load();
+    } else {
+      toast.error("Erreur lors de la mise à jour du statut");
+    }
   }
 
   const rows = data?.rows ?? [];
@@ -131,7 +137,9 @@ export default function CnamPage() {
       </div>
 
       {loading ? (
-        <p className="text-gray-400 text-sm">Chargement...</p>
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="w-6 h-6 animate-spin text-primary" />
+        </div>
       ) : rows.length === 0 ? (
         <div className="rounded-2xl border border-border bg-white p-12 text-center shadow-sm">
           <div className="h-14 w-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
@@ -141,10 +149,10 @@ export default function CnamPage() {
           <p className="text-gray-400 text-sm">Créez-en un depuis un rendez-vous terminé.</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-white shadow-sm overflow-x-auto">
+        <div className="rounded-2xl border border-border bg-white dark:bg-gray-800 shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border bg-secondary text-left">
+              <tr className="border-b border-border dark:border-gray-700 bg-secondary dark:bg-gray-700/50 text-left">
                 <th className="px-4 py-3 font-medium text-foreground">Date</th>
                 <th className="px-4 py-3 font-medium text-foreground">Patient</th>
                 <th className="px-4 py-3 font-medium text-foreground">N° CNAM</th>
@@ -153,11 +161,11 @@ export default function CnamPage() {
                 <th className="px-4 py-3 font-medium text-foreground">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-border">
+            <tbody className="divide-y divide-border dark:divide-gray-700">
               {rows.map((r) => {
                 const Icon = STATUS_ICONS[r.status];
                 return (
-                  <tr key={r.id} className="hover:bg-secondary transition-colors">
+                  <tr key={r.id} className="hover:bg-secondary dark:hover:bg-gray-700/50 transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap text-gray-700">
                       {format(parseISO(r.consultationDate), "d MMM yyyy", { locale: fr })}
                     </td>

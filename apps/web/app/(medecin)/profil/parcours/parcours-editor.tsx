@@ -1,6 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import { motion } from "framer-motion";
+import { toast } from "sonner";
+import { Loader2, CheckCircle2 } from "lucide-react";
 
 type Education = { degree: string; institution: string; year: number };
 type Experience = { role: string; place: string; startYear: number; endYear: number | null };
@@ -22,8 +25,6 @@ export function ParcoursEditor({ initial }: Props) {
   const [expertise, setExpertise] = useState<string[]>(initial.expertise);
   const [years, setYears] = useState<number | null>(initial.yearsOfExperience);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const addEducation = () =>
     setEducations([...educations, { degree: "", institution: "", year: new Date().getFullYear() }]);
@@ -44,8 +45,6 @@ export function ParcoursEditor({ initial }: Props) {
 
   async function handleSave() {
     setSaving(true);
-    setError(null);
-    setSaved(false);
     try {
       const res = await fetch("/api/doctor/profile/parcours", {
         method: "POST",
@@ -62,69 +61,75 @@ export function ParcoursEditor({ initial }: Props) {
         const body = await res.json().catch(() => ({}));
         throw new Error(body.error ?? "Échec de la sauvegarde");
       }
-      setSaved(true);
-      setTimeout(() => setSaved(false), 3000);
+      toast.success("Parcours enregistré avec succès");
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur inconnue");
+      toast.error(e instanceof Error ? e.message : "Erreur inconnue");
     } finally {
       setSaving(false);
     }
   }
 
+  const inputCls = "rounded-lg border border-border dark:border-gray-600 bg-white dark:bg-gray-800 text-foreground dark:text-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary";
+
   return (
-    <div className="space-y-6">
-      <section className="bg-white rounded-xl border p-5">
-        <h2 className="font-semibold mb-3">Années d&apos;expérience</h2>
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: "easeOut" }}
+    >
+      <section className="bg-white dark:bg-gray-800 rounded-xl border border-border dark:border-gray-700 p-5 shadow-sm">
+        <h2 className="font-semibold mb-3 text-foreground">Années d&apos;expérience</h2>
         <input
           type="number"
           min={0}
           max={70}
           value={years ?? ""}
           onChange={(e) => setYears(e.target.value === "" ? null : Number(e.target.value))}
-          className="w-32 rounded border px-3 py-2 text-sm"
+          className={`w-32 ${inputCls}`}
           placeholder="ex. 12"
         />
       </section>
 
-      <section className="bg-white rounded-xl border p-5">
+      <section className="bg-white dark:bg-gray-800 rounded-xl border border-border dark:border-gray-700 p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold">Formation</h2>
+          <h2 className="font-semibold text-foreground">Formation</h2>
           <button
             type="button"
             onClick={addEducation}
-            className="text-sm text-teal-600 hover:underline"
+            className="text-sm text-teal-600 hover:text-teal-700 font-medium transition-colors"
           >
             + Ajouter
           </button>
         </div>
         {educations.length === 0 && (
-          <p className="text-sm text-gray-400">Aucune formation renseignée.</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">Aucune formation renseignée.</p>
         )}
         <div className="space-y-3">
           {educations.map((edu, i) => (
             <div key={i} className="grid grid-cols-12 gap-2 items-start">
               <input
-                className="col-span-5 rounded border px-2 py-1.5 text-sm"
+                className={`col-span-5 ${inputCls}`}
                 placeholder="Diplôme (ex. MD)"
                 value={edu.degree}
                 onChange={(e) => updateEducation(i, { degree: e.target.value })}
               />
               <input
-                className="col-span-5 rounded border px-2 py-1.5 text-sm"
+                className={`col-span-5 ${inputCls}`}
                 placeholder="Établissement"
                 value={edu.institution}
                 onChange={(e) => updateEducation(i, { institution: e.target.value })}
               />
               <input
                 type="number"
-                className="col-span-1 rounded border px-2 py-1.5 text-sm"
+                className={`col-span-1 ${inputCls}`}
                 value={edu.year}
                 onChange={(e) => updateEducation(i, { year: Number(e.target.value) })}
               />
               <button
                 type="button"
                 onClick={() => removeEducation(i)}
-                className="col-span-1 text-xs text-red-500 hover:underline"
+                className="col-span-1 text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
               >
                 Suppr.
               </button>
@@ -133,45 +138,45 @@ export function ParcoursEditor({ initial }: Props) {
         </div>
       </section>
 
-      <section className="bg-white rounded-xl border p-5">
+      <section className="bg-white dark:bg-gray-800 rounded-xl border border-border dark:border-gray-700 p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold">Expérience professionnelle</h2>
+          <h2 className="font-semibold text-foreground">Expérience professionnelle</h2>
           <button
             type="button"
             onClick={addExperience}
-            className="text-sm text-teal-600 hover:underline"
+            className="text-sm text-teal-600 hover:text-teal-700 font-medium transition-colors"
           >
             + Ajouter
           </button>
         </div>
         {experiences.length === 0 && (
-          <p className="text-sm text-gray-400">Aucune expérience renseignée.</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">Aucune expérience renseignée.</p>
         )}
         <div className="space-y-3">
           {experiences.map((exp, i) => (
             <div key={i} className="grid grid-cols-12 gap-2 items-start">
               <input
-                className="col-span-4 rounded border px-2 py-1.5 text-sm"
+                className={`col-span-4 ${inputCls}`}
                 placeholder="Poste"
                 value={exp.role}
                 onChange={(e) => updateExperience(i, { role: e.target.value })}
               />
               <input
-                className="col-span-4 rounded border px-2 py-1.5 text-sm"
+                className={`col-span-4 ${inputCls}`}
                 placeholder="Lieu"
                 value={exp.place}
                 onChange={(e) => updateExperience(i, { place: e.target.value })}
               />
               <input
                 type="number"
-                className="col-span-1 rounded border px-2 py-1.5 text-sm"
+                className={`col-span-1 ${inputCls}`}
                 placeholder="Début"
                 value={exp.startYear}
                 onChange={(e) => updateExperience(i, { startYear: Number(e.target.value) })}
               />
               <input
                 type="number"
-                className="col-span-2 rounded border px-2 py-1.5 text-sm"
+                className={`col-span-2 ${inputCls}`}
                 placeholder="Fin"
                 value={exp.endYear ?? ""}
                 onChange={(e) =>
@@ -183,7 +188,7 @@ export function ParcoursEditor({ initial }: Props) {
               <button
                 type="button"
                 onClick={() => removeExperience(i)}
-                className="col-span-1 text-xs text-red-500 hover:underline"
+                className="col-span-1 text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
               >
                 Suppr.
               </button>
@@ -192,11 +197,11 @@ export function ParcoursEditor({ initial }: Props) {
         </div>
       </section>
 
-      <section className="bg-white rounded-xl border p-5">
-        <h2 className="font-semibold mb-3">Langues parlées</h2>
+      <section className="bg-white dark:bg-gray-800 rounded-xl border border-border dark:border-gray-700 p-5 shadow-sm">
+        <h2 className="font-semibold mb-3 text-foreground">Langues parlées</h2>
         <input
           type="text"
-          className="w-full rounded border px-3 py-2 text-sm"
+          className={`w-full ${inputCls}`}
           placeholder="Français, Arabe, Anglais (séparées par virgule)"
           value={languages.join(", ")}
           onChange={(e) =>
@@ -210,11 +215,11 @@ export function ParcoursEditor({ initial }: Props) {
         />
       </section>
 
-      <section className="bg-white rounded-xl border p-5">
-        <h2 className="font-semibold mb-3">Expertises / sur-spécialités</h2>
+      <section className="bg-white dark:bg-gray-800 rounded-xl border border-border dark:border-gray-700 p-5 shadow-sm">
+        <h2 className="font-semibold mb-3 text-foreground">Expertises / sur-spécialités</h2>
         <input
           type="text"
-          className="w-full rounded border px-3 py-2 text-sm"
+          className={`w-full ${inputCls}`}
           placeholder="Diabète, Hypertension, Cardiologie du sport (séparées par virgule)"
           value={expertise.join(", ")}
           onChange={(e) =>
@@ -233,13 +238,21 @@ export function ParcoursEditor({ initial }: Props) {
           type="button"
           onClick={handleSave}
           disabled={saving}
-          className="bg-teal-600 hover:bg-teal-700 text-white px-5 py-2 rounded-lg text-sm font-medium disabled:opacity-50"
+          className="inline-flex items-center gap-2 bg-teal-600 hover:bg-teal-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition-colors"
         >
-          {saving ? "Enregistrement…" : "Enregistrer"}
+          {saving ? (
+            <>
+              <Loader2 className="w-4 h-4 animate-spin" />
+              Enregistrement…
+            </>
+          ) : (
+            <>
+              <CheckCircle2 className="w-4 h-4" />
+              Enregistrer
+            </>
+          )}
         </button>
-        {saved && <span className="text-sm text-emerald-600">✓ Enregistré</span>}
-        {error && <span className="text-sm text-red-600">{error}</span>}
       </div>
-    </div>
+    </motion.div>
   );
 }

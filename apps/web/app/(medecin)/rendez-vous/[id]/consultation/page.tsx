@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { searchIcd10, type Icd10Code } from "@/lib/icd10-tn";
-import { CheckCircle2, X, ClipboardList, ArrowLeft, Send, FileText, ExternalLink } from "lucide-react";
+import { CheckCircle2, X, ClipboardList, ArrowLeft, Send, FileText, ExternalLink, Loader2 } from "lucide-react";
 
 type Vitals = {
   bp_systolic?: number | "";
@@ -354,7 +354,14 @@ export default function ConsultationPage() {
   };
 
   if (loading) {
-    return <p className="text-primary text-sm p-6">Chargement de la note de consultation...</p>;
+    return (
+      <div className="flex items-center justify-center min-h-[40vh]">
+        <div className="text-center space-y-3">
+          <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+          <p className="text-sm text-gray-500">Chargement de la note de consultation...</p>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -380,7 +387,10 @@ export default function ConsultationPage() {
         </div>
         <div className="flex items-center gap-2 text-sm">
           {saveStatus === "saving" && (
-            <span className="text-gray-400">Enregistrement...</span>
+            <span className="flex items-center gap-1.5 text-gray-400">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              Enregistrement...
+            </span>
           )}
           {saveStatus === "saved" && (
             <span className="flex items-center gap-1 text-primary font-medium">

@@ -118,6 +118,14 @@ MAILTO=""
 # Meilisearch full re-sync — rebuild doctors + clinics index (daily 3am)
 0 3 * * * source /opt/doktori/.env && curl -s -X POST -H "Authorization: Bearer $CRON_SECRET" http://localhost:3005/api/search/sync >> /var/log/doktori/cron.log 2>&1
 
+# ── Database backups ─────────────────────────────────────────────────────────
+
+# Daily at 2am: dump doktori database to /opt/doktori/backups/ (gzipped)
+0 2 * * * mkdir -p /opt/doktori/backups && docker exec supabase-db pg_dump -U doktori doktori | gzip > /opt/doktori/backups/doktori-$(date +\%Y\%m\%d).sql.gz 2>> /var/log/doktori/cron.log
+
+# Daily at 3am: remove backups older than 30 days
+0 3 * * * find /opt/doktori/backups -name "*.sql.gz" -mtime +30 -delete 2>> /var/log/doktori/cron.log
+
 # ── END DOKTORI CRONS ───────────────────────────────────────────────────────
 CRONBLOCK
 

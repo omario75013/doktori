@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { MessageCircle, Send } from "lucide-react";
+import { MessageCircle, Send, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -218,7 +218,9 @@ export default function PatientMessagesPage() {
 
         <div className="flex-1 overflow-y-auto">
           {loadingConvs ? (
-            <p className="text-sm text-gray-400 text-center py-8">Chargement...</p>
+            <div className="flex items-center justify-center py-10">
+              <Loader2 className="w-5 h-5 animate-spin text-teal-500" />
+            </div>
           ) : conversations.length === 0 ? (
             <div className="text-center py-12 px-4">
               <MessageCircle className="w-10 h-10 text-gray-200 dark:text-gray-700 mx-auto mb-2" />
@@ -288,7 +290,9 @@ export default function PatientMessagesPage() {
             {/* Messages */}
             <div className="flex-1 overflow-y-auto px-5 py-4 space-y-3">
               {loadingMsgs ? (
-                <p className="text-center text-gray-400 dark:text-gray-500 text-sm py-8">Chargement...</p>
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="w-5 h-5 animate-spin text-teal-500" />
+                </div>
               ) : messages.length === 0 ? (
                 <p className="text-center text-gray-400 dark:text-gray-500 text-sm py-8">
                   Aucun message. Commencez la conversation.
