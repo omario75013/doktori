@@ -8,7 +8,7 @@ import {
   Users,
   CheckCircle2,
   Clock,
-} from "lucide-react";
+Loader2, } from "lucide-react";
 
 type AgendaAppointment = {
   id: string;
@@ -150,7 +150,7 @@ export default function RapportJournalierPage() {
                 Rapport journalier
               </h1>
             </div>
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
               Rapport imprimable des rendez-vous de la journée
             </p>
           </div>
@@ -165,7 +165,7 @@ export default function RapportJournalierPage() {
             <button
               onClick={fetchData}
               disabled={loading}
-              className="flex items-center gap-1.5 px-4 py-2 bg-secondary text-foreground border border-border rounded-lg text-sm font-medium hover:bg-gray-100 disabled:opacity-50 transition-colors"
+              className="flex items-center gap-1.5 px-4 py-2 bg-secondary text-foreground border border-border rounded-lg text-sm font-medium hover:bg-gray-100 dark:bg-gray-700 disabled:opacity-50 transition-colors"
             >
               <RefreshCw
                 className={`w-4 h-4 ${loading ? "animate-spin" : ""}`}
@@ -223,11 +223,11 @@ export default function RapportJournalierPage() {
                   <h2 className="text-xl font-bold text-foreground">
                     Rapport journalier — Doktori
                   </h2>
-                  <p className="text-sm text-gray-500 mt-0.5 capitalize">
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5 capitalize">
                     {formatFullDate(date)}
                   </p>
                 </div>
-                <div className="text-right text-xs text-gray-400">
+                <div className="text-right text-xs text-gray-400 dark:text-gray-500">
                   Généré le{" "}
                   {new Date().toLocaleString("fr-TN", {
                     day: "numeric",
@@ -257,7 +257,7 @@ export default function RapportJournalierPage() {
                 value={pending}
               />
               <SummaryCell
-                icon={<Users className="w-4 h-4 text-gray-400" />}
+                icon={<Users className="w-4 h-4 text-gray-400 dark:text-gray-500" />}
                 label="Médecins"
                 value={groups.length}
               />
@@ -289,7 +289,7 @@ function SummaryCell({
     <div className="flex flex-col items-center justify-center gap-1 px-4 py-4">
       {icon}
       <span className="text-xl font-bold text-foreground">{value}</span>
-      <span className="text-xs text-gray-500">{label}</span>
+      <span className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">{label}</span>
     </div>
   );
 }
@@ -307,9 +307,9 @@ function DoctorSection({ group }: { group: DoctorGroup }) {
           <h3 className="text-base font-bold text-foreground">
             Dr. {group.doctorName}
           </h3>
-          <p className="text-xs text-gray-500">{group.doctorSpecialty}</p>
+          <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">{group.doctorSpecialty}</p>
         </div>
-        <div className="text-right text-xs text-gray-500">
+        <div className="text-right text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
           {group.appointments.length} RDV •{" "}
           <span className="text-green-600">{confirmedCount} confirmé{confirmedCount !== 1 ? "s" : ""}</span>
         </div>
@@ -318,20 +318,20 @@ function DoctorSection({ group }: { group: DoctorGroup }) {
       {/* Appointments table */}
       <table className="w-full text-sm border-collapse">
         <thead>
-          <tr className="bg-gray-50">
-            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 rounded-tl-lg">
+          <tr className="bg-gray-50 dark:bg-gray-800">
+            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 rounded-tl-lg">
               Heure
             </th>
-            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">
+            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500">
               Patient
             </th>
-            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">
+            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500">
               Téléphone
             </th>
-            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500">
+            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 dark:text-gray-500">
               Motif
             </th>
-            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 rounded-tr-lg">
+            <th className="text-left px-3 py-2 text-xs font-semibold text-gray-500 dark:text-gray-400 rounded-tr-lg">
               Statut
             </th>
           </tr>
@@ -340,7 +340,7 @@ function DoctorSection({ group }: { group: DoctorGroup }) {
           {group.appointments.map((appt, idx) => (
             <tr
               key={appt.id}
-              className={idx % 2 === 0 ? "bg-white" : "bg-gray-50/40"}
+              className={idx % 2 === 0 ? "bg-white" : "bg-gray-50 dark:bg-gray-800/40"}
             >
               <td className="px-3 py-2 font-mono text-xs text-primary whitespace-nowrap">
                 {formatTime(appt.startsAt)} – {formatTime(appt.endsAt)}
@@ -348,17 +348,17 @@ function DoctorSection({ group }: { group: DoctorGroup }) {
               <td className="px-3 py-2 font-medium text-foreground">
                 {appt.patientName}
               </td>
-              <td className="px-3 py-2 text-gray-500 text-xs">
+              <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs">
                 {appt.patientPhone}
               </td>
-              <td className="px-3 py-2 text-gray-500 text-xs max-w-[200px] truncate">
+              <td className="px-3 py-2 text-gray-500 dark:text-gray-400 text-xs max-w-[200px] truncate">
                 {appt.reason ?? "—"}
               </td>
               <td className="px-3 py-2 text-xs">
                 <span
                   className={
                     STATUS_PRINT_CLASSES[appt.status] ??
-                    "text-gray-500"
+                    "text-gray-500 dark:text-gray-400 dark:text-gray-500"
                   }
                 >
                   {STATUS_LABELS[appt.status] ?? appt.status}

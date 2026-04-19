@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { RefreshCw, CalendarRange, Users, Check, Clock } from "lucide-react";
+import { RefreshCw, CalendarRange, Users, Check, Clock, Loader2 } from "lucide-react";
 
 type SlotStatus = "free" | "booked" | "off";
 
@@ -37,7 +37,7 @@ function getTodayDate(): string {
 function SlotCell({ slot }: { slot: Slot }) {
   if (slot.status === "off") {
     return (
-      <div className="h-8 rounded bg-gray-50 border border-gray-100" />
+      <div className="h-8 rounded bg-gray-50 dark:bg-gray-800 border border-gray-100" />
     );
   }
 
@@ -111,7 +111,7 @@ export default function PlanningPage() {
               Planning équipe
             </h1>
           </div>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
             Vue comparative des disponibilités par médecin
           </p>
         </div>
@@ -141,7 +141,7 @@ export default function PlanningPage() {
           <span className="text-sm font-semibold text-foreground">
             {data.length}
           </span>
-          <span className="text-xs text-gray-500">médecin{data.length !== 1 ? "s" : ""}</span>
+          <span className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">médecin{data.length !== 1 ? "s" : ""}</span>
         </div>
 
         <div className="flex items-center gap-2 bg-teal-50 border border-teal-200 rounded-lg px-4 py-2.5">
@@ -162,7 +162,7 @@ export default function PlanningPage() {
       </div>
 
       {/* Legend */}
-      <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500">
+      <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">
         <div className="flex items-center gap-1.5">
           <div className="w-4 h-4 rounded bg-teal-50 border border-teal-200" />
           Libre
@@ -175,7 +175,7 @@ export default function PlanningPage() {
           Réservé
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-4 h-4 rounded bg-gray-50 border border-gray-100" />
+          <div className="w-4 h-4 rounded bg-gray-50 dark:bg-gray-800 border border-gray-100" />
           Hors planning
         </div>
       </div>
@@ -215,7 +215,7 @@ export default function PlanningPage() {
             <thead>
               <tr>
                 {/* Time column header */}
-                <th className="sticky left-0 bg-white z-10 px-3 py-3 text-left font-semibold text-gray-500 border-b border-border w-20">
+                <th className="sticky left-0 bg-white z-10 px-3 py-3 text-left font-semibold text-gray-500 dark:text-gray-400 border-b border-border w-20">
                   Heure
                 </th>
                 {/* Doctor columns */}
@@ -245,7 +245,7 @@ export default function PlanningPage() {
               {GRID_HOURS.map((hour) => (
                 <tr
                   key={hour}
-                  className="border-b border-gray-50 hover:bg-gray-50/50 transition-colors"
+                  className="border-b border-gray-50 hover:bg-gray-50 dark:bg-gray-800/50 transition-colors"
                 >
                   {/* Time label */}
                   <td className="sticky left-0 bg-white px-3 py-1 text-gray-400 font-mono whitespace-nowrap">
@@ -260,7 +260,7 @@ export default function PlanningPage() {
                         {slot ? (
                           <SlotCell slot={slot} />
                         ) : (
-                          <div className="h-8 rounded bg-gray-50 border border-gray-100" />
+                          <div className="h-8 rounded bg-gray-50 dark:bg-gray-800 border border-gray-100" />
                         )}
                       </td>
                     );

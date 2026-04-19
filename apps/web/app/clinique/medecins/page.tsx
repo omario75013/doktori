@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { Loader2 } from "lucide-react";
 
 interface DoctorStat {
   doctorId: string;
@@ -50,7 +51,7 @@ export default function CliniqueMedecinsPage() {
   }, [clinicId]);
 
   if (loading) {
-    return <div className="text-center py-20 text-gray-400 text-sm">Chargement…</div>;
+    return <div className="text-center py-20 text-primary text-sm flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Chargement...</div>;
   }
 
   if (error) {

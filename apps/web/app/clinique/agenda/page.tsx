@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useSession } from "next-auth/react";
-import { RefreshCw, Calendar, Users, CalendarDays } from "lucide-react";
+import { RefreshCw, Calendar, Users, CalendarDays, Loader2 } from "lucide-react";
 
 type AgendaAppointment = {
   id: string;
@@ -159,7 +159,7 @@ export default function ClinicAgendaPage() {
 
       {/* Loading skeleton */}
       {loading && (
-        <div className="text-center py-16 text-gray-400 text-sm">Chargement…</div>
+        <div className="text-center py-16 text-primary text-sm flex items-center gap-2"><Loader2 className="h-4 w-4 animate-spin" />Chargement...</div>
       )}
 
       {/* Empty state (no doctors have RDVs that day) */}

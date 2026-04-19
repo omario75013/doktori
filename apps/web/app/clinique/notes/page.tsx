@@ -107,7 +107,7 @@ export default function ClinicNotesPage() {
             Notes internes
           </h1>
         </div>
-        <p className="text-sm text-gray-500">
+        <p className="text-sm text-gray-500 dark:text-gray-400 dark:text-gray-500">
           Mémos et communications internes de la clinique
         </p>
       </div>
@@ -150,14 +150,14 @@ export default function ClinicNotesPage() {
         <div className="flex items-center justify-between gap-3">
           {/* Priority selector */}
           <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500">Priorité:</span>
+            <span className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">Priorité:</span>
             <button
               onClick={() => setPriority("normal")}
               className={[
                 "px-3 py-1 rounded-full text-xs font-medium transition-colors",
                 priority === "normal"
                   ? "bg-primary text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200",
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 hover:bg-gray-200",
               ].join(" ")}
             >
               Normale
@@ -168,7 +168,7 @@ export default function ClinicNotesPage() {
                 "px-3 py-1 rounded-full text-xs font-medium transition-colors",
                 priority === "urgent"
                   ? "bg-red-500 text-white"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200",
+                  : "bg-gray-100 dark:bg-gray-700 text-gray-600 hover:bg-gray-200",
               ].join(" ")}
             >
               Urgente
