@@ -103,10 +103,13 @@ export const doctorPractices = pgTable(
     phone: varchar("phone", { length: 30 }),
     isPrimary: boolean("is_primary").notNull().default(false),
     isActive: boolean("is_active").notNull().default(true),
+    // Optional: links this practice to a clinic (added in migration 0053)
+    clinicId: uuid("clinic_id").references(() => clinics.id, { onDelete: "set null" }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     index("doctor_practices_doctor_idx").on(table.doctorId),
+    index("doctor_practices_clinic_idx").on(table.clinicId),
   ]
 );
 

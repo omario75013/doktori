@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { useTranslations, useLocale } from "next-intl";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
-import { MapPin, ArrowRight, Star, Clock, BadgeCheck, Navigation, Video } from "lucide-react";
+import { MapPin, ArrowRight, Star, Clock, BadgeCheck, Navigation, Video, Building2 } from "lucide-react";
 
 interface Props {
   doctor: {
@@ -17,6 +17,7 @@ interface Props {
     consultationMode?: string; // camelCase variant
     average_rating?: number | null; // from Meilisearch document
     review_count?: number | null; // from Meilisearch document
+    clinicName?: string | null; // from Meilisearch document (added in migration 0053)
   };
 }
 
@@ -90,6 +91,12 @@ export function DoctorCard({ doctor }: Props) {
               <span className="inline-flex items-center gap-1 rounded-full bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-800">
                 <Video className="h-3 w-3" strokeWidth={2.5} />
                 Vidéo
+              </span>
+            )}
+            {doctor.clinicName && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                <Building2 className="h-3 w-3" strokeWidth={2.5} />
+                {doctor.clinicName}
               </span>
             )}
           </div>

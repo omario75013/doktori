@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Calendar, Clock, ArrowLeft, MapPin, Video, Building, CheckCircle2, Download, ArrowRight, Home, Check } from "lucide-react";
+import { Calendar, Clock, ArrowLeft, MapPin, Video, Building, Building2, CheckCircle2, Download, ArrowRight, Home, Check } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
@@ -158,6 +158,8 @@ interface Practice {
   city: string;
   phone: string | null;
   isPrimary: boolean;
+  clinicId: string | null;
+  clinicName: string | null;
 }
 
 interface BookingState {
@@ -600,10 +602,10 @@ export default function RdvPage({
           >
             <div>
               <h2 className="font-heading font-black text-foreground">
-                Choisir un cabinet
+                Où souhaitez-vous consulter ?
               </h2>
               <p className="text-sm text-foreground/60 mt-1">
-                Ce médecin exerce dans plusieurs lieux. Sélectionnez le cabinet souhaité.
+                Ce médecin exerce dans plusieurs lieux. Sélectionnez l&apos;endroit souhaité.
               </p>
             </div>
             <div className="space-y-2">
@@ -611,21 +613,37 @@ export default function RdvPage({
                 <button
                   key={p.id}
                   onClick={() => handlePracticeSelected(p)}
-                  className="w-full flex items-start gap-3 rounded-2xl border border-border bg-white px-4 py-3 text-start hover:border-primary hover:bg-secondary/40 transition-colors"
+                  className={`w-full flex items-start gap-3 rounded-2xl border-2 bg-white px-4 py-4 text-start transition-colors hover:bg-secondary/40 ${
+                    p.clinicId
+                      ? "border-primary/30 hover:border-primary"
+                      : "border-border hover:border-primary"
+                  }`}
                 >
-                  <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-0.5">
-                    <MapPin className="h-4 w-4 text-primary" />
+                  <div className={`h-9 w-9 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                    p.clinicId ? "bg-primary/10" : "bg-secondary"
+                  }`}>
+                    {p.clinicId ? (
+                      <Building2 className="h-4 w-4 text-primary" strokeWidth={2} />
+                    ) : (
+                      <MapPin className="h-4 w-4 text-muted-foreground" strokeWidth={2} />
+                    )}
                   </div>
-                  <div className="min-w-0">
-                    <div className="font-bold text-foreground flex items-center gap-2">
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-foreground flex items-center gap-2 flex-wrap">
                       {p.name}
                       {p.isPrimary && (
-                        <span className="text-xs font-normal text-primary bg-secondary px-1.5 py-0.5 rounded-full">
+                        <span className="text-[10px] font-bold text-doktori-green-dark bg-accent/10 px-1.5 py-0.5 rounded-full uppercase tracking-wide">
                           Principal
                         </span>
                       )}
                     </div>
-                    <div className="text-sm text-foreground/60 truncate">{p.address}</div>
+                    {p.clinicName && p.clinicName !== p.name && (
+                      <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                        <Building2 className="h-3 w-3" strokeWidth={2.5} />
+                        {p.clinicName}
+                      </div>
+                    )}
+                    <div className="mt-1 text-sm text-foreground/60 truncate">{p.address}</div>
                     <div className="text-xs text-foreground/40">{p.city}</div>
                     {p.phone && (
                       <div className="text-xs text-primary mt-0.5">{p.phone}</div>

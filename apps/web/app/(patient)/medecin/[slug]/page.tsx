@@ -13,13 +13,16 @@ import {
   db,
   reviews,
   patients,
+  doctorPractices,
+  clinics,
 } from "@doktori/db";
-import { desc, eq, sql } from "drizzle-orm";
+import { desc, eq, sql, and, asc } from "drizzle-orm";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 import {
   ArrowRight,
   BadgeCheck,
   Briefcase,
+  Building2,
   Calendar,
   Clock,
   GraduationCap,
@@ -171,6 +174,23 @@ export default async function DoctorProfilePage({
   const appointmentTypesList = await getDoctorAppointmentTypes(doctor.id);
   const specialtyLabel = getSpecialtyLabel(doctor.specialty);
   const cityLabel = getCityLabel(doctor.city);
+
+  // Fetch active practices with optional clinic info
+  const practiceRows = await db
+    .select({
+      id: doctorPractices.id,
+      name: doctorPractices.name,
+      address: doctorPractices.address,
+      city: doctorPractices.city,
+      phone: doctorPractices.phone,
+      isPrimary: doctorPractices.isPrimary,
+      clinicId: doctorPractices.clinicId,
+      clinicName: clinics.name,
+    })
+    .from(doctorPractices)
+    .leftJoin(clinics, eq(doctorPractices.clinicId, clinics.id))
+    .where(and(eq(doctorPractices.doctorId, doctor.id), eq(doctorPractices.isActive, true)))
+    .orderBy(desc(doctorPractices.isPrimary), asc(doctorPractices.createdAt));
 
   // Reviews — aggregate + latest 10 (joined with patient name)
   const [aggregateRow] = await db
@@ -473,9 +493,65 @@ export default async function DoctorProfilePage({
                 </p>
               </AnimatedSection>
 
+              {/* Lieux de consultation */}
+              {practiceRows.length > 0 && doctor.consultationMode !== "teleconsult" && (
+                <AnimatedSection index={2} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
+                      <MapPin className="h-4 w-4" strokeWidth={2.5} />
+                    </div>
+                    <h2 className="font-heading text-lg font-bold text-foreground">
+                      Lieux de consultation
+                    </h2>
+                  </div>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                    {practiceRows.map((practice) => (
+                      <div
+                        key={practice.id}
+                        className={`relative rounded-xl border-2 p-4 ${
+                          practice.clinicId
+                            ? "border-primary/30 bg-secondary/40"
+                            : "border-border bg-white"
+                        }`}
+                      >
+                        {practice.isPrimary && (
+                          <span className="mb-2 inline-flex items-center rounded-full bg-accent/10 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-doktori-green-dark">
+                            Cabinet principal
+                          </span>
+                        )}
+                        <div className="flex items-start gap-2">
+                          {practice.clinicId ? (
+                            <Building2 className="mt-0.5 h-4 w-4 shrink-0 text-primary" strokeWidth={2.5} />
+                          ) : (
+                            <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2.5} />
+                          )}
+                          <div className="min-w-0">
+                            <div className="text-sm font-bold text-foreground leading-snug">
+                              {practice.name}
+                            </div>
+                            {practice.clinicName && practice.clinicName !== practice.name && (
+                              <div className="mt-0.5 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
+                                <Building2 className="h-3 w-3" strokeWidth={2.5} />
+                                {practice.clinicName}
+                              </div>
+                            )}
+                            <div className="mt-1 text-xs text-muted-foreground">
+                              {practice.address}
+                            </div>
+                            <div className="text-xs font-medium text-muted-foreground">
+                              {getCityLabel(practice.city)}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </AnimatedSection>
+              )}
+
               {/* Expertises */}
               {expertise.length > 0 && (
-                <AnimatedSection index={2} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={3} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Sparkles className="h-4 w-4" strokeWidth={2.5} />

@@ -192,7 +192,7 @@ export default function CliniqueParametresPage() {
     }
   }
 
-  // ── Invite doctor ────────────────────────────────────────────────────────────
+  // ── Invite / add doctor ──────────────────────────────────────────────────────
   async function handleInviteDoctor(e: React.FormEvent) {
     e.preventDefault();
 
@@ -210,14 +210,19 @@ export default function CliniqueParametresPage() {
 
     setInviting(true);
     try {
-      const res = await fetch("/api/clinique/doctors", {
+      const res = await fetch("/api/clinique/invite-doctor", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole }),
       });
-      const data: { success?: boolean; error?: string; doctor?: { id: string; name: string } } =
-        await res.json();
-      if (res.ok && data.success) {
+      const data: {
+        status?: "added" | "invited";
+        error?: string;
+        doctor?: { id: string; name: string };
+        email?: string;
+      } = await res.json();
+
+      if (res.ok && data.status === "added") {
         toast.success(`${data.doctor?.name ?? "Médecin"} ajouté à la clinique.`);
         setInviteEmail("");
         // Reload doctors list
@@ -226,6 +231,9 @@ export default function CliniqueParametresPage() {
           const updated: { doctors: ClinicDoctor[] } = await dr.json();
           setDoctors(updated.doctors);
         }
+      } else if (res.ok && data.status === "invited") {
+        toast.success(`Invitation envoyée à ${data.email ?? inviteEmail.trim()}`);
+        setInviteEmail("");
       } else {
         toast.error(data.error ?? "Impossible d'ajouter ce médecin.");
       }
@@ -509,10 +517,13 @@ export default function CliniqueParametresPage() {
           )}
         </div>
 
-        {/* Invite form */}
+        {/* Invite / add form */}
         <div className="rounded-xl bg-secondary p-4">
-          <p className="mb-3 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
-            Inviter un médecin
+          <p className="mb-1 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
+            Ajouter ou inviter un médecin
+          </p>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Si le médecin n&apos;a pas encore de compte Doktori, il recevra un email d&apos;invitation.
           </p>
           <form onSubmit={handleInviteDoctor} className="space-y-3">
             <div className="flex flex-col gap-2">
@@ -556,7 +567,7 @@ export default function CliniqueParametresPage() {
               ) : (
                 <UserPlus className="h-4 w-4" strokeWidth={2.5} />
               )}
-              Ajouter
+              Ajouter ou inviter
             </button>
           </form>
         </div>

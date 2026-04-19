@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { db, doctors, clinics } from "@doktori/db";
+import { db, doctors, clinics, clinicDoctors } from "@doktori/db";
 import { and, eq } from "drizzle-orm";
 import { meili, DOCTORS_INDEX, CLINICS_INDEX } from "@/lib/meilisearch";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
@@ -46,6 +46,27 @@ export async function POST(req: Request) {
       .from(doctors)
       .where(and(eq(doctors.isActive, true), eq(doctors.isVisible, true)));
 
+    // Fetch clinic memberships for all doctors in one query
+    const clinicMemberships = await db
+      .select({
+        doctorId: clinicDoctors.doctorId,
+        clinicName: clinics.name,
+        clinicCity: clinics.city,
+      })
+      .from(clinicDoctors)
+      .innerJoin(clinics, eq(clinicDoctors.clinicId, clinics.id));
+
+    // Build a quick lookup: doctorId → first clinic found
+    const clinicByDoctor = new Map<string, { clinicName: string; clinicCity: string }>();
+    for (const row of clinicMemberships) {
+      if (!clinicByDoctor.has(row.doctorId)) {
+        clinicByDoctor.set(row.doctorId, {
+          clinicName: row.clinicName,
+          clinicCity: row.clinicCity,
+        });
+      }
+    }
+
     const documents = allDoctors.map((d) => {
       const spec = SPECIALTIES.find((s) => s.id === d.specialty);
       const city = CITIES.find((c) => c.id === d.city);
@@ -53,6 +74,8 @@ export async function POST(req: Request) {
       // Use doctor's own lat/lng if available, otherwise fall back to city centroid
       const lat = d.latitude ? Number(d.latitude) : CITY_CENTROIDS[d.city]?.lat;
       const lng = d.longitude ? Number(d.longitude) : CITY_CENTROIDS[d.city]?.lng;
+
+      const clinicInfo = clinicByDoctor.get(d.id);
 
       return {
         id: d.id,
@@ -70,6 +93,9 @@ export async function POST(req: Request) {
         teleconsult_fee: d.teleconsultFee,
         average_rating: d.averageRating ?? 0,
         review_count: d.reviewCount ?? 0,
+        // Clinic info — populated when the doctor is linked to a clinic
+        clinicName: clinicInfo?.clinicName ?? null,
+        clinicCity: clinicInfo?.clinicCity ?? null,
         searchContent: [
           d.name,
           spec?.label,
@@ -80,6 +106,7 @@ export async function POST(req: Request) {
           d.city,
           d.address,
           d.bio,
+          clinicInfo?.clinicName,
         ]
           .filter(Boolean)
           .join(" "),
