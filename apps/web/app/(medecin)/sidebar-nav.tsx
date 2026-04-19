@@ -31,6 +31,7 @@ export function SidebarNav({ userName }: { userName?: string | null }) {
     { href: "/messages", label: t("messages") },
     { href: "/messagerie", label: t("messagerie") },
     { href: "/wallet", label: t("wallet") },
+    { href: "/factures", label: t("factures") },
     { href: "/profil", label: t("profil") },
   ];
 
