@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db, appointments, patients } from "@doktori/db";
 import { eq, and, sql } from "drizzle-orm";
+import { applyNoShowPolicy } from "@/lib/noshow-policy";
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -37,6 +38,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
         .update(patients)
         .set({ noShowCount: sql`${patients.noShowCount} + 1` })
         .where(eq(patients.id, current.patientId));
+
+      // Apply no-show policy: auto-suspend if threshold reached, then notify patient
+      applyNoShowPolicy({
+        patientId: current.patientId,
+        appointmentId: id,
+        doctorId: session.user.id,
+      }).catch((e) => console.error("[status] applyNoShowPolicy failed:", e));
     }
 
     return NextResponse.json(updated);

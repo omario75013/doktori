@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Calendar, CalendarPlus } from "lucide-react";
+import { Calendar, CalendarPlus, Settings2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 
@@ -53,6 +53,51 @@ export default function RendezVousPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
+
+  // No-show threshold settings
+  const [showThresholdPanel, setShowThresholdPanel] = useState(false);
+  const [noShowThreshold, setNoShowThreshold] = useState(3);
+  const [thresholdInput, setThresholdInput] = useState("3");
+  const [thresholdSaving, setThresholdSaving] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/doctor/profile/noshow-threshold")
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data?.noShowThreshold === "number") {
+          setNoShowThreshold(data.noShowThreshold);
+          setThresholdInput(String(data.noShowThreshold));
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const saveThreshold = async () => {
+    const val = Number(thresholdInput);
+    if (!Number.isInteger(val) || val < 1 || val > 10) {
+      toast.error("Le seuil doit être entre 1 et 10.");
+      return;
+    }
+    setThresholdSaving(true);
+    try {
+      const res = await fetch("/api/doctor/profile/noshow-threshold", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ noShowThreshold: val }),
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error ?? "Erreur sauvegarde");
+      }
+      setNoShowThreshold(val);
+      toast.success("Seuil d'absences mis à jour.");
+      setShowThresholdPanel(false);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setThresholdSaving(false);
+    }
+  };
 
   // CNAM modal state
   const [cnamDialogAppointmentId, setCnamDialogAppointmentId] = useState<string | null>(null);
@@ -268,13 +313,66 @@ export default function RendezVousPage() {
           </div>
           <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
         </div>
-        <button
-          onClick={fetchAppointments}
-          className="text-sm text-primary hover:text-doktori-teal-dark font-medium border border-border hover:bg-secondary rounded-xl px-3 py-2 transition-colors"
-        >
-          {t("refresh")}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowThresholdPanel((v) => !v)}
+            title="Paramètres absences"
+            className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary font-medium border border-border hover:bg-secondary rounded-xl px-3 py-2 transition-colors"
+          >
+            <Settings2 className="h-4 w-4" />
+            <span className="hidden sm:inline">Absences ({noShowThreshold})</span>
+          </button>
+          <button
+            onClick={fetchAppointments}
+            className="text-sm text-primary hover:text-doktori-teal-dark font-medium border border-border hover:bg-secondary rounded-xl px-3 py-2 transition-colors"
+          >
+            {t("refresh")}
+          </button>
+        </div>
       </div>
+
+      {/* No-show threshold settings panel */}
+      {showThresholdPanel && (
+        <div className="rounded-2xl border border-amber-200 bg-amber-50 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <Settings2 className="h-4 w-4 text-amber-600" />
+            <h2 className="text-sm font-semibold text-amber-800">Seuil de suspension automatique</h2>
+          </div>
+          <p className="text-xs text-amber-700">
+            Un patient sera automatiquement suspendu après ce nombre d&apos;absences non justifiées.
+            Il sera notifié par SMS et email, et pourra à nouveau réserver après 30 jours.
+          </p>
+          <div className="flex items-center gap-3">
+            <input
+              type="number"
+              min={1}
+              max={10}
+              value={thresholdInput}
+              onChange={(e) => setThresholdInput(e.target.value)}
+              className="w-20 h-10 rounded-xl border border-amber-300 px-3 text-sm text-center focus:outline-none focus:ring-2 focus:ring-amber-400 bg-white"
+            />
+            <span className="text-sm text-amber-700">absence(s) (entre 1 et 10)</span>
+          </div>
+          <div className="flex gap-2">
+            <button
+              onClick={saveThreshold}
+              disabled={thresholdSaving}
+              className="text-sm px-4 py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold disabled:opacity-40 transition-colors"
+            >
+              {thresholdSaving ? "Enregistrement..." : "Enregistrer"}
+            </button>
+            <button
+              onClick={() => {
+                setShowThresholdPanel(false);
+                setThresholdInput(String(noShowThreshold));
+              }}
+              className="text-sm px-4 py-2 rounded-xl border border-amber-300 text-amber-700 hover:bg-amber-100 transition-colors"
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
 
       {appointments.length === 0 ? (
         <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
@@ -309,12 +407,12 @@ export default function RendezVousPage() {
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-medium text-foreground">{appt.patientName}</span>
-                        {appt.patientNoShowCount >= 2 && (
+                        {appt.patientNoShowCount > 0 && (
                           <span
                             className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700"
-                            title={`${appt.patientNoShowCount} absences enregistrées`}
+                            title={`${appt.patientNoShowCount} absence(s) non justifiée(s) enregistrée(s)`}
                           >
-                            ⚠ {appt.patientNoShowCount}
+                            {appt.patientNoShowCount} abs.
                           </span>
                         )}
                         {appt.patientLastMinuteCancelCount >= 2 && (

@@ -688,3 +688,120 @@ export function buildTrialExpiredTodayEmail(p: { doctorName: string }): { subjec
     </div>`,
   };
 }
+
+// ─── No-show warning email (patient, before ban) ──────────────────────────────
+
+const AMBER = "#D97706";
+const AMBER_BG = "#FFFBEB";
+const AMBER_BORDER = "#FDE68A";
+
+function warningLayout(content: string): string {
+  return `<!DOCTYPE html>
+<html dir="ltr" lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+<body style="margin:0;padding:0;background:${AMBER_BG};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:${AMBER_BG}">
+<tr><td align="center" style="padding:40px 20px">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);border:2px solid ${AMBER_BORDER}">
+<tr><td style="background:${AMBER};padding:24px 32px;text-align:center">
+<h1 style="margin:0;color:#fff;font-size:24px;font-weight:700">Doktori</h1>
+</td></tr>
+<tr><td style="padding:32px;color:#134E4A;font-size:15px;line-height:1.6">
+${content}
+</td></tr>
+<tr><td style="padding:16px 32px;background:#fffbeb;text-align:center;font-size:12px;color:#6b7280;border-top:1px solid ${AMBER_BORDER}">
+Doktori — La prise de rendez-vous médicaux en Tunisie
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+const RED_ALERT = "#DC2626";
+const RED_BG = "#FEF2F2";
+const RED_BORDER = "#FECACA";
+
+function suspensionLayout(content: string): string {
+  return `<!DOCTYPE html>
+<html dir="ltr" lang="fr">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width"></head>
+<body style="margin:0;padding:0;background:${RED_BG};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:${RED_BG}">
+<tr><td align="center" style="padding:40px 20px">
+<table width="600" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);border:2px solid ${RED_BORDER}">
+<tr><td style="background:${RED_ALERT};padding:24px 32px;text-align:center">
+<h1 style="margin:0;color:#fff;font-size:24px;font-weight:700">Doktori</h1>
+</td></tr>
+<tr><td style="padding:32px;color:#134E4A;font-size:15px;line-height:1.6">
+${content}
+</td></tr>
+<tr><td style="padding:16px 32px;background:#fef2f2;text-align:center;font-size:12px;color:#6b7280;border-top:1px solid ${RED_BORDER}">
+Doktori — La prise de rendez-vous médicaux en Tunisie
+</td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+export function buildNoShowWarningEmail(p: {
+  patientName: string;
+  doctorName: string;
+  noShowCount: number;
+  threshold: number;
+}): { subject: string; html: string } {
+  const remaining = p.threshold - p.noShowCount;
+  return {
+    subject: `Avertissement : absence non justifiée — ${p.noShowCount}/${p.threshold}`,
+    html: warningLayout(`
+      <p>Bonjour ${p.patientName},</p>
+      <p style="font-size:16px;font-weight:700;color:${AMBER}">Absence non justifiée enregistrée</p>
+      <p>Vous avez été marqué(e) absent(e) à votre rendez-vous avec <strong>${p.doctorName}</strong>.</p>
+      <table style="width:100%;border-collapse:collapse;margin:16px 0;background:#fffbeb;border-radius:8px;border:1px solid ${AMBER_BORDER}">
+        <tr>
+          <td style="padding:12px 16px;color:#92400e;font-weight:600">Absences enregistrées</td>
+          <td style="padding:12px 16px;font-weight:700;color:${AMBER};font-size:18px">${p.noShowCount} / ${p.threshold}</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;color:#92400e;font-weight:600">Absences restantes avant suspension</td>
+          <td style="padding:12px 16px;font-weight:700;color:#134E4A">${remaining}</td>
+        </tr>
+      </table>
+      <p style="color:#92400e;background:#fef3c7;border-left:4px solid ${AMBER};padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0">
+        <strong>Attention :</strong> Après <strong>${p.threshold} absences non justifiées</strong>, votre compte sera temporairement suspendu pendant 30 jours.
+      </p>
+      <p>Si cette absence est une erreur, veuillez contacter le cabinet directement.</p>
+    `),
+  };
+}
+
+export function buildNoShowSuspensionEmail(p: {
+  patientName: string;
+  noShowCount: number;
+  threshold: number;
+  unbanDate: string;
+}): { subject: string; html: string } {
+  return {
+    subject: "Compte Doktori temporairement suspendu",
+    html: suspensionLayout(`
+      <p>Bonjour ${p.patientName},</p>
+      <p style="font-size:16px;font-weight:700;color:${RED_ALERT}">Votre compte a été temporairement suspendu</p>
+      <p>Suite à <strong>${p.noShowCount} absences non justifiées</strong>, votre accès aux réservations sur Doktori a été suspendu.</p>
+      <table style="width:100%;border-collapse:collapse;margin:16px 0;background:#fef2f2;border-radius:8px;border:1px solid ${RED_BORDER}">
+        <tr>
+          <td style="padding:12px 16px;color:#991b1b;font-weight:600">Raison</td>
+          <td style="padding:12px 16px;font-weight:600">${p.noShowCount} absences non justifiées</td>
+        </tr>
+        <tr>
+          <td style="padding:12px 16px;color:#991b1b;font-weight:600">Levée automatique</td>
+          <td style="padding:12px 16px;font-weight:600">Le ${p.unbanDate}</td>
+        </tr>
+      </table>
+      <p style="color:#991b1b;background:#fee2e2;border-left:4px solid ${RED_ALERT};padding:12px 16px;border-radius:0 8px 8px 0;margin:16px 0">
+        Vous pourrez à nouveau prendre des rendez-vous à partir du <strong>${p.unbanDate}</strong>.
+      </p>
+      <p>Pour contester cette décision ou si vous pensez qu'il s'agit d'une erreur, contactez-nous à <a href="mailto:contact@doktori.tn" style="color:${RED_ALERT}">contact@doktori.tn</a>.</p>
+    `),
+  };
+}

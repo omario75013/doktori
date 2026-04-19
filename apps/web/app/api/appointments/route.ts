@@ -4,6 +4,7 @@ import { createAppointment, getAvailableSlots } from "@/lib/queries/appointments
 import { bookAppointmentSchema } from "@doktori/validation";
 import { formatPhone, SPECIALTIES } from "@doktori/shared";
 import { eq, and, sql } from "drizzle-orm";
+import { DEFAULT_NOSHOW_THRESHOLD, SUSPENSION_DAYS } from "@/lib/noshow-policy";
 import { sendSMS } from "@/lib/sms";
 import { sendEmail } from "@/lib/email";
 import { bookingConfirmation, welcomePatient, newBookingDoctor } from "@/emails/templates";
@@ -65,10 +66,32 @@ export async function POST(req: Request) {
       .returning();
   }
 
+  // Auto-unban: lift suspension after SUSPENSION_DAYS if the patient waited long enough
+  if (patient.isSuspended && patient.suspendedAt) {
+    const msElapsed = Date.now() - new Date(patient.suspendedAt).getTime();
+    const msThreshold = SUSPENSION_DAYS * 24 * 60 * 60 * 1000;
+    if (msElapsed >= msThreshold) {
+      await db
+        .update(patients)
+        .set({ isSuspended: false, suspensionReason: null, suspendedAt: null, noShowCount: 0 })
+        .where(eq(patients.id, patient.id));
+      // Refresh the local patient object so the suspended check below passes
+      patient = { ...patient, isSuspended: false, suspensionReason: null, suspendedAt: null, noShowCount: 0 };
+    }
+  }
+
   // Guard: block suspended patients from booking
   if (patient.isSuspended) {
     return NextResponse.json({ error: "Compte patient suspendu" }, { status: 403 });
   }
+
+  // Soft warning: include no-show count in the response for the client to display
+  const noShowWarning =
+    patient.noShowCount > 0
+      ? {
+          noShowWarning: `Attention : vous avez ${patient.noShowCount} absence(s) non justifiée(s). Après ${DEFAULT_NOSHOW_THRESHOLD} absences, votre compte sera temporairement suspendu.`,
+        }
+      : {};
 
   const [doctor] = await db
     .select()
@@ -305,7 +328,7 @@ export async function POST(req: Request) {
           `);
 
           return NextResponse.json(
-            { id: appointment.id, paymentUrl: payment.paymentUrl, paymentRequired: true },
+            { id: appointment.id, paymentUrl: payment.paymentUrl, paymentRequired: true, ...noShowWarning },
             { status: 201 }
           );
         }
@@ -322,7 +345,7 @@ export async function POST(req: Request) {
       patientId: appointment.patientId,
     }).catch(console.error);
 
-    return NextResponse.json(appointment, { status: 201 });
+    return NextResponse.json({ ...appointment, ...noShowWarning }, { status: 201 });
   } catch (e: unknown) {
     const message = e instanceof Error ? e.message : "Erreur lors de la réservation";
     return NextResponse.json({ error: message }, { status: 409 });

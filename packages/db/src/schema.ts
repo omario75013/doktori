@@ -68,6 +68,8 @@ export const doctors = pgTable(
     emailVerifiedAt: timestamp("email_verified_at", { withTimezone: true }),
     averageRating: doublePrecision("average_rating").default(0),
     reviewCount: integer("review_count").default(0),
+    /** Per-doctor configurable no-show threshold. Defaults to 3 (platform default). */
+    noShowThreshold: integer("no_show_threshold").notNull().default(3),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
