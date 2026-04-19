@@ -8,31 +8,36 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await requireAdmin(["super_admin", "support"]);
-  if (admin instanceof NextResponse) return admin;
+  try {
+    const admin = await requireAdmin(["super_admin", "support"]);
+    if (admin instanceof NextResponse) return admin;
 
-  const { id } = await params;
+    const { id } = await params;
 
-  const [patient] = await db.select().from(patients).where(eq(patients.id, id)).limit(1);
-  if (!patient) {
-    return NextResponse.json({ error: "Patient introuvable" }, { status: 404 });
+    const [patient] = await db.select().from(patients).where(eq(patients.id, id)).limit(1);
+    if (!patient) {
+      return NextResponse.json({ error: "Patient introuvable" }, { status: 404 });
+    }
+
+    const prev = patient.lastMinuteCancelCount;
+
+    await db.update(patients).set({ lastMinuteCancelCount: 0 }).where(eq(patients.id, id));
+
+    const meta = extractRequestMeta(req);
+    await logAudit({
+      actor: admin,
+      action: "patients.reset_cancel_count",
+      resourceType: "patients",
+      resourceId: id,
+      before: { lastMinuteCancelCount: prev },
+      after: { lastMinuteCancelCount: 0 },
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    console.error("[POST /api//admin/patients/[id]/reset-cancel-count]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-
-  const prev = patient.lastMinuteCancelCount;
-
-  await db.update(patients).set({ lastMinuteCancelCount: 0 }).where(eq(patients.id, id));
-
-  const meta = extractRequestMeta(req);
-  await logAudit({
-    actor: admin,
-    action: "patients.reset_cancel_count",
-    resourceType: "patients",
-    resourceId: id,
-    before: { lastMinuteCancelCount: prev },
-    after: { lastMinuteCancelCount: 0 },
-    ip: meta.ip,
-    userAgent: meta.userAgent,
-  });
-
-  return NextResponse.json({ ok: true });
 }

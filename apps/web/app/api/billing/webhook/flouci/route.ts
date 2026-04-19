@@ -5,45 +5,50 @@ import { verifyFlouciPayment } from "@/lib/flouci";
 import { createAdminNotification } from "@/lib/admin-notifications";
 
 export async function POST(req: Request) {
-  const body = await req.json();
-  const { payment_id, reference } = body;
+  try {
+    const body = await req.json();
+    const { payment_id, reference } = body;
 
-  if (!payment_id && !reference) return NextResponse.json({ error: "Missing params" }, { status: 400 });
+    if (!payment_id && !reference) return NextResponse.json({ error: "Missing params" }, { status: 400 });
 
-  // Find the subscription by external_ref OR id (dev mode uses reference as sub ID)
-  const subId = reference;
-  const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.id, subId)).limit(1);
-  if (!sub) return NextResponse.json({ error: "Subscription not found" }, { status: 404 });
+    // Find the subscription by external_ref OR id (dev mode uses reference as sub ID)
+    const subId = reference;
+    const [sub] = await db.select().from(subscriptions).where(eq(subscriptions.id, subId)).limit(1);
+    if (!sub) return NextResponse.json({ error: "Subscription not found" }, { status: 404 });
 
-  // Idempotency: if already active, return 200 without re-processing
-  if (sub.status === "active") {
-    return NextResponse.json({ success: true, idempotent: true });
+    // Idempotency: if already active, return 200 without re-processing
+    if (sub.status === "active") {
+      return NextResponse.json({ success: true, idempotent: true });
+    }
+
+    // Verify with Flouci before activating the subscription
+    const verification = await verifyFlouciPayment(payment_id || sub.externalRef || "");
+    if (!verification.success) {
+      createAdminNotification({
+        type: "payment_failed",
+        title: "Échec de paiement",
+        link: "/admin/finance/refunds",
+      }).catch(console.error);
+      return NextResponse.json({ error: "Paiement non vérifié" }, { status: 402 });
+    }
+
+    // Activate the subscription
+    const now = new Date();
+    const endsAt = new Date(now);
+    endsAt.setMonth(endsAt.getMonth() + 1);
+
+    await db.update(subscriptions)
+      .set({
+        status: "active",
+        startsAt: now,
+        endsAt,
+        updatedAt: now,
+      })
+      .where(eq(subscriptions.id, sub.id));
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error("[POST /api//billing/webhook/flouci]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-
-  // Verify with Flouci before activating the subscription
-  const verification = await verifyFlouciPayment(payment_id || sub.externalRef || "");
-  if (!verification.success) {
-    createAdminNotification({
-      type: "payment_failed",
-      title: "Échec de paiement",
-      link: "/admin/finance/refunds",
-    }).catch(console.error);
-    return NextResponse.json({ error: "Paiement non vérifié" }, { status: 402 });
-  }
-
-  // Activate the subscription
-  const now = new Date();
-  const endsAt = new Date(now);
-  endsAt.setMonth(endsAt.getMonth() + 1);
-
-  await db.update(subscriptions)
-    .set({
-      status: "active",
-      startsAt: now,
-      endsAt,
-      updatedAt: now,
-    })
-    .where(eq(subscriptions.id, sub.id));
-
-  return NextResponse.json({ success: true });
 }

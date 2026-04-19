@@ -37,7 +37,7 @@ export async function POST(
   // Build the URL using the server-configured NEXTAUTH_URL (never from the
   // incoming request, to eliminate any SSRF vector). The cron name is
   // validated against a fixed allowlist above before reaching this point.
-  const appUrl = (process.env.NEXTAUTH_URL ?? "http://localhost:3000").replace(/\/$/, "");
+  const appUrl = (process.env.NEXTAUTH_URL ?? "https://doktori.tn").replace(/\/$/, "");
   const cronUrl = `${appUrl}/api/cron/${name}`;
 
   let result: { success: boolean; status: number; body: unknown };

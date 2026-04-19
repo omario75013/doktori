@@ -15,8 +15,13 @@ export async function GET(req: Request) {
 
 // POST: receive delivery status updates
 export async function POST(req: Request) {
-  const body = await req.json();
-  // For MVP, just log
-  console.log("[WA-webhook]", JSON.stringify(body));
-  return NextResponse.json({ received: true });
+  try {
+    const body = await req.json();
+    // For MVP, just log
+    console.log("[WA-webhook]", JSON.stringify(body));
+    return NextResponse.json({ received: true });
+  } catch (e) {
+    console.error("[POST /api//whatsapp/webhook]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
 }

@@ -13,20 +13,25 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const { insuranceTypes } = await req.json();
-  if (!Array.isArray(insuranceTypes)) return NextResponse.json({ error: "Paramètres invalides" }, { status: 400 });
+    const { insuranceTypes } = await req.json();
+    if (!Array.isArray(insuranceTypes)) return NextResponse.json({ error: "Paramètres invalides" }, { status: 400 });
 
-  // Replace all conventions for this doctor
-  await db.delete(doctorInsurance).where(eq(doctorInsurance.doctorId, session.user.id));
+    // Replace all conventions for this doctor
+    await db.delete(doctorInsurance).where(eq(doctorInsurance.doctorId, session.user.id));
 
-  if (insuranceTypes.length > 0) {
-    await db.insert(doctorInsurance).values(
-      insuranceTypes.map((t: string) => ({ doctorId: session.user.id, insuranceType: t, isConventioned: true }))
-    );
+    if (insuranceTypes.length > 0) {
+      await db.insert(doctorInsurance).values(
+        insuranceTypes.map((t: string) => ({ doctorId: session.user.id, insuranceType: t, isConventioned: true }))
+      );
+    }
+
+    return NextResponse.json({ success: true });
+  } catch (e) {
+    console.error("[PUT /api//doctors/me/insurance]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-
-  return NextResponse.json({ success: true });
 }

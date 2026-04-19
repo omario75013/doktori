@@ -6,7 +6,7 @@ import { hash } from "bcryptjs";
 import { sign } from "jsonwebtoken";
 
 function isValidPhone(phone: string): boolean {
-  return /^\+?[\d\s\-()]{8,20}$/.test(phone);
+  return /^(\+216|216|0)?[2-9]\d{7}$/.test(phone.replace(/[\s\-()]/g, ""));
 }
 
 const ipCounts = new Map<string, { count: number; resetAt: number }>();

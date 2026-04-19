@@ -11,68 +11,73 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await requireAdmin(["super_admin", "support"]);
-  if (admin instanceof NextResponse) return admin;
+  try {
+    const admin = await requireAdmin(["super_admin", "support"]);
+    if (admin instanceof NextResponse) return admin;
 
-  const { id } = await params;
-  const body = (await req.json()) as { status?: unknown; reason?: unknown };
+    const { id } = await params;
+    const body = (await req.json()) as { status?: unknown; reason?: unknown };
 
-  const newStatus = body.status as string;
-  if (!VALID_STATUSES.includes(newStatus as AppointmentStatus)) {
-    return NextResponse.json(
-      { error: `Statut invalide. Valeurs acceptées: ${VALID_STATUSES.join(", ")}` },
-      { status: 400 }
-    );
+    const newStatus = body.status as string;
+    if (!VALID_STATUSES.includes(newStatus as AppointmentStatus)) {
+      return NextResponse.json(
+        { error: `Statut invalide. Valeurs acceptées: ${VALID_STATUSES.join(", ")}` },
+        { status: 400 }
+      );
+    }
+
+    const [before] = await db
+      .select()
+      .from(appointments)
+      .where(eq(appointments.id, id))
+      .limit(1);
+
+    if (!before) {
+      return NextResponse.json({ error: "Rendez-vous introuvable" }, { status: 404 });
+    }
+
+    const now = new Date();
+    const updates: Record<string, unknown> = {
+      status: newStatus,
+      updatedAt: now,
+    };
+
+    if (newStatus === "confirmed") {
+      updates.confirmedAt = now;
+    } else if (newStatus === "cancelled") {
+      updates.cancelledAt = now;
+    }
+
+    const [after] = await db
+      .update(appointments)
+      .set(updates)
+      .where(eq(appointments.id, id))
+      .returning();
+
+    const { ip, userAgent } = extractRequestMeta(req);
+    await logAudit({
+      actor: admin,
+      action: `appointments.status.${newStatus}`,
+      resourceType: "appointments",
+      resourceId: id,
+      before: { status: before.status, confirmedAt: before.confirmedAt, cancelledAt: before.cancelledAt },
+      after: { status: after.status, confirmedAt: after.confirmedAt, cancelledAt: after.cancelledAt },
+      reason: typeof body.reason === "string" ? body.reason : null,
+      ip,
+      userAgent,
+    });
+
+    return NextResponse.json({
+      appointment: {
+        id: after.id,
+        status: after.status,
+        confirmedAt: after.confirmedAt?.toISOString() ?? null,
+        cancelledAt: after.cancelledAt?.toISOString() ?? null,
+        updatedAt: after.updatedAt.toISOString(),
+      },
+    });
+  } catch (e) {
+    console.error("[PATCH /api//admin/appointments/[id]/status]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-
-  const [before] = await db
-    .select()
-    .from(appointments)
-    .where(eq(appointments.id, id))
-    .limit(1);
-
-  if (!before) {
-    return NextResponse.json({ error: "Rendez-vous introuvable" }, { status: 404 });
-  }
-
-  const now = new Date();
-  const updates: Record<string, unknown> = {
-    status: newStatus,
-    updatedAt: now,
-  };
-
-  if (newStatus === "confirmed") {
-    updates.confirmedAt = now;
-  } else if (newStatus === "cancelled") {
-    updates.cancelledAt = now;
-  }
-
-  const [after] = await db
-    .update(appointments)
-    .set(updates)
-    .where(eq(appointments.id, id))
-    .returning();
-
-  const { ip, userAgent } = extractRequestMeta(req);
-  await logAudit({
-    actor: admin,
-    action: `appointments.status.${newStatus}`,
-    resourceType: "appointments",
-    resourceId: id,
-    before: { status: before.status, confirmedAt: before.confirmedAt, cancelledAt: before.cancelledAt },
-    after: { status: after.status, confirmedAt: after.confirmedAt, cancelledAt: after.cancelledAt },
-    reason: typeof body.reason === "string" ? body.reason : null,
-    ip,
-    userAgent,
-  });
-
-  return NextResponse.json({
-    appointment: {
-      id: after.id,
-      status: after.status,
-      confirmedAt: after.confirmedAt?.toISOString() ?? null,
-      cancelledAt: after.cancelledAt?.toISOString() ?? null,
-      updatedAt: after.updatedAt.toISOString(),
-    },
-  });
 }

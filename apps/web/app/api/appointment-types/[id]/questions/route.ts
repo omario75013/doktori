@@ -48,55 +48,60 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id: typeId } = await params;
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
+  try {
+    const { id: typeId } = await params;
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
 
-  const owned = await verifyOwnership(session.user.id, typeId);
-  if (!owned) {
-    return NextResponse.json({ error: "Type introuvable" }, { status: 404 });
-  }
+    const owned = await verifyOwnership(session.user.id, typeId);
+    if (!owned) {
+      return NextResponse.json({ error: "Type introuvable" }, { status: 404 });
+    }
 
-  const body = await req.json();
-  const { label, kind, choices, required, displayOrder } = body;
+    const body = await req.json();
+    const { label, kind, choices, required, displayOrder } = body;
 
-  if (!label || typeof label !== "string" || label.trim().length === 0 || label.length > 500) {
-    return NextResponse.json({ error: "Label invalide (max 500 caractères)" }, { status: 400 });
-  }
+    if (!label || typeof label !== "string" || label.trim().length === 0 || label.length > 500) {
+      return NextResponse.json({ error: "Label invalide (max 500 caractères)" }, { status: 400 });
+    }
 
-  if (!isValidKind(kind)) {
-    return NextResponse.json(
-      { error: "Kind invalide — valeurs acceptées: text, choice, file, yesno" },
-      { status: 400 }
-    );
-  }
-
-  if (kind === "choice") {
-    if (
-      !Array.isArray(choices) ||
-      choices.length < 2 ||
-      choices.some((c) => typeof c !== "string" || c.trim().length === 0)
-    ) {
+    if (!isValidKind(kind)) {
       return NextResponse.json(
-        { error: "choices est requis pour kind=choice (tableau de 2 éléments minimum)" },
+        { error: "Kind invalide — valeurs acceptées: text, choice, file, yesno" },
         { status: 400 }
       );
     }
+
+    if (kind === "choice") {
+      if (
+        !Array.isArray(choices) ||
+        choices.length < 2 ||
+        choices.some((c) => typeof c !== "string" || c.trim().length === 0)
+      ) {
+        return NextResponse.json(
+          { error: "choices est requis pour kind=choice (tableau de 2 éléments minimum)" },
+          { status: 400 }
+        );
+      }
+    }
+
+    const [created] = await db
+      .insert(appointmentTypeQuestions)
+      .values({
+        appointmentTypeId: typeId,
+        label: label.trim(),
+        kind,
+        choices: kind === "choice" ? (choices as string[]) : null,
+        required: Boolean(required),
+        displayOrder: typeof displayOrder === "number" ? displayOrder : 0,
+      })
+      .returning();
+
+    return NextResponse.json(created, { status: 201 });
+  } catch (e) {
+    console.error("[POST /api//appointment-types/[id]/questions]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-
-  const [created] = await db
-    .insert(appointmentTypeQuestions)
-    .values({
-      appointmentTypeId: typeId,
-      label: label.trim(),
-      kind,
-      choices: kind === "choice" ? (choices as string[]) : null,
-      required: Boolean(required),
-      displayOrder: typeof displayOrder === "number" ? displayOrder : 0,
-    })
-    .returning();
-
-  return NextResponse.json(created, { status: 201 });
 }

@@ -14,17 +14,22 @@ export async function GET() {
 }
 
 export async function PUT(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
 
-  const body = await req.json();
-  const parsed = scheduleUpdateSchema.safeParse(body);
-  if (!parsed.success) {
-    return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
-  }
+    const body = await req.json();
+    const parsed = scheduleUpdateSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json({ error: parsed.error.flatten() }, { status: 400 });
+    }
 
-  const result = await upsertSchedule(session.user.id, parsed.data.slots);
-  return NextResponse.json(result);
+    const result = await upsertSchedule(session.user.id, parsed.data.slots);
+    return NextResponse.json(result);
+  } catch (e) {
+    console.error("[PUT /api//schedules]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
 }

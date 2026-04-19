@@ -177,7 +177,7 @@ async function sendPostConsultationDocuments({
   fee: number;
 }) {
   try {
-    const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+    const baseUrl = process.env.NEXTAUTH_URL || "https://doktori.tn";
 
     // 1. Get doctor name and patient info in parallel
     const [doctorResult, patientResult] = await Promise.all([

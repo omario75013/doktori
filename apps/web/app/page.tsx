@@ -30,6 +30,14 @@ import {
   Users,
   TrendingUp,
   BadgeCheck,
+  Wind,
+  Brain,
+  Dna,
+  Droplets,
+  Activity,
+  ScanLine,
+  Scissors,
+  Flower2,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { AppStoreBadge, GooglePlayBadge } from "@/components/store-badges";
@@ -45,6 +53,16 @@ const SPECIALTY_ICONS: Record<string, LucideIcon> = {
   cardiologue: Heart,
   orthopediste: Bone,
   gastrologue: Stethoscope,
+  pneumologue: Wind,
+  neurologue: Brain,
+  rhumatologue: Bone,
+  urologue: Droplets,
+  endocrinologue: Dna,
+  nephrologue: Activity,
+  psychiatre: Brain,
+  radiologue: ScanLine,
+  chirurgien: Scissors,
+  allergologue: Flower2,
 };
 
 export default function HomePage() {
@@ -168,15 +186,15 @@ export default function HomePage() {
           </div>
           <p className="text-sm text-muted-foreground leading-relaxed max-w-lg mx-auto">
             {locale === "ar"
-              ? "نحن نبني شبكة أطبائنا في تونس الكبرى. سجّل لتكون أول من يُبلَّغ عندما ينضم طبيب في منطقتك."
-              : "Nous constituons notre réseau de médecins dans le Grand Tunis. Inscrivez-vous pour être prévenu(e) dès qu'un médecin de votre zone rejoint la plateforme."
+              ? "نحن نبني شبكة أطبائنا عبر تونس. سجّل لتكون أول من يُبلَّغ عندما ينضم طبيب في مدينتك."
+              : "Nous constituons notre réseau de médecins à travers la Tunisie. Inscrivez-vous pour être prévenu(e) dès qu'un médecin de votre ville rejoint la plateforme."
             }
           </p>
         </div>
         <div className="mx-auto grid max-w-5xl grid-cols-2 gap-8 px-6 md:grid-cols-4 mt-8">
           {[
-            { value: "10", label: t("statsSpecialtiesLabel"), icon: Stethoscope },
-            { value: "8", label: locale === "ar" ? "أحياء مغطاة" : "Quartiers couverts", icon: MapPin },
+            { value: "20", label: t("statsSpecialtiesLabel"), icon: Stethoscope },
+            { value: "23", label: locale === "ar" ? "مدن مغطاة" : "Villes couvertes", icon: MapPin },
             { value: "24/7", label: locale === "ar" ? "متاح" : "Disponible", icon: CalendarCheck2 },
             { value: "🇹🇳", label: locale === "ar" ? "صنع في تونس" : "Made in Tunisia", icon: ShieldCheck },
           ].map(({ value, label, icon: Icon }) => (
@@ -318,6 +336,16 @@ export default function HomePage() {
                 </Link>
               );
             })}
+          </div>
+
+          <div className="mt-8 text-center">
+            <Link
+              href="/recherche"
+              className="group inline-flex items-center gap-2 rounded-xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 px-6 py-3 text-sm font-bold text-foreground dark:text-white shadow-sm transition-all hover:border-primary hover:text-primary hover:shadow-md"
+            >
+              {locale === "ar" ? "عرض كل التخصصات" : "Voir toutes les spécialités"}
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={2.5} />
+            </Link>
           </div>
         </div>
       </section>

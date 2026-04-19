@@ -95,76 +95,81 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await requireAdmin(["super_admin", "support"]);
-  if (admin instanceof NextResponse) return admin;
+  try {
+    const admin = await requireAdmin(["super_admin", "support"]);
+    if (admin instanceof NextResponse) return admin;
 
-  const { id } = await params;
-  const body = await req.json() as {
-    adminNotes?: string;
-    status?: string;
-    resolution?: string;
-  };
+    const { id } = await params;
+    const body = await req.json() as {
+      adminNotes?: string;
+      status?: string;
+      resolution?: string;
+    };
 
-  const ALLOWED_STATUSES = ["pending", "accepted", "completed", "expired", "cancelled"];
+    const ALLOWED_STATUSES = ["pending", "accepted", "completed", "expired", "cancelled"];
 
-  if (
-    typeof body.adminNotes === "undefined" &&
-    typeof body.status === "undefined" &&
-    typeof body.resolution === "undefined"
-  ) {
-    return NextResponse.json({ error: "adminNotes, status ou resolution requis" }, { status: 400 });
-  }
-
-  if (body.status !== undefined && !ALLOWED_STATUSES.includes(body.status)) {
-    return NextResponse.json({ error: "Statut invalide" }, { status: 400 });
-  }
-
-  // Build update clauses dynamically
-  const updates: ReturnType<typeof sql>[] = [];
-  const after: Record<string, unknown> = {};
-
-  if (typeof body.adminNotes !== "undefined") {
-    updates.push(sql`admin_notes = ${body.adminNotes}`);
-    after.adminNotes = body.adminNotes;
-  }
-  if (typeof body.status !== "undefined") {
-    updates.push(sql`status = ${body.status}`);
-    after.status = body.status;
-    // Set completion timestamp if marking completed
-    if (body.status === "completed") {
-      updates.push(sql`completed_at = COALESCE(completed_at, NOW())`);
+    if (
+      typeof body.adminNotes === "undefined" &&
+      typeof body.status === "undefined" &&
+      typeof body.resolution === "undefined"
+    ) {
+      return NextResponse.json({ error: "adminNotes, status ou resolution requis" }, { status: 400 });
     }
-    if (body.status === "cancelled") {
-      updates.push(sql`cancelled_at = COALESCE(cancelled_at, NOW())`);
-      updates.push(sql`cancelled_by = 'admin'`);
+
+    if (body.status !== undefined && !ALLOWED_STATUSES.includes(body.status)) {
+      return NextResponse.json({ error: "Statut invalide" }, { status: 400 });
     }
+
+    // Build update clauses dynamically
+    const updates: ReturnType<typeof sql>[] = [];
+    const after: Record<string, unknown> = {};
+
+    if (typeof body.adminNotes !== "undefined") {
+      updates.push(sql`admin_notes = ${body.adminNotes}`);
+      after.adminNotes = body.adminNotes;
+    }
+    if (typeof body.status !== "undefined") {
+      updates.push(sql`status = ${body.status}`);
+      after.status = body.status;
+      // Set completion timestamp if marking completed
+      if (body.status === "completed") {
+        updates.push(sql`completed_at = COALESCE(completed_at, NOW())`);
+      }
+      if (body.status === "cancelled") {
+        updates.push(sql`cancelled_at = COALESCE(cancelled_at, NOW())`);
+        updates.push(sql`cancelled_by = 'admin'`);
+      }
+    }
+    if (typeof body.resolution !== "undefined") {
+      updates.push(sql`resolution = ${body.resolution}`);
+      after.resolution = body.resolution;
+    }
+
+    // Compose the SET clause by joining with commas
+    const setClauses = updates.reduce(
+      (acc, clause, idx) => (idx === 0 ? sql`${clause}` : sql`${acc}, ${clause}`),
+      sql``
+    );
+
+    await db.execute(sql`
+      UPDATE sos_sessions SET ${setClauses} WHERE id = ${id}
+    `);
+
+    const meta = extractRequestMeta(req);
+    await logAudit({
+      actor: admin,
+      action: "sos.admin_update",
+      resourceType: "sos_sessions",
+      resourceId: id,
+      before: null,
+      after,
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
+
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    console.error("[PATCH /api//admin/sos/[id]]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-  if (typeof body.resolution !== "undefined") {
-    updates.push(sql`resolution = ${body.resolution}`);
-    after.resolution = body.resolution;
-  }
-
-  // Compose the SET clause by joining with commas
-  const setClauses = updates.reduce(
-    (acc, clause, idx) => (idx === 0 ? sql`${clause}` : sql`${acc}, ${clause}`),
-    sql``
-  );
-
-  await db.execute(sql`
-    UPDATE sos_sessions SET ${setClauses} WHERE id = ${id}
-  `);
-
-  const meta = extractRequestMeta(req);
-  await logAudit({
-    actor: admin,
-    action: "sos.admin_update",
-    resourceType: "sos_sessions",
-    resourceId: id,
-    before: null,
-    after,
-    ip: meta.ip,
-    userAgent: meta.userAgent,
-  });
-
-  return NextResponse.json({ ok: true });
 }

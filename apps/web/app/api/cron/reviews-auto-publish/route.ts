@@ -7,19 +7,24 @@ import { and, eq, lt, sql } from "drizzle-orm";
 // rejected are assumed legit and get promoted to `published` so they surface
 // on doctor profiles without needing a moderator click-through.
 export async function POST(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  try {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    }
+
+    const cutoff = sql`now() - interval '48 hours'`;
+
+    const promoted = await db
+      .update(reviews)
+      .set({ status: "published" })
+      .where(and(eq(reviews.status, "pending"), lt(reviews.createdAt, cutoff as unknown as Date)))
+      .returning({ id: reviews.id });
+
+    // TODO: wire system actor once admin-audit supports non-admin callers
+    return NextResponse.json({ promoted: promoted.length });
+  } catch (e) {
+    console.error("[POST /api//cron/reviews-auto-publish]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-
-  const cutoff = sql`now() - interval '48 hours'`;
-
-  const promoted = await db
-    .update(reviews)
-    .set({ status: "published" })
-    .where(and(eq(reviews.status, "pending"), lt(reviews.createdAt, cutoff as unknown as Date)))
-    .returning({ id: reviews.id });
-
-  // TODO: wire system actor once admin-audit supports non-admin callers
-  return NextResponse.json({ promoted: promoted.length });
 }

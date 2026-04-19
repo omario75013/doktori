@@ -25,23 +25,28 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const body = await req.json();
-  const { name, durationMinutes, fee, color } = body;
+    const body = await req.json();
+    const { name, durationMinutes, fee, color } = body;
 
-  if (!name || typeof durationMinutes !== "number" || durationMinutes < 5 || durationMinutes > 120) {
-    return NextResponse.json({ error: "Paramètres invalides" }, { status: 400 });
+    if (!name || typeof durationMinutes !== "number" || durationMinutes < 5 || durationMinutes > 120) {
+      return NextResponse.json({ error: "Paramètres invalides" }, { status: 400 });
+    }
+
+    const [created] = await db.insert(appointmentTypes).values({
+      doctorId: session.user.id,
+      name,
+      durationMinutes,
+      fee: typeof fee === "number" && fee > 0 ? fee * 1000 : null, // Store in millimes
+      color: color || "#2563eb",
+    }).returning();
+
+    return NextResponse.json(created, { status: 201 });
+  } catch (e) {
+    console.error("[POST /api//appointment-types]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-
-  const [created] = await db.insert(appointmentTypes).values({
-    doctorId: session.user.id,
-    name,
-    durationMinutes,
-    fee: typeof fee === "number" && fee > 0 ? fee * 1000 : null, // Store in millimes
-    color: color || "#2563eb",
-  }).returning();
-
-  return NextResponse.json(created, { status: 201 });
 }

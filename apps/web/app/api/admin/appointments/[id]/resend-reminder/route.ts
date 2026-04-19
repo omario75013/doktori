@@ -8,32 +8,37 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await requireAdmin(["super_admin", "support"]);
-  if (admin instanceof NextResponse) return admin;
+  try {
+    const admin = await requireAdmin(["super_admin", "support"]);
+    if (admin instanceof NextResponse) return admin;
 
-  const { id } = await params;
+    const { id } = await params;
 
-  const [row] = await db
-    .select({ id: appointments.id, status: appointments.status, patientId: appointments.patientId })
-    .from(appointments)
-    .where(eq(appointments.id, id))
-    .limit(1);
+    const [row] = await db
+      .select({ id: appointments.id, status: appointments.status, patientId: appointments.patientId })
+      .from(appointments)
+      .where(eq(appointments.id, id))
+      .limit(1);
 
-  if (!row) {
-    return NextResponse.json({ error: "Rendez-vous introuvable" }, { status: 404 });
+    if (!row) {
+      return NextResponse.json({ error: "Rendez-vous introuvable" }, { status: 404 });
+    }
+
+    const { ip, userAgent } = extractRequestMeta(req);
+    await logAudit({
+      actor: admin,
+      action: "appointments.resend_reminder",
+      resourceType: "appointments",
+      resourceId: id,
+      after: { patientId: row.patientId, status: row.status },
+      ip,
+      userAgent,
+    });
+
+    // SMS infrastructure not yet wired — logged for now.
+    return NextResponse.json({ success: true, message: "Rappel enregistré (SMS à implémenter)" });
+  } catch (e) {
+    console.error("[POST /api//admin/appointments/[id]/resend-reminder]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-
-  const { ip, userAgent } = extractRequestMeta(req);
-  await logAudit({
-    actor: admin,
-    action: "appointments.resend_reminder",
-    resourceType: "appointments",
-    resourceId: id,
-    after: { patientId: row.patientId, status: row.status },
-    ip,
-    userAgent,
-  });
-
-  // SMS infrastructure not yet wired — logged for now.
-  return NextResponse.json({ success: true, message: "Rappel enregistré (SMS à implémenter)" });
 }

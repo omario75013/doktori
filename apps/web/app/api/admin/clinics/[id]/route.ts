@@ -59,44 +59,49 @@ export async function PATCH(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await requireAdmin(["super_admin"]);
-  if (admin instanceof NextResponse) return admin;
+  try {
+    const admin = await requireAdmin(["super_admin"]);
+    if (admin instanceof NextResponse) return admin;
 
-  const { id } = await params;
-  const [existing] = await db.select().from(clinics).where(eq(clinics.id, id)).limit(1);
-  if (!existing) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
+    const { id } = await params;
+    const [existing] = await db.select().from(clinics).where(eq(clinics.id, id)).limit(1);
+    if (!existing) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  const body = (await req.json()) as Record<string, unknown>;
-  const allowed = ["name", "address", "city", "phone", "email", "plan", "logoUrl"] as const;
-  const updates: Partial<typeof clinics.$inferInsert> = {};
+    const body = (await req.json()) as Record<string, unknown>;
+    const allowed = ["name", "address", "city", "phone", "email", "plan", "logoUrl"] as const;
+    const updates: Partial<typeof clinics.$inferInsert> = {};
 
-  for (const key of allowed) {
-    if (key in body && body[key] !== undefined) {
-      (updates as Record<string, unknown>)[key] = body[key];
+    for (const key of allowed) {
+      if (key in body && body[key] !== undefined) {
+        (updates as Record<string, unknown>)[key] = body[key];
+      }
     }
+
+    if (Object.keys(updates).length === 0) {
+      return NextResponse.json({ error: "Aucune modification." }, { status: 400 });
+    }
+
+    const [updated] = await db
+      .update(clinics)
+      .set(updates)
+      .where(eq(clinics.id, id))
+      .returning();
+
+    const meta = extractRequestMeta(req);
+    await logAudit({
+      actor: admin,
+      action: "clinics.update",
+      resourceType: "clinics",
+      resourceId: id,
+      before: { name: existing.name, plan: existing.plan },
+      after: updates,
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
+
+    return NextResponse.json({ clinic: { ...updated, createdAt: updated.createdAt.toISOString() } });
+  } catch (e) {
+    console.error("[PATCH /api//admin/clinics/[id]]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-
-  if (Object.keys(updates).length === 0) {
-    return NextResponse.json({ error: "Aucune modification." }, { status: 400 });
-  }
-
-  const [updated] = await db
-    .update(clinics)
-    .set(updates)
-    .where(eq(clinics.id, id))
-    .returning();
-
-  const meta = extractRequestMeta(req);
-  await logAudit({
-    actor: admin,
-    action: "clinics.update",
-    resourceType: "clinics",
-    resourceId: id,
-    before: { name: existing.name, plan: existing.plan },
-    after: updates,
-    ip: meta.ip,
-    userAgent: meta.userAgent,
-  });
-
-  return NextResponse.json({ clinic: { ...updated, createdAt: updated.createdAt.toISOString() } });
 }

@@ -41,58 +41,63 @@ export async function GET(req: NextRequest) {
 }
 
 export async function PUT(req: NextRequest) {
-  const session = getPatientFromRequest(req);
-  if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  try {
+    const session = getPatientFromRequest(req);
+    if (!session) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const body = await req.json().catch(() => null);
-  if (!body) return NextResponse.json({ error: "Body invalide" }, { status: 400 });
+    const body = await req.json().catch(() => null);
+    if (!body) return NextResponse.json({ error: "Body invalide" }, { status: 400 });
 
-  const { dateOfBirth, gender, bloodType, allergies, chronicConditions, currentMeds, notes } = body;
+    const { dateOfBirth, gender, bloodType, allergies, chronicConditions, currentMeds, notes } = body;
 
-  if (dateOfBirth && !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
-    return NextResponse.json({ error: "Date invalide" }, { status: 400 });
+    if (dateOfBirth && !/^\d{4}-\d{2}-\d{2}$/.test(dateOfBirth)) {
+      return NextResponse.json({ error: "Date invalide" }, { status: 400 });
+    }
+    if (gender && !["M", "F"].includes(gender)) {
+      return NextResponse.json({ error: "Genre invalide" }, { status: 400 });
+    }
+    if (bloodType && !["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].includes(bloodType)) {
+      return NextResponse.json({ error: "Groupe sanguin invalide" }, { status: 400 });
+    }
+
+    await db
+      .update(patients)
+      .set({
+        dateOfBirth: dateOfBirth || null,
+        gender: gender || null,
+        bloodType: bloodType || null,
+      })
+      .where(eq(patients.id, session.id));
+
+    const clean = (s: unknown) =>
+      typeof s === "string" ? s.slice(0, 2000).trim() || null : null;
+
+    const values = {
+      patientId: session.id,
+      allergies: clean(allergies),
+      chronicConditions: clean(chronicConditions),
+      currentMeds: clean(currentMeds),
+      notes: clean(notes),
+      updatedAt: new Date(),
+    };
+
+    await db
+      .insert(patientMedicalProfile)
+      .values(values)
+      .onConflictDoUpdate({
+        target: patientMedicalProfile.patientId,
+        set: {
+          allergies: values.allergies,
+          chronicConditions: values.chronicConditions,
+          currentMeds: values.currentMeds,
+          notes: values.notes,
+          updatedAt: values.updatedAt,
+        },
+      });
+
+    return NextResponse.json({ ok: true });
+  } catch (e) {
+    console.error("[PUT /api//patients/me/profile]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-  if (gender && !["M", "F"].includes(gender)) {
-    return NextResponse.json({ error: "Genre invalide" }, { status: 400 });
-  }
-  if (bloodType && !["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].includes(bloodType)) {
-    return NextResponse.json({ error: "Groupe sanguin invalide" }, { status: 400 });
-  }
-
-  await db
-    .update(patients)
-    .set({
-      dateOfBirth: dateOfBirth || null,
-      gender: gender || null,
-      bloodType: bloodType || null,
-    })
-    .where(eq(patients.id, session.id));
-
-  const clean = (s: unknown) =>
-    typeof s === "string" ? s.slice(0, 2000).trim() || null : null;
-
-  const values = {
-    patientId: session.id,
-    allergies: clean(allergies),
-    chronicConditions: clean(chronicConditions),
-    currentMeds: clean(currentMeds),
-    notes: clean(notes),
-    updatedAt: new Date(),
-  };
-
-  await db
-    .insert(patientMedicalProfile)
-    .values(values)
-    .onConflictDoUpdate({
-      target: patientMedicalProfile.patientId,
-      set: {
-        allergies: values.allergies,
-        chronicConditions: values.chronicConditions,
-        currentMeds: values.currentMeds,
-        notes: values.notes,
-        updatedAt: values.updatedAt,
-      },
-    });
-
-  return NextResponse.json({ ok: true });
 }

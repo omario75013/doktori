@@ -9,6 +9,16 @@ export const SPECIALTIES = [
   { id: "cardiologue", label: "Cardiologue", labelAr: "طبيب قلب" },
   { id: "orthopediste", label: "Orthopédiste", labelAr: "طبيب عظام" },
   { id: "gastrologue", label: "Gastro-entérologue", labelAr: "طبيب جهاز هضمي" },
+  { id: "pneumologue", label: "Pneumologue", labelAr: "طبيب رئة" },
+  { id: "neurologue", label: "Neurologue", labelAr: "طبيب أعصاب" },
+  { id: "rhumatologue", label: "Rhumatologue", labelAr: "طبيب روماتيزم" },
+  { id: "urologue", label: "Urologue", labelAr: "طبيب مسالك بولية" },
+  { id: "endocrinologue", label: "Endocrinologue", labelAr: "طبيب غدد" },
+  { id: "nephrologue", label: "Néphrologue", labelAr: "طبيب كلى" },
+  { id: "psychiatre", label: "Psychiatre", labelAr: "طبيب نفسي" },
+  { id: "radiologue", label: "Radiologue", labelAr: "طبيب أشعة" },
+  { id: "chirurgien", label: "Chirurgien Général", labelAr: "جراح عام" },
+  { id: "allergologue", label: "Allergologue", labelAr: "طبيب حساسية" },
 ] as const;
 
 export const CITIES = [
@@ -20,6 +30,21 @@ export const CITIES = [
   { id: "la-soukra", label: "La Soukra", labelAr: "السكرة", governorate: "Ariana" },
   { id: "raoued", label: "Raoued", labelAr: "رواد", governorate: "Ariana" },
   { id: "manouba", label: "Manouba", labelAr: "منوبة", governorate: "Manouba" },
+  { id: "sfax", label: "Sfax", labelAr: "صفاقس", governorate: "Sfax" },
+  { id: "sousse", label: "Sousse", labelAr: "سوسة", governorate: "Sousse" },
+  { id: "monastir", label: "Monastir", labelAr: "المنستير", governorate: "Monastir" },
+  { id: "bizerte", label: "Bizerte", labelAr: "بنزرت", governorate: "Bizerte" },
+  { id: "nabeul", label: "Nabeul", labelAr: "نابل", governorate: "Nabeul" },
+  { id: "hammamet", label: "Hammamet", labelAr: "الحمامات", governorate: "Nabeul" },
+  { id: "kairouan", label: "Kairouan", labelAr: "القيروان", governorate: "Kairouan" },
+  { id: "gabes", label: "Gabès", labelAr: "قابس", governorate: "Gabès" },
+  { id: "medenine", label: "Médenine", labelAr: "مدنين", governorate: "Médenine" },
+  { id: "djerba", label: "Djerba", labelAr: "جربة", governorate: "Médenine" },
+  { id: "beja", label: "Béja", labelAr: "باجة", governorate: "Béja" },
+  { id: "jendouba", label: "Jendouba", labelAr: "جندوبة", governorate: "Jendouba" },
+  { id: "ben-arous", label: "Ben Arous", labelAr: "بن عروس", governorate: "Ben Arous" },
+  { id: "ezzahra", label: "Ezzahra", labelAr: "الزهراء", governorate: "Ben Arous" },
+  { id: "hammam-lif", label: "Hammam-Lif", labelAr: "حمام الأنف", governorate: "Ben Arous" },
 ] as const;
 
 export const APPOINTMENT_STATUSES = [

@@ -281,7 +281,7 @@ export async function POST(req: Request) {
       const fee = resolvedTypeFee ?? doctor.teleconsultFee ?? doctor.consultationFee ?? null;
 
       if (fee != null && fee > 0) {
-        const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+        const baseUrl = process.env.NEXTAUTH_URL || "https://doktori.tn";
         const successUrl = `${baseUrl}/payment/success?appt=${appointment.id}`;
         const failUrl = `${baseUrl}/payment/fail?appt=${appointment.id}`;
 

@@ -8,65 +8,70 @@ export async function POST(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const admin = await requireAdmin(["super_admin"]);
-  if (admin instanceof NextResponse) return admin;
+  try {
+    const admin = await requireAdmin(["super_admin"]);
+    if (admin instanceof NextResponse) return admin;
 
-  const { id } = await params;
+    const { id } = await params;
 
-  const [doctor] = await db
-    .select({ id: doctors.id })
-    .from(doctors)
-    .where(eq(doctors.id, id))
-    .limit(1);
-  if (!doctor) {
-    return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
-  }
+    const [doctor] = await db
+      .select({ id: doctors.id })
+      .from(doctors)
+      .where(eq(doctors.id, id))
+      .limit(1);
+    if (!doctor) {
+      return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
+    }
 
-  const body = (await req.json()) as { isActive?: unknown; until?: unknown };
+    const body = (await req.json()) as { isActive?: unknown; until?: unknown };
 
-  if (typeof body.isActive !== "boolean") {
-    return NextResponse.json(
-      { error: "isActive (boolean) est requis" },
-      { status: 422 }
-    );
-  }
+    if (typeof body.isActive !== "boolean") {
+      return NextResponse.json(
+        { error: "isActive (boolean) est requis" },
+        { status: 422 }
+      );
+    }
 
-  const [before] = await db
-    .select()
-    .from(doctorPremium)
-    .where(eq(doctorPremium.doctorId, id))
-    .limit(1);
+    const [before] = await db
+      .select()
+      .from(doctorPremium)
+      .where(eq(doctorPremium.doctorId, id))
+      .limit(1);
 
-  const untilDate =
-    typeof body.until === "string" ? new Date(body.until) : null;
+    const untilDate =
+      typeof body.until === "string" ? new Date(body.until) : null;
 
-  const [after] = await db
-    .insert(doctorPremium)
-    .values({
-      doctorId: id,
-      isActive: body.isActive,
-      until: untilDate,
-    })
-    .onConflictDoUpdate({
-      target: doctorPremium.doctorId,
-      set: {
+    const [after] = await db
+      .insert(doctorPremium)
+      .values({
+        doctorId: id,
         isActive: body.isActive,
         until: untilDate,
-      },
-    })
-    .returning();
+      })
+      .onConflictDoUpdate({
+        target: doctorPremium.doctorId,
+        set: {
+          isActive: body.isActive,
+          until: untilDate,
+        },
+      })
+      .returning();
 
-  const meta = extractRequestMeta(req);
-  await logAudit({
-    actor: admin,
-    action: body.isActive ? "doctors.premium_activate" : "doctors.premium_deactivate",
-    resourceType: "doctors",
-    resourceId: id,
-    before: before ? { isActive: before.isActive, until: before.until } : null,
-    after: { isActive: after.isActive, until: after.until },
-    ip: meta.ip,
-    userAgent: meta.userAgent,
-  });
+    const meta = extractRequestMeta(req);
+    await logAudit({
+      actor: admin,
+      action: body.isActive ? "doctors.premium_activate" : "doctors.premium_deactivate",
+      resourceType: "doctors",
+      resourceId: id,
+      before: before ? { isActive: before.isActive, until: before.until } : null,
+      after: { isActive: after.isActive, until: after.until },
+      ip: meta.ip,
+      userAgent: meta.userAgent,
+    });
 
-  return NextResponse.json({ ok: true, premium: after });
+    return NextResponse.json({ ok: true, premium: after });
+  } catch (e) {
+    console.error("[POST /api//admin/doctors/[id]/premium-badge]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
 }

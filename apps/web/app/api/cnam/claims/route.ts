@@ -61,61 +61,66 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await auth();
-  if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  try {
+    const session = await auth();
+    if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 
-  const body = await req.json().catch(() => ({}));
-  const { appointmentId, cnamNumber, amount, patientRole, notes } = body;
+    const body = await req.json().catch(() => ({}));
+    const { appointmentId, cnamNumber, amount, patientRole, notes } = body;
 
-  if (!appointmentId || typeof cnamNumber !== "string" || !cnamNumber.trim()) {
-    return NextResponse.json({ error: "appointmentId et numéro CNAM requis" }, { status: 400 });
-  }
-  const amountMillimes = Number(amount);
-  if (!Number.isFinite(amountMillimes) || amountMillimes < 1000 || amountMillimes > 1000000) {
-    return NextResponse.json({ error: "Montant invalide (1 à 1000 DT)" }, { status: 400 });
-  }
-  if (patientRole && !["assure", "ayant_droit"].includes(patientRole)) {
-    return NextResponse.json({ error: "Rôle invalide" }, { status: 400 });
-  }
+    if (!appointmentId || typeof cnamNumber !== "string" || !cnamNumber.trim()) {
+      return NextResponse.json({ error: "appointmentId et numéro CNAM requis" }, { status: 400 });
+    }
+    const amountMillimes = Number(amount);
+    if (!Number.isFinite(amountMillimes) || amountMillimes < 1000 || amountMillimes > 1000000) {
+      return NextResponse.json({ error: "Montant invalide (1 à 1000 DT)" }, { status: 400 });
+    }
+    if (patientRole && !["assure", "ayant_droit"].includes(patientRole)) {
+      return NextResponse.json({ error: "Rôle invalide" }, { status: 400 });
+    }
 
-  const [appt] = await db
-    .select()
-    .from(appointments)
-    .where(and(eq(appointments.id, appointmentId), eq(appointments.doctorId, session.user.id)))
-    .limit(1);
+    const [appt] = await db
+      .select()
+      .from(appointments)
+      .where(and(eq(appointments.id, appointmentId), eq(appointments.doctorId, session.user.id)))
+      .limit(1);
 
-  if (!appt) return NextResponse.json({ error: "RDV introuvable" }, { status: 404 });
+    if (!appt) return NextResponse.json({ error: "RDV introuvable" }, { status: 404 });
 
-  const normalized = normalizeCnam(cnamNumber);
+    const normalized = normalizeCnam(cnamNumber);
 
-  // Persist the CNAM number on the patient so future bookings auto-fill
-  await db
-    .update(patients)
-    .set({ cnamNumber: normalized })
-    .where(eq(patients.id, appt.patientId));
+    // Persist the CNAM number on the patient so future bookings auto-fill
+    await db
+      .update(patients)
+      .set({ cnamNumber: normalized })
+      .where(eq(patients.id, appt.patientId));
 
-  const [created] = await db
-    .insert(cnamClaims)
-    .values({
-      appointmentId: appt.id,
-      doctorId: session.user.id,
-      patientId: appt.patientId,
-      cnamNumber: normalized,
-      patientRole: patientRole ?? "assure",
-      amount: amountMillimes,
-      consultationDate: appt.startsAt.toISOString().slice(0, 10),
-      notes: notes || null,
-    })
-    .onConflictDoUpdate({
-      target: cnamClaims.appointmentId,
-      set: {
+    const [created] = await db
+      .insert(cnamClaims)
+      .values({
+        appointmentId: appt.id,
+        doctorId: session.user.id,
+        patientId: appt.patientId,
         cnamNumber: normalized,
         patientRole: patientRole ?? "assure",
         amount: amountMillimes,
+        consultationDate: appt.startsAt.toISOString().slice(0, 10),
         notes: notes || null,
-      },
-    })
-    .returning();
+      })
+      .onConflictDoUpdate({
+        target: cnamClaims.appointmentId,
+        set: {
+          cnamNumber: normalized,
+          patientRole: patientRole ?? "assure",
+          amount: amountMillimes,
+          notes: notes || null,
+        },
+      })
+      .returning();
 
-  return NextResponse.json(created, { status: 201 });
+    return NextResponse.json(created, { status: 201 });
+  } catch (e) {
+    console.error("[POST /api//cnam/claims]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
 }

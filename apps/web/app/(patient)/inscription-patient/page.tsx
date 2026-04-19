@@ -42,8 +42,10 @@ function validateEmail(email: string): string | null {
 
 function validatePhone(phone: string): string | null {
   if (!phone) return null;
-  const digits = phone.replace(/\D/g, "");
-  return digits.length >= 8 ? null : "Le numéro doit contenir au moins 8 chiffres";
+  const normalized = phone.replace(/[\s\-()]/g, "");
+  return /^(\+216|216|0)?[2-9]\d{7}$/.test(normalized)
+    ? null
+    : "Numéro tunisien invalide (ex: +216 XX XXX XXX)";
 }
 
 export default function InscriptionPatientPage() {

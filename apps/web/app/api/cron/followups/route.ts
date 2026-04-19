@@ -7,45 +7,50 @@ import { sendSMS } from "@/lib/sms";
 // 'follow_up' and whose preferredDate has arrived (<= today). One-shot —
 // updates notifiedAt so the row is never fired twice.
 export async function POST(req: Request) {
-  const authHeader = req.headers.get("authorization");
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
-  }
-
-  const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
-
-  const rows = await db
-    .select({
-      id: waitlist.id,
-      patientPhone: patients.phone,
-      patientName: patients.name,
-      doctorName: doctors.name,
-      doctorSlug: doctors.slug,
-    })
-    .from(waitlist)
-    .innerJoin(patients, eq(waitlist.patientId, patients.id))
-    .innerJoin(doctors, eq(waitlist.doctorId, doctors.id))
-    .where(
-      and(
-        eq(waitlist.source, "follow_up"),
-        lte(waitlist.preferredDate, today),
-        isNull(waitlist.notifiedAt),
-      ),
-    )
-    .limit(200);
-
-  let sent = 0;
-  for (const row of rows) {
-    const msg = `Doktori: ${row.doctorName} vous recommande un controle. Reservez sur doktori.tn/rdv/${row.doctorSlug}`;
-    const result = await sendSMS(row.patientPhone, msg);
-    if (result.success) {
-      await db
-        .update(waitlist)
-        .set({ notifiedAt: sql`now()` })
-        .where(eq(waitlist.id, row.id));
-      sent++;
+  try {
+    const authHeader = req.headers.get("authorization");
+    if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
-  }
 
-  return NextResponse.json({ sent, candidates: rows.length, date: today });
+    const today = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
+
+    const rows = await db
+      .select({
+        id: waitlist.id,
+        patientPhone: patients.phone,
+        patientName: patients.name,
+        doctorName: doctors.name,
+        doctorSlug: doctors.slug,
+      })
+      .from(waitlist)
+      .innerJoin(patients, eq(waitlist.patientId, patients.id))
+      .innerJoin(doctors, eq(waitlist.doctorId, doctors.id))
+      .where(
+        and(
+          eq(waitlist.source, "follow_up"),
+          lte(waitlist.preferredDate, today),
+          isNull(waitlist.notifiedAt),
+        ),
+      )
+      .limit(200);
+
+    let sent = 0;
+    for (const row of rows) {
+      const msg = `Doktori: ${row.doctorName} vous recommande un controle. Reservez sur doktori.tn/rdv/${row.doctorSlug}`;
+      const result = await sendSMS(row.patientPhone, msg);
+      if (result.success) {
+        await db
+          .update(waitlist)
+          .set({ notifiedAt: sql`now()` })
+          .where(eq(waitlist.id, row.id));
+        sent++;
+      }
+    }
+
+    return NextResponse.json({ sent, candidates: rows.length, date: today });
+  } catch (e) {
+    console.error("[POST /api//cron/followups]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
+  }
 }

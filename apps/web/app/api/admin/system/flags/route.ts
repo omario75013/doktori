@@ -19,38 +19,43 @@ export async function GET(req: Request) {
 
 // POST /api/admin/system/flags — create a new feature flag
 export async function POST(req: Request) {
-  const admin = await requireAdmin(["super_admin"]);
-  if (admin instanceof NextResponse) return admin;
+  try {
+    const admin = await requireAdmin(["super_admin"]);
+    if (admin instanceof NextResponse) return admin;
 
-  const body = await req.json();
-  const { key, description, enabled = false } = body;
+    const body = await req.json();
+    const { key, description, enabled = false } = body;
 
-  if (!key || typeof key !== "string" || !/^[a-z0-9_]{1,100}$/.test(key)) {
-    return NextResponse.json(
-      { error: "La clé doit être en minuscules, chiffres et underscores (max 100 car.)" },
-      { status: 400 }
-    );
+    if (!key || typeof key !== "string" || !/^[a-z0-9_]{1,100}$/.test(key)) {
+      return NextResponse.json(
+        { error: "La clé doit être en minuscules, chiffres et underscores (max 100 car.)" },
+        { status: 400 }
+      );
+    }
+
+    const [created] = await db
+      .insert(featureFlags)
+      .values({
+        key,
+        description: description ?? null,
+        enabled: Boolean(enabled),
+      })
+      .returning();
+
+    const { ip, userAgent } = extractRequestMeta(req);
+    await logAudit({
+      actor: admin,
+      action: "create",
+      resourceType: "feature_flag",
+      resourceId: key,
+      after: created,
+      ip,
+      userAgent,
+    });
+
+    return NextResponse.json({ flag: created }, { status: 201 });
+  } catch (e) {
+    console.error("[POST /api//admin/system/flags]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-
-  const [created] = await db
-    .insert(featureFlags)
-    .values({
-      key,
-      description: description ?? null,
-      enabled: Boolean(enabled),
-    })
-    .returning();
-
-  const { ip, userAgent } = extractRequestMeta(req);
-  await logAudit({
-    actor: admin,
-    action: "create",
-    resourceType: "feature_flag",
-    resourceId: key,
-    after: created,
-    ip,
-    userAgent,
-  });
-
-  return NextResponse.json({ flag: created }, { status: 201 });
 }

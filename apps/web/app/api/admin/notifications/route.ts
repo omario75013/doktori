@@ -26,31 +26,36 @@ export async function GET(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const admin = await requireAdmin();
-  if (admin instanceof NextResponse) return admin;
+  try {
+    const admin = await requireAdmin();
+    if (admin instanceof NextResponse) return admin;
 
-  const body = (await req.json()) as { ids?: string[]; markAllRead?: boolean };
+    const body = (await req.json()) as { ids?: string[]; markAllRead?: boolean };
 
-  if (body.markAllRead) {
-    await db
-      .update(adminNotifications)
-      .set({ isRead: true })
-      .where(eq(adminNotifications.isRead, false));
-    return NextResponse.json({ ok: true });
+    if (body.markAllRead) {
+      await db
+        .update(adminNotifications)
+        .set({ isRead: true })
+        .where(eq(adminNotifications.isRead, false));
+      return NextResponse.json({ ok: true });
+    }
+
+    if (Array.isArray(body.ids) && body.ids.length > 0) {
+      await db
+        .update(adminNotifications)
+        .set({ isRead: true })
+        .where(
+          and(
+            inArray(adminNotifications.id, body.ids),
+            eq(adminNotifications.isRead, false)
+          )
+        );
+      return NextResponse.json({ ok: true });
+    }
+
+    return NextResponse.json({ error: "ids ou markAllRead requis" }, { status: 400 });
+  } catch (e) {
+    console.error("[PATCH /api//admin/notifications]", e);
+    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
   }
-
-  if (Array.isArray(body.ids) && body.ids.length > 0) {
-    await db
-      .update(adminNotifications)
-      .set({ isRead: true })
-      .where(
-        and(
-          inArray(adminNotifications.id, body.ids),
-          eq(adminNotifications.isRead, false)
-        )
-      );
-    return NextResponse.json({ ok: true });
-  }
-
-  return NextResponse.json({ error: "ids ou markAllRead requis" }, { status: 400 });
 }
