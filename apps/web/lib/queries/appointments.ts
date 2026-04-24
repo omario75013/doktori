@@ -1,17 +1,50 @@
-import { db, appointments, doctorSchedules, patients } from "@doktori/db";
+import {
+  db,
+  appointments,
+  doctorSchedules,
+  patients,
+  appointmentTypePractices,
+} from "@doktori/db";
 import { eq, and, gte, lte, not, inArray, sql } from "drizzle-orm";
 
 // A patient cancellation is flagged as "last-minute" when it lands within this
 // window before the appointment start. Bumped into patients.lastMinuteCancelCount.
 const LAST_MINUTE_MS = 2 * 60 * 60 * 1000; // 2 hours
 
+export type Slot = {
+  startTime: string;
+  endTime: string;
+  available: boolean;
+  practiceId: string;
+};
+
 export async function getAvailableSlots(
   doctorId: string,
   date: string,
   durationOverride?: number,
   practiceId?: string,
-) {
+  appointmentTypeId?: string,
+): Promise<Slot[]> {
   const dayOfWeek = new Date(date).getDay();
+
+  // Resolve allowed practices for this motif (if provided). The booking flow
+  // should only surface cabinets where the motif is actually offered.
+  let allowedPracticeIds: string[] | null = null;
+  if (appointmentTypeId) {
+    const rows = await db
+      .select({ practiceId: appointmentTypePractices.practiceId })
+      .from(appointmentTypePractices)
+      .where(eq(appointmentTypePractices.appointmentTypeId, appointmentTypeId));
+    allowedPracticeIds = rows.map((r) => r.practiceId);
+    // If caller also specified a practiceId, intersect
+    if (practiceId && !allowedPracticeIds.includes(practiceId)) {
+      return [];
+    }
+    if (practiceId) allowedPracticeIds = [practiceId];
+    if (allowedPracticeIds.length === 0) return [];
+  } else if (practiceId) {
+    allowedPracticeIds = [practiceId];
+  }
 
   const schedules = await db
     .select()
@@ -21,7 +54,9 @@ export async function getAvailableSlots(
         eq(doctorSchedules.doctorId, doctorId),
         eq(doctorSchedules.dayOfWeek, dayOfWeek),
         eq(doctorSchedules.isActive, true),
-        practiceId ? eq(doctorSchedules.practiceId, practiceId) : undefined,
+        allowedPracticeIds && allowedPracticeIds.length > 0
+          ? inArray(doctorSchedules.practiceId, allowedPracticeIds)
+          : undefined,
       )
     );
 
@@ -31,7 +66,11 @@ export async function getAvailableSlots(
   const dayEnd = new Date(`${date}T23:59:59`);
 
   const booked = await db
-    .select({ startsAt: appointments.startsAt, endsAt: appointments.endsAt })
+    .select({
+      startsAt: appointments.startsAt,
+      endsAt: appointments.endsAt,
+      practiceId: appointments.practiceId,
+    })
     .from(appointments)
     .where(
       and(
@@ -42,7 +81,7 @@ export async function getAvailableSlots(
       )
     );
 
-  const slots: Array<{ startTime: string; endTime: string; available: boolean }> = [];
+  const slots: Slot[] = [];
 
   for (const sched of schedules) {
     const [startH, startM] = sched.startTime.split(":").map(Number);
@@ -59,13 +98,23 @@ export async function getAvailableSlots(
       const slotStartDate = new Date(`${date}T${slotStart}:00`);
       const slotEndDate = new Date(`${date}T${slotEnd}:00`);
 
+      // A slot is taken if any appointment at the same cabinet overlaps.
+      // Appointments at a DIFFERENT cabinet don't block this cabinet's slots.
       const isBooked = booked.some(
-        (b) => slotStartDate < b.endsAt && slotEndDate > b.startsAt
+        (b) =>
+          slotStartDate < b.endsAt &&
+          slotEndDate > b.startsAt &&
+          b.practiceId === sched.practiceId
       );
 
       const isPast = slotStartDate < new Date();
 
-      slots.push({ startTime: slotStart, endTime: slotEnd, available: !isBooked && !isPast });
+      slots.push({
+        startTime: slotStart,
+        endTime: slotEnd,
+        available: !isBooked && !isPast,
+        practiceId: sched.practiceId,
+      });
       current += duration;
     }
   }
@@ -85,12 +134,15 @@ export async function createAppointment(data: {
   type?: string;
 }) {
   return await db.transaction(async (tx) => {
+    // Conflicts are scoped per cabinet: a doctor can have overlapping slots
+    // at two different cabinets (booked by different secretaries, etc.).
     const conflicts = await tx
       .select({ id: appointments.id })
       .from(appointments)
       .where(
         and(
           eq(appointments.doctorId, data.doctorId),
+          data.practiceId ? eq(appointments.practiceId, data.practiceId) : undefined,
           not(inArray(appointments.status, ["cancelled", "no_show"])),
           lte(appointments.startsAt, data.endsAt),
           gte(appointments.endsAt, data.startsAt),

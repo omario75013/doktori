@@ -1,13 +1,38 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextResponse, NextRequest } from "next/server";
+import { requireAuth } from "@/lib/require-auth";
+import { getPatientFromRequest } from "@/lib/patient-auth";
 import { db, appointments, patients } from "@doktori/db";
 import { eq, and, sql } from "drizzle-orm";
 import { applyNoShowPolicy } from "@/lib/noshow-policy";
 
-export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  // Patient path: can only cancel their own appointment
+  const patientPayload = getPatientFromRequest(req);
+  if (patientPayload) {
+    const { id } = await params;
+    const { status } = await req.json().catch(() => ({}));
+    if (status !== "cancelled") {
+      return NextResponse.json({ error: "Les patients ne peuvent qu'annuler" }, { status: 403 });
+    }
+    const [appt] = await db
+      .select()
+      .from(appointments)
+      .where(and(eq(appointments.id, id), eq(appointments.patientId, patientPayload.id)))
+      .limit(1);
+    if (!appt) return NextResponse.json({ error: "RDV introuvable" }, { status: 404 });
+    const [updated] = await db
+      .update(appointments)
+      .set({ status: "cancelled", updatedAt: new Date() })
+      .where(eq(appointments.id, id))
+      .returning();
+    return NextResponse.json(updated);
+  }
+
   try {
-    const session = await auth();
-    if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    const user = await requireAuth(req);
+    if (!user || (user.role !== "doctor" && user.role !== "secretary"))
+      return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+    const doctorId = user.role === "doctor" ? user.id : (user as { doctorId: string }).doctorId;
 
     const { id } = await params;
     const { status } = await req.json();
@@ -20,7 +45,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const [current] = await db
       .select()
       .from(appointments)
-      .where(and(eq(appointments.id, id), eq(appointments.doctorId, session.user.id)))
+      .where(and(eq(appointments.id, id), eq(appointments.doctorId, doctorId)))
       .limit(1);
     if (!current) return NextResponse.json({ error: "RDV introuvable" }, { status: 404 });
 
@@ -29,7 +54,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     const [updated] = await db
       .update(appointments)
       .set({ status, updatedAt: now })
-      .where(and(eq(appointments.id, id), eq(appointments.doctorId, session.user.id)))
+      .where(and(eq(appointments.id, id), eq(appointments.doctorId, doctorId)))
       .returning();
 
     // Reliability counters — only bump on a true transition into the flagged state
@@ -43,7 +68,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
       applyNoShowPolicy({
         patientId: current.patientId,
         appointmentId: id,
-        doctorId: session.user.id,
+        doctorId: doctorId,
       }).catch((e) => console.error("[status] applyNoShowPolicy failed:", e));
     }
 

@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
+import { getStaffFromRequest } from "@/lib/staff-auth";
 
 export type DoctorSession = {
   id: string;
@@ -9,19 +10,31 @@ export type DoctorSession = {
 /**
  * Guard a doctor-facing API route. Returns the doctor session or a 401 NextResponse.
  *
+ * Accepts NextAuth cookie (web) and Bearer JWT (mobile) via `getStaffFromRequest`.
+ *
  * Usage:
- *   const doctor = await requireDoctor();
+ *   const doctor = await requireDoctor(req);
  *   if (doctor instanceof NextResponse) return doctor;
- *   // ...use doctor.id here
  */
-export async function requireDoctor(): Promise<DoctorSession | NextResponse> {
+export async function requireDoctor(
+  req?: Request | NextRequest
+): Promise<DoctorSession | NextResponse> {
+  // 1. NextAuth cookie
   const session = await auth();
-  if (!session?.user?.id) {
-    return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  if (session?.user?.id && session.user.role === "doctor") {
+    return { id: session.user.id, email: session.user.email ?? "" };
   }
-  const role = session.user.role;
-  if (role !== "doctor") {
+
+  // 2. Bearer JWT fallback
+  if (req) {
+    const staff = getStaffFromRequest(req);
+    if (staff && staff.role === "doctor") {
+      return { id: staff.id, email: "" };
+    }
+  }
+
+  if (session?.user?.id) {
     return NextResponse.json({ error: "Accès réservé aux médecins" }, { status: 403 });
   }
-  return { id: session.user.id, email: session.user.email ?? "" };
+  return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
 }

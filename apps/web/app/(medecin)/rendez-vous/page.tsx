@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Calendar, CalendarPlus, X, Search, Phone, MessageSquare, UserCheck } from "lucide-react";
+import { Calendar, CalendarPlus, X, Search, Phone, MessageSquare, UserCheck, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { SMSModal } from "@/components/sms-modal";
@@ -16,10 +16,20 @@ type Appointment = {
   type: string;
   reason: string | null;
   checkedInAt: string | null;
+  practiceId: string | null;
   patientName: string;
   patientPhone: string;
   patientNoShowCount: number;
   patientLastMinuteCancelCount: number;
+};
+
+type Practice = {
+  id: string;
+  name: string;
+  city: string;
+  kind: "cabinet" | "clinic";
+  isPrimary: boolean;
+  isActive: boolean;
 };
 
 type PatientOption = {
@@ -276,6 +286,8 @@ export default function RendezVousPage() {
   ];
 
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [practices, setPractices] = useState<Practice[]>([]);
+  const [cabinetFilter, setCabinetFilter] = useState<string>("all"); // "all" | practiceId
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
@@ -300,12 +312,15 @@ export default function RendezVousPage() {
 
   // SMS modal state
   const [smsAppt, setSmsAppt] = useState<Appointment | null>(null);
+  // Edit modal state
+  const [editAppt, setEditAppt] = useState<Appointment | null>(null);
 
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
-      const res = await fetch("/api/appointments/doctor");
+      const qs = cabinetFilter === "all" ? "" : `?practiceId=${cabinetFilter}`;
+      const res = await fetch(`/api/appointments/doctor${qs}`);
       if (!res.ok) throw new Error(t("retry"));
       const data: Appointment[] = await res.json();
       setAppointments(data);
@@ -314,11 +329,47 @@ export default function RendezVousPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [cabinetFilter, t]);
 
   useEffect(() => {
     fetchAppointments();
   }, [fetchAppointments]);
+
+  // Load cabinets once for tabs
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await fetch("/api/doctor/practices");
+        if (res.ok) {
+          const data: Practice[] = await res.json();
+          setPractices(data.filter((p) => p.isActive));
+        }
+      } catch {
+        /* ignore — tabs are optional */
+      }
+    })();
+  }, []);
+
+  // Sync cabinet filter with URL (?cabinet=all|<uuid>) for deep-linking.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const fromUrl = params.get("cabinet");
+    if (fromUrl && fromUrl !== cabinetFilter) setCabinetFilter(fromUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const setCabinet = (id: string) => {
+    setCabinetFilter(id);
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (id === "all") params.delete("cabinet");
+      else params.set("cabinet", id);
+      const qs = params.toString();
+      const url = qs ? `?${qs}` : window.location.pathname;
+      window.history.replaceState(null, "", url);
+    }
+  };
 
   const updateStatus = async (id: string, status: string) => {
     setUpdating(id);
@@ -535,6 +586,46 @@ export default function RendezVousPage() {
         </div>
       </div>
 
+      {/* Cabinet tabs — always visible if ≥1 cabinet */}
+      {practices.length > 0 && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setCabinet("all")}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors ${
+              cabinetFilter === "all"
+                ? "bg-primary text-white shadow-sm"
+                : "bg-white border border-border text-foreground hover:bg-secondary"
+            }`}
+          >
+            Tous les cabinets
+          </button>
+          {practices.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => setCabinet(p.id)}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors ${
+                cabinetFilter === p.id
+                  ? "bg-primary text-white shadow-sm"
+                  : "bg-white border border-border text-foreground hover:bg-secondary"
+              }`}
+            >
+              {p.name}
+              {p.kind === "clinic" && (
+                <span
+                  className={`text-[10px] rounded-full px-1.5 py-0.5 ${
+                    cabinetFilter === p.id
+                      ? "bg-white/20 text-white"
+                      : "bg-blue-100 text-blue-700"
+                  }`}
+                >
+                  Clinique
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
       {appointments.length === 0 ? (
         <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
           <div className="h-14 w-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
@@ -682,6 +773,16 @@ export default function RendezVousPage() {
                               {isUpdating ? "..." : action.label}
                             </button>
                           ))}
+                          {!isTerminal && (
+                            <button
+                              onClick={() => setEditAppt(appt)}
+                              title="Modifier le rendez-vous"
+                              className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl border border-border text-foreground hover:bg-secondary transition-colors"
+                            >
+                              <Pencil className="h-3.5 w-3.5" />
+                              Modifier
+                            </button>
+                          )}
                           <a
                             href={`/api/appointments/${appt.id}/calendar`}
                             title="Ajouter au calendrier"
@@ -832,6 +933,18 @@ export default function RendezVousPage() {
         />
       )}
 
+      {/* Edit appointment modal */}
+      {editAppt && (
+        <EditAppointmentModal
+          appointment={editAppt}
+          onClose={() => setEditAppt(null)}
+          onSaved={async () => {
+            setEditAppt(null);
+            await fetchAppointments();
+          }}
+        />
+      )}
+
       {/* CNAM modal */}
       {cnamDialogAppointmentId && (
         <div
@@ -893,6 +1006,169 @@ export default function RendezVousPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Edit appointment modal ───────────────────────────────────────────────────
+
+function EditAppointmentModal({
+  appointment,
+  onClose,
+  onSaved,
+}: {
+  appointment: Appointment;
+  onClose: () => void;
+  onSaved: () => void | Promise<void>;
+}) {
+  const start = new Date(appointment.startsAt);
+  const end = new Date(appointment.endsAt);
+  const [date, setDate] = useState(format(start, "yyyy-MM-dd"));
+  const [startTime, setStartTime] = useState(format(start, "HH:mm"));
+  const [endTime, setEndTime] = useState(format(end, "HH:mm"));
+  const [type, setType] = useState<"cabinet" | "teleconsult" | "domicile">(
+    (appointment.type as "cabinet" | "teleconsult" | "domicile") ?? "cabinet"
+  );
+  const [reason, setReason] = useState(appointment.reason ?? "");
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    const newStart = new Date(`${date}T${startTime}:00`);
+    const newEnd = new Date(`${date}T${endTime}:00`);
+    if (newEnd <= newStart) {
+      setError("L'heure de fin doit être postérieure au début");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch(`/api/appointments/${appointment.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          startsAt: newStart.toISOString(),
+          endsAt: newEnd.toISOString(),
+          type,
+          reason: reason.trim() === "" ? null : reason.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error ?? "Erreur mise à jour");
+      toast.success("Rendez-vous mis à jour");
+      await onSaved();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="w-full max-w-md rounded-2xl bg-white shadow-xl p-6 space-y-4 border border-border"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between">
+          <h2 className="text-base font-semibold text-foreground">
+            Modifier le rendez-vous
+          </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-secondary"
+            aria-label="Fermer"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+
+        <p className="text-sm text-gray-500">
+          Patient : <span className="font-medium text-foreground">{appointment.patientName}</span>
+        </p>
+
+        <form onSubmit={handleSubmit} className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="col-span-2">
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Date</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(e) => setDate(e.target.value)}
+                required
+                className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Début</label>
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                required
+                className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">Fin</label>
+              <input
+                type="time"
+                value={endTime}
+                onChange={(e) => setEndTime(e.target.value)}
+                required
+                className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
+            <select
+              value={type}
+              onChange={(e) => setType(e.target.value as typeof type)}
+              className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            >
+              <option value="cabinet">Au cabinet</option>
+              <option value="teleconsult">Téléconsultation</option>
+              <option value="domicile">À domicile</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">Motif</label>
+            <textarea
+              rows={2}
+              value={reason}
+              onChange={(e) => setReason(e.target.value)}
+              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+              placeholder="Consultation générale, suivi, etc."
+            />
+          </div>
+
+          {error && <p className="text-sm text-red-600">{error}</p>}
+
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={saving}
+              className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-60"
+            >
+              {saving ? "Enregistrement…" : "Enregistrer"}
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

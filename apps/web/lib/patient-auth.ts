@@ -1,5 +1,5 @@
 import { verify } from "jsonwebtoken";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
 interface PatientPayload {
   id: string;
@@ -18,4 +18,10 @@ export function getPatientFromRequest(req: NextRequest): PatientPayload | null {
   } catch {
     return null;
   }
+}
+
+export function requirePatientAuth(req: NextRequest): PatientPayload | NextResponse {
+  const patient = getPatientFromRequest(req);
+  if (!patient) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+  return patient;
 }

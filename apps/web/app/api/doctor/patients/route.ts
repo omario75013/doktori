@@ -1,15 +1,11 @@
-import { NextResponse } from "next/server";
-import { requireDoctorOrSecretary } from "@/lib/secretary-auth";
+import { NextResponse, NextRequest } from "next/server";
+import { requireDoctorOrSecretaryUnified } from "@/lib/require-auth";
 import { db, patients, appointments } from "@doktori/db";
 import { eq, sql } from "drizzle-orm";
 
-// ─── POST /api/doctor/patients ────────────────────────────────────────────────
-// Create a patient manually. If phone already exists, links to the existing
-// patient record instead of creating a duplicate.
-
-export async function POST(req: Request) {
-  const actor = await requireDoctorOrSecretary();
-  if (actor instanceof NextResponse) return actor;
+export async function POST(req: NextRequest) {
+  const actor = await requireDoctorOrSecretaryUnified(req);
+  if (actor instanceof Response) return actor;
 
   let body: unknown;
   try {
@@ -59,28 +55,38 @@ export async function POST(req: Request) {
 }
 
 // ─── GET /api/doctor/patients ─────────────────────────────────────────────────
-// List all patients who have had appointments with this doctor.
+// List all patients who have had appointments with this doctor. Accepts both
+// NextAuth cookie (web) and Bearer JWT (mobile) via the unified guard.
 
-export async function GET() {
-  const actor = await requireDoctorOrSecretary();
-  if (actor instanceof NextResponse) return actor;
+export async function GET(req: NextRequest) {
+  const authz = await requireDoctorOrSecretaryUnified(req);
+  if (authz instanceof Response) return authz;
 
-  const result = await db.execute(sql`
+  const rows = await db.execute(sql`
     SELECT
       p.id,
       p.name,
       p.phone,
       p.email,
-      p.date_of_birth AS "dateOfBirth",
-      COUNT(a.id)::int AS total_visits,
-      MAX(a.starts_at) AS last_visit
+      p.date_of_birth    AS "dateOfBirth",
+      p.gender,
+      p.blood_type       AS "bloodType",
+      p.cin,
+      p.cnam_number      AS "cnamNumber",
+      p.no_show_count    AS "noShowCount",
+      p.last_minute_cancel_count AS "lastMinuteCancelCount",
+      COUNT(a.id)::int   AS "appointmentCount",
+      MAX(a.starts_at)   AS "lastAppointmentAt"
     FROM patients p
     INNER JOIN appointments a ON a.patient_id = p.id
-    WHERE a.doctor_id = ${actor.doctorId}
-    GROUP BY p.id, p.name, p.phone, p.email, p.date_of_birth
-    ORDER BY last_visit DESC
+    WHERE a.doctor_id = ${authz.doctorId}
+      AND p.deleted_at IS NULL
+    GROUP BY p.id, p.name, p.phone, p.email, p.date_of_birth,
+             p.gender, p.blood_type, p.cin, p.cnam_number,
+             p.no_show_count, p.last_minute_cancel_count
+    ORDER BY MAX(a.starts_at) DESC
     LIMIT 200
   `);
 
-  return NextResponse.json(result);
+  return NextResponse.json(rows);
 }

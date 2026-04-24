@@ -1,27 +1,29 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/require-auth";
 import { db, doctorPractices } from "@doktori/db";
 import { eq, and, asc, desc } from "drizzle-orm";
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id) {
+export async function GET(req: NextRequest) {
+  const user = await requireAuth(req);
+  if (!user || (user.role !== "doctor" && user.role !== "secretary")) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+  const doctorId = user.role === "doctor" ? user.id : (user as { doctorId: string }).doctorId;
 
   const practices = await db
     .select()
     .from(doctorPractices)
-    .where(eq(doctorPractices.doctorId, session.user.id))
+    .where(eq(doctorPractices.doctorId, doctorId))
     .orderBy(desc(doctorPractices.isPrimary), asc(doctorPractices.createdAt));
 
   return NextResponse.json(practices);
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const user = await requireAuth(req);
+    if (!user || user.role !== "doctor") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
@@ -42,7 +44,7 @@ export async function POST(req: Request) {
     const existing = await db
       .select({ id: doctorPractices.id })
       .from(doctorPractices)
-      .where(eq(doctorPractices.doctorId, session.user.id))
+      .where(eq(doctorPractices.doctorId, user.id))
       .limit(1);
 
     const shouldBePrimary = existing.length === 0 ? true : !!isPrimary;
@@ -55,7 +57,7 @@ export async function POST(req: Request) {
           .set({ isPrimary: false })
           .where(
             and(
-              eq(doctorPractices.doctorId, session.user.id),
+              eq(doctorPractices.doctorId, user.id),
               eq(doctorPractices.isPrimary, true),
             )
           );
@@ -64,7 +66,7 @@ export async function POST(req: Request) {
       const [created] = await tx
         .insert(doctorPractices)
         .values({
-          doctorId: session.user.id,
+          doctorId: user.id,
           name: name.trim(),
           address: address.trim(),
           city: city.trim(),

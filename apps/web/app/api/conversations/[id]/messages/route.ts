@@ -38,3 +38,41 @@ export async function GET(
 
   return NextResponse.json(rows.reverse());
 }
+
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const patient = getPatientFromRequest(req);
+  if (!patient) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
+
+  const { id: conversationId } = await params;
+  const [conv] = await db
+    .select({ id: conversations.id })
+    .from(conversations)
+    .where(and(eq(conversations.id, conversationId), eq(conversations.patientId, patient.id)))
+    .limit(1);
+
+  if (!conv) return NextResponse.json({ error: "Conversation introuvable" }, { status: 404 });
+
+  const body = (await req.json().catch(() => null)) as { content?: string } | null;
+  const content = body?.content?.trim();
+  if (!content) return NextResponse.json({ error: "content requis" }, { status: 400 });
+
+  const [msg] = await db
+    .insert(messages)
+    .values({
+      conversationId,
+      senderType: "patient",
+      senderId: patient.id,
+      content,
+    })
+    .returning();
+
+  await db
+    .update(conversations)
+    .set({ lastMessageAt: new Date() })
+    .where(eq(conversations.id, conversationId));
+
+  return NextResponse.json(msg, { status: 201 });
+}

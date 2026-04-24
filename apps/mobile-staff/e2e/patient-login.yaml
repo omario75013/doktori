@@ -1,0 +1,14 @@
+appId: host.exp.exponent
+---
+- launchApp
+- assertVisible: "Doktori"
+- tapOn: "Téléphone"
+- inputText:
+    id: phone-input
+    text: "22123456"
+- tapOn: "Mot de passe"
+- inputText:
+    id: password-input
+    text: "Test1234!"
+- tapOn: "Se connecter"
+- assertVisible: "Bonjour"

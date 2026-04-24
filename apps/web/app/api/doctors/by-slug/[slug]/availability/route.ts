@@ -26,6 +26,7 @@ export async function GET(
   const startParam = searchParams.get("start");
   const daysParam = searchParams.get("days");
   const typeId = searchParams.get("typeId");
+  const practiceId = searchParams.get("practiceId") ?? undefined;
 
   const days = Math.min(Math.max(parseInt(daysParam ?? "14", 10) || 14, 1), 28);
 
@@ -61,7 +62,7 @@ export async function GET(
 
   const result: Array<{
     date: string;
-    slots: Array<{ startTime: string; endTime: string }>;
+    slots: Array<{ startTime: string; endTime: string; practiceId: string }>;
   }> = [];
 
   for (let i = 0; i < days; i++) {
@@ -72,12 +73,23 @@ export async function GET(
     const dd = String(d.getDate()).padStart(2, "0");
     const dateStr = `${yyyy}-${mm}-${dd}`;
 
-    const slots = await getAvailableSlots(doctor.id, dateStr, duration);
+    // Pass typeId to the booking engine so it filters by motif→practice.
+    const slots = await getAvailableSlots(
+      doctor.id,
+      dateStr,
+      duration,
+      practiceId,
+      typeId ?? undefined,
+    );
     result.push({
       date: dateStr,
       slots: slots
         .filter((s) => s.available)
-        .map((s) => ({ startTime: s.startTime, endTime: s.endTime })),
+        .map((s) => ({
+          startTime: s.startTime,
+          endTime: s.endTime,
+          practiceId: s.practiceId,
+        })),
     });
   }
 

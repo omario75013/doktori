@@ -1,5 +1,10 @@
 import { PageTransition } from "@/components/page-transition";
+import { PatientShellWrapper } from "@/components/patient-shell-wrapper";
 
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
-  return <PageTransition>{children}</PageTransition>;
+  return (
+    <PatientShellWrapper>
+      <PageTransition>{children}</PageTransition>
+    </PatientShellWrapper>
+  );
 }

@@ -1,0 +1,9 @@
+appId: host.exp.exponent
+---
+- launchApp
+- assertVisible: "Doktori"
+- tapOn: "Espace Pro →"
+- assertVisible: "Médecin"
+- assertVisible: "Secrétaire"
+- tapOn: "Médecin"
+- assertVisible: "Email"

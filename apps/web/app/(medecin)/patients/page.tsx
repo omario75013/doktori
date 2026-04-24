@@ -9,6 +9,14 @@ type PatientRow = {
   id: string;
   name: string;
   phone: string;
+  email: string | null;
+  date_of_birth: string | null;
+  gender: string | null;
+  blood_type: string | null;
+  cin: string | null;
+  cnam_number: string | null;
+  insurance_provider: string | null;
+  occupation: string | null;
   total_visits: number;
   last_visit: string;
 };
@@ -64,15 +72,20 @@ async function PatientsData() {
   if (!session?.user?.id) redirect("/connexion");
 
   const result = await db.execute(sql`
-    SELECT p.id, p.name, p.phone,
+    SELECT p.id, p.name, p.phone, p.email,
+           p.date_of_birth, p.gender, p.blood_type,
+           p.cin, p.cnam_number, p.insurance_provider, p.occupation,
            COUNT(a.id)::int AS total_visits,
            MAX(a.starts_at) AS last_visit
     FROM patients p
     INNER JOIN appointments a ON a.patient_id = p.id
     WHERE a.doctor_id = ${session.user.id}
-    GROUP BY p.id, p.name, p.phone
+      AND p.deleted_at IS NULL
+    GROUP BY p.id, p.name, p.phone, p.email,
+             p.date_of_birth, p.gender, p.blood_type,
+             p.cin, p.cnam_number, p.insurance_provider, p.occupation
     ORDER BY last_visit DESC
-    LIMIT 100
+    LIMIT 500
   `);
 
   const patientList = result as unknown as PatientRow[];

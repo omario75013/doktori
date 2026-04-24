@@ -1,0 +1,36 @@
+{
+  "common": {
+    "loading": "جاري التحميل…",
+    "error": "خطأ",
+    "retry": "إعادة المحاولة",
+    "cancel": "إلغاء",
+    "confirm": "تأكيد",
+    "save": "حفظ",
+    "close": "إغلاق"
+  },
+  "auth": {
+    "welcome": "مرحبا بعودتك",
+    "subtitle": "تسجيل الدخول لإدارة مواعيدك.",
+    "phone": "الهاتف",
+    "password": "كلمة المرور",
+    "signIn": "تسجيل الدخول",
+    "createAccount": "إنشاء حساب"
+  },
+  "home": {
+    "greeting": "مرحبا، {name}",
+    "prompt": "ماذا تريد أن تفعل اليوم؟",
+    "nextAppointment": "الموعد القادم",
+    "noAppointment": "لا يوجد حاليا",
+    "findDoctor": "ابحث عن طبيب",
+    "myAppointments": "مواعيدي",
+    "messages": "الرسائل",
+    "prescriptions": "الوصفات"
+  },
+  "tabs": {
+    "home": "الرئيسية",
+    "search": "بحث",
+    "agenda": "الأجندة",
+    "messages": "الرسائل",
+    "profil": "الملف الشخصي"
+  }
+}

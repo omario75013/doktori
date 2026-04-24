@@ -1,0 +1,18 @@
+{
+  "common": {
+    "loading": "Chargement…",
+    "error": "Erreur",
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "save": "Enregistrer"
+  },
+  "auth": {
+    "welcome": "Bienvenue",
+    "chooseRole": "Sélectionnez votre type de compte pour continuer.",
+    "doctor": "Médecin",
+    "secretary": "Secrétaire",
+    "signIn": "Se connecter",
+    "switchRole": "Pas vous ? Changer de rôle"
+  }
+}

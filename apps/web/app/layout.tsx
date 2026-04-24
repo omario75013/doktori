@@ -8,6 +8,7 @@ import { Footer } from "@/components/footer";
 import { Chatbot } from "@/components/chatbot";
 import { AppBanner } from "@/components/app-banner";
 import { PatientShell } from "@/components/patient-shell";
+import { DesktopBackBar } from "@/components/desktop-back-bar";
 import { InstallPrompt } from "@/components/install-prompt";
 import { ThemeProvider } from "@/components/theme-provider";
 import { MotionProvider } from "@/components/motion-provider";
@@ -104,38 +105,18 @@ export default async function RootLayout({
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col overflow-x-hidden">
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
-              "@type": "MedicalOrganization",
-              name: "Doktori",
-              url: "https://doktori.tn",
-              logo: "https://doktori.tn/logo.svg",
-              description:
-                "Plateforme de réservation médicale en ligne en Tunisie",
-              address: {
-                "@type": "PostalAddress",
-                addressCountry: "TN",
-              },
-              areaServed: {
-                "@type": "Country",
-                name: "Tunisie",
-              },
-              availableLanguage: ["fr", "ar"],
-            }),
-          }}
-        />
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
           <MotionProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
+            <DesktopBackBar />
             <PatientShell>
               <AppBanner />
               <Navbar />
             </PatientShell>
             {children}
-            <Footer />
+            <PatientShell>
+              <Footer />
+            </PatientShell>
             <Toaster position="bottom-right" richColors toastOptions={{ style: { borderRadius: "16px" } }} />
             <KeyboardShortcuts />
             <PatientShell>

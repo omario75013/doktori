@@ -232,6 +232,41 @@ export async function GET(req: Request) {
 
   const index = meili.index(DOCTORS_INDEX);
 
+  // DB fallback: used if Meilisearch is unreachable (local dev without Meili running)
+  async function dbFallback() {
+    const clauses = [eq(doctors.isActive, true)];
+    if (specialty) clauses.push(eq(doctors.specialty, specialty));
+    if (city) clauses.push(eq(doctors.city, city));
+    if (searchText && searchText.trim().length > 0) {
+      const pat = `%${searchText.trim()}%`;
+      clauses.push(sql`(${doctors.name} ILIKE ${pat} OR ${doctors.specialty} ILIKE ${pat})`);
+    }
+    const rows = await db
+      .select({
+        id: doctors.id,
+        name: doctors.name,
+        slug: doctors.slug,
+        specialty: doctors.specialty,
+        city: doctors.city,
+        address: doctors.address,
+        photoUrl: doctors.photoUrl,
+        bio: doctors.bio,
+        consultationFee: doctors.consultationFee,
+        averageRating: doctors.averageRating,
+        reviewCount: doctors.reviewCount,
+        latitude: doctors.latitude,
+        longitude: doctors.longitude,
+      })
+      .from(doctors)
+      .where(and(...clauses))
+      .limit(50);
+    return rows.map((r) => ({
+      ...r,
+      average_rating: r.averageRating ?? 0,
+      review_count: r.reviewCount ?? 0,
+    }));
+  }
+
   // Build filters — specialty/city + optional price range + optional min rating
   const buildFilters = (useCity: boolean) => {
     const f: string[] = [];
@@ -281,40 +316,50 @@ export async function GET(req: Request) {
   }
 
   // ═══ TIER 1: Strict match (specialty + city) + facet counts ═══
-  const tier1 = await index.search(searchText, {
-    filter: buildFilters(true),
-    sort: sortArray,
-    limit: 50,
-    matchingStrategy: "last",
-    facets: ["specialty", "city"],
-  });
-
-  const facetDistribution = tier1.facetDistribution || {};
-
-  let hits = [...tier1.hits];
+  let facetDistribution: Record<string, Record<string, number>> = {};
+  let hits: Array<Record<string, unknown>> = [];
   let expanded = false;
-
-  // ═══ TIER 2: Same specialty, nearby cities (if <3 results in tier 1) ═══
-  if (specialty && city && hits.length < 3) {
-    const tier2 = await index.search(searchText, {
-      filter: buildFilters(false),
+  let meiliAvailable = true;
+  try {
+    const tier1 = await index.search(searchText, {
+      filter: buildFilters(true),
       sort: sortArray,
       limit: 50,
       matchingStrategy: "last",
+      facets: ["specialty", "city"],
     });
-    const existingIds = new Set(hits.map((h) => (h as { id: string }).id));
-    const extra = tier2.hits.filter((h) => !existingIds.has((h as { id: string }).id));
-    hits = [...hits, ...extra];
-    expanded = true;
-  }
+    facetDistribution = (tier1.facetDistribution as Record<string, Record<string, number>>) || {};
+    hits = [...tier1.hits] as Array<Record<string, unknown>>;
 
-  // ═══ TIER 3: If still empty, broad fallback ═══
-  if (hits.length === 0 && q) {
-    const tier3 = await index.search(q, {
-      limit: 50,
-      matchingStrategy: "last",
-    });
-    hits = tier3.hits;
+    // ═══ TIER 2: Same specialty, nearby cities (if <3 results in tier 1) ═══
+    if (specialty && city && hits.length < 3) {
+      const tier2 = await index.search(searchText, {
+        filter: buildFilters(false),
+        sort: sortArray,
+        limit: 50,
+        matchingStrategy: "last",
+      });
+      const existingIds = new Set(hits.map((h) => (h as { id: string }).id));
+      const extra = (tier2.hits as Array<Record<string, unknown>>).filter(
+        (h) => !existingIds.has((h as { id: string }).id)
+      );
+      hits = [...hits, ...extra];
+      expanded = true;
+    }
+
+    // ═══ TIER 3: If still empty, broad fallback ═══
+    if (hits.length === 0 && q) {
+      const tier3 = await index.search(q, {
+        limit: 50,
+        matchingStrategy: "last",
+      });
+      hits = tier3.hits as Array<Record<string, unknown>>;
+    }
+  } catch (e) {
+    // Meilisearch unreachable (e.g., local dev without Meili running) — fall back to direct DB search
+    meiliAvailable = false;
+    console.warn("[search] Meili failed, falling back to DB:", e instanceof Error ? e.message : e);
+    hits = (await dbFallback()) as unknown as Array<Record<string, unknown>>;
   }
 
   // ═══ DATE-AWARE AVAILABILITY FILTER ═══

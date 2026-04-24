@@ -1,0 +1,19 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["./*"],
+      "@doktori/mobile-core": ["../../packages/mobile-core/src"],
+      "@doktori/mobile-core/*": ["../../packages/mobile-core/src/*"],
+      "@doktori/shared": ["../../packages/shared/src"]
+    }
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.tsx",
+    ".expo/types/**/*.ts",
+    "expo-env.d.ts"
+  ]
+}

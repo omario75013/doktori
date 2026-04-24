@@ -37,7 +37,7 @@ export async function GET(req: Request) {
     if (type) duration = type.durationMinutes;
   }
 
-  const slots = await getAvailableSlots(doctorId, date, duration, practiceId);
+  const slots = await getAvailableSlots(doctorId, date, duration, practiceId, typeId ?? undefined);
   return NextResponse.json(slots);
 }
 
@@ -169,7 +169,8 @@ export async function POST(req: Request) {
   const startsAt = new Date(`${parsed.data.date}T${parsed.data.startTime}:00`);
   const endsAt = new Date(startsAt.getTime() + slotDuration * 60 * 1000);
 
-  // Validate practiceId when provided: must belong to the doctor
+  // Resolve practiceId: explicit → validate; otherwise fall back to doctor's primary practice
+  // (appointments.practice_id is NOT NULL since migration 0063).
   let resolvedPracticeId: string | undefined;
   if (parsed.data.practiceId) {
     const [practice] = await db
@@ -187,6 +188,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Cabinet introuvable" }, { status: 400 });
     }
     resolvedPracticeId = practice.id;
+  } else {
+    const [primary] = await db
+      .select({ id: doctorPractices.id })
+      .from(doctorPractices)
+      .where(
+        and(
+          eq(doctorPractices.doctorId, doctor.id),
+          eq(doctorPractices.isPrimary, true),
+          eq(doctorPractices.isActive, true),
+        )
+      )
+      .limit(1);
+    if (!primary) {
+      return NextResponse.json(
+        { error: "Le médecin n'a pas de cabinet actif" },
+        { status: 400 }
+      );
+    }
+    resolvedPracticeId = primary.id;
   }
 
   // Analytics: capture referredBy from ?ref query param in the Referer header

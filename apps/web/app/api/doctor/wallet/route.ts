@@ -31,8 +31,8 @@ async function ensureWallet(doctorId: string) {
   return created;
 }
 
-export async function GET() {
-  const doctor = await requireDoctor();
+export async function GET(req: Request) {
+  const doctor = await requireDoctor(req);
   if (doctor instanceof NextResponse) return doctor;
 
   const wallet = await ensureWallet(doctor.id);
@@ -48,7 +48,7 @@ export async function GET() {
 }
 
 export async function POST(req: Request) {
-  const doctor = await requireDoctor();
+  const doctor = await requireDoctor(req);
   if (doctor instanceof NextResponse) return doctor;
 
   let body: unknown;

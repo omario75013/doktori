@@ -28,6 +28,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           id: doctor.id,
           name: doctor.name,
           email: doctor.email,
+          image: doctor.photoUrl ?? null,
           role: "doctor" as const,
         };
       },
@@ -132,6 +133,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (user.adminRole) token.adminRole = user.adminRole;
         if (user.doctorId) token.doctorId = user.doctorId;
         if ("clinicId" in user) token.clinicId = user.clinicId;
+        if ("image" in user) token.picture = user.image ?? null;
       }
       return token;
     },
@@ -142,6 +144,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (token.adminRole) session.user.adminRole = token.adminRole;
         if (token.doctorId) session.user.doctorId = token.doctorId;
         if ("clinicId" in token) session.user.clinicId = token.clinicId;
+        session.user.image = (token.picture as string | null) ?? null;
       }
       return session;
     },

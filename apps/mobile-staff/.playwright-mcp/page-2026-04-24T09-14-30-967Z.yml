@@ -1,0 +1,35 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - link "Doktori.tn" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - img [ref=e7]
+      - generic [ref=e10]: Doktori.tn
+    - generic [ref=e11]:
+      - generic [ref=e12]:
+        - img [ref=e14]
+        - heading "Espace Secrétaire" [level=1] [ref=e17]
+        - paragraph [ref=e18]: Connectez-vous à votre espace de gestion de l'agenda.
+      - generic [ref=e19]:
+        - generic [ref=e20]:
+          - generic [ref=e21]: Adresse e-mail
+          - generic [ref=e22]:
+            - img [ref=e23]
+            - textbox "Adresse e-mail" [ref=e26]:
+              - /placeholder: votre@email.tn
+        - generic [ref=e27]:
+          - generic [ref=e28]: Mot de passe
+          - generic [ref=e29]:
+            - img [ref=e30]
+            - textbox "Mot de passe" [ref=e33]:
+              - /placeholder: ••••••••
+        - button "Se connecter" [ref=e34]:
+          - generic [ref=e35]: Se connecter
+          - img [ref=e36]
+      - paragraph [ref=e38]:
+        - text: Vous êtes médecin ?
+        - link "Espace médecin" [ref=e39] [cursor=pointer]:
+          - /url: /connexion
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e45] [cursor=pointer]:
+    - img [ref=e46]
+  - alert [ref=e49]

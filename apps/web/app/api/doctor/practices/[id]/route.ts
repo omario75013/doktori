@@ -1,15 +1,15 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextResponse, NextRequest } from "next/server";
+import { requireAuth } from "@/lib/require-auth";
 import { db, doctorPractices } from "@doktori/db";
 import { eq, and, ne } from "drizzle-orm";
 
 export async function PATCH(
-  req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const user = await requireAuth(req as unknown as NextRequest);
+    if (!user || user.role !== "doctor") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
@@ -19,7 +19,7 @@ export async function PATCH(
     const [practice] = await db
       .select()
       .from(doctorPractices)
-      .where(and(eq(doctorPractices.id, id), eq(doctorPractices.doctorId, session.user.id)))
+      .where(and(eq(doctorPractices.id, id), eq(doctorPractices.doctorId, user.id)))
       .limit(1);
 
     if (!practice) {
@@ -49,7 +49,7 @@ export async function PATCH(
           .set({ isPrimary: false })
           .where(
             and(
-              eq(doctorPractices.doctorId, session.user.id),
+              eq(doctorPractices.doctorId, user.id),
               eq(doctorPractices.isPrimary, true),
               ne(doctorPractices.id, id),
             )
@@ -64,7 +64,7 @@ export async function PATCH(
       const [updated] = await tx
         .update(doctorPractices)
         .set(updates)
-        .where(and(eq(doctorPractices.id, id), eq(doctorPractices.doctorId, session.user.id)))
+        .where(and(eq(doctorPractices.id, id), eq(doctorPractices.doctorId, user.id)))
         .returning();
 
       return updated;
@@ -78,12 +78,12 @@ export async function PATCH(
 }
 
 export async function DELETE(
-  _req: Request,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const session = await auth();
-    if (!session?.user?.id) {
+    const user = await requireAuth(_req as unknown as NextRequest);
+    if (!user || user.role !== "doctor") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
@@ -93,7 +93,7 @@ export async function DELETE(
     const [practice] = await db
       .select()
       .from(doctorPractices)
-      .where(and(eq(doctorPractices.id, id), eq(doctorPractices.doctorId, session.user.id)))
+      .where(and(eq(doctorPractices.id, id), eq(doctorPractices.doctorId, user.id)))
       .limit(1);
 
     if (!practice) {
@@ -106,7 +106,7 @@ export async function DELETE(
       .from(doctorPractices)
       .where(
         and(
-          eq(doctorPractices.doctorId, session.user.id),
+          eq(doctorPractices.doctorId, user.id),
           eq(doctorPractices.isActive, true),
         )
       );
@@ -129,7 +129,7 @@ export async function DELETE(
     const [updated] = await db
       .update(doctorPractices)
       .set({ isActive: false })
-      .where(and(eq(doctorPractices.id, id), eq(doctorPractices.doctorId, session.user.id)))
+      .where(and(eq(doctorPractices.id, id), eq(doctorPractices.doctorId, user.id)))
       .returning();
 
     return NextResponse.json(updated);

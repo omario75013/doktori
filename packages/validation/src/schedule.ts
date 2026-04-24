@@ -14,6 +14,13 @@ export const scheduleSlotSchema = z
   });
 
 export const scheduleUpdateSchema = z.object({
+  /**
+   * When provided, replaces only the schedule for this practice (cabinet).
+   * Required as of migration 0063 (per-cabinet scoping). Omit only in legacy
+   * flows that write a doctor-global schedule; the server will fall back to
+   * the doctor's primary practice.
+   */
+  practiceId: z.string().uuid().optional(),
   slots: z.array(scheduleSlotSchema),
 });
 

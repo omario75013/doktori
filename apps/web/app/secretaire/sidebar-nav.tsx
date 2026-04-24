@@ -2,22 +2,58 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
+import { osNotify } from "@/lib/os-notify";
 import {
   Menu,
   X,
   LayoutDashboard,
   CalendarDays,
+  CalendarClock,
   Users,
   LogOut,
+  MessagesSquare,
+  Plane,
+  Bell,
+  UserCog,
   ClipboardList,
 } from "lucide-react";
 
-const LINKS = [
+type Perm =
+  | "agenda"
+  | "patients"
+  | "patientsCreate"
+  | "patientsEdit"
+  | "patientsDelete"
+  | "rendezVous"
+  | "rendezVousCreate"
+  | "rendezVousEdit"
+  | "rendezVousCancel"
+  | "messagerie"
+  | "wallet"
+  | "factures"
+  | "motifs"
+  | "cabinets"
+  | "teleconsult";
+
+type LinkDef = {
+  href: string;
+  label: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+  /** Link is shown if ANY of these permissions is true. `null` = always show. */
+  anyOf?: Perm[];
+};
+
+const LINKS: LinkDef[] = [
   { href: "/secretaire/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/secretaire/rendez-vous", label: "Rendez-vous", icon: CalendarDays },
-  { href: "/secretaire/patients", label: "Patients", icon: Users },
+  { href: "/secretaire/calendrier", label: "Calendrier", icon: CalendarDays, anyOf: ["rendezVous", "agenda"] },
+  { href: "/secretaire/rendez-vous", label: "Rendez-vous", icon: CalendarClock, anyOf: ["rendezVous", "rendezVousCreate", "rendezVousEdit", "rendezVousCancel"] },
+  { href: "/secretaire/patients", label: "Patients", icon: Users, anyOf: ["patients", "patientsCreate", "patientsEdit", "patientsDelete"] },
+  { href: "/secretaire/messagerie", label: "Messagerie équipe", icon: MessagesSquare },
+  { href: "/secretaire/notifications", label: "Notifications", icon: Bell },
+  { href: "/secretaire/conges", label: "Mes congés", icon: Plane },
+  { href: "/secretaire/profil", label: "Mon profil", icon: UserCog },
 ];
 
 export function SecretaireSidebarNav({
@@ -31,6 +67,65 @@ export function SecretaireSidebarNav({
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [unreadMsg, setUnreadMsg] = useState(0);
+  const [unreadNotif, setUnreadNotif] = useState(0);
+  const [perms, setPerms] = useState<Partial<Record<Perm, boolean>> | null>(null);
+  const prevUnreadRef = useRef({ msg: 0, notif: 0, initialized: false });
+
+  useEffect(() => {
+    let cancelled = false;
+    async function load() {
+      try {
+        const [r1, r2, r3] = await Promise.all([
+          fetch("/api/staff/conversations/unread", { cache: "no-store" }),
+          fetch("/api/secretary/notifications", { cache: "no-store" }),
+          fetch("/api/secretary/profile", { cache: "no-store" }),
+        ]);
+        if (!cancelled) {
+          if (r1.ok) {
+            const nMsg = Number((await r1.json()).count ?? 0);
+            if (prevUnreadRef.current.initialized && nMsg > prevUnreadRef.current.msg) {
+              osNotify({ title: "💬 Nouveau message", body: "Vous avez un nouveau message." });
+            }
+            prevUnreadRef.current.msg = nMsg;
+            setUnreadMsg(nMsg);
+          }
+          if (r2.ok) {
+            const nNotif = Number((await r2.json()).unreadCount ?? 0);
+            if (prevUnreadRef.current.initialized && nNotif > prevUnreadRef.current.notif) {
+              osNotify({ title: "🔔 Nouvelle notification", body: "Ouvrez votre feed." });
+            }
+            prevUnreadRef.current.notif = nNotif;
+            setUnreadNotif(nNotif);
+          }
+          prevUnreadRef.current.initialized = true;
+          if (r3.ok) {
+            const data = await r3.json();
+            setPerms((data.permissions as Partial<Record<Perm, boolean>>) ?? {});
+          }
+        }
+      } catch {
+        /* silent */
+      }
+    }
+    load();
+    const id = setInterval(load, 10_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+  const visibleLinks = LINKS.filter((l) => {
+    if (!l.anyOf) return true;
+    if (!perms) return true; // show optimistically until perms load
+    return l.anyOf.some((p) => perms[p] === true);
+  });
+
+  const badgeByHref: Record<string, number> = {
+    "/secretaire/messagerie": unreadMsg,
+    "/secretaire/notifications": unreadNotif,
+  };
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -88,8 +183,9 @@ export function SecretaireSidebarNav({
 
         {/* Nav links */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {LINKS.map(({ href, label, icon: Icon }) => {
+          {visibleLinks.map(({ href, label, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
+            const badge = badgeByHref[href] ?? 0;
             return (
               <Link
                 key={href}
@@ -103,11 +199,21 @@ export function SecretaireSidebarNav({
                 ].join(" ")}
                 style={active ? { background: "#0891B2" } : undefined}
               >
-                <Icon
-                  className={["h-4 w-4 flex-shrink-0", active ? "text-white" : "text-teal-300"].join(" ")}
-                  strokeWidth={2.5}
-                />
-                {label}
+                <span className="relative inline-flex items-center justify-center">
+                  <Icon
+                    className={["h-4 w-4 flex-shrink-0", active ? "text-white" : "text-teal-300"].join(" ")}
+                    strokeWidth={2.5}
+                  />
+                  {badge > 0 && (
+                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-[#134E4A]" />
+                  )}
+                </span>
+                <span className="flex-1">{label}</span>
+                {badge > 0 && (
+                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+                    {badge > 99 ? "99+" : badge}
+                  </span>
+                )}
               </Link>
             );
           })}

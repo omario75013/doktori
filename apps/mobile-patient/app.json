@@ -1,0 +1,52 @@
+{
+  "expo": {
+    "name": "Doktori",
+    "slug": "doktori-patient",
+    "scheme": "doktori",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "resizeMode": "cover",
+      "backgroundColor": "#0891B2"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "tn.doktori.patient",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Doktori utilise la caméra pour les téléconsultations avec votre médecin.",
+        "NSMicrophoneUsageDescription": "Doktori utilise le micro pour les téléconsultations avec votre médecin.",
+        "NSFaceIDUsageDescription": "Utiliser Face ID pour déverrouiller rapidement Doktori.",
+        "UIBackgroundModes": ["voip", "remote-notification"]
+      }
+    },
+    "android": {
+      "package": "tn.doktori.patient",
+      "adaptiveIcon": {
+        "backgroundColor": "#0891B2"
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.USE_BIOMETRIC",
+        "android.permission.USE_FINGERPRINT",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.FOREGROUND_SERVICE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-notifications",
+      "expo-local-authentication",
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "apiBaseUrl": "http://localhost:3000"
+    }
+  }
+}

@@ -1,12 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/require-auth";
 import { db, conversations, messages } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 
 export async function POST(req: NextRequest) {
   try {
-    const session = await auth();
-    if (!session?.user?.id || session.user.role !== "doctor") {
+    const user = await requireAuth(req);
+    if (!user || user.role !== "doctor") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
@@ -30,13 +30,13 @@ export async function POST(req: NextRequest) {
       let [conv] = await tx
         .select()
         .from(conversations)
-        .where(and(eq(conversations.doctorId, session.user.id), eq(conversations.patientId, patientId)))
+        .where(and(eq(conversations.doctorId, user.id), eq(conversations.patientId, patientId)))
         .limit(1);
 
       if (!conv) {
         [conv] = await tx
           .insert(conversations)
-          .values({ doctorId: session.user.id, patientId, lastMessageAt: now })
+          .values({ doctorId: user.id, patientId, lastMessageAt: now })
           .returning();
       } else {
         await tx
@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
         .values({
           conversationId: conv.id,
           senderType: "doctor",
-          senderId: session.user.id,
+          senderId: user.id,
           content: trimmedContent,
           createdAt: now,
         })

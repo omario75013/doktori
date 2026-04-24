@@ -1,0 +1,16 @@
+appId: host.exp.exponent
+---
+- launchApp
+- tapOn: "Espace Pro →"
+- tapOn: "Médecin"
+- inputText:
+    id: email-input
+    text: "karim.benali@doktori.tn"
+- inputText:
+    id: password-input
+    text: "Demo2026!"
+- tapOn: "Se connecter"
+- assertVisible: "Accueil"
+- tapOn: "Calendrier"
+- assertVisible:
+    text: "Aujourd'hui"

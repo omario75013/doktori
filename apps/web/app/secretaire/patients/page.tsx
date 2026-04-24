@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import Link from "next/link";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Users, Search, UserPlus, X, ChevronLeft, ChevronRight } from "lucide-react";
@@ -332,7 +333,12 @@ export default function SecretairePatientsPage() {
                 {paginated.map((p) => (
                   <tr key={p.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3">
-                      <div className="font-medium text-foreground">{p.name}</div>
+                      <Link
+                        href={`/secretaire/patients/${p.id}`}
+                        className="font-medium text-primary hover:underline"
+                      >
+                        {p.name}
+                      </Link>
                       {p.email && (
                         <div className="text-xs text-muted-foreground">{p.email}</div>
                       )}

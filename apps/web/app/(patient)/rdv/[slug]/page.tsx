@@ -173,6 +173,8 @@ interface AppointmentType {
   durationMinutes: number;
   fee: number | null;
   color: string;
+  mode?: string;
+  practiceIds?: string[];
 }
 
 export default function RdvPage({
@@ -278,16 +280,28 @@ export default function RdvPage({
     setStep("form");
   }
 
-  // After choosing a type, go to practice picker if >1 practice (and not teleconsult), else skip to slots
+  // After choosing a type, go to practice picker if the motif is offered at >1 practice
+  // (and not teleconsult); else auto-select the only option and skip to slots.
   function handleTypeSelected(type: AppointmentType) {
     setSelectedType(type);
-    if (selectedMode === "teleconsult") {
+    if (selectedMode === "teleconsult" || type.mode === "teleconsult") {
       // Teleconsult: no physical location needed
       setStep("slots");
-    } else if (practices.length > 1) {
-      setStep("practice");
-    } else {
+      return;
+    }
+    // Filter to practices where THIS motif is offered
+    const motifPractices =
+      type.practiceIds && type.practiceIds.length > 0
+        ? practices.filter((p) => type.practiceIds!.includes(p.id))
+        : practices;
+    if (motifPractices.length === 0) {
+      // Fallback: no cabinet mapped — let the server resolve to primary
       setStep("slots");
+    } else if (motifPractices.length === 1) {
+      setSelectedPractice(motifPractices[0]);
+      setStep("slots");
+    } else {
+      setStep("practice");
     }
   }
 
@@ -589,8 +603,17 @@ export default function RdvPage({
           </motion.div>
         )}
 
-        {/* Step: practice picker — only shown when doctor has >1 active practice */}
-        {step === "practice" && practices.length > 1 && (
+        {/* Step: practice picker — only when the SELECTED motif is offered at multiple cabinets.
+            If the motif is bound to a single cabinet, the patient is auto-routed in
+            handleTypeSelected and this step never renders. */}
+        {step === "practice" &&
+          (() => {
+            const allowed =
+              selectedType?.practiceIds && selectedType.practiceIds.length > 0
+                ? practices.filter((p) => selectedType.practiceIds!.includes(p.id))
+                : practices;
+            if (allowed.length <= 1) return null;
+            return (
           <motion.div
             key="step-practice"
             variants={slideVariants}
@@ -605,11 +628,12 @@ export default function RdvPage({
                 Où souhaitez-vous consulter ?
               </h2>
               <p className="text-sm text-foreground/60 mt-1">
-                Ce médecin exerce dans plusieurs lieux. Sélectionnez l&apos;endroit souhaité.
+                Ce motif est proposé dans plusieurs cabinets. Choisissez l&apos;endroit qui vous
+                convient.
               </p>
             </div>
             <div className="space-y-2">
-              {practices.map((p) => (
+              {allowed.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => handlePracticeSelected(p)}
@@ -662,7 +686,8 @@ export default function RdvPage({
               </button>
             )}
           </motion.div>
-        )}
+            );
+          })()}
 
         {/* Step: slot selection (Doctolib-style calendar) */}
         {step === "slots" && (
@@ -698,22 +723,40 @@ export default function RdvPage({
                     </button>
                   </div>
                 )}
-                {selectedPractice && practices.length > 1 && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-foreground/60 flex items-center gap-2">
-                      <MapPin className="h-3.5 w-3.5 text-primary/60" />
-                      <span className="font-bold text-foreground">{selectedPractice.name}</span>
-                      <span className="text-foreground/40">·</span>
-                      <span className="text-foreground/60">{selectedPractice.city}</span>
-                    </span>
-                    <button
-                      onClick={() => setStep("practice")}
-                      className="text-primary font-bold hover:underline"
-                    >
-                      Changer
-                    </button>
-                  </div>
-                )}
+                {selectedPractice &&
+                  (() => {
+                    // Only allow the patient to switch cabinet when the motif is offered
+                    // at more than one cabinet. For single-cabinet motifs the location
+                    // is fixed and the "Changer" affordance disappears.
+                    const motifPracticeCount =
+                      selectedType?.practiceIds && selectedType.practiceIds.length > 0
+                        ? selectedType.practiceIds.length
+                        : practices.length;
+                    return (
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-foreground/60 flex items-center gap-2">
+                          <MapPin className="h-3.5 w-3.5 text-primary/60" />
+                          <span className="font-bold text-foreground">
+                            {selectedPractice.name}
+                          </span>
+                          <span className="text-foreground/40">·</span>
+                          <span className="text-foreground/60">{selectedPractice.city}</span>
+                        </span>
+                        {motifPracticeCount > 1 ? (
+                          <button
+                            onClick={() => setStep("practice")}
+                            className="text-primary font-bold hover:underline"
+                          >
+                            Changer
+                          </button>
+                        ) : (
+                          <span className="text-[11px] text-foreground/40 italic">
+                            Cabinet défini par le motif
+                          </span>
+                        )}
+                      </div>
+                    );
+                  })()}
               </div>
             )}
             <h2 className="font-heading font-black text-foreground text-lg">
@@ -722,6 +765,11 @@ export default function RdvPage({
             <AvailabilityCalendar
               doctorSlug={doctor.slug}
               typeId={selectedType?.id}
+              practiceId={
+                selectedMode === "teleconsult" || selectedType?.mode === "teleconsult"
+                  ? undefined
+                  : selectedPractice?.id
+              }
               onSelect={handleSlotSelect}
               selected={booking}
             />

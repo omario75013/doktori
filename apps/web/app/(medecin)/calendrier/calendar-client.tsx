@@ -24,6 +24,7 @@ import {
 } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
   ChevronLeft,
   ChevronRight,
@@ -43,6 +44,7 @@ import {
   CheckCircle2,
   AlertCircle,
   Loader2,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -55,6 +57,7 @@ type Appointment = {
   status: string;
   type: string;
   reason: string | null;
+  patientId: string;
   patientName: string;
   patientPhone: string | null;
 };
@@ -510,6 +513,13 @@ function AppointmentPanel({
             Rejoindre la téléconsultation
           </Button>
         )}
+        <Link
+          href={`/patients/${appt.patientId}`}
+          className="inline-flex w-full h-10 items-center justify-center gap-2 rounded-xl border border-border bg-white text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
+        >
+          <History className="h-4 w-4" />
+          Voir l&apos;historique du patient
+        </Link>
       </div>
     </motion.div>
   );

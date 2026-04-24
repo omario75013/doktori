@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Doktori</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <main id="app">
+      <!-- Picker: shown on first run or when user clicks "Changer de rôle" -->
+      <section id="picker" class="hidden">
+        <div class="picker-card">
+          <div class="brand">
+            <span class="brand-logo">D</span>
+            <span class="brand-name">Doktori<span class="brand-tld">.tn</span></span>
+          </div>
+          <h1>Bienvenue</h1>
+          <p class="subtitle">Sélectionnez votre type de compte pour continuer</p>
+
+          <div class="role-grid">
+            <button class="role-btn" data-role="doctor">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 14a3 3 0 0 1-3 3h-2a3 3 0 0 1-3-3V4.5a.5.5 0 0 1 .5-.5h3a.5.5 0 0 1 .5.5V11"/>
+                <circle cx="18" cy="20" r="2"/>
+                <path d="M11 4.5v7.5A3 3 0 0 0 8 15H6a3 3 0 0 0 0 6h0"/>
+              </svg>
+              <span class="role-title">Médecin</span>
+              <span class="role-desc">Agenda, dossiers patients, téléconsult, réseau</span>
+            </button>
+            <button class="role-btn" data-role="secretary">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="8" r="4"/>
+                <path d="M20 21a8 8 0 1 0-16 0"/>
+              </svg>
+              <span class="role-title">Secrétaire</span>
+              <span class="role-desc">Prise de RDV, accueil, congés, messagerie</span>
+            </button>
+          </div>
+          <p class="foot">Vous pourrez changer de rôle à tout moment depuis le menu.</p>
+        </div>
+      </section>
+
+      <!-- Loading state while we resolve stored role + server URL -->
+      <section id="loading">
+        <div class="loader"></div>
+        <p>Chargement…</p>
+      </section>
+    </main>
+
+    <script type="module" src="picker.js"></script>
+  </body>
+</html>

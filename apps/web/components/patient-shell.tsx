@@ -1,13 +1,26 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import type { ReactNode } from "react";
-
-const HIDDEN_PREFIXES = ["/dashboard", "/agenda", "/rendez-vous", "/patients", "/profil", "/secretaires", "/motifs", "/cabinets", "/conventions", "/wallet", "/abonnement", "/domicile", "/cnam", "/stats", "/teleconsult-medecin", "/admin", "/admin-login", "/clinique", "/connexion", "/inscription"];
+import { useEffect, useState, type ReactNode } from "react";
+import { isAuthenticatedRoute } from "@/lib/route-groups";
 
 export function PatientShell({ children }: { children: ReactNode }) {
   const pathname = usePathname();
-  const hide = HIDDEN_PREFIXES.some((p) => pathname.startsWith(p));
-  if (hide) return null;
+  const [isDesktop, setIsDesktop] = useState(false);
+
+  useEffect(() => {
+    try {
+      const search = new URLSearchParams(window.location.search);
+      if (search.get("app") === "desktop") {
+        localStorage.setItem("doktori.app", "desktop");
+      }
+      setIsDesktop(localStorage.getItem("doktori.app") === "desktop");
+    } catch {
+      /* storage disabled */
+    }
+  }, [pathname]);
+
+  if (isAuthenticatedRoute(pathname)) return null;
+  if (isDesktop) return null;
   return <>{children}</>;
 }

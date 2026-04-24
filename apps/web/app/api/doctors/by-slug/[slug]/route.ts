@@ -19,6 +19,14 @@ export async function GET(
       photoUrl: doctors.photoUrl,
       bio: doctors.bio,
       consultationFee: doctors.consultationFee,
+      teleconsultFee: doctors.teleconsultFee,
+      consultationMode: doctors.consultationMode,
+      averageRating: doctors.averageRating,
+      reviewCount: doctors.reviewCount,
+      yearsOfExperience: doctors.yearsOfExperience,
+      languages: doctors.languages,
+      expertise: doctors.expertise,
+      isActive: doctors.isActive,
     })
     .from(doctors)
     .where(eq(doctors.slug, slug))

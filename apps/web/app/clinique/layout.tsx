@@ -2,6 +2,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { CliniqueSidebarNav } from "./sidebar-nav";
 import { CliniqueSessionProvider } from "./session-provider";
+import { AppTopBar } from "@/components/app-topbar";
 
 export default async function CliniqueLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -15,7 +16,10 @@ export default async function CliniqueLayout({ children }: { children: React.Rea
     <CliniqueSessionProvider>
       <div className="min-h-screen flex" style={{ background: "#F0FDFA" }}>
         <CliniqueSidebarNav clinicName={clinicName} />
-        <main className="flex-1 overflow-y-auto p-6 md:p-8">{children}</main>
+        <div className="flex-1 flex flex-col min-w-0">
+          <AppTopBar role="clinic" title={clinicName} showNotifications={false} />
+          <main className="flex-1 overflow-y-auto p-6 md:p-8">{children}</main>
+        </div>
       </div>
     </CliniqueSessionProvider>
   );

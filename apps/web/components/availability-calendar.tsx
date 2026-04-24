@@ -13,6 +13,9 @@ export interface AvailabilityDay {
 interface Props {
   doctorSlug: string;
   typeId?: string;
+  /** When set, only slots at this cabinet are returned. Undefined means "let the backend
+   *  figure it out from the motif" (useful for teleconsult or single-cabinet doctors). */
+  practiceId?: string;
   /** Called when the patient picks a slot. */
   onSelect: (date: string, startTime: string) => void;
   /** Current selected slot (to highlight). */
@@ -29,7 +32,7 @@ const WINDOW_DAYS = 28; // we fetch 28 days max, paginated 7 at a time
  * - Slots split into Matin / Après-midi / Soir.
  * - Unavailable slots are never rendered.
  */
-export function AvailabilityCalendar({ doctorSlug, typeId, onSelect, selected }: Props) {
+export function AvailabilityCalendar({ doctorSlug, typeId, practiceId, onSelect, selected }: Props) {
   const [offset, setOffset] = useState(0); // offset in days from today
   const [days, setDays] = useState<AvailabilityDay[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +47,7 @@ export function AvailabilityCalendar({ doctorSlug, typeId, onSelect, selected }:
     const start = format(addDays(new Date(), offset), "yyyy-MM-dd");
     const params = new URLSearchParams({ start, days: String(WINDOW_DAYS) });
     if (typeId) params.set("typeId", typeId);
+    if (practiceId) params.set("practiceId", practiceId);
 
     setLoading(true);
     setError(null);
@@ -77,7 +81,7 @@ export function AvailabilityCalendar({ doctorSlug, typeId, onSelect, selected }:
       });
 
     return () => controller.abort();
-  }, [doctorSlug, typeId, offset]);
+  }, [doctorSlug, typeId, practiceId, offset]);
 
   // The visible week = first 7 days of the fetched window
   const visibleDays = useMemo(() => days.slice(0, PAGE_SIZE), [days]);

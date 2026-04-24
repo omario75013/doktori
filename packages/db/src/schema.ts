@@ -9,9 +9,11 @@ import {
   time,
   date,
   doublePrecision,
+  numeric,
   jsonb,
   index,
   uniqueIndex,
+  primaryKey,
 } from "drizzle-orm/pg-core";
 
 export type DoctorEducation = {
@@ -74,6 +76,10 @@ export const doctors = pgTable(
     verificationStatus: varchar("verification_status", { length: 20 }).notNull().default("pending"),
     verificationNote: text("verification_note"),
     verifiedAt: timestamp("verified_at", { withTimezone: true }),
+    // 2FA (migration 0064)
+    totpSecret: text("totp_secret"),
+    totpEnabled: boolean("totp_enabled").notNull().default(false),
+    totpEnrolledAt: timestamp("totp_enrolled_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -82,6 +88,50 @@ export const doctors = pgTable(
     uniqueIndex("doctors_slug_idx").on(table.slug),
     index("doctors_specialty_city_idx").on(table.specialty, table.city),
   ]
+);
+
+// ─── Doctor Notification Preferences (1:1 with doctors) ──────────────────────
+export const doctorNotificationPrefs = pgTable("doctor_notification_prefs", {
+  doctorId: uuid("doctor_id")
+    .primaryKey()
+    .references(() => doctors.id, { onDelete: "cascade" }),
+  emailNewBooking: boolean("email_new_booking").notNull().default(true),
+  emailCancellation: boolean("email_cancellation").notNull().default(true),
+  emailDailyDigest: boolean("email_daily_digest").notNull().default(false),
+  pushNewBooking: boolean("push_new_booking").notNull().default(true),
+  pushCancellation: boolean("push_cancellation").notNull().default(true),
+  pushRemindersEnabled: boolean("push_reminders_enabled").notNull().default(true),
+  smsEnabled: boolean("sms_enabled").notNull().default(false),
+  cancelAlertChannels: jsonb("cancel_alert_channels")
+    .$type<string[]>()
+    .notNull()
+    .default(["email", "sms"]),
+  cancelAlertTemplate: text("cancel_alert_template"),
+  // Hours before the appointment at which reminders / cancel alerts fire.
+  reminderOffsetsHours: jsonb("reminder_offsets_hours")
+    .$type<number[]>()
+    .notNull()
+    .default([72, 24, 2]),
+  cancelAlertOffsetsHours: jsonb("cancel_alert_offsets_hours")
+    .$type<number[]>()
+    .notNull()
+    .default([0]),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+// ─── 2FA Backup Codes ─────────────────────────────────────────────────────────
+export const doctorBackupCodes = pgTable(
+  "doctor_backup_codes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    codeHash: text("code_hash").notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("doctor_backup_codes_doctor_idx").on(table.doctorId)]
 );
 
 // ─── Doctor Practices ─────────────────────────────────────────────────────────
@@ -105,6 +155,8 @@ export const doctorPractices = pgTable(
     isActive: boolean("is_active").notNull().default(true),
     // Optional: links this practice to a clinic (added in migration 0053)
     clinicId: uuid("clinic_id").references(() => clinics.id, { onDelete: "set null" }),
+    // 'cabinet' (private practice) | 'clinic' (hospital/clinic affiliation)
+    kind: varchar("kind", { length: 10 }).notNull().default("cabinet"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
@@ -129,11 +181,33 @@ export const doctorSchedules = pgTable(
     // Slot duration in minutes (10, 15, 20, 30, 45, 60)
     slotDuration: integer("slot_duration").notNull().default(20),
     isActive: boolean("is_active").notNull().default(true),
-    // nullable — backfilled to primary practice by migration 0024
-    practiceId: uuid("practice_id"),
+    // Promoted to NOT NULL in migration 0063 — schedules are scoped per cabinet
+    practiceId: uuid("practice_id")
+      .notNull()
+      .references(() => doctorPractices.id, { onDelete: "cascade" }),
   },
   (table) => [
-    index("doctor_schedules_doctor_day_idx").on(table.doctorId, table.dayOfWeek),
+    index("doctor_schedules_practice_day_idx").on(table.practiceId, table.dayOfWeek),
+  ]
+);
+
+// ─── Motif ↔ Practices (many-to-many) ────────────────────────────────────────
+// A motif ("Consultation", "Téléconsult", etc.) can be offered at N practices.
+// Booking engine uses this to filter which cabinet's schedule applies.
+export const appointmentTypePractices = pgTable(
+  "appointment_type_practices",
+  {
+    appointmentTypeId: uuid("appointment_type_id")
+      .notNull()
+      .references(() => appointmentTypes.id, { onDelete: "cascade" }),
+    practiceId: uuid("practice_id")
+      .notNull()
+      .references(() => doctorPractices.id, { onDelete: "cascade" }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.appointmentTypeId, table.practiceId] }),
+    index("atp_practice_idx").on(table.practiceId),
   ]
 );
 
@@ -150,12 +224,31 @@ export const patients = pgTable(
     gender: varchar("gender", { length: 10 }),
     bloodType: varchar("blood_type", { length: 5 }),
     cnamNumber: varchar("cnam_number", { length: 20 }),
+    // ─── Phase 3: enrichment ──
+    cin: varchar("cin", { length: 20 }),
+    insuranceProvider: varchar("insurance_provider", { length: 50 }),
+    insuranceNumber: varchar("insurance_number", { length: 30 }),
+    emergencyContactName: varchar("emergency_contact_name", { length: 120 }),
+    emergencyContactPhone: varchar("emergency_contact_phone", { length: 30 }),
+    emergencyContactRelation: varchar("emergency_contact_relation", { length: 30 }),
+    heightCm: integer("height_cm"),
+    weightKg: numeric("weight_kg", { precision: 5, scale: 2 }),
+    occupation: varchar("occupation", { length: 100 }),
+    maritalStatus: varchar("marital_status", { length: 20 }),
+    preferredLanguage: varchar("preferred_language", { length: 5 }).default("fr"),
+    referringDoctorId: uuid("referring_doctor_id"),
+    nationality: varchar("nationality", { length: 40 }),
+    addressStreet: varchar("address_street", { length: 200 }),
+    addressCity: varchar("address_city", { length: 80 }),
+    addressPostalCode: varchar("address_postal_code", { length: 10 }),
+    professionNotes: text("profession_notes"),
+    deletedAt: timestamp("deleted_at"),
+    // ──────────────────────────
     noShowCount: integer("no_show_count").notNull().default(0),
     lastMinuteCancelCount: integer("last_minute_cancel_count").notNull().default(0),
     isSuspended: boolean("is_suspended").notNull().default(false),
     suspensionReason: text("suspension_reason"),
     suspendedAt: timestamp("suspended_at", { withTimezone: true }),
-    // Email-based auth (optional — OTP is still the default)
     passwordHash: text("password_hash"),
     emailVerified: boolean("email_verified").notNull().default(false),
     authMethod: varchar("auth_method", { length: 10 }).notNull().default("otp"),
@@ -180,9 +273,62 @@ export const patientMedicalProfile = pgTable(
     chronicConditions: text("chronic_conditions"),
     currentMeds: text("current_meds"),
     notes: text("notes"),
+    lifestyle: jsonb("lifestyle"),
+    familyHistory: jsonb("family_history"),
+    pastSurgeries: jsonb("past_surgeries"),
+    pastHospitalizations: jsonb("past_hospitalizations"),
+    vaccinations: jsonb("vaccinations"),
+    womensHealth: jsonb("womens_health"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [uniqueIndex("patient_medical_profile_patient_uidx").on(table.patientId)]
+);
+
+// ─── Patient Attachments (labs, imaging, certificates, scans) ─────────────────
+export const patientAttachments = pgTable(
+  "patient_attachments",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id")
+      .notNull()
+      .references(() => patients.id, { onDelete: "cascade" }),
+    doctorId: uuid("doctor_id").references(() => doctors.id, { onDelete: "set null" }),
+    secretaryId: uuid("secretary_id"),
+    category: varchar("category", { length: 30 }).notNull().default("autre"),
+    title: varchar("title", { length: 200 }).notNull(),
+    description: text("description"),
+    fileUrl: text("file_url").notNull(),
+    fileKey: text("file_key").notNull(),
+    filename: varchar("filename", { length: 255 }).notNull(),
+    mimeType: varchar("mime_type", { length: 120 }).notNull(),
+    sizeBytes: integer("size_bytes").notNull(),
+    issuedAt: date("issued_at"),
+    uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
+    deletedAt: timestamp("deleted_at", { withTimezone: true }),
+  },
+  (table) => [
+    index("patient_attachments_patient_idx").on(table.patientId, table.uploadedAt),
+    index("patient_attachments_category_idx").on(table.category),
+  ]
+);
+
+// ─── Patient Timeline Events (manual log entries) ─────────────────────────────
+export const patientTimelineEvents = pgTable(
+  "patient_timeline_events",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id")
+      .notNull()
+      .references(() => patients.id, { onDelete: "cascade" }),
+    doctorId: uuid("doctor_id").references(() => doctors.id, { onDelete: "set null" }),
+    secretaryId: uuid("secretary_id"),
+    kind: varchar("kind", { length: 40 }).notNull(),
+    title: varchar("title", { length: 200 }).notNull(),
+    body: text("body"),
+    occurredAt: timestamp("occurred_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("patient_timeline_events_patient_idx").on(table.patientId, table.occurredAt)]
 );
 
 // ─── Patient Dependents ──────────────────────────────────────────────────────
@@ -356,12 +502,68 @@ export const secretaries = pgTable("secretaries", {
   isActive: boolean("is_active").default(true).notNull(),
   // When set, this secretary manages ALL doctors in the clinic
   clinicId: uuid("clinic_id").references(() => clinics.id, { onDelete: "set null" }),
+  permissions: jsonb("permissions").notNull().default({
+    agenda: true,
+    patients: true,
+    rendezVous: true,
+    messagerie: false,
+    wallet: false,
+    factures: false,
+    motifs: true,
+    cabinets: false,
+    teleconsult: false,
+  }),
+  // Phase 4.5: profile + presence
+  phone: varchar("phone", { length: 30 }),
+  dateOfBirth: date("date_of_birth"),
+  yearsOfExperience: integer("years_of_experience"),
+  monthlySalary: integer("monthly_salary"),
+  hireDate: date("hire_date"),
+  lastActiveAt: timestamp("last_active_at"),
+  photoUrl: text("photo_url"),
+  bio: text("bio"),
+  monthlyDayOffAllowance: numeric("monthly_day_off_allowance", { precision: 4, scale: 1 }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("secretaries_email_idx").on(table.email),
   index("secretaries_doctor_idx").on(table.doctorId),
   index("secretaries_clinic_idx").on(table.clinicId),
 ]);
+
+export const secretarySchedules = pgTable(
+  "secretary_schedules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    secretaryId: uuid("secretary_id")
+      .notNull()
+      .references(() => secretaries.id, { onDelete: "cascade" }),
+    /** 0 = Sunday … 6 = Saturday */
+    dayOfWeek: integer("day_of_week").notNull(),
+    startTime: time("start_time").notNull(),
+    endTime: time("end_time").notNull(),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("secretary_schedules_sec_day_idx").on(table.secretaryId, table.dayOfWeek)]
+);
+
+export const secretaryTimeOff = pgTable(
+  "secretary_time_off",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    secretaryId: uuid("secretary_id")
+      .notNull()
+      .references(() => secretaries.id, { onDelete: "cascade" }),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date").notNull(),
+    reason: text("reason"),
+    /** pending | approved | denied */
+    status: varchar("status", { length: 10 }).notNull().default("pending"),
+    createdAt: timestamp("created_at").defaultNow(),
+    decidedAt: timestamp("decided_at"),
+  },
+  (table) => [index("secretary_time_off_sec_idx").on(table.secretaryId, table.status)]
+);
 
 // ── Referrals ────────────────────────────────────────────
 export const doctorReferralCodes = pgTable("doctor_referral_codes", {
@@ -420,7 +622,11 @@ export const doctorPremium = pgTable("doctor_premium", {
 // ── Push Tokens ──────────────────────────────────────────
 export const pushTokens = pgTable("push_tokens", {
   id: uuid("id").primaryKey().defaultRandom(),
-  patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+  // Legacy: nullable since migration 0066 (poly-tenant). Keep referencing patients
+  // for historical data only; actorType/actorId is the new source of truth.
+  patientId: uuid("patient_id").references(() => patients.id, { onDelete: "cascade" }),
+  actorType: varchar("actor_type", { length: 10 }).notNull().default("patient"),
+  actorId: uuid("actor_id").notNull(),
   token: text("token").notNull().unique(),
   platform: varchar("platform", { length: 10 }).notNull(), // ios | android
   deviceId: varchar("device_id", { length: 255 }),
@@ -429,6 +635,7 @@ export const pushTokens = pgTable("push_tokens", {
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("push_tokens_patient_idx").on(table.patientId),
+  index("push_tokens_actor_idx").on(table.actorType, table.actorId),
 ]);
 
 // ── Appointment Types ────────────────────────────────────
@@ -1012,3 +1219,248 @@ export const doctorDocuments = pgTable(
   ]
 );
 
+
+// ── Phase 5: Doctor Network ─────────────────────────────────────────────────
+
+export const doctorConnections = pgTable(
+  "doctor_connections",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    requesterId: uuid("requester_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    addresseeId: uuid("addressee_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    /** pending | accepted | blocked */
+    status: varchar("status", { length: 10 }).notNull().default("pending"),
+    createdAt: timestamp("created_at").defaultNow(),
+    acceptedAt: timestamp("accepted_at"),
+  },
+  (table) => [
+    uniqueIndex("doctor_connections_unique").on(table.requesterId, table.addresseeId),
+    index("doctor_connections_requester_idx").on(table.requesterId, table.status),
+    index("doctor_connections_addressee_idx").on(table.addresseeId, table.status),
+  ]
+);
+
+export const patientReferrals = pgTable(
+  "patient_referrals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    fromDoctorId: uuid("from_doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    toDoctorId: uuid("to_doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    patientId: uuid("patient_id")
+      .notNull()
+      .references(() => patients.id, { onDelete: "cascade" }),
+    reason: text("reason").notNull(),
+    shareMedicalRecord: boolean("share_medical_record").notNull().default(false),
+    /** pending | granted | denied */
+    patientConsentStatus: varchar("patient_consent_status", { length: 10 })
+      .notNull()
+      .default("pending"),
+    patientConsentToken: varchar("patient_consent_token", { length: 64 }).unique(),
+    suggestedAppointmentAt: timestamp("suggested_appointment_at"),
+    /** pending | accepted | declined | completed */
+    status: varchar("status", { length: 15 }).notNull().default("pending"),
+    notesForReceivingDoctor: text("notes_for_receiving_doctor"),
+    createdAt: timestamp("created_at").defaultNow(),
+    updatedAt: timestamp("updated_at").defaultNow(),
+  },
+  (table) => [
+    index("patient_referrals_to_doctor_idx").on(table.toDoctorId, table.status),
+    index("patient_referrals_from_doctor_idx").on(table.fromDoctorId, table.status),
+    index("patient_referrals_consent_token_idx").on(table.patientConsentToken),
+  ]
+);
+
+export const doctorConversations = pgTable(
+  "doctor_conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorAId: uuid("doctor_a_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    doctorBId: uuid("doctor_b_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    lastMessageAt: timestamp("last_message_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("doctor_conversations_pair_idx").on(table.doctorAId, table.doctorBId),
+  ]
+);
+
+export const doctorMessages = pgTable(
+  "doctor_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => doctorConversations.id, { onDelete: "cascade" }),
+    senderId: uuid("sender_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    readAt: timestamp("read_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("doctor_messages_conv_idx").on(table.conversationId, table.createdAt)]
+);
+
+export const doctorNotifications = pgTable(
+  "doctor_notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    type: varchar("type", { length: 30 }).notNull(),
+    payload: jsonb("payload").notNull().default({}),
+    readAt: timestamp("read_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("doctor_notifications_doctor_idx").on(table.doctorId, table.createdAt)]
+);
+
+// ─── Phase 4.8: Staff Collab ─────────────────────────────────────────────────
+
+export const staffConversations = pgTable(
+  "staff_conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    memberAType: varchar("member_a_type", { length: 10 }).notNull(),
+    memberAId: uuid("member_a_id").notNull(),
+    memberBType: varchar("member_b_type", { length: 10 }).notNull(),
+    memberBId: uuid("member_b_id").notNull(),
+    lastMessageAt: timestamp("last_message_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [
+    index("staff_conv_doctor_idx").on(table.doctorId),
+    index("staff_conv_member_a_idx").on(table.memberAType, table.memberAId),
+    index("staff_conv_member_b_idx").on(table.memberBType, table.memberBId),
+  ]
+);
+
+export const staffMessages = pgTable(
+  "staff_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id")
+      .notNull()
+      .references(() => staffConversations.id, { onDelete: "cascade" }),
+    senderType: varchar("sender_type", { length: 10 }).notNull(),
+    senderId: uuid("sender_id").notNull(),
+    body: text("body").notNull(),
+    readAt: timestamp("read_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("staff_messages_conv_idx").on(table.conversationId, table.createdAt)]
+);
+
+export const secretaryNotifications = pgTable(
+  "secretary_notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    secretaryId: uuid("secretary_id")
+      .notNull()
+      .references(() => secretaries.id, { onDelete: "cascade" }),
+    type: varchar("type", { length: 30 }).notNull(),
+    title: varchar("title", { length: 255 }).notNull(),
+    body: text("body"),
+    payload: jsonb("payload").notNull().default({}),
+    readAt: timestamp("read_at"),
+    seenAt: timestamp("seen_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("sec_notif_sec_idx").on(table.secretaryId, table.createdAt)]
+);
+
+export const doctorQuickActions = pgTable(
+  "doctor_quick_actions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    label: varchar("label", { length: 100 }).notNull(),
+    message: text("message"),
+    icon: varchar("icon", { length: 30 }),
+    sound: varchar("sound", { length: 20 }),
+    position: integer("position").notNull().default(0),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("doctor_quick_actions_doctor_idx").on(table.doctorId, table.position)]
+);
+
+export const doctorBells = pgTable(
+  "doctor_bells",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    secretaryId: uuid("secretary_id").references(() => secretaries.id, {
+      onDelete: "cascade",
+    }),
+    label: varchar("label", { length: 100 }).notNull(),
+    message: text("message"),
+    icon: varchar("icon", { length: 30 }),
+    sound: varchar("sound", { length: 20 }),
+    acknowledgedAt: timestamp("acknowledged_at"),
+    acknowledgedBy: uuid("acknowledged_by").references(() => secretaries.id, {
+      onDelete: "set null",
+    }),
+    acknowledgmentMessage: text("acknowledgment_message"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("doctor_bells_doctor_idx").on(table.doctorId, table.createdAt)]
+);
+
+// ─── Phase 4.9: Voice calls ─────────────────────────────────────────────────
+
+export const callSessions = pgTable(
+  "call_sessions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    callerType: varchar("caller_type", { length: 10 }).notNull(),
+    callerId: uuid("caller_id").notNull(),
+    calleeType: varchar("callee_type", { length: 10 }).notNull(),
+    calleeId: uuid("callee_id").notNull(),
+    status: varchar("status", { length: 12 }).notNull().default("ringing"),
+    createdAt: timestamp("created_at").defaultNow(),
+    answeredAt: timestamp("answered_at"),
+    endedAt: timestamp("ended_at"),
+  },
+  (table) => [
+    index("call_sessions_callee_ring_idx").on(table.calleeType, table.calleeId, table.createdAt),
+    index("call_sessions_caller_idx").on(table.callerType, table.callerId, table.createdAt),
+  ]
+);
+
+export const callSignals = pgTable(
+  "call_signals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    sessionId: uuid("session_id")
+      .notNull()
+      .references(() => callSessions.id, { onDelete: "cascade" }),
+    senderType: varchar("sender_type", { length: 10 }).notNull(),
+    senderId: uuid("sender_id").notNull(),
+    kind: varchar("kind", { length: 10 }).notNull(),
+    payload: jsonb("payload").notNull(),
+    consumedAt: timestamp("consumed_at"),
+    createdAt: timestamp("created_at").defaultNow(),
+  },
+  (table) => [index("call_signals_session_idx").on(table.sessionId, table.createdAt)]
+);

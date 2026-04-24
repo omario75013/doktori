@@ -4,18 +4,68 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Search, Users, ChevronLeft, ChevronRight, UserPlus, X } from "lucide-react";
+import { Search, Users, ChevronLeft, ChevronRight, UserPlus, X, Columns3, Check } from "lucide-react";
 import { toast } from "sonner";
 
 type PatientRow = {
   id: string;
   name: string;
   phone: string;
+  email: string | null;
+  date_of_birth: string | null;
+  gender: string | null;
+  blood_type: string | null;
+  cin: string | null;
+  cnam_number: string | null;
+  insurance_provider: string | null;
+  occupation: string | null;
   total_visits: number;
   last_visit: string;
 };
 
-const PAGE_SIZE = 20;
+type ColumnKey =
+  | "email"
+  | "date_of_birth"
+  | "gender"
+  | "blood_type"
+  | "cin"
+  | "cnam_number"
+  | "insurance_provider"
+  | "occupation"
+  | "total_visits"
+  | "last_visit";
+
+const COLUMN_LABELS: Record<ColumnKey, string> = {
+  email: "Email",
+  date_of_birth: "Naissance",
+  gender: "Sexe",
+  blood_type: "Groupe sanguin",
+  cin: "CIN",
+  cnam_number: "N° CNAM",
+  insurance_provider: "Assurance",
+  occupation: "Profession",
+  total_visits: "Visites",
+  last_visit: "Dernière visite",
+};
+
+const ALL_COLUMNS: ColumnKey[] = [
+  "total_visits",
+  "last_visit",
+  "email",
+  "date_of_birth",
+  "gender",
+  "blood_type",
+  "cin",
+  "cnam_number",
+  "insurance_provider",
+  "occupation",
+];
+
+const DEFAULT_COLUMNS: ColumnKey[] = ["total_visits", "last_visit"];
+const COLUMNS_STORAGE_KEY = "doktori_patients_columns";
+
+const PAGE_SIZE_OPTIONS = [10, 20, 50] as const;
+type PageSize = (typeof PAGE_SIZE_OPTIONS)[number];
 
 function useDebounced(value: string, delay: number): string {
   const [debounced, setDebounced] = useState(value);
@@ -183,9 +233,52 @@ function AddPatientModal({
 export function PatientsClient({ patients }: { patients: PatientRow[] }) {
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<PageSize>(20);
   const [patientList, setPatientList] = useState<PatientRow[]>(patients);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [visibleColumns, setVisibleColumns] = useState<ColumnKey[]>(DEFAULT_COLUMNS);
+  const [columnsMenuOpen, setColumnsMenuOpen] = useState(false);
+  const columnsMenuRef = useRef<HTMLDivElement>(null);
   const debouncedQuery = useDebounced(query, 200);
+
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem(COLUMNS_STORAGE_KEY);
+      if (stored) {
+        const parsed = JSON.parse(stored) as string[];
+        const valid = parsed.filter((k): k is ColumnKey =>
+          (ALL_COLUMNS as string[]).includes(k)
+        );
+        if (valid.length > 0) setVisibleColumns(valid);
+      }
+    } catch {
+      /* bad JSON — ignore */
+    }
+  }, []);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLUMNS_STORAGE_KEY, JSON.stringify(visibleColumns));
+    } catch {
+      /* storage disabled */
+    }
+  }, [visibleColumns]);
+
+  useEffect(() => {
+    function onClickOutside(e: MouseEvent) {
+      if (columnsMenuRef.current && !columnsMenuRef.current.contains(e.target as Node)) {
+        setColumnsMenuOpen(false);
+      }
+    }
+    if (columnsMenuOpen) document.addEventListener("mousedown", onClickOutside);
+    return () => document.removeEventListener("mousedown", onClickOutside);
+  }, [columnsMenuOpen]);
+
+  function toggleColumn(col: ColumnKey) {
+    setVisibleColumns((prev) =>
+      prev.includes(col) ? prev.filter((c) => c !== col) : [...prev, col]
+    );
+  }
 
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
 
@@ -198,16 +291,18 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
     );
   }, [patientList, normalizedQuery]);
 
-  // Reset to page 1 when filter changes
+  // Reset to page 1 when filter or page size changes
   const prevQuery = useRef(normalizedQuery);
-  if (prevQuery.current !== normalizedQuery) {
+  const prevPageSize = useRef(pageSize);
+  if (prevQuery.current !== normalizedQuery || prevPageSize.current !== pageSize) {
     prevQuery.current = normalizedQuery;
+    prevPageSize.current = pageSize;
     if (page !== 1) setPage(1);
   }
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
   const safePage = Math.min(page, totalPages);
-  const paginated = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+  const paginated = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
 
   function handlePatientCreated(newPatient: PatientRow) {
     setPatientList((prev) => {
@@ -243,16 +338,81 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
         </button>
       </div>
 
-      {/* Search bar */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
-        <input
-          type="text"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher par nom ou téléphone…"
-          className="w-full pl-9 pr-4 py-2.5 text-sm rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
-        />
+      {/* Search bar + column picker */}
+      <div className="flex flex-col sm:flex-row gap-2">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none" />
+          <input
+            type="text"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Rechercher par nom ou téléphone…"
+            className="w-full pl-9 pr-4 py-2.5 text-sm rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
+          />
+        </div>
+        <div ref={columnsMenuRef} className="relative">
+          <button
+            type="button"
+            onClick={() => setColumnsMenuOpen((v) => !v)}
+            className="inline-flex items-center gap-2 h-10 px-3 rounded-2xl border border-border bg-white dark:bg-gray-900 text-sm text-foreground hover:bg-secondary transition-colors"
+          >
+            <Columns3 className="h-4 w-4" />
+            Colonnes
+            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-secondary px-1.5 text-[10px] font-bold text-primary">
+              {visibleColumns.length + 2}
+            </span>
+          </button>
+          {columnsMenuOpen && (
+            <div className="absolute right-0 top-12 z-30 w-64 rounded-2xl bg-white dark:bg-gray-900 shadow-xl border border-border overflow-hidden">
+              <div className="px-3 py-2 border-b border-border">
+                <p className="text-xs font-semibold text-foreground">Colonnes affichées</p>
+                <p className="text-[10px] text-gray-400 mt-0.5">
+                  Nom et téléphone sont toujours affichés
+                </p>
+              </div>
+              <div className="max-h-72 overflow-y-auto py-1">
+                {ALL_COLUMNS.map((col) => {
+                  const checked = visibleColumns.includes(col);
+                  return (
+                    <button
+                      key={col}
+                      type="button"
+                      onClick={() => toggleColumn(col)}
+                      className="w-full flex items-center gap-3 px-3 py-1.5 text-sm hover:bg-secondary transition-colors"
+                    >
+                      <span
+                        className={`h-4 w-4 rounded border flex items-center justify-center shrink-0 ${
+                          checked
+                            ? "bg-primary border-primary text-white"
+                            : "border-gray-300"
+                        }`}
+                      >
+                        {checked && <Check className="h-3 w-3" strokeWidth={3} />}
+                      </span>
+                      <span className="flex-1 text-left">{COLUMN_LABELS[col]}</span>
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="px-3 py-2 border-t border-border flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setVisibleColumns(DEFAULT_COLUMNS)}
+                  className="flex-1 text-xs text-gray-600 hover:text-primary"
+                >
+                  Réinitialiser
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVisibleColumns([...ALL_COLUMNS])}
+                  className="flex-1 text-xs text-gray-600 hover:text-primary"
+                >
+                  Tout afficher
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Search result count */}
@@ -302,8 +462,14 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                 <tr className="border-b border-border bg-secondary text-left">
                   <th className="px-4 py-3 font-medium text-foreground">Patient</th>
                   <th className="px-4 py-3 font-medium text-foreground">Téléphone</th>
-                  <th className="px-4 py-3 font-medium text-foreground">Visites</th>
-                  <th className="px-4 py-3 font-medium text-foreground">Dernière visite</th>
+                  {visibleColumns.map((col) => (
+                    <th
+                      key={col}
+                      className="px-4 py-3 font-medium text-foreground whitespace-nowrap"
+                    >
+                      {COLUMN_LABELS[col]}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -317,15 +483,12 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                         {p.name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">{p.phone}</td>
-                    <td className="px-4 py-3">
-                      <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-secondary text-primary text-xs font-bold">
-                        {p.total_visits}
-                      </span>
-                    </td>
                     <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                      {format(new Date(p.last_visit), "d MMM yyyy", { locale: fr })}
+                      {p.phone}
                     </td>
+                    {visibleColumns.map((col) => (
+                      <PatientCell key={col} col={col} patient={p} />
+                    ))}
                   </tr>
                 ))}
               </tbody>
@@ -333,32 +496,70 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
           </div>
 
           {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between pt-1">
-              <p className="text-sm text-gray-500 dark:text-gray-400">
-                Page {safePage} sur {totalPages} —{" "}
-                {filtered.length} patient{filtered.length !== 1 ? "s" : ""}
-              </p>
-              <div className="flex items-center gap-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
+            <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
+              <label className="inline-flex items-center gap-2">
+                <span>Afficher</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value) as PageSize)}
+                  className="h-8 rounded-lg border border-border bg-white dark:bg-gray-900 px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  {PAGE_SIZE_OPTIONS.map((n) => (
+                    <option key={n} value={n}>
+                      {n}
+                    </option>
+                  ))}
+                </select>
+                <span>par page</span>
+              </label>
+              <span className="hidden sm:inline text-gray-300">·</span>
+              <span>
+                {filtered.length === 0
+                  ? "0 patient"
+                  : `${(safePage - 1) * pageSize + 1}–${Math.min(safePage * pageSize, filtered.length)} sur ${filtered.length}`}
+              </span>
+            </div>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1.5">
+                <button
+                  onClick={() => setPage(1)}
+                  disabled={safePage === 1}
+                  className="inline-flex items-center justify-center h-8 w-8 text-sm rounded-lg border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Première page"
+                >
+                  «
+                </button>
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={safePage === 1}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-xl border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary dark:hover:bg-gray-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="inline-flex items-center justify-center h-8 w-8 text-sm rounded-lg border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Page précédente"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Précédent
                 </button>
+                <span className="px-2 text-sm text-foreground font-medium">
+                  {safePage} / {totalPages}
+                </span>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={safePage === totalPages}
-                  className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-xl border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary dark:hover:bg-gray-800 transition disabled:opacity-40 disabled:cursor-not-allowed"
+                  className="inline-flex items-center justify-center h-8 w-8 text-sm rounded-lg border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Page suivante"
                 >
-                  Suivant
                   <ChevronRight className="h-4 w-4" />
                 </button>
+                <button
+                  onClick={() => setPage(totalPages)}
+                  disabled={safePage === totalPages}
+                  className="inline-flex items-center justify-center h-8 w-8 text-sm rounded-lg border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
+                  aria-label="Dernière page"
+                >
+                  »
+                </button>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </>
       )}
 
@@ -371,4 +572,84 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
       )}
     </div>
   );
+}
+
+function PatientCell({ col, patient }: { col: ColumnKey; patient: PatientRow }) {
+  const cls = "px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap";
+  switch (col) {
+    case "email":
+      return (
+        <td className={cls}>
+          {patient.email ?? <span className="text-gray-300">—</span>}
+        </td>
+      );
+    case "date_of_birth":
+      return (
+        <td className={cls}>
+          {patient.date_of_birth ? (
+            format(new Date(patient.date_of_birth), "d MMM yyyy", { locale: fr })
+          ) : (
+            <span className="text-gray-300">—</span>
+          )}
+        </td>
+      );
+    case "gender":
+      return (
+        <td className={cls}>
+          {patient.gender === "M" ? "Homme" : patient.gender === "F" ? "Femme" : <span className="text-gray-300">—</span>}
+        </td>
+      );
+    case "blood_type":
+      return (
+        <td className={cls}>
+          {patient.blood_type ? (
+            <span className="inline-flex items-center rounded-full bg-red-50 text-red-700 border border-red-200 px-2 py-0.5 text-xs font-semibold">
+              {patient.blood_type}
+            </span>
+          ) : (
+            <span className="text-gray-300">—</span>
+          )}
+        </td>
+      );
+    case "cin":
+      return (
+        <td className={cls}>
+          {patient.cin ?? <span className="text-gray-300">—</span>}
+        </td>
+      );
+    case "cnam_number":
+      return (
+        <td className={cls}>
+          {patient.cnam_number ?? <span className="text-gray-300">—</span>}
+        </td>
+      );
+    case "insurance_provider":
+      return (
+        <td className={cls}>
+          {patient.insurance_provider ?? <span className="text-gray-300">—</span>}
+        </td>
+      );
+    case "occupation":
+      return (
+        <td className={cls}>
+          {patient.occupation ?? <span className="text-gray-300">—</span>}
+        </td>
+      );
+    case "total_visits":
+      return (
+        <td className="px-4 py-3">
+          <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-secondary text-primary text-xs font-bold">
+            {patient.total_visits}
+          </span>
+        </td>
+      );
+    case "last_visit":
+      return (
+        <td className={cls}>
+          {patient.last_visit
+            ? format(new Date(patient.last_visit), "d MMM yyyy", { locale: fr })
+            : "—"}
+        </td>
+      );
+  }
 }

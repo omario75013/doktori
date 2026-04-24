@@ -3,8 +3,8 @@ import { requireDoctor } from "@/lib/doctor-auth";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 
-export async function GET() {
-  const doctor = await requireDoctor();
+export async function GET(req: Request) {
+  const doctor = await requireDoctor(req);
   if (doctor instanceof NextResponse) return doctor;
 
   const rows = await db.execute(sql`

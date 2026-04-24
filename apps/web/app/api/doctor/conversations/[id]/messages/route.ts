@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/require-auth";
 import { db, conversations, messages } from "@doktori/db";
 import { eq, and, lt, desc } from "drizzle-orm";
 
@@ -7,8 +7,8 @@ export async function GET(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const session = await auth();
-  if (!session?.user?.id || session.user.role !== "doctor") {
+  const user = await requireAuth(req);
+  if (!user || user.role !== "doctor") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
 
@@ -18,7 +18,7 @@ export async function GET(
   const [conv] = await db
     .select({ id: conversations.id })
     .from(conversations)
-    .where(and(eq(conversations.id, conversationId), eq(conversations.doctorId, session.user.id)))
+    .where(and(eq(conversations.id, conversationId), eq(conversations.doctorId, user.id)))
     .limit(1);
 
   if (!conv) return NextResponse.json({ error: "Conversation introuvable" }, { status: 404 });

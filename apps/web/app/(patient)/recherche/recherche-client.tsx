@@ -578,11 +578,11 @@ function RechercheInner() {
           </aside>
 
           {/* ═══════════════ RESULTS ═══════════════ */}
-          <div>
+          <div className="pt-4">
             {/* Date picker + sort bar */}
             <div className="mb-4 space-y-3">
               {/* Teleconsult toggle pill */}
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 scroll-mt-40">
                 <button
                   onClick={() => setModeFilter(modeFilter === "teleconsult" ? "" : "teleconsult")}
                   className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border-2 px-4 py-2 text-xs font-bold transition-all ${

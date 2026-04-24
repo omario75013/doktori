@@ -1,6 +1,7 @@
 import { getAdminSession } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
 import { AdminSidebarNav } from "./admin-sidebar-nav";
+import { AppTopBar } from "@/components/app-topbar";
 
 export default async function AdminLayout({ children }: { children: React.ReactNode }) {
   const admin = await getAdminSession();
@@ -13,8 +14,10 @@ export default async function AdminLayout({ children }: { children: React.ReactN
         adminEmail={admin.email}
         adminRole={admin.role}
       />
-      {/* pt-14 on mobile prevents content from sitting under the fixed hamburger button */}
-      <main className="flex-1 overflow-auto pt-14 md:pt-0">{children}</main>
+      <div className="flex-1 flex flex-col min-w-0">
+        <AppTopBar role="admin" />
+        <main className="flex-1 overflow-auto">{children}</main>
+      </div>
     </div>
   );
 }

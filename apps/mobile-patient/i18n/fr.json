@@ -1,0 +1,36 @@
+{
+  "common": {
+    "loading": "Chargement…",
+    "error": "Erreur",
+    "retry": "Réessayer",
+    "cancel": "Annuler",
+    "confirm": "Confirmer",
+    "save": "Enregistrer",
+    "close": "Fermer"
+  },
+  "auth": {
+    "welcome": "Bon retour",
+    "subtitle": "Connectez-vous pour gérer vos rendez-vous.",
+    "phone": "Téléphone",
+    "password": "Mot de passe",
+    "signIn": "Se connecter",
+    "createAccount": "Créer un compte"
+  },
+  "home": {
+    "greeting": "Bonjour, {name}",
+    "prompt": "Que souhaitez-vous faire aujourd'hui ?",
+    "nextAppointment": "Prochain rendez-vous",
+    "noAppointment": "Aucun pour le moment",
+    "findDoctor": "Trouver un médecin",
+    "myAppointments": "Mes RDV",
+    "messages": "Messages",
+    "prescriptions": "Ordonnances"
+  },
+  "tabs": {
+    "home": "Accueil",
+    "search": "Recherche",
+    "agenda": "Agenda",
+    "messages": "Messages",
+    "profil": "Profil"
+  }
+}
