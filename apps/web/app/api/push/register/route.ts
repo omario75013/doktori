@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
     if (existing) {
       const [updated] = await db
         .update(pushTokens)
-        .set({ patientId: patient.id, isActive: true, platform, deviceId, updatedAt: new Date() })
+        .set({ actorId: patient.id, actorType: "patient", patientId: patient.id, isActive: true, platform, deviceId, updatedAt: new Date() })
         .where(eq(pushTokens.id, existing.id))
         .returning();
       return NextResponse.json(updated);
@@ -32,6 +32,8 @@ export async function POST(req: NextRequest) {
     const [created] = await db
       .insert(pushTokens)
       .values({
+        actorId: patient.id,
+        actorType: "patient",
         patientId: patient.id,
         token,
         platform,

@@ -3,7 +3,8 @@ import { z } from "zod";
 import { db, staffConversations, staffMessages, secretaryNotifications } from "@doktori/db";
 import { and, eq, asc, isNull, sql } from "drizzle-orm";
 import { requireStaff } from "@/lib/staff-context";
-import { sendPush } from "@/lib/push-fcm";
+import { sendPush, type PushPayload } from "@/lib/push-fcm";
+type Actor = "patient" | "doctor" | "secretary";
 
 async function authorize(convId: string, ctx: { doctorId: string; selfType: "doctor" | "secretary"; selfId: string }) {
   const [conv] = await db
@@ -100,7 +101,7 @@ export async function POST(
   }
 
   // Push notification to peer (fire-and-forget)
-  sendPush(peerType, peerId, {
+  sendPush(peerType as Actor, peerId, {
     title: "Nouveau message",
     body: parsed.data.body.slice(0, 120),
     sound: "default",

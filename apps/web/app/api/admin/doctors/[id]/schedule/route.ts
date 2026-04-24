@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, doctorSchedules, doctors } from "@doktori/db";
+import { db, doctorSchedules, doctors, doctorPractices } from "@doktori/db";
 import { eq, asc } from "drizzle-orm";
 
 type SlotInput = {
@@ -10,6 +10,7 @@ type SlotInput = {
   endTime: string;
   slotDuration: number;
   isActive?: boolean;
+  practiceId?: string;
 };
 
 export async function GET(
@@ -61,6 +62,16 @@ export async function PUT(
       return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
     }
 
+    // Resolve default practiceId for slots that don't specify one
+    const [defaultPractice] = await db
+      .select({ id: doctorPractices.id })
+      .from(doctorPractices)
+      .where(eq(doctorPractices.doctorId, id))
+      .limit(1);
+    if (!defaultPractice) {
+      return NextResponse.json({ error: "Aucun cabinet trouvé pour ce médecin" }, { status: 422 });
+    }
+
     const before = await db
       .select()
       .from(doctorSchedules)
@@ -69,6 +80,7 @@ export async function PUT(
     await db.delete(doctorSchedules).where(eq(doctorSchedules.doctorId, id));
     const rows = body.slots.map((s) => ({
       doctorId: id,
+      practiceId: s.practiceId ?? defaultPractice.id,
       dayOfWeek: s.dayOfWeek,
       startTime: s.startTime,
       endTime: s.endTime,

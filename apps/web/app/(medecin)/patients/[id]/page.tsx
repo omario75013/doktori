@@ -733,6 +733,12 @@ function PatientEditDialog({
         chronicConditions: (payload.medical as { chronicConditions?: string }).chronicConditions ?? null,
         currentMeds: (payload.medical as { currentMeds?: string }).currentMeds ?? null,
         notes: (payload.medical as { notes?: string }).notes ?? null,
+        lifestyle: null,
+        familyHistory: null,
+        pastSurgeries: null,
+        pastHospitalizations: null,
+        vaccinations: null,
+        womensHealth: null,
         updatedAt: new Date().toISOString(),
       });
     } catch (e) {
