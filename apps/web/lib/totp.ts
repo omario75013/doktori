@@ -1,31 +1,39 @@
-import { authenticator } from "otplib";
+import { generateSecret as _generateSecret, generateURI, verifySync } from "otplib";
 import crypto from "node:crypto";
 import bcrypt from "bcryptjs";
-
-authenticator.options = { window: 1, step: 30 };
 
 const ISSUER = "Doktori";
 
 export function generateSecret(): string {
-  return authenticator.generateSecret();
+  return _generateSecret();
 }
 
 export function totpUri(email: string, secret: string): string {
-  return authenticator.keyuri(email, ISSUER, secret);
+  return generateURI({
+    strategy: "totp",
+    issuer: ISSUER,
+    label: email,
+    secret,
+    algorithm: "sha1",
+    digits: 6,
+    period: 30,
+  });
 }
 
 export function verifyTotp(token: string, secret: string): boolean {
   try {
-    return authenticator.verify({ token, secret });
+    const result = verifySync({
+      strategy: "totp",
+      secret,
+      token,
+      epochTolerance: 30, // 1 time-step tolerance (±30s)
+    });
+    return result.valid;
   } catch {
     return false;
   }
 }
 
-/**
- * Generate 10 readable backup codes ("a1b2-c3d4-e5f6") and return both
- * plaintext (to show ONCE to the user) and hashed (to store).
- */
 export async function generateBackupCodes(): Promise<{ plain: string[]; hashed: string[] }> {
   const plain: string[] = [];
   for (let i = 0; i < 10; i++) {
