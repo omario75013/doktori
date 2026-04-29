@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -13,6 +13,7 @@ import {
   Loader2,
   Pencil,
 } from "lucide-react";
+import type { Locale } from "date-fns";
 import {
   format,
   startOfWeek,
@@ -34,7 +35,7 @@ import {
   getMinutes,
   differenceInMinutes,
 } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, ar as arLocale } from "date-fns/locale";
 import { toast } from "sonner";
 
 type Appt = {
@@ -61,6 +62,8 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function SecretaryCalendar() {
   const t = useTranslations("secretaire.calendrier");
+  const locale = useLocale();
+  const dateFnsLocale = locale === "ar" ? arLocale : fr;
   const [view, setView] = useState<View>("week");
   const [anchor, setAnchor] = useState(new Date());
   const [workingHoursOnly, setWorkingHoursOnly] = useState(true);
@@ -124,12 +127,12 @@ export default function SecretaryCalendar() {
 
   const title =
     view === "day"
-      ? format(anchor, "EEEE d MMMM yyyy", { locale: fr })
+      ? format(anchor, "EEEE d MMMM yyyy", { locale: dateFnsLocale })
       : view === "week"
-        ? `${format(range.start, "d MMM", { locale: fr })} – ${format(range.end, "d MMM yyyy", { locale: fr })}`
+        ? `${format(range.start, "d MMM", { locale: dateFnsLocale })} – ${format(range.end, "d MMM yyyy", { locale: dateFnsLocale })}`
         : view === "month"
-          ? format(anchor, "MMMM yyyy", { locale: fr })
-          : format(anchor, "yyyy", { locale: fr });
+          ? format(anchor, "MMMM yyyy", { locale: dateFnsLocale })
+          : format(anchor, "yyyy", { locale: dateFnsLocale });
 
   const viewOptions = [
     { key: "day" as const, label: t("day"), icon: CalendarClock },
@@ -212,11 +215,11 @@ export default function SecretaryCalendar() {
       ) : view === "day" ? (
         <DayView appts={filteredAppts} date={anchor} onEdit={setEditing} t={t} />
       ) : view === "week" ? (
-        <WeekView appts={filteredAppts} start={range.start} onEdit={setEditing} t={t} />
+        <WeekView appts={filteredAppts} start={range.start} onEdit={setEditing} t={t} dateFnsLocale={dateFnsLocale} />
       ) : view === "month" ? (
-        <MonthView appts={filteredAppts} date={anchor} onDayClick={(d) => { setAnchor(d); setView("day"); }} t={t} />
+        <MonthView appts={filteredAppts} date={anchor} onDayClick={(d) => { setAnchor(d); setView("day"); }} t={t} dateFnsLocale={dateFnsLocale} isArabic={locale === "ar"} />
       ) : (
-        <YearView appts={filteredAppts} year={anchor.getFullYear()} onMonthClick={(m) => { const d = new Date(anchor); d.setMonth(m); setAnchor(d); setView("month"); }} />
+        <YearView appts={filteredAppts} year={anchor.getFullYear()} onMonthClick={(m) => { const d = new Date(anchor); d.setMonth(m); setAnchor(d); setView("month"); }} dateFnsLocale={dateFnsLocale} />
       )}
 
       {editing && (
@@ -289,7 +292,7 @@ function DayView({ appts, date, onEdit, t }: { appts: Appt[]; date: Date; onEdit
   );
 }
 
-function WeekView({ appts, start, onEdit, t }: { appts: Appt[]; start: Date; onEdit: (a: Appt) => void; t: TFunc }) {
+function WeekView({ appts, start, onEdit, t, dateFnsLocale }: { appts: Appt[]; start: Date; onEdit: (a: Appt) => void; t: TFunc; dateFnsLocale: Locale }) {
   const days = eachDayOfInterval({ start, end: addDays(start, 6) });
   const HOUR_START = 8;
   const HOUR_END = 20;
@@ -315,8 +318,8 @@ function WeekView({ appts, start, onEdit, t }: { appts: Appt[]; start: Date; onE
               isSameDay(d, new Date()) ? "bg-teal-50 text-teal-700" : "bg-secondary text-gray-600"
             }`}
           >
-            <div className="capitalize">{format(d, "EEE", { locale: fr })}</div>
-            <div>{format(d, "d MMM", { locale: fr })}</div>
+            <div className="capitalize">{format(d, "EEE", { locale: dateFnsLocale })}</div>
+            <div>{format(d, "d MMM", { locale: dateFnsLocale })}</div>
           </div>
         ))}
         {/* time rows */}
@@ -372,7 +375,7 @@ function WeekView({ appts, start, onEdit, t }: { appts: Appt[]; start: Date; onE
   );
 }
 
-function MonthView({ appts, date, onDayClick, t }: { appts: Appt[]; date: Date; onDayClick: (d: Date) => void; t: TFunc }) {
+function MonthView({ appts, date, onDayClick, t, dateFnsLocale, isArabic }: { appts: Appt[]; date: Date; onDayClick: (d: Date) => void; t: TFunc; dateFnsLocale: Locale; isArabic: boolean }) {
   const start = startOfWeek(startOfMonth(date), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(date), { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start, end });
@@ -382,9 +385,10 @@ function MonthView({ appts, date, onDayClick, t }: { appts: Appt[]; date: Date; 
     byDay[key] = (byDay[key] ?? 0) + 1;
   }
 
-  const dayAbbrevs = [
-    t("dayMon"), t("dayTue"), t("dayWed"), t("dayThu"), t("dayFri"), t("daySat"), t("daySun"),
-  ];
+  // Jan 1 2024 = Monday; use it to generate Mon..Sun names
+  const dayAbbrevs = Array.from({ length: 7 }, (_, i) =>
+    format(new Date(2024, 0, 1 + i), isArabic ? "EEEE" : "EEE", { locale: dateFnsLocale })
+  );
 
   return (
     <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
@@ -422,7 +426,7 @@ function MonthView({ appts, date, onDayClick, t }: { appts: Appt[]; date: Date; 
   );
 }
 
-function YearView({ appts, year, onMonthClick }: { appts: Appt[]; year: number; onMonthClick: (m: number) => void }) {
+function YearView({ appts, year, onMonthClick, dateFnsLocale }: { appts: Appt[]; year: number; onMonthClick: (m: number) => void; dateFnsLocale: Locale }) {
   const counts = Array.from({ length: 12 }).map((_, i) => {
     return appts.filter((a) => {
       const d = new Date(a.startsAt);
@@ -430,7 +434,7 @@ function YearView({ appts, year, onMonthClick }: { appts: Appt[]; year: number; 
     }).length;
   });
   const maxCount = Math.max(1, ...counts);
-  const monthName = (i: number) => format(new Date(year, i, 1), "MMMM", { locale: fr });
+  const monthName = (i: number) => format(new Date(year, i, 1), "MMMM", { locale: dateFnsLocale });
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
       {counts.map((c, i) => (
