@@ -162,9 +162,10 @@ export function ProfileMenu({ name, email, image, role }: Props) {
             <div className="py-1 border-t border-gray-100 dark:border-gray-800">
               <button
                 type="button"
-                onClick={() => {
+                onClick={async () => {
                   setOpen(false);
-                  signOut({ callbackUrl: isDesktop ? "/app-picker" : "/connexion" });
+                  await signOut({ redirect: false });
+                  window.location.href = isDesktop ? "/app-picker" : "/connexion";
                 }}
                 className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
               >
