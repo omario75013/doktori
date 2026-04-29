@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +23,7 @@ type PhoneStep = "phone" | "code";
 
 export default function ConnexionPatientPage() {
   const router = useRouter();
+  const t = useTranslations("patientAuth");
   const [activeTab, setActiveTab] = useState<Tab>("phone");
 
   // OTP flow
@@ -53,7 +55,7 @@ export default function ConnexionPatientPage() {
     setLoading(false);
     if (!res.ok) {
       const err = await res.json();
-      setError(typeof err.error === "string" ? err.error : "Erreur lors de l'envoi du code");
+      setError(typeof err.error === "string" ? err.error : t("errorSendCode"));
       return;
     }
     setPhoneStep("code");
@@ -71,7 +73,7 @@ export default function ConnexionPatientPage() {
     setLoading(false);
     if (!res.ok) {
       const err = await res.json();
-      setError(typeof err.error === "string" ? err.error : "Code invalide");
+      setError(typeof err.error === "string" ? err.error : t("errorInvalidCode"));
       return;
     }
     const data = await res.json();
@@ -92,17 +94,24 @@ export default function ConnexionPatientPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        setError(typeof data.error === "string" ? data.error : "Identifiants invalides");
+        setError(typeof data.error === "string" ? data.error : t("errorInvalidCredentials"));
         return;
       }
       localStorage.setItem("doktori_patient_token", data.token);
       router.push("/mon-espace");
     } catch {
-      setError("Une erreur est survenue. Veuillez réessayer.");
+      setError(t("errorGeneric"));
     } finally {
       setLoading(false);
     }
   }
+
+  const features = [
+    { icon: Calendar, key: "feature1" },
+    { icon: FileText, key: "feature2" },
+    { icon: Heart, key: "feature3" },
+    { icon: UserRound, key: "feature4" },
+  ] as const;
 
   return (
     <div className="min-h-screen flex flex-col lg:flex-row">
@@ -126,25 +135,21 @@ export default function ConnexionPatientPage() {
           </div>
 
           <h1 className="font-heading text-3xl xl:text-4xl font-black leading-tight tracking-tight">
-            Bienvenue <br />sur votre espace patient
+            {t("welcomeTitle")} <br />
+            {t("welcomeSubtitle")}
           </h1>
           <p className="mt-4 text-white/70 text-sm leading-relaxed max-w-sm">
-            Connectez-vous pour gérer vos rendez-vous médicaux, consulter vos ordonnances et suivre votre santé.
+            {t("heroDesc")}
           </p>
         </div>
 
         <div className="relative z-10 space-y-5 mt-auto">
-          {[
-            { icon: Calendar, text: "Prenez RDV en ligne 24h/24 avec les meilleurs médecins" },
-            { icon: FileText, text: "Accédez à votre dossier médical et ordonnances" },
-            { icon: Heart, text: "Suivi personnalisé de votre santé" },
-            { icon: UserRound, text: "Gérez les RDV de toute votre famille" },
-          ].map(({ icon: Icon, text }) => (
-            <div key={text} className="flex items-center gap-3">
+          {features.map(({ icon: Icon, key }) => (
+            <div key={key} className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
                 <Icon className="h-4 w-4" />
               </div>
-              <span className="text-sm text-white/80">{text}</span>
+              <span className="text-sm text-white/80">{t(key)}</span>
             </div>
           ))}
         </div>
@@ -161,14 +166,14 @@ export default function ConnexionPatientPage() {
             <Stethoscope className="h-5 w-5" />
             <span className="font-bold">Doktori</span>
           </div>
-          <h1 className="text-lg font-bold">Mon espace patient</h1>
+          <h1 className="text-lg font-bold">{t("mobileTitle")}</h1>
         </div>
 
         <div className="flex-1 flex items-center justify-center px-4 py-8 sm:px-8 lg:px-12">
           <div className="w-full max-w-md">
             <div className="mb-8 hidden lg:block">
-              <h2 className="text-2xl font-black text-foreground">Se connecter</h2>
-              <p className="text-sm text-muted-foreground mt-1">Accédez à vos rendez-vous et votre dossier médical.</p>
+              <h2 className="text-2xl font-black text-foreground">{t("loginHeading")}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{t("loginSubtitle")}</p>
             </div>
 
             {/* Tab switcher */}
@@ -182,7 +187,7 @@ export default function ConnexionPatientPage() {
                 }`}
               >
                 <Phone className="h-4 w-4" />
-                Par téléphone
+                {t("tabPhone")}
               </button>
               <button
                 onClick={() => { setActiveTab("email"); clearError(); }}
@@ -193,12 +198,12 @@ export default function ConnexionPatientPage() {
                 }`}
               >
                 <Mail className="h-4 w-4" />
-                Par email
+                {t("tabEmail")}
               </button>
             </div>
 
             <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 shadow-sm p-6">
-              {/* Error banner — visible across all steps */}
+              {/* Error banner */}
               {error && (
                 <div className="flex items-start gap-3 text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3 mb-4">
                   <AlertCircle className="h-4 w-4 flex-shrink-0 mt-0.5" strokeWidth={2} />
@@ -211,7 +216,7 @@ export default function ConnexionPatientPage() {
                 <form onSubmit={requestOtp} className="space-y-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="phone" className="text-foreground font-semibold text-sm">
-                      Numéro de téléphone
+                      {t("phoneLabel")}
                     </Label>
                     <Input
                       id="phone"
@@ -228,9 +233,9 @@ export default function ConnexionPatientPage() {
                     disabled={loading}
                   >
                     {loading ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Envoi...</>
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t("sendingCode")}</>
                     ) : (
-                      "Recevoir le code par SMS"
+                      t("sendCodeBtn")
                     )}
                   </Button>
                 </form>
@@ -241,10 +246,10 @@ export default function ConnexionPatientPage() {
                 <form onSubmit={verifyOtp} className="space-y-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="code" className="text-foreground font-semibold text-sm">
-                      Code SMS
+                      {t("codeLabel")}
                     </Label>
                     <p className="text-xs text-muted-foreground">
-                      Code envoyé au <span className="font-semibold">{phone}</span>
+                      {t("codeSentTo", { phone })}
                     </p>
                     <Input
                       id="code"
@@ -262,9 +267,9 @@ export default function ConnexionPatientPage() {
                     disabled={loading}
                   >
                     {loading ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Vérification...</>
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t("verifying")}</>
                     ) : (
-                      "Valider"
+                      t("verifyBtn")
                     )}
                   </Button>
                   <button
@@ -272,7 +277,7 @@ export default function ConnexionPatientPage() {
                     onClick={() => { setPhoneStep("phone"); setCode(""); clearError(); }}
                     className="w-full text-sm text-foreground/60 hover:text-primary transition-colors"
                   >
-                    Changer de numéro
+                    {t("changeNumber")}
                   </button>
                 </form>
               )}
@@ -282,7 +287,7 @@ export default function ConnexionPatientPage() {
                 <form onSubmit={loginWithEmail} className="space-y-4">
                   <div className="space-y-1.5">
                     <Label htmlFor="email" className="text-foreground font-semibold text-sm">
-                      Adresse email
+                      {t("emailLabel")}
                     </Label>
                     <Input
                       id="email"
@@ -297,14 +302,14 @@ export default function ConnexionPatientPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor="password" className="text-foreground font-semibold text-sm">
-                      Mot de passe
+                      {t("passwordLabel")}
                     </Label>
                     <Input
                       id="password"
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="Votre mot de passe"
+                      placeholder="••••••••"
                       autoComplete="current-password"
                       required
                       className="h-12 rounded-xl border-border focus-visible:ring-primary"
@@ -316,9 +321,9 @@ export default function ConnexionPatientPage() {
                     disabled={loading}
                   >
                     {loading ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />Connexion...</>
+                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t("loggingIn")}</>
                     ) : (
-                      "Se connecter"
+                      t("loginBtn")
                     )}
                   </Button>
                 </form>
@@ -326,9 +331,9 @@ export default function ConnexionPatientPage() {
             </div>
 
             <p className="text-center text-sm text-muted-foreground mt-6">
-              Pas encore de compte ?{" "}
+              {t("noAccount")}{" "}
               <a href="/inscription-patient" className="font-bold text-primary hover:underline">
-                Créer un compte
+                {t("createAccount")}
               </a>
             </p>
           </div>
