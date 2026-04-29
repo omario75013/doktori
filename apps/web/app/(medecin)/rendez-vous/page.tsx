@@ -57,6 +57,7 @@ function NewAppointmentModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const t = useTranslations("medecin.appointments");
   const [patientOptions, setPatientOptions] = useState<PatientOption[]>([]);
   const [patientsLoading, setPatientsLoading] = useState(true);
   const [patientSearch, setPatientSearch] = useState("");
@@ -86,7 +87,7 @@ function NewAppointmentModal({
     e.preventDefault();
     setError(null);
     if (!selectedPatientId) {
-      setError("Veuillez sélectionner un patient.");
+      setError(t("selectPatientError"));
       return;
     }
     setSubmitting(true);
@@ -104,7 +105,7 @@ function NewAppointmentModal({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erreur lors de la création");
-      toast.success("Rendez-vous créé avec succès.");
+      toast.success(t("createdSuccess"));
       onCreated();
       onClose();
     } catch (e) {
@@ -124,7 +125,7 @@ function NewAppointmentModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Nouveau rendez-vous</h2>
+          <h2 className="text-base font-semibold text-foreground">{t("newModalTitle")}</h2>
           <button
             onClick={onClose}
             className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-secondary hover:text-foreground transition-colors"
@@ -145,16 +146,16 @@ function NewAppointmentModal({
                 type="text"
                 value={patientSearch}
                 onChange={(e) => setPatientSearch(e.target.value)}
-                placeholder="Rechercher un patient…"
+                placeholder={t("searchPatientPlaceholder")}
                 className="w-full h-9 pl-8 pr-3 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
               />
             </div>
             {patientsLoading ? (
-              <p className="text-xs text-gray-400">Chargement des patients…</p>
+              <p className="text-xs text-gray-400">{t("loadingPatients")}</p>
             ) : (
               <div className="max-h-40 overflow-y-auto rounded-xl border border-border divide-y divide-border">
                 {filteredPatients.length === 0 ? (
-                  <p className="p-3 text-xs text-gray-400 text-center">Aucun patient trouvé</p>
+                  <p className="p-3 text-xs text-gray-400 text-center">{t("noPatientFound")}</p>
                 ) : (
                   filteredPatients.map((p) => (
                     <button
@@ -207,21 +208,21 @@ function NewAppointmentModal({
           {/* Type */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Type de consultation
+              {t("consultationType")}
             </label>
             <div className="flex gap-2">
-              {(["cabinet", "teleconsult", "domicile"] as const).map((t) => (
+              {(["cabinet", "teleconsult", "domicile"] as const).map((typeOpt) => (
                 <button
-                  key={t}
+                  key={typeOpt}
                   type="button"
-                  onClick={() => setType(t)}
+                  onClick={() => setType(typeOpt)}
                   className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-colors ${
-                    type === t
+                    type === typeOpt
                       ? "bg-primary text-white border-primary"
                       : "border-border text-gray-600 hover:bg-secondary"
                   }`}
                 >
-                  {t === "cabinet" ? "Cabinet" : t === "teleconsult" ? "Téléconsult" : "Domicile"}
+                  {typeOpt === "cabinet" ? t("typeOffice") : typeOpt === "teleconsult" ? t("typeTeleconsult") : t("typeHome")}
                 </button>
               ))}
             </div>
@@ -230,13 +231,13 @@ function NewAppointmentModal({
           {/* Reason */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Motif <span className="text-gray-300 font-normal normal-case">(optionnel)</span>
+              {t("reasonLabel")}
             </label>
             <input
               type="text"
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Ex : Suivi tension, douleurs abdominales…"
+              placeholder={t("reasonPlaceholder")}
               className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
             />
           </div>
@@ -249,14 +250,14 @@ function NewAppointmentModal({
               onClick={onClose}
               className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 dark:text-gray-400 transition-colors"
             >
-              Annuler
+              {t("cancelButton")}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="px-4 py-2 text-sm rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold disabled:opacity-40 transition-colors"
             >
-              {submitting ? "Création…" : "Créer le RDV"}
+              {submitting ? t("creatingButton") : t("createButton")}
             </button>
           </div>
         </form>
@@ -383,10 +384,10 @@ export default function RendezVousPage() {
         const data = await res.json();
         throw new Error(data.error ?? "Erreur mise à jour");
       }
-      toast.success("Statut mis à jour");
+      toast.success(t("statusUpdated"));
       await fetchAppointments();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur lors de la mise à jour");
+      toast.error(e instanceof Error ? e.message : t("updateError"));
     } finally {
       setUpdating(null);
     }
@@ -406,9 +407,9 @@ export default function RendezVousPage() {
           a.id === appt.id ? { ...a, checkedInAt: data.checkedInAt ?? null } : a
         )
       );
-      toast.success(appt.checkedInAt ? "Enregistrement annulé" : "Patient enregistré à l'accueil");
+      toast.success(appt.checkedInAt ? t("checkInCancelled") : t("checkInSuccess"));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur");
+      toast.error(e instanceof Error ? e.message : t("error"));
     }
   };
 
@@ -446,13 +447,13 @@ export default function RendezVousPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? "Erreur création bordereau");
+        throw new Error(data.error ?? t("cnamBordereuError"));
       }
       const claim = await res.json();
-      toast.success("Bordereau CNAM créé");
+      toast.success(t("cnamBordereuCreated"));
       window.open(`/cnam/${claim.id}/print`, "_blank");
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur création bordereau");
+      toast.error(e instanceof Error ? e.message : t("cnamBordereuError"));
     } finally {
       setUpdating(null);
     }
@@ -469,7 +470,7 @@ export default function RendezVousPage() {
     if (!id) return;
     const weeks = Number(followupWeeks);
     if (!Number.isFinite(weeks) || weeks < 1 || weeks > 104) {
-      setFollowupError("Valeur invalide (1 à 104 semaines).");
+      setFollowupError(t("followupWeeksError"));
       return;
     }
     setFollowupError(null);
@@ -484,12 +485,10 @@ export default function RendezVousPage() {
         const data = await res.json();
         throw new Error(data.error ?? "Erreur programmation");
       }
-      toast.success(
-        `Suivi programmé dans ${weeks} semaine${weeks > 1 ? "s" : ""}. Le patient recevra un SMS.`,
-      );
+      toast.success(t("followupScheduled", { weeks, s: weeks > 1 ? "s" : "" }));
       setFollowupDialogId(null);
     } catch (e) {
-      setFollowupError(e instanceof Error ? e.message : "Erreur");
+      setFollowupError(e instanceof Error ? e.message : t("error"));
     } finally {
       setUpdating(null);
     }
@@ -516,11 +515,11 @@ export default function RendezVousPage() {
         const data = await res.json();
         throw new Error(data.error ?? "Erreur lors de l'annulation");
       }
-      toast.success("Rendez-vous annulé");
+      toast.success(t("appointmentCancelled"));
       setCancelDialogId(null);
       await fetchAppointments();
     } catch (e) {
-      setCancelError(e instanceof Error ? e.message : "Erreur");
+      setCancelError(e instanceof Error ? e.message : t("error"));
     } finally {
       setCancelSubmitting(false);
     }
@@ -575,7 +574,7 @@ export default function RendezVousPage() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white text-sm font-medium transition-colors shadow-sm"
           >
             <CalendarPlus className="h-4 w-4" />
-            Nouveau RDV
+            {t("newButton")}
           </button>
           <button
             onClick={fetchAppointments}
@@ -597,7 +596,7 @@ export default function RendezVousPage() {
                 : "bg-white border border-border text-foreground hover:bg-secondary"
             }`}
           >
-            Tous les cabinets
+            {t("allPractices")}
           </button>
           {practices.map((p) => (
             <button
@@ -618,7 +617,7 @@ export default function RendezVousPage() {
                       : "bg-blue-100 text-blue-700"
                   }`}
                 >
-                  Clinique
+                  {t("clinicBadge")}
                 </span>
               )}
             </button>
@@ -662,7 +661,7 @@ export default function RendezVousPage() {
                         {appt.patientNoShowCount >= 2 && (
                           <span
                             className="inline-flex items-center rounded-full bg-red-100 px-2 py-0.5 text-[10px] font-bold text-red-700"
-                            title={`${appt.patientNoShowCount} absences enregistrées`}
+                            title={t("noShowsTooltip", { count: appt.patientNoShowCount })}
                           >
                             ⚠ {appt.patientNoShowCount}
                           </span>
@@ -670,9 +669,9 @@ export default function RendezVousPage() {
                         {appt.patientLastMinuteCancelCount >= 2 && (
                           <span
                             className="inline-flex items-center rounded-full bg-orange-100 px-2 py-0.5 text-[10px] font-bold text-orange-700"
-                            title={`${appt.patientLastMinuteCancelCount} annulations tardives`}
+                            title={t("lastMinuteCancelsTooltip", { count: appt.patientLastMinuteCancelCount })}
                           >
-                            {appt.patientLastMinuteCancelCount} tardives
+                            {t("lastMinuteCancelsLabel", { count: appt.patientLastMinuteCancelCount })}
                           </span>
                         )}
                       </div>
@@ -681,14 +680,14 @@ export default function RendezVousPage() {
                       <div className="flex items-center gap-1.5">
                         <a
                           href={`tel:${appt.patientPhone}`}
-                          title={`Appeler ${appt.patientName}`}
+                          title={t("callPatientTooltip", { name: appt.patientName })}
                           className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
                         >
                           <Phone className="h-3.5 w-3.5" />
                         </a>
                         <button
                           type="button"
-                          title="Envoyer un SMS"
+                          title={t("sendSMSTooltip")}
                           onClick={() => setSmsAppt(appt)}
                           className="inline-flex items-center justify-center h-7 w-7 rounded-lg bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
                         >
@@ -735,7 +734,7 @@ export default function RendezVousPage() {
                             </button>
                             <a
                               href={`/api/appointments/${appt.id}/calendar`}
-                              title="Ajouter au calendrier"
+                              title={t("addToCalendarTooltip")}
                               className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl border border-border bg-secondary text-primary hover:bg-border transition-colors"
                             >
                               <CalendarPlus className="h-3.5 w-3.5" />
@@ -750,7 +749,7 @@ export default function RendezVousPage() {
                           {appt.status === "confirmed" && (
                             <button
                               onClick={() => toggleCheckin(appt)}
-                              title={appt.checkedInAt ? "Annuler l'arrivée" : "Marquer comme arrivé(e)"}
+                              title={appt.checkedInAt ? t("cancelArrivalTooltip") : t("markArrivedTooltip")}
                               className={`inline-flex items-center gap-1.5 text-xs px-2.5 py-1.5 rounded-xl border transition-colors ${
                                 appt.checkedInAt
                                   ? "bg-green-500 border-green-500 text-white hover:bg-green-600"
@@ -759,8 +758,8 @@ export default function RendezVousPage() {
                             >
                               <UserCheck className="h-3.5 w-3.5" />
                               {appt.checkedInAt
-                                ? `Arrivé(e) à ${format(new Date(appt.checkedInAt), "HH:mm")}`
-                                : "Arrivé(e)"}
+                                ? t("arrivedAtTime", { time: format(new Date(appt.checkedInAt), "HH:mm") })
+                                : t("arrived")}
                             </button>
                           )}
                           {ACTIONS.filter((a) => a.status !== appt.status).map((action) => (
@@ -776,16 +775,16 @@ export default function RendezVousPage() {
                           {!isTerminal && (
                             <button
                               onClick={() => setEditAppt(appt)}
-                              title="Modifier le rendez-vous"
+                              title={t("editModalTitle")}
                               className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl border border-border text-foreground hover:bg-secondary transition-colors"
                             >
                               <Pencil className="h-3.5 w-3.5" />
-                              Modifier
+                              {t("editButton")}
                             </button>
                           )}
                           <a
                             href={`/api/appointments/${appt.id}/calendar`}
-                            title="Ajouter au calendrier"
+                            title={t("addToCalendarTooltip")}
                             className="inline-flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-xl border border-border bg-secondary text-primary hover:bg-border transition-colors"
                           >
                             <CalendarPlus className="h-3.5 w-3.5" />
@@ -1021,6 +1020,7 @@ function EditAppointmentModal({
   onClose: () => void;
   onSaved: () => void | Promise<void>;
 }) {
+  const t = useTranslations("medecin.appointments");
   const start = new Date(appointment.startsAt);
   const end = new Date(appointment.endsAt);
   const [date, setDate] = useState(format(start, "yyyy-MM-dd"));
@@ -1039,7 +1039,7 @@ function EditAppointmentModal({
     const newStart = new Date(`${date}T${startTime}:00`);
     const newEnd = new Date(`${date}T${endTime}:00`);
     if (newEnd <= newStart) {
-      setError("L'heure de fin doit être postérieure au début");
+      setError(t("endTimeMustBeAfterStart"));
       return;
     }
     setSaving(true);
@@ -1055,11 +1055,11 @@ function EditAppointmentModal({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erreur mise à jour");
-      toast.success("Rendez-vous mis à jour");
+      if (!res.ok) throw new Error(data.error ?? t("updateError"));
+      toast.success(t("updatedSuccess"));
       await onSaved();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur");
+      setError(e instanceof Error ? e.message : t("error"));
     } finally {
       setSaving(false);
     }
@@ -1076,26 +1076,26 @@ function EditAppointmentModal({
       >
         <div className="flex items-center justify-between">
           <h2 className="text-base font-semibold text-foreground">
-            Modifier le rendez-vous
+            {t("editModalTitle")}
           </h2>
           <button
             type="button"
             onClick={onClose}
             className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-secondary"
-            aria-label="Fermer"
+            aria-label={t("closeBtnLabel")}
           >
             <X className="h-4 w-4" />
           </button>
         </div>
 
         <p className="text-sm text-gray-500">
-          Patient : <span className="font-medium text-foreground">{appointment.patientName}</span>
+          {t("patientLabel")} <span className="font-medium text-foreground">{appointment.patientName}</span>
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-3">
           <div className="grid grid-cols-2 gap-2">
             <div className="col-span-2">
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Date</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">{t("dateLabel")}</label>
               <input
                 type="date"
                 value={date}
@@ -1105,7 +1105,7 @@ function EditAppointmentModal({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Début</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">{t("startLabel")}</label>
               <input
                 type="time"
                 value={startTime}
@@ -1115,7 +1115,7 @@ function EditAppointmentModal({
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">Fin</label>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">{t("endLabel")}</label>
               <input
                 type="time"
                 value={endTime}
@@ -1126,25 +1126,25 @@ function EditAppointmentModal({
             </div>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Type</label>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">{t("typeLabel")}</label>
             <select
               value={type}
               onChange={(e) => setType(e.target.value as typeof type)}
               className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="cabinet">Au cabinet</option>
-              <option value="teleconsult">Téléconsultation</option>
-              <option value="domicile">À domicile</option>
+              <option value="cabinet">{t("editTypeOffice")}</option>
+              <option value="teleconsult">{t("editTypeTeleconsult")}</option>
+              <option value="domicile">{t("editTypeHome")}</option>
             </select>
           </div>
           <div>
-            <label className="block text-xs font-semibold text-gray-600 mb-1">Motif</label>
+            <label className="block text-xs font-semibold text-gray-600 mb-1">{t("reasonFieldLabel")}</label>
             <textarea
               rows={2}
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
-              placeholder="Consultation générale, suivi, etc."
+              placeholder={t("reasonFieldPlaceholder")}
             />
           </div>
 
@@ -1157,14 +1157,14 @@ function EditAppointmentModal({
               disabled={saving}
               className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary"
             >
-              Annuler
+              {t("editCancelButton")}
             </button>
             <button
               type="submit"
               disabled={saving}
               className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-60"
             >
-              {saving ? "Enregistrement…" : "Enregistrer"}
+              {saving ? t("savingButton") : t("saveButton")}
             </button>
           </div>
         </form>

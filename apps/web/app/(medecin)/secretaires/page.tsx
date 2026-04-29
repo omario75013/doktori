@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -25,25 +26,26 @@ import {
 } from "@/lib/secretary-permissions";
 import { QuickActionsManager } from "@/components/quick-actions-manager";
 
-const SECTION_LABELS: Record<Section, string> = {
-  agenda: "Agenda (horaires)",
-  patients: "Voir les patients",
-  patientsCreate: "Ajouter un patient",
-  patientsEdit: "Modifier un patient",
-  patientsDelete: "Supprimer un patient",
-  rendezVous: "Voir les RDV",
-  rendezVousCreate: "Créer un RDV",
-  rendezVousEdit: "Modifier / décaler un RDV",
-  rendezVousCancel: "Annuler un RDV",
-  messagerie: "Messagerie",
-  wallet: "Wallet",
-  factures: "Factures",
-  motifs: "Motifs",
-  cabinets: "Cabinets",
-  teleconsult: "Téléconsultation",
-};
+function getSectionLabels(t: ReturnType<typeof useTranslations<"medecin.secretaires">>): Record<Section, string> {
+  return {
+    agenda: t("permCalendar"),
+    patients: t("permPatients"),
+    patientsCreate: t("permCreate"),
+    patientsEdit: t("permSoapNotes"),
+    patientsDelete: t("permBilling"),
+    rendezVous: t("permAppts"),
+    rendezVousCreate: t("permCreate"),
+    rendezVousEdit: t("permCheckIn"),
+    rendezVousCancel: t("permCancel"),
+    messagerie: t("permMessages"),
+    wallet: t("permWallet"),
+    factures: t("permBilling"),
+    motifs: t("permFollowup"),
+    cabinets: t("permSecretaries"),
+    teleconsult: t("permCnam"),
+  };
+}
 
-const DAY_LABELS = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
 
 type Secretary = {
   id: string;
@@ -76,6 +78,7 @@ type OverviewRow = {
 };
 
 export default function SecretairesPage() {
+  const t = useTranslations("medecin.secretaires");
   const [secretaries, setSecretaries] = useState<Secretary[]>([]);
   const [overview, setOverview] = useState<OverviewRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -107,15 +110,15 @@ export default function SecretairesPage() {
   }, [loadAll]);
 
   async function handleRemove(id: string, name: string) {
-    if (!confirm(`Retirer ${name} ?`)) return;
+    if (!confirm(t("removeConfirm", { name }))) return;
     setRemoving(id);
     try {
       const res = await fetch(`/api/secretaries/${id}`, { method: "DELETE" });
-      if (!res.ok) throw new Error("Erreur");
-      toast.success(`${name} retirée`);
+      if (!res.ok) throw new Error(t("errorFallback"));
+      toast.success(t("removeSuccess", { name }));
       await loadAll();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur");
+      toast.error(e instanceof Error ? e.message : t("errorFallback"));
     } finally {
       setRemoving(null);
     }
@@ -131,9 +134,9 @@ export default function SecretairesPage() {
             <Users className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Secrétaires</h1>
+            <h1 className="text-2xl font-bold">{t("pageTitle")}</h1>
             <p className="text-sm text-gray-500">
-              {active.length} active{active.length !== 1 ? "s" : ""}
+              {t("activeCount", { count: active.length })}
             </p>
           </div>
         </div>
@@ -143,7 +146,7 @@ export default function SecretairesPage() {
           className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
         >
           <UserPlus className="h-4 w-4" />
-          Ajouter
+          {t("addButton")}
         </button>
       </div>
 
@@ -154,7 +157,7 @@ export default function SecretairesPage() {
       {overview.length > 0 && (
         <section className="rounded-2xl border border-border bg-white shadow-sm p-4">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
-            Aujourd&apos;hui
+            {t("todaySection")}
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
             {overview.map((r) => (
@@ -166,14 +169,14 @@ export default function SecretairesPage() {
 
       {/* List */}
       <section className="rounded-2xl border border-border bg-white shadow-sm p-4">
-        <h2 className="text-base font-semibold mb-3">Secrétaires actives</h2>
+        <h2 className="text-base font-semibold mb-3">{t("activeSecretaries")}</h2>
         {loading ? (
           <p className="py-6 text-center text-sm text-gray-400">
-            <Loader2 className="h-4 w-4 animate-spin inline" /> Chargement…
+            <Loader2 className="h-4 w-4 animate-spin inline" /> {t("loading")}
           </p>
         ) : active.length === 0 ? (
           <p className="py-6 text-center text-sm text-gray-400">
-            Aucune secrétaire. Cliquez sur « Ajouter » pour commencer.
+            {t("emptyState")}
           </p>
         ) : (
           <ul className="divide-y divide-border">
@@ -194,7 +197,7 @@ export default function SecretairesPage() {
                     className="inline-flex items-center gap-1 rounded-xl border border-border bg-white px-2.5 py-1.5 text-xs font-medium hover:bg-secondary"
                   >
                     <UserCog className="h-3 w-3" />
-                    Modifier
+                    {t("editButton")}
                   </button>
                   <button
                     type="button"
@@ -202,7 +205,7 @@ export default function SecretairesPage() {
                     className="inline-flex items-center gap-1 rounded-xl border border-border bg-white px-2.5 py-1.5 text-xs font-medium hover:bg-secondary"
                   >
                     <CalendarDays className="h-3 w-3" />
-                    Planning
+                    {t("scheduleButton")}
                   </button>
                   <button
                     type="button"
@@ -210,7 +213,7 @@ export default function SecretairesPage() {
                     className="inline-flex items-center gap-1 rounded-xl border border-border bg-white px-2.5 py-1.5 text-xs font-medium hover:bg-secondary"
                   >
                     <Plane className="h-3 w-3" />
-                    Congés
+                    {t("timeOffButton")}
                   </button>
                   <button
                     type="button"
@@ -218,7 +221,7 @@ export default function SecretairesPage() {
                     className="inline-flex items-center gap-1 rounded-xl border border-border bg-white px-2.5 py-1.5 text-xs font-medium hover:bg-secondary"
                   >
                     <Shield className="h-3 w-3" />
-                    Permissions
+                    {t("permissionsButton")}
                   </button>
                   <button
                     type="button"
@@ -229,7 +232,7 @@ export default function SecretairesPage() {
                     {removing === sec.id ? (
                       <Loader2 className="h-3 w-3 animate-spin" />
                     ) : (
-                      "Retirer"
+                      t("removeButton")
                     )}
                   </button>
                 </div>
@@ -297,6 +300,7 @@ function EditSecretaryDialog({
   onClose: () => void;
   onSaved: () => void | Promise<void>;
 }) {
+  const t = useTranslations("medecin.secretaires");
   const [form, setForm] = useState({
     name: secretary.name,
     phone: secretary.phone ?? "",
@@ -334,50 +338,50 @@ function EditSecretaryDialog({
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Erreur");
+        throw new Error(err.error ?? t("errorFallback"));
       }
-      toast.success("Profil mis à jour");
+      toast.success(t("updateProfileSuccess"));
       await onSaved();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur");
+      toast.error(e instanceof Error ? e.message : t("errorFallback"));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Modal title={`Modifier · ${secretary.name}`} onClose={onClose}>
+    <Modal title={t("editModalTitle", { name: secretary.name })} onClose={onClose}>
       <form onSubmit={submit} className="space-y-3">
         <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-3" disabled={saving}>
-          <Field label="Nom">
+          <Field label={t("fieldName")}>
             <Input value={form.name} onChange={(v) => setForm({ ...form, name: v })} />
           </Field>
-          <Field label="Téléphone">
+          <Field label={t("fieldPhone")}>
             <Input value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
           </Field>
-          <Field label="Date de naissance">
+          <Field label={t("fieldDateOfBirth")}>
             <Input type="date" value={form.dateOfBirth} onChange={(v) => setForm({ ...form, dateOfBirth: v })} />
           </Field>
-          <Field label="Date d'embauche">
+          <Field label={t("fieldHireDate")}>
             <Input type="date" value={form.hireDate} onChange={(v) => setForm({ ...form, hireDate: v })} />
           </Field>
-          <Field label="Années d'expérience">
+          <Field label={t("fieldYearsExp")}>
             <Input type="number" min="0" value={form.yearsOfExperience} onChange={(v) => setForm({ ...form, yearsOfExperience: v })} />
           </Field>
-          <Field label="Salaire mensuel (DT)">
+          <Field label={t("fieldSalary")}>
             <Input type="number" min="0" step="1" value={form.monthlySalary} onChange={(v) => setForm({ ...form, monthlySalary: v })} />
           </Field>
-          <Field label="Jours de congé / mois">
+          <Field label={t("fieldDaysOff")}>
             <Input type="number" min="0" step="0.5" value={form.monthlyDayOffAllowance} onChange={(v) => setForm({ ...form, monthlyDayOffAllowance: v })} />
           </Field>
-          <Field label="Email (non modifiable)">
+          <Field label={t("fieldEmailReadonly")}>
             <input type="email" disabled value={secretary.email} className="w-full h-10 rounded-xl border border-border bg-gray-100 px-3 text-sm" />
           </Field>
         </fieldset>
         <div className="flex justify-end gap-2 pt-1">
-          <button type="button" onClick={onClose} disabled={saving} className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-secondary">Annuler</button>
+          <button type="button" onClick={onClose} disabled={saving} className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-secondary">{t("cancelButton")}</button>
           <button type="submit" disabled={saving} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
-            {saving ? "Enregistrement…" : "Enregistrer"}
+            {saving ? t("savingButton") : t("saveButton")}
           </button>
         </div>
       </form>
@@ -388,6 +392,7 @@ function EditSecretaryDialog({
 // ─── Overview ─────────────────────────────────────────────────────────────────
 
 function OverviewCard({ row }: { row: OverviewRow }) {
+  const t = useTranslations("medecin.secretaires");
   const now = new Date();
   const connected =
     row.lastActiveAt &&
@@ -401,16 +406,16 @@ function OverviewCard({ row }: { row: OverviewRow }) {
     return mins >= h1 * 60 + m1 && mins <= h2 * 60 + m2;
   });
 
-  let statusLabel = "Hors planning";
+  let statusLabel = t("statusOff");
   let statusClass = "bg-gray-100 text-gray-500";
   if (row.offToday) {
-    statusLabel = "En congé";
+    statusLabel = t("statusOnLeave");
     statusClass = "bg-orange-100 text-orange-700";
   } else if (scheduledNow) {
-    statusLabel = "En poste";
+    statusLabel = t("statusWorking");
     statusClass = "bg-green-100 text-green-700";
   } else if (row.todaySlots.length > 0) {
-    statusLabel = "Plus tard aujourd'hui";
+    statusLabel = t("statusLater");
     statusClass = "bg-blue-100 text-blue-700";
   }
 
@@ -425,7 +430,7 @@ function OverviewCard({ row }: { row: OverviewRow }) {
             .join("")}
         </div>
         <span
-          title={connected ? "Connectée" : "Hors ligne"}
+          title={connected ? t("online") : t("offline")}
           className={`absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full ring-2 ring-white ${
             connected ? "bg-green-500" : "bg-gray-300"
           }`}
@@ -452,6 +457,7 @@ function OverviewCard({ row }: { row: OverviewRow }) {
 }
 
 function LeaveBalancePill({ balance }: { balance: number }) {
+  const t = useTranslations("medecin.secretaires");
   const neg = balance < 0;
   return (
     <div
@@ -462,10 +468,9 @@ function LeaveBalancePill({ balance }: { balance: number }) {
             ? "bg-gray-50 text-gray-500 border border-gray-200"
             : "bg-green-50 text-green-700 border border-green-200"
       }`}
-      title="Solde de congés"
+      title={t("leaveBalance", { balance: balance.toFixed(1) })}
     >
-      Solde : {balance > 0 ? "+" : ""}
-      {balance.toFixed(1)} j
+      {t("leaveBalance", { balance: `${balance > 0 ? "+" : ""}${balance.toFixed(1)}` })}
     </div>
   );
 }
@@ -479,6 +484,8 @@ function AddSecretaryDialog({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const t = useTranslations("medecin.secretaires");
+  const SECTION_LABELS = getSectionLabels(t);
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -496,7 +503,7 @@ function AddSecretaryDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!form.name.trim() || !form.email.trim() || form.password.length < 8) {
-      toast.error("Nom, email et mot de passe (≥ 8) requis");
+      toast.error(t("validationError"));
       return;
     }
     setSubmitting(true);
@@ -522,11 +529,11 @@ function AddSecretaryDialog({
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erreur");
-      toast.success(`${data.name} ajoutée`);
+      if (!res.ok) throw new Error(data.error ?? t("errorFallback"));
+      toast.success(t("addedSuccess", { name: data.name }));
       onCreated();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur");
+      toast.error(err instanceof Error ? err.message : t("errorFallback"));
     } finally {
       setSubmitting(false);
     }
@@ -537,40 +544,40 @@ function AddSecretaryDialog({
   }
 
   return (
-    <Modal title="Ajouter une secrétaire" onClose={onClose}>
+    <Modal title={t("addModalTitle")} onClose={onClose}>
       <form onSubmit={handleSubmit} className="space-y-4">
         <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-3" disabled={submitting}>
-          <Field label="Nom complet *">
+          <Field label={t("fieldFullName")}>
             <Input value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
           </Field>
-          <Field label="Téléphone">
+          <Field label={t("fieldPhone")}>
             <Input value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
           </Field>
-          <Field label="Email *">
+          <Field label={t("fieldEmail")}>
             <Input type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
           </Field>
-          <Field label="Mot de passe * (≥ 8)">
+          <Field label={t("fieldPassword")}>
             <Input type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} required />
           </Field>
-          <Field label="Date de naissance">
+          <Field label={t("fieldDateOfBirth")}>
             <Input type="date" value={form.dateOfBirth} onChange={(v) => setForm({ ...form, dateOfBirth: v })} />
           </Field>
-          <Field label="Date d'embauche">
+          <Field label={t("fieldHireDate")}>
             <Input type="date" value={form.hireDate} onChange={(v) => setForm({ ...form, hireDate: v })} />
           </Field>
-          <Field label="Années d'expérience">
+          <Field label={t("fieldYearsExp")}>
             <Input type="number" min="0" value={form.yearsOfExperience} onChange={(v) => setForm({ ...form, yearsOfExperience: v })} />
           </Field>
-          <Field label="Salaire mensuel (DT)">
+          <Field label={t("fieldSalary")}>
             <Input type="number" min="0" step="1" value={form.monthlySalary} onChange={(v) => setForm({ ...form, monthlySalary: v })} />
           </Field>
-          <Field label="Jours de congé / mois">
+          <Field label={t("fieldDaysOff")}>
             <Input type="number" min="0" step="0.5" value={form.monthlyDayOffAllowance} onChange={(v) => setForm({ ...form, monthlyDayOffAllowance: v })} />
           </Field>
         </fieldset>
 
         <div>
-          <h3 className="text-sm font-semibold mb-2">Permissions initiales</h3>
+          <h3 className="text-sm font-semibold mb-2">{t("initialPermissions")}</h3>
           <div className="grid grid-cols-2 gap-1.5">
             {SECTIONS.map((s) => (
               <label key={s} className="flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-1.5 text-sm cursor-pointer hover:bg-secondary/40">
@@ -583,10 +590,10 @@ function AddSecretaryDialog({
 
         <div className="flex justify-end gap-2 pt-1">
           <button type="button" onClick={onClose} disabled={submitting} className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-secondary">
-            Annuler
+            {t("cancelButton")}
           </button>
           <button type="submit" disabled={submitting} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
-            {submitting ? "Création…" : "Créer"}
+            {submitting ? t("creatingButton") : t("createButton")}
           </button>
         </div>
       </form>
@@ -605,6 +612,8 @@ function PermissionsDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("medecin.secretaires");
+  const SECTION_LABELS = getSectionLabels(t);
   const [perms, setPerms] = useState<SecretaryPermissions>(
     parsePermissions(secretary.permissions ?? DEFAULT_PERMISSIONS)
   );
@@ -619,17 +628,17 @@ function PermissionsDialog({
         body: JSON.stringify({ permissions: perms }),
       });
       if (!res.ok) throw new Error();
-      toast.success("Permissions mises à jour");
+      toast.success(t("permissionsSuccess"));
       onSaved();
     } catch {
-      toast.error("Erreur");
+      toast.error(t("errorFallback"));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Modal title={`Permissions · ${secretary.name}`} onClose={onClose}>
+    <Modal title={t("permissionsModalTitle", { name: secretary.name })} onClose={onClose}>
       <div className="grid grid-cols-1 gap-2">
         {SECTIONS.map((s) => (
           <label key={s} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-white px-3 py-2 cursor-pointer hover:bg-secondary/40">
@@ -643,10 +652,10 @@ function PermissionsDialog({
       </div>
       <div className="flex justify-end gap-2 pt-3">
         <button type="button" onClick={onClose} disabled={saving} className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-secondary">
-          Annuler
+          {t("cancelButton")}
         </button>
         <button type="button" onClick={save} disabled={saving} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
-          {saving ? "Enregistrement…" : "Enregistrer"}
+          {saving ? t("savingButton") : t("saveButton")}
         </button>
       </div>
     </Modal>
@@ -671,6 +680,8 @@ function ScheduleDialog({
   onClose: () => void;
   onSaved: () => void;
 }) {
+  const t = useTranslations("medecin.secretaires");
+  const DAY_LABELS = [t("daySun"), t("dayMon"), t("dayTue"), t("dayWed"), t("dayThu"), t("dayFri"), t("daySat")];
   const [days, setDays] = useState<DaySchedule[]>(() =>
     [1, 2, 3, 4, 5, 6, 0].map((d) => ({
       dayOfWeek: d,
@@ -720,19 +731,19 @@ function ScheduleDialog({
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Erreur");
+        throw new Error(err.error ?? t("errorFallback"));
       }
-      toast.success("Planning enregistré");
+      toast.success(t("scheduleSuccess"));
       onSaved();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur");
+      toast.error(e instanceof Error ? e.message : t("errorFallback"));
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <Modal title={`Planning · ${secretary.name}`} onClose={onClose}>
+    <Modal title={t("scheduleModalTitle", { name: secretary.name })} onClose={onClose}>
       {loading ? (
         <div className="py-8 text-center">
           <Loader2 className="h-4 w-4 animate-spin inline" />
@@ -779,7 +790,7 @@ function ScheduleDialog({
                     />
                   </span>
                 ) : (
-                  <span className="ml-auto text-xs text-gray-400 italic">Fermé</span>
+                  <span className="ml-auto text-xs text-gray-400 italic">{t("scheduleClosed")}</span>
                 )}
               </label>
             </div>
@@ -788,10 +799,10 @@ function ScheduleDialog({
       )}
       <div className="flex justify-end gap-2 pt-3">
         <button type="button" onClick={onClose} disabled={saving} className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-secondary">
-          Annuler
+          {t("cancelButton")}
         </button>
         <button type="button" onClick={save} disabled={saving || loading} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
-          {saving ? "Enregistrement…" : "Enregistrer"}
+          {saving ? t("savingButton") : t("saveButton")}
         </button>
       </div>
     </Modal>
@@ -815,6 +826,7 @@ function TimeOffDialog({
   secretary: Secretary;
   onClose: () => void;
 }) {
+  const t = useTranslations("medecin.secretaires");
   const [list, setList] = useState<TimeOffRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState("");
@@ -853,13 +865,13 @@ function TimeOffDialog({
         }),
       });
       if (!res.ok) throw new Error();
-      toast.success("Congé enregistré");
+      toast.success(t("timeOffSuccess"));
       setStartDate("");
       setEndDate("");
       setReason("");
       await reload();
     } catch {
-      toast.error("Erreur");
+      toast.error(t("errorFallback"));
     } finally {
       setSubmitting(false);
     }
@@ -872,15 +884,15 @@ function TimeOffDialog({
       body: JSON.stringify({ status }),
     });
     if (res.ok) {
-      toast.success(status === "approved" ? "Approuvé" : "Refusé");
+      toast.success(status === "approved" ? t("timeOffStatusApproved") : t("timeOffStatusDenied"));
       reload();
-    } else toast.error("Erreur");
+    } else toast.error(t("errorFallback"));
   }
 
   async function remove(toId: string) {
     const res = await fetch(`/api/secretaries/${secretary.id}/time-off/${toId}`, { method: "DELETE" });
     if (res.ok) {
-      toast.success("Supprimé");
+      toast.success(t("deleteSuccess"));
       reload();
     }
   }
@@ -907,7 +919,7 @@ function TimeOffDialog({
     : 0;
 
   return (
-    <Modal title={`Congés · ${secretary.name}`} onClose={onClose}>
+    <Modal title={t("timeOffModalTitle", { name: secretary.name })} onClose={onClose}>
       {/* Summary */}
       <div className="rounded-xl bg-secondary/40 p-3 mb-4 grid grid-cols-2 md:grid-cols-4 gap-2 text-center">
         <div>
@@ -946,32 +958,32 @@ function TimeOffDialog({
       <form onSubmit={add} className="rounded-xl bg-white border border-border p-3 mb-4 space-y-2">
         <p className="text-xs font-semibold text-gray-600 flex items-center gap-1">
           <Plane className="h-3 w-3" />
-          Nouveau congé (approuvé d&apos;office côté médecin)
+          {t("newTimeOffRequest")}
         </p>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
           <label className="space-y-1">
-            <span className="text-[10px] text-gray-500">Début</span>
+            <span className="text-[10px] text-gray-500">{t("timeOffStart")}</span>
             <input type="date" required value={startDate} onChange={(e) => setStartDate(e.target.value)} className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
           </label>
           <label className="space-y-1">
-            <span className="text-[10px] text-gray-500">Fin</span>
+            <span className="text-[10px] text-gray-500">{t("timeOffEnd")}</span>
             <input type="date" required value={endDate} onChange={(e) => setEndDate(e.target.value)} className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
           </label>
         </div>
-        <input type="text" placeholder="Raison (facultatif)" value={reason} onChange={(e) => setReason(e.target.value)} className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
+        <input type="text" placeholder={t("timeOffReason")} value={reason} onChange={(e) => setReason(e.target.value)} className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary" />
         {requestedDays > 0 && (
           <p className="text-xs text-gray-500">
-            Durée : <strong>{requestedDays} jour{requestedDays > 1 ? "s" : ""}</strong>
+            <strong>{t("timeOffDuration", { days: requestedDays })}</strong>
             {allowance != null && requestedDays + approvedDaysThisMonth > allowance && (
               <span className="ml-2 text-orange-600 font-semibold">
-                ⚠ Dépasse le quota mensuel
+                ⚠ {t("timeOffQuotaWarning")}
               </span>
             )}
           </p>
         )}
         <div className="flex justify-end">
           <button type="submit" disabled={submitting} className="h-10 rounded-xl bg-primary px-4 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
-            {submitting ? "Enregistrement…" : "Ajouter"}
+            {submitting ? t("savingButton") : t("addTimeOffButton")}
           </button>
         </div>
       </form>
@@ -980,7 +992,7 @@ function TimeOffDialog({
           <Loader2 className="h-4 w-4 animate-spin inline" />
         </div>
       ) : list.length === 0 ? (
-        <p className="py-4 text-sm text-gray-400 italic">Aucune demande</p>
+        <p className="py-4 text-sm text-gray-400 italic">{t("emptyTimeOff")}</p>
       ) : (
         <ul className="divide-y divide-border">
           {list.map((r) => (
@@ -995,15 +1007,15 @@ function TimeOffDialog({
               <div className="flex gap-1">
                 {r.status === "pending" && (
                   <>
-                    <button onClick={() => updateStatus(r.id, "approved")} className="text-xs rounded-lg bg-green-500 text-white px-2 py-1">
+                    <button onClick={() => updateStatus(r.id, "approved")} aria-label={t("approveButton")} className="text-xs rounded-lg bg-green-500 text-white px-2 py-1">
                       <Check className="h-3 w-3" />
                     </button>
-                    <button onClick={() => updateStatus(r.id, "denied")} className="text-xs rounded-lg bg-red-500 text-white px-2 py-1">
+                    <button onClick={() => updateStatus(r.id, "denied")} aria-label={t("denyButton")} className="text-xs rounded-lg bg-red-500 text-white px-2 py-1">
                       <XIcon className="h-3 w-3" />
                     </button>
                   </>
                 )}
-                <button onClick={() => remove(r.id)} className="text-xs rounded-lg border border-border px-2 py-1 text-gray-500 hover:bg-secondary">
+                <button onClick={() => remove(r.id)} aria-label={t("deleteButton")} className="text-xs rounded-lg border border-border px-2 py-1 text-gray-500 hover:bg-secondary">
                   <XIcon className="h-3 w-3" />
                 </button>
               </div>
@@ -1016,6 +1028,7 @@ function TimeOffDialog({
 }
 
 function StatusPill({ status }: { status: string }) {
+  const t = useTranslations("medecin.secretaires");
   const map: Record<string, string> = {
     pending: "bg-orange-100 text-orange-700",
     approved: "bg-green-100 text-green-700",
@@ -1023,7 +1036,11 @@ function StatusPill({ status }: { status: string }) {
   };
   return (
     <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${map[status] ?? map.pending}`}>
-      {status === "pending" ? "En attente" : status === "approved" ? "Approuvé" : "Refusé"}
+      {status === "pending"
+        ? t("timeOffStatusPending")
+        : status === "approved"
+          ? t("timeOffStatusApproved")
+          : t("timeOffStatusDenied")}
     </span>
   );
 }
@@ -1031,6 +1048,7 @@ function StatusPill({ status }: { status: string }) {
 // ─── Shared atoms ─────────────────────────────────────────────────────────────
 
 function Modal({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
+  const t = useTranslations("medecin.secretaires");
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
       <div
@@ -1039,7 +1057,7 @@ function Modal({ title, onClose, children }: { title: string; onClose: () => voi
       >
         <div className="sticky top-0 bg-white border-b border-border px-5 py-3 flex items-center justify-between">
           <h2 className="font-semibold text-foreground">{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Fermer" className="h-8 w-8 rounded-lg text-gray-400 hover:bg-secondary flex items-center justify-center">
+          <button type="button" onClick={onClose} aria-label={t("closeButton")} className="h-8 w-8 rounded-lg text-gray-400 hover:bg-secondary flex items-center justify-center">
             <XIcon className="h-4 w-4" />
           </button>
         </div>
