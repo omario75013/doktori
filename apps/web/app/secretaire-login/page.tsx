@@ -4,6 +4,7 @@ import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   ClipboardList,
   Mail,
@@ -17,6 +18,7 @@ import {
 
 export default function SecretaireLoginPage() {
   const router = useRouter();
+  const t = useTranslations("secretaryLogin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -35,16 +37,22 @@ export default function SecretaireLoginPage() {
       });
 
       if (result?.error) {
-        setError("Email ou mot de passe incorrect.");
+        setError(t("errorInvalidCredentials"));
       } else {
         router.push("/secretaire/dashboard");
       }
     } catch {
-      setError("Une erreur est survenue. Veuillez réessayer.");
+      setError(t("errorGeneric"));
     } finally {
       setLoading(false);
     }
   }
+
+  const features = [
+    { icon: Calendar, key: "feature1" },
+    { icon: Users, key: "feature2" },
+    { icon: ShieldCheck, key: "feature3" },
+  ] as const;
 
   return (
     <div className="flex min-h-screen">
@@ -79,36 +87,30 @@ export default function SecretaireLoginPage() {
         <div className="relative">
           <div className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-bold text-accent">
             <ClipboardList className="h-3.5 w-3.5" strokeWidth={2.5} />
-            ESPACE SECRÉTAIRE
+            {t("badge")}
           </div>
           <h2 className="mt-6 font-heading text-4xl font-black leading-tight tracking-tight text-white xl:text-5xl">
-            Gérez l&apos;agenda
+            {t("heroHeading1")}
             <br />
-            <span className="text-doktori-teal-light">de votre médecin.</span>
+            <span className="text-doktori-teal-light">{t("heroHeading2")}</span>
           </h2>
           <p className="mt-6 max-w-md text-base leading-relaxed text-[#A7F3D0]">
-            Accueil des patients, prise de rendez-vous, gestion des absences — tout en un seul espace dédié.
+            {t("heroDesc")}
           </p>
 
           <ul className="mt-8 space-y-3">
-            {[
-              { icon: Calendar, label: "Agenda du médecin en temps réel" },
-              { icon: Users, label: "Gestion des patients" },
-              { icon: ShieldCheck, label: "Accès limité à votre périmètre" },
-            ].map(({ icon: Icon, label }) => (
-              <li key={label} className="flex items-center gap-3 text-sm text-white">
+            {features.map(({ icon: Icon, key }) => (
+              <li key={key} className="flex items-center gap-3 text-sm text-white">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-accent text-foreground">
                   <Icon className="h-3.5 w-3.5" strokeWidth={3} />
                 </span>
-                {label}
+                {t(key)}
               </li>
             ))}
           </ul>
         </div>
 
-        <p className="relative text-xs text-[#A7F3D0]">
-          © 2025–2026 Doktori · Fait avec soin pour la santé des Tunisiens
-        </p>
+        <p className="relative text-xs text-[#A7F3D0]">{t("footer")}</p>
       </div>
 
       {/* ═════ RIGHT: form ═════ */}
@@ -133,10 +135,10 @@ export default function SecretaireLoginPage() {
                 <ClipboardList className="h-7 w-7" strokeWidth={2} />
               </div>
               <h1 className="font-heading text-3xl font-black tracking-tight text-foreground">
-                Espace Secrétaire
+                {t("formHeading")}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                Connectez-vous à votre espace de gestion de l&apos;agenda.
+                {t("formSubtitle")}
               </p>
             </div>
 
@@ -147,7 +149,7 @@ export default function SecretaireLoginPage() {
                   htmlFor="email"
                   className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark"
                 >
-                  Adresse e-mail
+                  {t("emailLabel")}
                 </label>
                 <div className="group flex h-12 items-center rounded-xl border-2 border-border bg-white px-4 transition-colors focus-within:border-primary">
                   <Mail
@@ -173,7 +175,7 @@ export default function SecretaireLoginPage() {
                   htmlFor="password"
                   className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark"
                 >
-                  Mot de passe
+                  {t("passwordLabel")}
                 </label>
                 <div className="group flex h-12 items-center rounded-xl border-2 border-border bg-white px-4 transition-colors focus-within:border-primary">
                   <Lock
@@ -208,10 +210,10 @@ export default function SecretaireLoginPage() {
                 className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary font-heading text-base font-bold text-white shadow-lg shadow-primary/20 transition-all hover:bg-doktori-teal-dark disabled:opacity-60"
               >
                 {loading ? (
-                  "Connexion en cours…"
+                  t("loggingIn")
                 ) : (
                   <>
-                    <span>Se connecter</span>
+                    <span>{t("loginBtn")}</span>
                     <ArrowRight
                       className="h-4 w-4 transition-transform group-hover:translate-x-0.5"
                       strokeWidth={3}
@@ -222,9 +224,9 @@ export default function SecretaireLoginPage() {
             </form>
 
             <p className="mt-6 text-center text-sm text-muted-foreground">
-              Vous êtes médecin ?{" "}
+              {t("doctorLink")}{" "}
               <Link href="/connexion" className="font-bold text-primary hover:underline">
-                Espace médecin
+                {t("doctorSpace")}
               </Link>
             </p>
           </div>

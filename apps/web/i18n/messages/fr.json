@@ -208,6 +208,26 @@
     "errorInvalidCredentials": "Identifiants invalides",
     "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
   },
+  "secretaryLogin": {
+    "badge": "ESPACE SECRÉTAIRE",
+    "heroHeading1": "Gérez l'agenda",
+    "heroHeading2": "de votre médecin.",
+    "heroDesc": "Accueil des patients, prise de rendez-vous, gestion des absences — tout en un seul espace dédié.",
+    "feature1": "Agenda du médecin en temps réel",
+    "feature2": "Gestion des patients",
+    "feature3": "Accès limité à votre périmètre",
+    "footer": "© 2025–2026 Doktori · Fait avec soin pour la santé des Tunisiens",
+    "formHeading": "Espace Secrétaire",
+    "formSubtitle": "Connectez-vous à votre espace de gestion de l'agenda.",
+    "emailLabel": "Adresse e-mail",
+    "passwordLabel": "Mot de passe",
+    "loginBtn": "Se connecter",
+    "loggingIn": "Connexion en cours…",
+    "doctorLink": "Vous êtes médecin ?",
+    "doctorSpace": "Espace médecin",
+    "errorInvalidCredentials": "Email ou mot de passe incorrect.",
+    "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
+  },
   "common": {
     "language": "Langue",
     "french": "Français",
