@@ -323,7 +323,7 @@ export default function SecretairePatientsPage() {
           <div className="rounded-2xl border border-border bg-white shadow-sm overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-gray-50 text-left">
+                <tr className="border-b border-border bg-gray-50 text-start">
                   <th className="px-4 py-3 font-medium text-foreground">{t("colPatient")}</th>
                   <th className="px-4 py-3 font-medium text-foreground">{t("colPhone")}</th>
                   <th className="px-4 py-3 font-medium text-foreground">{t("colVisits")}</th>
