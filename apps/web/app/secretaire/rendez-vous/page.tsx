@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, ar as arLocale } from "date-fns/locale";
 import { Calendar, CalendarPlus, X, Search, Phone, MessageSquare, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { SMSModal } from "@/components/sms-modal";
@@ -49,6 +49,8 @@ function NewAppointmentModal({
   onCreated: () => void;
 }) {
   const t = useTranslations("secretaire.rendezVous");
+  const locale = useLocale();
+  const dateFnsLocale = locale === "ar" ? arLocale : fr;
   const [patientOptions, setPatientOptions] = useState<PatientOption[]>([]);
   const [patientsLoading, setPatientsLoading] = useState(true);
   const [patientSearch, setPatientSearch] = useState("");
@@ -270,6 +272,8 @@ function NewAppointmentModal({
 
 export default function SecretaireRendezVousPage() {
   const t = useTranslations("secretaire.rendezVous");
+  const locale = useLocale();
+  const dateFnsLocale = locale === "ar" ? arLocale : fr;
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -439,7 +443,7 @@ export default function SecretaireRendezVousPage() {
                 return (
                   <tr key={appt.id} className="hover:bg-gray-50 transition-colors">
                     <td className="px-4 py-3 whitespace-nowrap text-gray-700">
-                      {format(new Date(appt.startsAt), "EEE d MMM yyyy HH:mm", { locale: fr })}
+                      {format(new Date(appt.startsAt), "EEE d MMM yyyy HH:mm", { locale: dateFnsLocale })}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -468,7 +472,7 @@ export default function SecretaireRendezVousPage() {
                         >
                           <MessageSquare className="h-3.5 w-3.5" />
                         </button>
-                        <span className="text-xs text-gray-500">{appt.patientPhone}</span>
+                        <span className="text-xs text-gray-500" dir="ltr">{appt.patientPhone}</span>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-gray-500">
@@ -552,7 +556,7 @@ export default function SecretaireRendezVousPage() {
           patientPhone={smsAppt.patientPhone}
           patientName={smsAppt.patientName}
           appointmentId={smsAppt.id}
-          appointmentDate={format(new Date(smsAppt.startsAt), "d MMMM yyyy", { locale: fr })}
+          appointmentDate={format(new Date(smsAppt.startsAt), "d MMMM yyyy", { locale: dateFnsLocale })}
           appointmentTime={format(new Date(smsAppt.startsAt), "HH:mm")}
           onClose={() => setSmsAppt(null)}
         />

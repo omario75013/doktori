@@ -1,10 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import { useTranslations } from "next-intl";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, ar as arLocale } from "date-fns/locale";
 import { Users, Search, UserPlus, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +39,8 @@ function AddPatientModal({
   onSuccess: (patient: PatientRow) => void;
 }) {
   const t = useTranslations("secretaire.patients");
+  const locale = useLocale();
+  const dateFnsLocale = locale === "ar" ? arLocale : fr;
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -187,6 +189,8 @@ function AddPatientModal({
 
 export default function SecretairePatientsPage() {
   const t = useTranslations("secretaire.patients");
+  const locale = useLocale();
+  const dateFnsLocale = locale === "ar" ? arLocale : fr;
   const [patientList, setPatientList] = useState<PatientRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -344,7 +348,7 @@ export default function SecretairePatientsPage() {
                         <div className="text-xs text-muted-foreground">{p.email}</div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{p.phone}</td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap" dir="ltr">{p.phone}</td>
                     <td className="px-4 py-3">
                       <span
                         className="inline-flex items-center justify-center h-6 w-6 rounded-full text-white text-xs font-bold"
@@ -355,7 +359,7 @@ export default function SecretairePatientsPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                       {p.last_visit && p.total_visits > 0
-                        ? format(new Date(p.last_visit), "d MMM yyyy", { locale: fr })
+                        ? format(new Date(p.last_visit), "d MMM yyyy", { locale: dateFnsLocale })
                         : "—"}
                     </td>
                   </tr>
