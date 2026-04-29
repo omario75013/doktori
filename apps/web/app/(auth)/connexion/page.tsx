@@ -38,12 +38,12 @@ export default function ConnexionPage() {
       });
 
       if (result?.error) {
-        setError("Email ou mot de passe incorrect.");
+        setError(t("invalidCredentials"));
       } else {
         router.push("/dashboard");
       }
     } catch {
-      setError("Une erreur est survenue. Veuillez réessayer.");
+      setError(t("loginError"));
     } finally {
       setLoading(false);
     }
@@ -82,37 +82,36 @@ export default function ConnexionPage() {
         <div className="relative">
           <div className="inline-flex items-center gap-2 rounded-full border border-accent/40 bg-accent/10 px-4 py-1.5 text-xs font-bold text-accent">
             <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
-            PROGRAMME FONDATEUR
+            {t("founderBadge")}
           </div>
           <h2 className="mt-6 font-heading text-4xl font-black leading-tight tracking-tight text-white xl:text-5xl">
-            Gérez votre cabinet
+            {t("heroHeadline")}
             <br />
-            <span className="text-doktori-teal-light">en toute sérénité.</span>
+            <span className="text-doktori-teal-light">{t("heroHeadlineHighlight")}</span>
           </h2>
           <p className="mt-6 max-w-md text-base leading-relaxed text-[#A7F3D0]">
-            Agenda en ligne 24/7, rappels SMS automatiques, et statistiques en temps
-            réel. Tout ce dont vous avez besoin pour grandir.
+            {t("heroDesc")}
           </p>
 
           <ul className="mt-8 space-y-3">
             {[
-              "Agenda en ligne 24/7",
-              "Rappels SMS automatiques",
-              "Vitrine référencée Google",
-              "Support WhatsApp dédié",
-            ].map((t) => (
-              <li key={t} className="flex items-center gap-3 text-sm text-white">
+              t("heroBenefit1"),
+              t("heroBenefit2"),
+              t("heroBenefit3"),
+              t("heroBenefit4"),
+            ].map((benefit) => (
+              <li key={benefit} className="flex items-center gap-3 text-sm text-white">
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-accent text-foreground">
                   <ShieldCheck className="h-3.5 w-3.5" strokeWidth={3} />
                 </span>
-                {t}
+                {benefit}
               </li>
             ))}
           </ul>
         </div>
 
         <p className="relative text-xs text-[#A7F3D0]">
-          © 2025–2026 Doktori · Fait avec soin pour la santé des Tunisiens
+          {t("heroFooter")}
         </p>
       </div>
 
@@ -135,10 +134,10 @@ export default function ConnexionPage() {
           <div className="rounded-3xl border border-border bg-white p-8 shadow-xl shadow-primary/5 sm:p-10">
             <div className="mb-8">
               <h1 className="font-heading text-3xl font-black tracking-tight text-foreground">
-                Bon retour 👋
+                {t("welcomeBack")}
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
-                Connectez-vous à votre espace médecin Doktori.
+                {t("loginSubtitle")}
               </p>
             </div>
 
@@ -201,13 +200,13 @@ export default function ConnexionPage() {
               {verified === "success" && (
                 <div className="flex items-start gap-2 rounded-xl bg-green-50 px-4 py-3 text-sm text-green-700">
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.5} />
-                  <span>Votre email a été vérifié avec succès. Vous pouvez maintenant vous connecter.</span>
+                  <span>{t("emailVerifiedSuccess")}</span>
                 </div>
               )}
               {verified === "already" && (
                 <div className="flex items-start gap-2 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700">
                   <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.5} />
-                  <span>Votre email est déjà vérifié. Connectez-vous ci-dessous.</span>
+                  <span>{t("emailAlreadyVerified")}</span>
                 </div>
               )}
 

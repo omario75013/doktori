@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Home, Loader2, CheckCircle2, MapPin, Banknote } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 export default function DomicilePage() {
+  const t = useTranslations("medecin.domicile");
   const [isAvailable, setIsAvailable] = useState(false);
   const [radiusKm, setRadiusKm] = useState(5);
   const [fee, setFee] = useState(80); // in DT
@@ -47,7 +49,7 @@ export default function DomicilePage() {
     return (
       <div className="flex items-center gap-3 p-6 text-primary">
         <Loader2 className="h-5 w-5 animate-spin" />
-        <span className="text-sm font-medium">Chargement...</span>
+        <span className="text-sm font-medium">{t("loading")}</span>
       </div>
     );
   }
@@ -60,8 +62,8 @@ export default function DomicilePage() {
           <Home className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Visites à domicile</h1>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Acceptez les demandes de consultation à domicile avec votre propre tarif et rayon.</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("pageTitle")}</h1>
+          <p className="text-sm text-gray-500 dark:text-gray-400">{t("pageSubtitle")}</p>
         </div>
       </div>
 
@@ -76,14 +78,14 @@ export default function DomicilePage() {
             onCheckedChange={(v) => setIsAvailable(Boolean(v))}
           />
           <Label htmlFor="available" className="cursor-pointer font-medium text-foreground">
-            J&apos;accepte les visites à domicile
+            {t("acceptCheckbox")}
           </Label>
         </div>
 
         <div className={isAvailable ? "" : "opacity-40 pointer-events-none"}>
           <div className="space-y-4">
             <div>
-              <Label htmlFor="radius" className="text-foreground font-medium">Rayon de déplacement (km)</Label>
+              <Label htmlFor="radius" className="text-foreground font-medium">{t("radiusLabel")}</Label>
               <Input
                 id="radius"
                 type="number"
@@ -93,11 +95,11 @@ export default function DomicilePage() {
                 onChange={(e) => setRadiusKm(Number(e.target.value))}
                 className="h-12 rounded-xl border-border focus-visible:ring-primary mt-1"
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Distance maximale depuis votre cabinet</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("radiusHint")}</p>
             </div>
 
             <div>
-              <Label htmlFor="fee" className="text-foreground font-medium">Tarif de la visite (DT)</Label>
+              <Label htmlFor="fee" className="text-foreground font-medium">{t("feeLabel")}</Label>
               <Input
                 id="fee"
                 type="number"
@@ -107,7 +109,7 @@ export default function DomicilePage() {
                 onChange={(e) => setFee(Number(e.target.value))}
                 className="h-12 rounded-xl border-border focus-visible:ring-primary mt-1"
               />
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Tarif total facturé au patient. Doktori prélève une commission de 10%.</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("feeHint")}</p>
             </div>
           </div>
         </div>
@@ -118,10 +120,10 @@ export default function DomicilePage() {
             disabled={saving}
             className="bg-primary hover:bg-doktori-teal-dark h-12 rounded-xl font-bold text-white"
           >
-            {saving ? "Enregistrement..." : "Enregistrer"}
+            {saving ? t("savingButton") : t("saveButton")}
           </Button>
           {savedAt && (
-            <span className="text-sm text-primary font-medium">&#x2713; Enregistré</span>
+            <span className="text-sm text-primary font-medium">{t("savedConfirmation")}</span>
           )}
         </div>
       </div>

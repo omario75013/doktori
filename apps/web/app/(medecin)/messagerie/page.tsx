@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { MessageCircle, ChevronRight } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -32,6 +33,8 @@ function ConversationSkeleton() {
 }
 
 export default function DoctorMessageriePage() {
+  const t = useTranslations("medecin.messages");
+  const tNav = useTranslations("medecin.nav");
   const router = useRouter();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -40,7 +43,7 @@ export default function DoctorMessageriePage() {
   useEffect(() => {
     fetch("/api/doctor/conversations")
       .then((r) => {
-        if (!r.ok) throw new Error("Erreur de chargement");
+        if (!r.ok) throw new Error(t("loadError"));
         return r.json();
       })
       .then((data) => {
@@ -59,7 +62,7 @@ export default function DoctorMessageriePage() {
         <div className="p-2 bg-teal-100 rounded-lg">
           <MessageCircle className="w-6 h-6 text-teal-700" />
         </div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Messagerie</h1>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{tNav("messagerie")}</h1>
       </div>
 
       {loading ? (
@@ -73,9 +76,9 @@ export default function DoctorMessageriePage() {
       ) : conversations.length === 0 ? (
         <div className="text-center py-16 bg-white dark:bg-gray-900 rounded-2xl border border-gray-100 dark:border-gray-700">
           <MessageCircle className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 dark:text-gray-400 font-medium">Aucune conversation</p>
+          <p className="text-gray-500 dark:text-gray-400 font-medium">{t("noConversations")}</p>
           <p className="text-sm text-gray-400 dark:text-gray-500 mt-1">
-            Les patients peuvent vous contacter après une consultation
+            {t("noConversationsDesc")}
           </p>
         </div>
       ) : (
@@ -126,7 +129,7 @@ export default function DoctorMessageriePage() {
                 </div>
                 {conv.status === "archived" && (
                   <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full flex-shrink-0">
-                    Archivée
+                    {t("archived")}
                   </span>
                 )}
                 <ChevronRight className="w-5 h-5 text-gray-300 flex-shrink-0" />

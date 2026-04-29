@@ -101,12 +101,12 @@ export function SidebarNav({
 
   const groups: NavGroup[] = [
     {
-      label: "Principal",
+      label: t("groupMain"),
       items: [
         { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
         {
           href: "/verification",
-          label: "Vérification",
+          label: t("verification"),
           icon: BadgeCheck,
           dot: showVerificationDot,
         },
@@ -115,25 +115,25 @@ export function SidebarNav({
       ],
     },
     {
-      label: "Patients",
+      label: t("groupPatients"),
       items: [{ href: "/patients", label: t("patients"), icon: Users }],
     },
     {
-      label: "Réseau",
+      label: t("groupNetwork"),
       items: [
-        { href: "/reseau", label: "Réseau médecins", icon: Network },
-        { href: "/reseau/referencements", label: "Référencements", icon: FileText },
+        { href: "/reseau", label: t("networkDoctors"), icon: Network },
+        { href: "/reseau/referencements", label: t("referrals"), icon: FileText },
       ],
     },
     {
-      label: "Communication",
+      label: t("groupCommunication"),
       items: [
         { href: "/messagerie", label: t("messagerie"), icon: MessagesSquare, badge: unreadMsg },
-        { href: "/messagerie-equipe", label: "Équipe", icon: UserCog, badge: unreadStaff },
+        { href: "/messagerie-equipe", label: t("staff"), icon: UserCog, badge: unreadStaff },
       ],
     },
     {
-      label: "Cabinet",
+      label: t("groupOffice"),
       items: [
         { href: "/motifs", label: t("motifs"), icon: ClipboardList },
         { href: "/cabinets", label: t("cabinets"), icon: Building2 },
@@ -146,7 +146,7 @@ export function SidebarNav({
       ],
     },
     {
-      label: "Finances",
+      label: t("groupFinances"),
       items: [
         { href: "/wallet", label: t("wallet"), icon: Wallet },
         { href: "/factures", label: t("factures"), icon: Receipt },
@@ -154,12 +154,12 @@ export function SidebarNav({
       ],
     },
     {
-      label: "Moi",
+      label: t("groupMe"),
       items: [
         { href: "/stats", label: t("stats"), icon: BarChart3 },
         { href: "/parrainage", label: t("parrainage"), icon: Gift },
         { href: "/profil", label: t("profil"), icon: UserCircle },
-        { href: "/profil/parametres", label: "Paramètres", icon: Settings },
+        { href: "/profil/parametres", label: t("settings"), icon: Settings },
       ],
     },
   ];
@@ -204,7 +204,7 @@ export function SidebarNav({
           <button
             type="button"
             onClick={toggleCollapsed}
-            aria-label={collapsed ? "Étendre la barre latérale" : "Réduire la barre latérale"}
+            aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")}
             className="hidden md:inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-800 hover:text-white transition-colors ml-auto"
           >
             {collapsed ? (

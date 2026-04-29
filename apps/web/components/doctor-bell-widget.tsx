@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Bell as BellIcon, Plus, X, Coffee, FileText, Folder, AlertCircle, Smile } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,6 +32,7 @@ function IconFromName({ name }: { name: string | null }) {
 }
 
 export function DoctorBellWidget() {
+  const t = useTranslations("medecin.quickActions");
   const [open, setOpen] = useState(false);
   const [actions, setActions] = useState<QuickAction[]>([]);
   const [secretaries, setSecretaries] = useState<Secretary[]>([]);
@@ -171,7 +173,7 @@ export function DoctorBellWidget() {
               {/* Quick actions */}
               {actions.length > 0 && (
                 <div>
-                  <p className="text-xs font-semibold text-gray-600 mb-2">Actions rapides</p>
+                  <p className="text-xs font-semibold text-gray-600 mb-2">{t("quickActionsLabel")}</p>
                   <div className="grid grid-cols-2 gap-2">
                     {actions.map((a) => (
                       <div key={a.id} className="relative">

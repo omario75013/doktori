@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Receipt, Download, AlertCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Invoice {
   id: string;
@@ -16,18 +17,22 @@ interface Invoice {
   invoiceNumber: string;
 }
 
-const PLAN_LABELS: Record<string, string> = {
-  free: "Gratuit",
-  essentiel: "Essentiel",
-  pro: "Pro",
-  clinique: "Clinique",
-};
+function getPlanLabels(t: ReturnType<typeof useTranslations<"medecin.factures">>) {
+  return {
+    free: t("planFree"),
+    essentiel: t("planEssential"),
+    pro: t("planPro"),
+    clinique: t("planClinic"),
+  };
+}
 
-const STATUS_LABELS: Record<string, { label: string; className: string }> = {
-  active: { label: "Actif", className: "bg-green-100 text-green-700" },
-  expired: { label: "Expiré", className: "bg-gray-100 text-gray-600" },
-  cancelled: { label: "Annulé", className: "bg-red-100 text-red-600" },
-};
+function getStatusLabels(t: ReturnType<typeof useTranslations<"medecin.factures">>) {
+  return {
+    active: { label: t("statusActive"), className: "bg-green-100 text-green-700" },
+    expired: { label: t("statusExpired"), className: "bg-gray-100 text-gray-600" },
+    cancelled: { label: t("statusCancelled"), className: "bg-red-100 text-red-600" },
+  };
+}
 
 function formatDate(iso: string | null): string {
   if (!iso) return "—";
@@ -43,6 +48,11 @@ function formatAmount(millimes: number): string {
 }
 
 export default function FacturesPage() {
+  const t = useTranslations("medecin.factures");
+  const tCommon = useTranslations("medecin.common");
+  const PLAN_LABELS = getPlanLabels(t);
+  const STATUS_LABELS = getStatusLabels(t);
+
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,12 +61,13 @@ export default function FacturesPage() {
   useEffect(() => {
     fetch("/api/doctor/invoices")
       .then((r) => {
-        if (!r.ok) throw new Error("Impossible de charger les factures.");
+        if (!r.ok) throw new Error(t("loadError"));
         return r.json();
       })
       .then((data: Invoice[]) => setInvoices(data))
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   async function handleDownload(invoice: Invoice) {
@@ -67,7 +78,7 @@ export default function FacturesPage() {
       );
       if (!res.ok) {
         const data = (await res.json()) as { error?: string };
-        throw new Error(data.error ?? "Erreur lors du téléchargement.");
+        throw new Error(data.error ?? t("downloadError"));
       }
       const blob = await res.blob();
       const url = URL.createObjectURL(blob);
@@ -88,20 +99,18 @@ export default function FacturesPage() {
 
   return (
     <div className="space-y-6 max-w-4xl">
-      {/* Page header */}
       <div className="flex items-center gap-3 mb-2">
         <div className="h-10 w-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
           <Receipt className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Factures</h1>
+          <h1 className="text-2xl font-bold text-gray-900">{t("pageTitle")}</h1>
           <p className="text-sm text-gray-500">
-            Téléchargez vos factures d&apos;abonnement Doktori.
+            {t("pageSubtitle")}
           </p>
         </div>
       </div>
 
-      {/* Error banner */}
       {error && (
         <div className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
           <AlertCircle className="h-4 w-4 shrink-0" />
@@ -110,61 +119,58 @@ export default function FacturesPage() {
             className="ml-auto text-red-400 hover:text-red-600 text-xs underline"
             onClick={() => setError(null)}
           >
-            Fermer
+            {tCommon("close")}
           </button>
         </div>
       )}
 
-      {/* Loading */}
       {loading && (
         <div className="flex items-center gap-3 text-teal-600 py-12 justify-center">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          <span className="text-sm font-medium">Chargement des factures…</span>
+          <span className="text-sm font-medium">{t("loading")}</span>
         </div>
       )}
 
-      {/* Empty state */}
       {!loading && invoices.length === 0 && !error && (
         <div className="rounded-2xl border border-dashed border-gray-200 bg-white py-16 text-center">
           <Receipt className="mx-auto h-10 w-10 text-gray-300 mb-3" />
           <p className="text-sm font-medium text-gray-500">
-            Aucune facture disponible pour le moment.
+            {t("noInvoices")}
           </p>
           <p className="text-xs text-gray-400 mt-1">
-            Vos factures apparaîtront ici dès qu&apos;un abonnement sera activé.
+            {t("noInvoicesDesc")}
           </p>
         </div>
       )}
 
-      {/* Invoice list */}
       {!loading && invoices.length > 0 && (
         <div className="rounded-2xl border border-gray-200 bg-white overflow-hidden">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-gray-100 bg-gray-50">
                 <th className="px-5 py-3.5 text-left font-semibold text-gray-600 text-xs uppercase tracking-wide">
-                  N° Facture
+                  {t("invoiceNumber")}
                 </th>
                 <th className="px-5 py-3.5 text-left font-semibold text-gray-600 text-xs uppercase tracking-wide">
-                  Plan
+                  {t("plan")}
                 </th>
                 <th className="px-5 py-3.5 text-left font-semibold text-gray-600 text-xs uppercase tracking-wide">
-                  Période
+                  {t("period")}
                 </th>
                 <th className="px-5 py-3.5 text-right font-semibold text-gray-600 text-xs uppercase tracking-wide">
-                  Montant TTC
+                  {t("amountTtc")}
                 </th>
                 <th className="px-5 py-3.5 text-center font-semibold text-gray-600 text-xs uppercase tracking-wide">
-                  Statut
+                  {tCommon("status")}
                 </th>
                 <th className="px-5 py-3.5 text-right font-semibold text-gray-600 text-xs uppercase tracking-wide">
-                  Action
+                  {tCommon("actions")}
                 </th>
               </tr>
             </thead>
             <tbody>
               {invoices.map((inv) => {
-                const statusMeta = STATUS_LABELS[inv.status] ?? {
+                const statusMeta = STATUS_LABELS[inv.status as keyof typeof STATUS_LABELS] ?? {
                   label: inv.status,
                   className: "bg-gray-100 text-gray-600",
                 };
@@ -177,9 +183,9 @@ export default function FacturesPage() {
                       {inv.invoiceNumber}
                     </td>
                     <td className="px-5 py-4 text-gray-800 font-medium">
-                      {PLAN_LABELS[inv.plan] ?? inv.plan}
+                      {PLAN_LABELS[inv.plan as keyof typeof PLAN_LABELS] ?? inv.plan}
                       <span className="ml-1.5 text-gray-400 text-xs font-normal">
-                        ({inv.billingCycle === "annual" ? "annuel" : "mensuel"})
+                        ({inv.billingCycle === "annual" ? t("annual") : t("monthly")})
                       </span>
                     </td>
                     <td className="px-5 py-4 text-gray-500">
@@ -211,14 +217,14 @@ export default function FacturesPage() {
                         onClick={() => handleDownload(inv)}
                         disabled={downloading === inv.id}
                         className="inline-flex items-center gap-1.5 rounded-lg bg-teal-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-teal-700 disabled:opacity-60 transition-colors"
-                        title="Télécharger la facture"
+                        title={t("downloadInvoice")}
                       >
                         {downloading === inv.id ? (
                           <div className="h-3 w-3 animate-spin rounded-full border-2 border-white border-t-transparent" />
                         ) : (
                           <Download className="h-3 w-3" />
                         )}
-                        {downloading === inv.id ? "…" : "Télécharger"}
+                        {downloading === inv.id ? "…" : tCommon("download")}
                       </button>
                     </td>
                   </tr>
@@ -227,7 +233,6 @@ export default function FacturesPage() {
             </tbody>
           </table>
 
-          {/* Legal note */}
           <div className="px-5 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-400">
             Factures émises par Random Walkers SUARL — RNE 1625867B — MF
             1625867/B/A/M/000. Paiement via Flouci. Factures générées

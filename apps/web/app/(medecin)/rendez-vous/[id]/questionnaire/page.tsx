@@ -6,6 +6,7 @@ import { ArrowLeft, FileText, MessageSquare } from "lucide-react";
 import Link from "next/link";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
+import { useTranslations } from "next-intl";
 
 interface Answer {
   id: string;
@@ -23,6 +24,8 @@ export default function AppointmentQuestionnairePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = useTranslations("medecin.questionnaire");
+  const tCommon = useTranslations("medecin.common");
   const { id } = use(params);
 
   const [answers, setAnswers] = useState<Answer[]>([]);
@@ -34,7 +37,7 @@ export default function AppointmentQuestionnairePage({
       .then(async (res) => {
         if (!res.ok) {
           const data = await res.json();
-          throw new Error(typeof data.error === "string" ? data.error : "Erreur de chargement");
+          throw new Error(typeof data.error === "string" ? data.error : tCommon("error"));
         }
         return res.json() as Promise<Answer[]>;
       })
@@ -43,7 +46,7 @@ export default function AppointmentQuestionnairePage({
         setLoading(false);
       })
       .catch((e) => {
-        setError(e instanceof Error ? e.message : "Erreur inattendue");
+        setError(e instanceof Error ? e.message : tCommon("error"));
         setLoading(false);
       });
   }, [id]);
@@ -56,7 +59,7 @@ export default function AppointmentQuestionnairePage({
           className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"
         >
           <ArrowLeft className="h-4 w-4" />
-          Retour aux rendez-vous
+          {t("backToAppointments")}
         </Link>
       </div>
 
@@ -65,13 +68,13 @@ export default function AppointmentQuestionnairePage({
           <MessageSquare className="h-5 w-5 text-primary" />
         </div>
         <div>
-          <h1 className="text-xl font-bold text-foreground">Questionnaire pré-consultation</h1>
-          <p className="text-sm text-foreground/50">Réponses du patient — RDV #{id.slice(0, 8)}</p>
+          <h1 className="text-xl font-bold text-foreground">{t("pageTitle")}</h1>
+          <p className="text-sm text-foreground/50">{t("patientResponses", { id: id.slice(0, 8) })}</p>
         </div>
       </div>
 
       {loading && (
-        <p className="text-center text-sm text-foreground/40 py-12">Chargement...</p>
+        <p className="text-center text-sm text-foreground/40 py-12">{t("loading")}</p>
       )}
 
       {error && (
@@ -83,7 +86,7 @@ export default function AppointmentQuestionnairePage({
       {!loading && !error && answers.length === 0 && (
         <div className="rounded-2xl border border-border bg-white shadow-sm p-8 text-center">
           <p className="text-sm text-foreground/50">
-            Aucune réponse enregistrée pour ce rendez-vous.
+            {t("noResponses")}
           </p>
         </div>
       )}
@@ -108,19 +111,19 @@ export default function AppointmentQuestionnairePage({
                     className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
                   >
                     <FileText className="h-4 w-4" />
-                    {answer.value ?? "Fichier joint"}
+                    {answer.value ?? t("attachedFile")}
                   </a>
                 ) : (
                   <div className="text-sm text-foreground/70 flex items-center gap-1.5">
                     <FileText className="h-4 w-4 text-foreground/30" />
                     <span>{answer.value ?? "—"}</span>
-                    <span className="text-xs text-foreground/40">(fichier non uploadé)</span>
+                    <span className="text-xs text-foreground/40">{t("fileNotUploaded")}</span>
                   </div>
                 )
               ) : (
                 <div className="text-sm text-foreground whitespace-pre-wrap">
                   {answer.value && answer.value.trim().length > 0 ? answer.value : (
-                    <span className="text-foreground/30 italic">Non renseigné</span>
+                    <span className="text-foreground/30 italic">{t("notProvided")}</span>
                   )}
                 </div>
               )}
@@ -138,7 +141,7 @@ export default function AppointmentQuestionnairePage({
           href="/rendez-vous"
           className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium hover:bg-accent"
         >
-          Retour
+          {tCommon("back")}
         </Link>
       </div>
     </div>

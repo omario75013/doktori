@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Bell as BellIcon, Coffee, Folder, FileText, AlertCircle, Smile, Plus, Trash2, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -26,6 +27,7 @@ function Icon({ name }: { name: string | null }) {
 }
 
 export function QuickActionsManager() {
+  const t = useTranslations("medecin.quickActions");
   const [list, setList] = useState<QuickAction[]>([]);
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
@@ -59,11 +61,11 @@ export function QuickActionsManager() {
         }),
       });
       if (!res.ok) throw new Error();
-      toast.success("Action rapide ajoutée");
+      toast.success(t("added"));
       setForm({ label: "", message: "", icon: "bell" });
       await reload();
     } catch {
-      toast.error("Erreur");
+      toast.error(t("errorToast"));
     } finally {
       setAdding(false);
     }
@@ -79,9 +81,9 @@ export function QuickActionsManager() {
       <div className="flex items-center gap-2">
         <BellIcon className="h-5 w-5 text-primary" />
         <div>
-          <h2 className="font-semibold text-foreground">Actions rapides (cloche)</h2>
+          <h2 className="font-semibold text-foreground">{t("sectionTitle")}</h2>
           <p className="text-xs text-gray-500">
-            Messages pré-définis à envoyer à la secrétaire en un clic via la cloche flottante.
+            {t("sectionDesc")}
           </p>
         </div>
       </div>
@@ -91,7 +93,7 @@ export function QuickActionsManager() {
           <Loader2 className="h-4 w-4 animate-spin inline text-gray-400" />
         </div>
       ) : list.length === 0 ? (
-        <p className="text-xs text-gray-400 italic">Aucune action configurée.</p>
+        <p className="text-xs text-gray-400 italic">{t("noActions")}</p>
       ) : (
         <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
           {list.map((a) => (
@@ -112,7 +114,7 @@ export function QuickActionsManager() {
                 type="button"
                 onClick={() => remove(a.id)}
                 className="h-7 w-7 rounded-lg text-gray-400 hover:bg-red-50 hover:text-red-500 flex items-center justify-center"
-                title="Supprimer"
+                title={t("deleteTitle")}
               >
                 <Trash2 className="h-3.5 w-3.5" />
               </button>
@@ -125,14 +127,14 @@ export function QuickActionsManager() {
         <input
           type="text"
           required
-          placeholder="Libellé (ex: Apporter un café)"
+          placeholder={t("labelPlaceholder")}
           value={form.label}
           onChange={(e) => setForm({ ...form, label: e.target.value })}
           className="h-9 rounded-lg border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <input
           type="text"
-          placeholder="Message (facultatif)"
+          placeholder={t("messagePlaceholder")}
           value={form.message}
           onChange={(e) => setForm({ ...form, message: e.target.value })}
           className="h-9 rounded-lg border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
@@ -156,7 +158,7 @@ export function QuickActionsManager() {
             className="inline-flex items-center gap-1 h-9 rounded-lg bg-primary px-3 text-xs font-semibold text-white hover:opacity-90 disabled:opacity-60"
           >
             <Plus className="h-3.5 w-3.5" />
-            Ajouter
+            {t("addButton")}
           </button>
         </div>
       </form>

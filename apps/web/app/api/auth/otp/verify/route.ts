@@ -45,12 +45,12 @@ export async function POST(req: Request) {
     }
 
     const token = sign(
-      { id: patient.id, phone: patient.phone, role: "patient" },
+      { id: patient.id, phone: patient.phone, name: patient.name ?? undefined, role: "patient" },
       process.env.NEXTAUTH_SECRET!,
       { expiresIn: "7d" }
     );
 
-    return NextResponse.json({ token, patient: { id: patient.id, phone: patient.phone } });
+    return NextResponse.json({ token, patient: { id: patient.id, phone: patient.phone, name: patient.name } });
   } catch (e) {
     console.error("[POST /api//auth/otp/verify]", e);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

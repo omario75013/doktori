@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Stethoscope, Plus, Loader2, Building2, Pencil, X as XIcon } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface AppointmentType {
   id: string;
@@ -36,6 +37,9 @@ interface FormErrors {
 }
 
 export default function MotifsPage() {
+  const t = useTranslations("medecin.motifs");
+  const tCommon = useTranslations("medecin.common");
+
   const [types, setTypes] = useState<AppointmentType[]>([]);
   const [practices, setPractices] = useState<Practice[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,10 +63,9 @@ export default function MotifsPage() {
     ]);
     const typesData: AppointmentType[] = await typesRes.json();
     const practicesData: Practice[] = await practicesRes.json();
-    setTypes(typesData.filter((t) => t.isActive));
+    setTypes(typesData.filter((item) => item.isActive));
     const active = practicesData.filter((p) => p.isActive);
     setPractices(active);
-    // Default: preselect primary cabinet for the "new motif" form
     if (selectedPractices.size === 0 && active.length > 0) {
       const primary = active.find((p) => p.isPrimary) ?? active[0];
       setSelectedPractices(new Set([primary.id]));
@@ -85,13 +88,13 @@ export default function MotifsPage() {
 
   function validate(): boolean {
     const errors: FormErrors = {};
-    if (!name.trim()) errors.name = "Le nom du motif est requis";
+    if (!name.trim()) errors.name = t("nameRequired");
     const dur = Number(duration);
     if (!duration || isNaN(dur) || dur < 5 || dur > 120) {
-      errors.duration = "La durée doit être entre 5 et 120 minutes";
+      errors.duration = t("durationRangeError");
     }
     if (selectedPractices.size === 0 && mode !== "teleconsult") {
-      errors.practices = "Sélectionnez au moins un cabinet";
+      errors.practices = t("selectCabinet");
     }
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
@@ -102,7 +105,7 @@ export default function MotifsPage() {
     if (!validate()) return;
 
     if (practices.length === 0) {
-      toast.error("Ajoutez d'abord un cabinet avant de créer un motif");
+      toast.error(t("addCabinetFirst"));
       return;
     }
 
@@ -121,10 +124,10 @@ export default function MotifsPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        toast.error(err.error ?? "Erreur lors de la création du motif");
+        toast.error(err.error ?? t("creationError"));
         return;
       }
-      toast.success(`Motif "${name.trim()}" ajouté`);
+      toast.success(t("addedSuccess", { name: name.trim() }));
       setName("");
       setDuration("20");
       setFee("");
@@ -142,10 +145,10 @@ export default function MotifsPage() {
     try {
       const res = await fetch(`/api/appointment-types/${id}`, { method: "DELETE" });
       if (!res.ok) {
-        toast.error("Erreur lors de la suppression");
+        toast.error(t("deletionError"));
         return;
       }
-      toast.success(`Motif "${motifName}" supprimé`);
+      toast.success(t("deletedSuccess", { name: motifName }));
       await refresh();
     } catch {
       toast.error("Une erreur est survenue");
@@ -157,7 +160,7 @@ export default function MotifsPage() {
   async function savePractices() {
     if (!editingId) return;
     if (editingPractices.size === 0) {
-      toast.error("Sélectionnez au moins un cabinet");
+      toast.error(t("selectCabinet"));
       return;
     }
     setSavingEdit(true);
@@ -169,10 +172,10 @@ export default function MotifsPage() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        toast.error(err.error ?? "Mise à jour échouée");
+        toast.error(err.error ?? t("updateFailed"));
         return;
       }
-      toast.success("Cabinets mis à jour");
+      toast.success(t("cabinetsUpdated"));
       setEditingId(null);
       await refresh();
     } finally {
@@ -184,22 +187,21 @@ export default function MotifsPage() {
     return (
       <div className="flex items-center justify-center gap-2 text-primary text-sm p-6">
         <Loader2 className="w-4 h-4 animate-spin" />
-        <span>Chargement des motifs...</span>
+        <span>{t("loading")}</span>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
       <div className="flex items-center gap-3 mb-6">
         <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary">
           <Stethoscope className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Motifs de consultation</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("pageTitle")}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Définissez les types de consultations avec leurs durées, tarifs et cabinets.
+            {t("pageSubtitle")}
           </p>
         </div>
       </div>
@@ -207,26 +209,25 @@ export default function MotifsPage() {
       {practices.length === 0 ? (
         <div className="rounded-2xl border border-dashed border-border bg-secondary/40 p-10 text-center max-w-xl">
           <Building2 className="h-10 w-10 text-primary mx-auto" />
-          <p className="mt-3 text-foreground font-semibold">Aucun cabinet défini</p>
+          <p className="mt-3 text-foreground font-semibold">{t("noCabinets")}</p>
           <p className="mt-1 text-sm text-gray-500 max-w-md mx-auto">
-            Les motifs sont rattachés à un ou plusieurs cabinets. Créez un cabinet avant de
-            définir vos motifs.
+            {t("noCabinetsDesc")}
           </p>
           <Link
             href="/cabinets"
             className="mt-4 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
           >
             <Plus className="h-4 w-4" />
-            Gérer mes cabinets
+            {t("manageCabinets")}
           </Link>
         </div>
       ) : (
         <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm max-w-xl">
-          <h2 className="font-semibold text-foreground mb-4">Ajouter un motif</h2>
+          <h2 className="font-semibold text-foreground mb-4">{t("addMotif")}</h2>
           <form onSubmit={handleCreate} className="space-y-4" noValidate>
             <div>
               <Label htmlFor="name" className="text-foreground font-medium">
-                Nom
+                {t("nameLabel")}
               </Label>
               <Input
                 id="name"
@@ -235,7 +236,7 @@ export default function MotifsPage() {
                   setName(e.target.value);
                   if (formErrors.name) setFormErrors((prev) => ({ ...prev, name: undefined }));
                 }}
-                placeholder="ex: Première consultation"
+                placeholder={t("namePlaceholder")}
                 className={`h-12 rounded-xl border-border focus-visible:ring-primary mt-1 ${
                   formErrors.name ? "border-red-400 focus-visible:ring-red-400" : ""
                 }`}
@@ -246,7 +247,7 @@ export default function MotifsPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <Label htmlFor="duration" className="text-foreground font-medium">
-                  Durée (minutes)
+                  {t("durationLabel")}
                 </Label>
                 <Input
                   id="duration"
@@ -270,7 +271,7 @@ export default function MotifsPage() {
               </div>
               <div>
                 <Label htmlFor="fee" className="text-foreground font-medium">
-                  Tarif (DT)
+                  {t("feeLabel")}
                 </Label>
                 <Input
                   id="fee"
@@ -285,7 +286,7 @@ export default function MotifsPage() {
             </div>
 
             <div>
-              <Label className="text-foreground font-medium">Type de consultation</Label>
+              <Label className="text-foreground font-medium">{t("typeLabel")}</Label>
               <div className="mt-2 flex gap-2">
                 <button
                   type="button"
@@ -296,7 +297,7 @@ export default function MotifsPage() {
                       : "border border-border bg-white text-foreground hover:bg-secondary"
                   }`}
                 >
-                  Au cabinet
+                  {t("typeCabinet")}
                 </button>
                 <button
                   type="button"
@@ -307,15 +308,15 @@ export default function MotifsPage() {
                       : "border border-border bg-white text-foreground hover:bg-secondary"
                   }`}
                 >
-                  Téléconsultation
+                  {t("typeTeleconsult")}
                 </button>
               </div>
             </div>
 
             <div>
-              <Label className="text-foreground font-medium">Cabinets proposés</Label>
+              <Label className="text-foreground font-medium">{t("cabinetsOffered")}</Label>
               <p className="text-xs text-gray-500 mt-0.5 mb-2">
-                Le patient pourra réserver ce motif uniquement dans les cabinets sélectionnés.
+                {t("cabinetsNote")}
               </p>
               <div className="space-y-2">
                 {practices.map((p) => (
@@ -351,12 +352,12 @@ export default function MotifsPage() {
               {saving ? (
                 <>
                   <Loader2 className="h-4 w-4 animate-spin" />
-                  Ajout en cours...
+                  {t("adding")}
                 </>
               ) : (
                 <>
                   <Plus className="h-4 w-4" />
-                  Ajouter
+                  {tCommon("add")}
                 </>
               )}
             </Button>
@@ -366,7 +367,7 @@ export default function MotifsPage() {
 
       <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm max-w-xl">
         <div className="p-4 border-b border-border flex items-center justify-between">
-          <h2 className="font-semibold text-foreground">Motifs actifs</h2>
+          <h2 className="font-semibold text-foreground">{t("activeMotifs")}</h2>
           <span className="text-xs text-primary font-semibold bg-secondary px-2.5 py-1 rounded-full">
             {types.length}
           </span>
@@ -376,30 +377,30 @@ export default function MotifsPage() {
             <div className="h-12 w-12 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
               <Stethoscope className="h-6 w-6 text-primary" />
             </div>
-            <p className="text-foreground font-medium mb-1">Aucun motif défini</p>
+            <p className="text-foreground font-medium mb-1">{t("noMotifs")}</p>
             <p className="text-sm text-gray-400 dark:text-gray-500">
-              Ajoutez votre premier motif de consultation ci-dessus.
+              {t("noMotifsDes")}
             </p>
           </div>
         ) : (
           <div className="divide-y divide-border">
-            {types.map((t) => {
-              const motifPractices = practices.filter((p) => t.practiceIds.includes(p.id));
-              const isEditing = editingId === t.id;
+            {types.map((motifType) => {
+              const motifPractices = practices.filter((p) => motifType.practiceIds.includes(p.id));
+              const isEditing = editingId === motifType.id;
               return (
-                <div key={t.id} className="p-4 space-y-2 hover:bg-secondary transition-colors">
+                <div key={motifType.id} className="p-4 space-y-2 hover:bg-secondary transition-colors">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0">
-                      <div className="font-medium text-foreground">{t.name}</div>
+                      <div className="font-medium text-foreground">{motifType.name}</div>
                       <div className="text-sm text-gray-500 dark:text-gray-400">
-                        {t.durationMinutes} min
-                        {t.fee ? ` · ${t.fee / 1000} DT` : ""}
-                        {t.mode === "teleconsult" && " · Téléconsult"}
+                        {motifType.durationMinutes} min
+                        {motifType.fee ? ` · ${motifType.fee / 1000} DT` : ""}
+                        {motifType.mode === "teleconsult" && ` · ${t("typeTeleconsult")}`}
                       </div>
                       <div className="mt-1 flex flex-wrap gap-1">
                         {motifPractices.length === 0 ? (
                           <span className="text-[11px] text-red-600 italic">
-                            Aucun cabinet rattaché
+                            {t("noCabinetAttached")}
                           </span>
                         ) : (
                           motifPractices.map((p) => (
@@ -416,19 +417,19 @@ export default function MotifsPage() {
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       <button
-                        onClick={() => setEditingMotif(t)}
+                        onClick={() => setEditingMotif(motifType)}
                         className="inline-flex items-center gap-1 text-xs font-semibold text-foreground hover:bg-border border border-border rounded-xl px-3 py-1.5"
                       >
                         <Pencil className="h-3 w-3" />
-                        Modifier
+                        {tCommon("edit")}
                       </button>
                       <button
                         onClick={() => {
                           if (isEditing) {
                             setEditingId(null);
                           } else {
-                            setEditingId(t.id);
-                            setEditingPractices(new Set(t.practiceIds));
+                            setEditingId(motifType.id);
+                            setEditingPractices(new Set(motifType.practiceIds));
                           }
                         }}
                         className="text-xs font-semibold text-foreground hover:bg-border border border-border rounded-xl px-3 py-1.5"
@@ -436,22 +437,22 @@ export default function MotifsPage() {
                         {isEditing ? "Fermer" : "Cabinets"}
                       </button>
                       <Link
-                        href={`/motifs/${t.id}/questions`}
+                        href={`/motifs/${motifType.id}/questions`}
                         className="text-xs font-semibold text-primary hover:bg-border border border-border rounded-xl px-3 py-1.5"
                       >
-                        Questions
+                        {t("questions")}
                       </Link>
                       <Button
                         variant="outline"
                         size="sm"
-                        disabled={deletingId === t.id}
-                        onClick={() => handleDelete(t.id, t.name)}
+                        disabled={deletingId === motifType.id}
+                        onClick={() => handleDelete(motifType.id, motifType.name)}
                         className="border border-border hover:bg-red-50 hover:text-red-600 hover:border-red-200 rounded-xl text-xs"
                       >
-                        {deletingId === t.id ? (
+                        {deletingId === motifType.id ? (
                           <Loader2 className="h-3 w-3 animate-spin" />
                         ) : (
-                          "Supprimer"
+                          tCommon("delete")
                         )}
                       </Button>
                     </div>
@@ -459,7 +460,7 @@ export default function MotifsPage() {
 
                   {isEditing && (
                     <div className="rounded-xl border border-border bg-secondary/40 p-3 space-y-2">
-                      <p className="text-xs text-gray-600">Sélectionnez les cabinets où ce motif est proposé :</p>
+                      <p className="text-xs text-gray-600">{t("selectCabinetsForMotif")}</p>
                       <div className="space-y-1.5">
                         {practices.map((p) => (
                           <label
@@ -483,14 +484,14 @@ export default function MotifsPage() {
                           onClick={() => setEditingId(null)}
                           className="rounded-xl border border-border bg-white px-3 py-1 text-xs hover:bg-white"
                         >
-                          Annuler
+                          {tCommon("cancel")}
                         </button>
                         <button
                           onClick={savePractices}
                           disabled={savingEdit}
                           className="rounded-xl bg-primary text-white px-3 py-1 text-xs font-semibold hover:opacity-90 disabled:opacity-60"
                         >
-                          {savingEdit ? "..." : "Enregistrer"}
+                          {savingEdit ? "..." : tCommon("save")}
                         </button>
                       </div>
                     </div>
@@ -529,6 +530,9 @@ function EditMotifDialog({
   onClose: () => void;
   onSaved: () => void | Promise<void>;
 }) {
+  const t = useTranslations("medecin.motifs");
+  const tCommon = useTranslations("medecin.common");
+
   const [name, setName] = useState(motif.name);
   const [duration, setDuration] = useState(String(motif.durationMinutes));
   const [fee, setFee] = useState(motif.fee ? String(motif.fee / 1000) : "");
@@ -549,16 +553,16 @@ function EditMotifDialog({
 
   async function submit() {
     if (!name.trim()) {
-      toast.error("Nom obligatoire");
+      toast.error(t("nameRequired"));
       return;
     }
     const dur = Number(duration);
     if (isNaN(dur) || dur < 5 || dur > 120) {
-      toast.error("Durée entre 5 et 120 minutes");
+      toast.error(t("durationRangeError"));
       return;
     }
     if (practiceIds.size === 0 && mode !== "teleconsult") {
-      toast.error("Sélectionnez au moins un cabinet");
+      toast.error(t("selectCabinet"));
       return;
     }
 
@@ -577,7 +581,7 @@ function EditMotifDialog({
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        toast.error(err.error ?? "Mise à jour échouée");
+        toast.error(err.error ?? t("updateFailed"));
         return;
       }
       await onSaved();
@@ -601,7 +605,7 @@ function EditMotifDialog({
 
         <div className="p-5 space-y-4">
           <div>
-            <Label className="text-foreground font-medium">Nom</Label>
+            <Label className="text-foreground font-medium">{t("nameLabel")}</Label>
             <Input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -611,7 +615,7 @@ function EditMotifDialog({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label className="text-foreground font-medium">Durée (min)</Label>
+              <Label className="text-foreground font-medium">{t("durationLabel")}</Label>
               <Input
                 type="number"
                 min={5}
@@ -622,7 +626,7 @@ function EditMotifDialog({
               />
             </div>
             <div>
-              <Label className="text-foreground font-medium">Tarif (DT)</Label>
+              <Label className="text-foreground font-medium">{t("feeLabel")}</Label>
               <Input
                 type="number"
                 min={0}
@@ -635,7 +639,7 @@ function EditMotifDialog({
           </div>
 
           <div>
-            <Label className="text-foreground font-medium">Type</Label>
+            <Label className="text-foreground font-medium">{t("typeLabel")}</Label>
             <div className="mt-2 flex gap-2">
               <button
                 type="button"
@@ -646,7 +650,7 @@ function EditMotifDialog({
                     : "border border-border bg-white text-foreground hover:bg-secondary"
                 }`}
               >
-                Au cabinet
+                {t("typeCabinet")}
               </button>
               <button
                 type="button"
@@ -657,13 +661,13 @@ function EditMotifDialog({
                     : "border border-border bg-white text-foreground hover:bg-secondary"
                 }`}
               >
-                Téléconsultation
+                {t("typeTeleconsult")}
               </button>
             </div>
           </div>
 
           <div>
-            <Label className="text-foreground font-medium">Cabinets proposés</Label>
+            <Label className="text-foreground font-medium">{t("cabinetsOffered")}</Label>
             <div className="mt-2 space-y-2">
               {practices.map((p) => (
                 <label
@@ -688,14 +692,14 @@ function EditMotifDialog({
             onClick={onClose}
             className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary"
           >
-            Annuler
+            {tCommon("cancel")}
           </button>
           <button
             onClick={submit}
             disabled={saving}
             className="rounded-xl bg-primary text-white px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-60"
           >
-            {saving ? "Enregistrement..." : "Enregistrer"}
+            {saving ? tCommon("saving") : tCommon("save")}
           </button>
         </div>
       </div>

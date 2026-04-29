@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
-import { requireSecretary } from "@/lib/secretary-auth";
+import { type NextRequest, NextResponse } from "next/server";
+import { requireDoctorOrSecretaryUnified } from "@/lib/require-auth";
 import { db, patients } from "@doktori/db";
 import { eq, sql } from "drizzle-orm";
 
 // GET /api/secretaire/patients
 // Returns all patients who have had appointments with this secretary's doctor
-export async function GET() {
-  const secretary = await requireSecretary();
-  if (secretary instanceof NextResponse) return secretary;
+export async function GET(req: NextRequest) {
+  const ctx = await requireDoctorOrSecretaryUnified(req);
+  if (ctx instanceof Response) return ctx;
+  const secretary = { doctorId: ctx.doctorId };
 
   const result = await db.execute(sql`
     SELECT
@@ -31,9 +32,10 @@ export async function GET() {
 
 // POST /api/secretaire/patients
 // Create or link a patient manually
-export async function POST(req: Request) {
-  const secretary = await requireSecretary();
-  if (secretary instanceof NextResponse) return secretary;
+export async function POST(req: NextRequest) {
+  const ctx = await requireDoctorOrSecretaryUnified(req);
+  if (ctx instanceof Response) return ctx;
+  const secretary = { doctorId: ctx.doctorId };
 
   let body: unknown;
   try {

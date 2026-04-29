@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { searchIcd10, type Icd10Code } from "@/lib/icd10-tn";
 import { CheckCircle2, X, ClipboardList, ArrowLeft, Send, FileText, ExternalLink, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Vitals = {
   bp_systolic?: number | "";
@@ -90,6 +91,7 @@ function IcdTagger({
   selected: Icd10Code[];
   onChange: (codes: Icd10Code[]) => void;
 }) {
+  const t = useTranslations("medecin.consultation");
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<Icd10Code[]>([]);
   const [open, setOpen] = useState(false);
@@ -128,7 +130,7 @@ function IcdTagger({
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onBlur={() => setTimeout(() => setOpen(false), 150)}
-          placeholder="Rechercher un code CIM-10 (ex: diabète, I10...)"
+          placeholder={t("icd10SearchPlaceholder")}
           className="w-full h-10 border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white"
         />
         {open && results.length > 0 && (
@@ -209,6 +211,8 @@ function SoapSection({
 type SendStatus = "idle" | "sending" | "sent" | "error";
 
 export default function ConsultationPage() {
+  const t = useTranslations("medecin.consultation");
+  const tCommon = useTranslations("medecin.common");
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const appointmentId = params.id;
@@ -224,12 +228,10 @@ export default function ConsultationPage() {
   const [sendCnamStatus, setSendCnamStatus] = useState<SendStatus>("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load existing note
   useEffect(() => {
     const load = async () => {
       setLoading(true);
       try {
-        // Fetch appointment date and status
         const apptRes = await fetch(`/api/appointments/${appointmentId}`);
         if (apptRes.ok) {
           const apptData = await apptRes.json();
@@ -241,7 +243,6 @@ export default function ConsultationPage() {
           }
           if (apptData?.patientId) {
             setPatientId(apptData.patientId);
-            // Fetch patient email
             const ptRes = await fetch(`/api/patients/${apptData.patientId}`);
             if (ptRes.ok) {
               const ptData = await ptRes.json();
@@ -266,7 +267,6 @@ export default function ConsultationPage() {
           });
         }
       } catch {
-        // Start with empty note
       } finally {
         setLoading(false);
       }
@@ -358,7 +358,7 @@ export default function ConsultationPage() {
       <div className="flex items-center justify-center min-h-[40vh]">
         <div className="text-center space-y-3">
           <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
-          <p className="text-sm text-gray-500">Chargement de la note de consultation...</p>
+          <p className="text-sm text-gray-500">{t("loading")}</p>
         </div>
       </div>
     );
@@ -366,7 +366,6 @@ export default function ConsultationPage() {
 
   return (
     <div className="max-w-3xl mx-auto space-y-6">
-      {/* Header */}
       <div className="flex items-center gap-3">
         <button
           onClick={() => router.push("/rendez-vous")}
@@ -378,7 +377,7 @@ export default function ConsultationPage() {
           <ClipboardList className="h-5 w-5" />
         </div>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-foreground">Note de consultation SOAP</h1>
+          <h1 className="text-xl font-bold text-foreground">{t("pageTitle")}</h1>
           {appointmentDate && (
             <p className="text-sm text-gray-500 mt-0.5">
               RDV du {format(new Date(appointmentDate), "d MMMM yyyy à HH:mm", { locale: fr })}
@@ -389,25 +388,24 @@ export default function ConsultationPage() {
           {saveStatus === "saving" && (
             <span className="flex items-center gap-1.5 text-gray-400">
               <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              Enregistrement...
+              {tCommon("saving")}
             </span>
           )}
           {saveStatus === "saved" && (
             <span className="flex items-center gap-1 text-primary font-medium">
               <CheckCircle2 size={15} />
-              Enregistré
+              {tCommon("saved")}
             </span>
           )}
           {saveStatus === "error" && (
-            <span className="text-red-500">Erreur lors de l&apos;enregistrement</span>
+            <span className="text-red-500">{t("saveError")}</span>
           )}
         </div>
       </div>
 
-      {/* Vitals */}
       <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
         <h2 className="font-semibold text-foreground text-sm uppercase tracking-wide">
-          Constantes vitales
+          {t("vitals")}
         </h2>
         <VitalsGrid
           vitals={note.vitals}
@@ -415,42 +413,40 @@ export default function ConsultationPage() {
         />
       </div>
 
-      {/* SOAP Sections */}
       <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-6">
         <SoapSection
           letter="S"
-          label="Subjectif — Ce que rapporte le patient"
+          label={t("subjective")}
           value={note.subjective}
           onChange={(subjective) => updateNote({ subjective })}
-          placeholder="Motif de consultation, symptômes décrits par le patient, évolution..."
+          placeholder={t("subjectivePlaceholder")}
         />
         <SoapSection
           letter="O"
-          label="Objectif — Observations cliniques"
+          label={t("objective")}
           value={note.objective}
           onChange={(objective) => updateNote({ objective })}
-          placeholder="Examen physique, résultats biologiques, signes cliniques..."
+          placeholder={t("objectivePlaceholder")}
         />
 
-        {/* Assessment with ICD-10 tagger */}
         <div>
           <div className="flex items-center gap-2 mb-2">
             <span className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
               A
             </span>
             <label className="font-medium text-foreground text-sm">
-              Assessment — Diagnostic
+              {t("assessment")}
             </label>
           </div>
           <textarea
             value={note.assessment}
             onChange={(e) => updateNote({ assessment: e.target.value })}
-            placeholder="Diagnostic principal, diagnostics différentiels..."
+            placeholder={t("assessmentPlaceholder")}
             rows={3}
             className="w-full border border-border rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y bg-white text-gray-800 mb-3"
           />
           <div className="space-y-1.5">
-            <div className="text-xs text-foreground font-medium">Codes CIM-10</div>
+            <div className="text-xs text-foreground font-medium">{t("icd10Codes")}</div>
             <IcdTagger
               selected={note.icd10Codes}
               onChange={(icd10Codes) => updateNote({ icd10Codes })}
@@ -460,37 +456,34 @@ export default function ConsultationPage() {
 
         <SoapSection
           letter="P"
-          label="Plan — Traitement et suivi"
+          label={t("plan")}
           value={note.plan}
           onChange={(plan) => updateNote({ plan })}
-          placeholder="Traitement prescrit, examens à effectuer, renvoi spécialiste, suivi..."
+          placeholder={t("planPlaceholder")}
         />
       </div>
 
-      {/* Documents du patient — only for completed appointments */}
       {appointmentStatus === "completed" && (
         <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-primary" />
             <h2 className="font-semibold text-foreground text-sm uppercase tracking-wide">
-              Documents du patient
+              {t("patientDocuments")}
             </h2>
           </div>
 
-          {/* Patient email info */}
           {patientEmail === undefined ? null : patientEmail ? (
             <p className="text-xs text-gray-500">
-              Documents envoyés à :{" "}
+              {t("documentsSentTo")}{" "}
               <span className="font-medium text-foreground">{patientEmail}</span>
             </p>
           ) : (
             <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
-              Le patient n&apos;a pas d&apos;adresse email — les documents seront envoyés par SMS uniquement.
+              {t("noEmailWarning")}
             </p>
           )}
 
           <div className="flex flex-wrap gap-3">
-            {/* Send prescription */}
             <button
               onClick={() => sendDocument("send-prescription", setSendPrescriptionStatus)}
               disabled={sendPrescriptionStatus === "sending"}
@@ -502,13 +495,12 @@ export default function ConsultationPage() {
                 <Send className="h-4 w-4 text-primary" />
               )}
               {sendPrescriptionStatus === "sent"
-                ? "Ordonnance envoyée"
+                ? t("prescriptionSent")
                 : sendPrescriptionStatus === "error"
-                ? "Erreur — réessayer"
-                : "Envoyer l'ordonnance"}
+                ? t("errorRetry")
+                : t("sendPrescription")}
             </button>
 
-            {/* Send CNAM */}
             <button
               onClick={() => sendDocument("send-cnam", setSendCnamStatus)}
               disabled={sendCnamStatus === "sending"}
@@ -520,20 +512,19 @@ export default function ConsultationPage() {
                 <Send className="h-4 w-4 text-primary" />
               )}
               {sendCnamStatus === "sent"
-                ? "Bordereau CNAM envoyé"
+                ? t("cnamSent")
                 : sendCnamStatus === "error"
-                ? "Erreur — réessayer"
-                : "Envoyer le bordereau CNAM"}
+                ? t("errorRetry")
+                : t("sendCnam")}
             </button>
 
-            {/* View patient dossier */}
             {patientId && (
               <a
                 href={`/patients/${patientId}`}
                 className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-primary bg-secondary text-sm font-medium text-primary hover:bg-border transition-colors"
               >
                 <ExternalLink className="h-4 w-4" />
-                Voir le dossier patient
+                {t("viewPatientFile")}
               </a>
             )}
           </div>
@@ -541,8 +532,8 @@ export default function ConsultationPage() {
           {(sendPrescriptionStatus === "sent" || sendCnamStatus === "sent") && (
             <p className="flex items-center gap-1.5 text-xs text-primary font-medium">
               <CheckCircle2 size={14} />
-              Document(s) envoyé(s) avec succès par SMS
-              {patientEmail ? " et email" : ""}.
+              {t("documentsSentSms")}
+              {patientEmail ? t("andEmail") : ""}.
             </p>
           )}
         </div>

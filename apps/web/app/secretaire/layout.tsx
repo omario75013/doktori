@@ -37,7 +37,7 @@ export default async function SecretaireLayout({ children }: { children: React.R
       <div className="min-h-screen flex" style={{ background: "#F0FDFA" }}>
         <SecretaireSidebarNav secretaireName={secretaireName} doctorName={doctorName} />
         <div className="flex-1 flex flex-col min-w-0">
-          <AppTopBar role="secretary" title={`Cabinet Dr. ${doctorName}`} />
+          <AppTopBar role="secretary" title={`Cabinet ${doctorName.startsWith("Dr") ? doctorName : "Dr. " + doctorName}`} />
           <main className="flex-1 overflow-y-auto p-6 md:p-8">{children}</main>
         </div>
       </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
 import {
   Users,
@@ -167,6 +168,7 @@ function KpiCard({
 // ─── Monthly chart ────────────────────────────────────────────────────────────
 
 function MonthlyChart({ monthly }: { monthly: MonthlyRow[] }) {
+  const t = useTranslations("medecin.stats");
   const data = monthly.map((r) => ({
     name: formatMonth(r.month),
     Complétés: r.completed,
@@ -182,7 +184,7 @@ function MonthlyChart({ monthly }: { monthly: MonthlyRow[] }) {
       animate="visible"
       className="rounded-2xl border border-border bg-white p-5 shadow-sm"
     >
-      <SectionHeader title="Rendez-vous mensuels" subtitle="Répartition des statuts sur 6 mois" />
+      <SectionHeader title={t("monthlyTitle")} subtitle={t("monthlySubtitle")} />
       {monthly.length === 0 ? (
         <EmptyState />
       ) : (
@@ -207,9 +209,9 @@ function MonthlyChart({ monthly }: { monthly: MonthlyRow[] }) {
               iconType="circle"
               iconSize={8}
             />
-            <Bar dataKey="Complétés" fill={GREEN} radius={[4, 4, 0, 0]} />
-            <Bar dataKey="Annulés" fill={RED} radius={[4, 4, 0, 0]} />
-            <Bar dataKey="Absences" fill={ORANGE} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="Complétés" name={t("completed")} fill={GREEN} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="Annulés" name={t("cancelled")} fill={RED} radius={[4, 4, 0, 0]} />
+            <Bar dataKey="Absences" name={t("noShows")} fill={ORANGE} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       )}
@@ -220,6 +222,7 @@ function MonthlyChart({ monthly }: { monthly: MonthlyRow[] }) {
 // ─── Peak hours area chart ────────────────────────────────────────────────────
 
 function PeakHoursChart({ peaks }: { peaks: PeakRow[] }) {
+  const t = useTranslations("medecin.stats");
   const data = Array.from({ length: 24 }, (_, h) => {
     const found = peaks.find((p) => p.hour === h);
     return { hour: `${h}h`, rdv: found?.count ?? 0 };
@@ -237,7 +240,7 @@ function PeakHoursChart({ peaks }: { peaks: PeakRow[] }) {
       animate="visible"
       className="rounded-2xl border border-border bg-white p-5 shadow-sm"
     >
-      <SectionHeader title="Créneaux horaires" subtitle="Distribution des RDV par heure" />
+      <SectionHeader title={t("peakHoursTitle")} subtitle={t("peakHoursSubtitle")} />
       {peaks.length === 0 ? (
         <EmptyState />
       ) : (
@@ -265,7 +268,7 @@ function PeakHoursChart({ peaks }: { peaks: PeakRow[] }) {
                   return (
                     <div className="bg-white border border-border rounded-xl shadow-lg px-3 py-2 text-sm">
                       <p className="font-semibold text-foreground">{label}</p>
-                      <p className="text-primary">{payload[0].value} RDV</p>
+                      <p className="text-primary">{payload[0].value} {t("appointmentShort")}</p>
                     </div>
                   );
                 }}
@@ -283,10 +286,10 @@ function PeakHoursChart({ peaks }: { peaks: PeakRow[] }) {
           </ResponsiveContainer>
           {busiest && (
             <p className="mt-3 text-xs text-gray-500">
-              Créneau le plus chargé :{" "}
+              {t("busiestSlotLabel")}{" "}
               <span className="font-semibold text-foreground">{busiest.hour}h</span>
               {" "}avec{" "}
-              <span className="font-semibold text-foreground">{busiest.count}</span>{" "}RDV
+              <span className="font-semibold text-foreground">{busiest.count}</span>{" "}{t("appointmentShort")}
             </p>
           )}
         </>
@@ -298,6 +301,7 @@ function PeakHoursChart({ peaks }: { peaks: PeakRow[] }) {
 // ─── Status donut chart ───────────────────────────────────────────────────────
 
 function StatusDonut({ monthly }: { monthly: MonthlyRow[] }) {
+  const t = useTranslations("medecin.stats");
   const totals = monthly.reduce(
     (acc, r) => ({
       completed: acc.completed + r.completed,
@@ -308,9 +312,9 @@ function StatusDonut({ monthly }: { monthly: MonthlyRow[] }) {
   );
 
   const data = [
-    { name: "Complétés", value: totals.completed },
-    { name: "Annulés", value: totals.cancelled },
-    { name: "Absences", value: totals.no_shows },
+    { name: t("completed"), value: totals.completed },
+    { name: t("cancelled"), value: totals.cancelled },
+    { name: t("noShows"), value: totals.no_shows },
   ].filter((d) => d.value > 0);
 
   const total = data.reduce((s, d) => s + d.value, 0);
@@ -323,7 +327,7 @@ function StatusDonut({ monthly }: { monthly: MonthlyRow[] }) {
       animate="visible"
       className="rounded-2xl border border-border bg-white p-5 shadow-sm"
     >
-      <SectionHeader title="Répartition des statuts" subtitle="6 derniers mois — total cumulé" />
+      <SectionHeader title={t("statusDistributionTitle")} subtitle={t("statusDistributionSubtitle")} />
       {total === 0 ? (
         <EmptyState />
       ) : (
@@ -360,7 +364,7 @@ function StatusDonut({ monthly }: { monthly: MonthlyRow[] }) {
               <Legend iconType="circle" iconSize={8} wrapperStyle={{ fontSize: 12 }} />
             </PieChart>
           </ResponsiveContainer>
-          <p className="text-xs text-gray-400 -mt-2">{total} RDV au total</p>
+          <p className="text-xs text-gray-400 -mt-2">{total} {t("totalAppointments")}</p>
         </div>
       )}
     </motion.div>
@@ -376,6 +380,7 @@ function PatientTypeSection({
   newPatients: number;
   returningPatients: number;
 }) {
+  const t = useTranslations("medecin.stats");
   const total = newPatients + returningPatients;
 
   return (
@@ -386,19 +391,19 @@ function PatientTypeSection({
       animate="visible"
       className="rounded-2xl border border-border bg-white p-5 shadow-sm"
     >
-      <SectionHeader title="Patients (30 derniers jours)" subtitle="Nouveaux vs récurrents" />
+      <SectionHeader title={t("patientsTitle")} subtitle={t("patientsSubtitle")} />
       {total === 0 ? (
         <EmptyState />
       ) : (
         <div className="space-y-5">
           <AnimatedBar
-            label="Nouveaux patients"
+            label={t("newPatientsLabel")}
             count={newPatients}
             total={total}
             colorClass="bg-primary"
           />
           <AnimatedBar
-            label="Patients récurrents"
+            label={t("returningPatientsLabel")}
             count={returningPatients}
             total={total}
             colorClass="bg-foreground"
@@ -407,13 +412,13 @@ function PatientTypeSection({
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-primary inline-block" />
               <span className="text-gray-500">
-                <span className="font-semibold text-foreground">{newPatients}</span> nouveaux
+                <span className="font-semibold text-foreground">{newPatients}</span> {t("newSuffix")}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <span className="h-2 w-2 rounded-full bg-foreground inline-block" />
               <span className="text-gray-500">
-                <span className="font-semibold text-foreground">{returningPatients}</span> récurrents
+                <span className="font-semibold text-foreground">{returningPatients}</span> {t("returningSuffix")}
               </span>
             </div>
           </div>
@@ -458,6 +463,7 @@ function AnimatedBar({
 // ─── Top reasons ──────────────────────────────────────────────────────────────
 
 function TopReasons({ reasons }: { reasons: ReasonRow[] }) {
+  const t = useTranslations("medecin.stats");
   const max = reasons.reduce((m, r) => Math.max(m, r.count), 1);
   const rankColors = [TEAL, TEAL_MID, "#0C6B88", "#0A5E78", "#085369"];
 
@@ -469,7 +475,7 @@ function TopReasons({ reasons }: { reasons: ReasonRow[] }) {
       animate="visible"
       className="rounded-2xl border border-border bg-white p-5 shadow-sm"
     >
-      <SectionHeader title="Motifs les plus fréquents" subtitle="Top 5 raisons de consultation" />
+      <SectionHeader title={t("topReasonsTitle")} subtitle={t("topReasonsSubtitle")} />
       {reasons.length === 0 ? (
         <EmptyState />
       ) : (
@@ -511,10 +517,11 @@ function TopReasons({ reasons }: { reasons: ReasonRow[] }) {
 // ─── Empty state ──────────────────────────────────────────────────────────────
 
 function EmptyState() {
+  const t = useTranslations("medecin.stats");
   return (
     <div className="flex flex-col items-center justify-center py-10 text-gray-300">
       <Activity className="h-10 w-10 mb-3" />
-      <p className="text-sm">Aucune donnée disponible</p>
+      <p className="text-sm">{t("noData")}</p>
     </div>
   );
 }
@@ -547,42 +554,43 @@ export function StatsClient({
   newPatients,
   returningPatients,
 }: StatsClientProps) {
+  const t = useTranslations("medecin.stats");
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <KpiCard
           index={0}
-          label="RDV ce mois"
+          label={t("appointmentsThisMonth")}
           value={String(totalThisMonth)}
-          sub="rendez-vous planifiés"
+          sub={t("appointmentsThisMonthSub")}
           color="teal"
           icon={CalendarCheck2}
         />
         <KpiCard
           index={1}
-          label="Taux de complétion"
+          label={t("completionRateLabel")}
           value={`${confirmationRate}%`}
-          sub="des RDV complétés"
+          sub={t("completionRateSub")}
           color="green"
           icon={TrendingUp}
         />
         <KpiCard
           index={2}
-          label="Taux no-show"
+          label={t("noShowRateLabel")}
           value={`${noShowRate}%`}
-          sub="absences ce mois"
+          sub={t("noShowRateSub")}
           color={noShowRate > 20 ? "red" : "orange"}
           icon={Users}
         />
         <KpiCard
           index={3}
-          label="Revenus estimés"
+          label={t("estimatedRevenueLabel")}
           value={feeInDT > 0 ? `${revenueProjection.toFixed(0)} DT` : "—"}
           sub={
             feeInDT > 0
-              ? `${confirmedCount} RDV × ${feeInDT} DT`
-              : "Honoraires non renseignés"
+              ? `${confirmedCount} ${t("appointmentShort")} × ${feeInDT} DT`
+              : t("noFeeSet")
           }
           color="purple"
           icon={DollarSign}

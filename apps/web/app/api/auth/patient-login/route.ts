@@ -39,7 +39,7 @@ export async function POST(req: Request) {
   }
 
   const token = sign(
-    { id: patient.id, phone: patient.phone, role: "patient" },
+    { id: patient.id, phone: patient.phone, name: patient.name ?? undefined, role: "patient" },
     process.env.NEXTAUTH_SECRET!,
     { expiresIn: "30d" }
   );

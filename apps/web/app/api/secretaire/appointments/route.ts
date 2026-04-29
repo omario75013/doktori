@@ -1,13 +1,14 @@
-import { NextResponse } from "next/server";
-import { requireSecretary } from "@/lib/secretary-auth";
+import { type NextRequest, NextResponse } from "next/server";
+import { requireDoctorOrSecretaryUnified } from "@/lib/require-auth";
 import { db, appointments, patients } from "@doktori/db";
 import { eq, and, desc } from "drizzle-orm";
 
 // GET /api/secretaire/appointments
 // Returns all appointments for the secretary's doctor (last 100, desc)
-export async function GET() {
-  const secretary = await requireSecretary();
-  if (secretary instanceof NextResponse) return secretary;
+export async function GET(req: NextRequest) {
+  const ctx = await requireDoctorOrSecretaryUnified(req);
+  if (ctx instanceof Response) return ctx;
+  const secretary = { doctorId: ctx.doctorId };
 
   const results = await db
     .select({
@@ -35,9 +36,10 @@ export async function GET() {
 
 // PATCH /api/secretaire/appointments — update appointment status
 // Body: { id, status }
-export async function PATCH(req: Request) {
-  const secretary = await requireSecretary();
-  if (secretary instanceof NextResponse) return secretary;
+export async function PATCH(req: NextRequest) {
+  const ctx = await requireDoctorOrSecretaryUnified(req);
+  if (ctx instanceof Response) return ctx;
+  const secretary = { doctorId: ctx.doctorId };
 
   let body: unknown;
   try {

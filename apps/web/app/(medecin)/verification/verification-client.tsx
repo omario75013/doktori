@@ -3,6 +3,7 @@
 import { useState, useRef, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { useTranslations } from "next-intl";
 import {
   Shield,
   CheckCircle2,
@@ -32,34 +33,24 @@ type DocumentSlot = {
   hint: string;
 };
 
-const DOCUMENT_SLOTS: DocumentSlot[] = [
-  {
-    type: "diplome",
-    label: "Diplôme de médecine",
-    required: true,
-    hint: "PDF ou photo de votre diplôme de docteur en médecine",
-  },
-  {
-    type: "carte_cnom",
-    label: "Carte CNOM",
-    required: true,
-    hint: "Carte d'inscription au Conseil National de l'Ordre des Médecins",
-  },
-  {
-    type: "cin",
-    label: "CIN ou passeport",
-    required: true,
-    hint: "Pièce d'identité nationale en cours de validité",
-  },
-  {
-    type: "autre",
-    label: "Autres documents",
-    required: false,
-    hint: "Attestation de spécialité, certificat d'expérience, etc. (optionnel)",
-  },
-];
+function getDocumentSlots(t: ReturnType<typeof useTranslations<"medecin.verification">>): DocumentSlot[] {
+  return [
+    { type: "diplome", label: t("diplomaLabel"), required: true, hint: t("diplomaHint") },
+    { type: "carte_cnom", label: t("cnomLabel"), required: true, hint: t("cnomHint") },
+    { type: "cin", label: t("cinLabel"), required: true, hint: t("cinHint") },
+    { type: "autre", label: t("otherLabel"), required: false, hint: t("otherHint") },
+  ];
+}
 
-function StatusBanner({ status, reason }: { status: VerificationStatus; reason: string | null }) {
+function StatusBanner({
+  status,
+  reason,
+  t,
+}: {
+  status: VerificationStatus;
+  reason: string | null;
+  t: ReturnType<typeof useTranslations<"medecin.verification">>;
+}) {
   if (status === "approved") {
     return (
       <motion.div
@@ -69,11 +60,8 @@ function StatusBanner({ status, reason }: { status: VerificationStatus; reason: 
       >
         <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
         <div>
-          <p className="font-semibold text-green-800">Compte vérifié</p>
-          <p className="text-sm text-green-700 mt-0.5">
-            Votre profil est visible sur doktori.tn. Vos patients peuvent maintenant prendre
-            rendez-vous en ligne.
-          </p>
+          <p className="font-semibold text-green-800">{t("approvedTitle")}</p>
+          <p className="text-sm text-green-700 mt-0.5">{t("approvedMessage")}</p>
         </div>
       </motion.div>
     );
@@ -88,10 +76,8 @@ function StatusBanner({ status, reason }: { status: VerificationStatus; reason: 
       >
         <Clock className="w-5 h-5 text-blue-600 mt-0.5 shrink-0" />
         <div>
-          <p className="font-semibold text-blue-800">Documents en cours de vérification</p>
-          <p className="text-sm text-blue-700 mt-0.5">
-            Notre équipe examine vos documents. Vous serez notifié par email sous 24-48h.
-          </p>
+          <p className="font-semibold text-blue-800">{t("pendingDocsTitle")}</p>
+          <p className="text-sm text-blue-700 mt-0.5">{t("pendingDocsMessage")}</p>
         </div>
       </motion.div>
     );
@@ -106,15 +92,13 @@ function StatusBanner({ status, reason }: { status: VerificationStatus; reason: 
       >
         <XCircle className="w-5 h-5 text-red-600 mt-0.5 shrink-0" />
         <div>
-          <p className="font-semibold text-red-800">Documents refusés</p>
+          <p className="font-semibold text-red-800">{t("rejectedTitle")}</p>
           {reason && (
             <p className="text-sm text-red-700 mt-0.5">
-              <span className="font-medium">Raison :</span> {reason}
+              <span className="font-medium">{t("rejectedReason")}</span> {reason}
             </p>
           )}
-          <p className="text-sm text-red-700 mt-1">
-            Veuillez soumettre de nouveaux documents conformes.
-          </p>
+          <p className="text-sm text-red-700 mt-1">{t("rejectedResubmit")}</p>
         </div>
       </motion.div>
     );
@@ -129,11 +113,8 @@ function StatusBanner({ status, reason }: { status: VerificationStatus; reason: 
     >
       <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 shrink-0" />
       <div>
-        <p className="font-semibold text-amber-800">En attente de vos documents</p>
-        <p className="text-sm text-amber-700 mt-0.5">
-          Téléversez vos documents pour que notre équipe puisse vérifier votre identité et
-          activer votre profil.
-        </p>
+        <p className="font-semibold text-amber-800">{t("waitingTitle")}</p>
+        <p className="text-sm text-amber-700 mt-0.5">{t("waitingMessage")}</p>
       </div>
     </motion.div>
   );
@@ -146,6 +127,7 @@ function DocumentSlotCard({
   onDelete,
   uploading,
   canEdit,
+  t,
 }: {
   slot: DocumentSlot;
   uploaded: UploadedDocument | undefined;
@@ -153,6 +135,7 @@ function DocumentSlotCard({
   onDelete: (docId: string) => Promise<void>;
   uploading: boolean;
   canEdit: boolean;
+  t: ReturnType<typeof useTranslations<"medecin.verification">>;
 }) {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -173,10 +156,10 @@ function DocumentSlotCard({
           <div className="flex items-center gap-2">
             <p className="font-medium text-slate-900">{slot.label}</p>
             {slot.required && (
-              <span className="text-xs text-red-500 font-medium">* Requis</span>
+              <span className="text-xs text-red-500 font-medium">{t("requiredLabel")}</span>
             )}
             {!slot.required && (
-              <span className="text-xs text-slate-400">Optionnel</span>
+              <span className="text-xs text-slate-400">{t("optionalLabel")}</span>
             )}
           </div>
           <p className="text-xs text-slate-500 mt-0.5">{slot.hint}</p>
@@ -186,7 +169,7 @@ function DocumentSlotCard({
           <div className="shrink-0">
             <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-green-50 text-green-700 text-xs font-medium rounded-full">
               <CheckCircle2 className="w-3 h-3" />
-              Uploadé
+              {t("uploadedBadge")}
             </span>
           </div>
         ) : null}
@@ -211,7 +194,7 @@ function DocumentSlotCard({
               <button
                 onClick={() => onDelete(uploaded.id)}
                 className="p-1 text-red-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors shrink-0"
-                title="Supprimer"
+                title={t("deleteTitle")}
               >
                 <Trash2 className="w-3.5 h-3.5" />
               </button>
@@ -224,12 +207,12 @@ function DocumentSlotCard({
             className="w-full flex items-center justify-center gap-2 px-4 py-3 border-2 border-dashed border-slate-200 rounded-lg text-sm text-slate-500 hover:border-teal-400 hover:text-teal-700 hover:bg-teal-50/50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Upload className="w-4 h-4" />
-            {uploading ? "Envoi en cours..." : "Cliquer pour téléverser"}
+            {uploading ? t("uploading") : t("uploadButton")}
           </button>
         ) : (
           <div className="flex items-center gap-2 px-4 py-3 border border-dashed border-slate-200 rounded-lg">
             <AlertCircle className="w-4 h-4 text-amber-400" />
-            <span className="text-sm text-slate-500">Non fourni</span>
+            <span className="text-sm text-slate-500">{t("notProvided")}</span>
           </div>
         )}
       </div>
@@ -256,6 +239,8 @@ export function VerificationClient({
   verificationNote: string | null;
   uploadedDocuments: UploadedDocument[];
 }) {
+  const t = useTranslations("medecin.verification");
+  const DOCUMENT_SLOTS = getDocumentSlots(t);
   const router = useRouter();
   const [docs, setDocs] = useState<UploadedDocument[]>(uploadedDocuments);
   const [uploadingType, setUploadingType] = useState<string | null>(null);
@@ -289,14 +274,14 @@ export function VerificationClient({
 
       if (!res.ok) {
         const data = await res.json();
-        setError(data.error ?? "Erreur lors du téléversement");
+        setError(data.error ?? t("uploadError"));
         return;
       }
 
       const data = await res.json();
       setDocs((prev) => [...prev, data.document]);
     } catch {
-      setError("Erreur réseau. Veuillez réessayer.");
+      setError(t("networkError"));
     } finally {
       setUploadingType(null);
     }
@@ -310,7 +295,7 @@ export function VerificationClient({
     });
 
     if (!res.ok) {
-      setError("Impossible de supprimer ce document");
+      setError(t("deleteError"));
       return;
     }
 
@@ -325,9 +310,9 @@ export function VerificationClient({
     if (!res.ok) {
       const data = await res.json();
       if (data.missing) {
-        setSubmitError(`Documents manquants : ${(data.missing as string[]).join(", ")}`);
+        setSubmitError(t("missingDocs", { list: (data.missing as string[]).join(", ") }));
       } else {
-        setSubmitError(data.error ?? "Erreur lors de la soumission");
+        setSubmitError(data.error ?? t("submitError"));
       }
       return;
     }
@@ -346,15 +331,13 @@ export function VerificationClient({
           <Shield className="w-5 h-5 text-teal-700" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Vérification du compte</h1>
-          <p className="text-sm text-slate-500 mt-0.5">
-            Téléversez vos documents pour activer votre profil
-          </p>
+          <h1 className="text-2xl font-bold text-slate-900">{t("pageTitle")}</h1>
+          <p className="text-sm text-slate-500 mt-0.5">{t("pageSubtitle")}</p>
         </div>
       </div>
 
       {/* Status banner */}
-      <StatusBanner status={status} reason={verificationNote} />
+      <StatusBanner status={status} reason={verificationNote} t={t} />
 
       {/* Error alert */}
       <AnimatePresence>
@@ -379,7 +362,7 @@ export function VerificationClient({
       {/* Documents grid */}
       <div className="space-y-3">
         <h2 className="text-sm font-semibold text-slate-700 uppercase tracking-wider">
-          Documents requis
+          {t("requiredDocsSection")}
         </h2>
         {DOCUMENT_SLOTS.map((slot) => (
           <DocumentSlotCard
@@ -390,6 +373,7 @@ export function VerificationClient({
             onDelete={handleDelete}
             uploading={uploadingType === slot.type}
             canEdit={canEdit}
+            t={t}
           />
         ))}
       </div>
@@ -412,12 +396,12 @@ export function VerificationClient({
             className="w-full flex items-center justify-center gap-2 px-6 py-3.5 bg-teal-600 text-white font-semibold rounded-xl hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
             <Send className="w-4 h-4" />
-            {isPending ? "Soumission en cours..." : "Soumettre pour vérification"}
+            {isPending ? t("submitting") : t("submitButton")}
           </motion.button>
 
           {!allRequiredUploaded && (
             <p className="text-center text-xs text-slate-500">
-              Téléversez tous les documents requis (*) pour pouvoir soumettre.
+              {t("submitDisabledMessage")}
             </p>
           )}
         </div>
@@ -425,19 +409,9 @@ export function VerificationClient({
 
       {/* Info box */}
       <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-600">
-        <p className="font-medium text-slate-700 mb-1">Pourquoi cette vérification ?</p>
-        <p>
-          Doktori est une plateforme de confiance pour les patients tunisiens. La vérification de
-          l&apos;identité et des qualifications de nos médecins garantit la sécurité de tous.
-        </p>
-        <p className="mt-2">
-          La vérification est traitée sous <strong>24-48h ouvrables</strong>. En cas de question,
-          contactez-nous à{" "}
-          <a href="mailto:contact@doktori.tn" className="text-teal-600 hover:underline">
-            contact@doktori.tn
-          </a>
-          .
-        </p>
+        <p className="font-medium text-slate-700 mb-1">{t("faqTitle")}</p>
+        <p>{t("faqTrust")}</p>
+        <p className="mt-2">{t("faqTimeline")}</p>
       </div>
     </div>
   );

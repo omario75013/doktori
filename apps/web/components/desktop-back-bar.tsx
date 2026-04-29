@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { roleFromPath } from "@/lib/route-groups";
+import { useTranslations } from "next-intl";
 
 /**
  * Small persistent bar visible only inside the Tauri desktop app.
@@ -14,6 +15,7 @@ import { roleFromPath } from "@/lib/route-groups";
 export function DesktopBackBar() {
   const pathname = usePathname();
   const [isDesktop, setIsDesktop] = useState(false);
+  const t = useTranslations("common");
 
   useEffect(() => {
     try {
@@ -48,9 +50,9 @@ export function DesktopBackBar() {
           className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 hover:bg-white/10 font-medium"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Changer de rôle
+          {t("changerRole")}
         </Link>
-        <span className="hidden sm:inline text-slate-400">Doktori Desktop</span>
+        <span className="hidden sm:inline text-slate-400">{t("doktoriDesktop")}</span>
       </div>
     </div>
   );

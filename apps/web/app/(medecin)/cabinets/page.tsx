@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { MapPin, Phone, Plus, Pencil, Trash2, Star, ArrowLeft, Check, X, Loader2, Building2 } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface Practice {
   id: string;
@@ -38,23 +39,23 @@ const emptyForm: PracticeForm = {
 };
 
 export default function CabinetsPage() {
+  const t = useTranslations("medecin.cabinets");
+  const tCommon = useTranslations("medecin.common");
+
   const [practices, setPractices] = useState<Practice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Add form state
   const [showAddForm, setShowAddForm] = useState(false);
   const [addForm, setAddForm] = useState<PracticeForm>(emptyForm);
   const [addError, setAddError] = useState<string | null>(null);
   const [addSubmitting, setAddSubmitting] = useState(false);
 
-  // Edit form state
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState<PracticeForm>(emptyForm);
   const [editError, setEditError] = useState<string | null>(null);
   const [editSubmitting, setEditSubmitting] = useState(false);
 
-  // Delete state
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
@@ -63,11 +64,11 @@ export default function CabinetsPage() {
     setError(null);
     try {
       const res = await fetch("/api/doctor/practices");
-      if (!res.ok) throw new Error("Erreur de chargement");
+      if (!res.ok) throw new Error(t("loadingError"));
       const data = await res.json() as Practice[];
       setPractices(data);
     } catch {
-      setError("Impossible de charger vos cabinets.");
+      setError(t("loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -89,14 +90,14 @@ export default function CabinetsPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(typeof data.error === "string" ? data.error : "Erreur");
+        throw new Error(typeof data.error === "string" ? data.error : t("loadingError"));
       }
       setAddForm(emptyForm);
       setShowAddForm(false);
-      toast.success("Cabinet ajouté avec succès");
+      toast.success(t("addedSuccess"));
       await loadPractices();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erreur inattendue";
+      const msg = err instanceof Error ? err.message : t("loadingError");
       setAddError(msg);
       toast.error(msg);
     } finally {
@@ -132,13 +133,13 @@ export default function CabinetsPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(typeof data.error === "string" ? data.error : "Erreur");
+        throw new Error(typeof data.error === "string" ? data.error : t("loadingError"));
       }
       setEditingId(null);
-      toast.success("Cabinet mis à jour");
+      toast.success(t("updatedSuccess"));
       await loadPractices();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erreur inattendue";
+      const msg = err instanceof Error ? err.message : t("loadingError");
       setEditError(msg);
       toast.error(msg);
     } finally {
@@ -153,12 +154,12 @@ export default function CabinetsPage() {
       const res = await fetch(`/api/doctor/practices/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(typeof data.error === "string" ? data.error : "Erreur");
+        throw new Error(typeof data.error === "string" ? data.error : t("loadingError"));
       }
-      toast.success("Cabinet supprimé");
+      toast.success(t("deletedSuccess"));
       await loadPractices();
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "Erreur inattendue";
+      const msg = err instanceof Error ? err.message : t("loadingError");
       setDeleteError(msg);
       toast.error(msg);
     } finally {
@@ -192,7 +193,7 @@ export default function CabinetsPage() {
           </Link>
           <span className="text-foreground/30">/</span>
           <h1 className="text-xl font-heading font-black text-foreground">
-            Mes cabinets
+            {t("pageTitle")}
           </h1>
         </div>
         <Button
@@ -204,7 +205,7 @@ export default function CabinetsPage() {
           size="sm"
         >
           <Plus className="h-4 w-4" />
-          Ajouter
+          {t("add")}
         </Button>
       </div>
 
@@ -214,17 +215,16 @@ export default function CabinetsPage() {
         </div>
       )}
 
-      {/* Add form */}
       {showAddForm && (
         <div className="rounded-3xl border border-border bg-white dark:bg-gray-900 shadow-sm p-5 space-y-4">
-          <h2 className="font-heading font-black text-foreground">Nouveau cabinet</h2>
+          <h2 className="font-heading font-black text-foreground">{t("newCabinet")}</h2>
           <form onSubmit={handleAdd} className="space-y-3">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="add-name">Nom du cabinet *</Label>
+                <Label htmlFor="add-name">{t("nameLabel")}</Label>
                 <Input
                   id="add-name"
-                  placeholder="ex: Cabinet Menzah"
+                  placeholder={t("namePlaceholder")}
                   value={addForm.name}
                   onChange={(e) => setAddForm((f) => ({ ...f, name: e.target.value }))}
                   required
@@ -232,10 +232,10 @@ export default function CabinetsPage() {
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="add-city">Ville *</Label>
+                <Label htmlFor="add-city">{t("cityLabel")}</Label>
                 <Input
                   id="add-city"
-                  placeholder="ex: Tunis"
+                  placeholder={t("cityPlaceholder")}
                   value={addForm.city}
                   onChange={(e) => setAddForm((f) => ({ ...f, city: e.target.value }))}
                   required
@@ -244,10 +244,10 @@ export default function CabinetsPage() {
               </div>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="add-address">Adresse *</Label>
+              <Label htmlFor="add-address">{t("addressLabel")}</Label>
               <Input
                 id="add-address"
-                placeholder="Rue, numéro, quartier..."
+                placeholder={t("addressPlaceholder")}
                 value={addForm.address}
                 onChange={(e) => setAddForm((f) => ({ ...f, address: e.target.value }))}
                 required
@@ -258,7 +258,7 @@ export default function CabinetsPage() {
               <Input
                 id="add-phone"
                 type="tel"
-                placeholder="+216 XX XXX XXX"
+                placeholder={t("phonePlaceholder")}
                 value={addForm.phone}
                 onChange={(e) => setAddForm((f) => ({ ...f, phone: e.target.value }))}
               />
@@ -270,7 +270,7 @@ export default function CabinetsPage() {
                 onChange={(e) => setAddForm((f) => ({ ...f, isPrimary: e.target.checked }))}
                 className="rounded border-border text-primary"
               />
-              <span className="text-sm text-foreground">Cabinet principal</span>
+              <span className="text-sm text-foreground">{t("primaryCabinet")}</span>
             </label>
             {addError && (
               <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
@@ -282,10 +282,10 @@ export default function CabinetsPage() {
                 {addSubmitting ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                    Enregistrement...
+                    {t("loading")}
                   </>
                 ) : (
-                  "Enregistrer"
+                  tCommon("save")
                 )}
               </Button>
               <Button
@@ -294,16 +294,15 @@ export default function CabinetsPage() {
                 size="sm"
                 onClick={() => { setShowAddForm(false); setAddForm(emptyForm); }}
               >
-                Annuler
+                {tCommon("cancel")}
               </Button>
             </div>
           </form>
         </div>
       )}
 
-      {/* Practices list */}
       {loading ? (
-        <div className="text-sm text-foreground/40 py-8 text-center">Chargement...</div>
+        <div className="text-sm text-foreground/40 py-8 text-center">{t("loading")}</div>
       ) : error ? (
         <div className="text-sm text-red-500 py-4">{error}</div>
       ) : practices.length === 0 ? (
@@ -312,9 +311,9 @@ export default function CabinetsPage() {
             <Building2 className="h-7 w-7 text-primary/60" strokeWidth={1.5} />
           </div>
           <div>
-            <p className="font-heading font-black text-foreground">Aucun cabinet enregistré</p>
+            <p className="font-heading font-black text-foreground">{t("noCabinets")}</p>
             <p className="text-sm text-foreground/50 mt-1">
-              Ajoutez votre premier cabinet pour que les patients puissent vous trouver.
+              {t("noCabinetsDesc")}
             </p>
           </div>
           <Button
@@ -323,7 +322,7 @@ export default function CabinetsPage() {
             size="sm"
           >
             <Plus className="h-4 w-4" />
-            Ajouter mon premier cabinet
+            {t("addFirstCabinet")}
           </Button>
         </div>
       ) : (
@@ -336,11 +335,10 @@ export default function CabinetsPage() {
               }`}
             >
               {editingId === p.id ? (
-                /* Edit form inline */
                 <form onSubmit={handleEdit} className="space-y-3">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div className="space-y-1.5">
-                      <Label htmlFor={`edit-name-${p.id}`}>Nom *</Label>
+                      <Label htmlFor={`edit-name-${p.id}`}>{t("nameRequired")}</Label>
                       <Input
                         id={`edit-name-${p.id}`}
                         value={editForm.name}
@@ -350,7 +348,7 @@ export default function CabinetsPage() {
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <Label htmlFor={`edit-city-${p.id}`}>Ville *</Label>
+                      <Label htmlFor={`edit-city-${p.id}`}>{t("cityRequired")}</Label>
                       <Input
                         id={`edit-city-${p.id}`}
                         value={editForm.city}
@@ -361,7 +359,7 @@ export default function CabinetsPage() {
                     </div>
                   </div>
                   <div className="space-y-1.5">
-                    <Label htmlFor={`edit-address-${p.id}`}>Adresse *</Label>
+                    <Label htmlFor={`edit-address-${p.id}`}>{t("addressRequired")}</Label>
                     <Input
                       id={`edit-address-${p.id}`}
                       value={editForm.address}
@@ -386,7 +384,7 @@ export default function CabinetsPage() {
                         onChange={(e) => setEditForm((f) => ({ ...f, isPrimary: e.target.checked }))}
                         className="rounded border-border text-primary"
                       />
-                      <span className="text-sm text-foreground">Définir comme cabinet principal</span>
+                      <span className="text-sm text-foreground">{t("setAsPrimary")}</span>
                     </label>
                   )}
                   {editError && (
@@ -401,16 +399,15 @@ export default function CabinetsPage() {
                       ) : (
                         <Check className="h-3.5 w-3.5" />
                       )}
-                      {editSubmitting ? "Sauvegarde..." : "Sauvegarder"}
+                      {editSubmitting ? tCommon("saving") : tCommon("save")}
                     </Button>
                     <Button type="button" variant="ghost" size="sm" onClick={() => setEditingId(null)}>
                       <X className="h-3.5 w-3.5" />
-                      Annuler
+                      {tCommon("cancel")}
                     </Button>
                   </div>
                 </form>
               ) : (
-                /* Display row */
                 <>
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -419,12 +416,12 @@ export default function CabinetsPage() {
                         {p.isPrimary && (
                           <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
                             <Star className="h-3 w-3 fill-primary" />
-                            Principal
+                            {t("primary")}
                           </span>
                         )}
                         {!p.isActive && (
                           <span className="rounded-full bg-gray-100 dark:bg-gray-800 px-2 py-0.5 text-xs text-gray-500 dark:text-gray-400">
-                            Inactif
+                            {tCommon("inactive")}
                           </span>
                         )}
                       </div>
@@ -444,7 +441,7 @@ export default function CabinetsPage() {
                     <div className="flex items-center gap-1.5 flex-shrink-0">
                       {!p.isPrimary && p.isActive && (
                         <button
-                          title="Définir comme principal"
+                          title={t("setAsPrimary")}
                           onClick={() => void handleSetPrimary(p.id)}
                           className="rounded-lg border border-border p-1.5 text-foreground/40 hover:border-primary hover:text-primary transition"
                         >
@@ -452,7 +449,7 @@ export default function CabinetsPage() {
                         </button>
                       )}
                       <button
-                        title="Modifier"
+                        title={tCommon("edit")}
                         onClick={() => startEdit(p)}
                         className="rounded-lg border border-border p-1.5 text-foreground/40 hover:border-primary hover:text-primary transition"
                       >
@@ -460,7 +457,7 @@ export default function CabinetsPage() {
                       </button>
                       {!p.isPrimary && (
                         <button
-                          title="Supprimer"
+                          title={tCommon("delete")}
                           disabled={deletingId === p.id}
                           onClick={() => void handleDelete(p.id)}
                           className="rounded-lg border border-border p-1.5 text-foreground/40 hover:border-red-400 hover:text-red-500 transition disabled:opacity-50"

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import {
   Bell,
   Lock,
@@ -42,25 +43,43 @@ const CHANNELS = [
   { value: "push", label: "Push" },
 ];
 
-const REMINDER_PRESETS: Array<{ hours: number; label: string }> = [
-  { hours: 168, label: "7 jours avant" },
-  { hours: 72, label: "3 jours avant" },
-  { hours: 48, label: "48 h avant" },
-  { hours: 24, label: "24 h avant" },
-  { hours: 4, label: "4 h avant" },
-  { hours: 2, label: "2 h avant" },
-  { hours: 1, label: "1 h avant" },
-];
+function getReminderPresets(t: ReturnType<typeof useTranslations<"medecin.settings">>) {
+  return [
+    { hours: 168, label: t("reminder7Days") },
+    { hours: 72, label: t("reminder3Days") },
+    { hours: 48, label: t("reminder48Hours") },
+    { hours: 24, label: t("reminder24Hours") },
+    { hours: 4, label: t("reminder4Hours") },
+    { hours: 2, label: t("reminder2Hours") },
+    { hours: 1, label: t("reminder1Hour") },
+  ];
+}
 
-const CANCEL_PRESETS: Array<{ hours: number; label: string }> = [
-  { hours: 0, label: "Immédiatement" },
-  { hours: 1, label: "1 h avant" },
-  { hours: 2, label: "2 h avant" },
-  { hours: 4, label: "4 h avant" },
-  { hours: 24, label: "24 h avant" },
-];
+function getCancelPresets(t: ReturnType<typeof useTranslations<"medecin.settings">>) {
+  return [
+    { hours: 0, label: t("cancelImmediate") },
+    { hours: 1, label: t("cancel1HourBefore") },
+    { hours: 2, label: t("cancel2HoursBefore") },
+    { hours: 4, label: t("cancel4HoursBefore") },
+    { hours: 24, label: t("cancel24HoursBefore") },
+  ];
+}
+
+function getTabs(t: ReturnType<typeof useTranslations<"medecin.settings">>) {
+  return [
+    { id: "notifications" as TabId, label: t("tabNotifications"), icon: Bell },
+    { id: "reminders" as TabId, label: t("tabReminders"), icon: Clock },
+    { id: "cancel-alerts" as TabId, label: t("tabCancelAlerts"), icon: AlertTriangle },
+    { id: "security" as TabId, label: t("tabSecurity"), icon: Lock },
+    { id: "about" as TabId, label: t("tabAbout"), icon: Info },
+  ];
+}
 
 export default function SettingsPage() {
+  const t = useTranslations("medecin.settings");
+  const REMINDER_PRESETS = getReminderPresets(t);
+  const CANCEL_PRESETS = getCancelPresets(t);
+  const TABS = getTabs(t);
   const [activeTab, setActiveTab] = useState<TabId>("notifications");
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [loading, setLoading] = useState(true);
@@ -110,10 +129,10 @@ export default function SettingsPage() {
         body: JSON.stringify(prefs),
       });
       if (!res.ok) {
-        toast.error("Sauvegarde échouée");
+        toast.error(t("saveFailed"));
         return;
       }
-      toast.success("Préférences enregistrées");
+      toast.success(t("saveSuccess"));
     } finally {
       setSavingPrefs(false);
     }
@@ -121,11 +140,11 @@ export default function SettingsPage() {
 
   async function changePassword() {
     if (pwNew !== pwConfirm) {
-      toast.error("Les mots de passe ne correspondent pas");
+      toast.error(t("passwordMismatch"));
       return;
     }
     if (pwNew.length < 8) {
-      toast.error("Minimum 8 caractères");
+      toast.error(t("passwordMinLength"));
       return;
     }
     setChangingPw(true);
@@ -137,10 +156,10 @@ export default function SettingsPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data.error ?? "Erreur");
+        toast.error(data.error ?? t("error"));
         return;
       }
-      toast.success("Mot de passe mis à jour");
+      toast.success(t("passwordUpdated"));
       setPwCurrent("");
       setPwNew("");
       setPwConfirm("");
@@ -155,7 +174,7 @@ export default function SettingsPage() {
       const res = await fetch("/api/doctor/2fa/enable", { method: "POST" });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error ?? "Erreur");
+        toast.error(data.error ?? t("error"));
         return;
       }
       setTfaSecret(data.secret);
@@ -175,7 +194,7 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error ?? "Code incorrect");
+        toast.error(data.error ?? t("error"));
         return;
       }
       setTfaEnabled(true);
@@ -183,7 +202,7 @@ export default function SettingsPage() {
       setTfaUri(null);
       setTfaCode("");
       setBackupCodes(data.backupCodes);
-      toast.success("2FA activé");
+      toast.success(t("twoFAEnabled"));
     } finally {
       setTfaBusy(false);
     }
@@ -199,13 +218,13 @@ export default function SettingsPage() {
       });
       const data = await res.json();
       if (!res.ok) {
-        toast.error(data.error ?? "Erreur");
+        toast.error(data.error ?? t("error"));
         return;
       }
       setTfaEnabled(false);
       setDisablePw("");
       setShowDisable(false);
-      toast.success("2FA désactivé");
+      toast.success(t("twoFADisabled"));
     } finally {
       setTfaBusy(false);
     }
@@ -246,23 +265,15 @@ export default function SettingsPage() {
   }
 
   if (loading || !prefs) {
-    return <div className="p-6 text-sm text-gray-500">Chargement...</div>;
+    return <div className="p-6 text-sm text-gray-500">{t("loading")}</div>;
   }
-
-  const TABS: Array<{ id: TabId; label: string; icon: typeof Bell }> = [
-    { id: "notifications", label: "Notifications", icon: Bell },
-    { id: "reminders", label: "Rappels patients", icon: Clock },
-    { id: "cancel-alerts", label: "Alertes d'annulation", icon: AlertTriangle },
-    { id: "security", label: "Sécurité", icon: Lock },
-    { id: "about", label: "À propos", icon: Info },
-  ];
 
   return (
     <div className="space-y-6 max-w-3xl">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Paramètres</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("pageTitle")}</h1>
         <p className="text-sm text-gray-500">
-          Notifications, sécurité, rappels et alertes d&apos;annulation.
+          {t("pageSubtitle")}
         </p>
       </div>
 
@@ -289,44 +300,44 @@ export default function SettingsPage() {
 
       {activeTab === "notifications" && (
         <>
-          <Section icon={Bell} title="Canaux par événement">
+          <Section icon={Bell} title={t("sectionNotifChannels")}>
             <p className="text-sm text-gray-500 mb-4">
-              Choisissez comment vous souhaitez être averti pour chaque type d&apos;événement.
+              {t("notifChannelsDesc")}
             </p>
             <ToggleGroup>
               <Toggle
                 icon={<Mail className="h-4 w-4" />}
-                label="Email — Nouvelle réservation"
+                label={t("toggleEmailNewBooking")}
                 value={prefs.emailNewBooking}
                 onChange={(v) => setPrefs({ ...prefs, emailNewBooking: v })}
               />
               <Toggle
                 icon={<Mail className="h-4 w-4" />}
-                label="Email — Annulation patient"
+                label={t("toggleEmailCancellation")}
                 value={prefs.emailCancellation}
                 onChange={(v) => setPrefs({ ...prefs, emailCancellation: v })}
               />
               <Toggle
                 icon={<Mail className="h-4 w-4" />}
-                label="Email — Résumé quotidien"
+                label={t("toggleEmailDailyDigest")}
                 value={prefs.emailDailyDigest}
                 onChange={(v) => setPrefs({ ...prefs, emailDailyDigest: v })}
               />
               <Toggle
                 icon={<Smartphone className="h-4 w-4" />}
-                label="Push — Nouvelle réservation"
+                label={t("togglePushNewBooking")}
                 value={prefs.pushNewBooking}
                 onChange={(v) => setPrefs({ ...prefs, pushNewBooking: v })}
               />
               <Toggle
                 icon={<Smartphone className="h-4 w-4" />}
-                label="Push — Annulation patient"
+                label={t("togglePushCancellation")}
                 value={prefs.pushCancellation}
                 onChange={(v) => setPrefs({ ...prefs, pushCancellation: v })}
               />
               <Toggle
                 icon={<MessageSquare className="h-4 w-4" />}
-                label="SMS (peut entraîner des frais)"
+                label={t("toggleSMS")}
                 value={prefs.smsEnabled}
                 onChange={(v) => setPrefs({ ...prefs, smsEnabled: v })}
               />
@@ -338,18 +349,17 @@ export default function SettingsPage() {
 
       {activeTab === "reminders" && (
         <>
-          <Section icon={Clock} title="Rappels patients — activation">
+          <Section icon={Clock} title={t("sectionRemindersActivation")}>
             <Toggle
               icon={<Bell className="h-4 w-4" />}
-              label="Envoyer des rappels automatiques aux patients"
+              label={t("toggleSendReminders")}
               value={prefs.pushRemindersEnabled}
               onChange={(v) => setPrefs({ ...prefs, pushRemindersEnabled: v })}
             />
           </Section>
-          <Section icon={Clock} title="Quand envoyer le rappel ?">
+          <Section icon={Clock} title={t("sectionWhenToSendReminder")}>
             <p className="text-sm text-gray-500 mb-4">
-              Le patient recevra un rappel à chacune des échéances ci-dessous avant son
-              rendez-vous. Sélectionnez autant de moments que nécessaire.
+              {t("whenToSendReminderDesc")}
             </p>
             <OffsetChips
               presets={REMINDER_PRESETS}
@@ -366,9 +376,9 @@ export default function SettingsPage() {
 
       {activeTab === "cancel-alerts" && (
         <>
-          <Section icon={AlertTriangle} title="Canaux d'alerte par défaut">
+          <Section icon={AlertTriangle} title={t("sectionCancelChannels")}>
             <p className="text-sm text-gray-500 mb-4">
-              Lorsque vous annulez un rendez-vous, ces canaux sont pré-cochés dans la modale.
+              {t("cancelChannelsDesc")}
             </p>
             <div className="flex gap-2">
               {CHANNELS.map((c) => (
@@ -387,10 +397,9 @@ export default function SettingsPage() {
             </div>
           </Section>
 
-          <Section icon={Clock} title="Quand prévenir le patient ?">
+          <Section icon={Clock} title={t("sectionWhenToNotifyPatient")}>
             <p className="text-sm text-gray-500 mb-4">
-              Choisissez le moment où le message est envoyé, calculé par rapport à l&apos;heure
-              initiale du rendez-vous. "Immédiatement" envoie dès l&apos;annulation.
+              {t("whenToNotifyPatientDesc")}
             </p>
             <OffsetChips
               presets={CANCEL_PRESETS}
@@ -401,7 +410,7 @@ export default function SettingsPage() {
             />
           </Section>
 
-          <Section icon={MessageSquare} title="Modèle de message">
+          <Section icon={MessageSquare} title={t("sectionMessageTemplate")}>
             <textarea
               value={prefs.cancelAlertTemplate ?? ""}
               onChange={(e) => setPrefs({ ...prefs, cancelAlertTemplate: e.target.value })}
@@ -420,20 +429,20 @@ export default function SettingsPage() {
 
       {activeTab === "security" && (
         <>
-          <Section icon={Lock} title="Mot de passe">
+          <Section icon={Lock} title={t("sectionPassword")}>
             <div className="space-y-3 max-w-md">
               <PasswordField
-                label="Mot de passe actuel"
+                label={t("labelCurrentPassword")}
                 value={pwCurrent}
                 onChange={setPwCurrent}
               />
               <PasswordField
-                label="Nouveau mot de passe"
+                label={t("labelNewPassword")}
                 value={pwNew}
                 onChange={setPwNew}
               />
               <PasswordField
-                label="Confirmer le nouveau mot de passe"
+                label={t("labelConfirmPassword")}
                 value={pwConfirm}
                 onChange={setPwConfirm}
               />
@@ -442,17 +451,17 @@ export default function SettingsPage() {
                 disabled={changingPw || !pwCurrent || !pwNew}
                 className="rounded-xl bg-primary text-white px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-60"
               >
-                {changingPw ? "Mise à jour..." : "Changer le mot de passe"}
+                {changingPw ? t("updatingPassword") : t("changePasswordButton")}
               </button>
             </div>
           </Section>
 
-          <Section icon={ShieldCheck} title="Authentification à deux facteurs (2FA)">
+          <Section icon={ShieldCheck} title={t("section2FA")}>
             {tfaEnabled ? (
               <div className="space-y-4">
                 <div className="flex items-center gap-2 rounded-xl bg-green-50 border border-green-200 px-3 py-2 text-sm text-green-800">
                   <CheckCircle2 className="h-4 w-4" />
-                  2FA activé — votre compte est protégé par une vérification supplémentaire.
+                  {t("twoFAActiveMessage")}
                 </div>
                 {backupCodes && (
                   <BackupCodesCard codes={backupCodes} onDismiss={() => setBackupCodes(null)} />
@@ -460,14 +469,14 @@ export default function SettingsPage() {
                 {showDisable ? (
                   <div className="rounded-xl border border-red-200 bg-red-50 p-3 space-y-2">
                     <p className="text-sm text-red-800">
-                      Saisissez votre mot de passe pour désactiver le 2FA.
+                      {t("disableTFAPrompt")}
                     </p>
                     <input
                       type="password"
                       value={disablePw}
                       onChange={(e) => setDisablePw(e.target.value)}
                       className="w-full rounded-xl border border-red-200 px-3 py-2"
-                      placeholder="Mot de passe"
+                      placeholder={t("passwordPlaceholder")}
                     />
                     <div className="flex gap-2 justify-end">
                       <button
@@ -477,14 +486,14 @@ export default function SettingsPage() {
                         }}
                         className="rounded-xl border border-border bg-white px-3 py-1.5 text-sm"
                       >
-                        Annuler
+                        {t("cancelButton")}
                       </button>
                       <button
                         onClick={disableTfa}
                         disabled={tfaBusy}
                         className="rounded-xl bg-red-600 text-white px-3 py-1.5 text-sm hover:bg-red-700 disabled:opacity-60"
                       >
-                        Désactiver
+                        {t("disableButton")}
                       </button>
                     </div>
                   </div>
@@ -493,15 +502,14 @@ export default function SettingsPage() {
                     onClick={() => setShowDisable(true)}
                     className="rounded-xl border border-red-200 bg-white px-3 py-1.5 text-sm text-red-600 hover:bg-red-50"
                   >
-                    Désactiver le 2FA
+                    {t("disable2FAButton")}
                   </button>
                 )}
               </div>
             ) : tfaSecret && tfaUri ? (
               <div className="space-y-4">
                 <div className="text-sm text-gray-700">
-                  1. Ouvre ton application d&apos;authentification (Google Authenticator, Authy,
-                  1Password…) et scanne ce QR code.
+                  {t("twoFASetupStep1")}
                 </div>
                 <div className="rounded-xl border border-border bg-white p-4 inline-flex flex-col items-center gap-2">
                   <img
@@ -512,13 +520,13 @@ export default function SettingsPage() {
                     className="h-48 w-48"
                   />
                   <div className="text-[11px] text-gray-500">
-                    ou entre manuellement :{" "}
+                    {t("twoFAManualEntry")}{" "}
                     <code className="font-mono bg-secondary px-1 rounded">{tfaSecret}</code>
                   </div>
                 </div>
                 <div>
                   <label className="text-xs uppercase text-gray-500 tracking-wide">
-                    2. Entre le code à 6 chiffres
+                    {t("twoFASetupStep2")}
                   </label>
                   <input
                     type="text"
@@ -537,7 +545,7 @@ export default function SettingsPage() {
                     disabled={tfaBusy || tfaCode.length !== 6}
                     className="rounded-xl bg-primary text-white px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-60"
                   >
-                    Valider et activer
+                    {t("validateAndActivate")}
                   </button>
                   <button
                     onClick={() => {
@@ -547,15 +555,14 @@ export default function SettingsPage() {
                     }}
                     className="rounded-xl border border-border bg-white px-3 py-2 text-sm"
                   >
-                    Annuler
+                    {t("cancelButton")}
                   </button>
                 </div>
               </div>
             ) : (
               <div className="space-y-3">
                 <p className="text-sm text-gray-500">
-                  Protégez votre compte avec une vérification à deux facteurs. Vous aurez
-                  besoin d&apos;une application comme Google Authenticator, Authy ou 1Password.
+                  {t("twoFADescription")}
                 </p>
                 <button
                   onClick={startTfa}
@@ -563,7 +570,7 @@ export default function SettingsPage() {
                   className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-60"
                 >
                   <QrCode className="h-4 w-4" />
-                  Activer le 2FA
+                  {t("enable2FAButton")}
                 </button>
               </div>
             )}
@@ -583,28 +590,27 @@ export default function SettingsPage() {
             </div>
           </div>
           <p className="text-sm text-gray-600 leading-relaxed">
-            Doktori est une plateforme de gestion médicale et de prise de rendez-vous en ligne,
-            développée par <strong>RandomWalkers</strong>, une agence de développement logiciel basée en Tunisie.
+            {t("aboutDescription")}
           </p>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
             <div className="rounded-xl bg-slate-50 p-4">
-              <div className="font-semibold text-foreground mb-1">Développeur</div>
+              <div className="font-semibold text-foreground mb-1">{t("aboutDeveloperLabel")}</div>
               <div className="text-gray-600">RandomWalkers</div>
               <div className="text-gray-400 text-xs mt-0.5">Tunisie</div>
             </div>
             <div className="rounded-xl bg-slate-50 p-4">
-              <div className="font-semibold text-foreground mb-1">Plateforme</div>
+              <div className="font-semibold text-foreground mb-1">{t("aboutPlatformLabel")}</div>
               <a href="https://doktori.tn" target="_blank" rel="noreferrer" className="text-teal-600 hover:underline font-medium">
                 doktori.tn
               </a>
             </div>
             <div className="rounded-xl bg-slate-50 p-4">
-              <div className="font-semibold text-foreground mb-1">Droits</div>
-              <div className="text-gray-600">© 2026 RandomWalkers. Tous droits réservés.</div>
+              <div className="font-semibold text-foreground mb-1">{t("aboutRightsLabel")}</div>
+              <div className="text-gray-600">{t("aboutRightsValue")}</div>
             </div>
             <div className="rounded-xl bg-slate-50 p-4">
-              <div className="font-semibold text-foreground mb-1">Licence</div>
-              <div className="text-gray-600">Propriétaire — usage commercial réservé</div>
+              <div className="font-semibold text-foreground mb-1">{t("aboutLicenceLabel")}</div>
+              <div className="text-gray-600">{t("aboutLicenceValue")}</div>
             </div>
           </div>
         </div>
@@ -662,7 +668,7 @@ function Toggle({
       >
         <span
           className={`h-5 w-5 rounded-full bg-white transition-transform ${
-            value ? "translate-x-5" : "translate-x-0"
+            value ? "translate-x-5 rtl:-translate-x-5" : "translate-x-0"
           }`}
         />
       </span>
@@ -693,6 +699,7 @@ function PasswordField({
 }
 
 function SaveBar({ onSave, saving }: { onSave: () => void; saving: boolean }) {
+  const t = useTranslations("medecin.settings");
   return (
     <div className="flex justify-end">
       <button
@@ -700,7 +707,7 @@ function SaveBar({ onSave, saving }: { onSave: () => void; saving: boolean }) {
         disabled={saving}
         className="rounded-xl bg-primary text-white px-4 py-2 text-sm font-semibold hover:opacity-90 disabled:opacity-60"
       >
-        {saving ? "Enregistrement..." : "Enregistrer"}
+        {saving ? t("savingButton") : t("saveButton")}
       </button>
     </div>
   );
@@ -730,6 +737,7 @@ function OffsetChips({
   maxHours: number;
   disabled?: boolean;
 }) {
+  const t = useTranslations("medecin.settings");
   const [custom, setCustom] = useState("");
   const extras = value.filter((h) => !presets.some((p) => p.hours === h));
 
@@ -742,7 +750,7 @@ function OffsetChips({
             <button
               key={p.hours}
               onClick={() => onToggle(p.hours)}
-              className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`inline-flex items-center rtl:flex-row-reverse gap-1.5 rounded-xl px-3 py-1.5 text-sm font-medium transition-colors ${
                 active
                   ? "bg-primary text-white"
                   : "border border-border bg-white text-foreground hover:bg-secondary"
@@ -757,7 +765,7 @@ function OffsetChips({
           <button
             key={h}
             onClick={() => onToggle(h)}
-            className="inline-flex items-center gap-1 rounded-xl bg-primary text-white px-3 py-1.5 text-sm font-medium"
+            className="inline-flex items-center rtl:flex-row-reverse gap-1 rounded-xl bg-primary text-white px-3 py-1.5 text-sm font-medium"
           >
             {formatOffsetLabel(h)}
             <XIcon className="h-3 w-3" />
@@ -773,7 +781,7 @@ function OffsetChips({
           max={maxHours}
           value={custom}
           onChange={(e) => setCustom(e.target.value)}
-          placeholder="Heures personnalisées"
+          placeholder={t("customHoursPlaceholder")}
           className="w-44 rounded-xl border border-border px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
         />
         <button
@@ -784,21 +792,21 @@ function OffsetChips({
               setCustom("");
             }
           }}
-          className="inline-flex items-center gap-1 rounded-xl border border-border bg-white px-3 py-1.5 text-sm hover:bg-secondary"
+          className="inline-flex items-center rtl:flex-row-reverse gap-1 rounded-xl border border-border bg-white px-3 py-1.5 text-sm hover:bg-secondary"
         >
           <Plus className="h-3.5 w-3.5" />
-          Ajouter
+          {t("addButton")}
         </button>
       </div>
 
       {value.length === 0 && (
         <p className="mt-3 text-xs text-amber-600">
-          Aucune échéance sélectionnée — aucun message ne sera envoyé.
+          {t("noOffsetSelected")}
         </p>
       )}
       {value.length > 0 && (
         <p className="mt-3 text-xs text-gray-500">
-          Actif : {value.map(formatOffsetLabel).join(" · ")}
+          {t("activeOffsets")} {value.map(formatOffsetLabel).join(" · ")}
         </p>
       )}
     </div>
@@ -812,6 +820,7 @@ function BackupCodesCard({
   codes: string[];
   onDismiss: () => void;
 }) {
+  const t = useTranslations("medecin.settings");
   const [copied, setCopied] = useState(false);
   async function copyAll() {
     await navigator.clipboard.writeText(codes.join("\n"));
@@ -823,10 +832,9 @@ function BackupCodesCard({
       <div className="flex items-start gap-2">
         <KeyRound className="h-4 w-4 text-amber-700 mt-0.5" />
         <div className="flex-1 text-sm text-amber-900">
-          <div className="font-semibold">Codes de secours</div>
+          <div className="font-semibold">{t("backupCodesTitle")}</div>
           <p className="text-xs">
-            Conservez-les en lieu sûr — ils servent à vous connecter si vous perdez votre
-            application d&apos;authentification. Chaque code n&apos;est utilisable qu&apos;une fois.
+            {t("backupCodesDesc")}
           </p>
         </div>
       </div>
@@ -843,13 +851,13 @@ function BackupCodesCard({
           className="inline-flex items-center gap-1 rounded-xl border border-amber-300 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100"
         >
           <Copy className="h-3.5 w-3.5" />
-          {copied ? "Copié" : "Copier"}
+          {copied ? t("copiedButton") : t("copyButton")}
         </button>
         <button
           onClick={onDismiss}
           className="rounded-xl bg-amber-700 text-white px-3 py-1.5 text-xs font-semibold hover:bg-amber-800"
         >
-          J&apos;ai sauvegardé les codes
+          {t("savedCodesButton")}
         </button>
       </div>
     </div>

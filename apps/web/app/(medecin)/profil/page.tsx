@@ -32,6 +32,7 @@ export default async function ProfilPage() {
   if (!session?.user?.id) redirect("/connexion");
   const locale = await getLocale();
   const t = await getTranslations({ locale, namespace: "medecin.profil" });
+  const tCommon = await getTranslations({ locale, namespace: "medecin.common" });
 
   const [doctor] = await db
     .select()
@@ -65,7 +66,7 @@ export default async function ProfilPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
-            <p className="text-sm text-gray-500">Gérez vos informations publiques</p>
+            <p className="text-sm text-gray-500">{t("subtitle")}</p>
           </div>
         </div>
         <Link
@@ -74,7 +75,7 @@ export default async function ProfilPage() {
           className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-primary hover:bg-secondary transition-colors"
         >
           <Eye className="h-4 w-4" />
-          Voir ma page publique
+          {t("viewPublicPage")}
           <ExternalLink className="h-3 w-3" />
         </Link>
       </div>
@@ -119,21 +120,21 @@ export default async function ProfilPage() {
             <div className="flex items-center gap-3 rounded-xl bg-secondary p-3.5">
               <Mail className="h-4 w-4 text-primary shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs text-gray-500">Email</p>
+                <p className="text-xs text-gray-500">{t("fieldEmail")}</p>
                 <p className="text-sm font-medium text-foreground truncate">{doctor.email}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-xl bg-secondary p-3.5">
               <Phone className="h-4 w-4 text-primary shrink-0" />
               <div>
-                <p className="text-xs text-gray-500">Téléphone</p>
+                <p className="text-xs text-gray-500">{t("fieldPhone")}</p>
                 <p className="text-sm font-medium text-foreground">{doctor.phone}</p>
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-xl bg-secondary p-3.5">
               <MapPin className="h-4 w-4 text-primary shrink-0" />
               <div className="min-w-0">
-                <p className="text-xs text-gray-500">Adresse</p>
+                <p className="text-xs text-gray-500">{t("fieldAddress")}</p>
                 <p className="text-sm font-medium text-foreground truncate">
                   {doctor.address}, {city?.label ?? doctor.city}
                 </p>
@@ -142,13 +143,13 @@ export default async function ProfilPage() {
             <div className="flex items-center gap-3 rounded-xl bg-secondary p-3.5">
               <Stethoscope className="h-4 w-4 text-primary shrink-0" />
               <div>
-                <p className="text-xs text-gray-500">Mode de consultation</p>
+                <p className="text-xs text-gray-500">{t("consultationMode")}</p>
                 <p className="text-sm font-medium text-foreground">
                   {doctor.consultationMode === "both"
-                    ? "Cabinet + Téléconsultation"
+                    ? t("bothModes")
                     : doctor.consultationMode === "teleconsult"
-                    ? "Téléconsultation"
-                    : "Cabinet"}
+                    ? t("teleconsultOnly")
+                    : t("cabinetOnly")}
                 </p>
               </div>
             </div>
@@ -163,13 +164,13 @@ export default async function ProfilPage() {
                   {doctor.averageRating.toFixed(1)}
                 </span>
                 <span className="text-xs text-gray-400">
-                  ({doctor.reviewCount ?? 0} avis)
+                  {t("reviewsCount", { count: doctor.reviewCount ?? 0 })}
                 </span>
               </div>
             )}
             {doctor.consultationFee && (
               <div className="flex items-center gap-1.5">
-                <span className="text-sm text-gray-500">Consultation :</span>
+                <span className="text-sm text-gray-500">{t("consultationFeeLabel")}</span>
                 <span className="text-sm font-bold text-foreground">
                   {doctor.consultationFee / 1000} DT
                 </span>
@@ -193,7 +194,7 @@ export default async function ProfilPage() {
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
               <AlertCircle className="h-4 w-4 text-amber-500" />
-              Complétez votre profil
+              {t("completeProfile")}
             </h3>
             <span className="text-sm font-bold text-amber-600">{completeness}%</span>
           </div>
@@ -214,7 +215,7 @@ export default async function ProfilPage() {
                       href={c.href}
                       className="text-xs font-semibold text-primary hover:underline"
                     >
-                      Compléter
+                      {tCommon("complete")}
                     </Link>
                   )}
                 </div>
@@ -230,24 +231,24 @@ export default async function ProfilPage() {
           className="rounded-2xl border border-border bg-white p-5 hover:shadow-md transition-shadow group"
         >
           <GraduationCap className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
-          <h3 className="text-sm font-bold text-foreground">Parcours</h3>
-          <p className="text-xs text-gray-500 mt-1">Formations, expériences, langues</p>
+          <h3 className="text-sm font-bold text-foreground">{t("journeyLabel")}</h3>
+          <p className="text-xs text-gray-500 mt-1">{t("journeySubtitle")}</p>
         </Link>
         <Link
           href="/cabinets"
           className="rounded-2xl border border-border bg-white p-5 hover:shadow-md transition-shadow group"
         >
           <Building2 className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
-          <h3 className="text-sm font-bold text-foreground">Cabinets</h3>
-          <p className="text-xs text-gray-500 mt-1">Gérer vos lieux de pratique</p>
+          <h3 className="text-sm font-bold text-foreground">{t("cabinetsLabel")}</h3>
+          <p className="text-xs text-gray-500 mt-1">{t("cabinetsSubtitle")}</p>
         </Link>
         <Link
           href="/agenda"
           className="rounded-2xl border border-border bg-white p-5 hover:shadow-md transition-shadow group"
         >
           <Calendar className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
-          <h3 className="text-sm font-bold text-foreground">Horaires</h3>
-          <p className="text-xs text-gray-500 mt-1">Configurer vos disponibilités</p>
+          <h3 className="text-sm font-bold text-foreground">{t("schedulesLabel")}</h3>
+          <p className="text-xs text-gray-500 mt-1">{t("schedulesSubtitle")}</p>
         </Link>
       </div>
 
@@ -255,16 +256,16 @@ export default async function ProfilPage() {
       <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
         <h2 className="text-base font-bold text-foreground mb-1 flex items-center gap-2">
           <QrCode className="h-5 w-5 text-primary" />
-          Mon QR code
+          {t("myQrCode")}
         </h2>
         <p className="text-sm text-gray-500 mb-4">
-          Affichez ce QR code dans votre cabinet pour que vos patients puissent prendre rendez-vous directement.
+          {t("qrCodeDesc")}
         </p>
         <div className="flex items-start gap-6">
           <QRCode url={`https://doktori.tn/rdv/${doctor.slug}`} size={150} />
           <div className="space-y-3">
             <p className="text-xs text-gray-400">
-              Ce QR code renvoie vers votre page de prise de rendez-vous :
+              {t("qrCodeRedirectInfo")}
             </p>
             <code className="block text-xs text-primary bg-secondary px-3 py-2 rounded-lg break-all">
               doktori.tn/rdv/{doctor.slug}
@@ -276,7 +277,7 @@ export default async function ProfilPage() {
               className="inline-flex items-center gap-2 border border-primary text-primary hover:bg-secondary px-4 py-2 rounded-xl text-sm font-bold transition-colors"
             >
               <QrCode className="h-4 w-4" />
-              Télécharger en PNG
+              {t("downloadPng")}
             </a>
           </div>
         </div>

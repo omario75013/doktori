@@ -5,6 +5,7 @@ import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { Download, Printer, FileText, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Claim = {
   id: string;
@@ -25,12 +26,14 @@ type Response = {
   totals: { count: number; amount: number; byStatus: Record<string, number> };
 };
 
-const STATUS_LABELS: Record<Claim["status"], string> = {
-  draft: "Brouillon",
-  submitted: "Soumis",
-  reimbursed: "Remboursé",
-  rejected: "Rejeté",
-};
+function getStatusLabels(t: ReturnType<typeof useTranslations<"medecin.cnam">>) {
+  return {
+    draft: t("statusDraft"),
+    submitted: t("statusSubmitted"),
+    reimbursed: t("statusReimbursed"),
+    rejected: t("statusRejected"),
+  };
+}
 
 const STATUS_STYLES: Record<Claim["status"], string> = {
   draft: "bg-gray-100 text-gray-700",
@@ -52,6 +55,10 @@ function currentMonth(): string {
 }
 
 export default function CnamPage() {
+  const t = useTranslations("medecin.cnam");
+  const tCommon = useTranslations("medecin.common");
+  const STATUS_LABELS = getStatusLabels(t);
+
   const [month, setMonth] = useState(currentMonth());
   const [data, setData] = useState<Response | null>(null);
   const [loading, setLoading] = useState(true);
@@ -77,10 +84,10 @@ export default function CnamPage() {
     });
     setUpdating(null);
     if (res.ok) {
-      toast.success(status === "submitted" ? "Bordereau marqué soumis" : "Bordereau marqué remboursé");
+      toast.success(status === "submitted" ? t("markedSubmitted") : t("markedReimbursed"));
       load();
     } else {
-      toast.error("Erreur lors de la mise à jour du statut");
+      toast.error(t("statusUpdateError"));
     }
   }
 
@@ -96,8 +103,8 @@ export default function CnamPage() {
             <FileText className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Bordereaux CNAM</h1>
-            <p className="text-sm text-gray-500">Tiers-payant — {monthLabel}</p>
+            <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
+            <p className="text-sm text-gray-500">{t("subtitle", { monthLabel })}</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -118,19 +125,19 @@ export default function CnamPage() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-        <StatCard label="Bordereaux" value={totals.count.toString()} valueColor="text-foreground" />
+        <StatCard label={t("claims")} value={totals.count.toString()} valueColor="text-foreground" />
         <StatCard
-          label="Montant total"
+          label={t("totalAmount")}
           value={`${((totals.amount || 0) / 1000).toFixed(0)} DT`}
           valueColor="text-primary"
         />
         <StatCard
-          label="Remboursés"
+          label={t("reimbursed")}
           value={`${((totals.byStatus.reimbursed || 0) / 1000).toFixed(0)} DT`}
           valueColor="text-green-600"
         />
         <StatCard
-          label="En attente"
+          label={t("pending")}
           value={`${(((totals.byStatus.draft || 0) + (totals.byStatus.submitted || 0)) / 1000).toFixed(0)} DT`}
           valueColor="text-orange-600"
         />
@@ -146,19 +153,19 @@ export default function CnamPage() {
             <FileText className="w-7 h-7 text-primary" />
           </div>
           <p className="text-foreground font-medium mb-1">Aucun bordereau pour {monthLabel}</p>
-          <p className="text-gray-400 text-sm">Créez-en un depuis un rendez-vous terminé.</p>
+          <p className="text-gray-400 text-sm">{t("createFromCompleted")}</p>
         </div>
       ) : (
         <div className="rounded-2xl border border-border bg-white dark:bg-gray-800 shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border dark:border-gray-700 bg-secondary dark:bg-gray-700/50 text-left">
-                <th className="px-4 py-3 font-medium text-foreground">Date</th>
+                <th className="px-4 py-3 font-medium text-foreground">{tCommon("date")}</th>
                 <th className="px-4 py-3 font-medium text-foreground">Patient</th>
-                <th className="px-4 py-3 font-medium text-foreground">N° CNAM</th>
-                <th className="px-4 py-3 font-medium text-foreground">Montant</th>
-                <th className="px-4 py-3 font-medium text-foreground">Statut</th>
-                <th className="px-4 py-3 font-medium text-foreground">Actions</th>
+                <th className="px-4 py-3 font-medium text-foreground">{t("cnamNumber")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{tCommon("amount")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{tCommon("status")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{tCommon("actions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border dark:divide-gray-700">
@@ -172,7 +179,7 @@ export default function CnamPage() {
                     <td className="px-4 py-3">
                       <div className="font-medium text-foreground">{r.patientName}</div>
                       <div className="text-xs text-gray-400">
-                        {r.patientRole === "assure" ? "Assuré" : "Ayant-droit"}
+                        {r.patientRole === "assure" ? t("insured") : t("beneficiary")}
                       </div>
                     </td>
                     <td className="px-4 py-3 font-mono text-xs text-gray-700">{r.cnamNumber}</td>
@@ -196,7 +203,7 @@ export default function CnamPage() {
                           className="text-xs px-2.5 py-1.5 rounded-xl border border-border bg-white hover:bg-secondary inline-flex items-center gap-1 transition-colors"
                         >
                           <Printer className="w-3 h-3" />
-                          Imprimer
+                          {tCommon("print")}
                         </a>
                         {r.status === "draft" && (
                           <button
@@ -204,7 +211,7 @@ export default function CnamPage() {
                             onClick={() => updateStatus(r.id, "submitted")}
                             className="text-xs px-2.5 py-1.5 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100 disabled:opacity-40 transition-colors"
                           >
-                            Marquer soumis
+                            {t("markSubmitted")}
                           </button>
                         )}
                         {r.status === "submitted" && (
@@ -213,7 +220,7 @@ export default function CnamPage() {
                             onClick={() => updateStatus(r.id, "reimbursed")}
                             className="text-xs px-2.5 py-1.5 rounded-xl border border-border bg-secondary text-primary hover:bg-border disabled:opacity-40 transition-colors"
                           >
-                            Marquer remboursé
+                            {t("markReimbursed")}
                           </button>
                         )}
                       </div>
