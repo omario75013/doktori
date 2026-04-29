@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 import { signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { osNotify } from "@/lib/os-notify";
 import {
   Menu,
@@ -39,21 +40,20 @@ type Perm =
 
 type LinkDef = {
   href: string;
-  label: string;
+  key: string;
   icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
-  /** Link is shown if ANY of these permissions is true. `null` = always show. */
   anyOf?: Perm[];
 };
 
 const LINKS: LinkDef[] = [
-  { href: "/secretaire/dashboard", label: "Tableau de bord", icon: LayoutDashboard },
-  { href: "/secretaire/calendrier", label: "Calendrier", icon: CalendarDays, anyOf: ["rendezVous", "agenda"] },
-  { href: "/secretaire/rendez-vous", label: "Rendez-vous", icon: CalendarClock, anyOf: ["rendezVous", "rendezVousCreate", "rendezVousEdit", "rendezVousCancel"] },
-  { href: "/secretaire/patients", label: "Patients", icon: Users, anyOf: ["patients", "patientsCreate", "patientsEdit", "patientsDelete"] },
-  { href: "/secretaire/messagerie", label: "Messagerie équipe", icon: MessagesSquare },
-  { href: "/secretaire/notifications", label: "Notifications", icon: Bell },
-  { href: "/secretaire/conges", label: "Mes congés", icon: Plane },
-  { href: "/secretaire/profil", label: "Mon profil", icon: UserCog },
+  { href: "/secretaire/dashboard", key: "dashboard", icon: LayoutDashboard },
+  { href: "/secretaire/calendrier", key: "calendrier", icon: CalendarDays, anyOf: ["rendezVous", "agenda"] },
+  { href: "/secretaire/rendez-vous", key: "rendezVous", icon: CalendarClock, anyOf: ["rendezVous", "rendezVousCreate", "rendezVousEdit", "rendezVousCancel"] },
+  { href: "/secretaire/patients", key: "patients", icon: Users, anyOf: ["patients", "patientsCreate", "patientsEdit", "patientsDelete"] },
+  { href: "/secretaire/messagerie", key: "messagerie", icon: MessagesSquare },
+  { href: "/secretaire/notifications", key: "notifications", icon: Bell },
+  { href: "/secretaire/conges", key: "conges", icon: Plane },
+  { href: "/secretaire/profil", key: "profil", icon: UserCog },
 ];
 
 export function SecretaireSidebarNav({
@@ -63,6 +63,7 @@ export function SecretaireSidebarNav({
   secretaireName: string;
   doctorName: string;
 }) {
+  const t = useTranslations("secretaire.nav");
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -118,7 +119,7 @@ export function SecretaireSidebarNav({
 
   const visibleLinks = LINKS.filter((l) => {
     if (!l.anyOf) return true;
-    if (!perms) return true; // show optimistically until perms load
+    if (!perms) return true;
     return l.anyOf.some((p) => perms[p] === true);
   });
 
@@ -135,17 +136,15 @@ export function SecretaireSidebarNav({
 
   return (
     <>
-      {/* Mobile hamburger */}
       <button
         onClick={() => setOpen(!open)}
         className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg text-white"
         style={{ background: "#0891B2" }}
-        aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+        aria-label={open ? t("closeMenu") : t("openMenu")}
       >
         {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
-      {/* Sidebar */}
       <aside
         className={[
           "fixed md:static inset-y-0 left-0 z-40",
@@ -155,7 +154,6 @@ export function SecretaireSidebarNav({
         ].join(" ")}
         style={{ background: "#134E4A" }}
       >
-        {/* Brand + context */}
         <div className="px-5 pt-6 pb-5 border-b border-white/10">
           <div className="flex items-center gap-2.5 mb-3">
             <div
@@ -170,20 +168,19 @@ export function SecretaireSidebarNav({
           </div>
           <div className="ml-0.5">
             <p className="text-[10px] uppercase tracking-widest font-bold mb-0.5" style={{ color: "#5EEAD4" }}>
-              Espace Secrétaire
+              {t("espace")}
             </p>
             <p className="text-white text-sm font-semibold truncate" title={secretaireName}>
               {secretaireName}
             </p>
             <p className="text-xs mt-0.5 truncate" style={{ color: "#5EEAD4" }} title={doctorName}>
-              Pour Dr. {doctorName}
+              {t("pour")} {doctorName.startsWith("Dr") ? doctorName : "Dr. " + doctorName}
             </p>
           </div>
         </div>
 
-        {/* Nav links */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {visibleLinks.map(({ href, label, icon: Icon }) => {
+          {visibleLinks.map(({ href, key, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
             const badge = badgeByHref[href] ?? 0;
             return (
@@ -208,7 +205,7 @@ export function SecretaireSidebarNav({
                     <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-[#134E4A]" />
                   )}
                 </span>
-                <span className="flex-1">{label}</span>
+                <span className="flex-1">{t(key as Parameters<typeof t>[0])}</span>
                 {badge > 0 && (
                   <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
                     {badge > 99 ? "99+" : badge}
@@ -219,7 +216,6 @@ export function SecretaireSidebarNav({
           })}
         </nav>
 
-        {/* Logout */}
         <div className="px-3 pb-5 border-t border-white/10 pt-3">
           <button
             onClick={handleLogout}
@@ -227,12 +223,11 @@ export function SecretaireSidebarNav({
             className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-300 hover:bg-red-500/15 hover:text-red-200 transition-all disabled:opacity-50"
           >
             <LogOut className="h-4 w-4 flex-shrink-0" strokeWidth={2.5} />
-            {loggingOut ? "Déconnexion…" : "Se déconnecter"}
+            {loggingOut ? t("loggingOut") : t("logout")}
           </button>
         </div>
       </aside>
 
-      {/* Mobile backdrop */}
       {open && (
         <div
           className="fixed inset-0 bg-black/50 z-30 md:hidden"

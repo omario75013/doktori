@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
   Stethoscope,
@@ -35,55 +36,49 @@ import {
 
 const ADMIN_COLLAPSED_KEY = "doktori_admin_sidebar_collapsed";
 
-const ROLE_LABELS: Record<string, string> = {
-  super_admin: "Super admin",
-  moderator: "Modérateur",
-  finance: "Finance",
-  support: "Support",
-  marketing: "Marketing",
-};
+type NavLink = { href: string; key: string; icon: React.ComponentType<{ className?: string }>; exact?: boolean };
 
-const links = [
-  { href: "/admin", label: "Tableau de bord", icon: LayoutDashboard, exact: true },
-  { href: "/admin/medecins", label: "Médecins", icon: Stethoscope },
-  { href: "/admin/patients", label: "Patients", icon: Users },
-  { href: "/admin/rendez-vous", label: "Rendez-vous", icon: Calendar },
-  { href: "/admin/validation", label: "Validation", icon: UserCheck },
-  { href: "/admin/reviews", label: "Avis patients", icon: MessageSquare },
+const links: NavLink[] = [
+  { href: "/admin", key: "dashboard", icon: LayoutDashboard, exact: true },
+  { href: "/admin/medecins", key: "medecins", icon: Stethoscope },
+  { href: "/admin/patients", key: "patients", icon: Users },
+  { href: "/admin/rendez-vous", key: "rendezVous", icon: Calendar },
+  { href: "/admin/validation", key: "validation", icon: UserCheck },
+  { href: "/admin/reviews", key: "reviews", icon: MessageSquare },
 ];
 
-const contentLinks = [
-  { href: "/admin/blog", label: "Blog", icon: BookOpen },
+const contentLinks: NavLink[] = [
+  { href: "/admin/blog", key: "blog", icon: BookOpen },
 ];
 
-const orgLinks = [
-  { href: "/admin/finance", label: "Finance", icon: CreditCard, exact: true },
-  { href: "/admin/finance/revenue", label: "Revenus", icon: TrendingUp },
-  { href: "/admin/finance/doctors", label: "Facturation médecins", icon: Receipt },
-  { href: "/admin/promotions", label: "Promotions", icon: Tag },
-  { href: "/admin/communications", label: "Communications", icon: Phone },
-  { href: "/admin/cliniques", label: "Cliniques", icon: Building2 },
-  { href: "/admin/secretaires", label: "Secrétaires", icon: UserCog },
-  { href: "/admin/parrainage", label: "Parrainage", icon: Star },
-  { href: "/admin/catalog/specialites", label: "Catalogue", icon: FileText },
+const orgLinks: NavLink[] = [
+  { href: "/admin/finance", key: "finance", icon: CreditCard, exact: true },
+  { href: "/admin/finance/revenue", key: "revenus", icon: TrendingUp },
+  { href: "/admin/finance/doctors", key: "facturations", icon: Receipt },
+  { href: "/admin/promotions", key: "promotions", icon: Tag },
+  { href: "/admin/communications", key: "communications", icon: Phone },
+  { href: "/admin/cliniques", key: "cliniques", icon: Building2 },
+  { href: "/admin/secretaires", key: "secretaires", icon: UserCog },
+  { href: "/admin/parrainage", key: "parrainage", icon: Star },
+  { href: "/admin/catalog/specialites", key: "catalogue", icon: FileText },
 ];
 
-const sosLinks = [
-  { href: "/admin/sos", label: "SOS", icon: Radio, exact: true },
-  { href: "/admin/sos/sessions", label: "Sessions SOS", icon: Activity },
-  { href: "/admin/sos/kpis", label: "KPIs SOS", icon: BarChart3 },
-  { href: "/admin/sos/coverage", label: "Couverture", icon: Map },
+const sosLinks: NavLink[] = [
+  { href: "/admin/sos", key: "sos", icon: Radio, exact: true },
+  { href: "/admin/sos/sessions", key: "sosSessions", icon: Activity },
+  { href: "/admin/sos/kpis", key: "sosKpis", icon: BarChart3 },
+  { href: "/admin/sos/coverage", key: "sosCoverage", icon: Map },
 ];
 
-const analyticsLinks = [
-  { href: "/admin/analytics/mobile", label: "Analytics mobile", icon: Smartphone },
-  { href: "/admin/stats", label: "Statistiques", icon: BarChart3 },
+const analyticsLinks: NavLink[] = [
+  { href: "/admin/analytics/mobile", key: "analyticsMobile", icon: Smartphone },
+  { href: "/admin/stats", key: "statistiques", icon: BarChart3 },
 ];
 
-const systemLinks = [
-  { href: "/admin/acces/utilisateurs", label: "Accès & rôles", icon: Shield },
-  { href: "/admin/acces/audit", label: "Journal d'audit", icon: FileText },
-  { href: "/admin/parametres", label: "Paramètres", icon: Settings },
+const systemLinks: NavLink[] = [
+  { href: "/admin/acces/utilisateurs", key: "acces", icon: Shield },
+  { href: "/admin/acces/audit", key: "audit", icon: FileText },
+  { href: "/admin/parametres", key: "parametres", icon: Settings },
 ];
 
 interface AdminSidebarNavProps {
@@ -93,6 +88,7 @@ interface AdminSidebarNavProps {
 }
 
 export function AdminSidebarNav({ adminName, adminEmail, adminRole }: AdminSidebarNavProps) {
+  const t = useTranslations("admin.nav");
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -100,6 +96,14 @@ export function AdminSidebarNav({ adminName, adminEmail, adminRole }: AdminSideb
     validationPending: 0,
     reviewsPending: 0,
   });
+
+  const ROLE_LABEL_KEYS: Record<string, string> = {
+    super_admin: "roleSuperAdmin",
+    moderator: "roleModerator",
+    finance: "roleFinance",
+    support: "roleSupport",
+    marketing: "roleMarketing",
+  };
 
   useEffect(() => {
     setCollapsed(localStorage.getItem(ADMIN_COLLAPSED_KEY) === "1");
@@ -148,18 +152,45 @@ export function AdminSidebarNav({ adminName, adminEmail, adminRole }: AdminSideb
     } ${collapsed ? "justify-center" : ""}`;
   }
 
+  function renderLinks(group: NavLink[]) {
+    return group.map((l) => {
+      const Icon = l.icon;
+      return (
+        <Link
+          key={l.href}
+          href={l.href}
+          onClick={() => setOpen(false)}
+          className={linkClass(l.href, l.exact)}
+        >
+          <span className="relative inline-flex items-center justify-center shrink-0">
+            <Icon className="w-4 h-4" />
+            {collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
+              <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-900" />
+            )}
+          </span>
+          {!collapsed && <span className="flex-1">{t(l.key as Parameters<typeof t>[0])}</span>}
+          {!collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
+            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
+              {(badgeByHref[l.href] ?? 0) > 99 ? "99+" : badgeByHref[l.href]}
+            </span>
+          )}
+        </Link>
+      );
+    });
+  }
+
+  const roleKey = ROLE_LABEL_KEYS[adminRole] ?? null;
+
   return (
     <>
-      {/* Mobile hamburger */}
       <button
         onClick={() => setOpen(!open)}
         className="md:hidden fixed top-4 left-4 z-50 bg-slate-900 text-white p-2 rounded-lg"
-        aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+        aria-label={open ? t("closeMenu") : t("openMenu")}
       >
         {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
-      {/* Sidebar */}
       <aside
         className={`
           fixed md:static inset-y-0 left-0 z-40
@@ -176,14 +207,14 @@ export function AdminSidebarNav({ adminName, adminEmail, adminRole }: AdminSideb
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold">Doktori Admin</p>
               <p className="text-[10px] text-slate-400 uppercase tracking-wider">
-                {ROLE_LABELS[adminRole] ?? adminRole}
+                {roleKey ? t(roleKey as Parameters<typeof t>[0]) : adminRole}
               </p>
             </div>
           )}
           <button
             type="button"
             onClick={toggleCollapsed}
-            aria-label={collapsed ? "Étendre" : "Réduire"}
+            aria-label={collapsed ? t("expand") : t("collapse")}
             className="hidden md:inline-flex h-7 w-7 items-center justify-center rounded-md text-slate-400 hover:bg-slate-800 hover:text-white"
           >
             {collapsed ? (
@@ -195,185 +226,42 @@ export function AdminSidebarNav({ adminName, adminEmail, adminRole }: AdminSideb
         </div>
 
         <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
-          {links.map((l) => {
-            const Icon = l.icon;
-            return (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className={linkClass(l.href, l.exact)}
-              >
-                <span className="relative inline-flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4" />
-                  {collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-900" />
-                  )}
-                </span>
-                {!collapsed && <span className="flex-1">{l.label}</span>}
-                {!collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
-                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-                    {(badgeByHref[l.href] ?? 0) > 99 ? "99+" : badgeByHref[l.href]}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          {renderLinks(links)}
 
           <div className={`pt-3 pb-1 px-3 ${collapsed ? "hidden" : ""}`}>
             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
-              Contenu
+              {t("sectionContenu")}
             </p>
           </div>
-
-          {contentLinks.map((l) => {
-            const Icon = l.icon;
-            return (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className={linkClass(l.href)}
-              >
-                <span className="relative inline-flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4" />
-                  {collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-900" />
-                  )}
-                </span>
-                {!collapsed && <span className="flex-1">{l.label}</span>}
-                {!collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
-                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-                    {(badgeByHref[l.href] ?? 0) > 99 ? "99+" : badgeByHref[l.href]}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          {renderLinks(contentLinks)}
 
           <div className={`pt-3 pb-1 px-3 ${collapsed ? "hidden" : ""}`}>
             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
-              Organisations
+              {t("sectionOrganisations")}
             </p>
           </div>
-
-          {orgLinks.map((l) => {
-            const Icon = l.icon;
-            return (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className={linkClass(l.href, l.exact)}
-              >
-                <span className="relative inline-flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4" />
-                  {collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-900" />
-                  )}
-                </span>
-                {!collapsed && <span className="flex-1">{l.label}</span>}
-                {!collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
-                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-                    {(badgeByHref[l.href] ?? 0) > 99 ? "99+" : badgeByHref[l.href]}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          {renderLinks(orgLinks)}
 
           <div className={`pt-3 pb-1 px-3 ${collapsed ? "hidden" : ""}`}>
             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
-              Opérations
+              {t("sectionOperations")}
             </p>
           </div>
-
-          {sosLinks.map((l) => {
-            const Icon = l.icon;
-            return (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className={linkClass(l.href, l.exact)}
-              >
-                <span className="relative inline-flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4" />
-                  {collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-900" />
-                  )}
-                </span>
-                {!collapsed && <span className="flex-1">{l.label}</span>}
-                {!collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
-                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-                    {(badgeByHref[l.href] ?? 0) > 99 ? "99+" : badgeByHref[l.href]}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          {renderLinks(sosLinks)}
 
           <div className={`pt-3 pb-1 px-3 ${collapsed ? "hidden" : ""}`}>
             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
-              Analytics
+              {t("sectionAnalytics")}
             </p>
           </div>
-
-          {analyticsLinks.map((l) => {
-            const Icon = l.icon;
-            return (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className={linkClass(l.href)}
-              >
-                <span className="relative inline-flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4" />
-                  {collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-900" />
-                  )}
-                </span>
-                {!collapsed && <span className="flex-1">{l.label}</span>}
-                {!collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
-                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-                    {(badgeByHref[l.href] ?? 0) > 99 ? "99+" : badgeByHref[l.href]}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          {renderLinks(analyticsLinks)}
 
           <div className={`pt-3 pb-1 px-3 ${collapsed ? "hidden" : ""}`}>
             <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-widest">
-              Système
+              {t("sectionSysteme")}
             </p>
           </div>
-
-          {systemLinks.map((l) => {
-            const Icon = l.icon;
-            return (
-              <Link
-                key={l.href}
-                href={l.href}
-                onClick={() => setOpen(false)}
-                className={linkClass(l.href)}
-              >
-                <span className="relative inline-flex items-center justify-center shrink-0">
-                  <Icon className="w-4 h-4" />
-                  {collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
-                    <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-slate-900" />
-                  )}
-                </span>
-                {!collapsed && <span className="flex-1">{l.label}</span>}
-                {!collapsed && (badgeByHref[l.href] ?? 0) > 0 && (
-                  <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
-                    {(badgeByHref[l.href] ?? 0) > 99 ? "99+" : badgeByHref[l.href]}
-                  </span>
-                )}
-              </Link>
-            );
-          })}
+          {renderLinks(systemLinks)}
         </nav>
 
         <div className="p-3 border-t border-slate-800">
@@ -385,16 +273,15 @@ export function AdminSidebarNav({ adminName, adminEmail, adminRole }: AdminSideb
           )}
           <Link
             href="/api/auth/signout"
-            title={collapsed ? "Déconnexion" : undefined}
+            title={collapsed ? t("logout") : undefined}
             className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-colors ${collapsed ? "justify-center" : ""}`}
           >
             <LogOut className="w-4 h-4 shrink-0" />
-            {!collapsed && <span>Déconnexion</span>}
+            {!collapsed && <span>{t("logout")}</span>}
           </Link>
         </div>
       </aside>
 
-      {/* Backdrop on mobile */}
       {open && (
         <div
           className="fixed inset-0 bg-black/50 z-30 md:hidden"

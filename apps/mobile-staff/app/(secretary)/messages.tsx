@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t } from "@doktori/mobile-core";
 
 type StaffConversation = {
   id: string;
@@ -38,7 +38,7 @@ export default function SecretaryMessages() {
       const data = await api<StaffConversation[]>("/api/staff/conversations", { noRedirect: true });
       setConvs(data);
     } catch {
-      setError("Impossible de charger les messages");
+      setError(t("secretary.messages.errorLoad"));
     } finally {
       setLoading(false);
     }
@@ -53,7 +53,7 @@ export default function SecretaryMessages() {
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
       <View style={styles.header}>
-        <Text style={styles.title}>Messagerie équipe</Text>
+        <Text style={styles.title}>{t("secretary.messages.title")}</Text>
       </View>
 
       {loading ? (
@@ -62,14 +62,14 @@ export default function SecretaryMessages() {
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>{error}</Text>
           <Pressable onPress={load} style={styles.retryBtn}>
-            <Text style={styles.retryText}>Réessayer</Text>
+            <Text style={styles.retryText}>{t("common.retry")}</Text>
           </Pressable>
         </View>
       ) : convs.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="chatbubbles-outline" size={48} color={colors.border} />
-          <Text style={styles.emptyText}>Aucune conversation d'équipe</Text>
-          <Text style={styles.emptySubtext}>Les échanges avec le médecin apparaîtront ici</Text>
+          <Text style={styles.emptyText}>{t("secretary.messages.empty")}</Text>
+          <Text style={styles.emptySubtext}>{t("secretary.messages.emptyDesc")}</Text>
         </View>
       ) : (
         <FlatList
@@ -104,7 +104,7 @@ export default function SecretaryMessages() {
                     {time && <Text style={styles.rowTime}>{time}</Text>}
                   </View>
                   <Text style={styles.rowMeta} numberOfLines={1}>
-                    {item.lastMessage ?? (item.peerType === "doctor" ? "Médecin" : "Secrétaire")}
+                    {item.lastMessage ?? (item.peerType === "doctor" ? t("secretary.messages.peerDoctor") : t("secretary.messages.peerSecretary"))}
                   </Text>
                 </View>
                 {item.unread > 0 && (

@@ -17,21 +17,25 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, tArray } from "@doktori/mobile-core";
 
 const { width: SCREEN_W } = Dimensions.get("window");
 const CARD_W = Math.floor((SCREEN_W - spacing.xl * 2 - spacing.md) / 2);
 const MINI_CELL = Math.floor(CARD_W / 7);
 
-const MONTHS_LONG = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
+function getMonthsLong() {
+  return (t("doctor.calendrier.months") as unknown as string[]) ?? ["Janvier","Février","Mars","Avril","Mai","Juin","Juillet","Août","Septembre","Octobre","Novembre","Décembre"];
+}
 
-const STATUS_META: Record<string, { label: string; color: string; bg: string; border: string }> = {
-  confirmed: { label: "Confirmé",   color: "#0E7490", bg: "#F0FDFA", border: "#0891B2" },
-  pending:   { label: "À confirmer",color: "#B45309", bg: "#FFFBEB", border: "#F59E0B" },
-  completed: { label: "Terminé",    color: "#374151", bg: "#F3F4F6", border: "#9CA3AF" },
-  cancelled: { label: "Annulé",     color: "#B91C1C", bg: "#FEF2F2", border: "#EF4444" },
-  no_show:   { label: "Absent",     color: "#7C3AED", bg: "#F5F3FF", border: "#8B5CF6" },
-};
+function getStatusMeta(): Record<string, { label: string; color: string; bg: string; border: string }> {
+  return {
+    confirmed: { label: t("doctor.calendrier.statusConfirmed"), color: "#0E7490", bg: "#F0FDFA", border: "#0891B2" },
+    pending:   { label: t("doctor.calendrier.statusPending"),   color: "#B45309", bg: "#FFFBEB", border: "#F59E0B" },
+    completed: { label: t("doctor.calendrier.statusCompleted"), color: "#374151", bg: "#F3F4F6", border: "#9CA3AF" },
+    cancelled: { label: t("doctor.calendrier.statusCancelled"), color: "#B91C1C", bg: "#FEF2F2", border: "#EF4444" },
+    no_show:   { label: t("doctor.calendrier.statusNoShow"),    color: "#7C3AED", bg: "#F5F3FF", border: "#8B5CF6" },
+  };
+}
 
 function isoDate(d: Date): string {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -56,7 +60,9 @@ function getMonthGrid(year: number, month: number): (Date | null)[] {
   return cells;
 }
 
-const DOW_LETTERS = ["L", "M", "M", "J", "V", "S", "D"];
+function getDowLetters(): string[] {
+  return (t("doctor.calendrier.dowLetters") as unknown as string[]) ?? ["L","M","M","J","V","S","D"];
+}
 
 type Appointment = {
   id: string;
@@ -86,13 +92,15 @@ type PatientSummary = {
 
 type ViewMode = "day" | "week" | "month" | "year" | "settings";
 
-const VIEWS: Array<{ id: ViewMode; label: string }> = [
-  { id: "day", label: "Jour" },
-  { id: "week", label: "Semaine" },
-  { id: "month", label: "Mois" },
-  { id: "year", label: "Année" },
-  { id: "settings", label: "Horaires" },
-];
+function getViews(): Array<{ id: ViewMode; label: string }> {
+  return [
+    { id: "day",      label: t("doctor.calendrier.viewDay") },
+    { id: "week",     label: t("doctor.calendrier.viewWeek") },
+    { id: "month",    label: t("doctor.calendrier.viewMonth") },
+    { id: "year",     label: t("doctor.calendrier.viewYear") },
+    { id: "settings", label: t("doctor.calendrier.viewSettings") },
+  ];
+}
 
 const STATUS_TONES: Record<string, { bg: string; fg: string }> = {
   pending: { bg: "#FED7AA", fg: "#9A3412" },
@@ -102,23 +110,28 @@ const STATUS_TONES: Record<string, { bg: string; fg: string }> = {
   no_show: { bg: "#FECACA", fg: "#991B1B" },
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "À confirmer",
-  confirmed: "Confirmé",
-  completed: "Terminé",
-  cancelled: "Annulé",
-  no_show: "Absent",
-};
+function getStatusLabels(): Record<string, string> {
+  return {
+    pending: t("doctor.calendrier.statusPending"),
+    confirmed: t("doctor.calendrier.statusConfirmed"),
+    completed: t("doctor.calendrier.statusCompleted"),
+    cancelled: t("doctor.calendrier.statusCancelled"),
+    no_show: t("doctor.calendrier.statusNoShow"),
+  };
+}
 
-const APPT_TYPES: Array<{ id: string; label: string }> = [
-  { id: "cabinet", label: "Cabinet" },
-  { id: "teleconsult", label: "Teleconsult" },
-  { id: "domicile", label: "Domicile" },
-];
+function getApptTypes(): Array<{ id: string; label: string }> {
+  return [
+    { id: "cabinet",     label: t("doctor.calendrier.typesCabinet") },
+    { id: "teleconsult", label: t("doctor.calendrier.typesTeleconsult") },
+    { id: "domicile",    label: t("doctor.calendrier.typesDomicile") },
+  ];
+}
 
 const DURATIONS = [15, 20, 30, 45, 60];
 
 export default function CalendrierScreen() {
+  const VIEWS = getViews();
   const [view, setView] = useState<ViewMode>("day");
   const [cursor, setCursor] = useState<Date>(new Date());
   const [appointments, setAppointments] = useState<Appointment[]>([]);
@@ -178,7 +191,7 @@ export default function CalendrierScreen() {
     <SafeAreaView edges={["top"]} style={styles.root}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Calendrier</Text>
+        <Text style={styles.title}>{t("doctor.calendrier.title")}</Text>
         <View style={{ flexDirection: "row", gap: spacing.sm, alignItems: "center" }}>
           {view !== "settings" && (
             <Pressable hitSlop={8} onPress={() => setSearchOpen(true)} style={styles.searchIconBtn}>
@@ -191,7 +204,7 @@ export default function CalendrierScreen() {
               onPress={() => setShowNewModal(true)}
             >
               <Ionicons name="add" size={18} color="#FFFFFF" />
-              <Text style={styles.addBtnText}>Ajouter</Text>
+              <Text style={styles.addBtnText}>{t("doctor.calendrier.add")}</Text>
             </Pressable>
           )}
         </View>
@@ -316,7 +329,7 @@ export default function CalendrierScreen() {
                 setSelectedAppt(null);
                 await load();
               } catch (e) {
-                Alert.alert("Erreur", e instanceof Error ? e.message : "Action échouée");
+                Alert.alert(t("doctor.calendrier.errorTitle"), e instanceof Error ? e.message : t("doctor.calendrier.actionFailed"));
               }
             }}
           />
@@ -368,6 +381,7 @@ function NewApptModal({
   const [apptType, setApptType] = useState("cabinet");
   const [reason, setReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const APPT_TYPES = getApptTypes();
 
   const suggestions = useMemo(() => {
     if (!patientQuery || patientQuery.length < 2) return [];
@@ -395,8 +409,8 @@ function NewApptModal({
   }
 
   async function handleCreatePatient() {
-    if (!npName.trim()) { Alert.alert("Validation", "Le nom est requis."); return; }
-    if (!npPhone.trim()) { Alert.alert("Validation", "Le téléphone est requis."); return; }
+    if (!npName.trim()) { Alert.alert("Validation", t("doctor.calendrier.validationNameRequired")); return; }
+    if (!npPhone.trim()) { Alert.alert("Validation", t("doctor.calendrier.validationPhoneRequired")); return; }
     setCreatingPatient(true);
     try {
       const created = await api<PatientSummary>("/api/doctor/patients", {
@@ -412,7 +426,7 @@ function NewApptModal({
       setNpName(""); setNpPhone(""); setNpEmail(""); setNpDob("");
       setShowNewPatientForm(false);
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Création échouée");
+      Alert.alert(t("doctor.calendrier.errorTitle"), e instanceof Error ? e.message : t("doctor.calendrier.creationFailed"));
     } finally {
       setCreatingPatient(false);
     }
@@ -420,25 +434,25 @@ function NewApptModal({
 
   async function handleSubmit() {
     if (!selectedPatient) {
-      Alert.alert("Validation", "Veuillez sélectionner un patient.");
+      Alert.alert("Validation", t("doctor.calendrier.validationPatientRequired"));
       return;
     }
     const dateMatch = /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
     if (!dateMatch) {
-      Alert.alert("Validation", "Format de date invalide (attendu : YYYY-MM-DD).");
+      Alert.alert("Validation", t("doctor.calendrier.validationDateFormat"));
       return;
     }
     const hhNum = parseInt(hh, 10);
     const mmNum = parseInt(mm, 10);
     if (isNaN(hhNum) || hhNum < 0 || hhNum > 23 || isNaN(mmNum) || mmNum < 0 || mmNum > 59) {
-      Alert.alert("Validation", "Heure invalide.");
+      Alert.alert("Validation", t("doctor.calendrier.validationInvalidTime"));
       return;
     }
     const hhPad = String(hhNum).padStart(2, "0");
     const mmPad = String(mmNum).padStart(2, "0");
     const startsAt = new Date(`${dateStr}T${hhPad}:${mmPad}:00`);
     if (isNaN(startsAt.getTime())) {
-      Alert.alert("Validation", "Date ou heure invalide.");
+      Alert.alert("Validation", t("doctor.calendrier.validationInvalidDateTime"));
       return;
     }
     const endsAt = new Date(startsAt.getTime() + duration * 60 * 1000);
@@ -457,7 +471,7 @@ function NewApptModal({
       });
       onCreated();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Création échouée");
+      Alert.alert(t("doctor.calendrier.errorTitle"), e instanceof Error ? e.message : t("doctor.calendrier.creationFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -470,7 +484,7 @@ function NewApptModal({
     >
       <View style={styles.modalSheet}>
         <View style={styles.modalHead}>
-          <Text style={styles.modalTitle}>Nouveau rendez-vous</Text>
+          <Text style={styles.modalTitle}>{t("doctor.calendrier.newApptTitle")}</Text>
           <Pressable onPress={onClose} style={styles.modalClose}>
             <Ionicons name="close" size={22} color={colors.foreground} />
           </Pressable>
@@ -478,7 +492,7 @@ function NewApptModal({
 
         <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false} contentContainerStyle={{ gap: spacing.xs, paddingBottom: spacing.lg }}>
           {/* Patient lookup */}
-          <Text style={styles.fieldLabel}>Patient</Text>
+          <Text style={styles.fieldLabel}>{t("doctor.calendrier.patient")}</Text>
           {selectedPatient ? (
             <View style={styles.patientChip}>
               <Ionicons name="person-circle" size={18} color={colors.teal} />
@@ -494,7 +508,7 @@ function NewApptModal({
             <>
               <TextInput
                 style={styles.textInput}
-                placeholder="Rechercher par nom ou téléphone…"
+                placeholder={t("doctor.calendrier.searchPatient")}
                 placeholderTextColor={colors.foregroundSecondary}
                 value={patientQuery}
                 onChangeText={(t) => {
@@ -518,24 +532,24 @@ function NewApptModal({
                     onPress={() => { setShowSuggestions(false); setShowNewPatientForm(true); setNpName(patientQuery); }}
                   >
                     <Ionicons name="add-circle-outline" size={16} color={colors.teal} />
-                    <Text style={styles.createPatientText}>Créer un nouveau patient</Text>
+                    <Text style={styles.createPatientText}>{t("doctor.calendrier.createNewPatient")}</Text>
                   </Pressable>
                 </View>
               )}
               {!showSuggestions && !showNewPatientForm && patientQuery.length === 0 && (
                 <Pressable style={styles.createPatientBtn} onPress={() => setShowNewPatientForm(true)}>
                   <Ionicons name="person-add-outline" size={15} color={colors.teal} />
-                  <Text style={styles.createPatientText}>Nouveau patient</Text>
+                  <Text style={styles.createPatientText}>{t("doctor.calendrier.newPatient")}</Text>
                 </Pressable>
               )}
             </>
           )}
           {showNewPatientForm && (
             <View style={styles.newPatientForm}>
-              <Text style={styles.newPatientFormTitle}>Nouveau patient</Text>
+              <Text style={styles.newPatientFormTitle}>{t("doctor.calendrier.newPatientTitle")}</Text>
               <TextInput
                 style={styles.textInput}
-                placeholder="Nom complet *"
+                placeholder={t("doctor.calendrier.fullName")}
                 placeholderTextColor={colors.foregroundSecondary}
                 value={npName}
                 onChangeText={setNpName}
@@ -543,7 +557,7 @@ function NewApptModal({
               />
               <TextInput
                 style={[styles.textInput, { marginTop: spacing.xs }]}
-                placeholder="Téléphone *"
+                placeholder={t("doctor.calendrier.phone")}
                 placeholderTextColor={colors.foregroundSecondary}
                 value={npPhone}
                 onChangeText={setNpPhone}
@@ -551,7 +565,7 @@ function NewApptModal({
               />
               <TextInput
                 style={[styles.textInput, { marginTop: spacing.xs }]}
-                placeholder="Email (optionnel)"
+                placeholder={t("doctor.calendrier.emailOptional")}
                 placeholderTextColor={colors.foregroundSecondary}
                 value={npEmail}
                 onChangeText={setNpEmail}
@@ -560,7 +574,7 @@ function NewApptModal({
               />
               <TextInput
                 style={[styles.textInput, { marginTop: spacing.xs }]}
-                placeholder="Date de naissance YYYY-MM-DD (optionnel)"
+                placeholder={t("doctor.calendrier.dobOptional")}
                 placeholderTextColor={colors.foregroundSecondary}
                 value={npDob}
                 onChangeText={setNpDob}
@@ -568,7 +582,7 @@ function NewApptModal({
               />
               <View style={styles.newPatientActions}>
                 <Pressable style={styles.newPatientCancel} onPress={() => setShowNewPatientForm(false)}>
-                  <Text style={styles.newPatientCancelText}>Annuler</Text>
+                  <Text style={styles.newPatientCancelText}>{t("doctor.calendrier.cancel")}</Text>
                 </Pressable>
                 <Pressable
                   style={[styles.newPatientSave, creatingPatient && styles.submitBtnDisabled]}
@@ -577,7 +591,7 @@ function NewApptModal({
                 >
                   {creatingPatient
                     ? <ActivityIndicator size="small" color="#fff" />
-                    : <Text style={styles.newPatientSaveText}>Créer et sélectionner</Text>
+                    : <Text style={styles.newPatientSaveText}>{t("doctor.calendrier.createAndSelect")}</Text>
                   }
                 </Pressable>
               </View>
@@ -585,7 +599,7 @@ function NewApptModal({
           )}
 
           {/* Date */}
-          <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>Date (YYYY-MM-DD)</Text>
+          <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>{t("doctor.calendrier.dateLabel")}</Text>
           <TextInput
             style={styles.textInput}
             placeholder="2025-06-15"
@@ -597,7 +611,7 @@ function NewApptModal({
           />
 
           {/* Time */}
-          <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>Heure de début</Text>
+          <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>{t("doctor.calendrier.startTime")}</Text>
           <View style={styles.timeRow}>
             <TextInput
               style={[styles.textInput, styles.timeInput]}
@@ -621,7 +635,7 @@ function NewApptModal({
           </View>
 
           {/* Duration */}
-          <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>Durée</Text>
+          <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>{t("doctor.calendrier.duration")}</Text>
           <View style={styles.pillRow}>
             {DURATIONS.map((d) => (
               <Pressable
@@ -637,7 +651,7 @@ function NewApptModal({
           </View>
 
           {/* Type */}
-          <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>Type</Text>
+          <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>{t("doctor.calendrier.type")}</Text>
           <View style={styles.pillRow}>
             {APPT_TYPES.map((t) => (
               <Pressable
@@ -653,10 +667,10 @@ function NewApptModal({
           </View>
 
           {/* Reason */}
-          <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>Motif (optionnel)</Text>
+          <Text style={[styles.fieldLabel, { marginTop: spacing.md }]}>{t("doctor.calendrier.reasonOptional")}</Text>
           <TextInput
             style={styles.textInput}
-            placeholder="Ex. Consultation de suivi"
+            placeholder={t("doctor.calendrier.reasonPlaceholder")}
             placeholderTextColor={colors.foregroundSecondary}
             value={reason}
             onChangeText={setReason}
@@ -671,7 +685,7 @@ function NewApptModal({
             {submitting ? (
               <ActivityIndicator size="small" color="#FFFFFF" />
             ) : (
-              <Text style={styles.submitBtnText}>Créer le rendez-vous</Text>
+              <Text style={styles.submitBtnText}>{t("doctor.calendrier.createAppt")}</Text>
             )}
           </Pressable>
         </ScrollView>
@@ -711,8 +725,8 @@ function DayView({
       {appts.length === 0 ? (
         <View style={styles.emptyState}>
           <Ionicons name="sunny-outline" size={52} color={colors.border} />
-          <Text style={styles.emptyTitle}>Journée libre</Text>
-          <Text style={styles.emptyText}>Aucun rendez-vous ce jour</Text>
+          <Text style={styles.emptyTitle}>{t("doctor.calendrier.freeDayTitle")}</Text>
+          <Text style={styles.emptyText}>{t("doctor.calendrier.freeDayText")}</Text>
         </View>
       ) : (
         appts.map((a) => <ApptCard key={a.id} appt={a} onPress={() => onSelect(a)} />)
@@ -731,6 +745,7 @@ function WeekView({ appts, weekDates, anchor, onSelectDay, onSelect, refreshing,
   refreshing: boolean;
   onRefresh: () => void;
 }) {
+  const DOW_LETTERS = getDowLetters();
   const today = isoDate(new Date());
   const grouped = weekDates.map((d) => ({
     date: d,
@@ -779,8 +794,8 @@ function WeekView({ appts, weekDates, anchor, onSelectDay, onSelect, refreshing,
       {grouped.every((g) => g.appts.length === 0) ? (
         <View style={[styles.emptyState, { marginTop: spacing.xl }]}>
           <Ionicons name="calendar-clear-outline" size={48} color={colors.border} />
-          <Text style={styles.emptyTitle}>Semaine libre</Text>
-          <Text style={styles.emptyText}>Aucun rendez-vous cette semaine</Text>
+          <Text style={styles.emptyTitle}>{t("doctor.calendrier.freeWeekTitle")}</Text>
+          <Text style={styles.emptyText}>{t("doctor.calendrier.freeWeekText")}</Text>
         </View>
       ) : (
         grouped.map(({ date, appts: dayAppts }) => {
@@ -793,7 +808,7 @@ function WeekView({ appts, weekDates, anchor, onSelectDay, onSelect, refreshing,
                 <Text style={[styles.weekDayHeaderText, isToday && { color: colors.teal }]}>
                   {date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "short" })}
                 </Text>
-                <Text style={styles.weekDayHeaderCount}>{dayAppts.length} RDV</Text>
+                <Text style={styles.weekDayHeaderCount}>{dayAppts.length} {t("doctor.calendrier.rdv")}</Text>
               </View>
               {dayAppts.map((a) => <CompactCard key={a.id} appt={a} onSelect={onSelect} />)}
             </View>
@@ -814,6 +829,8 @@ function MonthView({ appts, grid, anchor, onDrillDay, onSelect, refreshing, onRe
   refreshing: boolean;
   onRefresh: () => void;
 }) {
+  const DOW_LETTERS = getDowLetters();
+  const STATUS_META = getStatusMeta();
   const [calSelected, setCalSelected] = useState<string>(isoDate(anchor));
   const today = isoDate(new Date());
   const cellW = Math.floor((SCREEN_W - spacing.xl * 2) / 7);
@@ -878,13 +895,13 @@ function MonthView({ appts, grid, anchor, onDrillDay, onSelect, refreshing, onRe
           </Text>
           {selAppts.length > 0 && (
             <Pressable onPress={() => onDrillDay(new Date(calSelected + "T12:00:00"))} style={styles.drillBtn}>
-              <Text style={styles.drillBtnText}>Vue jour</Text>
+              <Text style={styles.drillBtnText}>{t("doctor.calendrier.dayView")}</Text>
               <Ionicons name="chevron-forward" size={13} color={colors.teal} />
             </Pressable>
           )}
         </View>
         {selAppts.length === 0 ? (
-          <Text style={styles.monthNoAppt}>Aucun rendez-vous</Text>
+          <Text style={styles.monthNoAppt}>{t("doctor.calendrier.noAppt")}</Text>
         ) : (
           selAppts.map((a) => <CompactCard key={a.id} appt={a} onSelect={onSelect} />)
         )}
@@ -895,6 +912,7 @@ function MonthView({ appts, grid, anchor, onDrillDay, onSelect, refreshing, onRe
 
 // ─── Compact card (week + month) ─────────────────────────────────────────────
 function CompactCard({ appt, onSelect }: { appt: Appointment; onSelect: (a: Appointment) => void }) {
+  const STATUS_META = getStatusMeta();
   const meta = STATUS_META[appt.status] ?? STATUS_META.pending;
   const initials = appt.patientName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
   return (
@@ -910,7 +928,7 @@ function CompactCard({ appt, onSelect }: { appt: Appointment; onSelect: (a: Appo
       <View style={{ flex: 1 }}>
         <Text style={styles.compactName} numberOfLines={1}>{appt.patientName}</Text>
         <Text style={styles.compactReason} numberOfLines={1}>
-          {appt.reason ?? (appt.type === "teleconsult" ? "Téléconsultation" : "Consultation")}
+          {appt.reason ?? (appt.type === "teleconsult" ? t("doctor.calendrier.teleconsultation") : t("doctor.calendrier.consultation"))}
         </Text>
       </View>
       <View style={[styles.compactStatusDot, { backgroundColor: meta.border }]} />
@@ -930,6 +948,7 @@ function MiniCalendar({ year, month, appts }: { year: number; month: number; app
   }, [year, month]);
 
   const dotMap = useMemo(() => {
+    const STATUS_META = getStatusMeta();
     const m: Record<string, string> = {};
     appts.forEach((a) => {
       const ds = isoDate(new Date(a.startsAt));
@@ -942,7 +961,7 @@ function MiniCalendar({ year, month, appts }: { year: number; month: number; app
   return (
     <View style={yearStyles.miniCal}>
       <View style={yearStyles.miniDowRow}>
-        {["L","M","M","J","V","S","D"].map((l, i) => (
+        {getDowLetters().map((l, i) => (
           <View key={i} style={[yearStyles.miniCell, { width: MINI_CELL }]}>
             <Text style={yearStyles.miniDowText}>{l}</Text>
           </View>
@@ -987,6 +1006,7 @@ function YearView({ all, year, onSelectMonth, onYearChange, refreshing, onRefres
   refreshing: boolean;
   onRefresh: () => void;
 }) {
+  const MONTHS_LONG = getMonthsLong();
   const today = new Date();
 
   const monthData = useMemo(() =>
@@ -1024,17 +1044,17 @@ function YearView({ all, year, onSelectMonth, onYearChange, refreshing, onRefres
       <View style={yearStyles.banner}>
         <View style={yearStyles.bannerStat}>
           <Text style={yearStyles.bannerNum}>{yearTotal}</Text>
-          <Text style={yearStyles.bannerLabel}>Total RDV</Text>
+          <Text style={yearStyles.bannerLabel}>{t("doctor.calendrier.yearTotal")}</Text>
         </View>
         <View style={yearStyles.bannerDivider} />
         <View style={yearStyles.bannerStat}>
           <Text style={[yearStyles.bannerNum, { color: "#0891B2" }]}>{yearConfirmed}</Text>
-          <Text style={yearStyles.bannerLabel}>Confirmés</Text>
+          <Text style={yearStyles.bannerLabel}>{t("doctor.calendrier.yearConfirmed")}</Text>
         </View>
         <View style={yearStyles.bannerDivider} />
         <View style={yearStyles.bannerStat}>
           <Text style={[yearStyles.bannerNum, { color: "#F59E0B" }]}>{yearPending}</Text>
-          <Text style={yearStyles.bannerLabel}>En attente</Text>
+          <Text style={yearStyles.bannerLabel}>{t("doctor.calendrier.yearPending")}</Text>
         </View>
       </View>
 
@@ -1069,7 +1089,7 @@ function YearView({ all, year, onSelectMonth, onYearChange, refreshing, onRefres
                   {cancelled > 0 && <StatPill count={cancelled} color="#EF4444" />}
                 </View>
               ) : (
-                <Text style={yearStyles.freeLabel}>Aucun RDV</Text>
+                <Text style={yearStyles.freeLabel}>{t("doctor.calendrier.yearNoAppt")}</Text>
               )}
             </Pressable>
           );
@@ -1102,7 +1122,10 @@ type ApiSlot = {
 };
 
 const DAY_ORDER_AGENDA = [1, 2, 3, 4, 5, 6, 0];
-const DAY_NAMES_AGENDA = ["Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi", "Dimanche"];
+function getAgendaDayNames(): string[] {
+  const arr = tArray("doctor.calendrier.agendaDayNames");
+  return arr.length ? arr : ["Lundi","Mardi","Mercredi","Jeudi","Vendredi","Samedi","Dimanche"];
+}
 const SLOT_DURATIONS = [10, 15, 20, 30, 45, 60];
 
 function buildDefaultDays(): DaySchedule[] {
@@ -1189,9 +1212,9 @@ function AgendaSettings({ practices }: { practices: Practice[] }) {
         return entries;
       });
       await api("/api/schedules", { method: "PUT", body: { slots, practiceId: selectedPracticeId } });
-      setFeedback({ type: "success", msg: "Horaires enregistrés avec succès." });
+      setFeedback({ type: "success", msg: t("doctor.calendrier.agendaSaved") });
     } catch (e: unknown) {
-      setFeedback({ type: "error", msg: e instanceof Error ? e.message : "Erreur lors de la sauvegarde." });
+      setFeedback({ type: "error", msg: e instanceof Error ? e.message : t("doctor.calendrier.agendaSaveFailed") });
     } finally {
       setSaving(false);
     }
@@ -1203,9 +1226,9 @@ function AgendaSettings({ practices }: { practices: Practice[] }) {
     return (
       <View style={agendaStyles.emptyPractice}>
         <Ionicons name="business-outline" size={40} color={colors.border} />
-        <Text style={agendaStyles.emptyPracticeTitle}>Aucun cabinet actif</Text>
+        <Text style={agendaStyles.emptyPracticeTitle}>{t("doctor.calendrier.agendaNoCabinet")}</Text>
         <Text style={agendaStyles.emptyPracticeText}>
-          Créez un cabinet depuis l&apos;espace web pour configurer vos horaires.
+          {t("doctor.calendrier.agendaNoCabinetText")}
         </Text>
       </View>
     );
@@ -1240,14 +1263,14 @@ function AgendaSettings({ practices }: { practices: Practice[] }) {
             <Ionicons name="time-outline" size={15} color={colors.teal} />
             <Text style={agendaStyles.bannerText}>
               {openCount === 0
-                ? "Aucun jour ouvert"
-                : `${openCount} jour${openCount > 1 ? "s" : ""} ouvert${openCount > 1 ? "s" : ""}`}
+                ? t("doctor.calendrier.agendaNoOpenDays")
+                : `${openCount} ${t("doctor.calendrier.agendaOpenDays")}`}
             </Text>
           </View>
 
           {/* Day rows */}
           {days.map((d, idx) => {
-            const name = DAY_NAMES_AGENDA[DAY_ORDER_AGENDA.indexOf(d.dayOfWeek)];
+            const name = getAgendaDayNames()[DAY_ORDER_AGENDA.indexOf(d.dayOfWeek)];
             const isExpanded = expanded.has(d.dayOfWeek);
             const summary = [
               d.morningOpen && `${d.morningStart}–${d.morningEnd}`,
@@ -1281,7 +1304,7 @@ function AgendaSettings({ practices }: { practices: Practice[] }) {
                 {d.open && isExpanded && (
                   <View style={agendaStyles.dayBody}>
                     <AgendaPeriodRow
-                      label="Matin"
+                      label={t("doctor.calendrier.agendaMatin")}
                       open={d.morningOpen}
                       start={d.morningStart}
                       end={d.morningEnd}
@@ -1290,7 +1313,7 @@ function AgendaSettings({ practices }: { practices: Practice[] }) {
                       onEndChange={(v) => updateDay(idx, { morningEnd: v })}
                     />
                     <AgendaPeriodRow
-                      label="Après-midi"
+                      label={t("doctor.calendrier.agendaApresMidi")}
                       open={d.afternoonOpen}
                       start={d.afternoonStart}
                       end={d.afternoonEnd}
@@ -1299,7 +1322,7 @@ function AgendaSettings({ practices }: { practices: Practice[] }) {
                       onEndChange={(v) => updateDay(idx, { afternoonEnd: v })}
                     />
                     <View style={agendaStyles.slotSection}>
-                      <Text style={agendaStyles.periodLabel}>Durée du créneau</Text>
+                      <Text style={agendaStyles.periodLabel}>{t("doctor.calendrier.agendaSlotDuration")}</Text>
                       <View style={agendaStyles.slotPillRow}>
                         {SLOT_DURATIONS.map((dur) => (
                           <Pressable
@@ -1339,7 +1362,7 @@ function AgendaSettings({ practices }: { practices: Practice[] }) {
             {saving ? (
               <ActivityIndicator color="#fff" size="small" />
             ) : (
-              <Text style={agendaStyles.saveBtnText}>Enregistrer les horaires</Text>
+              <Text style={agendaStyles.saveBtnText}>{t("doctor.calendrier.agendaSave")}</Text>
             )}
           </Pressable>
         </>
@@ -1404,6 +1427,7 @@ function ApptCard({
   compact?: boolean;
   onPress: () => void;
 }) {
+  const STATUS_LABELS = getStatusLabels();
   const start = new Date(appt.startsAt);
   const hhmm = start.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
   const tone = STATUS_TONES[appt.status] ?? { bg: colors.bgSecondary, fg: colors.teal };
@@ -1436,9 +1460,10 @@ function ApptDetailSheet({
     action: "confirmed" | "completed" | "no_show" | "cancelled" | "refresh"
   ) => void;
 }) {
+  const STATUS_LABELS = getStatusLabels();
   const start = new Date(appt.startsAt);
   const end = new Date(appt.endsAt);
-  const date = start.toLocaleDateString("fr-FR", {
+    const date = start.toLocaleDateString("fr-FR", {
     weekday: "long",
     day: "numeric",
     month: "long",
@@ -1465,7 +1490,7 @@ function ApptDetailSheet({
   async function handleSendPrescription() {
     const trimmed = prescContent.trim();
     if (trimmed.length < 3) {
-      Alert.alert("Validation", "L'ordonnance doit contenir au moins 3 caractères.");
+      Alert.alert("Validation", t("doctor.calendrier.prescValidation"));
       return;
     }
     setSendingPresc(true);
@@ -1474,11 +1499,11 @@ function ApptDetailSheet({
         method: "POST",
         body: { appointmentId: appt.id, content: trimmed },
       });
-      Alert.alert("Succès", "Ordonnance enregistrée");
+      Alert.alert(t("doctor.calendrier.success"), t("doctor.calendrier.prescSuccess"));
       setPrescOpen(false);
       setPrescContent("");
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Envoi échoué");
+      Alert.alert(t("doctor.calendrier.errorTitle"), e instanceof Error ? e.message : t("doctor.calendrier.actionFailed"));
     } finally {
       setSendingPresc(false);
     }
@@ -1509,7 +1534,7 @@ function ApptDetailSheet({
       });
       onAction("refresh");
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Sauvegarde échouée");
+      Alert.alert(t("doctor.calendrier.errorTitle"), e instanceof Error ? e.message : t("doctor.calendrier.saveFailed"));
     } finally {
       setSavingEdit(false);
     }
@@ -1518,7 +1543,7 @@ function ApptDetailSheet({
   async function handleApplyResched() {
     const dateMatch = /^\d{4}-\d{2}-\d{2}$/.test(reschedDateStr);
     if (!dateMatch) {
-      Alert.alert("Validation", "Format de date invalide (attendu : YYYY-MM-DD).");
+      Alert.alert("Validation", t("doctor.calendrier.validationDateFormat"));
       return;
     }
     const hhNum = parseInt(reschedHh, 10);
@@ -1531,14 +1556,14 @@ function ApptDetailSheet({
       mmNum < 0 ||
       mmNum > 59
     ) {
-      Alert.alert("Validation", "Heure invalide.");
+      Alert.alert("Validation", t("doctor.calendrier.validationInvalidTime"));
       return;
     }
     const hhPad = String(hhNum).padStart(2, "0");
     const mmPad = String(mmNum).padStart(2, "0");
     const newStart = new Date(`${reschedDateStr}T${hhPad}:${mmPad}:00`);
     if (isNaN(newStart.getTime())) {
-      Alert.alert("Validation", "Date ou heure invalide.");
+      Alert.alert("Validation", t("doctor.calendrier.validationInvalidDateTime"));
       return;
     }
     const newEnd = new Date(newStart.getTime() + reschedDuration * 60 * 1000);
@@ -1554,7 +1579,7 @@ function ApptDetailSheet({
       });
       onAction("refresh");
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Reprogrammation échouée");
+      Alert.alert(t("doctor.calendrier.errorTitle"), e instanceof Error ? e.message : t("doctor.calendrier.reschedFailed"));
     } finally {
       setSavingResched(false);
     }
@@ -1564,7 +1589,7 @@ function ApptDetailSheet({
     <View style={styles.modalBg}>
       <View style={styles.modalSheet}>
         <View style={styles.modalHead}>
-          <Text style={styles.modalTitle}>Rendez-vous</Text>
+          <Text style={styles.modalTitle}>{t("doctor.calendrier.detailTitle")}</Text>
           <Pressable onPress={onClose} style={styles.modalClose}>
             <Ionicons name="close" size={22} color={colors.foreground} />
           </Pressable>
@@ -1572,13 +1597,13 @@ function ApptDetailSheet({
 
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
           <View style={styles.modalBody}>
-            <InfoRow icon="calendar" label="Date" value={`${date} · ${hhmm}`} />
-            <InfoRow icon="person" label="Patient" value={appt.patientName} />
-            <InfoRow icon="call" label="Téléphone" value={appt.patientPhone} />
-            {appt.reason && <InfoRow icon="document-text" label="Motif" value={appt.reason} />}
+            <InfoRow icon="calendar" label={t("doctor.calendrier.detailDate")} value={`${date} · ${hhmm}`} />
+            <InfoRow icon="person" label={t("doctor.calendrier.patient")} value={appt.patientName} />
+            <InfoRow icon="call" label={t("doctor.calendrier.detailPhone")} value={appt.patientPhone} />
+            {appt.reason && <InfoRow icon="document-text" label={t("doctor.calendrier.editReasonLabel")} value={appt.reason} />}
             <InfoRow
               icon="flag"
-              label="Statut"
+              label={t("doctor.calendrier.detailStatus")}
               value={STATUS_LABELS[appt.status] ?? appt.status}
             />
           </View>
@@ -1586,30 +1611,30 @@ function ApptDetailSheet({
           <View style={styles.modalActions}>
             <ActionBtn
               icon="checkmark-circle"
-              label="Confirmer"
+              label={t("doctor.calendrier.actionConfirm")}
               tone="primary"
               onPress={() => onAction("confirmed")}
             />
             <ActionBtn
               icon="checkmark-done"
-              label="Terminé"
+              label={t("doctor.calendrier.actionComplete")}
               tone="primary"
               onPress={() => onAction("completed")}
             />
             <ActionBtn
               icon="alert-circle"
-              label="Absent"
+              label={t("doctor.calendrier.actionAbsent")}
               tone="warning"
               onPress={() => onAction("no_show")}
             />
             <ActionBtn
               icon="close-circle"
-              label="Annuler"
+              label={t("doctor.calendrier.cancel")}
               tone="danger"
               onPress={() =>
-                Alert.alert("Annuler le RDV", "Confirmer l'annulation ?", [
-                  { text: "Non", style: "cancel" },
-                  { text: "Oui", style: "destructive", onPress: () => onAction("cancelled") },
+                Alert.alert(t("doctor.calendrier.cancelConfirmTitle"), t("doctor.calendrier.cancelConfirmText"), [
+                  { text: t("doctor.calendrier.cancelNo"), style: "cancel" },
+                  { text: t("doctor.calendrier.cancelYes"), style: "destructive", onPress: () => onAction("cancelled") },
                 ])
               }
             />
@@ -1617,29 +1642,29 @@ function ApptDetailSheet({
 
           {/* ── Éditer section ── */}
           <View style={styles.editSection}>
-            <Text style={styles.editSectionTitle}>Éditer</Text>
+            <Text style={styles.editSectionTitle}>{t("doctor.calendrier.editSectionTitle")}</Text>
 
-            <Text style={styles.fieldLabel}>Motif</Text>
+            <Text style={styles.fieldLabel}>{t("doctor.calendrier.editReasonLabel")}</Text>
             <TextInput
               style={styles.textInput}
-              placeholder="Motif du rendez-vous"
+              placeholder={t("doctor.calendrier.editReasonPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               value={editReason}
               onChangeText={setEditReason}
             />
 
-            <Text style={[styles.fieldLabel, { marginTop: spacing.sm }]}>Type</Text>
+            <Text style={[styles.fieldLabel, { marginTop: spacing.sm }]}>{t("doctor.calendrier.type")}</Text>
             <View style={styles.pillRow}>
-              {APPT_TYPES.map((t) => (
+              {getApptTypes().map((at) => (
                 <Pressable
-                  key={t.id}
-                  style={[styles.pill, editType === t.id && styles.pillActive]}
-                  onPress={() => setEditType(t.id)}
+                  key={at.id}
+                  style={[styles.pill, editType === at.id && styles.pillActive]}
+                  onPress={() => setEditType(at.id)}
                 >
                   <Text
-                    style={[styles.pillText, editType === t.id && styles.pillTextActive]}
+                    style={[styles.pillText, editType === at.id && styles.pillTextActive]}
                   >
-                    {t.label}
+                    {at.label}
                   </Text>
                 </Pressable>
               ))}
@@ -1653,7 +1678,7 @@ function ApptDetailSheet({
               {savingEdit ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={styles.saveBtnText}>Enregistrer</Text>
+                <Text style={styles.saveBtnText}>{t("doctor.calendrier.editSave")}</Text>
               )}
             </Pressable>
           </View>
@@ -1670,7 +1695,7 @@ function ApptDetailSheet({
                   size={16}
                   color={colors.teal}
                 />
-                <Text style={styles.prescToggleBtnText}>Rédiger une ordonnance</Text>
+                <Text style={styles.prescToggleBtnText}>{t("doctor.calendrier.prescToggle")}</Text>
                 <Ionicons
                   name={prescOpen ? "chevron-up" : "chevron-down"}
                   size={14}
@@ -1682,7 +1707,7 @@ function ApptDetailSheet({
                 <View style={styles.prescForm}>
                   <TextInput
                     style={styles.prescInput}
-                    placeholder="Médicaments et posologies…"
+                    placeholder={t("doctor.calendrier.prescPlaceholder")}
                     placeholderTextColor={colors.foregroundSecondary}
                     value={prescContent}
                     onChangeText={(t) => {
@@ -1703,7 +1728,7 @@ function ApptDetailSheet({
                     {sendingPresc ? (
                       <ActivityIndicator size="small" color="#FFFFFF" />
                     ) : (
-                      <Text style={styles.saveBtnText}>Envoyer l&apos;ordonnance</Text>
+                      <Text style={styles.saveBtnText}>{t("doctor.calendrier.prescSend")}</Text>
                     )}
                   </Pressable>
                 </View>
@@ -1713,9 +1738,9 @@ function ApptDetailSheet({
 
           {/* ── Reprogrammer section ── */}
           <View style={[styles.editSection, { marginBottom: spacing.xl }]}>
-            <Text style={styles.editSectionTitle}>Reprogrammer</Text>
+            <Text style={styles.editSectionTitle}>{t("doctor.calendrier.reschedTitle")}</Text>
 
-            <Text style={styles.fieldLabel}>Date (YYYY-MM-DD)</Text>
+            <Text style={styles.fieldLabel}>{t("doctor.calendrier.dateLabel")}</Text>
             <TextInput
               style={styles.textInput}
               placeholder="2025-06-15"
@@ -1726,7 +1751,7 @@ function ApptDetailSheet({
               maxLength={10}
             />
 
-            <Text style={[styles.fieldLabel, { marginTop: spacing.sm }]}>Heure (HH MM)</Text>
+            <Text style={[styles.fieldLabel, { marginTop: spacing.sm }]}>{t("doctor.calendrier.reschedTimeLabel")}</Text>
             <View style={styles.timeRow}>
               <TextInput
                 style={[styles.textInput, styles.timeInput]}
@@ -1749,7 +1774,7 @@ function ApptDetailSheet({
               />
             </View>
 
-            <Text style={[styles.fieldLabel, { marginTop: spacing.sm }]}>Durée</Text>
+            <Text style={[styles.fieldLabel, { marginTop: spacing.sm }]}>{t("doctor.calendrier.duration")}</Text>
             <View style={styles.pillRow}>
               {DURATIONS.map((d) => (
                 <Pressable
@@ -1777,7 +1802,7 @@ function ApptDetailSheet({
               {savingResched ? (
                 <ActivityIndicator size="small" color="#FFFFFF" />
               ) : (
-                <Text style={styles.saveBtnText}>Appliquer</Text>
+                <Text style={styles.saveBtnText}>{t("doctor.calendrier.reschedApply")}</Text>
               )}
             </Pressable>
           </View>
@@ -2473,7 +2498,7 @@ function SearchModal({ visible, query, onQueryChange, all, onSelect, onClose }: 
             style={searchStyles.input}
             value={query}
             onChangeText={onQueryChange}
-            placeholder="Nom, motif, téléphone…"
+            placeholder={t("doctor.calendrier.searchBarPlaceholder")}
             placeholderTextColor={colors.foregroundSecondary}
             autoFocus
             returnKeyType="search"
@@ -2485,7 +2510,7 @@ function SearchModal({ visible, query, onQueryChange, all, onSelect, onClose }: 
           )}
         </View>
         <Pressable onPress={onClose} style={{ paddingHorizontal: spacing.sm }}>
-          <Text style={searchStyles.cancelText}>Annuler</Text>
+          <Text style={searchStyles.cancelText}>{t("doctor.calendrier.cancel")}</Text>
         </Pressable>
       </View>
 
@@ -2493,12 +2518,12 @@ function SearchModal({ visible, query, onQueryChange, all, onSelect, onClose }: 
         {query.trim().length === 0 ? (
           <View style={searchStyles.hint}>
             <Ionicons name="search-outline" size={40} color={colors.border} />
-            <Text style={searchStyles.hintText}>Rechercher un rendez-vous</Text>
+            <Text style={searchStyles.hintText}>{t("doctor.calendrier.searchHint")}</Text>
           </View>
         ) : results.length === 0 ? (
           <View style={searchStyles.hint}>
             <Ionicons name="alert-circle-outline" size={40} color={colors.border} />
-            <Text style={searchStyles.hintText}>Aucun résultat pour « {query} »</Text>
+            <Text style={searchStyles.hintText}>{t("doctor.calendrier.searchNoResultFor")} {query} »</Text>
           </View>
         ) : (
           <FlatList
@@ -2507,6 +2532,7 @@ function SearchModal({ visible, query, onQueryChange, all, onSelect, onClose }: 
             keyboardShouldPersistTaps="handled"
             contentContainerStyle={{ paddingBottom: spacing["3xl"] }}
             renderItem={({ item }) => {
+              const STATUS_META = getStatusMeta();
               const meta = STATUS_META[item.status] ?? STATUS_META.pending;
               const initials = item.patientName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
               const dateStr = new Date(item.startsAt).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });

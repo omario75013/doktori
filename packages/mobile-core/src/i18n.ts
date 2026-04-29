@@ -1,31 +1,75 @@
 /**
- * Minimal i18n surface for mobile. Translations are loaded from bundled JSON
- * (copied from apps/web/i18n/messages/{fr,ar}.json on prebuild). We keep the
- * public API small: `t("path.to.key", vars?)` + `setLocale("fr" | "ar")`.
- *
- * No dependency on react-intl or i18next — both have native-module surface
- * areas we don't need. This lookup handles the 95% case and leaves room to
- * swap in a richer engine later.
+ * Minimal i18n surface for mobile.
+ * Public API: t(), setLocale(), getLocale(), isRtl(), useLocale(), changeLocale()
  */
 
-type Dict = Record<string, unknown>;
-type Locale = "fr" | "ar";
+import { useState, useEffect } from "react";
+import { I18nManager } from "react-native";
+import * as SecureStore from "expo-secure-store";
 
+type Dict = Record<string, unknown>;
+export type Locale = "fr" | "ar";
+
+const LOCALE_KEY = "doktori.locale";
 const dictionaries: Record<Locale, Dict> = { fr: {}, ar: {} };
 let activeLocale: Locale = "fr";
 
+// Subscribers notified when locale changes (React hooks register here)
+const subscribers = new Set<() => void>();
+
+function notify() {
+  subscribers.forEach((cb) => cb());
+}
+
 export function setLocale(locale: Locale): void {
   activeLocale = locale;
+  notify();
 }
+
 export function getLocale(): Locale {
   return activeLocale;
 }
+
 export function isRtl(): boolean {
   return activeLocale === "ar";
 }
 
 export function loadMessages(locale: Locale, messages: Dict): void {
   dictionaries[locale] = messages;
+}
+
+/** Persist + apply a locale change at runtime. */
+export async function changeLocale(locale: Locale): Promise<void> {
+  try {
+    await SecureStore.setItemAsync(LOCALE_KEY, locale);
+  } catch {
+    /* storage unavailable — still apply in-memory */
+  }
+  const needsRtlFlip = locale === "ar" !== I18nManager.isRTL;
+  if (needsRtlFlip) {
+    I18nManager.forceRTL(locale === "ar");
+    // Full RTL flip requires a reload — caller should trigger Updates.reloadAsync()
+  }
+  setLocale(locale);
+}
+
+/** Load persisted locale on app boot (call in root _layout before setReady). */
+export async function loadPersistedLocale(): Promise<Locale> {
+  try {
+    const saved = await SecureStore.getItemAsync(LOCALE_KEY);
+    if (saved === "fr" || saved === "ar") {
+      activeLocale = saved;
+      if (saved === "ar" && !I18nManager.isRTL) {
+        I18nManager.forceRTL(true);
+      } else if (saved === "fr" && I18nManager.isRTL) {
+        I18nManager.forceRTL(false);
+      }
+      return saved;
+    }
+  } catch {
+    /* ignore */
+  }
+  return "fr";
 }
 
 function resolve(key: string, dict: Dict): unknown {
@@ -35,6 +79,16 @@ function resolve(key: string, dict: Dict): unknown {
     }
     return undefined;
   }, dict);
+}
+
+/** Returns an array value from the i18n dictionary (for keys whose JSON value is an array). */
+export function tArray(key: string): string[] {
+  const dict = dictionaries[activeLocale];
+  const hit = resolve(key, dict);
+  if (Array.isArray(hit)) return hit as string[];
+  const frHit = resolve(key, dictionaries.fr);
+  if (Array.isArray(frHit)) return frHit as string[];
+  return [];
 }
 
 export function t(key: string, vars?: Record<string, string | number>): string {
@@ -50,4 +104,17 @@ export function t(key: string, vars?: Record<string, string | number>): string {
   return template.replace(/\{(\w+)\}/g, (_, name: string) =>
     vars[name] !== undefined ? String(vars[name]) : `{${name}}`
   );
+}
+
+/** React hook — re-renders component whenever locale changes. */
+export function useLocale(): { locale: Locale; changeLocale: (l: Locale) => Promise<void>; isRtl: boolean } {
+  const [locale, setLocaleState] = useState<Locale>(activeLocale);
+
+  useEffect(() => {
+    const handler = () => setLocaleState(activeLocale);
+    subscribers.add(handler);
+    return () => { subscribers.delete(handler); };
+  }, []);
+
+  return { locale, changeLocale, isRtl: locale === "ar" };
 }

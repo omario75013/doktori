@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import {
   Menu,
   X,
@@ -22,21 +23,28 @@ import {
   Building2,
 } from "lucide-react";
 
-const LINKS = [
-  { href: "/clinique/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/clinique/agenda", label: "Agenda équipe", icon: CalendarDays },
-  { href: "/clinique/planning", label: "Planning", icon: CalendarRange },
-  { href: "/clinique/rendez-vous", label: "Rendez-vous", icon: Calendar },
-  { href: "/clinique/medecins", label: "Médecins", icon: Users },
-  { href: "/clinique/patients", label: "Patients", icon: UserRound },
-  { href: "/clinique/secretaires", label: "Secrétaires", icon: UserCog },
-  { href: "/clinique/statistiques", label: "Statistiques", icon: BarChart3 },
-  { href: "/clinique/notes", label: "Notes internes", icon: StickyNote },
-  { href: "/clinique/rapport-journalier", label: "Rapport", icon: Printer },
-  { href: "/clinique/parametres", label: "Paramètres", icon: Settings },
+type LinkDef = {
+  href: string;
+  key: string;
+  icon: React.ComponentType<{ className?: string; strokeWidth?: number }>;
+};
+
+const LINKS: LinkDef[] = [
+  { href: "/clinique/dashboard", key: "dashboard", icon: LayoutDashboard },
+  { href: "/clinique/agenda", key: "agenda", icon: CalendarDays },
+  { href: "/clinique/planning", key: "planning", icon: CalendarRange },
+  { href: "/clinique/rendez-vous", key: "rendezVous", icon: Calendar },
+  { href: "/clinique/medecins", key: "medecins", icon: Users },
+  { href: "/clinique/patients", key: "patients", icon: UserRound },
+  { href: "/clinique/secretaires", key: "secretaires", icon: UserCog },
+  { href: "/clinique/statistiques", key: "statistiques", icon: BarChart3 },
+  { href: "/clinique/notes", key: "notes", icon: StickyNote },
+  { href: "/clinique/rapport-journalier", key: "rapport", icon: Printer },
+  { href: "/clinique/parametres", key: "parametres", icon: Settings },
 ];
 
 export function CliniqueSidebarNav({ clinicName }: { clinicName: string }) {
+  const t = useTranslations("clinique.nav");
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -50,17 +58,15 @@ export function CliniqueSidebarNav({ clinicName }: { clinicName: string }) {
 
   return (
     <>
-      {/* Mobile hamburger */}
       <button
         onClick={() => setOpen(!open)}
         className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-lg text-white"
         style={{ background: "#0891B2" }}
-        aria-label={open ? "Fermer le menu" : "Ouvrir le menu"}
+        aria-label={open ? t("closeMenu") : t("openMenu")}
       >
         {open ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
 
-      {/* Sidebar */}
       <aside
         className={[
           "fixed md:static inset-y-0 left-0 z-40",
@@ -70,7 +76,6 @@ export function CliniqueSidebarNav({ clinicName }: { clinicName: string }) {
         ].join(" ")}
         style={{ background: "#134E4A" }}
       >
-        {/* Brand + clinic name */}
         <div className="px-5 pt-6 pb-5 border-b border-white/10">
           <div className="flex items-center gap-2.5 mb-3">
             <div
@@ -85,7 +90,7 @@ export function CliniqueSidebarNav({ clinicName }: { clinicName: string }) {
           </div>
           <div className="ml-0.5">
             <p className="text-[10px] uppercase tracking-widest font-bold mb-0.5" style={{ color: "#5EEAD4" }}>
-              Espace Clinique
+              {t("espace")}
             </p>
             <p className="text-white text-sm font-semibold truncate" title={clinicName}>
               {clinicName}
@@ -93,9 +98,8 @@ export function CliniqueSidebarNav({ clinicName }: { clinicName: string }) {
           </div>
         </div>
 
-        {/* Nav links */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          {LINKS.map(({ href, label, icon: Icon }) => {
+          {LINKS.map(({ href, key, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
             return (
               <Link
@@ -114,13 +118,12 @@ export function CliniqueSidebarNav({ clinicName }: { clinicName: string }) {
                   className={["h-4 w-4 flex-shrink-0", active ? "text-white" : "text-teal-300"].join(" ")}
                   strokeWidth={2.5}
                 />
-                {label}
+                {t(key as Parameters<typeof t>[0])}
               </Link>
             );
           })}
         </nav>
 
-        {/* Logout */}
         <div className="px-3 pb-5 border-t border-white/10 pt-3">
           <button
             onClick={handleLogout}
@@ -128,12 +131,11 @@ export function CliniqueSidebarNav({ clinicName }: { clinicName: string }) {
             className="flex w-full items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-300 hover:bg-red-500/15 hover:text-red-200 transition-all disabled:opacity-50"
           >
             <LogOut className="h-4 w-4 flex-shrink-0" strokeWidth={2.5} />
-            {loggingOut ? "Déconnexion…" : "Se déconnecter"}
+            {loggingOut ? t("loggingOut") : t("logout")}
           </button>
         </div>
       </aside>
 
-      {/* Mobile backdrop */}
       {open && (
         <div
           className="fixed inset-0 bg-black/50 z-30 md:hidden"
