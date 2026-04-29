@@ -8,6 +8,7 @@ import { AppTopBar } from "@/components/app-topbar";
 import { SecretaryHeartbeat } from "@/components/secretary-heartbeat";
 import { SecretaryBellListener } from "@/components/secretary-bell-listener";
 import { IncomingCallListener } from "@/components/call-ui";
+import { getTranslations } from "next-intl/server";
 
 export default async function SecretaireLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -26,8 +27,10 @@ export default async function SecretaireLayout({ children }: { children: React.R
     .where(eq(doctors.id, doctorId))
     .limit(1);
 
-  const doctorName = doctor?.name ?? "Médecin";
-  const secretaireName = session.user.name ?? "Secrétaire";
+  const t = await getTranslations("secretaire.layout");
+
+  const doctorName = doctor?.name ?? t("doctor");
+  const secretaireName = session.user.name ?? t("secretary");
 
   return (
     <SecretaireSessionProvider>
@@ -37,7 +40,7 @@ export default async function SecretaireLayout({ children }: { children: React.R
       <div className="min-h-screen flex" style={{ background: "#F0FDFA" }}>
         <SecretaireSidebarNav secretaireName={secretaireName} doctorName={doctorName} />
         <div className="flex-1 flex flex-col min-w-0">
-          <AppTopBar role="secretary" title={`Cabinet ${doctorName.startsWith("Dr") ? doctorName : "Dr. " + doctorName}`} />
+          <AppTopBar role="secretary" title={`${t("cabinet")} ${doctorName.startsWith("Dr") ? doctorName : "Dr. " + doctorName}`} />
           <main className="flex-1 overflow-y-auto p-6 md:p-8">{children}</main>
         </div>
       </div>

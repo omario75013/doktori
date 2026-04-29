@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Camera, Loader2, Save, UserCog } from "lucide-react";
 import { toast } from "sonner";
@@ -18,6 +19,7 @@ type Profile = {
 };
 
 export default function SecretaryProfilePage() {
+  const t = useTranslations("secretaire.profil");
   const [profile, setProfile] = useState<Profile | null>(null);
   const [form, setForm] = useState({ name: "", phone: "", bio: "" });
   const [loading, setLoading] = useState(true);
@@ -29,7 +31,7 @@ export default function SecretaryProfilePage() {
     async function load() {
       try {
         const res = await fetch("/api/secretary/profile");
-        if (!res.ok) throw new Error("Erreur");
+        if (!res.ok) throw new Error(t("errorLoading"));
         const data: Profile = await res.json();
         setProfile(data);
         setForm({
@@ -38,13 +40,13 @@ export default function SecretaryProfilePage() {
           bio: data.bio ?? "",
         });
       } catch (e) {
-        toast.error(e instanceof Error ? e.message : "Erreur");
+        toast.error(e instanceof Error ? e.message : t("errorLoading"));
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, []);
+  }, [t]);
 
   async function handleUpload(file: File) {
     setUploading(true);
@@ -56,11 +58,11 @@ export default function SecretaryProfilePage() {
         body: fd,
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erreur");
+      if (!res.ok) throw new Error(data.error ?? t("errorLoading"));
       setProfile((p) => (p ? { ...p, photoUrl: data.photoUrl } : p));
-      toast.success("Photo mise à jour");
+      toast.success(t("successPhoto"));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur");
+      toast.error(e instanceof Error ? e.message : t("errorLoading"));
     } finally {
       setUploading(false);
     }
@@ -80,9 +82,9 @@ export default function SecretaryProfilePage() {
         }),
       });
       if (!res.ok) throw new Error();
-      toast.success("Profil mis à jour");
+      toast.success(t("successUpdated"));
     } catch {
-      toast.error("Erreur");
+      toast.error(t("errorLoading"));
     } finally {
       setSaving(false);
     }
@@ -95,7 +97,7 @@ export default function SecretaryProfilePage() {
       </div>
     );
   }
-  if (!profile) return <p className="text-sm text-red-600">Profil introuvable</p>;
+  if (!profile) return <p className="text-sm text-red-600">{t("notFound")}</p>;
 
   const initials = profile.name
     .split(/\s+/)
@@ -110,8 +112,8 @@ export default function SecretaryProfilePage() {
           <UserCog className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Mon profil</h1>
-          <p className="text-sm text-gray-500">Gérez vos informations personnelles</p>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <p className="text-sm text-gray-500">{t("subtitle")}</p>
         </div>
       </div>
 
@@ -135,7 +137,7 @@ export default function SecretaryProfilePage() {
             onClick={() => fileInputRef.current?.click()}
             disabled={uploading}
             className="absolute -bottom-1 -right-1 h-8 w-8 rounded-full bg-primary text-white shadow flex items-center justify-center hover:opacity-90 disabled:opacity-60"
-            aria-label="Changer la photo"
+            aria-label={t("changePhoto")}
           >
             {uploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
           </button>
@@ -156,7 +158,7 @@ export default function SecretaryProfilePage() {
           <p className="text-sm text-gray-500">{profile.email}</p>
           {profile.hireDate && (
             <p className="text-xs text-gray-400 mt-1">
-              En poste depuis le {new Date(profile.hireDate).toLocaleDateString("fr-FR")}
+              {t("hiringDate", { date: new Date(profile.hireDate).toLocaleDateString("fr-FR") })}
             </p>
           )}
         </div>
@@ -166,10 +168,10 @@ export default function SecretaryProfilePage() {
         onSubmit={handleSave}
         className="rounded-2xl border border-border bg-white shadow-sm p-5 space-y-4"
       >
-        <h2 className="font-semibold text-foreground">Informations</h2>
+        <h2 className="font-semibold text-foreground">{t("infoSection")}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <label className="space-y-1">
-            <span className="text-xs font-medium text-gray-600">Nom complet</span>
+            <span className="text-xs font-medium text-gray-600">{t("fullName")}</span>
             <input
               type="text"
               required
@@ -179,7 +181,7 @@ export default function SecretaryProfilePage() {
             />
           </label>
           <label className="space-y-1">
-            <span className="text-xs font-medium text-gray-600">Téléphone</span>
+            <span className="text-xs font-medium text-gray-600">{t("phone")}</span>
             <input
               type="tel"
               value={form.phone}
@@ -189,19 +191,16 @@ export default function SecretaryProfilePage() {
           </label>
         </div>
         <label className="block space-y-1">
-          <span className="text-xs font-medium text-gray-600">À propos</span>
+          <span className="text-xs font-medium text-gray-600">{t("about")}</span>
           <textarea
             rows={3}
             value={form.bio}
             onChange={(e) => setForm({ ...form, bio: e.target.value })}
-            placeholder="Brève présentation, parcours…"
+            placeholder={t("aboutPlaceholder")}
             className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
           />
         </label>
-        <p className="text-xs text-gray-400">
-          Les champs <span className="font-medium">email, date de naissance, expérience, salaire</span>{" "}
-          et <span className="font-medium">permissions</span> sont gérés par le médecin.
-        </p>
+        <p className="text-xs text-gray-400">{t("managedByDoctor")}</p>
 
         <div className="flex justify-end">
           <button
@@ -210,7 +209,7 @@ export default function SecretaryProfilePage() {
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
           >
             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Enregistrer
+            {saving ? t("saving") : t("save")}
           </button>
         </div>
       </form>

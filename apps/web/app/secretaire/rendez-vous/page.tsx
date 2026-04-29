@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Calendar, CalendarPlus, X, Search, UserPlus, Phone, MessageSquare, UserCheck } from "lucide-react";
+import { Calendar, CalendarPlus, X, Search, Phone, MessageSquare, UserCheck } from "lucide-react";
 import { toast } from "sonner";
 import { SMSModal } from "@/components/sms-modal";
 
@@ -36,14 +37,6 @@ const STATUS_STYLES: Record<string, string> = {
   no_show: "bg-red-100 text-red-700",
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "À confirmer",
-  confirmed: "Confirmé",
-  cancelled: "Annulé",
-  completed: "Terminé",
-  no_show: "Absent",
-};
-
 const TERMINAL_STATUSES = ["cancelled", "completed", "no_show"];
 
 // ─── New appointment modal ────────────────────────────────────────────────────
@@ -55,6 +48,7 @@ function NewAppointmentModal({
   onClose: () => void;
   onCreated: () => void;
 }) {
+  const t = useTranslations("secretaire.rendezVous");
   const [patientOptions, setPatientOptions] = useState<PatientOption[]>([]);
   const [patientsLoading, setPatientsLoading] = useState(true);
   const [patientSearch, setPatientSearch] = useState("");
@@ -84,7 +78,7 @@ function NewAppointmentModal({
     e.preventDefault();
     setError(null);
     if (!selectedPatientId) {
-      setError("Veuillez sélectionner un patient.");
+      setError(t("selectPatientError"));
       return;
     }
     setSubmitting(true);
@@ -101,16 +95,22 @@ function NewAppointmentModal({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erreur lors de la création");
-      toast.success("Rendez-vous créé avec succès.");
+      if (!res.ok) throw new Error(data.error ?? t("createRdv"));
+      toast.success(t("createRdv"));
       onCreated();
       onClose();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur inconnue");
+      setError(e instanceof Error ? e.message : t("selectPatientError"));
     } finally {
       setSubmitting(false);
     }
   }
+
+  const typeLabels: Record<string, string> = {
+    cabinet: t("cabinet"),
+    teleconsult: t("teleconsult"),
+    domicile: t("domicile"),
+  };
 
   return (
     <div
@@ -122,7 +122,7 @@ function NewAppointmentModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Nouveau rendez-vous</h2>
+          <h2 className="text-base font-semibold text-foreground">{t("modalTitle")}</h2>
           <button
             onClick={onClose}
             className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-secondary hover:text-foreground transition-colors"
@@ -135,7 +135,7 @@ function NewAppointmentModal({
           {/* Patient selection */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Patient <span className="text-red-500">*</span>
+              {t("patient")} <span className="text-red-500">*</span>
             </label>
             <div className="relative mb-2">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
@@ -143,16 +143,16 @@ function NewAppointmentModal({
                 type="text"
                 value={patientSearch}
                 onChange={(e) => setPatientSearch(e.target.value)}
-                placeholder="Rechercher un patient…"
+                placeholder={t("searchPatient")}
                 className="w-full h-9 pl-8 pr-3 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white"
               />
             </div>
             {patientsLoading ? (
-              <p className="text-xs text-gray-400">Chargement des patients…</p>
+              <p className="text-xs text-gray-400">{t("loadingPatients")}</p>
             ) : (
               <div className="max-h-40 overflow-y-auto rounded-xl border border-border divide-y divide-border">
                 {filteredPatients.length === 0 ? (
-                  <p className="p-3 text-xs text-gray-400 text-center">Aucun patient trouvé</p>
+                  <p className="p-3 text-xs text-gray-400 text-center">{t("noPatientFound")}</p>
                 ) : (
                   filteredPatients.map((p) => (
                     <button
@@ -179,7 +179,7 @@ function NewAppointmentModal({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-                Date <span className="text-red-500">*</span>
+                {t("date")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="date"
@@ -191,7 +191,7 @@ function NewAppointmentModal({
             </div>
             <div>
               <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-                Heure <span className="text-red-500">*</span>
+                {t("time")} <span className="text-red-500">*</span>
               </label>
               <input
                 type="time"
@@ -206,22 +206,22 @@ function NewAppointmentModal({
           {/* Type */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Type de consultation
+              {t("consultationType")}
             </label>
             <div className="flex gap-2">
-              {(["cabinet", "teleconsult", "domicile"] as const).map((t) => (
+              {(["cabinet", "teleconsult", "domicile"] as const).map((typeKey) => (
                 <button
-                  key={t}
+                  key={typeKey}
                   type="button"
-                  onClick={() => setType(t)}
+                  onClick={() => setType(typeKey)}
                   className={`flex-1 py-2 rounded-xl text-xs font-medium border transition-colors ${
-                    type === t
+                    type === typeKey
                       ? "text-white border-transparent"
                       : "border-border text-gray-600 hover:bg-secondary"
                   }`}
-                  style={type === t ? { background: "#0891B2" } : undefined}
+                  style={type === typeKey ? { background: "#0891B2" } : undefined}
                 >
-                  {t === "cabinet" ? "Cabinet" : t === "teleconsult" ? "Téléconsult" : "Domicile"}
+                  {typeLabels[typeKey]}
                 </button>
               ))}
             </div>
@@ -230,7 +230,7 @@ function NewAppointmentModal({
           {/* Reason */}
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Motif <span className="text-gray-300 font-normal normal-case">(optionnel)</span>
+              {t("reason")} <span className="text-gray-300 font-normal normal-case">{t("reasonOptional")}</span>
             </label>
             <input
               type="text"
@@ -249,7 +249,7 @@ function NewAppointmentModal({
               onClick={onClose}
               className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 transition-colors"
             >
-              Annuler
+              {t("cancel")}
             </button>
             <button
               type="submit"
@@ -257,7 +257,7 @@ function NewAppointmentModal({
               className="px-4 py-2 text-sm rounded-xl text-white font-bold disabled:opacity-40 transition-colors"
               style={{ background: "#0891B2" }}
             >
-              {submitting ? "Création…" : "Créer le RDV"}
+              {submitting ? t("creating") : t("createRdv")}
             </button>
           </div>
         </form>
@@ -269,6 +269,7 @@ function NewAppointmentModal({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function SecretaireRendezVousPage() {
+  const t = useTranslations("secretaire.rendezVous");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -276,20 +277,28 @@ export default function SecretaireRendezVousPage() {
   const [showNewRdvModal, setShowNewRdvModal] = useState(false);
   const [smsAppt, setSmsAppt] = useState<Appointment | null>(null);
 
+  const STATUS_LABELS: Record<string, string> = {
+    pending: t("statusPending"),
+    confirmed: t("statusConfirmed"),
+    cancelled: t("statusCancelled"),
+    completed: t("statusCompleted"),
+    no_show: t("statusNoShow"),
+  };
+
   const fetchAppointments = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
       const res = await fetch("/api/secretaire/appointments");
-      if (!res.ok) throw new Error("Erreur lors du chargement");
+      if (!res.ok) throw new Error(t("noAppointments"));
       const data: Appointment[] = await res.json();
       setAppointments(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur inconnue");
+      setError(e instanceof Error ? e.message : t("noAppointments"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchAppointments();
@@ -305,12 +314,12 @@ export default function SecretaireRendezVousPage() {
       });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? "Erreur mise à jour");
+        throw new Error(data.error ?? t("noAppointments"));
       }
-      toast.success("Statut mis à jour");
+      toast.success(t("statusConfirmed"));
       await fetchAppointments();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur lors de la mise à jour");
+      toast.error(e instanceof Error ? e.message : t("noAppointments"));
     } finally {
       setUpdating(null);
     }
@@ -322,7 +331,7 @@ export default function SecretaireRendezVousPage() {
       const res = await fetch(`/api/doctor/appointments/${appt.id}/checkin`, { method });
       if (!res.ok) {
         const data = await res.json();
-        throw new Error(data.error ?? "Erreur enregistrement");
+        throw new Error(data.error ?? t("noAppointments"));
       }
       const data = await res.json();
       setAppointments((prev) =>
@@ -330,9 +339,9 @@ export default function SecretaireRendezVousPage() {
           a.id === appt.id ? { ...a, checkedInAt: data.checkedInAt ?? null } : a
         )
       );
-      toast.success(appt.checkedInAt ? "Enregistrement annulé" : "Patient enregistré à l'accueil");
+      toast.success(appt.checkedInAt ? t("statusCancelled") : t("statusConfirmed"));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur");
+      toast.error(e instanceof Error ? e.message : t("noAppointments"));
     }
   };
 
@@ -361,7 +370,7 @@ export default function SecretaireRendezVousPage() {
       <div className="p-6 space-y-3">
         <p className="text-red-500 text-sm">{error}</p>
         <button onClick={fetchAppointments} className="text-sm text-primary hover:underline">
-          Réessayer
+          {t("refresh")}
         </button>
       </div>
     );
@@ -378,7 +387,7 @@ export default function SecretaireRendezVousPage() {
           >
             <Calendar className="h-5 w-5" style={{ color: "#0891B2" }} />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Rendez-vous</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -387,13 +396,13 @@ export default function SecretaireRendezVousPage() {
             style={{ background: "#0891B2" }}
           >
             <CalendarPlus className="h-4 w-4" />
-            Nouveau RDV
+            {t("newRdv")}
           </button>
           <button
             onClick={fetchAppointments}
             className="text-sm font-medium border border-border hover:bg-secondary rounded-xl px-3 py-2 transition-colors text-foreground"
           >
-            Actualiser
+            {t("refresh")}
           </button>
         </div>
       </div>
@@ -406,20 +415,20 @@ export default function SecretaireRendezVousPage() {
           >
             <Calendar className="h-7 w-7" style={{ color: "#0891B2" }} />
           </div>
-          <p className="text-foreground font-medium mb-1">Aucun rendez-vous</p>
-          <p className="text-sm text-gray-400">Le planning du médecin est vide.</p>
+          <p className="text-foreground font-medium mb-1">{t("noAppointments")}</p>
+          <p className="text-sm text-gray-400">{t("scheduleEmpty")}</p>
         </div>
       ) : (
         <div className="rounded-2xl border border-border bg-white shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-gray-50 text-left">
-                <th className="px-4 py-3 font-medium text-foreground">Date</th>
-                <th className="px-4 py-3 font-medium text-foreground">Patient</th>
-                <th className="px-4 py-3 font-medium text-foreground">Téléphone</th>
-                <th className="px-4 py-3 font-medium text-foreground">Motif</th>
-                <th className="px-4 py-3 font-medium text-foreground">Statut</th>
-                <th className="px-4 py-3 font-medium text-foreground">Actions</th>
+                <th className="px-4 py-3 font-medium text-foreground">{t("colDate")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{t("colPatient")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{t("colPhone")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{t("colReason")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{t("colStatus")}</th>
+                <th className="px-4 py-3 font-medium text-foreground">{t("colActions")}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -491,8 +500,8 @@ export default function SecretaireRendezVousPage() {
                             >
                               <UserCheck className="h-3.5 w-3.5" />
                               {appt.checkedInAt
-                                ? `Arrivé(e) à ${format(new Date(appt.checkedInAt), "HH:mm")}`
-                                : "Arrivé(e)"}
+                                ? `${t("statusConfirmed")} ${format(new Date(appt.checkedInAt), "HH:mm")}`
+                                : t("statusConfirmed")}
                             </button>
                           )}
                           {appt.status !== "confirmed" && (
@@ -501,7 +510,7 @@ export default function SecretaireRendezVousPage() {
                               onClick={() => updateStatus(appt.id, "confirmed")}
                               className="text-xs px-2.5 py-1.5 rounded-xl border border-border hover:bg-secondary disabled:opacity-40 transition-colors"
                             >
-                              {isUpdating ? "…" : "Confirmer"}
+                              {isUpdating ? "…" : t("confirm")}
                             </button>
                           )}
                           <button
@@ -509,14 +518,14 @@ export default function SecretaireRendezVousPage() {
                             onClick={() => updateStatus(appt.id, "no_show")}
                             className="text-xs px-2.5 py-1.5 rounded-xl border border-red-200 text-red-600 hover:bg-red-50 disabled:opacity-40 transition-colors"
                           >
-                            {isUpdating ? "…" : "Absent"}
+                            {isUpdating ? "…" : t("absent")}
                           </button>
                           <button
                             disabled={isUpdating}
                             onClick={() => updateStatus(appt.id, "cancelled")}
                             className="text-xs px-2.5 py-1.5 rounded-xl border border-gray-200 text-gray-500 hover:bg-gray-50 disabled:opacity-40 transition-colors"
                           >
-                            {isUpdating ? "…" : "Annuler"}
+                            {isUpdating ? "…" : t("cancel")}
                           </button>
                         </div>
                       )}

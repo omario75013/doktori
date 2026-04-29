@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { Bell, CalendarClock, MessagesSquare, Loader2, CheckCheck } from "lucide-react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -23,6 +24,7 @@ type Upcoming = {
 };
 
 export default function NotifPage() {
+  const t = useTranslations("secretaire.notifications");
   const [feed, setFeed] = useState<Feed[]>([]);
   const [upcoming, setUpcoming] = useState<Upcoming[]>([]);
   const [unread, setUnread] = useState(0);
@@ -57,9 +59,9 @@ export default function NotifPage() {
             <Bell className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold">Notifications</h1>
+            <h1 className="text-2xl font-bold">{t("title")}</h1>
             <p className="text-sm text-gray-500">
-              {unread > 0 ? `${unread} non lue${unread > 1 ? "s" : ""}` : "Tout est lu"}
+              {unread > 0 ? t("unread", { count: unread, plural: unread > 1 ? "s" : "" }) : t("allRead")}
             </p>
           </div>
         </div>
@@ -70,7 +72,7 @@ export default function NotifPage() {
             className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-xs font-semibold hover:bg-secondary"
           >
             <CheckCheck className="h-4 w-4" />
-            Tout marquer comme lu
+            {t("markAllRead")}
           </button>
         )}
       </div>
@@ -78,14 +80,14 @@ export default function NotifPage() {
       <section className="rounded-2xl border border-border bg-white shadow-sm p-5">
         <h2 className="font-semibold mb-3 flex items-center gap-2">
           <CalendarClock className="h-4 w-4 text-primary" />
-          Rendez-vous à venir (24h)
+          {t("upcomingTitle")}
         </h2>
         {loading ? (
           <div className="py-6 text-center">
             <Loader2 className="h-4 w-4 animate-spin inline" />
           </div>
         ) : upcoming.length === 0 ? (
-          <p className="py-4 text-sm text-gray-400 italic">Aucun rendez-vous dans les 24 prochaines heures</p>
+          <p className="py-4 text-sm text-gray-400 italic">{t("noUpcoming")}</p>
         ) : (
           <ul className="divide-y divide-border">
             {upcoming.map((r) => (
@@ -111,14 +113,14 @@ export default function NotifPage() {
       <section className="rounded-2xl border border-border bg-white shadow-sm p-5">
         <h2 className="font-semibold mb-3 flex items-center gap-2">
           <MessagesSquare className="h-4 w-4 text-primary" />
-          Activité récente
+          {t("activityTitle")}
         </h2>
         {loading ? (
           <div className="py-6 text-center">
             <Loader2 className="h-4 w-4 animate-spin inline" />
           </div>
         ) : feed.length === 0 ? (
-          <p className="py-4 text-sm text-gray-400 italic">Rien pour l&apos;instant</p>
+          <p className="py-4 text-sm text-gray-400 italic">{t("nothingYet")}</p>
         ) : (
           <ul className="divide-y divide-border">
             {feed.map((n) => (

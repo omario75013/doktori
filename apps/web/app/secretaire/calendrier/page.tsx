@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -59,6 +60,7 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function SecretaryCalendar() {
+  const t = useTranslations("secretaire.calendrier");
   const [view, setView] = useState<View>("week");
   const [anchor, setAnchor] = useState(new Date());
   const [workingHoursOnly, setWorkingHoursOnly] = useState(true);
@@ -96,13 +98,13 @@ export default function SecretaryCalendar() {
         if (!res.ok) throw new Error();
         setAppts(await res.json());
       } catch {
-        toast.error("Erreur chargement RDV");
+        toast.error(t("loadError"));
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, [range.start, range.end]);
+  }, [range.start, range.end, t]);
 
   function navigate(dir: -1 | 1) {
     if (view === "day") setAnchor(addDays(anchor, dir));
@@ -129,26 +131,26 @@ export default function SecretaryCalendar() {
           ? format(anchor, "MMMM yyyy", { locale: fr })
           : format(anchor, "yyyy", { locale: fr });
 
+  const viewOptions = [
+    { key: "day" as const, label: t("day"), icon: CalendarClock },
+    { key: "week" as const, label: t("week"), icon: CalendarDays },
+    { key: "month" as const, label: t("month"), icon: CalendarRange },
+    { key: "year" as const, label: t("year"), icon: CalendarIcon },
+  ];
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <CalendarDays className="h-6 w-6 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold">Calendrier</h1>
-          <p className="text-sm text-gray-500">Rendez-vous du cabinet</p>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <p className="text-sm text-gray-500">{t("subtitle")}</p>
         </div>
       </div>
 
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
         <div className="flex items-center gap-1 rounded-2xl bg-white border border-border p-1">
-          {(
-            [
-              { key: "day" as const, label: "Jour", icon: CalendarClock },
-              { key: "week" as const, label: "Semaine", icon: CalendarDays },
-              { key: "month" as const, label: "Mois", icon: CalendarRange },
-              { key: "year" as const, label: "Année", icon: CalendarIcon },
-            ]
-          ).map((v) => {
+          {viewOptions.map((v) => {
             const Icon = v.icon;
             return (
               <button
@@ -171,7 +173,7 @@ export default function SecretaryCalendar() {
             type="button"
             onClick={() => navigate(-1)}
             className="h-9 w-9 rounded-xl border border-border bg-white flex items-center justify-center hover:bg-secondary"
-            aria-label="Précédent"
+            aria-label={t("previous")}
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
@@ -180,13 +182,13 @@ export default function SecretaryCalendar() {
             onClick={() => setAnchor(new Date())}
             className="rounded-xl border border-border bg-white px-3 py-2 text-sm font-medium hover:bg-secondary"
           >
-            Aujourd&apos;hui
+            {t("today")}
           </button>
           <button
             type="button"
             onClick={() => navigate(1)}
             className="h-9 w-9 rounded-xl border border-border bg-white flex items-center justify-center hover:bg-secondary"
-            aria-label="Suivant"
+            aria-label={t("next")}
           >
             <ChevronRight className="h-4 w-4" />
           </button>
@@ -199,7 +201,7 @@ export default function SecretaryCalendar() {
             checked={workingHoursOnly}
             onChange={(e) => setWorkingHoursOnly(e.target.checked)}
           />
-          Filtrer heures ouvrées
+          {t("filterWorkingHours")}
         </label>
       </div>
 
@@ -208,11 +210,11 @@ export default function SecretaryCalendar() {
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : view === "day" ? (
-        <DayView appts={filteredAppts} date={anchor} onEdit={setEditing} />
+        <DayView appts={filteredAppts} date={anchor} onEdit={setEditing} t={t} />
       ) : view === "week" ? (
-        <WeekView appts={filteredAppts} start={range.start} onEdit={setEditing} />
+        <WeekView appts={filteredAppts} start={range.start} onEdit={setEditing} t={t} />
       ) : view === "month" ? (
-        <MonthView appts={filteredAppts} date={anchor} onDayClick={(d) => { setAnchor(d); setView("day"); }} />
+        <MonthView appts={filteredAppts} date={anchor} onDayClick={(d) => { setAnchor(d); setView("day"); }} t={t} />
       ) : (
         <YearView appts={filteredAppts} year={anchor.getFullYear()} onMonthClick={(m) => { const d = new Date(anchor); d.setMonth(m); setAnchor(d); setView("month"); }} />
       )}
@@ -223,17 +225,19 @@ export default function SecretaryCalendar() {
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
-            // Reload
             fetch(`/api/secretary/appointments?from=${range.start.toISOString()}&to=${range.end.toISOString()}`)
               .then((r) => r.json())
               .then(setAppts)
               .catch(() => {});
           }}
+          t={t}
         />
       )}
     </div>
   );
 }
+
+type TFunc = ReturnType<typeof useTranslations>;
 
 function StatusPill({ status }: { status: string }) {
   return (
@@ -247,12 +251,12 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-function DayView({ appts, date, onEdit }: { appts: Appt[]; date: Date; onEdit: (a: Appt) => void }) {
+function DayView({ appts, date, onEdit, t }: { appts: Appt[]; date: Date; onEdit: (a: Appt) => void; t: TFunc }) {
   const list = appts.filter((a) => isSameDay(new Date(a.startsAt), date));
   if (list.length === 0) {
     return (
       <div className="rounded-2xl border border-border bg-white p-10 text-center text-sm text-gray-400">
-        Aucun rendez-vous ce jour.
+        {t("noDayAppointments")}
       </div>
     );
   }
@@ -275,7 +279,7 @@ function DayView({ appts, date, onEdit }: { appts: Appt[]; date: Date; onEdit: (
             type="button"
             onClick={() => onEdit(a)}
             className="h-8 w-8 rounded-lg border border-border bg-white flex items-center justify-center hover:bg-secondary"
-            title="Décaler"
+            title={t("reschedule")}
           >
             <Pencil className="h-3.5 w-3.5" />
           </button>
@@ -285,7 +289,7 @@ function DayView({ appts, date, onEdit }: { appts: Appt[]; date: Date; onEdit: (
   );
 }
 
-function WeekView({ appts, start, onEdit }: { appts: Appt[]; start: Date; onEdit: (a: Appt) => void }) {
+function WeekView({ appts, start, onEdit, t }: { appts: Appt[]; start: Date; onEdit: (a: Appt) => void; t: TFunc }) {
   const days = eachDayOfInterval({ start, end: addDays(start, 6) });
   const HOUR_START = 8;
   const HOUR_END = 20;
@@ -368,7 +372,7 @@ function WeekView({ appts, start, onEdit }: { appts: Appt[]; start: Date; onEdit
   );
 }
 
-function MonthView({ appts, date, onDayClick }: { appts: Appt[]; date: Date; onDayClick: (d: Date) => void }) {
+function MonthView({ appts, date, onDayClick, t }: { appts: Appt[]; date: Date; onDayClick: (d: Date) => void; t: TFunc }) {
   const start = startOfWeek(startOfMonth(date), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(date), { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start, end });
@@ -377,10 +381,15 @@ function MonthView({ appts, date, onDayClick }: { appts: Appt[]; date: Date; onD
     const key = format(new Date(a.startsAt), "yyyy-MM-dd");
     byDay[key] = (byDay[key] ?? 0) + 1;
   }
+
+  const dayAbbrevs = [
+    t("dayMon"), t("dayTue"), t("dayWed"), t("dayThu"), t("dayFri"), t("daySat"), t("daySun"),
+  ];
+
   return (
     <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
       <div className="grid grid-cols-7 bg-secondary text-xs font-semibold text-center">
-        {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((d) => (
+        {dayAbbrevs.map((d) => (
           <div key={d} className="py-2 border-r last:border-r-0 border-border">
             {d}
           </div>
@@ -402,7 +411,7 @@ function MonthView({ appts, date, onDayClick }: { appts: Appt[]; date: Date; onD
               <span className="text-sm font-semibold">{d.getDate()}</span>
               {count > 0 && (
                 <p className="mt-1 text-[10px] inline-flex items-center rounded-full bg-primary text-white px-1.5 font-bold">
-                  {count} RDV
+                  {count} {t("rdv")}
                 </p>
               )}
             </button>
@@ -450,10 +459,12 @@ function RescheduleDialog({
   appt,
   onClose,
   onSaved,
+  t,
 }: {
   appt: Appt;
   onClose: () => void;
   onSaved: () => void;
+  t: TFunc;
 }) {
   const start = new Date(appt.startsAt);
   const end = new Date(appt.endsAt);
@@ -468,7 +479,7 @@ function RescheduleDialog({
     try {
       const s = new Date(`${date}T${startTime}:00`);
       const e2 = new Date(`${date}T${endTime}:00`);
-      if (e2 <= s) throw new Error("Heure fin doit être après début");
+      if (e2 <= s) throw new Error(t("endTimeError"));
       const res = await fetch(`/api/appointments/${appt.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -476,12 +487,12 @@ function RescheduleDialog({
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Erreur");
+        throw new Error(err.error ?? t("endTimeError"));
       }
-      toast.success("RDV décalé");
+      toast.success(t("reschedule"));
       onSaved();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur");
+      toast.error(err instanceof Error ? err.message : t("endTimeError"));
     } finally {
       setSaving(false);
     }
@@ -494,10 +505,10 @@ function RescheduleDialog({
         className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-5 space-y-3"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-base font-semibold">Décaler le RDV</h2>
+        <h2 className="text-base font-semibold">{t("rescheduleTitle")}</h2>
         <p className="text-sm text-gray-500">{appt.patientName}</p>
         <label className="block space-y-1 text-xs font-medium text-gray-600">
-          <span>Date</span>
+          <span>{t("dateLabel")}</span>
           <input
             type="date"
             required
@@ -508,7 +519,7 @@ function RescheduleDialog({
         </label>
         <div className="grid grid-cols-2 gap-2">
           <label className="block space-y-1 text-xs font-medium text-gray-600">
-            <span>Début</span>
+            <span>{t("startLabel")}</span>
             <input
               type="time"
               required
@@ -518,7 +529,7 @@ function RescheduleDialog({
             />
           </label>
           <label className="block space-y-1 text-xs font-medium text-gray-600">
-            <span>Fin</span>
+            <span>{t("endLabel")}</span>
             <input
               type="time"
               required
@@ -530,10 +541,10 @@ function RescheduleDialog({
         </div>
         <div className="flex justify-end gap-2 pt-1">
           <button type="button" onClick={onClose} disabled={saving} className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-secondary">
-            Annuler
+            {t("cancel")}
           </button>
           <button type="submit" disabled={saving} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
-            {saving ? "Enregistrement…" : "Valider"}
+            {saving ? t("saving") : t("validate")}
           </button>
         </div>
       </form>

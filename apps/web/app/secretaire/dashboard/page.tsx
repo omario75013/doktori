@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { format, isToday, isTomorrow, addDays, startOfDay, differenceInMinutes } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -38,14 +39,6 @@ const STATUS_STYLES: Record<string, string> = {
   cancelled: "bg-gray-100 text-gray-500 border border-gray-200",
   completed: "bg-blue-50 text-blue-700 border border-blue-200",
   no_show: "bg-red-100 text-red-700 border border-red-200",
-};
-
-const STATUS_LABELS: Record<string, string> = {
-  pending: "À confirmer",
-  confirmed: "Confirmé",
-  cancelled: "Annulé",
-  completed: "Terminé",
-  no_show: "Absent",
 };
 
 const STATUS_TIMELINE_BG: Record<string, string> = {
@@ -96,10 +89,20 @@ function StatCard({
 
 export default function SecretaireDashboardPage() {
   const { data: session, status } = useSession();
+  const t = useTranslations("secretaire.dashboard");
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [now, setNow] = useState(new Date());
+
+  // Status labels built inside component to use t()
+  const STATUS_LABELS: Record<string, string> = {
+    pending: t("statusPending"),
+    confirmed: t("statusConfirmed"),
+    cancelled: t("statusCancelled"),
+    completed: t("statusCompleted"),
+    no_show: t("statusNoShow"),
+  };
 
   useEffect(() => {
     const interval = setInterval(() => setNow(new Date()), 60_000);
@@ -115,7 +118,7 @@ export default function SecretaireDashboardPage() {
         return r.json() as Promise<Appointment[]>;
       })
       .then((data) => setAppointments(data))
-      .catch((err: string) => setError(err ?? "Erreur inconnue"))
+      .catch((err: string) => setError(err ?? t("errorUnknown")))
       .finally(() => setLoading(false));
   }, [status]);
 
@@ -140,7 +143,7 @@ export default function SecretaireDashboardPage() {
 
   if (error) {
     return (
-      <div className="text-center py-20 text-red-500 text-sm">Erreur : {error}</div>
+      <div className="text-center py-20 text-red-500 text-sm">{t("errorPrefix", { message: error })}</div>
     );
   }
 
@@ -192,7 +195,7 @@ export default function SecretaireDashboardPage() {
         transition={{ duration: 0.35 }}
       >
         <h1 className="text-2xl font-black text-foreground">
-          Bonjour, {session?.user?.name ?? "Secrétaire"}
+          {t("greeting")}, {session?.user?.name ?? ""}
         </h1>
         <p className="text-muted-foreground text-sm mt-1 capitalize">{todayStr}</p>
       </motion.div>
@@ -210,14 +213,14 @@ export default function SecretaireDashboardPage() {
           style={{ background: "#0891B2" }}
         >
           <CalendarPlus className="h-4 w-4" strokeWidth={2.5} />
-          Nouveau RDV
+          {t("newAppointment")}
         </Link>
         <Link
           href="/secretaire/patients"
           className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary transition-colors"
         >
           <UserPlus className="h-4 w-4" strokeWidth={2.5} />
-          Ajouter un patient
+          {t("addPatient")}
         </Link>
         {nextConfirmed && (
           <a
@@ -225,23 +228,23 @@ export default function SecretaireDashboardPage() {
             className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold border border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
           >
             <Phone className="h-4 w-4" strokeWidth={2.5} />
-            Appeler prochain patient
+            {t("callNextPatient")}
           </a>
         )}
       </motion.div>
 
       {/* KPI cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard label="RDV aujourd'hui" value={todayAppointments.length} iconColor="#0891B2" index={0}>
+        <StatCard label={t("rdvToday")} value={todayAppointments.length} iconColor="#0891B2" index={0}>
           <CalendarDays className="h-4 w-4" strokeWidth={2.5} />
         </StatCard>
-        <StatCard label="À confirmer" value={pendingCount} iconColor="#D97706" index={1}>
+        <StatCard label={t("toConfirm")} value={pendingCount} iconColor="#D97706" index={1}>
           <Clock className="h-4 w-4" strokeWidth={2.5} />
         </StatCard>
-        <StatCard label="Confirmés" value={confirmedCount} iconColor="#059669" index={2}>
+        <StatCard label={t("confirmed")} value={confirmedCount} iconColor="#059669" index={2}>
           <CheckCircle2 className="h-4 w-4" strokeWidth={2.5} />
         </StatCard>
-        <StatCard label="Absences" value={noShowCount} iconColor="#DC2626" index={3}>
+        <StatCard label={t("absences")} value={noShowCount} iconColor="#DC2626" index={3}>
           <AlertCircle className="h-4 w-4" strokeWidth={2.5} />
         </StatCard>
       </div>
@@ -256,7 +259,7 @@ export default function SecretaireDashboardPage() {
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Coffee className="h-4 w-4 shrink-0" style={{ color: "#0891B2" }} strokeWidth={2.5} />
-            <h2 className="font-bold text-foreground">Salle d&apos;attente</h2>
+            <h2 className="font-bold text-foreground">{t("waitingRoom")}</h2>
             {waitingPatients.length > 0 && (
               <span className="ml-1 inline-flex items-center justify-center h-5 w-5 rounded-full text-xs font-bold text-white" style={{ background: "#0891B2" }}>
                 {waitingPatients.length}
@@ -267,7 +270,7 @@ export default function SecretaireDashboardPage() {
         {waitingPatients.length === 0 ? (
           <div className="flex items-center gap-3 px-5 py-4 text-muted-foreground text-sm">
             <Coffee className="h-5 w-5 text-gray-200" strokeWidth={1.5} />
-            <span>Aucun patient en salle d&apos;attente</span>
+            <span>{t("noWaitingPatients")}</span>
           </div>
         ) : (
           <div className="divide-y divide-border">
@@ -279,11 +282,11 @@ export default function SecretaireDashboardPage() {
                   <div>
                     <div className="font-semibold text-foreground text-sm">{a.patientName}</div>
                     <div className="text-xs text-muted-foreground">
-                      Arrivé(e) à {format(checkedAt, "HH:mm")} · attente : {waitMin} min
+                      {t("arrivedAt", { time: format(checkedAt, "HH:mm"), min: waitMin })}
                     </div>
                   </div>
                   <span className="inline-flex items-center gap-1 text-xs px-2.5 py-1 rounded-full font-medium bg-teal-50 text-teal-700 border border-teal-200">
-                    Arrivé(e)
+                    {t("arrived")}
                   </span>
                 </div>
               );
@@ -302,23 +305,23 @@ export default function SecretaireDashboardPage() {
         <div className="p-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <CalendarDays className="h-4 w-4" style={{ color: "#0891B2" }} strokeWidth={2.5} />
-            <h2 className="font-bold text-foreground">Planning du jour</h2>
+            <h2 className="font-bold text-foreground">{t("todaySchedule")}</h2>
           </div>
           <Link
             href="/secretaire/rendez-vous"
             className="text-xs font-medium hover:underline"
             style={{ color: "#0891B2" }}
           >
-            Voir tout
+            {t("seeAll")}
           </Link>
         </div>
 
         {todayAppointments.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
             <CalendarDays className="h-10 w-10 mb-3 text-gray-200" strokeWidth={1.5} />
-            <p className="font-medium text-sm">Aucun rendez-vous aujourd&apos;hui</p>
+            <p className="font-medium text-sm">{t("noAppointmentsToday")}</p>
             <p className="text-xs text-muted-foreground/70 mt-1">
-              Le planning est libre pour cette journée.
+              {t("scheduleIsFree")}
             </p>
           </div>
         ) : (
@@ -349,7 +352,7 @@ export default function SecretaireDashboardPage() {
                       <span className="font-semibold text-foreground text-sm">{appt.patientName}</span>
                       {isCheckedIn && (
                         <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-teal-50 text-teal-700 border border-teal-200">
-                          Arrivé(e)
+                          {t("arrived")}
                         </span>
                       )}
                       <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${STATUS_STYLES[appt.status] ?? "bg-gray-100 text-gray-500"}`}>
@@ -381,14 +384,14 @@ export default function SecretaireDashboardPage() {
           <div className="p-4 border-b border-border">
             <div className="flex items-center gap-2">
               <CalendarDays className="h-4 w-4" style={{ color: "#0891B2" }} strokeWidth={2.5} />
-              <h2 className="font-bold text-foreground">Prochains jours</h2>
+              <h2 className="font-bold text-foreground">{t("upcomingDays")}</h2>
             </div>
           </div>
           {upcomingDays.map((dayKey) => {
             const dayAppts = upcomingByDay[dayKey];
             const dayDate = new Date(dayKey);
             const label = isTomorrow(dayDate)
-              ? "Demain"
+              ? t("tomorrow")
               : format(dayDate, "EEEE d MMMM", { locale: fr });
             return (
               <div key={dayKey}>
@@ -396,7 +399,7 @@ export default function SecretaireDashboardPage() {
                   <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400 capitalize">
                     {label}
                   </span>
-                  <span className="text-xs font-semibold text-primary">{dayAppts.length} RDV</span>
+                  <span className="text-xs font-semibold text-primary">{t("rdvCount", { count: dayAppts.length })}</span>
                 </div>
                 <div className="divide-y divide-border">
                   {dayAppts.map((a) => (
@@ -441,15 +444,15 @@ export default function SecretaireDashboardPage() {
             <Users className="h-5 w-5" style={{ color: "#0891B2" }} strokeWidth={2.5} />
           </div>
           <div>
-            <p className="font-semibold text-foreground text-sm">Liste des patients</p>
-            <p className="text-xs text-muted-foreground">Consulter et gérer les patients du médecin</p>
+            <p className="font-semibold text-foreground text-sm">{t("patientList")}</p>
+            <p className="text-xs text-muted-foreground">{t("patientListSub")}</p>
           </div>
         </div>
         <Link
           href="/secretaire/patients"
           className="text-xs font-semibold px-3 py-1.5 rounded-xl border border-border hover:bg-secondary transition-colors text-foreground"
         >
-          Accéder
+          {t("access")}
         </Link>
       </motion.div>
     </div>
