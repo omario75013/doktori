@@ -1477,7 +1477,7 @@ export const prescriptionTemplates = pgTable("prescription_templates", {
   bodyMarkdown: text("body_markdown").notNull(),
   targetType: varchar("target_type", { length: 20 }).notNull().default("prescription"),
   isOfficial: boolean("is_official").notNull().default(false),
-  clonedFromId: uuid("cloned_from_id"),
+  clonedFromId: uuid("cloned_from_id").references((): any => prescriptionTemplates.id, { onDelete: "set null" }),
   applyCount: integer("apply_count").notNull().default(0),
   cloneCount: integer("clone_count").notNull().default(0),
   lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
