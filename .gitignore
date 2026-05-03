@@ -10,3 +10,4 @@ dist/
 .DS_Store
 .claude/
 apps/mobile/.env
+apps/web/.env.test
