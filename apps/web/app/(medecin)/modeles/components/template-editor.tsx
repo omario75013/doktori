@@ -17,10 +17,12 @@ interface InitialData {
   description: string | null;
   language: string;
   bodyMarkdown: string;
+  slug?: string | null;
 }
 
 interface Props {
-  mode: "create" | "edit";
+  /** "create" | "edit" — doctor flow. "admin" — admin creates/edits official templates. */
+  mode: "create" | "edit" | "admin";
   initialData?: InitialData;
 }
 
@@ -33,22 +35,25 @@ export function TemplateEditor({ mode, initialData }: Props) {
     (initialData?.language as "fr" | "ar") ?? "fr"
   );
   const [body, setBody] = useState(initialData?.bodyMarkdown ?? "");
+  const [slug, setSlug] = useState(initialData?.slug ?? "");
+  const [isOfficialLocked] = useState(mode === "admin" && !!initialData?.id);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
 
   // Track dirty state
   useEffect(() => {
-    if (mode === "create") {
+    if (mode === "create" || mode === "admin") {
       setDirty(title.length > 0 || body.length > 0);
     } else {
       const changed =
         title !== (initialData?.title ?? "") ||
         description !== (initialData?.description ?? "") ||
         language !== ((initialData?.language as "fr" | "ar") ?? "fr") ||
-        body !== (initialData?.bodyMarkdown ?? "");
+        body !== (initialData?.bodyMarkdown ?? "") ||
+        slug !== (initialData?.slug ?? "");
       setDirty(changed);
     }
-  }, [title, description, language, body, mode, initialData]);
+  }, [title, description, language, body, slug, mode, initialData]);
 
   // Warn before leaving with unsaved changes
   useEffect(() => {
@@ -68,19 +73,36 @@ export function TemplateEditor({ mode, initialData }: Props) {
       return;
     }
 
+    if (mode === "admin" && (!slug.trim() || !/^[a-z0-9-]+$/.test(slug.trim()))) {
+      toast.error("Le slug est obligatoire (lettres minuscules, chiffres, tirets)");
+      return;
+    }
+
     setSaving(true);
     try {
-      let url = "/api/medecin/templates";
-      let method = "POST";
-      if (mode === "edit" && initialData?.id) {
-        url = `/api/medecin/templates/${initialData.id}`;
-        method = "PATCH";
+      let url: string;
+      let method: string;
+      if (mode === "admin") {
+        url = initialData?.id
+          ? `/api/admin/templates/${initialData.id}`
+          : "/api/admin/templates";
+        method = initialData?.id ? "PATCH" : "POST";
+      } else {
+        url = "/api/medecin/templates";
+        method = "POST";
+        if (mode === "edit" && initialData?.id) {
+          url = `/api/medecin/templates/${initialData.id}`;
+          method = "PATCH";
+        }
       }
+
+      const payload: Record<string, unknown> = { title, description, language, bodyMarkdown: body };
+      if (mode === "admin") payload.slug = slug.trim();
 
       const res = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title, description, language, bodyMarkdown: body }),
+        body: JSON.stringify(payload),
       });
 
       if (!res.ok) {
@@ -89,16 +111,19 @@ export function TemplateEditor({ mode, initialData }: Props) {
       }
 
       setDirty(false);
-      toast.success(
-        mode === "create" ? "Modèle créé avec succès" : "Modèle mis à jour"
-      );
-      router.push("/medecin/modeles");
+      if (mode === "admin") {
+        toast.success(initialData?.id ? "Modèle officiel mis à jour" : "Modèle officiel créé");
+        router.push("/admin/templates");
+      } else {
+        toast.success(mode === "create" ? "Modèle créé avec succès" : "Modèle mis à jour");
+        router.push("/medecin/modeles");
+      }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erreur serveur");
     } finally {
       setSaving(false);
     }
-  }, [title, description, language, body, mode, initialData, router]);
+  }, [title, description, language, body, slug, mode, initialData, router]);
 
   return (
     <div className="space-y-6">
@@ -106,10 +131,18 @@ export function TemplateEditor({ mode, initialData }: Props) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-xl font-semibold text-gray-900">
-            {mode === "create" ? "Nouveau modèle" : "Modifier le modèle"}
+            {mode === "create"
+              ? "Nouveau modèle"
+              : mode === "admin"
+              ? initialData?.id
+                ? "Modifier le modèle officiel"
+                : "Nouveau modèle officiel"
+              : "Modifier le modèle"}
           </h1>
           <p className="text-sm text-gray-500 mt-0.5">
-            Utilisez les variables pour personnaliser automatiquement le contenu
+            {mode === "admin"
+              ? "Modèle officiel Doktori — visible par tous les médecins"
+              : "Utilisez les variables pour personnaliser automatiquement le contenu"}
           </p>
         </div>
         <Button onClick={handleSave} disabled={saving} size="sm">
@@ -156,6 +189,44 @@ export function TemplateEditor({ mode, initialData }: Props) {
                 className="rounded-lg"
               />
             </div>
+
+            {/* Slug — admin mode uniquement */}
+            {mode === "admin" && (
+              <div className="space-y-1.5">
+                <Label htmlFor="slug" className="text-sm font-medium">
+                  Slug <span className="text-red-500">*</span>
+                </Label>
+                <Input
+                  id="slug"
+                  value={slug}
+                  onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""))}
+                  maxLength={60}
+                  placeholder="ordonnance-cardiologie-standard"
+                  className="rounded-lg font-mono text-sm"
+                  disabled={isOfficialLocked}
+                />
+                <p className="text-xs text-gray-400">
+                  Identifiant unique [a-z0-9-], max 60 caractères.
+                  {isOfficialLocked && (
+                    <span className="ml-1 text-amber-600 font-medium">
+                      Slug immuable une fois publié (les clones existants le référencent).
+                    </span>
+                  )}
+                </p>
+              </div>
+            )}
+
+            {/* Template officiel badge — admin mode uniquement */}
+            {mode === "admin" && (
+              <div className="flex items-center gap-3 rounded-lg border border-teal-200 bg-teal-50 px-4 py-3">
+                <span className="text-teal-700 text-sm font-medium">
+                  Template officiel Doktori
+                </span>
+                <span className="text-xs text-teal-600 bg-teal-100 rounded-full px-2 py-0.5 ml-auto">
+                  Toujours activé
+                </span>
+              </div>
+            )}
 
             {/* Langue */}
             <div className="space-y-1.5">
