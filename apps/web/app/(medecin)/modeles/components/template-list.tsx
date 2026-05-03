@@ -59,6 +59,10 @@ export function TemplateList({ templates, doctorId }: Props) {
       }
       const cloned = await res.json();
       toast.success("Modèle dupliqué");
+      toast.warning(
+        "Le médecin reste seul responsable de la prescription, des doses et de la pertinence clinique.",
+        { duration: 2000 }
+      );
       router.push(`/medecin/modeles/${cloned.id}/edit`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erreur serveur");

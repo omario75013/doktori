@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { X, Search, FileText, CheckCircle2, AlertTriangle, Loader2 } from "lucide-react";
 import { render } from "@/lib/templates/render";
 import type { TemplateContext } from "@/lib/templates/variables";
+import { LegalDisclaimer } from "./legal-disclaimer";
 
 interface Template {
   id: string;
@@ -281,20 +282,23 @@ export function PrescriptionTemplateModal({
                   </div>
 
                   {/* Footer */}
-                  <div className="px-4 pb-4 flex justify-end gap-2">
-                    <button
-                      onClick={onClose}
-                      className="h-9 px-4 rounded-xl border border-border text-sm text-gray-600 hover:bg-secondary transition-colors"
-                    >
-                      Annuler
-                    </button>
-                    <button
-                      onClick={handleApply}
-                      className="h-9 px-5 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 inline-flex items-center gap-2 transition-colors"
-                    >
-                      <CheckCircle2 className="h-4 w-4" />
-                      Insérer
-                    </button>
+                  <div className="px-4 pb-4 space-y-3">
+                    <LegalDisclaimer />
+                    <div className="flex justify-end gap-2">
+                      <button
+                        onClick={onClose}
+                        className="h-9 px-4 rounded-xl border border-border text-sm text-gray-600 hover:bg-secondary transition-colors"
+                      >
+                        Annuler
+                      </button>
+                      <button
+                        onClick={handleApply}
+                        className="h-9 px-5 rounded-xl bg-primary text-white text-sm font-medium hover:bg-primary/90 inline-flex items-center gap-2 transition-colors"
+                      >
+                        <CheckCircle2 className="h-4 w-4" />
+                        Insérer
+                      </button>
+                    </div>
                   </div>
                 </>
               ) : (
