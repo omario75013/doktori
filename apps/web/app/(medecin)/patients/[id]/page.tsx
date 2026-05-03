@@ -1848,7 +1848,7 @@ function OrdonnancesSection({
 // ─── Prescription modal ───────────────────────────────────────────────────────
 
 function PrescriptionModal({
-  patientId: _patientId,
+  patientId,
   completedAppointments,
   onClose,
   onCreated,
