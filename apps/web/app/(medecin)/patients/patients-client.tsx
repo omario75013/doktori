@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Search, Users, ChevronLeft, ChevronRight, UserPlus, X, Columns3, Check } from "lucide-react";
+import { Search, Users, ChevronLeft, ChevronRight, UserPlus, X, Columns3, Check, SlidersHorizontal, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 
 type PatientRow = {
@@ -236,7 +236,50 @@ function AddPatientModal({
   );
 }
 
+// ─── Filter field wrapper ─────────────────────────────────────────────────────
+function FilterField({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="space-y-1">
+      <label className="text-xs font-medium text-gray-600 dark:text-gray-400">{label}</label>
+      {children}
+    </div>
+  );
+}
+
 // ─── Main patients client ─────────────────────────────────────────────────────
+
+type AdvancedFilters = {
+  email: string;
+  cin: string;
+  cnam: string;
+  gender: "" | "male" | "female";
+  bloodType: string;
+  insurance: string;
+  occupation: string;
+  ageMin: string;
+  ageMax: string;
+  visitsMin: string;
+  visitsMax: string;
+  lastVisitFrom: string;
+  lastVisitTo: string;
+};
+
+const EMPTY_FILTERS: AdvancedFilters = {
+  email: "", cin: "", cnam: "", gender: "", bloodType: "", insurance: "",
+  occupation: "", ageMin: "", ageMax: "", visitsMin: "", visitsMax: "",
+  lastVisitFrom: "", lastVisitTo: "",
+};
+
+function computeAge(dob: string | null): number | null {
+  if (!dob) return null;
+  const birthDate = new Date(dob);
+  if (isNaN(birthDate.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - birthDate.getFullYear();
+  const m = now.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && now.getDate() < birthDate.getDate())) age--;
+  return age;
+}
 
 export function PatientsClient({ patients }: { patients: PatientRow[] }) {
   const [query, setQuery] = useState("");
@@ -246,8 +289,20 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState<ColumnKey[]>(DEFAULT_COLUMNS);
   const [columnsMenuOpen, setColumnsMenuOpen] = useState(false);
+  const [advFiltersOpen, setAdvFiltersOpen] = useState(false);
+  const [advFilters, setAdvFilters] = useState<AdvancedFilters>(EMPTY_FILTERS);
   const columnsMenuRef = useRef<HTMLDivElement>(null);
   const debouncedQuery = useDebounced(query, 200);
+
+  const activeFiltersCount = Object.values(advFilters).filter((v) => v !== "").length;
+
+  function updateFilter<K extends keyof AdvancedFilters>(key: K, value: AdvancedFilters[K]) {
+    setAdvFilters((prev) => ({ ...prev, [key]: value }));
+  }
+  function resetFilters() {
+    setAdvFilters(EMPTY_FILTERS);
+    setQuery("");
+  }
 
   useEffect(() => {
     try {
@@ -291,13 +346,36 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
 
   const filtered = useMemo(() => {
-    if (!normalizedQuery) return patientList;
-    return patientList.filter(
-      (p) =>
-        p.name.toLowerCase().includes(normalizedQuery) ||
-        p.phone.replace(/\s/g, "").includes(normalizedQuery.replace(/\s/g, ""))
-    );
-  }, [patientList, normalizedQuery]);
+    return patientList.filter((p) => {
+      // Quick search (name + phone)
+      if (normalizedQuery) {
+        const matchQuick =
+          p.name.toLowerCase().includes(normalizedQuery) ||
+          p.phone.replace(/\s/g, "").includes(normalizedQuery.replace(/\s/g, ""));
+        if (!matchQuick) return false;
+      }
+      // Advanced filters
+      const f = advFilters;
+      if (f.email && !(p.email ?? "").toLowerCase().includes(f.email.toLowerCase())) return false;
+      if (f.cin && !(p.cin ?? "").toLowerCase().includes(f.cin.toLowerCase())) return false;
+      if (f.cnam && !(p.cnam_number ?? "").toLowerCase().includes(f.cnam.toLowerCase())) return false;
+      if (f.gender && p.gender !== f.gender) return false;
+      if (f.bloodType && p.blood_type !== f.bloodType) return false;
+      if (f.insurance && !(p.insurance_provider ?? "").toLowerCase().includes(f.insurance.toLowerCase())) return false;
+      if (f.occupation && !(p.occupation ?? "").toLowerCase().includes(f.occupation.toLowerCase())) return false;
+      if (f.ageMin || f.ageMax) {
+        const age = computeAge(p.date_of_birth);
+        if (age === null) return false;
+        if (f.ageMin && age < parseInt(f.ageMin, 10)) return false;
+        if (f.ageMax && age > parseInt(f.ageMax, 10)) return false;
+      }
+      if (f.visitsMin && p.total_visits < parseInt(f.visitsMin, 10)) return false;
+      if (f.visitsMax && p.total_visits > parseInt(f.visitsMax, 10)) return false;
+      if (f.lastVisitFrom && p.last_visit && new Date(p.last_visit) < new Date(f.lastVisitFrom)) return false;
+      if (f.lastVisitTo && p.last_visit && new Date(p.last_visit) > new Date(f.lastVisitTo + "T23:59:59")) return false;
+      return true;
+    });
+  }, [patientList, normalizedQuery, advFilters]);
 
   // Reset to page 1 when filter or page size changes
   const prevQuery = useRef(normalizedQuery);
@@ -358,6 +436,23 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
             className="w-full pl-9 pr-4 py-2.5 text-sm rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
           />
         </div>
+        <button
+          type="button"
+          onClick={() => setAdvFiltersOpen((v) => !v)}
+          className={`inline-flex items-center gap-2 h-10 px-3 rounded-2xl border text-sm transition-colors ${
+            activeFiltersCount > 0
+              ? "border-primary bg-primary/10 text-primary hover:bg-primary/15"
+              : "border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary"
+          }`}
+        >
+          <SlidersHorizontal className="h-4 w-4" />
+          Filtres
+          {activeFiltersCount > 0 && (
+            <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-primary px-1.5 text-[10px] font-bold text-white">
+              {activeFiltersCount}
+            </span>
+          )}
+        </button>
         <div ref={columnsMenuRef} className="relative">
           <button
             type="button"
@@ -422,6 +517,159 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
           )}
         </div>
       </div>
+
+      {/* Advanced filters panel */}
+      {advFiltersOpen && (
+        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <SlidersHorizontal className="h-4 w-4" />
+              Filtres avancés
+            </h3>
+            {activeFiltersCount > 0 && (
+              <button
+                type="button"
+                onClick={resetFilters}
+                className="inline-flex items-center gap-1 text-xs text-gray-500 hover:text-primary transition-colors"
+              >
+                <RotateCcw className="h-3 w-3" />
+                Réinitialiser
+              </button>
+            )}
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            <FilterField label="Email">
+              <input
+                type="text"
+                value={advFilters.email}
+                onChange={(e) => updateFilter("email", e.target.value)}
+                placeholder="exemple@gmail.com"
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+              />
+            </FilterField>
+            <FilterField label="CIN">
+              <input
+                type="text"
+                value={advFilters.cin}
+                onChange={(e) => updateFilter("cin", e.target.value)}
+                placeholder="N° CIN"
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+              />
+            </FilterField>
+            <FilterField label="N° CNAM">
+              <input
+                type="text"
+                value={advFilters.cnam}
+                onChange={(e) => updateFilter("cnam", e.target.value)}
+                placeholder="N° CNAM"
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+              />
+            </FilterField>
+            <FilterField label="Sexe">
+              <select
+                value={advFilters.gender}
+                onChange={(e) => updateFilter("gender", e.target.value as "" | "male" | "female")}
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+              >
+                <option value="">Tous</option>
+                <option value="male">Homme</option>
+                <option value="female">Femme</option>
+              </select>
+            </FilterField>
+            <FilterField label="Groupe sanguin">
+              <select
+                value={advFilters.bloodType}
+                onChange={(e) => updateFilter("bloodType", e.target.value)}
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+              >
+                <option value="">Tous</option>
+                {["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((bt) => (
+                  <option key={bt} value={bt}>{bt}</option>
+                ))}
+              </select>
+            </FilterField>
+            <FilterField label="Assurance">
+              <input
+                type="text"
+                value={advFilters.insurance}
+                onChange={(e) => updateFilter("insurance", e.target.value)}
+                placeholder="Ex: CNAM, STAR…"
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+              />
+            </FilterField>
+            <FilterField label="Profession">
+              <input
+                type="text"
+                value={advFilters.occupation}
+                onChange={(e) => updateFilter("occupation", e.target.value)}
+                placeholder="Ex: Ingénieur"
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+              />
+            </FilterField>
+            <FilterField label="Âge (min – max)">
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="0" max="120"
+                  value={advFilters.ageMin}
+                  onChange={(e) => updateFilter("ageMin", e.target.value)}
+                  placeholder="Min"
+                  className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+                />
+                <input
+                  type="number"
+                  min="0" max="120"
+                  value={advFilters.ageMax}
+                  onChange={(e) => updateFilter("ageMax", e.target.value)}
+                  placeholder="Max"
+                  className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+                />
+              </div>
+            </FilterField>
+            <FilterField label="Visites totales (min – max)">
+              <div className="flex gap-2">
+                <input
+                  type="number"
+                  min="0"
+                  value={advFilters.visitsMin}
+                  onChange={(e) => updateFilter("visitsMin", e.target.value)}
+                  placeholder="Min"
+                  className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+                />
+                <input
+                  type="number"
+                  min="0"
+                  value={advFilters.visitsMax}
+                  onChange={(e) => updateFilter("visitsMax", e.target.value)}
+                  placeholder="Max"
+                  className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+                />
+              </div>
+            </FilterField>
+            <FilterField label="Dernière visite — du">
+              <input
+                type="date"
+                value={advFilters.lastVisitFrom}
+                onChange={(e) => updateFilter("lastVisitFrom", e.target.value)}
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+              />
+            </FilterField>
+            <FilterField label="Dernière visite — au">
+              <input
+                type="date"
+                value={advFilters.lastVisitTo}
+                onChange={(e) => updateFilter("lastVisitTo", e.target.value)}
+                className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+              />
+            </FilterField>
+          </div>
+          <div className="text-xs text-gray-500 pt-1 border-t border-border">
+            {filtered.length === 0
+              ? "Aucun résultat"
+              : `${filtered.length} patient${filtered.length > 1 ? "s" : ""} correspondent aux filtres`}
+          </div>
+        </div>
+      )}
 
       {/* Search result count */}
       {normalizedQuery && (
