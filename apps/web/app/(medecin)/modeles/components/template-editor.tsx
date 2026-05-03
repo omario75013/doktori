@@ -116,7 +116,7 @@ export function TemplateEditor({ mode, initialData }: Props) {
         router.push("/admin/templates");
       } else {
         toast.success(mode === "create" ? "Modèle créé avec succès" : "Modèle mis à jour");
-        router.push("/medecin/modeles");
+        router.push("/modeles");
       }
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erreur serveur");

@@ -54,7 +54,7 @@ test.describe("Templates — Create + Apply in Prescription", () => {
     await loginAsDoctor(page);
 
     // ── Step 1: create a new template ──────────────────────────────────────
-    await page.goto(`${BASE}/medecin/modeles/nouveau`);
+    await page.goto(`${BASE}/modeles/nouveau`);
     await page.waitForLoadState("networkidle");
 
     const templateTitle = `Test template ${Date.now()}`;
@@ -69,7 +69,7 @@ test.describe("Templates — Create + Apply in Prescription", () => {
 
     // Save
     await page.click('button:has-text("Sauvegarder")');
-    await page.waitForURL(`${BASE}/medecin/modeles`, { timeout: 10_000 });
+    await page.waitForURL(`${BASE}/modeles`, { timeout: 10_000 });
 
     // Verify template appears in list
     await expect(page.getByText(templateTitle)).toBeVisible({ timeout: 5_000 });
@@ -131,7 +131,7 @@ test.describe("Templates — Clone preserves original", () => {
   }) => {
     await loginAsDoctor(page);
 
-    await page.goto(`${BASE}/medecin/modeles`);
+    await page.goto(`${BASE}/modeles`);
     await page.waitForLoadState("networkidle");
 
     // Find first official template
@@ -173,7 +173,7 @@ test.describe("Templates — Missing patient data shows placeholders", () => {
     await loginAsDoctor(page);
 
     // Create a template with variables that are unlikely to be filled
-    await page.goto(`${BASE}/medecin/modeles/nouveau`);
+    await page.goto(`${BASE}/modeles/nouveau`);
     await page.waitForLoadState("networkidle");
 
     const templateTitle = `Placeholder test ${Date.now()}`;
@@ -186,7 +186,7 @@ test.describe("Templates — Missing patient data shows placeholders", () => {
     );
 
     await page.click('button:has-text("Sauvegarder")');
-    await page.waitForURL(`${BASE}/medecin/modeles`, { timeout: 10_000 });
+    await page.waitForURL(`${BASE}/modeles`, { timeout: 10_000 });
 
     // Open a prescription modal for a patient that likely has missing CIN/insurance
     await page.goto(`${BASE}/medecin/patients`);

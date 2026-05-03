@@ -63,7 +63,7 @@ export function TemplateList({ templates, doctorId }: Props) {
         "Le médecin reste seul responsable de la prescription, des doses et de la pertinence clinique.",
         { duration: 2000 }
       );
-      router.push(`/medecin/modeles/${cloned.id}/edit`);
+      router.push(`/modeles/${cloned.id}/edit`);
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erreur serveur");
     } finally {
@@ -105,7 +105,7 @@ export function TemplateList({ templates, doctorId }: Props) {
           </div>
         </div>
         <Link
-          href="/medecin/modeles/nouveau"
+          href="/modeles/nouveau"
           className="inline-flex items-center justify-center rounded-lg border border-transparent bg-primary text-primary-foreground h-7 gap-1 px-2.5 text-[0.8rem] font-medium whitespace-nowrap transition-all hover:opacity-90"
         >
           <Plus className="size-3.5" />
@@ -173,7 +173,7 @@ export function TemplateList({ templates, doctorId }: Props) {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Link
-                    href={`/medecin/modeles/${t.id}/edit`}
+                    href={`/modeles/${t.id}/edit`}
                     className="inline-flex items-center gap-1 h-7 px-2 text-xs font-medium rounded-md border border-border bg-background hover:bg-muted transition-colors"
                   >
                     <Eye className="size-3" />
@@ -214,7 +214,7 @@ export function TemplateList({ templates, doctorId }: Props) {
               Créez votre premier modèle ou dupliquez un modèle officiel.
             </p>
             <Link
-              href="/medecin/modeles/nouveau"
+              href="/modeles/nouveau"
               className="inline-flex items-center gap-1.5 h-8 px-2.5 text-sm font-medium rounded-lg border border-border bg-background hover:bg-muted transition-colors"
             >
               <Plus className="size-4" />
@@ -252,7 +252,7 @@ export function TemplateList({ templates, doctorId }: Props) {
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Link
-                    href={`/medecin/modeles/${t.id}/edit`}
+                    href={`/modeles/${t.id}/edit`}
                     className="inline-flex items-center gap-1 h-7 px-2 text-xs font-medium rounded-md border border-border bg-background hover:bg-muted transition-colors"
                   >
                     <Pencil className="size-3" />

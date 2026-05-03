@@ -33,12 +33,12 @@ export default async function EditModelePage({ params }: PageProps) {
 
   // Official templates cannot be edited — redirect to list
   if (template.isOfficial) {
-    redirect("/medecin/modeles");
+    redirect("/modeles");
   }
 
   // Must own the template
   if (template.doctorId !== session.user.id) {
-    redirect("/medecin/modeles");
+    redirect("/modeles");
   }
 
   return (

@@ -135,6 +135,7 @@ export function SidebarNav({
     {
       label: "Cabinet",
       items: [
+        { href: "/modeles", label: t("modeles"), icon: FileText },
         { href: "/motifs", label: t("motifs"), icon: ClipboardList },
         { href: "/cabinets", label: t("cabinets"), icon: Building2 },
         { href: "/domicile", label: t("domicile"), icon: Home },
