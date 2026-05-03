@@ -20,7 +20,7 @@ const BASE_PARAMS = {
   actorType: "doctor" as const,
   actorId: "doc-uuid-001",
   templateId: "tpl-uuid-001",
-  action: "create" as const,
+  action: "created" as const,
 };
 
 beforeEach(() => {
@@ -62,7 +62,7 @@ describe("logTemplateAudit", () => {
   it("maps action to the inserted row", async () => {
     await logTemplateAudit(BASE_PARAMS);
     const insertedValues = mockValues.mock.calls[0][0];
-    expect(insertedValues.action).toBe("create");
+    expect(insertedValues.action).toBe("created");
   });
 
   it("passes before snapshot when provided", async () => {

@@ -8,10 +8,12 @@
 import { db, templateAuditLogs } from "@doktori/db";
 
 export interface TemplateAuditParams {
-  actorType: "doctor" | "secretary" | "admin";
+  /** Matches DB CHECK constraint: doctor | admin */
+  actorType: "doctor" | "admin";
   actorId: string;
   templateId: string;
-  action: "create" | "update" | "delete" | "clone" | "apply" | "view";
+  /** Matches DB CHECK constraint on template_audit_logs.action */
+  action: "created" | "edited" | "cloned" | "deleted" | "applied";
   before?: unknown;
   after?: unknown;
   context?: unknown;

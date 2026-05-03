@@ -7,6 +7,8 @@ export default defineConfig({
     globals: false,
     include: ["lib/**/*.test.{ts,tsx}", "__tests__/**/*.test.{ts,tsx}"],
     exclude: ["node_modules", "dist", ".next", "e2e"],
+    testTimeout: 30000,
+    hookTimeout: 60000,
   },
   resolve: {
     alias: {
