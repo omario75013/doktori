@@ -405,4 +405,55 @@ export const FAQ_ITEMS: FaqItem[] = [
       ar: "نعم. من فضاء الطبيب، قسم « الأجندة »، فعّل تصدير iCal: تتم مزامنة جميع مواعيد دكتوري تلقائيًا مع Google Calendar أو Apple Calendar أو Outlook. يتم اكتشاف التعارضات مع أحداثك الحالية وتُحجب المواعيد المعنية تلقائيًا على دكتوري.",
     },
   },
+
+  // ─── Modèles d'ordonnance ────────────────────────────────────
+  {
+    id: "templates-what",
+    category: "doctor-pro",
+    featured: false,
+    question: {
+      fr: "À quoi servent les modèles d'ordonnance Doktori ?",
+      ar: "ما فائدة نماذج الوصفات في دكتوري؟",
+    },
+    answer: {
+      fr: "Les modèles d'ordonnance sont des gabarits Markdown pré-remplis qui accélèrent la rédaction de vos prescriptions, certificats et courriers. Doktori propose des modèles officiels (arrêt de travail, bilan biologique, ordonnance cardiologie…) et vous pouvez créer vos propres modèles personnalisés depuis Espace médecin › Modèles. Les variables comme {{patient_first_name}} ou {{date_today}} se substituent automatiquement au moment de l'insertion. Attention : le médecin reste seul responsable de la pertinence clinique de chaque prescription.",
+      ar: "نماذج الوصفات هي قوالب Markdown مسبقة الملء تُسرّع كتابة وصفاتك وشهاداتك ورسائلك. تقدم دكتوري نماذج رسمية (شهادة توقف عن العمل، فحوصات بيولوجية، وصفة قلبية...) ويمكنك إنشاء نماذجك الخاصة من فضاء الطبيب › النماذج. تُستبدل المتغيرات مثل {{patient_first_name}} أو {{date_today}} تلقائيًا عند الإدراج. تنبيه: يظل الطبيب وحده المسؤول عن الملاءمة السريرية لكل وصفة.",
+    },
+  },
+  {
+    id: "templates-create",
+    category: "doctor-pro",
+    question: {
+      fr: "Comment créer mon propre modèle d'ordonnance ?",
+      ar: "كيف أنشئ نموذج وصفة خاص بي؟",
+    },
+    answer: {
+      fr: "Depuis Espace médecin › Modèles, cliquez sur « Nouveau modèle ». L'éditeur propose trois colonnes : le formulaire de rédaction (titre, langue, contenu Markdown), le panneau des variables disponibles ({{patient_first_name}}, {{doctor_name}}, {{date_today}}, etc.) et un aperçu en temps réel. Vos modèles personnels ne sont visibles que par vous ; vous pouvez en créer jusqu'à 200.",
+      ar: "من فضاء الطبيب › النماذج، انقر على « نموذج جديد ». يعرض المحرر ثلاثة أعمدة: نموذج التحرير (العنوان، اللغة، محتوى Markdown)، لوحة المتغيرات المتاحة ({{patient_first_name}}، {{doctor_name}}، {{date_today}}، إلخ) ومعاينة في الوقت الفعلي. نماذجك الشخصية مرئية لك فقط، ويمكنك إنشاء ما يصل إلى 200 نموذج.",
+    },
+  },
+  {
+    id: "templates-official",
+    category: "doctor-pro",
+    question: {
+      fr: "Puis-je modifier un modèle officiel Doktori ?",
+      ar: "هل يمكنني تعديل نموذج رسمي من دكتوري؟",
+    },
+    answer: {
+      fr: "Les modèles officiels ne peuvent pas être édités directement. En revanche, le bouton « Dupliquer » crée une copie personnelle que vous pouvez modifier à votre guise : ajoutez vos mentions légales, adaptez les médicaments habituels, changez la mise en page. La copie appartient à votre espace et ne modifie pas le modèle officiel.",
+      ar: "لا يمكن تعديل النماذج الرسمية مباشرة. بدلاً من ذلك، ينشئ زر « تكرار » نسخة شخصية يمكنك تعديلها كما تشاء: أضف إشعاراتك القانونية، وكيّف الأدوية المعتادة، وغيّر التخطيط. تنتمي النسخة إلى فضائك ولا تُعدّل النموذج الرسمي.",
+    },
+  },
+  {
+    id: "templates-variables",
+    category: "doctor-pro",
+    question: {
+      fr: "Quelles variables sont disponibles dans les modèles ?",
+      ar: "ما المتغيرات المتاحة في النماذج؟",
+    },
+    answer: {
+      fr: "Les variables s'écrivent entre doubles accolades : {{patient_first_name}}, {{patient_last_name}}, {{patient_dob}}, {{patient_blood_type}}, {{patient_allergies}}, {{doctor_name}}, {{doctor_specialty}}, {{doctor_city}}, {{doctor_phone}}, {{date_today}}, {{appointment_type}}. Si une variable n'est pas résolue (information manquante dans le dossier patient), elle est remplacée par ___ avec un avertissement. Vous pouvez compléter le texte manuellement avant d'insérer l'ordonnance.",
+      ar: "تُكتب المتغيرات بين قوسين مزدوجين: {{patient_first_name}}، {{patient_last_name}}، {{patient_dob}}، {{patient_blood_type}}، {{patient_allergies}}، {{doctor_name}}، {{doctor_specialty}}، {{doctor_city}}، {{doctor_phone}}، {{date_today}}، {{appointment_type}}. إذا لم يُحَل متغير (معلومة مفقودة في ملف المريض)، فإنه يُستبدل بـ ___ مع تحذير. يمكنك إكمال النص يدويًا قبل إدراج الوصفة.",
+    },
+  },
 ];
