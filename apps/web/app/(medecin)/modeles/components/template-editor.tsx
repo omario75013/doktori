@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Loader2, Save } from "lucide-react";
+import { Loader2, Save, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -145,14 +145,31 @@ export function TemplateEditor({ mode, initialData }: Props) {
               : "Utilisez les variables pour personnaliser automatiquement le contenu"}
           </p>
         </div>
-        <Button onClick={handleSave} disabled={saving} size="sm">
-          {saving ? (
-            <Loader2 className="size-4 mr-2 animate-spin" />
-          ) : (
-            <Save className="size-4 mr-2" />
-          )}
-          {saving ? "Sauvegarde…" : "Sauvegarder"}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => {
+              if (dirty && !confirm("Modifications non sauvegardées. Quitter quand même ?")) return;
+              router.push(mode === "admin" ? "/admin/templates" : "/modeles");
+            }}
+          >
+            <ArrowLeft className="size-4 mr-2" />
+            Retour
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={saving || !title.trim() || !body.trim()}
+            size="sm"
+          >
+            {saving ? (
+              <Loader2 className="size-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="size-4 mr-2" />
+            )}
+            {saving ? "Sauvegarde…" : "Sauvegarder"}
+          </Button>
+        </div>
       </div>
 
       {/* 3-column grid */}
