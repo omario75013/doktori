@@ -785,6 +785,7 @@ export const prescriptions = pgTable("prescriptions", {
   patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
   content: text("content").notNull(),
   verificationToken: varchar("verification_token", { length: 64 }),
+  templateId: uuid("template_id").references((): any => prescriptionTemplates.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("prescriptions_appointment_idx").on(table.appointmentId),
@@ -1464,3 +1465,43 @@ export const callSignals = pgTable(
   },
   (table) => [index("call_signals_session_idx").on(table.sessionId, table.createdAt)]
 );
+
+// ── Prescription Templates ────────────────────────────────
+export const prescriptionTemplates = pgTable("prescription_templates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  doctorId: uuid("doctor_id").references(() => doctors.id, { onDelete: "set null" }),
+  title: varchar("title", { length: 120 }).notNull(),
+  description: text("description"),
+  language: varchar("language", { length: 2 }).notNull().default("fr"),
+  slug: varchar("slug", { length: 60 }),
+  bodyMarkdown: text("body_markdown").notNull(),
+  targetType: varchar("target_type", { length: 20 }).notNull().default("prescription"),
+  isOfficial: boolean("is_official").notNull().default(false),
+  clonedFromId: uuid("cloned_from_id"),
+  applyCount: integer("apply_count").notNull().default(0),
+  cloneCount: integer("clone_count").notNull().default(0),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+  version: integer("version").notNull().default(1),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  deletedAt: timestamp("deleted_at", { withTimezone: true }),
+});
+
+export type PrescriptionTemplate = typeof prescriptionTemplates.$inferSelect;
+export type NewPrescriptionTemplate = typeof prescriptionTemplates.$inferInsert;
+
+// ── Template Audit Logs ───────────────────────────────────
+export const templateAuditLogs = pgTable("template_audit_logs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  actorType: varchar("actor_type", { length: 10 }).notNull(),
+  actorId: uuid("actor_id").notNull(),
+  templateId: uuid("template_id").notNull(),
+  action: varchar("action", { length: 20 }).notNull(),
+  before: jsonb("before"),
+  after: jsonb("after"),
+  context: jsonb("context"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type TemplateAuditLog = typeof templateAuditLogs.$inferSelect;
+export type NewTemplateAuditLog = typeof templateAuditLogs.$inferInsert;
