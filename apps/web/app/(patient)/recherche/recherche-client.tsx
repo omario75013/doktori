@@ -784,11 +784,30 @@ function RechercheInner() {
               </div>
             )}
 
+            {/* Map placeholder — TODO: replace with <MapContainer> once react-leaflet
+                is installed (pnpm add react-leaflet leaflet @types/leaflet on dev VM).
+                Doctors have _geo.lat/_geo.lng from Meilisearch (see sync/route.ts).
+                Component: DoctorMapView from @/components/doctor-map-view */}
+            {results.length > 0 && (
+              <div className="mb-4">
+                <button
+                  type="button"
+                  disabled
+                  className="inline-flex items-center gap-2 h-9 px-3 rounded-xl border border-dashed border-border bg-white/50 text-xs font-medium text-muted-foreground cursor-not-allowed"
+                  title="Carte disponible après installation de react-leaflet"
+                >
+                  <MapPin className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  Voir sur la carte ({results.length} médecins)
+                  <span className="text-[10px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-full font-bold">Bientôt</span>
+                </button>
+              </div>
+            )}
+
             {/* Results */}
             {results.length > 0 && (
               <div className="grid gap-3">
                 {results.map((doctor) => (
-                  <DoctorCard key={doctor.id} doctor={doctor} />
+                  <DoctorCard key={doctor.id} doctor={doctor} showSlots />
                 ))}
               </div>
             )}
