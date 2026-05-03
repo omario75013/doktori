@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Search, Users, ChevronLeft, ChevronRight, UserPlus, X, Columns3, Check, SlidersHorizontal, RotateCcw } from "lucide-react";
+import { Search, Users, ChevronLeft, ChevronRight, UserPlus, X, Columns3, Check, SlidersHorizontal, RotateCcw, Download, FileSearch } from "lucide-react";
 import { toast } from "sonner";
 
 type PatientRow = {
@@ -262,12 +262,13 @@ type AdvancedFilters = {
   visitsMax: string;
   lastVisitFrom: string;
   lastVisitTo: string;
+  medicalContent: string;
 };
 
 const EMPTY_FILTERS: AdvancedFilters = {
   email: "", cin: "", cnam: "", gender: "", bloodType: "", insurance: "",
   occupation: "", ageMin: "", ageMax: "", visitsMin: "", visitsMax: "",
-  lastVisitFrom: "", lastVisitTo: "",
+  lastVisitFrom: "", lastVisitTo: "", medicalContent: "",
 };
 
 function computeAge(dob: string | null): number | null {
@@ -293,6 +294,10 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
   const [advFilters, setAdvFilters] = useState<AdvancedFilters>(EMPTY_FILTERS);
   const columnsMenuRef = useRef<HTMLDivElement>(null);
   const debouncedQuery = useDebounced(query, 200);
+  // Medical content full-text search
+  const [medicalSearchIds, setMedicalSearchIds] = useState<Set<string> | null>(null);
+  const [medicalSearchLoading, setMedicalSearchLoading] = useState(false);
+  const debouncedMedical = useDebounced(advFilters.medicalContent, 300);
 
   const activeFiltersCount = Object.values(advFilters).filter((v) => v !== "").length;
 
@@ -302,7 +307,34 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
   function resetFilters() {
     setAdvFilters(EMPTY_FILTERS);
     setQuery("");
+    setMedicalSearchIds(null);
   }
+
+  // Fetch patient IDs matching full-text search in medical records
+  useEffect(() => {
+    if (debouncedMedical.trim().length < 3) {
+      setMedicalSearchIds(null);
+      return;
+    }
+    let cancelled = false;
+    setMedicalSearchLoading(true);
+    fetch("/api/medecin/patients/search-content", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ q: debouncedMedical.trim() }),
+    })
+      .then((res) => res.json())
+      .then((data: { patientIds?: string[] }) => {
+        if (!cancelled) {
+          setMedicalSearchIds(new Set(data.patientIds ?? []));
+          setMedicalSearchLoading(false);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setMedicalSearchLoading(false);
+      });
+    return () => { cancelled = true; };
+  }, [debouncedMedical]);
 
   useEffect(() => {
     try {
@@ -373,9 +405,11 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
       if (f.visitsMax && p.total_visits > parseInt(f.visitsMax, 10)) return false;
       if (f.lastVisitFrom && p.last_visit && new Date(p.last_visit) < new Date(f.lastVisitFrom)) return false;
       if (f.lastVisitTo && p.last_visit && new Date(p.last_visit) > new Date(f.lastVisitTo + "T23:59:59")) return false;
+      // Full-text medical content filter
+      if (medicalSearchIds !== null && !medicalSearchIds.has(p.id)) return false;
       return true;
     });
-  }, [patientList, normalizedQuery, advFilters]);
+  }, [patientList, normalizedQuery, advFilters, medicalSearchIds]);
 
   // Reset to page 1 when filter or page size changes
   const prevQuery = useRef(normalizedQuery);
@@ -397,6 +431,41 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
       return [newPatient, ...prev];
     });
     setShowAddModal(false);
+  }
+
+  function exportCsv() {
+    function esc(val: string | null | undefined): string {
+      if (val == null) return "";
+      return `"${String(val).replace(/"/g, '""')}"`;
+    }
+    const headers = [
+      "ID", "Nom", "Téléphone", "Email", "Date de naissance",
+      "Sexe", "Groupe sanguin", "CIN", "N° CNAM", "Assurance",
+      "Profession", "Total visites", "Dernière visite",
+    ];
+    const rows = filtered.map((p) => [
+      esc(p.id),
+      esc(p.name),
+      esc(p.phone),
+      esc(p.email),
+      esc(p.date_of_birth ? format(new Date(p.date_of_birth), "dd/MM/yyyy") : null),
+      esc(p.gender === "M" ? "Homme" : p.gender === "F" ? "Femme" : p.gender),
+      esc(p.blood_type),
+      esc(p.cin),
+      esc(p.cnam_number),
+      esc(p.insurance_provider),
+      esc(p.occupation),
+      esc(String(p.total_visits)),
+      esc(p.last_visit ? format(new Date(p.last_visit), "dd/MM/yyyy") : null),
+    ]);
+    const csv = "﻿" + [headers.map((h) => `"${h}"`).join(","), ...rows.map((r) => r.join(","))].join("\r\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `patients-export-${format(new Date(), "yyyy-MM-dd")}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 
   return (
@@ -452,6 +521,16 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
               {activeFiltersCount}
             </span>
           )}
+        </button>
+        <button
+          type="button"
+          onClick={exportCsv}
+          disabled={filtered.length === 0}
+          className="inline-flex items-center gap-2 h-10 px-3 rounded-2xl border border-border bg-white dark:bg-gray-900 text-sm text-foreground hover:bg-secondary transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+          title={`Exporter ${filtered.length} patient${filtered.length !== 1 ? "s" : ""} en CSV`}
+        >
+          <Download className="h-4 w-4" />
+          Exporter
         </button>
         <div ref={columnsMenuRef} className="relative">
           <button
@@ -662,7 +741,33 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                 className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
               />
             </FilterField>
+            <FilterField label="Recherche dans dossiers médicaux">
+              <div className="relative">
+                <FileSearch className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-gray-400 pointer-events-none" />
+                <input
+                  type="text"
+                  value={advFilters.medicalContent}
+                  onChange={(e) => updateFilter("medicalContent", e.target.value)}
+                  placeholder="Mot-clé dans notes ou ordonnances…"
+                  className="w-full pl-8 pr-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
+                />
+                {medicalSearchLoading && (
+                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] text-primary animate-pulse">
+                    …
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-gray-400 mt-1">Min. 3 caractères</p>
+            </FilterField>
           </div>
+          {medicalSearchIds !== null && advFilters.medicalContent.trim().length >= 3 && (
+            <div className="flex items-center gap-2 pt-1 text-xs text-primary font-medium">
+              <FileSearch className="h-3.5 w-3.5 shrink-0" />
+              {medicalSearchIds.size === 0
+                ? "Aucun dossier ne contient ce terme"
+                : `${medicalSearchIds.size} dossier${medicalSearchIds.size > 1 ? "s" : ""} trouvé${medicalSearchIds.size > 1 ? "s" : ""} dans les notes / ordonnances`}
+            </div>
+          )}
           <div className="text-xs text-gray-500 pt-1 border-t border-border">
             {filtered.length === 0
               ? "Aucun résultat"
