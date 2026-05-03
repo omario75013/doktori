@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import { db, prescriptionTemplates } from "@doktori/db";
 import { and, eq, isNull } from "drizzle-orm";
 import { TemplateEditor } from "../../components/template-editor";
+import { isEnabled } from "@/lib/feature-flags";
 
 type PageProps = {
   params: Promise<{ id: string }>;
@@ -12,6 +13,10 @@ export default async function EditModelePage({ params }: PageProps) {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== "doctor") {
     redirect("/connexion");
+  }
+
+  if (!(await isEnabled("prescription_templates_enabled"))) {
+    redirect("/medecin");
   }
 
   const { id } = await params;

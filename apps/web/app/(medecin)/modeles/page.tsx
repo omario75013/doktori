@@ -3,11 +3,16 @@ import { redirect } from "next/navigation";
 import { db, prescriptionTemplates } from "@doktori/db";
 import { and, or, eq, isNull, desc } from "drizzle-orm";
 import { TemplateList } from "./components/template-list";
+import { isEnabled } from "@/lib/feature-flags";
 
 export default async function ModelesPage() {
   const session = await auth();
   if (!session?.user?.id || session.user.role !== "doctor") {
     redirect("/connexion");
+  }
+
+  if (!(await isEnabled("prescription_templates_enabled"))) {
+    redirect("/medecin");
   }
 
   const doctorId = session.user.id;
