@@ -26,6 +26,7 @@ import {
   Activity,
 } from "lucide-react";
 import { toast } from "sonner";
+import { PrescriptionTemplateModal } from "../../modeles/components/prescription-template-modal";
 
 type Appointment = {
   id: string;
@@ -1862,6 +1863,8 @@ function PrescriptionModal({
   );
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [usedTemplateId, setUsedTemplateId] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -1878,7 +1881,11 @@ function PrescriptionModal({
       const res = await fetch("/api/prescriptions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ appointmentId, content: content.trim() }),
+        body: JSON.stringify({
+          appointmentId,
+          content: content.trim(),
+          ...(usedTemplateId ? { templateId: usedTemplateId } : {}),
+        }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -1932,7 +1939,22 @@ function PrescriptionModal({
             )}
           </Field>
 
-          <Field label="Médicaments et posologies">
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">
+                Médicaments et posologies
+              </label>
+              {appointmentId && (
+                <button
+                  type="button"
+                  onClick={() => setTemplateModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-medium border border-primary/40 text-primary hover:bg-primary/5 transition-colors"
+                >
+                  <FileText className="h-3 w-3" />
+                  Choisir un modèle
+                </button>
+              )}
+            </div>
             <textarea
               rows={6}
               value={content}
@@ -1944,10 +1966,30 @@ function PrescriptionModal({
               className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
               required
             />
-            <div className="text-right text-xs text-gray-400 mt-0.5">
-              {content.length} / 5000
+            <div className="flex items-center justify-between">
+              {usedTemplateId && (
+                <p className="text-xs text-primary">Modèle appliqué</p>
+              )}
+              <div className="ml-auto text-right text-xs text-gray-400">
+                {content.length} / 5000
+              </div>
             </div>
-          </Field>
+          </div>
+
+          {templateModalOpen && appointmentId && (
+            <PrescriptionTemplateModal
+              open={templateModalOpen}
+              onClose={() => setTemplateModalOpen(false)}
+              patientId={patientId}
+              appointmentId={appointmentId}
+              onApply={(markdown, templateId) => {
+                setContent((prev) =>
+                  prev.trim() ? prev + "\n\n" + markdown : markdown
+                );
+                setUsedTemplateId(templateId);
+              }}
+            />
+          )}
 
           <div className="flex justify-end gap-2 pt-1">
             <button
