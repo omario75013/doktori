@@ -315,7 +315,7 @@ export default function InscriptionPatientPage() {
                 />
                 <Label htmlFor="terms" className="text-sm text-foreground/70 leading-relaxed cursor-pointer font-normal">
                   J'accepte les{" "}
-                  <a href="/cgu" className="text-primary font-semibold hover:underline">
+                  <a href="/legal/cgu" className="text-primary font-semibold hover:underline">
                     Conditions Générales d'Utilisation
                   </a>{" "}
                   et la{" "}
