@@ -157,6 +157,8 @@ export const doctorPractices = pgTable(
     clinicId: uuid("clinic_id").references(() => clinics.id, { onDelete: "set null" }),
     // 'cabinet' (private practice) | 'clinic' (hospital/clinic affiliation)
     kind: varchar("kind", { length: 10 }).notNull().default("cabinet"),
+    // Array of { url: string, alt?: string } photo objects for cabinet gallery
+    photos: jsonb("photos").$type<Array<{ url: string; alt?: string }>>().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
