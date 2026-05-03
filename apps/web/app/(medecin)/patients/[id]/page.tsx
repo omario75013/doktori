@@ -24,6 +24,7 @@ import {
   Pill,
   FileUp,
   Activity,
+  Printer,
 } from "lucide-react";
 import { toast } from "sonner";
 import { PrescriptionTemplateModal } from "../../modeles/components/prescription-template-modal";
@@ -1832,9 +1833,22 @@ function OrdonnancesSection({
                   )}
                 </button>
                 {isExpanded && (
-                  <div className="mt-3 ml-11 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap">
-                    {p.content}
-                  </div>
+                  <>
+                    <div className="mt-3 ml-11 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap">
+                      {p.content}
+                    </div>
+                    <div className="mt-2 ml-11 flex items-center gap-2">
+                      <a
+                        href={`/ordonnance/${p.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium transition-colors"
+                      >
+                        <Printer className="h-3.5 w-3.5" />
+                        Imprimer
+                      </a>
+                    </div>
+                  </>
                 )}
               </li>
             );
