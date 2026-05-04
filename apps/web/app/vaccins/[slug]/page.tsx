@@ -49,8 +49,8 @@ export default async function VaccinPage({ params }: { params: Promise<{ slug: s
     <main className="min-h-screen bg-secondary">
       <div className="bg-foreground py-10 px-4">
         <div className="max-w-3xl mx-auto">
-          <Link href="/vaccins" className="text-teal-300 hover:text-white text-sm inline-flex items-center gap-1">
-            <ChevronLeft className="w-4 h-4" /> Tous les vaccins
+          <Link href="/" className="text-teal-300 hover:text-white text-sm inline-flex items-center gap-1">
+            <ChevronLeft className="w-4 h-4" /> Doktori
           </Link>
           <h1 className="text-3xl sm:text-4xl font-black text-white mt-3 leading-tight">
             {vaccine.nameFr}

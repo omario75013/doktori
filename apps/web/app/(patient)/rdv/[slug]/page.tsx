@@ -428,7 +428,7 @@ export default function RdvPage({
     <div className="min-h-screen bg-secondary/40 px-4 py-8">
       <div className="mx-auto max-w-2xl space-y-6">
         {/* Doctor summary card */}
-        <div className="rounded-3xl border border-border bg-white shadow-sm p-5 flex items-center gap-4">
+        <div className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 flex items-center gap-4">
           {doctor.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -450,7 +450,7 @@ export default function RdvPage({
 
         {/* Step indicator — hidden on success */}
         {step !== "success" && (
-          <div className="rounded-2xl bg-white border border-border shadow-sm overflow-hidden">
+          <div className="rounded-2xl bg-white dark:bg-gray-900 border border-border dark:border-gray-700 shadow-sm overflow-hidden">
             <BookingStepIndicator currentStep={getVisualStep(step)} />
           </div>
         )}
@@ -497,7 +497,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border bg-white shadow-sm p-5 space-y-4"
+            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 space-y-4"
           >
             <div>
               <h2 className="font-heading font-black text-foreground">
@@ -520,7 +520,7 @@ export default function RdvPage({
                     setStep("slots");
                   }
                 }}
-                className="flex flex-col items-center gap-3 rounded-2xl border-2 border-border bg-white p-5 text-center hover:border-primary hover:bg-secondary/40 transition-colors"
+                className="flex flex-col items-center gap-3 rounded-2xl border-2 border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-5 text-center hover:border-primary hover:bg-secondary/40 transition-colors"
               >
                 <div className="h-12 w-12 rounded-2xl bg-secondary flex items-center justify-center">
                   <Building className="h-6 w-6 text-primary" strokeWidth={2} />
@@ -543,7 +543,7 @@ export default function RdvPage({
                     setStep("slots");
                   }
                 }}
-                className="flex flex-col items-center gap-3 rounded-2xl border-2 border-border bg-white p-5 text-center hover:border-purple-400 hover:bg-purple-50/40 transition-colors"
+                className="flex flex-col items-center gap-3 rounded-2xl border-2 border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-5 text-center hover:border-purple-400 hover:bg-purple-50/40 transition-colors"
               >
                 <div className="h-12 w-12 rounded-2xl bg-purple-100 flex items-center justify-center">
                   <Video className="h-6 w-6 text-purple-600" strokeWidth={2} />
@@ -573,7 +573,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border bg-white shadow-sm p-5 space-y-4"
+            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 space-y-4"
           >
             <div>
               <h2 className="font-heading font-black text-foreground">
@@ -589,7 +589,7 @@ export default function RdvPage({
                 <button
                   key={t.id}
                   onClick={() => handleTypeSelected(t)}
-                  className="w-full flex items-center justify-between gap-3 rounded-2xl border border-border bg-white px-4 py-3 text-start hover:border-primary hover:bg-secondary/40 transition-colors"
+                  className="w-full flex items-center justify-between gap-3 rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3 text-start hover:border-primary hover:bg-secondary/40 transition-colors"
                 >
                   <div className="flex items-center gap-3">
                     <span
@@ -634,7 +634,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border bg-white shadow-sm p-5 space-y-4"
+            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 space-y-4"
           >
             <div>
               <h2 className="font-heading font-black text-foreground">
@@ -711,7 +711,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border bg-white shadow-sm p-5 sm:p-6 space-y-5"
+            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 sm:p-6 space-y-5"
           >
             {(selectedType || selectedPractice) && (
               <div className="flex flex-col gap-1.5 pb-3 border-b border-border">
@@ -798,7 +798,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border bg-white shadow-sm p-5 sm:p-6 space-y-5"
+            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 sm:p-6 space-y-5"
           >
             <button
               type="button"
@@ -854,7 +854,7 @@ export default function RdvPage({
                             className={`flex-1 rounded-xl border-2 py-2 text-sm font-semibold transition ${
                               value === opt
                                 ? "border-primary bg-secondary text-primary"
-                                : "border-border bg-white text-foreground/70"
+                                : "border-border dark:border-gray-700 bg-white dark:bg-gray-900 text-foreground/70"
                             }`}
                           >
                             {opt}
@@ -873,7 +873,7 @@ export default function RdvPage({
                             className={`w-full text-start rounded-xl border-2 px-3 py-2 text-sm font-medium transition ${
                               value === choice
                                 ? "border-primary bg-secondary text-primary"
-                                : "border-border bg-white text-foreground/70"
+                                : "border-border dark:border-gray-700 bg-white dark:bg-gray-900 text-foreground/70"
                             }`}
                           >
                             {choice}
@@ -985,7 +985,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border bg-white shadow-sm p-5 sm:p-6 space-y-5"
+            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 sm:p-6 space-y-5"
           >
             <button
               type="button"
@@ -1042,7 +1042,7 @@ export default function RdvPage({
                     className={`rounded-xl border-2 px-3 py-2 text-sm font-semibold transition ${
                       forSelf
                         ? "border-primary bg-white text-primary"
-                        : "border-border bg-white text-foreground/70"
+                        : "border-border dark:border-gray-700 bg-white dark:bg-gray-900 text-foreground/70"
                     }`}
                   >
                     Pour moi
@@ -1053,7 +1053,7 @@ export default function RdvPage({
                     className={`rounded-xl border-2 px-3 py-2 text-sm font-semibold transition ${
                       !forSelf
                         ? "border-primary bg-white text-primary"
-                        : "border-border bg-white text-foreground/70"
+                        : "border-border dark:border-gray-700 bg-white dark:bg-gray-900 text-foreground/70"
                     }`}
                   >
                     Pour un proche
@@ -1170,7 +1170,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border bg-white shadow-sm p-8 text-center space-y-4"
+            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-8 text-center space-y-4"
           >
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
               <svg
@@ -1316,7 +1316,7 @@ function SuccessView({
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.25 }}
-              className="rounded-3xl border border-border bg-white shadow-sm overflow-hidden"
+              className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden"
             >
               {/* Header */}
               <div className="bg-gradient-to-r from-green-50 to-secondary px-7 pt-7 pb-5 text-center border-b border-border">

@@ -71,7 +71,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
       ]);
       if (depRes.ok) {
         const data = await depRes.json();
-        const all: Dependent[] = data.dependents ?? [];
+        const all: Dependent[] = data.items ?? data.dependents ?? [];
         setDependent(all.find((d) => d.id === dependentId) ?? null);
       }
       if (vaccRes.ok) {

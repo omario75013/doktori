@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { db, doctors, clinics, blogPosts } from "@doktori/db";
+import { db, doctors, clinics, blogPosts, pregnancyWeekContent, vaccineInfoContent } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 
@@ -115,5 +115,44 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  return [...staticPages, ...doctorPages, ...clinicPages, ...blogPages, ...specialtyCityPages, ...listingPages];
+  // Pregnancy week pages
+  let pregnancyWeeks: Array<{ weekNumber: number }> = [];
+  try {
+    pregnancyWeeks = await db
+      .select({ weekNumber: pregnancyWeekContent.weekNumber })
+      .from(pregnancyWeekContent);
+  } catch {
+    // DB unreachable — skip
+  }
+  const pregnancyPages: MetadataRoute.Sitemap = pregnancyWeeks.map((w) => ({
+    url: `${baseUrl}/grossesse/${w.weekNumber}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
+
+  // Vaccine info pages
+  let vaccines: Array<{ slug: string }> = [];
+  try {
+    vaccines = await db.select({ slug: vaccineInfoContent.slug }).from(vaccineInfoContent);
+  } catch {
+    // DB unreachable — skip
+  }
+  const vaccinePages: MetadataRoute.Sitemap = vaccines.map((v) => ({
+    url: `${baseUrl}/vaccins/${v.slug}`,
+    lastModified: new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.5,
+  }));
+
+  return [
+    ...staticPages,
+    ...doctorPages,
+    ...clinicPages,
+    ...blogPages,
+    ...specialtyCityPages,
+    ...listingPages,
+    ...pregnancyPages,
+    ...vaccinePages,
+  ];
 }

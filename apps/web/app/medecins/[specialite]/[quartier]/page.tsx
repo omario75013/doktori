@@ -212,20 +212,33 @@ export default async function SpecialiteCityPage({
             </h2>
 
             {matchingDoctors.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-border p-10 text-center shadow-sm">
-                <p className="text-lg font-semibold text-foreground mb-2">
-                  Aucun {spec.label.toLowerCase()} à {city.label} pour le moment.
-                </p>
-                <p className="text-sm text-muted-foreground mb-6">
-                  Inscrivez-vous pour être prévenu dès qu&apos;un médecin rejoint la plateforme dans votre zone.
-                </p>
-                <Link
-                  href="/recherche"
-                  className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-bold hover:bg-doktori-teal-dark transition-colors"
-                >
-                  <Calendar className="w-4 h-4" />
-                  Chercher dans toute la Tunisie
-                </Link>
+              <div className="bg-white rounded-2xl border border-border p-8 shadow-sm space-y-6">
+                <div className="text-center">
+                  <p className="text-lg font-semibold text-foreground mb-2">
+                    Aucun médecin disponible à {city.label} en {spec.label}
+                  </p>
+                  <p className="text-sm text-muted-foreground">
+                    Soyez prévenu(e) dès qu&apos;un médecin rejoint la plateforme dans votre zone.
+                  </p>
+                </div>
+                <div className="max-w-sm mx-auto">
+                  <NewsletterSignup
+                    source="seo_empty_city"
+                    language="fr"
+                    placeholder="Votre adresse email"
+                    buttonLabel="M'alerter"
+                    successMessage="Merci ! Vous serez prévenu(e) dès qu'un médecin rejoint."
+                  />
+                </div>
+                <div className="text-center">
+                  <Link
+                    href="/recherche"
+                    className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+                  >
+                    <Calendar className="w-4 h-4" />
+                    Ou chercher dans toute la Tunisie
+                  </Link>
+                </div>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

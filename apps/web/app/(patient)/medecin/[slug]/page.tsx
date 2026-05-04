@@ -348,7 +348,7 @@ export default async function DoctorProfilePage({
 
         <div className="mx-auto max-w-5xl px-4 py-6 sm:px-6 sm:py-8">
           {/* ═════ MOBILE STICKY CTA ═════ */}
-          <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden border-t border-border bg-white/95 backdrop-blur-sm px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+          <div className="fixed bottom-0 inset-x-0 z-40 lg:hidden border-t border-border dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-sm px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
             <div className="flex items-center gap-3 max-w-lg mx-auto">
               <div className="flex-1 min-w-0">
                 <div className="text-xs font-bold text-muted-foreground truncate">{doctor.name}</div>
@@ -528,7 +528,7 @@ export default async function DoctorProfilePage({
                       <div className="mt-3">
                         <Link
                           href={`/devis/${doctor.id}`}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-bold text-primary transition hover:border-primary"
+                          className="inline-flex items-center gap-1.5 rounded-full border border-border dark:border-gray-700 bg-white dark:bg-gray-900 px-3 py-1.5 text-xs font-bold text-primary transition hover:border-primary"
                         >
                           <span aria-hidden>💰</span>
                           Estimer le prix CNAM / mutuelle
@@ -627,7 +627,7 @@ export default async function DoctorProfilePage({
                         className={`relative rounded-xl border-2 p-4 ${
                           practice.clinicId
                             ? "border-primary/30 bg-secondary/40"
-                            : "border-border bg-white"
+                            : "border-border dark:border-gray-700 bg-white dark:bg-gray-900"
                         }`}
                       >
                         {practice.isPrimary && (
@@ -799,7 +799,7 @@ export default async function DoctorProfilePage({
                     {languages.map((lang) => (
                       <span
                         key={lang}
-                        className="inline-flex items-center gap-2 rounded-full border border-border bg-white px-3.5 py-1.5 text-xs font-bold text-foreground shadow-sm"
+                        className="inline-flex items-center gap-2 rounded-full border border-border dark:border-gray-700 bg-white dark:bg-gray-900 px-3.5 py-1.5 text-xs font-bold text-foreground shadow-sm"
                       >
                         <Languages className="h-3 w-3 text-primary" strokeWidth={2.5} />
                         {lang}
@@ -824,7 +824,7 @@ export default async function DoctorProfilePage({
                     {appointmentTypesList.map((t) => (
                       <li
                         key={t.id}
-                        className="flex items-center justify-between gap-3 rounded-xl border border-border bg-white px-4 py-3"
+                        className="flex items-center justify-between gap-3 rounded-xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-3"
                       >
                         <div className="flex items-center gap-3">
                           <span
@@ -1017,7 +1017,7 @@ export default async function DoctorProfilePage({
                     <div className="mt-5 flex justify-center">
                       <Link
                         href={`/medecin/${doctor.slug}/avis`}
-                        className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-5 py-2.5 text-sm font-bold text-primary transition-colors hover:border-primary hover:bg-secondary"
+                        className="inline-flex items-center gap-1.5 rounded-full border border-border dark:border-gray-700 bg-white dark:bg-gray-900 px-5 py-2.5 text-sm font-bold text-primary transition-colors hover:border-primary hover:bg-secondary"
                       >
                         Voir tous les {reviewCount} avis
                         <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
@@ -1046,7 +1046,7 @@ export default async function DoctorProfilePage({
                       <Link
                         key={sd.id}
                         href={`/medecin/${sd.slug}`}
-                        className="group rounded-2xl border border-border bg-white p-4 transition-shadow hover:shadow-md"
+                        className="group rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-4 transition-shadow hover:shadow-md"
                       >
                         <div className="flex flex-col items-center text-center">
                           {sd.photoUrl ? (
@@ -1080,7 +1080,7 @@ export default async function DoctorProfilePage({
 
               {/* Practical info */}
               <AnimatedSection index={9} className="grid gap-4 sm:grid-cols-2">
-                <div className="rounded-2xl border border-border bg-white p-5">
+                <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
                     <MessageSquareText className="h-3.5 w-3.5" strokeWidth={2.5} />
                     Langues
@@ -1091,7 +1091,7 @@ export default async function DoctorProfilePage({
                       : "Français · العربية · English"}
                   </p>
                 </div>
-                <div className="rounded-2xl border border-border bg-white p-5">
+                <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-5">
                   <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
                     <ShieldCheck className="h-3.5 w-3.5" strokeWidth={2.5} />
                     Moyens de paiement
@@ -1161,7 +1161,7 @@ export default async function DoctorProfilePage({
 
                   <Link
                     href={`/domicile/${doctor.slug}`}
-                    className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-border bg-white text-sm font-bold text-foreground transition-colors hover:border-accent hover:bg-accent/5 hover:text-doktori-green-dark"
+                    className="mt-3 inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl border-2 border-border dark:border-gray-700 bg-white dark:bg-gray-900 text-sm font-bold text-foreground transition-colors hover:border-accent hover:bg-accent/5 hover:text-doktori-green-dark"
                   >
                     <Phone className="h-4 w-4" strokeWidth={2.5} />
                     Visite à domicile

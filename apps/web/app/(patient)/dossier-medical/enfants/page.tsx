@@ -52,7 +52,7 @@ export default function CarnetEnfantsPage() {
       const res = await fetch("/api/me/dependents", { headers: { Authorization: `Bearer ${t}` } });
       if (res.ok) {
         const data = await res.json();
-        const all: Dependent[] = data.dependents ?? [];
+        const all: Dependent[] = data.items ?? data.dependents ?? [];
         const children = all.filter((d) => {
           if (!d.dateOfBirth) return false;
           const months = ageInMonths(d.dateOfBirth);

@@ -26,6 +26,7 @@ import {
   Video,
   Siren,
   Bell,
+  Microscope,
   X,
 } from "lucide-react";
 
@@ -198,6 +199,7 @@ export default function PatientDashboardPage() {
   const [cancelConfirm, setCancelConfirm] = useState<string | null>(null);
   const [reviewBannerDismissed, setReviewBannerDismissed] = useState(true);
   const [pushBannerDismissed, setPushBannerDismissed] = useState(true);
+  const [researchBannerVisible, setResearchBannerVisible] = useState(false);
 
   useEffect(() => {
     const stored = localStorage.getItem("doktori_patient_token");
@@ -215,7 +217,27 @@ export default function PatientDashboardPage() {
     setPushBannerDismissed(
       localStorage.getItem("doktori_push_banner_dismissed") === "true",
     );
+
+    // Show research banner only if patient has never seen the consent screen
+    const dismissed =
+      localStorage.getItem("doktori_research_banner_dismissed") === "true";
+    if (!dismissed) {
+      // Check current consent state — if null (never asked), show banner
+      fetch("/api/me/anonymization-consent", {
+        headers: { Authorization: `Bearer ${stored}` },
+      })
+        .then((r) => (r.ok ? r.json() : { consent: undefined }))
+        .then((d) => {
+          if (d?.consent === null) setResearchBannerVisible(true);
+        })
+        .catch(() => {});
+    }
   }, [router]);
+
+  function dismissResearchBanner() {
+    localStorage.setItem("doktori_research_banner_dismissed", "true");
+    setResearchBannerVisible(false);
+  }
 
   useEffect(() => {
     if (!token) return;
@@ -390,6 +412,37 @@ export default function PatientDashboardPage() {
                 onClick={dismissReviewBanner}
                 aria-label="Fermer"
                 className="text-amber-400 hover:text-amber-600 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Medical research opt-in banner (loi 2004-63) */}
+        {researchBannerVisible && (
+          <motion.div
+            variants={fadeUp}
+            initial="hidden"
+            animate="visible"
+            className="mb-4 rounded-2xl border border-emerald-300/40 bg-emerald-50 dark:bg-emerald-900/20 dark:border-emerald-700 px-4 py-3 flex items-center gap-3"
+          >
+            <Microscope className="w-5 h-5 text-emerald-700 shrink-0" />
+            <p className="flex-1 text-sm text-emerald-800 dark:text-emerald-200">
+              Aidez la recherche médicale tunisienne — Découvrez le programme
+              d'anonymisation
+            </p>
+            <div className="flex items-center gap-2 shrink-0">
+              <a
+                href="/parametres/recherche-medicale"
+                className="text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl px-3 py-1.5 transition-colors"
+              >
+                En savoir plus
+              </a>
+              <button
+                onClick={dismissResearchBanner}
+                aria-label="Fermer"
+                className="text-emerald-500 hover:text-emerald-700 transition-colors"
               >
                 <X className="w-4 h-4" />
               </button>
