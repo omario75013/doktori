@@ -156,6 +156,7 @@ export default function MesRdvPage() {
   const [error, setError] = useState("");
   const [sessionExpiredMsg, setSessionExpiredMsg] = useState("");
   const [cancelConfirm, setCancelConfirm] = useState<CancelState>(null);
+  const [cancelReason, setCancelReason] = useState("");
   const [activeTab, setActiveTab] = useState<ActiveTab>("upcoming");
   const [dismissedSatisfaction, setDismissedSatisfaction] = useState<Set<string>>(new Set());
 
@@ -225,11 +226,12 @@ export default function MesRdvPage() {
     setStep("loggedIn");
   }
 
-  async function cancelAppointment(id: string) {
+  async function cancelAppointment(id: string, reason: string) {
     if (!token) return;
-    const res = await fetch(`/api/appointments/${id}/cancel`, {
+    const res = await fetch(`/api/me/appointments/${id}/cancel`, {
       method: "POST",
-      headers: { Authorization: `Bearer ${token}` },
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ reason: reason.trim() || undefined }),
     });
     if (res.ok) {
       setAppointments((prev) => prev.map((a) => a.id === id ? { ...a, status: "cancelled" } : a));
@@ -597,6 +599,13 @@ export default function MesRdvPage() {
                                 <MessageCircle className="h-3 w-3" />
                                 Message
                               </a>
+                              <a
+                                href={`/medecin/${a.doctorSlug}?reschedule=${a.id}`}
+                                className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg px-3 py-1.5 transition-colors"
+                              >
+                                <RefreshCw className="h-3 w-3" />
+                                Reprogrammer
+                              </a>
                               <button
                                 onClick={() => setCancelConfirm({ id: a.id, doctorName: a.doctorName, startsAt: a.startsAt })}
                                 className="inline-flex items-center gap-1 text-xs font-medium text-red-600 border border-red-200 bg-white hover:bg-red-50 rounded-lg px-3 py-1.5 transition-colors"
@@ -689,15 +698,29 @@ export default function MesRdvPage() {
                 </span>{" "}
                 ?
               </p>
+              <div className="mt-4">
+                <label htmlFor="cancel-reason" className="text-xs font-semibold text-foreground/70">
+                  Motif (optionnel)
+                </label>
+                <textarea
+                  id="cancel-reason"
+                  value={cancelReason}
+                  onChange={(e) => setCancelReason(e.target.value)}
+                  placeholder="Indiquez un motif d'annulation pour aider le médecin"
+                  rows={3}
+                  maxLength={500}
+                  className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                />
+              </div>
               <div className="mt-6 flex gap-3">
                 <button
-                  onClick={() => setCancelConfirm(null)}
+                  onClick={() => { setCancelConfirm(null); setCancelReason(""); }}
                   className="flex-1 rounded-xl border border-border dark:border-gray-600 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary dark:hover:bg-gray-700 transition-colors"
                 >
                   Non, garder
                 </button>
                 <button
-                  onClick={() => cancelAppointment(cancelConfirm.id)}
+                  onClick={() => { void cancelAppointment(cancelConfirm.id, cancelReason); setCancelReason(""); }}
                   className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-700 transition-colors"
                 >
                   Oui, annuler
