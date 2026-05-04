@@ -2192,35 +2192,37 @@ function PrescriptionModal({
               />
             )}
             {previewing ? (
-              <div className="rounded-xl border-2 border-dashed border-primary/30 bg-white shadow-sm p-6 min-h-[300px]">
-                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-primary font-bold mb-4">
+              <div className="rounded-xl border border-gray-200 bg-gradient-to-b from-white to-gray-50/50 shadow-sm overflow-hidden">
+                <div className="px-5 py-2 bg-primary/5 border-b border-primary/20 flex items-center gap-2 text-[10px] uppercase tracking-widest text-primary font-bold">
                   <Eye className="h-3 w-3" />
                   {t("previewLabel")}
                 </div>
-                <div className="border-b-2 border-primary pb-3 mb-4 flex justify-between items-start">
-                  <div>
-                    <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Patient</p>
-                    <p className="text-sm font-semibold text-gray-800">{patientName}</p>
+                <div className="p-6">
+                  <div className="border-b-2 border-primary pb-3 mb-5 flex justify-between items-end">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Patient</p>
+                      <p className="text-base font-semibold text-gray-800">{patientName}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Date</p>
+                      <p className="text-base font-semibold text-gray-800">
+                        {format(new Date(), "d MMMM yyyy", { locale: fr })}
+                      </p>
+                    </div>
                   </div>
-                  <div className="text-right">
-                    <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Date</p>
-                    <p className="text-sm font-semibold text-gray-800">
-                      {format(new Date(), "d MMMM yyyy", { locale: fr })}
-                    </p>
-                  </div>
-                </div>
-                {content.trim() ? (
-                  <div
-                    className="prose prose-sm max-w-none text-gray-800 mb-8"
-                    dangerouslySetInnerHTML={{ __html: content }}
-                  />
-                ) : (
-                  <p className="text-sm text-gray-400 italic mb-8">{t("previewEmpty")}</p>
-                )}
-                <div className="mt-8 flex justify-end">
-                  <div className="text-center min-w-[160px]">
-                    <div className="h-12 border-b border-gray-300 mb-1" />
-                    <p className="text-[10px] text-gray-400">{t("signatureLabel")}</p>
+                  {content.trim() ? (
+                    <div
+                      className="prose prose-sm max-w-none text-gray-800 [&>h1]:mt-0 [&>h1]:mb-3 [&>h2]:mt-4 [&>p]:my-2 [&>hr]:my-4"
+                      dangerouslySetInnerHTML={{ __html: content }}
+                    />
+                  ) : (
+                    <p className="text-sm text-gray-400 italic">{t("previewEmpty")}</p>
+                  )}
+                  <div className="mt-10 flex justify-end">
+                    <div className="text-center min-w-[180px]">
+                      <div className="h-14 border-b border-gray-300" />
+                      <p className="text-[11px] text-gray-500 mt-1.5">{t("signatureLabel")}</p>
+                    </div>
                   </div>
                 </div>
               </div>
