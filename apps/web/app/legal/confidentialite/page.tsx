@@ -1,12 +1,40 @@
 import type { Metadata } from "next";
 import { Scale } from "lucide-react";
+import { db, retentionPolicies } from "@doktori/db";
 
 export const metadata: Metadata = {
   title: "Politique de Confidentialité | Doktori",
   description: "Politique de confidentialité et protection des données personnelles de Doktori.",
 };
 
-export default function ConfidentialitePage() {
+const RESOURCE_LABELS: Record<string, string> = {
+  audit_logs: "Logs d'audit administrateur",
+  sms_logs: "Logs SMS / email",
+  messages: "Messagerie patient ↔ médecin",
+  cancelled_appointments: "Rendez-vous annulés",
+  inactive_patients: "Comptes patients inactifs",
+  webhook_logs: "Logs de webhooks",
+  analytics_events: "Événements analytics",
+};
+
+export const dynamic = "force-dynamic";
+
+export default async function ConfidentialitePage() {
+  let policies: Array<{
+    resourceType: string;
+    retentionDays: number;
+    description: string | null;
+    hardDelete: boolean;
+  }> = [];
+  try {
+    policies = await db
+      .select()
+      .from(retentionPolicies)
+      .orderBy(retentionPolicies.resourceType);
+  } catch {
+    // gracefully degrade if DB unreachable
+    policies = [];
+  }
   return (
     <div className="min-h-screen bg-secondary">
       {/* Teal header banner */}
@@ -137,6 +165,43 @@ export default function ConfidentialitePage() {
                 de compte, les données sont effacées sous 30 jours, à l'exception des données comptables et
                 légales conservées pour la durée requise par la loi.
               </p>
+              {policies.length > 0 && (
+                <div className="mt-4 overflow-x-auto">
+                  <p className="text-sm text-gray-600 mb-2">
+                    Durées de conservation par type de donnée :
+                  </p>
+                  <table className="w-full text-sm border border-border rounded-lg overflow-hidden">
+                    <thead className="bg-secondary text-foreground">
+                      <tr>
+                        <th className="text-left px-3 py-2 font-semibold">Type de donnée</th>
+                        <th className="text-left px-3 py-2 font-semibold">Durée</th>
+                        <th className="text-left px-3 py-2 font-semibold">Action</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {policies.map((p) => (
+                        <tr key={p.resourceType} className="border-t border-border">
+                          <td className="px-3 py-2">
+                            <div className="font-medium">
+                              {RESOURCE_LABELS[p.resourceType] ?? p.resourceType}
+                            </div>
+                            {p.description && (
+                              <div className="text-xs text-gray-500">{p.description}</div>
+                            )}
+                          </td>
+                          <td className="px-3 py-2 font-mono text-xs">
+                            {p.retentionDays} jours (≈ {(p.retentionDays / 365).toFixed(1)} an
+                            {p.retentionDays / 365 > 1 ? "s" : ""})
+                          </td>
+                          <td className="px-3 py-2 text-xs">
+                            {p.hardDelete ? "Suppression" : "Anonymisation"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </section>
 
             <section>

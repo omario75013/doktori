@@ -2,6 +2,7 @@ import { db, doctors } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 import { DoctorCard } from "@/components/doctor-card";
+import { NewsletterSignup } from "@/components/newsletter-signup";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 
@@ -50,11 +51,27 @@ export default async function SEOListingPage({ params }: Props) {
       </p>
 
       {results.length === 0 ? (
-        <div className="text-center py-12 bg-white rounded-xl shadow-sm">
-          <p className="text-gray-400 mb-4">Aucun {spec.label.toLowerCase()} inscrit dans ce quartier pour le moment.</p>
-          <p className="text-sm text-gray-400">
+        <div className="bg-white rounded-2xl shadow-sm p-8 space-y-5">
+          <div className="text-center">
+            <p className="text-lg font-bold text-foreground mb-1">
+              Aucun médecin disponible à {city.label} en {spec.label}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              Soyez prévenu(e) dès qu&apos;un médecin rejoint la plateforme dans votre zone.
+            </p>
+          </div>
+          <div className="max-w-sm mx-auto">
+            <NewsletterSignup
+              source="seo_empty_city"
+              language="fr"
+              placeholder="Votre email"
+              buttonLabel="M'alerter"
+              successMessage="Merci ! Vous serez prévenu(e) dès qu'un médecin rejoint."
+            />
+          </div>
+          <p className="text-center text-xs text-muted-foreground pt-2">
             Vous êtes {spec.label.toLowerCase()} à {city.label} ?{" "}
-            <a href="/inscription" className="text-blue-600 hover:underline">
+            <a href="/inscription" className="text-primary hover:underline">
               Inscrivez-vous gratuitement
             </a>
           </p>

@@ -19,6 +19,16 @@ export const SPECIALTIES = [
   { id: "radiologue", label: "Radiologue", labelAr: "طبيب أشعة" },
   { id: "chirurgien", label: "Chirurgien Général", labelAr: "جراح عام" },
   { id: "allergologue", label: "Allergologue", labelAr: "طبيب حساسية" },
+  { id: "diabetologue", label: "Diabétologue", labelAr: "طبيب السكري" },
+  { id: "hematologue", label: "Hématologue", labelAr: "طبيب أمراض الدم" },
+  { id: "oncologue", label: "Oncologue", labelAr: "طبيب الأورام" },
+  { id: "anesthesiste", label: "Anesthésiste", labelAr: "طبيب التخدير" },
+  { id: "geriatre", label: "Gériatre", labelAr: "طبيب المسنين" },
+  { id: "kinesitherapeute", label: "Kinésithérapeute", labelAr: "أخصائي العلاج الطبيعي" },
+  { id: "psychologue", label: "Psychologue", labelAr: "أخصائي نفسي" },
+  { id: "nutritionniste", label: "Nutritionniste", labelAr: "أخصائي التغذية" },
+  { id: "sage-femme", label: "Sage-femme", labelAr: "قابلة" },
+  { id: "medecin-sport", label: "Médecin du sport", labelAr: "طبيب الرياضة" },
 ] as const;
 
 export const CITIES = [
@@ -45,6 +55,16 @@ export const CITIES = [
   { id: "ben-arous", label: "Ben Arous", labelAr: "بن عروس", governorate: "Ben Arous" },
   { id: "ezzahra", label: "Ezzahra", labelAr: "الزهراء", governorate: "Ben Arous" },
   { id: "hammam-lif", label: "Hammam-Lif", labelAr: "حمام الأنف", governorate: "Ben Arous" },
+  { id: "le-kef", label: "Le Kef", labelAr: "الكاف", governorate: "Le Kef" },
+  { id: "siliana", label: "Siliana", labelAr: "سليانة", governorate: "Siliana" },
+  { id: "mahdia", label: "Mahdia", labelAr: "المهدية", governorate: "Mahdia" },
+  { id: "kasserine", label: "Kasserine", labelAr: "القصرين", governorate: "Kasserine" },
+  { id: "sidi-bouzid", label: "Sidi Bouzid", labelAr: "سيدي بوزيد", governorate: "Sidi Bouzid" },
+  { id: "tataouine", label: "Tataouine", labelAr: "تطاوين", governorate: "Tataouine" },
+  { id: "gafsa", label: "Gafsa", labelAr: "قفصة", governorate: "Gafsa" },
+  { id: "tozeur", label: "Tozeur", labelAr: "توزر", governorate: "Tozeur" },
+  { id: "kebili", label: "Kébili", labelAr: "قبلي", governorate: "Kébili" },
+  { id: "zaghouan", label: "Zaghouan", labelAr: "زغوان", governorate: "Zaghouan" },
 ] as const;
 
 export const APPOINTMENT_STATUSES = [

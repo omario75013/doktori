@@ -618,19 +618,19 @@ export default function MesRdvPage() {
                               <div className="flex gap-2">
                                 <button
                                   onClick={() => handleSatisfaction(a.id)}
-                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-border text-xs font-medium text-foreground hover:bg-green-50 hover:border-green-200 transition-colors"
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-border dark:border-gray-700 text-xs font-medium text-foreground hover:bg-green-50 hover:border-green-200 dark:hover:bg-green-900/30 dark:hover:border-green-700 transition-colors"
                                 >
                                   😊 Bien
                                 </button>
                                 <button
                                   onClick={() => handleSatisfaction(a.id)}
-                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-border text-xs font-medium text-foreground hover:bg-amber-50 hover:border-amber-200 transition-colors"
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-border dark:border-gray-700 text-xs font-medium text-foreground hover:bg-amber-50 hover:border-amber-200 dark:hover:bg-amber-900/30 dark:hover:border-amber-700 transition-colors"
                                 >
                                   😐 Correct
                                 </button>
                                 <button
                                   onClick={() => handleSatisfaction(a.id)}
-                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white border border-border text-xs font-medium text-foreground hover:bg-red-50 hover:border-red-200 transition-colors"
+                                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-white dark:bg-gray-800 border border-border dark:border-gray-700 text-xs font-medium text-foreground hover:bg-red-50 hover:border-red-200 dark:hover:bg-red-900/30 dark:hover:border-red-700 transition-colors"
                                 >
                                   😞 Décevant
                                 </button>
@@ -681,7 +681,7 @@ export default function MesRdvPage() {
                               </a>
                               <button
                                 onClick={() => setCancelConfirm({ id: a.id, doctorName: a.doctorName, startsAt: a.startsAt })}
-                                className="inline-flex items-center gap-1 text-xs font-medium text-red-600 border border-red-200 bg-white hover:bg-red-50 rounded-lg px-3 py-1.5 transition-colors"
+                                className="inline-flex items-center gap-1 text-xs font-medium text-red-600 dark:text-red-400 border border-red-200 dark:border-red-800 bg-white dark:bg-gray-800 hover:bg-red-50 dark:hover:bg-red-900/30 rounded-lg px-3 py-1.5 transition-colors"
                               >
                                 <X className="h-3 w-3" />
                                 Annuler

@@ -378,7 +378,7 @@ export default async function DoctorProfilePage({
             {/* ═════ LEFT COLUMN ═════ */}
             <div className="space-y-6">
               {/* Header card */}
-              <AnimatedSection index={0} className="overflow-hidden rounded-3xl border border-border bg-white shadow-sm">
+              <AnimatedSection index={0} className="overflow-hidden rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
                 {/* Cover banner — Doktori teal gradient */}
                 <div className="relative h-32 overflow-hidden bg-gradient-to-br from-foreground via-primary to-doktori-teal-light">
                   {/* Grid overlay */}
@@ -555,7 +555,7 @@ export default async function DoctorProfilePage({
               />
 
               {/* About section */}
-              <AnimatedSection index={1} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+              <AnimatedSection index={1} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                     <Sparkles className="h-4 w-4" strokeWidth={2.5} />
@@ -572,7 +572,7 @@ export default async function DoctorProfilePage({
 
               {/* Cabinet photo gallery — only shown when at least one photo exists */}
               {cabinetPhotos.length > 0 && (
-                <AnimatedSection index={2} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={2} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Building2 className="h-4 w-4" strokeWidth={2.5} />
@@ -611,7 +611,7 @@ export default async function DoctorProfilePage({
 
               {/* Lieux de consultation */}
               {practiceRows.length > 0 && doctor.consultationMode !== "teleconsult" && (
-                <AnimatedSection index={2} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={2} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <MapPin className="h-4 w-4" strokeWidth={2.5} />
@@ -667,7 +667,7 @@ export default async function DoctorProfilePage({
 
               {/* Expertises */}
               {expertise.length > 0 && (
-                <AnimatedSection index={3} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={3} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Sparkles className="h-4 w-4" strokeWidth={2.5} />
@@ -692,7 +692,7 @@ export default async function DoctorProfilePage({
 
               {/* Formation */}
               {educations.length > 0 && (
-                <AnimatedSection index={3} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={3} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <GraduationCap className="h-4 w-4" strokeWidth={2.5} />
@@ -735,7 +735,7 @@ export default async function DoctorProfilePage({
 
               {/* Expérience */}
               {experiences.length > 0 && (
-                <AnimatedSection index={4} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={4} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Briefcase className="h-4 w-4" strokeWidth={2.5} />
@@ -786,7 +786,7 @@ export default async function DoctorProfilePage({
 
               {/* Langues parlées */}
               {languages.length > 0 && (
-                <AnimatedSection index={5} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={5} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Languages className="h-4 w-4" strokeWidth={2.5} />
@@ -811,7 +811,7 @@ export default async function DoctorProfilePage({
 
               {/* Appointment types (motifs) */}
               {appointmentTypesList.length > 0 && (
-                <AnimatedSection index={6} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={6} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
@@ -847,7 +847,7 @@ export default async function DoctorProfilePage({
               )}
 
               {/* Weekly schedule */}
-              <AnimatedSection index={7} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+              <AnimatedSection index={7} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
@@ -894,7 +894,7 @@ export default async function DoctorProfilePage({
 
               {/* Avis patients — on mobile, pushed below practical info via order */}
               {reviewCount > 0 && (
-                <AnimatedSection index={8} className="order-last lg:order-none rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={8} className="order-last lg:order-none rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
@@ -1029,7 +1029,7 @@ export default async function DoctorProfilePage({
 
               {/* Similar doctors */}
               {similarDoctors.length > 0 && (
-                <AnimatedSection index={9} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={9} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Stethoscope className="h-4 w-4" strokeWidth={2.5} />

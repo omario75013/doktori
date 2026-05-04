@@ -17,6 +17,13 @@ type Doctor = {
   teleconsultFee: number | null;
 };
 
+type CnamAct = {
+  code: string;
+  nameFr: string;
+  reimbursementPct: number; // 0-100
+  baseFeeTnd: number;
+};
+
 type ConsultationType = "cabinet" | "video" | "domicile";
 type Insurance = "cnam" | "mutuelle" | "aucune";
 type VisitType = "generale" | "specialiste" | "suivi";
@@ -25,7 +32,13 @@ function fmtTND(millimes: number): string {
   return `${(millimes / 1000).toFixed(1)} TND`;
 }
 
-export default function DevisClient({ doctor }: { doctor: Doctor }) {
+export default function DevisClient({
+  doctor,
+  cnamAct,
+}: {
+  doctor: Doctor;
+  cnamAct: CnamAct | null;
+}) {
   const [consultationType, setConsultationType] = useState<ConsultationType>("cabinet");
   const [insurance, setInsurance] = useState<Insurance>("cnam");
   const [visitType, setVisitType] = useState<VisitType>(
@@ -47,12 +60,30 @@ export default function DevisClient({ doctor }: { doctor: Doctor }) {
     let coverageLabel = "Aucune couverture";
 
     if (insurance === "cnam") {
+      // Use the actual CNAM nomenclature rate when we have a mapping (item #29).
+      // CNAM only reimburses up to base_fee_tnd × reimbursement_pct on the
+      // *official* tariff — anything above is "dépassement" out of pocket.
+      if (cnamAct) {
+        const reimbursementCapMillimes = Math.round(
+          cnamAct.baseFeeTnd * 1000 * (cnamAct.reimbursementPct / 100)
+        );
+        const reimbursed = Math.min(reimbursementCapMillimes, base);
+        const outOfPocket = base - reimbursed;
+        return {
+          base,
+          reimbursed,
+          outOfPocket,
+          coverageRate: cnamAct.reimbursementPct / 100,
+          coverageLabel: `CNAM ${cnamAct.code} — ${cnamAct.nameFr} (${cnamAct.reimbursementPct.toFixed(0)}% du tarif officiel ${cnamAct.baseFeeTnd.toFixed(0)} TND)`,
+        };
+      }
+      // Fallback when no CNAM mapping available (shouldn't happen post-seed).
       if (visitType === "generale") {
         coverageRate = 0.7;
         coverageLabel = "CNAM (généraliste, ~70%)";
       } else if (visitType === "specialiste") {
-        coverageRate = 0.35;
-        coverageLabel = "CNAM (spécialiste, ~35%)";
+        coverageRate = 0.6;
+        coverageLabel = "CNAM (spécialiste, ~60%)";
       } else {
         coverageRate = 0.5;
         coverageLabel = "CNAM (suivi, ~50%)";
@@ -66,7 +97,7 @@ export default function DevisClient({ doctor }: { doctor: Doctor }) {
     const outOfPocket = base - reimbursed;
 
     return { base, reimbursed, outOfPocket, coverageRate, coverageLabel };
-  }, [consultationType, insurance, visitType, doctor]);
+  }, [consultationType, insurance, visitType, doctor, cnamAct]);
 
   return (
     <div className="min-h-screen bg-secondary px-4 py-8 sm:py-12">

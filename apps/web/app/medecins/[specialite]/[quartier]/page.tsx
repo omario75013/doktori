@@ -5,6 +5,7 @@ import { db, doctors } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 import { MapPin, Star, Calendar, ChevronRight } from "lucide-react";
+import { NewsletterSignup } from "@/components/newsletter-signup";
 
 export async function generateStaticParams() {
   const params = [];
