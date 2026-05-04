@@ -16,6 +16,7 @@ import { Toaster } from "sonner";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
 import { CookieBanner } from "@/components/cookie-banner";
 import { ServiceWorkerRegister } from "@/components/sw-register";
+import { SupportButton } from "@/components/support-button";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -125,6 +126,7 @@ export default async function RootLayout({
             <PatientShell>
               <Chatbot />
               <InstallPrompt />
+              <SupportButton />
             </PatientShell>
             <CookieBanner />
           </NextIntlClientProvider>

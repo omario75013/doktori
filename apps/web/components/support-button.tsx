@@ -21,7 +21,7 @@ export function SupportButton() {
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Contacter le support sur WhatsApp"
-      className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-40 flex h-14 w-14 items-center justify-center rounded-full shadow-lg text-white transition-transform hover:scale-105 active:scale-95"
+      className="fixed bottom-24 right-4 md:bottom-24 md:right-6 z-40 flex h-12 w-12 md:h-14 md:w-14 items-center justify-center rounded-full shadow-lg text-white transition-transform hover:scale-105 active:scale-95"
       style={{ backgroundColor: "#25D366" }}
     >
       <MessageCircle className="h-7 w-7" strokeWidth={2.2} />
