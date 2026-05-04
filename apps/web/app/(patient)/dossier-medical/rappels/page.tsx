@@ -303,7 +303,7 @@ export default function ChronicRemindersPage() {
                 <Select
                   value={diseaseSlug || "none"}
                   onValueChange={(v) => {
-                    if (v === "none") {
+                    if (!v || v === "none") {
                       setDiseaseSlug("");
                     } else {
                       setDiseaseSlug(v);
