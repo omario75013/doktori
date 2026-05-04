@@ -22,6 +22,7 @@ import {
   FileText,
   Star,
   RefreshCw,
+  CalendarPlus,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
@@ -257,6 +258,30 @@ export default function MesRdvPage() {
 
   function dismissSatisfaction(apptId: string) {
     setDismissedSatisfaction((prev) => new Set([...prev, apptId]));
+  }
+
+  async function downloadIcs(apptId: string) {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/me/appointments/${apptId}/ics`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) {
+        toast.error("Erreur lors du téléchargement");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `doktori-${apptId}.ics`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Erreur lors du téléchargement");
+    }
   }
 
   if (step === "phone") {
@@ -599,6 +624,13 @@ export default function MesRdvPage() {
                                 <MessageCircle className="h-3 w-3" />
                                 Message
                               </a>
+                              <button
+                                onClick={() => void downloadIcs(a.id)}
+                                className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg px-3 py-1.5 transition-colors"
+                              >
+                                <CalendarPlus className="h-3 w-3" />
+                                Calendrier
+                              </button>
                               <a
                                 href={`/medecin/${a.doctorSlug}?reschedule=${a.id}`}
                                 className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 bg-amber-50 hover:bg-amber-100 border border-amber-200 rounded-lg px-3 py-1.5 transition-colors"
