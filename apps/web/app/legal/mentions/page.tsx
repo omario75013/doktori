@@ -20,7 +20,7 @@ export default function MentionsPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Mentions Légales</h1>
-            <p className="text-cyan-100 text-sm mt-0.5">Dernière mise à jour : 18 avril 2026</p>
+            <p className="text-cyan-100 text-sm mt-0.5">Dernière mise à jour : 4 mai 2026</p>
           </div>
         </div>
       </div>
@@ -32,15 +32,21 @@ export default function MentionsPage() {
             <section>
               <h2 className="text-lg font-bold text-foreground mb-3">1. Éditeur du site</h2>
               <p>
-                Le site <strong>Doktori.tn</strong> est édité par <strong>RANDOM WALKERS</strong>, Société Unipersonnelle à Responsabilité Limitée (SUARL) au capital de 1 400 TND, immatriculée au Registre National des Entreprises sous le n° <strong>1625867B</strong> (n° de gestion interne : B01130082019), dont le siège social est situé à l&apos;Immeuble Babel, Bloc D, Montplaisir, 1073 Bab Bhar, Tunis, Tunisie.
+                <strong>Doktori est une marque exploitée par Random Walkers SUARL.</strong>
+              </p>
+              <p className="mt-2">
+                Le site <strong>Doktori.tn</strong> est édité par <strong>Random Walkers SUARL</strong>, Société Unipersonnelle à Responsabilité Limitée au capital de 1 400 TND, immatriculée au Registre National des Entreprises sous le n° <strong>1625867B</strong> (n° de gestion interne : B01130082019), dont le siège social est situé à l&apos;Immeuble Babel, Bloc D, Montplaisir 1073, Bab Bhar, Tunis — Tunisie.
               </p>
               <ul className="mt-3 space-y-1.5">
-                <li><strong>RNE :</strong> 1625867B</li>
-                <li><strong>Code activité (NAT) :</strong> 74 — Consultations en informatique</li>
-                <li><strong>Date début activité :</strong> 7 juin 2019</li>
-                <li><strong>Gérant :</strong> Omar Harbi</li>
-                <li><strong>Matricule fiscal :</strong> 1625867/B/A/M/000</li>
+                <li><strong>Dénomination sociale :</strong> Random Walkers SUARL</li>
+                <li><strong>Forme juridique :</strong> Société Unipersonnelle à Responsabilité Limitée</li>
+                <li><strong>Capital social :</strong> 1 400 TND (entièrement libéré)</li>
+                <li><strong>Identifiant Unique (RNE) :</strong> 1625867B</li>
+                <li><strong>Matricule fiscal :</strong> 1625867/B</li>
+                <li><strong>Siège social :</strong> Immeuble Babel, Bloc D, Montplaisir 1073, Bab Bhar, Tunis — Tunisie</li>
+                <li><strong>Gérant :</strong> Omar HARBI</li>
                 <li><strong>Email :</strong> <a href="mailto:contact@doktori.tn" className="text-primary hover:underline">contact@doktori.tn</a></li>
+                <li><strong>Site web :</strong> <a href="https://doktori.tn" className="text-primary hover:underline" target="_blank" rel="noopener">https://doktori.tn</a></li>
               </ul>
             </section>
 

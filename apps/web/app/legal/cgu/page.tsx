@@ -20,7 +20,7 @@ export default function CGUPage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Conditions Générales d'Utilisation</h1>
-            <p className="text-cyan-100 text-sm mt-0.5">Dernière mise à jour : 10 avril 2026</p>
+            <p className="text-cyan-100 text-sm mt-0.5">Dernière mise à jour : 4 mai 2026</p>
           </div>
         </div>
       </div>
@@ -30,16 +30,28 @@ export default function CGUPage() {
         <div className="rounded-2xl border border-border bg-white p-8 shadow-sm">
           <div className="prose prose-gray max-w-none space-y-6 text-sm leading-relaxed">
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">1. Objet</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">1. Identification de l'Éditeur</h2>
               <p>
-                Les présentes Conditions Générales d'Utilisation (CGU) ont pour objet de définir les modalités et
-                conditions d'utilisation de la plateforme Doktori, accessible à l'adresse doktori.tn, ainsi que
+                Les présentes Conditions Générales d&apos;Utilisation régissent l&apos;usage de la plateforme Doktori
+                (<a href="https://doktori.tn" className="text-primary hover:text-doktori-teal-dark hover:underline">https://doktori.tn</a>),
+                exploitée par <strong>Random Walkers SUARL</strong>, société unipersonnelle à responsabilité limitée
+                au capital de 1 400 TND, immatriculée au Registre National des Entreprises sous le numéro
+                <strong> 1625867B</strong>, ayant son siège social à Immeuble Babel, Bloc D, Montplaisir 1073,
+                Bab Bhar, Tunis (ci-après « Doktori » ou « l&apos;Éditeur »).
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-3">2. Objet</h2>
+              <p>
+                Les présentes Conditions Générales d&apos;Utilisation (CGU) ont pour objet de définir les modalités et
+                conditions d&apos;utilisation de la plateforme Doktori, accessible à l&apos;adresse doktori.tn, ainsi que
                 les droits et obligations des utilisateurs.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">2. Définitions</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">3. Définitions</h2>
               <ul className="list-disc pl-6 space-y-1">
                 <li><strong>Plateforme</strong> : le site web et l'application mobile Doktori.</li>
                 <li><strong>Patient</strong> : toute personne utilisant la Plateforme pour rechercher et prendre rendez-vous avec un médecin.</li>
@@ -49,7 +61,7 @@ export default function CGUPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">3. Services proposés</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">4. Services proposés</h2>
               <p>
                 Doktori est une plateforme de mise en relation entre patients et professionnels de santé. La Plateforme
                 permet :
@@ -64,7 +76,7 @@ export default function CGUPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">4. Nature des services</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">5. Nature des services</h2>
               <p>
                 <strong>Doktori n'est PAS un service d'urgence médicale.</strong> En cas d'urgence vitale, composez
                 immédiatement le <strong>190 (SAMU)</strong> ou le <strong>198 (Protection Civile)</strong>.
@@ -76,7 +88,7 @@ export default function CGUPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">5. Inscription et compte utilisateur</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">6. Inscription et compte utilisateur</h2>
               <p>
                 L'inscription sur la Plateforme est gratuite pour les patients. Les médecins bénéficient d'une
                 période gratuite puis d'un abonnement payant. L'utilisateur s'engage à fournir des informations
@@ -85,7 +97,7 @@ export default function CGUPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">6. Responsabilité</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">7. Responsabilité</h2>
               <p>
                 Doktori agit uniquement en qualité d'intermédiaire technique. La Plateforme ne saurait être tenue
                 responsable de la qualité des consultations médicales, du contenu des avis patients, ni des
@@ -94,7 +106,7 @@ export default function CGUPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">7. Données personnelles</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">8. Données personnelles</h2>
               <p>
                 Les données personnelles des utilisateurs sont traitées conformément à la
                 <a href="/legal/confidentialite" className="text-primary hover:text-doktori-teal-dark hover:underline"> Politique de Confidentialité </a>
@@ -104,7 +116,7 @@ export default function CGUPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">8. Propriété intellectuelle</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">9. Propriété intellectuelle</h2>
               <p>
                 Tous les éléments de la Plateforme (textes, logos, graphismes, code) sont la propriété exclusive de
                 Doktori. Toute reproduction non autorisée est interdite.
@@ -112,7 +124,7 @@ export default function CGUPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">9. Droit applicable</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">10. Droit applicable</h2>
               <p>
                 Les présentes CGU sont régies par le droit tunisien. Tout litige sera soumis aux tribunaux
                 compétents de Tunis.
@@ -120,7 +132,7 @@ export default function CGUPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">10. Contact</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">11. Contact</h2>
               <p>
                 Pour toute question relative aux présentes CGU : <a href="mailto:contact@doktori.tn" className="text-primary hover:text-doktori-teal-dark hover:underline">contact@doktori.tn</a>
               </p>
