@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { db, appointments, patients } from "@doktori/db";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { DashboardClient } from "./dashboard-client";
+import { OnboardingTour } from "@/components/medecin/onboarding-tour";
 import { getSMSUsage } from "@/lib/sms-quota";
 
 export default async function DashboardPage() {
@@ -88,7 +89,7 @@ export default async function DashboardPage() {
   // Fetch doctor consultation mode, verification status + teleconsult stats + new quick stats
   const [doctorRow, teleconsultCountRow, walletRow, smsUsageData, totalPatientsRow, monthStatsRow, recentActivityRows] = await Promise.all([
     db.execute(
-      sql`SELECT consultation_mode, verification_status, verification_note, average_rating FROM doctors WHERE id = ${doctorId} LIMIT 1`
+      sql`SELECT consultation_mode, verification_status, verification_note, average_rating, onboarding_tour_completed_at, onboarding_tour_skipped FROM doctors WHERE id = ${doctorId} LIMIT 1`
     ),
     db.execute(
       sql`SELECT COUNT(*) AS count FROM appointments WHERE doctor_id = ${doctorId} AND type = 'teleconsult' AND starts_at >= ${monthStart.toISOString()}`
@@ -126,12 +127,16 @@ export default async function DashboardPage() {
     verification_status: string | null;
     verification_note: string | null;
     average_rating: number | null;
+    onboarding_tour_completed_at: string | null;
+    onboarding_tour_skipped: boolean | null;
   };
   const drRow = ((doctorRow as unknown as DoctorRowType[])[0]);
   const consultationMode = drRow?.consultation_mode ?? "cabinet";
   const verificationStatus = drRow?.verification_status ?? "pending";
   const verificationNote = drRow?.verification_note ?? null;
   const averageRating = Number(drRow?.average_rating ?? 0);
+  const tourEnabled =
+    !drRow?.onboarding_tour_completed_at && !drRow?.onboarding_tour_skipped;
 
   const teleconsultCount = Number(
     ((teleconsultCountRow as unknown as Array<{ count: string }>)[0])?.count ?? 0
@@ -168,7 +173,9 @@ export default async function DashboardPage() {
   }));
 
   return (
-    <DashboardClient
+    <>
+      <OnboardingTour enabled={tourEnabled} />
+      <DashboardClient
       doctorName={session.user.name ?? "Médecin"}
       todayCount={todayAppts.length}
       toConfirm={toConfirm}
@@ -192,5 +199,6 @@ export default async function DashboardPage() {
       waitingRoomCount={waitingPatients.length}
       waitingPatients={waitingPatients}
     />
+    </>
   );
 }

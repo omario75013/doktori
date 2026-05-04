@@ -193,6 +193,7 @@ export function SidebarNav({
       )}
 
       <aside
+        data-tour-id="sidebar"
         className={`
           ${width}
           fixed md:static inset-y-0 left-0 z-30
@@ -239,6 +240,7 @@ export function SidebarNav({
                       <Link
                         href={locked ? "/abonnement" : item.href}
                         onClick={() => setOpen(false)}
+                        data-tour-id={`nav-${item.href.replace(/^\//, "").replace(/\//g, "-") || "dashboard"}`}
                         title={collapsed ? item.label : locked ? "Passer à Pro" : undefined}
                         className={`
                           group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors
