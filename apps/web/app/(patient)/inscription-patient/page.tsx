@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -50,9 +50,22 @@ function validatePhone(phone: string): string | null {
 
 export default function InscriptionPatientPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
+
+  // Capture referral code from URL (?ref=CODE) and persist in localStorage
+  useEffect(() => {
+    const ref = searchParams.get("ref");
+    if (ref) {
+      try {
+        localStorage.setItem("doktori_referral_code", ref.toUpperCase());
+      } catch {
+        // ignore
+      }
+    }
+  }, [searchParams]);
 
   const [form, setForm] = useState({
     name: "",
@@ -115,6 +128,25 @@ export default function InscriptionPatientPage() {
       }
 
       localStorage.setItem("doktori_patient_token", data.token);
+
+      // Track referral if a code was captured during onboarding
+      try {
+        const referrerCode = localStorage.getItem("doktori_referral_code");
+        if (referrerCode) {
+          await fetch("/api/me/referral/track", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${data.token}`,
+            },
+            body: JSON.stringify({ referrerCode }),
+          }).catch(() => {});
+          localStorage.removeItem("doktori_referral_code");
+        }
+      } catch {
+        // ignore tracking errors — they shouldn't block signup
+      }
+
       router.push("/mon-espace");
     } catch {
       setError("Une erreur est survenue. Veuillez réessayer.");

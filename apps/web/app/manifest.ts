@@ -30,5 +30,44 @@ export default function manifest(): MetadataRoute.Manifest {
         purpose: "maskable",
       },
     ],
+    shortcuts: [
+      {
+        name: "Rechercher un médecin",
+        short_name: "Recherche",
+        description: "Trouvez un médecin par spécialité ou ville",
+        url: "/recherche",
+        icons: [{ src: "/icon-192.png", sizes: "192x192" }],
+      },
+      {
+        name: "Mes rendez-vous",
+        short_name: "Mes RDV",
+        description: "Consultez vos rendez-vous à venir",
+        url: "/mes-rdv",
+        icons: [{ src: "/icon-192.png", sizes: "192x192" }],
+      },
+      {
+        name: "SOS Médecin",
+        short_name: "SOS",
+        description: "Trouvez un médecin disponible immédiatement",
+        url: "/sos",
+        icons: [{ src: "/icon-192.png", sizes: "192x192" }],
+      },
+    ],
+    screenshots: [
+      {
+        src: "/screenshots/home.png",
+        sizes: "1080x1920",
+        type: "image/png",
+        form_factor: "narrow",
+        label: "Page d'accueil Doktori",
+      },
+      {
+        src: "/screenshots/search.png",
+        sizes: "1080x1920",
+        type: "image/png",
+        form_factor: "narrow",
+        label: "Recherche de médecin",
+      },
+    ],
   };
 }

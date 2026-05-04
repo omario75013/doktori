@@ -47,10 +47,35 @@ export async function POST(req: NextRequest) {
     }
 
     const body = await req.json();
-    const { appointmentId, rating, comment } = body;
+    const {
+      appointmentId,
+      rating,
+      comment,
+      punctualityRating,
+      communicationRating,
+      cleanlinessRating,
+      staffRating,
+    } = body;
 
     if (!appointmentId || typeof rating !== "number" || rating < 1 || rating > 5) {
       return NextResponse.json({ error: "appointmentId et rating (1-5) requis" }, { status: 400 });
+    }
+
+    // Validate optional multi-criteria ratings
+    const subRatingFields = {
+      punctualityRating,
+      communicationRating,
+      cleanlinessRating,
+      staffRating,
+    };
+    for (const [key, val] of Object.entries(subRatingFields)) {
+      if (val == null) continue;
+      if (typeof val !== "number" || val < 1 || val > 5) {
+        return NextResponse.json(
+          { error: `${key} doit être entre 1 et 5` },
+          { status: 400 }
+        );
+      }
     }
 
     // Verify the appointment exists and is completed
@@ -91,6 +116,10 @@ export async function POST(req: NextRequest) {
         comment: comment || null,
         verified: true,
         status: "pending",
+        punctualityRating: punctualityRating ?? null,
+        communicationRating: communicationRating ?? null,
+        cleanlinessRating: cleanlinessRating ?? null,
+        staffRating: staffRating ?? null,
       })
       .returning();
 

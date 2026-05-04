@@ -98,8 +98,9 @@ function timeAgo(date: Date): string {
   return years === 1 ? "il y a 1 an" : `il y a ${years} ans`;
 }
 
-function StarRating({ value }: { value: number }) {
+function StarRating({ value, size = "md" }: { value: number; size?: "sm" | "md" }) {
   const rounded = Math.round(value);
+  const dim = size === "sm" ? "h-3 w-3" : "h-4 w-4";
   return (
     <div className="inline-flex items-center gap-0.5" aria-label={`${value.toFixed(1)} sur 5`}>
       {[1, 2, 3, 4, 5].map((i) => (
@@ -107,8 +108,8 @@ function StarRating({ value }: { value: number }) {
           key={i}
           className={
             i <= rounded
-              ? "h-4 w-4 fill-doktori-amber text-doktori-amber"
-              : "h-4 w-4 fill-gray-200 text-gray-200"
+              ? `${dim} fill-doktori-amber text-doktori-amber`
+              : `${dim} fill-gray-200 text-gray-200`
           }
         />
       ))}
@@ -202,6 +203,10 @@ export default async function DoctorProfilePage({
     .select({
       avg: sql<string | null>`AVG(${reviews.rating})::text`,
       count: sql<number>`COUNT(*)::int`,
+      avgPunctuality: sql<string | null>`AVG(${reviews.punctualityRating})::text`,
+      avgCommunication: sql<string | null>`AVG(${reviews.communicationRating})::text`,
+      avgCleanliness: sql<string | null>`AVG(${reviews.cleanlinessRating})::text`,
+      avgStaff: sql<string | null>`AVG(${reviews.staffRating})::text`,
     })
     .from(reviews)
     .where(eq(reviews.doctorId, doctor.id));
@@ -209,6 +214,12 @@ export default async function DoctorProfilePage({
   const reviewCount = aggregateRow?.count ?? 0;
   const averageRating =
     aggregateRow?.avg != null ? Number.parseFloat(aggregateRow.avg) : 0;
+  const subRatings = {
+    punctuality: aggregateRow?.avgPunctuality != null ? Number.parseFloat(aggregateRow.avgPunctuality) : 0,
+    communication: aggregateRow?.avgCommunication != null ? Number.parseFloat(aggregateRow.avgCommunication) : 0,
+    cleanliness: aggregateRow?.avgCleanliness != null ? Number.parseFloat(aggregateRow.avgCleanliness) : 0,
+    staff: aggregateRow?.avgStaff != null ? Number.parseFloat(aggregateRow.avgStaff) : 0,
+  };
 
   const latestReviews = reviewCount
     ? await db
@@ -464,6 +475,19 @@ export default async function DoctorProfilePage({
                       <div className="mt-4 flex items-start gap-2 text-sm text-muted-foreground">
                         <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" strokeWidth={2.5} />
                         <span>{doctor.address}</span>
+                      </div>
+                    )}
+
+                    {/* CNAM price estimator link */}
+                    {doctor.consultationFee != null && (
+                      <div className="mt-3">
+                        <Link
+                          href={`/devis/${doctor.id}`}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-bold text-primary transition hover:border-primary"
+                        >
+                          <span aria-hidden>💰</span>
+                          Estimer le prix CNAM / mutuelle
+                        </Link>
                       </div>
                     )}
 
@@ -849,6 +873,47 @@ export default async function DoctorProfilePage({
                       <StarRating value={averageRating} />
                     </div>
                   </div>
+
+                  {(subRatings.punctuality > 0 || subRatings.communication > 0 || subRatings.cleanliness > 0 || subRatings.staff > 0) && (
+                    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      {subRatings.punctuality > 0 && (
+                        <div className="rounded-xl bg-secondary/40 p-3">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Ponctualité</div>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-foreground">{subRatings.punctuality.toFixed(1)}</span>
+                            <StarRating value={subRatings.punctuality} size="sm" />
+                          </div>
+                        </div>
+                      )}
+                      {subRatings.communication > 0 && (
+                        <div className="rounded-xl bg-secondary/40 p-3">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Communication</div>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-foreground">{subRatings.communication.toFixed(1)}</span>
+                            <StarRating value={subRatings.communication} size="sm" />
+                          </div>
+                        </div>
+                      )}
+                      {subRatings.cleanliness > 0 && (
+                        <div className="rounded-xl bg-secondary/40 p-3">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Propreté</div>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-foreground">{subRatings.cleanliness.toFixed(1)}</span>
+                            <StarRating value={subRatings.cleanliness} size="sm" />
+                          </div>
+                        </div>
+                      )}
+                      {subRatings.staff > 0 && (
+                        <div className="rounded-xl bg-secondary/40 p-3">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Personnel</div>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-foreground">{subRatings.staff.toFixed(1)}</span>
+                            <StarRating value={subRatings.staff} size="sm" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <ul className="mt-6 space-y-4">
                     {latestReviews.map((r) => {
