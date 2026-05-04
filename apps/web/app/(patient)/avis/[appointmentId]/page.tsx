@@ -13,6 +13,10 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
   const { appointmentId } = use(params);
   const router = useRouter();
   const [rating, setRating] = useState(0);
+  const [punctuality, setPunctuality] = useState(0);
+  const [communication, setCommunication] = useState(0);
+  const [cleanliness, setCleanliness] = useState(0);
+  const [staff, setStaff] = useState(0);
   const [comment, setComment] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -21,7 +25,7 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (rating === 0) {
-      setError("Veuillez sélectionner une note");
+      setError("Veuillez sélectionner une note globale");
       return;
     }
     setLoading(true);
@@ -29,7 +33,15 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
     const res = await fetch("/api/reviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ appointmentId, rating, comment: comment || undefined }),
+      body: JSON.stringify({
+        appointmentId,
+        rating,
+        comment: comment || undefined,
+        punctualityRating: punctuality || undefined,
+        communicationRating: communication || undefined,
+        cleanlinessRating: cleanliness || undefined,
+        staffRating: staff || undefined,
+      }),
     });
     setLoading(false);
     if (!res.ok) {
@@ -74,8 +86,30 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
 
         <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-6">
           <div>
-            <p className="text-sm font-medium text-foreground mb-3">Votre note</p>
+            <p className="text-sm font-medium text-foreground mb-3">Note globale</p>
             <StarRating value={rating} onChange={setRating} size="lg" />
+          </div>
+
+          <div className="space-y-4 rounded-xl border border-border bg-secondary/40 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Critères détaillés (optionnel)
+            </p>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm text-foreground">Ponctualité</span>
+              <StarRating value={punctuality} onChange={setPunctuality} size="md" />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm text-foreground">Communication</span>
+              <StarRating value={communication} onChange={setCommunication} size="md" />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm text-foreground">Propreté du cabinet</span>
+              <StarRating value={cleanliness} onChange={setCleanliness} size="md" />
+            </div>
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-sm text-foreground">Personnel / Secrétariat</span>
+              <StarRating value={staff} onChange={setStaff} size="md" />
+            </div>
           </div>
 
           <div>

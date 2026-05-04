@@ -201,6 +201,10 @@ export default async function DoctorProfilePage({
     .select({
       avg: sql<string | null>`AVG(${reviews.rating})::text`,
       count: sql<number>`COUNT(*)::int`,
+      avgPunctuality: sql<string | null>`AVG(${reviews.punctualityRating})::text`,
+      avgCommunication: sql<string | null>`AVG(${reviews.communicationRating})::text`,
+      avgCleanliness: sql<string | null>`AVG(${reviews.cleanlinessRating})::text`,
+      avgStaff: sql<string | null>`AVG(${reviews.staffRating})::text`,
     })
     .from(reviews)
     .where(eq(reviews.doctorId, doctor.id));
@@ -208,6 +212,12 @@ export default async function DoctorProfilePage({
   const reviewCount = aggregateRow?.count ?? 0;
   const averageRating =
     aggregateRow?.avg != null ? Number.parseFloat(aggregateRow.avg) : 0;
+  const subRatings = {
+    punctuality: aggregateRow?.avgPunctuality != null ? Number.parseFloat(aggregateRow.avgPunctuality) : 0,
+    communication: aggregateRow?.avgCommunication != null ? Number.parseFloat(aggregateRow.avgCommunication) : 0,
+    cleanliness: aggregateRow?.avgCleanliness != null ? Number.parseFloat(aggregateRow.avgCleanliness) : 0,
+    staff: aggregateRow?.avgStaff != null ? Number.parseFloat(aggregateRow.avgStaff) : 0,
+  };
 
   const latestReviews = reviewCount
     ? await db
@@ -845,6 +855,47 @@ export default async function DoctorProfilePage({
                       <StarRating value={averageRating} />
                     </div>
                   </div>
+
+                  {(subRatings.punctuality > 0 || subRatings.communication > 0 || subRatings.cleanliness > 0 || subRatings.staff > 0) && (
+                    <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
+                      {subRatings.punctuality > 0 && (
+                        <div className="rounded-xl bg-secondary/40 p-3">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Ponctualité</div>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-foreground">{subRatings.punctuality.toFixed(1)}</span>
+                            <StarRating value={subRatings.punctuality} size="sm" />
+                          </div>
+                        </div>
+                      )}
+                      {subRatings.communication > 0 && (
+                        <div className="rounded-xl bg-secondary/40 p-3">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Communication</div>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-foreground">{subRatings.communication.toFixed(1)}</span>
+                            <StarRating value={subRatings.communication} size="sm" />
+                          </div>
+                        </div>
+                      )}
+                      {subRatings.cleanliness > 0 && (
+                        <div className="rounded-xl bg-secondary/40 p-3">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Propreté</div>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-foreground">{subRatings.cleanliness.toFixed(1)}</span>
+                            <StarRating value={subRatings.cleanliness} size="sm" />
+                          </div>
+                        </div>
+                      )}
+                      {subRatings.staff > 0 && (
+                        <div className="rounded-xl bg-secondary/40 p-3">
+                          <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Personnel</div>
+                          <div className="mt-1 flex items-center gap-1.5">
+                            <span className="text-sm font-bold text-foreground">{subRatings.staff.toFixed(1)}</span>
+                            <StarRating value={subRatings.staff} size="sm" />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                   <ul className="mt-6 space-y-4">
                     {latestReviews.map((r) => {
