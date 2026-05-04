@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Loader2, Save, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -21,13 +22,15 @@ interface InitialData {
 }
 
 interface Props {
-  /** "create" | "edit" — doctor flow. "admin" — admin creates/edits official templates. */
-  mode: "create" | "edit" | "admin";
+  /** "create" | "edit" — doctor flow. "view" — read-only (official templates). "admin" — admin creates/edits official templates. */
+  mode: "create" | "edit" | "view" | "admin";
   initialData?: InitialData;
 }
 
 export function TemplateEditor({ mode, initialData }: Props) {
   const router = useRouter();
+  const t = useTranslations("medecin.modeles");
+  const readOnly = mode === "view";
 
   const [title, setTitle] = useState(initialData?.title ?? "");
   const [description, setDescription] = useState(initialData?.description ?? "");
@@ -42,6 +45,10 @@ export function TemplateEditor({ mode, initialData }: Props) {
 
   // Track dirty state
   useEffect(() => {
+    if (readOnly) {
+      setDirty(false);
+      return;
+    }
     if (mode === "create" || mode === "admin") {
       setDirty(title.length > 0 || body.length > 0);
     } else {
@@ -53,7 +60,7 @@ export function TemplateEditor({ mode, initialData }: Props) {
         slug !== (initialData?.slug ?? "");
       setDirty(changed);
     }
-  }, [title, description, language, body, slug, mode, initialData]);
+  }, [title, description, language, body, slug, mode, initialData, readOnly]);
 
   // Warn before leaving with unsaved changes
   useEffect(() => {
@@ -69,7 +76,7 @@ export function TemplateEditor({ mode, initialData }: Props) {
 
   const handleSave = useCallback(async () => {
     if (!title.trim()) {
-      toast.error("Le titre est obligatoire");
+      toast.error(t("titleRequired"));
       return;
     }
 
@@ -107,7 +114,7 @@ export function TemplateEditor({ mode, initialData }: Props) {
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error ?? "Erreur lors de la sauvegarde");
+        throw new Error((data as { error?: string }).error ?? t("saveError"));
       }
 
       setDirty(false);
@@ -115,60 +122,68 @@ export function TemplateEditor({ mode, initialData }: Props) {
         toast.success(initialData?.id ? "Modèle officiel mis à jour" : "Modèle officiel créé");
         router.push("/admin/templates");
       } else {
-        toast.success(mode === "create" ? "Modèle créé avec succès" : "Modèle mis à jour");
+        toast.success(mode === "create" ? t("created") : t("updated"));
         router.push("/modeles");
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur serveur");
+      toast.error(e instanceof Error ? e.message : t("errorServer"));
     } finally {
       setSaving(false);
     }
-  }, [title, description, language, body, slug, mode, initialData, router]);
+  }, [title, description, language, body, slug, mode, initialData, router, t]);
+
+  const headerTitle =
+    mode === "create"
+      ? t("newTitle")
+      : mode === "view"
+      ? t("viewTitle")
+      : mode === "admin"
+      ? initialData?.id
+        ? "Modifier le modèle officiel"
+        : "Nouveau modèle officiel"
+      : t("editTitle");
+
+  const headerSubtitle =
+    mode === "view"
+      ? t("viewSubtitle")
+      : mode === "admin"
+      ? "Modèle officiel Doktori — visible par tous les médecins"
+      : t("editorSubtitle");
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-semibold text-gray-900">
-            {mode === "create"
-              ? "Nouveau modèle"
-              : mode === "admin"
-              ? initialData?.id
-                ? "Modifier le modèle officiel"
-                : "Nouveau modèle officiel"
-              : "Modifier le modèle"}
-          </h1>
-          <p className="text-sm text-gray-500 mt-0.5">
-            {mode === "admin"
-              ? "Modèle officiel Doktori — visible par tous les médecins"
-              : "Utilisez les variables pour personnaliser automatiquement le contenu"}
-          </p>
+          <h1 className="text-xl font-semibold text-gray-900">{headerTitle}</h1>
+          <p className="text-sm text-gray-500 mt-0.5">{headerSubtitle}</p>
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="outline"
             size="sm"
             onClick={() => {
-              if (dirty && !confirm("Modifications non sauvegardées. Quitter quand même ?")) return;
+              if (dirty && !confirm(t("unsavedConfirm"))) return;
               router.push(mode === "admin" ? "/admin/templates" : "/modeles");
             }}
           >
             <ArrowLeft className="size-4 mr-2" />
-            Retour
+            {t("back")}
           </Button>
-          <Button
-            onClick={handleSave}
-            disabled={saving || !title.trim() || !body.trim()}
-            size="sm"
-          >
-            {saving ? (
-              <Loader2 className="size-4 mr-2 animate-spin" />
-            ) : (
-              <Save className="size-4 mr-2" />
-            )}
-            {saving ? "Sauvegarde…" : "Sauvegarder"}
-          </Button>
+          {!readOnly && (
+            <Button
+              onClick={handleSave}
+              disabled={saving || !title.trim() || !body.trim()}
+              size="sm"
+            >
+              {saving ? (
+                <Loader2 className="size-4 mr-2 animate-spin" />
+              ) : (
+                <Save className="size-4 mr-2" />
+              )}
+              {saving ? t("saving") : t("save")}
+            </Button>
+          )}
         </div>
       </div>
 
@@ -180,30 +195,32 @@ export function TemplateEditor({ mode, initialData }: Props) {
             {/* Titre */}
             <div className="space-y-1.5">
               <Label htmlFor="title" className="text-sm font-medium">
-                Titre <span className="text-red-500">*</span>
+                {t("fieldTitle")} {!readOnly && <span className="text-red-500">*</span>}
               </Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 maxLength={120}
-                placeholder="Ex: Ordonnance standard cardiologie"
+                placeholder={t("fieldTitlePlaceholder")}
                 className="rounded-lg"
+                disabled={readOnly}
               />
-              <p className="text-xs text-gray-400 text-right">{title.length}/120</p>
+              {!readOnly && <p className="text-xs text-gray-400 text-right">{title.length}/120</p>}
             </div>
 
             {/* Description */}
             <div className="space-y-1.5">
               <Label htmlFor="description" className="text-sm font-medium">
-                Description
+                {t("fieldDescription")}
               </Label>
               <Input
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Description courte (optionnelle)"
+                placeholder={t("fieldDescriptionPlaceholder")}
                 className="rounded-lg"
+                disabled={readOnly}
               />
             </div>
 
@@ -248,45 +265,44 @@ export function TemplateEditor({ mode, initialData }: Props) {
             {/* Langue */}
             <div className="space-y-1.5">
               <Label htmlFor="language" className="text-sm font-medium">
-                Langue
+                {t("fieldLanguage")}
               </Label>
               <select
                 id="language"
                 value={language}
                 onChange={(e) => setLanguage(e.target.value as "fr" | "ar")}
-                className="h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                disabled={readOnly}
+                className="h-9 w-full rounded-lg border border-input bg-transparent px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:opacity-60"
               >
-                <option value="fr">Français</option>
-                <option value="ar">العربية</option>
+                <option value="fr">{t("filterFr")}</option>
+                <option value="ar">{t("filterAr")}</option>
               </select>
             </div>
 
             {/* Contenu */}
             <div className="space-y-1.5">
               <Label htmlFor="body" className="text-sm font-medium">
-                Contenu <span className="text-red-500">*</span>
+                {t("fieldContent")} {!readOnly && <span className="text-red-500">*</span>}
               </Label>
               <HighlightedTextarea
                 value={body}
-                onChange={setBody}
-                placeholder={`Contenu en Markdown. Utilisez {{first_name}}, {{doctor_name}}, etc.`}
+                onChange={readOnly ? () => {} : setBody}
+                placeholder={t("fieldContentPlaceholder")}
                 dir={language === "ar" ? "rtl" : "ltr"}
                 minHeight="400px"
               />
-              <p className="text-xs text-gray-400">
-                Markdown supporté. Les variables{" "}
-                <code className="bg-cyan-50 text-cyan-700 rounded px-0.5 text-[10px]">
-                  {"{{variable}}"}
-                </code>{" "}
-                sont colorées en cyan.
-              </p>
+              {!readOnly && (
+                <p className="text-xs text-gray-400">
+                  {t("contentHelp")}
+                </p>
+              )}
             </div>
           </div>
         </div>
 
         {/* Right col — 1/3 width */}
         <div className="col-span-1 space-y-4">
-          <VariableHelperPanel />
+          {!readOnly && <VariableHelperPanel />}
           <TemplatePreview body={body} language={language} />
         </div>
       </div>
