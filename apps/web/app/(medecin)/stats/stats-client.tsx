@@ -10,6 +10,7 @@ import {
   Clock,
   Activity,
 } from "lucide-react";
+import { PeerBenchmarks } from "@/components/medecin/peer-benchmarks";
 import {
   BarChart,
   Bar,
@@ -610,6 +611,15 @@ export function StatsClient({
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <TopReasons reasons={reasons} />
         <PeakHoursChart peaks={peaks} />
+      </div>
+
+      {/* Peer benchmarks (anonymized rank within specialty + city) */}
+      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 dark:border-gray-700 p-5 shadow-sm">
+        <SectionHeader
+          title="Comparaison avec mes pairs"
+          subtitle="Votre position relative parmi les médecins de la même spécialité, dans votre ville"
+        />
+        <PeerBenchmarks />
       </div>
     </div>
   );
