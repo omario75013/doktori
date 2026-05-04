@@ -1606,6 +1606,25 @@ export const patient2fa = pgTable("patient_2fa", {
 export type Patient2fa = typeof patient2fa.$inferSelect;
 export type NewPatient2fa = typeof patient2fa.$inferInsert;
 
+// ─── Stream 2 — A3 (Password Reset Tokens) ────────────────────────────────────
+
+export const passwordResetTokens = pgTable(
+  "password_reset_tokens",
+  {
+    tokenHash: varchar("token_hash", { length: 128 }).primaryKey(),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("password_reset_tokens_patient_idx").on(table.patientId),
+  ]
+);
+
+export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
+export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;
+
 // ─── Stream 3 (UX) ───────────────────────────────────────────────────────────
 
 export const patientFavorites = pgTable("patient_favorites", {
