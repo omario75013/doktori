@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, patients, passwordResetTokens } from "@doktori/db";
-import { eq, isNull, gt } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { createHash } from "crypto";
 import { hash } from "bcryptjs";
 

@@ -8,7 +8,6 @@ import {
   conversations,
   patientNotifications,
   patientConsents,
-  doctors,
 } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { getPatientFromRequest } from "@/lib/patient-auth";
@@ -74,23 +73,7 @@ export async function POST(req: NextRequest) {
   let msgRows: Record<string, unknown>[] = [];
   if (convs.length > 0) {
     const convIds = convs.map((c) => c.id);
-    // Fetch messages for all patient conversations
-    const allMessages = await db
-      .select({
-        id: messages.id,
-        conversationId: messages.conversationId,
-        senderType: messages.senderType,
-        content: messages.content,
-        createdAt: messages.createdAt,
-      })
-      .from(messages)
-      .where(
-        convIds.length === 1
-          ? eq(messages.conversationId, convIds[0])
-          : eq(messages.conversationId, convIds[0]) // simplified for MVP — full IN clause below
-      );
-
-    // Build all messages using individual queries for each conversation
+    // Build messages by querying each conversation individually (MVP approach)
     msgRows = [];
     for (const convId of convIds) {
       const convMessages = await db

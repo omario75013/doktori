@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, patientConsents } from "@doktori/db";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getPatientFromRequest } from "@/lib/patient-auth";
 
 const VALID_CONSENT_TYPES = [

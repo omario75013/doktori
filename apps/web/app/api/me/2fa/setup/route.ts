@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, patient2fa, patients } from "@doktori/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getPatientFromRequest } from "@/lib/patient-auth";
 import { authenticator } from "otplib";
 
@@ -64,8 +64,8 @@ export async function POST(req: NextRequest) {
       set: {
         totpSecret: secret,
         enabled: false,
-        backupCodes: [],
-        enabledAt: null,
+        backupCodes: sql`'[]'::jsonb`,
+        enabledAt: sql`NULL`,
       },
     });
 

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db, patient2fa, patients } from "@doktori/db";
-import { eq } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 import { getPatientFromRequest } from "@/lib/patient-auth";
 import { compare } from "bcryptjs";
 
@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
 
   await db
     .update(patient2fa)
-    .set({ enabled: false, backupCodes: [], enabledAt: null })
+    .set({ enabled: false, backupCodes: sql`'[]'::jsonb`, enabledAt: sql`NULL` })
     .where(eq(patient2fa.patientId, session.id));
 
   return NextResponse.json({ success: true });

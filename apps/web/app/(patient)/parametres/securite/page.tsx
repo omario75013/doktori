@@ -9,7 +9,6 @@ import {
   ShieldCheck,
   ShieldOff,
   QrCode,
-  KeyRound,
   CheckCircle,
   Copy,
   AlertTriangle,
