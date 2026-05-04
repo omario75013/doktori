@@ -17,7 +17,8 @@ interface Template {
 
 interface Props {
   patientId: string;
-  appointmentId: string;
+  /** Optional — if absent, variables are not resolved (raw {{tokens}} kept). */
+  appointmentId?: string;
   /** Called with rendered plain-text content + the picked template id. */
   onPick: (rendered: string, templateId: string) => void;
 }
@@ -92,16 +93,25 @@ export function TemplateLookup({ patientId, appointmentId, onPick }: Props) {
   const [hoverIdx, setHoverIdx] = useState(0);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
-  // Fetch templates + patient context once
+  // Fetch templates always; context only when appointmentId is available
   useEffect(() => {
-    Promise.all([
-      fetch("/api/medecin/templates").then((r) => (r.ok ? r.json() : null)),
-      fetch(`/api/medecin/patients/${patientId}/template-context?appointmentId=${appointmentId}`)
-        .then((r) => (r.ok ? r.json() : null)),
-    ]).then(([tpl, ctx]) => {
-      if (Array.isArray(tpl)) setTemplates(tpl as Template[]);
-      if (ctx) setCtxData(ctx as Record<string, unknown>);
-    });
+    fetch("/api/medecin/templates")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((tpl) => {
+        if (Array.isArray(tpl)) setTemplates(tpl as Template[]);
+      });
+  }, []);
+
+  useEffect(() => {
+    if (!appointmentId) {
+      setCtxData(null);
+      return;
+    }
+    fetch(`/api/medecin/patients/${patientId}/template-context?appointmentId=${appointmentId}`)
+      .then((r) => (r.ok ? r.json() : null))
+      .then((ctx) => {
+        if (ctx) setCtxData(ctx as Record<string, unknown>);
+      });
   }, [patientId, appointmentId]);
 
   // Click-outside closes the dropdown
@@ -124,13 +134,14 @@ export function TemplateLookup({ patientId, appointmentId, onPick }: Props) {
   }, [search, templates]);
 
   function handlePick(template: Template) {
-    if (!ctxData) return;
     setApplyingId(template.id);
     try {
-      const ctx = buildContext(ctxData, (template.language as "fr" | "ar") ?? "fr");
-      const result = render(template.bodyMarkdown, ctx);
-      const plain = htmlToPlainText(result.body);
-      onPick(plain, template.id);
+      const locale = (template.language as "fr" | "ar") ?? "fr";
+      // If we have context, render with variable substitution; otherwise pass body raw.
+      const rendered = ctxData
+        ? render(template.bodyMarkdown, buildContext(ctxData, locale)).body
+        : template.bodyMarkdown;
+      onPick(htmlToPlainText(rendered), template.id);
       setOpen(false);
       setSearch("");
     } finally {

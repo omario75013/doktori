@@ -2134,18 +2134,16 @@ function PrescriptionModal({
             <label className="text-sm font-medium text-gray-700 block">
               {t("fieldMedications")}
             </label>
-            {appointmentId && (
-              <TemplateLookup
-                patientId={patientId}
-                appointmentId={appointmentId}
-                onPick={(rendered, templateId) => {
-                  setContent((prev) =>
-                    prev.trim() ? prev + "\n\n" + rendered : rendered
-                  );
-                  setUsedTemplateId(templateId);
-                }}
-              />
-            )}
+            <TemplateLookup
+              patientId={patientId}
+              appointmentId={appointmentId || undefined}
+              onPick={(rendered, templateId) => {
+                setContent((prev) =>
+                  prev.trim() ? prev + "\n\n" + rendered : rendered
+                );
+                setUsedTemplateId(templateId);
+              }}
+            />
             <textarea
               rows={6}
               value={content}
