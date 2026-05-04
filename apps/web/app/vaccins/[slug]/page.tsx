@@ -5,6 +5,8 @@ import { db, vaccineInfoContent } from "@doktori/db";
 import { asc, eq } from "drizzle-orm";
 import { ChevronLeft, Syringe, ShieldCheck } from "lucide-react";
 
+export const dynamic = "force-dynamic";
+
 export async function generateStaticParams() {
   try {
     const all = await db.select({ slug: vaccineInfoContent.slug }).from(vaccineInfoContent);
