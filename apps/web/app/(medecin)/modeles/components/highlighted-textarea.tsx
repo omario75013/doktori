@@ -64,7 +64,7 @@ export function HighlightedTextarea({
       <pre
         ref={highlightRef}
         aria-hidden
-        className="absolute inset-0 z-0 m-0 overflow-hidden whitespace-pre-wrap break-words rounded-md border border-transparent bg-white px-3 py-2 font-mono text-sm leading-6 text-transparent pointer-events-none select-none dark:bg-gray-950"
+        className="absolute inset-0 z-0 m-0 overflow-hidden whitespace-pre-wrap break-words rounded-md border border-transparent bg-white px-3 py-2 font-mono text-sm leading-6 text-gray-900 pointer-events-none select-none dark:bg-gray-950 dark:text-gray-100"
         style={{ minHeight, direction: dir }}
       >
         {parts.map((part, i) =>
