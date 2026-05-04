@@ -33,6 +33,9 @@ export async function GET(req: NextRequest) {
       addressStreet: patients.addressStreet,
       addressCity: patients.addressCity,
       addressPostalCode: patients.addressPostalCode,
+      photoUrl: patients.photoUrl,
+      cnamCardUrl: patients.cnamCardUrl,
+      insuranceCardUrl: patients.insuranceCardUrl,
     })
     .from(patients)
     .where(eq(patients.id, payload.id))
