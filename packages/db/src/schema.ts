@@ -15,6 +15,7 @@ import {
   uniqueIndex,
   primaryKey,
 } from "drizzle-orm/pg-core";
+import { relations } from "drizzle-orm";
 
 export type DoctorEducation = {
   degree: string;
@@ -1022,6 +1023,9 @@ export const featureFlags = pgTable("feature_flags", {
   enabled: boolean("enabled").notNull().default(false),
   description: text("description"),
   rules: jsonb("rules").default({}),
+  /** Pilot mode: when non-empty, feature is enabled ONLY for these doctor IDs.
+   *  When empty + enabled=true → all doctors. When empty + enabled=false → none. */
+  enabledDoctorIds: text("enabled_doctor_ids").array().notNull().default([]),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
@@ -1507,3 +1511,25 @@ export const templateAuditLogs = pgTable("template_audit_logs", {
 
 export type TemplateAuditLog = typeof templateAuditLogs.$inferSelect;
 export type NewTemplateAuditLog = typeof templateAuditLogs.$inferInsert;
+
+// ── Drizzle relations ─────────────────────────────────────────────────────────
+
+export const prescriptionTemplatesRelations = relations(prescriptionTemplates, ({ one, many }) => ({
+  doctor: one(doctors, {
+    fields: [prescriptionTemplates.doctorId],
+    references: [doctors.id],
+  }),
+  clonedFrom: one(prescriptionTemplates, {
+    fields: [prescriptionTemplates.clonedFromId],
+    references: [prescriptionTemplates.id],
+    relationName: "templateClone",
+  }),
+  prescriptions: many(prescriptions),
+}));
+
+export const templateAuditLogsRelations = relations(templateAuditLogs, ({ one }) => ({
+  template: one(prescriptionTemplates, {
+    fields: [templateAuditLogs.templateId],
+    references: [prescriptionTemplates.id],
+  }),
+}));
