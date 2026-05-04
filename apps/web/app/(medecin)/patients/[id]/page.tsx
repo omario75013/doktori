@@ -662,10 +662,8 @@ function PatientDetail({ listPath }: { listPath: string }) {
         <div className="rounded-2xl border border-border bg-white shadow-sm">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <div>
-              <h2 className="font-semibold text-foreground">Documents et fichiers</h2>
-              <p className="text-xs text-gray-400 mt-0.5">
-                Analyses, imagerie, ordonnances, certificats
-              </p>
+              <h2 className="font-semibold text-foreground">{t("docsTitle")}</h2>
+              <p className="text-xs text-gray-400 mt-0.5">{t("docsSubtitle")}</p>
             </div>
             {(viewerRole === "doctor" || viewerPerms?.patientsEdit) && (
               <button
@@ -673,13 +671,13 @@ function PatientDetail({ listPath }: { listPath: string }) {
                 className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3 py-2 text-sm font-medium hover:opacity-90"
               >
                 <Upload className="h-4 w-4" />
-                Ajouter un document
+                {t("addDocument")}
               </button>
             )}
           </div>
           {attachments.length === 0 ? (
             <div className="p-10 text-center text-sm text-gray-400">
-              Aucun document pour le moment.
+              {t("noDocumentsYet")}
             </div>
           ) : (
             <ul className="divide-y divide-border">
