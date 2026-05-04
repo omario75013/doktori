@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Mail, Stethoscope } from "lucide-react";
+import { NewsletterSignup } from "./newsletter-signup";
 
 const FOOTER_LINKS = {
   platform: {
@@ -102,8 +103,23 @@ export function Footer() {
           </div>
         </div>
 
+        {/* Newsletter signup band */}
+        <div className="mt-12 pt-8 border-t border-white/10">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-center">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-widest text-white/40 mb-2">Newsletter santé</p>
+              <p className="text-sm text-white/70">
+                Recevez chaque mois nos meilleurs conseils santé et nouveautés Doktori.
+              </p>
+            </div>
+            <div className="bg-white rounded-xl p-3">
+              <NewsletterSignup variant="compact" source="footer" language="fr" />
+            </div>
+          </div>
+        </div>
+
         {/* Bottom bar */}
-        <div className="mt-12 pt-6 border-t border-white/10">
+        <div className="mt-8 pt-6 border-t border-white/10">
           <p className="text-xs text-white/40 text-center">
             © 2025-2026 Random Walkers SUARL · Doktori.tn
           </p>

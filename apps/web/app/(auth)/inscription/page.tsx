@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "next-auth/react";
 import { useTranslations } from "next-intl";
@@ -557,6 +557,18 @@ function DoctorForm() {
   const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
 
+  // Capture ?ref= from URL on mount and persist across the multi-step flow
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const ref = params.get("ref");
+    if (ref) {
+      try {
+        localStorage.setItem("doktori_doctor_ref", ref);
+      } catch {}
+    }
+  }, []);
+
   const [form, setForm] = useState({
     name: "",
     email: "",
@@ -649,6 +661,24 @@ function DoctorForm() {
         formData.append("file", photoFile);
         formData.append("doctorId", data.id);
         await fetch("/api/doctors/photo", { method: "POST", body: formData });
+      }
+
+      // Track doctor-to-doctor referral if a ?ref= was captured
+      if (!loginResult?.error) {
+        try {
+          const ref = localStorage.getItem("doktori_doctor_ref");
+          if (ref) {
+            await fetch("/api/medecin/referrals/track", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ referrerCode: ref }),
+            });
+            localStorage.removeItem("doktori_doctor_ref");
+          }
+        } catch (e) {
+          // best-effort, do not block signup
+          console.warn("[doctor-referral-track] failed", e);
+        }
       }
 
       if (!loginResult?.error) {
