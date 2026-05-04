@@ -32,8 +32,9 @@ Demande de partenariat SMS transactionnel — Doktori.tn (plateforme de santé)
 Madame, Monsieur,
 
 Nous sommes Doktori (https://doktori.tn), la première plateforme tunisienne
-de prise de rendez-vous médicaux en ligne, éditée par Random Walkers SUARL
-(siège social à Tunis).
+de prise de rendez-vous médicaux en ligne, éditée par Random Walkers SUARL,
+société unipersonnelle au capital de 1 400 TND, immatriculée au RNE 1625867B,
+ayant son siège à Tunis.
 
 Notre plateforme met en relation patients et médecins en Tunisie pour
 faciliter l'accès aux soins. Nous comptons aujourd'hui :
@@ -104,9 +105,9 @@ Restant à votre entière disposition pour tout complément,
 nous vous prions d'agréer, Madame, Monsieur, l'expression de nos
 salutations distinguées.
 
-[VOTRE NOM ET PRÉNOM]
-[VOTRE TITRE — ex: Fondateur / Directeur Général]
-Random Walkers
+Omar HARBI
+Gérant unique
+Random Walkers SUARL
 Doktori.tn — La prise de rendez-vous médicaux en Tunisie
 
 📧  contact@doktori.tn  |  [VOTRE EMAIL DIRECT]
@@ -114,14 +115,15 @@ Doktori.tn — La prise de rendez-vous médicaux en Tunisie
 🌐  https://doktori.tn
 
 —
-Random Walkers
-Matricule fiscal : 1625867/B
-Code TVA : A — Assujetti obligatoire à la TVA
-Activité principale : Consultant (depuis le 07/06/2019)
-Siège social : Immeuble Babel, Bloc D, Montplaisir 1073, Tunis — Tunisie
-Carte d'Identification Fiscale n° 0339736 — délivrée le 10/06/2019
-par la Direction Générale des Impôts (Guichet Unique 405, Tunis)
-RNE : [À COMPLÉTER si disponible]
+Random Walkers SUARL
+Société Unipersonnelle à Responsabilité Limitée au capital de 1 400 TND
+Identifiant Unique (RNE) : 1625867B
+Matricule fiscal : 1625867/B (assujetti à la TVA — code A)
+N° de gestion interne : B01130082019
+Siège social : Immeuble Babel, Bloc D, Montplaisir 1073, Bab Bhar, Tunis — Tunisie
+Activité principale : Services aux entreprises (code 74) — consultations en informatique
+Date de constitution : 07/06/2019 (publication 10/06/2019)
+Gérant unique : Omar HARBI
 ```
 
 ---
