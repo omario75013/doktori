@@ -132,6 +132,9 @@ function RechercheInner() {
     Array<{ query: string; specialty: string; city: string; timestamp: number }>
   >([]);
 
+  // Comparator selection (max 3 doctors)
+  const [compareIds, setCompareIds] = useState<string[]>([]);
+
   useEffect(() => {
     try {
       const stored = localStorage.getItem("doktori_recent_searches");
@@ -828,9 +831,40 @@ function RechercheInner() {
             {/* Results — hidden on mobile when map is shown */}
             {results.length > 0 && (
               <div className={`grid gap-3 ${showMap ? "hidden lg:grid" : ""}`}>
-                {results.map((doctor) => (
-                  <DoctorCard key={doctor.id} doctor={doctor} showSlots />
-                ))}
+                {results.map((doctor) => {
+                  const checked = compareIds.includes(doctor.id);
+                  const disabled = !checked && compareIds.length >= 3;
+                  return (
+                    <div key={doctor.id} className="relative">
+                      <label
+                        className={`absolute end-3 top-3 z-10 flex cursor-pointer items-center gap-1.5 rounded-full border bg-white/95 px-2.5 py-1 text-xs font-bold shadow-sm transition ${
+                          checked
+                            ? "border-primary text-primary"
+                            : disabled
+                            ? "border-border text-muted-foreground/50 cursor-not-allowed"
+                            : "border-border text-muted-foreground hover:border-primary"
+                        }`}
+                        title={disabled ? "Maximum 3 médecins" : "Comparer ce médecin"}
+                      >
+                        <input
+                          type="checkbox"
+                          className="h-3 w-3 cursor-pointer accent-primary disabled:cursor-not-allowed"
+                          checked={checked}
+                          disabled={disabled}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setCompareIds((prev) => [...prev, doctor.id].slice(0, 3));
+                            } else {
+                              setCompareIds((prev) => prev.filter((id) => id !== doctor.id));
+                            }
+                          }}
+                        />
+                        <span>Comparer</span>
+                      </label>
+                      <DoctorCard doctor={doctor} showSlots />
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -852,6 +886,32 @@ function RechercheInner() {
           </aside>
         </div>
       </div>
+
+      {/* Sticky comparator bar */}
+      {compareIds.length > 0 && (
+        <div className="fixed inset-x-0 bottom-4 z-50 flex justify-center px-4">
+          <div className="flex items-center gap-3 rounded-full border border-primary/20 bg-white px-4 py-3 shadow-2xl">
+            <span className="text-sm font-bold text-foreground">
+              {compareIds.length} médecin{compareIds.length > 1 ? "s" : ""} sélectionné{compareIds.length > 1 ? "s" : ""}
+            </span>
+            <button
+              type="button"
+              onClick={() => setCompareIds([])}
+              className="text-xs font-medium text-muted-foreground hover:text-foreground"
+            >
+              Effacer
+            </button>
+            <button
+              type="button"
+              disabled={compareIds.length < 2}
+              onClick={() => router.push(`/comparer?ids=${compareIds.join(",")}`)}
+              className="rounded-full bg-primary px-4 py-2 text-sm font-bold text-white shadow-md transition hover:bg-doktori-teal-dark disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              Comparer ({compareIds.length})
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
