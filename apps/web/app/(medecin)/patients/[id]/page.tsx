@@ -320,6 +320,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
   const t = useTranslations("medecin.patientDetail");
   const tCommon = useTranslations("medecin.common");
   const STATUS_LABELS = getStatusLabels(t);
+  const ATTACHMENT_CATEGORIES = getAttachmentCategories(t);
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [patient, setPatient] = useState<Patient | null>(null);
