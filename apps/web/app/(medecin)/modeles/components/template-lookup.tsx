@@ -125,23 +125,36 @@ export function TemplateLookup({ patientId, appointmentId, onPick }: Props) {
     return () => document.removeEventListener("mousedown", onDoc);
   }, []);
 
+  const BLANK: Template = {
+    id: "__blank__",
+    title: t("blankTemplate"),
+    description: t("blankTemplateDesc"),
+    language: "fr",
+    isOfficial: false,
+    bodyMarkdown: "",
+  };
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const matches = q
       ? templates.filter((tpl) => tpl.title.toLowerCase().includes(q) || (tpl.description?.toLowerCase().includes(q) ?? false))
       : templates;
-    return matches.slice(0, 12);
-  }, [search, templates]);
+    // Always prepend the blank "default" template so the doctor can start from scratch.
+    return [BLANK, ...matches.slice(0, 12)];
+  }, [search, templates, t]);
 
   function handlePick(template: Template) {
     setApplyingId(template.id);
     try {
-      const locale = (template.language as "fr" | "ar") ?? "fr";
-      // If we have context, render with variable substitution; otherwise pass body raw.
-      const rendered = ctxData
-        ? render(template.bodyMarkdown, buildContext(ctxData, locale)).body
-        : template.bodyMarkdown;
-      onPick(htmlToPlainText(rendered), template.id);
+      if (template.id === "__blank__") {
+        onPick("", "__blank__");
+      } else {
+        const locale = (template.language as "fr" | "ar") ?? "fr";
+        const rendered = ctxData
+          ? render(template.bodyMarkdown, buildContext(ctxData, locale)).body
+          : template.bodyMarkdown;
+        onPick(rendered, template.id);
+      }
       setOpen(false);
       setSearch("");
     } finally {

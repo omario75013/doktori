@@ -696,7 +696,9 @@
       "previewTitle": "معاينة (مريض وهمي: سامي الطرابلسي، 35 سنة)",
       "previewLoading": "جارٍ تحميل المعاينة…",
       "unresolved": "{count, plural, one {# متغير غير محلول} other {# متغيرات غير محلولة}}: {list}",
-      "duplicateAndEdit": "نسخ وتعديل"
+      "duplicateAndEdit": "نسخ وتعديل",
+      "blankTemplate": "نموذج فارغ (افتراضي)",
+      "blankTemplateDesc": "ابدأ من محرر فارغ"
     },
     "motifs": {
       "title": "أسباب الاستشارة",
@@ -1751,6 +1753,10 @@
       "fieldMedications": "الأدوية والجرعات",
       "prescPlaceholder": "مثال: Amoxicilline 500mg — قرص في الصباح والظهيرة والمساء لمدة 7 أيام...",
       "saveOrdonnance": "حفظ الوصفة الطبية",
+      "previewPrescription": "معاينة",
+      "editPrescription": "تعديل",
+      "previewLabel": "معاينة الوصفة الطبية",
+      "previewEmpty": "سيظهر محتوى الوصفة هنا.",
       "prescRequireAppt": "يرجى اختيار موعد",
       "prescTooShort": "يجب أن تحتوي الوصفة على 3 أحرف على الأقل",
       "cardTimeline": "الجدول الزمني للملف",

@@ -26,8 +26,11 @@ import {
   FileUp,
   Activity,
   Printer,
+  Eye,
+  Edit3,
 } from "lucide-react";
 import { toast } from "sonner";
+import { QuillEditor } from "../../modeles/components/quill-editor";
 import { TemplateLookup } from "../../modeles/components/template-lookup";
 
 type Appointment = {
@@ -2056,6 +2059,7 @@ function PrescriptionModal({
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
   const [usedTemplateId, setUsedTemplateId] = useState<string | null>(null);
+  const [previewing, setPreviewing] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -2131,38 +2135,76 @@ function PrescriptionModal({
           </Field>
 
           <div className="space-y-1.5">
-            <label className="text-sm font-medium text-gray-700 block">
-              {t("fieldMedications")}
-            </label>
-            <TemplateLookup
-              patientId={patientId}
-              appointmentId={appointmentId || undefined}
-              onPick={(rendered, templateId) => {
-                setContent((prev) =>
-                  prev.trim() ? prev + "\n\n" + rendered : rendered
-                );
-                setUsedTemplateId(templateId);
-              }}
-            />
-            <textarea
-              rows={6}
-              value={content}
-              onChange={(e) => {
-                if (e.target.value.length <= 5000) setContent(e.target.value);
-              }}
-              maxLength={5000}
-              placeholder={t("prescPlaceholder")}
-              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
-              required
-            />
             <div className="flex items-center justify-between">
-              {usedTemplateId && (
-                <p className="text-xs text-primary">Modèle appliqué</p>
-              )}
-              <div className="ml-auto text-right text-xs text-gray-400">
-                {content.length} / 5000
-              </div>
+              <label className="text-sm font-medium text-gray-700 block">
+                {t("fieldMedications")}
+              </label>
+              <button
+                type="button"
+                onClick={() => setPreviewing((p) => !p)}
+                className="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-medium border border-primary/40 text-primary hover:bg-primary/5 transition-colors"
+              >
+                {previewing ? (
+                  <>
+                    <Edit3 className="h-3 w-3" />
+                    {t("editPrescription")}
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-3 w-3" />
+                    {t("previewPrescription")}
+                  </>
+                )}
+              </button>
             </div>
+            {!previewing && (
+              <TemplateLookup
+                patientId={patientId}
+                appointmentId={appointmentId || undefined}
+                onPick={(rendered, templateId) => {
+                  if (templateId === "__blank__") {
+                    setContent("");
+                  } else {
+                    setContent((prev) =>
+                      prev.trim() ? prev + rendered : rendered
+                    );
+                  }
+                  setUsedTemplateId(templateId);
+                }}
+              />
+            )}
+            {previewing ? (
+              <div className="rounded-xl border border-border bg-white p-5 min-h-[200px]">
+                <div className="border-b border-gray-200 pb-3 mb-4 flex justify-between items-start text-xs text-gray-500">
+                  <span>{t("previewLabel")}</span>
+                  <span>
+                    {format(new Date(), "d MMMM yyyy", { locale: fr })}
+                  </span>
+                </div>
+                {content.trim() ? (
+                  <div
+                    className="prose prose-sm max-w-none text-gray-800"
+                    dangerouslySetInnerHTML={{ __html: content }}
+                  />
+                ) : (
+                  <p className="text-sm text-gray-400 italic">{t("previewEmpty")}</p>
+                )}
+              </div>
+            ) : (
+              <QuillEditor
+                value={content}
+                onChange={setContent}
+                placeholder={t("prescPlaceholder")}
+                minHeight="240px"
+              />
+            )}
+            {!previewing && (
+              <div className="flex items-center justify-between">
+                {usedTemplateId && usedTemplateId !== "__blank__" && (
+                  <p className="text-xs text-primary">{t("templateApplied")}</p>
+                )}
+              </div>
+            )}
           </div>
 
           <div className="flex justify-end gap-2 pt-1">
