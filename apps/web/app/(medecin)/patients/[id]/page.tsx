@@ -28,7 +28,7 @@ import {
   Printer,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PrescriptionTemplateModal } from "../../modeles/components/prescription-template-modal";
+import { TemplateLookup } from "../../modeles/components/template-lookup";
 
 type Appointment = {
   id: string;
@@ -2055,7 +2055,6 @@ function PrescriptionModal({
   );
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
-  const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [usedTemplateId, setUsedTemplateId] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
@@ -2132,21 +2131,21 @@ function PrescriptionModal({
           </Field>
 
           <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-700">
-                {t("fieldMedications")}
-              </label>
-              {appointmentId && (
-                <button
-                  type="button"
-                  onClick={() => setTemplateModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-medium border border-primary/40 text-primary hover:bg-primary/5 transition-colors"
-                >
-                  <FileText className="h-3 w-3" />
-                  {t("chooseTemplate")}
-                </button>
-              )}
-            </div>
+            <label className="text-sm font-medium text-gray-700 block">
+              {t("fieldMedications")}
+            </label>
+            {appointmentId && (
+              <TemplateLookup
+                patientId={patientId}
+                appointmentId={appointmentId}
+                onPick={(rendered, templateId) => {
+                  setContent((prev) =>
+                    prev.trim() ? prev + "\n\n" + rendered : rendered
+                  );
+                  setUsedTemplateId(templateId);
+                }}
+              />
+            )}
             <textarea
               rows={6}
               value={content}
@@ -2167,21 +2166,6 @@ function PrescriptionModal({
               </div>
             </div>
           </div>
-
-          {templateModalOpen && appointmentId && (
-            <PrescriptionTemplateModal
-              open={templateModalOpen}
-              onClose={() => setTemplateModalOpen(false)}
-              patientId={patientId}
-              appointmentId={appointmentId}
-              onApply={(markdown, templateId) => {
-                setContent((prev) =>
-                  prev.trim() ? prev + "\n\n" + markdown : markdown
-                );
-                setUsedTemplateId(templateId);
-              }}
-            />
-          )}
 
           <div className="flex justify-end gap-2 pt-1">
             <button
