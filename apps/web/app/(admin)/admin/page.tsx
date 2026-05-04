@@ -1,4 +1,5 @@
 import { LiveKpiStrip } from "@/components/admin/live-kpi-strip";
+import { LiveKpisGrid } from "@/components/admin/live-kpis-grid";
 import { AlertBanners } from "@/components/admin/alert-banners";
 import { EventFeed } from "@/components/admin/event-feed";
 import { TrendChart } from "@/components/admin/trend-chart";
@@ -14,6 +15,8 @@ export default function AdminDashboardPage() {
           Pilotage temps réel de la plateforme Doktori
         </p>
       </div>
+
+      <LiveKpisGrid />
 
       <AlertBanners />
 
