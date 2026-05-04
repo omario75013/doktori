@@ -1,62 +1,80 @@
-// Doktori Service Worker — cache-first for static assets, network-first for navigation
+// Doktori service worker — offline support
+// Versioned cache so we can invalidate older releases.
 const CACHE = "doktori-v1";
-const STATIC_PATHS = ["/", "/icon-192.png", "/icon-512.png"];
+const STATIC_PATTERNS = [/\/_next\/static\//, /\/icon-\d+\.png$/, /\/apple-touch-icon\.png$/, /\/favicon-\d+x\d+\.png$/];
+const OFFLINE_FALLBACK = "/";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE).then((cache) => cache.addAll(STATIC_PATHS).catch(() => undefined))
+    (async () => {
+      const cache = await caches.open(CACHE);
+      // Best-effort: prime the offline fallback.
+      try { await cache.add(new Request(OFFLINE_FALLBACK, { cache: "reload" })); } catch {}
+      self.skipWaiting();
+    })()
   );
-  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)))
-    )
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k)));
+      await self.clients.claim();
+    })()
   );
-  self.clients.claim();
 });
+
+function isStatic(url) {
+  return STATIC_PATTERNS.some((re) => re.test(url.pathname));
+}
 
 self.addEventListener("fetch", (event) => {
   const req = event.request;
   if (req.method !== "GET") return;
   const url = new URL(req.url);
+  if (url.origin !== self.location.origin) return;
 
-  // Don't cache API calls
-  if (url.pathname.startsWith("/api/")) return;
-
-  // Cache-first for Next.js static assets and PWA icons
-  if (url.pathname.startsWith("/_next/static/") || url.pathname.startsWith("/icon-")) {
+  // Cache-first for static assets
+  if (isStatic(url)) {
     event.respondWith(
-      caches.match(req).then((cached) => {
+      (async () => {
+        const cache = await caches.open(CACHE);
+        const cached = await cache.match(req);
         if (cached) return cached;
-        return fetch(req).then((res) => {
-          if (res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => undefined);
-          }
+        try {
+          const res = await fetch(req);
+          if (res && res.status === 200) cache.put(req, res.clone());
           return res;
-        });
-      })
+        } catch {
+          return cached || Response.error();
+        }
+      })()
     );
     return;
   }
 
-  // Network-first for navigation, fallback to cache, then to / (root)
+  // Network-first with cache fallback for navigations
   if (req.mode === "navigate") {
     event.respondWith(
-      fetch(req)
-        .then((res) => {
-          if (res.ok) {
-            const copy = res.clone();
-            caches.open(CACHE).then((cache) => cache.put(req, copy)).catch(() => undefined);
+      (async () => {
+        try {
+          const res = await fetch(req);
+          // Stash homepage as offline fallback when we can
+          if (res && res.status === 200 && url.pathname === "/") {
+            const cache = await caches.open(CACHE);
+            cache.put(OFFLINE_FALLBACK, res.clone());
           }
           return res;
-        })
-        .catch(() =>
-          caches.match(req).then((cached) => cached || caches.match("/offline").then((off) => off || caches.match("/")))
-        )
+        } catch {
+          const cache = await caches.open(CACHE);
+          const cached = await cache.match(req);
+          if (cached) return cached;
+          const fallback = await cache.match(OFFLINE_FALLBACK);
+          if (fallback) return fallback;
+          return new Response("Hors ligne", { status: 503, headers: { "Content-Type": "text/plain; charset=utf-8" } });
+        }
+      })()
     );
   }
 });

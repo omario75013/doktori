@@ -81,6 +81,8 @@ export const doctors = pgTable(
     totpSecret: text("totp_secret"),
     totpEnabled: boolean("totp_enabled").notNull().default(false),
     totpEnrolledAt: timestamp("totp_enrolled_at", { withTimezone: true }),
+    // D30 presence — last time doctor pinged the presence endpoint
+    lastActiveAt: timestamp("last_active_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },

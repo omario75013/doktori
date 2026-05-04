@@ -14,6 +14,7 @@ import {
   reviews,
   patients,
   doctorPractices,
+  doctors,
   clinics,
 } from "@doktori/db";
 import { desc, eq, sql, and, asc } from "drizzle-orm";
@@ -176,6 +177,31 @@ export default async function DoctorProfilePage({
   const appointmentTypesList = await getDoctorAppointmentTypes(doctor.id);
   const specialtyLabel = getSpecialtyLabel(doctor.specialty);
   const cityLabel = getCityLabel(doctor.city);
+
+  // Similar doctors — same specialty + same city, top 3 by rating
+  const similarDoctors = await db
+    .select({
+      id: doctors.id,
+      slug: doctors.slug,
+      fullName: doctors.name,
+      photoUrl: doctors.photoUrl,
+      specialty: doctors.specialty,
+      city: doctors.city,
+      rating: doctors.averageRating,
+      totalReviews: doctors.reviewCount,
+    })
+    .from(doctors)
+    .where(
+      and(
+        eq(doctors.specialty, doctor.specialty),
+        eq(doctors.city, doctor.city),
+        eq(doctors.isActive, true),
+        eq(doctors.isVisible, true),
+        sql`${doctors.id} <> ${doctor.id}`,
+      )
+    )
+    .orderBy(desc(sql`COALESCE(${doctors.averageRating}, 0)`))
+    .limit(3);
 
   // Fetch active practices with optional clinic info
   const practiceRows = await db
@@ -446,6 +472,25 @@ export default async function DoctorProfilePage({
                         <span className="h-1.5 w-1.5 rounded-full bg-accent"></span>
                         Disponible aujourd&apos;hui
                       </div>
+                      {(() => {
+                        const last = doctor.lastActiveAt as string | Date | null | undefined;
+                        if (!last) return null;
+                        const ts = typeof last === "string" ? new Date(last) : last;
+                        if (Number.isNaN(ts.getTime())) return null;
+                        const diffMs = Date.now() - ts.getTime();
+                        const online = diffMs < 5 * 60_000;
+                        let label: string;
+                        if (online) label = "En ligne";
+                        else if (diffMs < 60 * 60_000) label = `Vu il y a ${Math.floor(diffMs / 60_000)} min`;
+                        else if (diffMs < 24 * 3600_000) label = `Vu il y a ${Math.floor(diffMs / 3600_000)} h`;
+                        else label = `Vu il y a ${Math.floor(diffMs / (24 * 3600_000))} j`;
+                        return (
+                          <div className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${online ? "bg-green-100 text-green-800" : "bg-gray-100 text-muted-foreground"}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${online ? "bg-green-500" : "bg-gray-400"}`} />
+                            {label}
+                          </div>
+                        );
+                      })()}
                       {reviewCount > 0 ? (
                         <div className="inline-flex items-center gap-1 rounded-full bg-[#FEF3C7] px-3 py-1 text-xs font-bold text-[#92400E]">
                           <Star className="h-3 w-3 fill-doktori-amber text-doktori-amber" />
@@ -979,6 +1024,57 @@ export default async function DoctorProfilePage({
                       </Link>
                     </div>
                   )}
+                </AnimatedSection>
+              )}
+
+              {/* Similar doctors */}
+              {similarDoctors.length > 0 && (
+                <AnimatedSection index={9} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                  <div className="flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
+                      <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
+                    </div>
+                    <h2 className="font-heading text-lg font-bold text-foreground">
+                      Médecins similaires
+                    </h2>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Mêmes spécialité et ville
+                  </p>
+                  <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                    {similarDoctors.map((sd) => (
+                      <Link
+                        key={sd.id}
+                        href={`/medecin/${sd.slug}`}
+                        className="group rounded-2xl border border-border bg-white p-4 transition-shadow hover:shadow-md"
+                      >
+                        <div className="flex flex-col items-center text-center">
+                          {sd.photoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={sd.photoUrl}
+                              alt={sd.fullName}
+                              className="h-16 w-16 rounded-2xl object-cover ring-2 ring-secondary"
+                            />
+                          ) : (
+                            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-lg font-black text-white ring-2 ring-secondary">
+                              {sd.fullName.split(" ").slice(-2).map((n) => n[0]).join("").toUpperCase()}
+                            </div>
+                          )}
+                          <p className="mt-2 text-sm font-bold text-foreground line-clamp-2">{sd.fullName}</p>
+                          <p className="text-xs text-primary font-semibold mt-0.5">{getSpecialtyLabel(sd.specialty)}</p>
+                          <p className="text-xs text-muted-foreground">{getCityLabel(sd.city)}</p>
+                          {sd.rating != null && sd.rating > 0 && (
+                            <div className="mt-2 inline-flex items-center gap-1 text-xs font-bold text-doktori-amber">
+                              <Star className="h-3 w-3 fill-doktori-amber text-doktori-amber" />
+                              {sd.rating.toFixed(1)}
+                              <span className="text-muted-foreground font-normal">({sd.totalReviews ?? 0})</span>
+                            </div>
+                          )}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
                 </AnimatedSection>
               )}
 
