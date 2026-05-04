@@ -97,8 +97,9 @@ function timeAgo(date: Date): string {
   return years === 1 ? "il y a 1 an" : `il y a ${years} ans`;
 }
 
-function StarRating({ value }: { value: number }) {
+function StarRating({ value, size = "md" }: { value: number; size?: "sm" | "md" }) {
   const rounded = Math.round(value);
+  const dim = size === "sm" ? "h-3 w-3" : "h-4 w-4";
   return (
     <div className="inline-flex items-center gap-0.5" aria-label={`${value.toFixed(1)} sur 5`}>
       {[1, 2, 3, 4, 5].map((i) => (
@@ -106,8 +107,8 @@ function StarRating({ value }: { value: number }) {
           key={i}
           className={
             i <= rounded
-              ? "h-4 w-4 fill-doktori-amber text-doktori-amber"
-              : "h-4 w-4 fill-gray-200 text-gray-200"
+              ? `${dim} fill-doktori-amber text-doktori-amber`
+              : `${dim} fill-gray-200 text-gray-200`
           }
         />
       ))}
