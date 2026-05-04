@@ -706,7 +706,7 @@ export default function MesRdvPage() {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
-            onClick={() => setCancelConfirm(null)}
+            onClick={() => { setCancelConfirm(null); setCancelReason(""); }}
           >
             <motion.div
               key="cancel-card"
