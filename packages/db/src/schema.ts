@@ -800,7 +800,7 @@ export const doctorInsurance = pgTable("doctor_insurance", {
 // ── Prescriptions ────────────────────────────────────────
 export const prescriptions = pgTable("prescriptions", {
   id: uuid("id").primaryKey().defaultRandom(),
-  appointmentId: uuid("appointment_id").notNull().references(() => appointments.id, { onDelete: "cascade" }),
+  appointmentId: uuid("appointment_id").references(() => appointments.id, { onDelete: "cascade" }),
   doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
   patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
   content: text("content").notNull(),

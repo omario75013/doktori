@@ -1757,6 +1757,8 @@
       "editPrescription": "Modifier",
       "previewLabel": "Aperçu de l'ordonnance",
       "previewEmpty": "Le contenu de l'ordonnance apparaîtra ici.",
+      "withoutAppointment": "Ordonnance sans rendez-vous",
+      "signatureLabel": "Signature et cachet du médecin",
       "prescRequireAppt": "Veuillez sélectionner un rendez-vous",
       "prescTooShort": "L'ordonnance doit contenir au moins 3 caractères",
       "cardTimeline": "Chronologie du dossier",

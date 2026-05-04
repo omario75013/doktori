@@ -49,24 +49,37 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { appointmentId, content, templateId } = await req.json();
-    if (!appointmentId || typeof content !== "string" || content.length < 3 || content.length > 5000) {
+    const { appointmentId, patientId: rawPatientId, content, templateId } = await req.json();
+    if (typeof content !== "string" || content.length < 3 || content.length > 5000) {
       return NextResponse.json({ error: "Contenu invalide (3-5000 caractères)" }, { status: 400 });
     }
+    if (!appointmentId && !rawPatientId) {
+      return NextResponse.json({ error: "appointmentId ou patientId requis" }, { status: 400 });
+    }
 
-    // Verify doctor owns the appointment
-    const [appt] = await db.select().from(appointments)
-      .where(and(eq(appointments.id, appointmentId), eq(appointments.doctorId, user.id)))
-      .limit(1);
-
-    if (!appt) return NextResponse.json({ error: "RDV introuvable" }, { status: 404 });
+    let resolvedPatientId: string;
+    if (appointmentId) {
+      // Verify doctor owns the appointment
+      const [appt] = await db.select().from(appointments)
+        .where(and(eq(appointments.id, appointmentId), eq(appointments.doctorId, user.id)))
+        .limit(1);
+      if (!appt) return NextResponse.json({ error: "RDV introuvable" }, { status: 404 });
+      resolvedPatientId = appt.patientId;
+    } else {
+      // No appointment: doctor must have at least one prior appointment with this patient
+      const [link] = await db.select().from(appointments)
+        .where(and(eq(appointments.doctorId, user.id), eq(appointments.patientId, rawPatientId)))
+        .limit(1);
+      if (!link) return NextResponse.json({ error: "Patient non lié au médecin" }, { status: 403 });
+      resolvedPatientId = rawPatientId;
+    }
 
     const verificationToken = randomBytes(32).toString("hex");
 
     const [created] = await db.insert(prescriptions).values({
-      appointmentId,
+      appointmentId: appointmentId ?? null,
       doctorId: user.id,
-      patientId: appt.patientId,
+      patientId: resolvedPatientId,
       content,
       verificationToken,
       // B4: store templateId if provided
@@ -94,7 +107,7 @@ export async function POST(req: NextRequest) {
         actorId: user.id,
         templateId,
         action: "applied",
-        context: { prescriptionId: created.id, appointmentId },
+        context: { prescriptionId: created.id, appointmentId: appointmentId ?? null },
       });
     }
 

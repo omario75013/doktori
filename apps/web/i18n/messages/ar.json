@@ -1757,6 +1757,8 @@
       "editPrescription": "تعديل",
       "previewLabel": "معاينة الوصفة الطبية",
       "previewEmpty": "سيظهر محتوى الوصفة هنا.",
+      "withoutAppointment": "وصفة طبية بدون موعد",
+      "signatureLabel": "إمضاء وختم الطبيب",
       "prescRequireAppt": "يرجى اختيار موعد",
       "prescTooShort": "يجب أن تحتوي الوصفة على 3 أحرف على الأقل",
       "cardTimeline": "الجدول الزمني للملف",

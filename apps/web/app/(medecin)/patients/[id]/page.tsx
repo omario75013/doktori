@@ -773,6 +773,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
       {prescModalOpen && (
         <PrescriptionModal
           patientId={params.id!}
+          patientName={patient?.name ?? "—"}
           completedAppointments={appointments.filter((a) => a.status === "completed")}
           onClose={() => setPrescModalOpen(false)}
           onCreated={(presc) => {
@@ -2042,11 +2043,13 @@ function OrdonnancesSection({
 
 function PrescriptionModal({
   patientId,
+  patientName,
   completedAppointments,
   onClose,
   onCreated,
 }: {
   patientId: string;
+  patientName: string;
   completedAppointments: Appointment[];
   onClose: () => void;
   onCreated: (presc: Prescription) => void;
@@ -2060,10 +2063,13 @@ function PrescriptionModal({
   const [saving, setSaving] = useState(false);
   const [usedTemplateId, setUsedTemplateId] = useState<string | null>(null);
   const [previewing, setPreviewing] = useState(false);
+  const [withoutAppointment, setWithoutAppointment] = useState(
+    completedAppointments.length === 0
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!appointmentId) {
+    if (!withoutAppointment && !appointmentId) {
       toast.error(t("prescRequireAppt"));
       return;
     }
@@ -2073,14 +2079,17 @@ function PrescriptionModal({
     }
     setSaving(true);
     try {
+      const body: Record<string, unknown> = { content: content.trim() };
+      if (withoutAppointment) {
+        body.patientId = patientId;
+      } else {
+        body.appointmentId = appointmentId;
+      }
+      if (usedTemplateId && usedTemplateId !== "__blank__") body.templateId = usedTemplateId;
       const res = await fetch("/api/prescriptions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          appointmentId,
-          content: content.trim(),
-          ...(usedTemplateId ? { templateId: usedTemplateId } : {}),
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -2112,27 +2121,36 @@ function PrescriptionModal({
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          <Field label={t("fieldAppointment")}>
-            {completedAppointments.length === 0 ? (
-              <p className="text-sm text-gray-400 italic">
-                {t("noCompletedAppts")}
-              </p>
-            ) : (
-              <select
-                value={appointmentId}
-                onChange={(e) => setAppointmentId(e.target.value)}
-                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              >
-                {completedAppointments.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {format(new Date(a.startsAt), "d MMM yyyy HH:mm", { locale: fr })}
-                    {a.reason ? ` — ${a.reason}` : ""}
-                  </option>
-                ))}
-              </select>
-            )}
-          </Field>
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={withoutAppointment}
+              onChange={(e) => setWithoutAppointment(e.target.checked)}
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+            />
+            {t("withoutAppointment")}
+          </label>
+          {!withoutAppointment && (
+            <Field label={t("fieldAppointment")}>
+              {completedAppointments.length === 0 ? (
+                <p className="text-sm text-gray-400 italic">{t("noCompletedAppts")}</p>
+              ) : (
+                <select
+                  value={appointmentId}
+                  onChange={(e) => setAppointmentId(e.target.value)}
+                  className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  required
+                >
+                  {completedAppointments.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {format(new Date(a.startsAt), "d MMM yyyy HH:mm", { locale: fr })}
+                      {a.reason ? ` — ${a.reason}` : ""}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </Field>
+          )}
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
@@ -2174,21 +2192,37 @@ function PrescriptionModal({
               />
             )}
             {previewing ? (
-              <div className="rounded-xl border border-border bg-white p-5 min-h-[200px]">
-                <div className="border-b border-gray-200 pb-3 mb-4 flex justify-between items-start text-xs text-gray-500">
-                  <span>{t("previewLabel")}</span>
-                  <span>
-                    {format(new Date(), "d MMMM yyyy", { locale: fr })}
-                  </span>
+              <div className="rounded-xl border-2 border-dashed border-primary/30 bg-white shadow-sm p-6 min-h-[300px]">
+                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-primary font-bold mb-4">
+                  <Eye className="h-3 w-3" />
+                  {t("previewLabel")}
+                </div>
+                <div className="border-b-2 border-primary pb-3 mb-4 flex justify-between items-start">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Patient</p>
+                    <p className="text-sm font-semibold text-gray-800">{patientName}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Date</p>
+                    <p className="text-sm font-semibold text-gray-800">
+                      {format(new Date(), "d MMMM yyyy", { locale: fr })}
+                    </p>
+                  </div>
                 </div>
                 {content.trim() ? (
                   <div
-                    className="prose prose-sm max-w-none text-gray-800"
+                    className="prose prose-sm max-w-none text-gray-800 mb-8"
                     dangerouslySetInnerHTML={{ __html: content }}
                   />
                 ) : (
-                  <p className="text-sm text-gray-400 italic">{t("previewEmpty")}</p>
+                  <p className="text-sm text-gray-400 italic mb-8">{t("previewEmpty")}</p>
                 )}
+                <div className="mt-8 flex justify-end">
+                  <div className="text-center min-w-[160px]">
+                    <div className="h-12 border-b border-gray-300 mb-1" />
+                    <p className="text-[10px] text-gray-400">{t("signatureLabel")}</p>
+                  </div>
+                </div>
               </div>
             ) : (
               <QuillEditor
@@ -2218,7 +2252,7 @@ function PrescriptionModal({
             </button>
             <button
               type="submit"
-              disabled={saving || completedAppointments.length === 0}
+              disabled={saving || (!withoutAppointment && completedAppointments.length === 0)}
               className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
             >
               {saving ? tCommon("saving") : t("saveOrdonnance")}
