@@ -45,6 +45,7 @@ import {
   AnimatedCTAButton,
   TrustSignals,
 } from "@/components/doctor-profile-animated";
+import { FavoriteButton } from "@/components/favorite-button";
 
 const DAY_NAMES = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"] as const;
 const DAY_FULL_NAMES = [
@@ -392,9 +393,12 @@ export default async function DoctorProfilePage({
                   <div className="mt-4">
                     <div className="flex items-start justify-between gap-3">
                       <div>
-                        <h1 className="font-heading text-2xl font-black tracking-tight text-foreground sm:text-3xl">
-                          {doctor.name}
-                        </h1>
+                        <div className="flex items-center gap-3">
+                          <h1 className="font-heading text-2xl font-black tracking-tight text-foreground sm:text-3xl">
+                            {doctor.name}
+                          </h1>
+                          <FavoriteButton doctorId={doctor.id} size="sm" />
+                        </div>
                         <div className="mt-1 flex items-center gap-2 flex-wrap">
                           <Stethoscope className="h-4 w-4 text-primary" strokeWidth={2.5} />
                           <span className="text-sm font-bold text-primary">

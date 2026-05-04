@@ -8,6 +8,7 @@ import { format, isPast, differenceInMinutes } from "date-fns";
 import { fr } from "date-fns/locale";
 import { SPECIALTIES } from "@doktori/shared";
 import { GuidedTour } from "@/components/guided-tour";
+import { PatientMediaSection } from "@/components/patient-media-section";
 import { motion } from "framer-motion";
 import {
   Search,
@@ -641,6 +642,13 @@ export default function PatientDashboardPage() {
                 );
               })}
             </div>
+          </motion.section>
+        )}
+
+        {/* Profile media + insurance cards */}
+        {token && (
+          <motion.section variants={fadeUp} initial="hidden" animate="visible" className="mb-8">
+            <PatientMediaSection token={token} />
           </motion.section>
         )}
 
