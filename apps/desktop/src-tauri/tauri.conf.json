@@ -17,7 +17,7 @@
         "resizable": true,
         "fullscreen": false,
         "decorations": true,
-        "url": "https://doktori.tn/app-picker"
+        "url": "http://localhost:3000/app-picker"
       }
     ],
     "security": {

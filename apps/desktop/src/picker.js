@@ -2,7 +2,7 @@
 // Tauri's WebView persists localStorage per-origin, so we store the role there.
 
 const ROLE_KEY = "doktori.role";
-const SERVER_URL = "https://doktori.tn";
+const SERVER_URL = "http://localhost:3000";
 
 const LOGIN_URLS = {
   doctor: "/connexion",
