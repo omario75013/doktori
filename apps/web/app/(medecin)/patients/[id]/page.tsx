@@ -28,6 +28,12 @@ import {
   Printer,
   Eye,
   Edit3,
+  CalendarPlus,
+  MessageSquare,
+  Phone,
+  Mail,
+  Send,
+  X as XClose,
 } from "lucide-react";
 import { toast } from "sonner";
 import { QuillEditor } from "../../modeles/components/quill-editor";
@@ -331,6 +337,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
   const [consultNotes, setConsultNotes] = useState<ConsultationNote[]>([]);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const [editOpen, setEditOpen] = useState(false);
+  const [smsOpen, setSmsOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [viewerRole, setViewerRole] = useState<"doctor" | "secretary">("doctor");
@@ -472,63 +479,137 @@ function PatientDetail({ listPath }: { listPath: string }) {
     );
   }
 
+  const initials = patient.name
+    .split(" ")
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+
+  const lastVisit = appointments
+    .filter((a) => a.status === "completed")
+    .sort((a, b) => new Date(b.startsAt).getTime() - new Date(a.startsAt).getTime())[0];
+
+  const totalVisits = appointments.filter((a) => a.status === "completed").length;
+  const upcomingCount = appointments.filter(
+    (a) => (a.status === "pending" || a.status === "confirmed") && new Date(a.startsAt) > new Date()
+  ).length;
+
   return (
     <div className="space-y-6">
-      {/* Page header */}
-      <div className="flex items-center gap-3">
-        <button
-          onClick={() => router.back()}
-          className="h-9 w-9 rounded-xl border border-border hover:bg-secondary flex items-center justify-center text-gray-500 hover:text-primary transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-        </button>
-        <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary">
-          <User className="h-5 w-5" />
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <h1 className="text-2xl font-bold text-foreground">{patient.name}</h1>
-            {patient.noShowCount > 0 && (
-              <span
-                className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700"
-                title="Nombre de rendez-vous où ce patient ne s'est pas présenté"
+      {/* Back nav */}
+      <button
+        onClick={() => router.back()}
+        className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-primary transition-colors"
+      >
+        <ArrowLeft className="h-4 w-4" />
+        {tCommon("back")}
+      </button>
+
+      {/* Patient hero card */}
+      <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+        <div className="p-5 lg:p-6 flex flex-col lg:flex-row lg:items-center gap-5">
+          {/* Avatar + identity */}
+          <div className="flex items-center gap-4 flex-1 min-w-0">
+            <div className="h-16 w-16 lg:h-20 lg:w-20 rounded-2xl bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center text-white text-xl lg:text-2xl font-bold shrink-0 shadow-sm">
+              {initials || <User className="h-8 w-8" />}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                <h1 className="text-xl lg:text-2xl font-bold text-foreground truncate">
+                  {patient.name}
+                </h1>
+                {patient.noShowCount > 0 && (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full bg-red-50 border border-red-200 px-2 py-0.5 text-[10px] font-semibold text-red-700"
+                    title="Nombre de rendez-vous où ce patient ne s'est pas présenté"
+                  >
+                    ⚠ {t("noShowBadge", { count: patient.noShowCount, s: patient.noShowCount > 1 ? "s" : "" })}
+                  </span>
+                )}
+                {patient.lastMinuteCancelCount > 0 && (
+                  <span
+                    className="inline-flex items-center gap-1 rounded-full bg-orange-50 border border-orange-200 px-2 py-0.5 text-[10px] font-semibold text-orange-700"
+                    title="Annulations dans les 2h avant le rendez-vous"
+                  >
+                    {t("lateCancelBadge", { count: patient.lastMinuteCancelCount, s: patient.lastMinuteCancelCount > 1 ? "s" : "" })}
+                  </span>
+                )}
+              </div>
+              <div className="flex items-center gap-3 flex-wrap text-sm text-gray-500">
+                <span className="inline-flex items-center gap-1.5" dir="ltr">
+                  <Phone className="h-3.5 w-3.5 text-gray-400" />
+                  {patient.phone || "—"}
+                </span>
+                {patient.email && (
+                  <span className="inline-flex items-center gap-1.5">
+                    <Mail className="h-3.5 w-3.5 text-gray-400" />
+                    {patient.email}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Action toolbar */}
+          <div className="flex items-center gap-2 flex-wrap shrink-0">
+            <button
+              onClick={() => router.push(`/rendez-vous?createForPatientId=${patient.id}`)}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3.5 py-2 text-sm font-semibold hover:opacity-90 transition-opacity shadow-sm"
+            >
+              <CalendarPlus className="h-4 w-4" />
+              {t("quickNewRdv")}
+            </button>
+            {patient.phone && (
+              <button
+                onClick={() => setSmsOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-white border border-primary/40 text-primary px-3.5 py-2 text-sm font-semibold hover:bg-primary/5 transition-colors"
               >
-                ⚠ {t("noShowBadge", { count: patient.noShowCount, s: patient.noShowCount > 1 ? "s" : "" })}
-              </span>
+                <MessageSquare className="h-4 w-4" />
+                {t("quickSendSms")}
+              </button>
             )}
-            {patient.lastMinuteCancelCount > 0 && (
-              <span
-                className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-bold text-orange-700"
-                title="Annulations dans les 2h avant le rendez-vous"
+            {(viewerRole === "doctor" || viewerPerms?.patientsEdit) && (
+              <button
+                onClick={() => setEditOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
               >
-                {t("lateCancelBadge", { count: patient.lastMinuteCancelCount, s: patient.lastMinuteCancelCount > 1 ? "s" : "" })}
-              </span>
+                <Pencil className="h-4 w-4" />
+                {tCommon("edit")}
+              </button>
+            )}
+            {(viewerRole === "doctor" || viewerPerms?.patientsDelete) && (
+              <button
+                onClick={() => setConfirmDelete(true)}
+                className="inline-flex items-center justify-center h-9 w-9 rounded-xl border border-red-200 bg-white text-red-500 hover:bg-red-50 transition-colors"
+                title={tCommon("delete")}
+                aria-label={tCommon("delete")}
+              >
+                <Trash2 className="h-4 w-4" />
+              </button>
             )}
           </div>
-          <p className="text-sm text-gray-500">
-            {patient.phone}
-            {patient.email ? ` · ${patient.email}` : ""}
-          </p>
         </div>
-        <div className="flex items-center gap-2">
-          {(viewerRole === "doctor" || viewerPerms?.patientsEdit) && (
-            <button
-              onClick={() => setEditOpen(true)}
-              className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
-            >
-              <Pencil className="h-4 w-4" />
-              {tCommon("edit")}
-            </button>
-          )}
-          {(viewerRole === "doctor" || viewerPerms?.patientsDelete) && (
-            <button
-              onClick={() => setConfirmDelete(true)}
-              className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
-            >
-              <Trash2 className="h-4 w-4" />
-              {tCommon("delete")}
-            </button>
-          )}
+
+        {/* Quick stats strip */}
+        <div className="grid grid-cols-3 border-t border-border bg-gray-50/50">
+          <div className="px-5 py-3 border-r border-border">
+            <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">{t("statTotalVisits")}</p>
+            <p className="text-lg font-bold text-foreground mt-0.5">{totalVisits}</p>
+          </div>
+          <div className="px-5 py-3 border-r border-border">
+            <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">{t("statUpcoming")}</p>
+            <p className="text-lg font-bold text-foreground mt-0.5">{upcomingCount}</p>
+          </div>
+          <div className="px-5 py-3">
+            <p className="text-[10px] uppercase tracking-wider text-gray-400 font-medium">{t("statLastVisit")}</p>
+            <p className="text-sm font-semibold text-foreground mt-1">
+              {lastVisit
+                ? format(new Date(lastVisit.startsAt), "d MMM yyyy", { locale: fr })
+                : "—"}
+            </p>
+          </div>
         </div>
       </div>
 
@@ -755,6 +836,15 @@ function PatientDetail({ listPath }: { listPath: string }) {
         />
       )}
 
+      {smsOpen && (
+        <SmsComposeDialog
+          patientId={patient.id}
+          patientName={patient.name}
+          patientPhone={patient.phone}
+          onClose={() => setSmsOpen(false)}
+        />
+      )}
+
       {uploadOpen && (
         <UploadDialog
           patientId={params.id!}
@@ -809,6 +899,119 @@ function PatientDetail({ listPath }: { listPath: string }) {
           }}
         />
       )}
+    </div>
+  );
+}
+
+// ─── SMS compose dialog ──────────────────────────────────────────────────────
+
+function SmsComposeDialog({
+  patientId,
+  patientName,
+  patientPhone,
+  onClose,
+}: {
+  patientId: string;
+  patientName: string;
+  patientPhone: string;
+  onClose: () => void;
+}) {
+  const t = useTranslations("medecin.patientDetail");
+  const tCommon = useTranslations("medecin.common");
+  const [message, setMessage] = useState("");
+  const [sending, setSending] = useState(false);
+
+  const remaining = 500 - message.length;
+
+  async function handleSend() {
+    if (message.trim().length < 1) {
+      toast.error(t("smsRequired"));
+      return;
+    }
+    setSending(true);
+    try {
+      const res = await fetch(`/api/medecin/patients/${patientId}/sms`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: message.trim() }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error((err as { error?: string }).error ?? "Erreur");
+      }
+      toast.success(t("smsSent"));
+      onClose();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erreur");
+    } finally {
+      setSending(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
+      <div className="w-full max-w-md rounded-2xl bg-white shadow-xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-border">
+          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+            <MessageSquare className="h-5 w-5 text-primary" />
+            {t("smsTitle")}
+          </h2>
+          <button
+            onClick={onClose}
+            className="h-8 w-8 rounded-lg hover:bg-secondary flex items-center justify-center text-gray-500"
+            aria-label={tCommon("close")}
+          >
+            <XClose className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="p-5 space-y-4">
+          <div className="flex items-center gap-3 rounded-xl bg-secondary/50 px-4 py-3">
+            <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+              <Phone className="h-4 w-4" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground truncate">{patientName}</p>
+              <p className="text-xs text-gray-500 font-mono" dir="ltr">{patientPhone}</p>
+            </div>
+          </div>
+          <div>
+            <label className="text-sm font-medium text-gray-700 block mb-1.5">{t("smsLabel")}</label>
+            <textarea
+              rows={5}
+              value={message}
+              onChange={(e) => {
+                if (e.target.value.length <= 500) setMessage(e.target.value);
+              }}
+              maxLength={500}
+              placeholder={t("smsPlaceholder")}
+              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
+              autoFocus
+            />
+            <p className={`text-[11px] mt-1 text-right ${remaining < 50 ? "text-amber-600" : "text-gray-400"}`}>
+              {remaining} / 500
+            </p>
+          </div>
+          <div className="flex justify-end gap-2 pt-1">
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={sending}
+              className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary"
+            >
+              {tCommon("cancel")}
+            </button>
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={sending || message.trim().length < 1}
+              className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
+            >
+              <Send className="h-4 w-4" />
+              {sending ? tCommon("saving") : t("smsSend")}
+            </button>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
