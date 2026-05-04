@@ -41,9 +41,10 @@ async function getPatientToken(): Promise<string | null> {
 }
 
 export default function PatientChatScreen() {
-  const params = useLocalSearchParams<{ id: string; doctorName?: string }>();
+  const params = useLocalSearchParams<{ id: string; doctorName?: string; doctorId?: string }>();
   const conversationId = params.id;
   const doctorName = params.doctorName ?? "Médecin";
+  const doctorId = params.doctorId;
 
   const [messages, setMessages] = useState<AnyMsg[]>([]);
   const [text, setText] = useState("");
@@ -52,6 +53,7 @@ export default function PatientChatScreen() {
   const [patientId, setPatientId] = useState<string | null>(null);
   const listRef = useRef<FlatList<AnyMsg>>(null);
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [doctorStatus, setDoctorStatus] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -75,6 +77,16 @@ export default function PatientChatScreen() {
     pollRef.current = setInterval(load, 4000);
     return () => { if (pollRef.current) clearInterval(pollRef.current); };
   }, [load]);
+
+  useEffect(() => {
+    if (!doctorId) return;
+    api<{ statusMessage: string | null; isActive: boolean }>(
+      `/api/doctors/${doctorId}/status`,
+      { noRedirect: true }
+    )
+      .then((s) => setDoctorStatus(s.isActive ? s.statusMessage : null))
+      .catch(() => null);
+  }, [doctorId]);
 
   async function send() {
     const content = text.trim();
@@ -110,6 +122,9 @@ export default function PatientChatScreen() {
         </Pressable>
         <View style={{ flex: 1 }}>
           <Text style={styles.headerName}>{doctorName}</Text>
+          {doctorStatus ? (
+            <Text style={styles.headerStatus} numberOfLines={1}>{doctorStatus}</Text>
+          ) : null}
         </View>
       </View>
 
@@ -177,6 +192,7 @@ const styles = StyleSheet.create({
   },
   backBtn: { width: 36, alignItems: "flex-start" },
   headerName: { fontSize: 16, fontWeight: "700", color: colors.foreground },
+  headerStatus: { fontSize: 11, color: colors.amber, fontStyle: "italic", marginTop: 1 },
   listContent: { padding: spacing.lg, gap: spacing.sm, flexGrow: 1 },
   bubble: {
     maxWidth: "78%",

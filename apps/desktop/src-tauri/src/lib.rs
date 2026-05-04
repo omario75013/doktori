@@ -10,7 +10,7 @@ struct AppEnv {
 fn app_env() -> AppEnv {
     // DOKTORI_SERVER_URL can override the target server at build/run time.
     let server_url = std::env::var("DOKTORI_SERVER_URL")
-        .unwrap_or_else(|_| "http://localhost:3000".to_string());
+        .unwrap_or_else(|_| "https://doktori.tn".to_string());
     AppEnv {
         server_url,
         version: env!("CARGO_PKG_VERSION").to_string(),

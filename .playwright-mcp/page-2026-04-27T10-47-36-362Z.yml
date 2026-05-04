@@ -1,0 +1,231 @@
+- generic [ref=e1]:
+  - generic [ref=e171]:
+    - generic [ref=e172]:
+      - img [ref=e173]
+      - generic [ref=e175]:
+        - text: L'app Doktori arrive bientôt sur
+        - strong [ref=e176]: App Store
+        - text: et
+        - strong [ref=e177]: Google Play
+    - button "Fermer" [ref=e178]:
+      - img [ref=e179]
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Doktori.tn" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e13]: Doktori.tn
+      - navigation [ref=e14]:
+        - link "ابحث عن طبيب" [ref=e15] [cursor=pointer]:
+          - /url: /recherche
+          - img [ref=e16]
+          - text: ابحث عن طبيب
+        - link "المدونة" [ref=e19] [cursor=pointer]:
+          - /url: /blog
+          - img [ref=e20]
+          - text: المدونة
+        - link "مساعدة" [ref=e22] [cursor=pointer]:
+          - /url: /faq
+          - img [ref=e23]
+          - text: مساعدة
+        - link "استغاثة" [ref=e26] [cursor=pointer]:
+          - /url: /sos
+          - img [ref=e27]
+          - text: استغاثة
+        - button "Passer en mode sombre" [ref=e182]:
+          - img [ref=e183]
+        - group "Changer de langue" [ref=e33]:
+          - button "Passer en français" [ref=e34]: FR
+          - button "التبديل إلى العربية" [disabled] [pressed] [ref=e35]: AR
+        - link "حسابي" [ref=e36] [cursor=pointer]:
+          - /url: /connexion-patient
+          - img [ref=e37]
+          - text: حسابي
+        - link "فضاء الطبيب" [ref=e40] [cursor=pointer]:
+          - /url: /connexion
+          - img [ref=e41]
+          - generic [ref=e44]: فضاء الطبيب
+  - generic [ref=e917]:
+    - generic [ref=e918]:
+      - img "Dr. Karim Ben Ali" [ref=e919]
+      - generic [ref=e920]:
+        - heading "Dr. Karim Ben Ali" [level=1] [ref=e921]
+        - paragraph [ref=e922]: generaliste
+        - paragraph [ref=e923]: la-marsa
+    - generic [ref=e925]:
+      - generic [ref=e927]:
+        - generic [ref=e929]: "1"
+        - generic [ref=e930]: Choisir le créneau
+      - generic [ref=e934]:
+        - generic [ref=e936]: "2"
+        - generic [ref=e937]: Vos informations
+      - generic [ref=e941]:
+        - generic [ref=e943]: "3"
+        - generic [ref=e944]: Confirmation
+    - generic [ref=e990]:
+      - generic [ref=e991]:
+        - generic [ref=e992]:
+          - generic [ref=e993]:
+            - generic [ref=e995]: Consultation 1
+            - generic [ref=e996]: ·
+            - generic [ref=e997]: 20 min
+          - button "Changer" [ref=e998]
+        - generic [ref=e999]:
+          - generic [ref=e1000]:
+            - img [ref=e1001]
+            - generic [ref=e1004]: Cabinet principal
+            - generic [ref=e1005]: ·
+            - generic [ref=e1006]: la-marsa
+          - generic [ref=e1007]: Cabinet défini par le motif
+      - heading "Choisir un créneau" [level=2] [ref=e1008]
+      - generic [ref=e1009]:
+        - generic [ref=e1010]:
+          - button "Semaine précédente" [disabled] [ref=e1011]:
+            - img [ref=e1012]
+          - generic [ref=e1014]:
+            - paragraph [ref=e1015]: Disponibilités
+            - paragraph [ref=e1016]: 27 avr. – 3 mai 2026
+          - button "Semaine suivante" [ref=e1017]:
+            - img [ref=e1018]
+        - generic [ref=e1020]:
+          - button "lun 27 avr — Aujourd'hui" [disabled] [ref=e1021]:
+            - generic [ref=e1022]: lun
+            - generic [ref=e1023]: "27"
+            - generic [ref=e1024]: avr
+            - generic [ref=e1025]: —
+            - generic [ref=e1026]: Aujourd'hui
+          - button "mar 28 avr 24 créneaux" [active] [ref=e1027]:
+            - generic [ref=e1028]: mar
+            - generic [ref=e1029]: "28"
+            - generic [ref=e1030]: avr
+            - generic [ref=e1031]: 24 créneaux
+          - button "mer 29 avr 24 créneaux" [ref=e1032]:
+            - generic [ref=e1033]: mer
+            - generic [ref=e1034]: "29"
+            - generic [ref=e1035]: avr
+            - generic [ref=e1036]: 24 créneaux
+          - button "jeu 30 avr 24 créneaux" [ref=e1037]:
+            - generic [ref=e1038]: jeu
+            - generic [ref=e1039]: "30"
+            - generic [ref=e1040]: avr
+            - generic [ref=e1041]: 24 créneaux
+          - button "ven 1 mai 24 créneaux" [ref=e1042]:
+            - generic [ref=e1043]: ven
+            - generic [ref=e1044]: "1"
+            - generic [ref=e1045]: mai
+            - generic [ref=e1046]: 24 créneaux
+          - button "sam 2 mai 12 créneaux" [ref=e1047]:
+            - generic [ref=e1048]: sam
+            - generic [ref=e1049]: "2"
+            - generic [ref=e1050]: mai
+            - generic [ref=e1051]: 12 créneaux
+          - button "dim 3 mai 24 créneaux" [ref=e1052]:
+            - generic [ref=e1053]: dim
+            - generic [ref=e1054]: "3"
+            - generic [ref=e1055]: mai
+            - generic [ref=e1056]: 24 créneaux
+        - generic [ref=e1057]:
+          - generic [ref=e1058]:
+            - generic [ref=e1059]:
+              - img [ref=e1060]
+              - heading "Matin" [level=3] [ref=e1066]
+              - generic [ref=e1067]: (12)
+            - generic [ref=e1068]:
+              - button "08:00" [ref=e1069]
+              - button "08:20" [ref=e1070]
+              - button "08:40" [ref=e1071]
+              - button "09:00" [ref=e1072]
+              - button "09:20" [ref=e1073]
+              - button "09:40" [ref=e1074]
+              - button "10:00" [ref=e1075]
+              - button "10:20" [ref=e1076]
+              - button "10:40" [ref=e1077]
+              - button "11:00" [ref=e1078]
+              - button "11:20" [ref=e1079]
+              - button "11:40" [ref=e1080]
+          - generic [ref=e1081]:
+            - generic [ref=e1082]:
+              - img [ref=e1083]
+              - heading "Après-midi" [level=3] [ref=e1088]
+              - generic [ref=e1089]: (9)
+            - generic [ref=e1090]:
+              - button "14:00" [ref=e1091]
+              - button "14:20" [ref=e1092]
+              - button "14:40" [ref=e1093]
+              - button "15:00" [ref=e1094]
+              - button "15:20" [ref=e1095]
+              - button "15:40" [ref=e1096]
+              - button "16:00" [ref=e1097]
+              - button "16:20" [ref=e1098]
+              - button "16:40" [ref=e1099]
+          - generic [ref=e1100]:
+            - generic [ref=e1101]:
+              - img [ref=e1102]
+              - heading "Soir" [level=3] [ref=e1104]
+              - generic [ref=e1105]: (3)
+            - generic [ref=e1106]:
+              - button "17:00" [ref=e1107]
+              - button "17:20" [ref=e1108]
+              - button "17:40" [ref=e1109]
+  - contentinfo [ref=e110]:
+    - generic [ref=e111]:
+      - generic [ref=e112]:
+        - generic [ref=e113]:
+          - generic [ref=e114]:
+            - img [ref=e116]
+            - generic [ref=e120]: Doktori
+          - paragraph [ref=e121]: La prise de rendez-vous médicaux en Tunisie
+          - link "contact@doktori.tn" [ref=e122] [cursor=pointer]:
+            - /url: mailto:contact@doktori.tn
+            - img [ref=e123]
+            - text: contact@doktori.tn
+        - generic [ref=e126]:
+          - paragraph [ref=e127]: Plateforme
+          - list [ref=e128]:
+            - listitem [ref=e129]:
+              - link "À propos" [ref=e130] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e131]:
+              - link "Blog" [ref=e132] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=e133]:
+              - link "FAQ" [ref=e134] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e135]:
+              - link "SOS Médecin" [ref=e136] [cursor=pointer]:
+                - /url: /sos-medecin
+        - generic [ref=e137]:
+          - paragraph [ref=e138]: Légal
+          - list [ref=e139]:
+            - listitem [ref=e140]:
+              - link "Mentions légales" [ref=e141] [cursor=pointer]:
+                - /url: /mentions-legales
+            - listitem [ref=e142]:
+              - link "CGU" [ref=e143] [cursor=pointer]:
+                - /url: /cgu
+            - listitem [ref=e144]:
+              - link "Politique de confidentialité" [ref=e145] [cursor=pointer]:
+                - /url: /confidentialite
+        - generic [ref=e146]:
+          - paragraph [ref=e147]: Espace médecin
+          - paragraph [ref=e148]: Vous êtes médecin et souhaitez rejoindre Doktori ?
+          - link "Espace médecin" [ref=e149] [cursor=pointer]:
+            - /url: /connexion
+            - img [ref=e150]
+            - text: Espace médecin
+      - paragraph [ref=e155]: © 2025-2026 Random Walkers SUARL · Doktori.tn
+  - region "Notifications alt+T"
+  - button "افتح معالج دوكتي" [ref=e156]:
+    - img [ref=e157]
+    - generic [ref=e161]: "!"
+  - button "Open Next.js Dev Tools" [ref=e167] [cursor=pointer]:
+    - img [ref=e168]
+  - alert [ref=e262]: دكتوري - احجز طبيبك عبر الإنترنت في تونس
+  - generic [ref=e265]:
+    - img [ref=e267]
+    - generic [ref=e269]:
+      - paragraph [ref=e270]: Installer Doktori sur votre téléphone
+      - paragraph [ref=e271]: Accédez rapidement à vos rendez-vous depuis votre écran d'accueil.
+      - button "Installer l'application" [ref=e272]
+    - button "Fermer" [ref=e273]:
+      - img [ref=e274]

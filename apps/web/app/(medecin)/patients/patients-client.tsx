@@ -850,7 +850,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                         {p.name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap" dir="ltr">
                       {p.phone}
                     </td>
                     {visibleColumns.map((col) => (

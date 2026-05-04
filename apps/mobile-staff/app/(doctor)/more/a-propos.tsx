@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, Pressable, Linking, Alert } from "react-native";
 import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii } from "@doktori/mobile-core";
+import { colors, spacing, radii, t, useLocale } from "@doktori/mobile-core";
 
 const APP_VERSION = "1.0.0";
 const YEAR = new Date().getFullYear();
@@ -34,15 +34,16 @@ function LinkRow({ icon, label, sublabel, onPress }: { icon: React.ComponentProp
 }
 
 export default function AProposScreen() {
+  const { locale } = useLocale();
   function openUrl(url: string) {
-    Linking.openURL(url).catch(() => Alert.alert("Erreur", "Impossible d'ouvrir le lien."));
+    Linking.openURL(url).catch(() => Alert.alert(t("common.error"), t("common.error")));
   }
 
   return (
     <>
       <Stack.Screen
         options={{
-          title: "À propos",
+          title: t("doctor.about.title"),
           headerLeft: () => (
             <Pressable onPress={() => router.back()} hitSlop={10} style={{ paddingHorizontal: spacing.sm }}>
               <Ionicons name="chevron-back" size={24} color={colors.foreground} />
@@ -56,80 +57,78 @@ export default function AProposScreen() {
           <View style={s.logoWrap}>
             <Ionicons name="medkit" size={36} color="#FFF" />
           </View>
-          <Text style={s.appName}>Doktori</Text>
-          <Text style={s.appTagline}>La santé numérique en Tunisie</Text>
+          <Text style={s.appName}>{t("doctor.about.appName")}</Text>
+          <Text style={s.appTagline}>{t("doctor.about.tagline")}</Text>
           <View style={s.versionBadge}>
-            <Text style={s.versionText}>Version {APP_VERSION}</Text>
+            <Text style={s.versionText}>{t("doctor.about.version")}</Text>
           </View>
         </View>
 
         {/* App info */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Application</Text>
+          <Text style={s.sectionTitle}>{t("doctor.about.sectionApp")}</Text>
           <View style={s.card}>
-            <InfoRow icon="globe-outline" label="Site web" value="doktori.tn" />
+            <InfoRow icon="globe-outline" label={t("doctor.about.website")} value={t("doctor.about.websiteValue")} />
             <View style={s.divider} />
-            <InfoRow icon="phone-portrait-outline" label="Version" value={APP_VERSION} />
+            <InfoRow icon="phone-portrait-outline" label={t("doctor.about.versionLabel")} value={APP_VERSION} />
             <View style={s.divider} />
-            <InfoRow icon="calendar-outline" label="Dernière mise à jour" value="Avril 2026" />
+            <InfoRow icon="calendar-outline" label={t("doctor.about.lastUpdate")} value={t("doctor.about.lastUpdateValue")} />
             <View style={s.divider} />
-            <InfoRow icon="flag-outline" label="Région" value="Tunisie 🇹🇳" />
+            <InfoRow icon="flag-outline" label={t("doctor.about.region")} value={t("doctor.about.regionValue")} />
           </View>
         </View>
 
         {/* Mission */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Notre mission</Text>
+          <Text style={s.sectionTitle}>{t("doctor.about.missionTitle")}</Text>
           <View style={s.missionCard}>
             <Text style={s.missionText}>
-              Doktori est la plateforme de santé numérique de référence en Tunisie. Notre mission est de simplifier
-              la gestion des rendez-vous médicaux, de fluidifier la communication entre professionnels de santé
-              et de faciliter l'accès aux soins pour tous les patients.
+              {t("doctor.about.missionText")}
             </Text>
           </View>
         </View>
 
         {/* Developer */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Développeur</Text>
+          <Text style={s.sectionTitle}>{t("doctor.about.sectionDev")}</Text>
           <View style={s.card}>
-            <InfoRow icon="code-slash-outline" label="Agence" value="RandomWalkers" />
+            <InfoRow icon="code-slash-outline" label={t("doctor.about.agency")} value={t("doctor.about.agencyValue")} />
             <View style={s.divider} />
-            <InfoRow icon="location-outline" label="Localisation" value="Tunis, Tunisie" />
+            <InfoRow icon="location-outline" label={t("doctor.about.location")} value={t("doctor.about.locationValue")} />
             <View style={s.divider} />
-            <InfoRow icon="globe-outline" label="Web" value="randomwalkers.tech" />
+            <InfoRow icon="globe-outline" label={t("doctor.about.web")} value={t("doctor.about.webValue")} />
           </View>
         </View>
 
         {/* Contact & Links */}
         <View style={s.section}>
-          <Text style={s.sectionTitle}>Contact & liens</Text>
+          <Text style={s.sectionTitle}>{t("doctor.about.sectionLinks")}</Text>
           <View style={s.card}>
             <LinkRow
               icon="mail-outline"
-              label="Contacter le support"
-              sublabel="support@doktori.tn"
+              label={t("doctor.about.support")}
+              sublabel={t("doctor.about.supportEmail")}
               onPress={() => Linking.openURL("mailto:support@doktori.tn").catch(() => {})}
             />
             <View style={s.divider} />
             <LinkRow
               icon="globe-outline"
-              label="Site officiel"
-              sublabel="doktori.tn"
+              label={t("doctor.about.officialSite")}
+              sublabel={t("doctor.about.websiteValue")}
               onPress={() => openUrl("https://doktori.tn")}
             />
             <View style={s.divider} />
             <LinkRow
               icon="logo-linkedin"
-              label="LinkedIn"
+              label={t("doctor.about.linkedin")}
               sublabel="linkedin.com/company/doktori"
               onPress={() => openUrl("https://linkedin.com/company/doktori")}
             />
           </View>
         </View>
 
-        <Text style={s.copyright}>© {YEAR} RandomWalkers. Tous droits réservés.</Text>
-        <Text style={s.copyright}>Doktori est une marque déposée en Tunisie.</Text>
+        <Text style={s.copyright}>{t("doctor.about.copyright", { year: YEAR })}</Text>
+        <Text style={s.copyright}>{t("doctor.about.trademark")}</Text>
       </ScrollView>
     </>
   );

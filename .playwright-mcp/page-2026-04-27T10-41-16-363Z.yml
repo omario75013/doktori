@@ -1,0 +1,819 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Doktori.tn" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e13]: Doktori.tn
+      - navigation [ref=e14]:
+        - link "ابحث عن طبيب" [ref=e15] [cursor=pointer]:
+          - /url: /recherche
+          - img [ref=e16]
+          - text: ابحث عن طبيب
+        - link "المدونة" [ref=e19] [cursor=pointer]:
+          - /url: /blog
+          - img [ref=e20]
+          - text: المدونة
+        - link "مساعدة" [ref=e22] [cursor=pointer]:
+          - /url: /faq
+          - img [ref=e23]
+          - text: مساعدة
+        - link "استغاثة" [ref=e26] [cursor=pointer]:
+          - /url: /sos
+          - img [ref=e27]
+          - text: استغاثة
+        - group "Changer de langue" [ref=e33]:
+          - button "Passer en français" [ref=e34]: FR
+          - button "التبديل إلى العربية" [disabled] [pressed] [ref=e35]: AR
+        - link "حسابي" [ref=e36] [cursor=pointer]:
+          - /url: /connexion-patient
+          - img [ref=e37]
+          - text: حسابي
+        - link "فضاء الطبيب" [ref=e40] [cursor=pointer]:
+          - /url: /connexion
+          - img [ref=e41]
+          - generic [ref=e44]: فضاء الطبيب
+  - generic [ref=e45]:
+    - generic [ref=e47]:
+      - navigation [ref=e48]:
+        - link "الرئيسية" [ref=e49] [cursor=pointer]:
+          - /url: /
+          - img [ref=e50]
+          - text: الرئيسية
+        - generic [ref=e53]: /
+        - generic [ref=e54]: مركز المساعدة
+      - generic [ref=e55]:
+        - generic [ref=e56]:
+          - img [ref=e57]
+          - generic [ref=e60]: مركز المساعدة
+        - heading "كيف يمكننا مساعدتك؟" [level=1] [ref=e61]
+        - paragraph [ref=e62]: اعثر في ثوانٍ على إجابات لأسئلتك حول حجز المواعيد، الدفع، استغاثة طبيب واستخدام دكتوري.
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - img [ref=e65]
+            - 'searchbox "ابحث عن سؤال... (مثال: إلغاء، CNAM، استغاثة)" [ref=e68]'
+            - generic [ref=e69]:
+              - img [ref=e70]
+              - text: /
+          - generic [ref=e72]:
+            - generic [ref=e73]: "بحوث شائعة:"
+            - button "CNAM" [ref=e74]
+            - button "إلغاء" [ref=e75]
+            - button "استغاثة" [ref=e76]
+            - button "دفع" [ref=e77]
+            - button "الموقع" [ref=e78]
+    - generic [ref=e79]:
+      - generic [ref=e80]:
+        - img [ref=e81]
+        - heading "الأسئلة الأكثر طرحًا" [level=2] [ref=e83]
+      - generic [ref=e84]:
+        - link "حجز موعد كيف أحجز موعدًا عبر الإنترنت على دكتوري؟ اقرأ" [ref=e85] [cursor=pointer]:
+          - /url: "#how-to-book"
+          - generic [ref=e87]:
+            - generic [ref=e88]: حجز موعد
+            - heading "كيف أحجز موعدًا عبر الإنترنت على دكتوري؟" [level=3] [ref=e89]
+            - generic [ref=e90]:
+              - text: اقرأ
+              - img [ref=e91]
+        - link "الأطباء هل يقبل الأطباء بطاقة الصندوق الوطني للتأمين على المرض (CNAM)؟ اقرأ" [ref=e93] [cursor=pointer]:
+          - /url: "#cnam-convention"
+          - generic [ref=e95]:
+            - generic [ref=e96]: الأطباء
+            - heading "هل يقبل الأطباء بطاقة الصندوق الوطني للتأمين على المرض (CNAM)؟" [level=3] [ref=e97]
+            - generic [ref=e98]:
+              - text: اقرأ
+              - img [ref=e99]
+        - link "الحساب والبيانات هل بياناتي الشخصية والطبية محمية؟ اقرأ" [ref=e101] [cursor=pointer]:
+          - /url: "#data-protection"
+          - generic [ref=e103]:
+            - generic [ref=e104]: الحساب والبيانات
+            - heading "هل بياناتي الشخصية والطبية محمية؟" [level=3] [ref=e105]
+            - generic [ref=e106]:
+              - text: اقرأ
+              - img [ref=e107]
+        - link "استغاثة طبيب ما هو استغاثة طبيب؟ اقرأ" [ref=e109] [cursor=pointer]:
+          - /url: "#sos-what"
+          - generic [ref=e111]:
+            - generic [ref=e112]: استغاثة طبيب
+            - heading "ما هو استغاثة طبيب؟" [level=3] [ref=e113]
+            - generic [ref=e114]:
+              - text: اقرأ
+              - img [ref=e115]
+    - generic [ref=e117]:
+      - complementary [ref=e118]:
+        - paragraph [ref=e119]: تصفح حسب الفئة
+        - navigation [ref=e120]:
+          - button "الكل 30" [ref=e121]:
+            - generic [ref=e122]:
+              - img [ref=e123]
+              - text: الكل
+            - generic [ref=e126]: "30"
+          - button "حجز موعد 6" [ref=e127]:
+            - generic [ref=e130]: حجز موعد
+            - generic [ref=e131]: "6"
+          - button "الأطباء 4" [ref=e132]:
+            - generic [ref=e135]: الأطباء
+            - generic [ref=e136]: "4"
+          - button "الدفع والأسعار 4" [ref=e137]:
+            - generic [ref=e140]: الدفع والأسعار
+            - generic [ref=e141]: "4"
+          - button "الحساب والبيانات 4" [ref=e142]:
+            - generic [ref=e145]: الحساب والبيانات
+            - generic [ref=e146]: "4"
+          - button "استغاثة طبيب 5" [ref=e147]:
+            - generic [ref=e150]: استغاثة طبيب
+            - generic [ref=e151]: "5"
+          - button "التطبيق 4" [ref=e152]:
+            - generic [ref=e155]: التطبيق
+            - generic [ref=e156]: "4"
+          - button "فضاء الطبيب 3" [ref=e157]:
+            - generic [ref=e160]: فضاء الطبيب
+            - generic [ref=e161]: "3"
+      - main [ref=e162]:
+        - paragraph [ref=e163]: 30 سؤال
+        - generic [ref=e164]:
+          - generic [ref=e165]:
+            - generic [ref=e166]:
+              - img [ref=e168]
+              - generic [ref=e171]:
+                - heading "حجز موعد" [level=2] [ref=e172]
+                - paragraph [ref=e173]: 6 سؤال
+            - generic [ref=e174]:
+              - article [ref=e175]:
+                - button "كيف أحجز موعدًا عبر الإنترنت على دكتوري؟" [ref=e176]:
+                  - heading "كيف أحجز موعدًا عبر الإنترنت على دكتوري؟" [level=3] [ref=e178]
+                  - img [ref=e179]
+                - region:
+                  - generic [ref=e181]:
+                    - paragraph [ref=e182]: ابحث عن طبيبك بالاسم أو الاختصاص أو الحي، واختر موعدًا متاحًا في الوقت الفعلي، ثم أدخل اسمك ورقم هاتفك. ستصلك رسالة تأكيد فورية. لا حاجة لإنشاء حساب، تستغرق العملية أقل من 60 ثانية.
+                    - generic [ref=e183]:
+                      - generic [ref=e184]:
+                        - generic [ref=e185]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e186]:
+                          - img [ref=e187]
+                          - text: نعم
+                        - button "لا" [ref=e189]:
+                          - img [ref=e190]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e192]:
+                        - img [ref=e193]
+                        - text: نسخ الرابط
+              - article [ref=e196]:
+                - button "هل يمكنني الحجز دون إنشاء حساب؟" [ref=e197]:
+                  - heading "هل يمكنني الحجز دون إنشاء حساب؟" [level=3] [ref=e199]
+                  - img [ref=e200]
+                - region:
+                  - generic [ref=e202]:
+                    - paragraph [ref=e203]: "نعم. تم تصميم دكتوري لحجز المواعيد بسرعة فائقة: الاسم ورقم الهاتف فقط. إذا كنت ترغب في استرجاع سجل مواعيدك أو إدارة عدة مواعيد، يمكنك لاحقًا إنشاء حساب مجاني من صفحة « مواعيدي »."
+                    - generic [ref=e204]:
+                      - generic [ref=e205]:
+                        - generic [ref=e206]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e207]:
+                          - img [ref=e208]
+                          - text: نعم
+                        - button "لا" [ref=e210]:
+                          - img [ref=e211]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e213]:
+                        - img [ref=e214]
+                        - text: نسخ الرابط
+              - article [ref=e217]:
+                - button "كيف ألغي موعدًا أو أعدّله؟" [ref=e218]:
+                  - heading "كيف ألغي موعدًا أو أعدّله؟" [level=3] [ref=e220]
+                  - img [ref=e221]
+                - region:
+                  - generic [ref=e223]:
+                    - paragraph [ref=e224]: تحتوي رسالة التأكيد على رابط مباشر إلى موعدك. اضغط عليه للإلغاء أو إعادة الجدولة بنقرة واحدة، حتى ساعتين قبل الموعد. بعد ذلك، يرجى الاتصال بعيادة الطبيب مباشرة.
+                    - generic [ref=e225]:
+                      - generic [ref=e226]:
+                        - generic [ref=e227]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e228]:
+                          - img [ref=e229]
+                          - text: نعم
+                        - button "لا" [ref=e231]:
+                          - img [ref=e232]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e234]:
+                        - img [ref=e235]
+                        - text: نسخ الرابط
+              - article [ref=e238]:
+                - button "كم من الوقت مسبقًا يمكنني الحجز؟" [ref=e239]:
+                  - heading "كم من الوقت مسبقًا يمكنني الحجز؟" [level=3] [ref=e241]
+                  - img [ref=e242]
+                - region:
+                  - generic [ref=e244]:
+                    - paragraph [ref=e245]: يفتح كل طبيب مواعيده حتى 8 أسابيع مسبقًا. بالنسبة لاستشارات اليوم، تظهر المواعيد التي يتم تحريرها بسبب الإلغاءات في الوقت الفعلي — حدّث الصفحة إذا كنت تبحث عن موعد عاجل.
+                    - generic [ref=e246]:
+                      - generic [ref=e247]:
+                        - generic [ref=e248]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e249]:
+                          - img [ref=e250]
+                          - text: نعم
+                        - button "لا" [ref=e252]:
+                          - img [ref=e253]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e255]:
+                        - img [ref=e256]
+                        - text: نسخ الرابط
+              - article [ref=e259]:
+                - button "ماذا أفعل إذا لم تكن هناك مواعيد متاحة؟" [ref=e260]:
+                  - heading "ماذا أفعل إذا لم تكن هناك مواعيد متاحة؟" [level=3] [ref=e262]
+                  - img [ref=e263]
+                - region:
+                  - generic [ref=e265]:
+                    - paragraph [ref=e266]: "ثلاثة خيارات: (1) فعّل قائمة الانتظار وسيتم إشعارك عبر SMS عند توفر موعد، (2) وسّع بحثك إلى الأحياء المجاورة عبر فلتر القرب، أو (3) استخدم استغاثة طبيب لاستشارة عاجلة غير حيوية."
+                    - generic [ref=e267]:
+                      - generic [ref=e268]:
+                        - generic [ref=e269]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e270]:
+                          - img [ref=e271]
+                          - text: نعم
+                        - button "لا" [ref=e273]:
+                          - img [ref=e274]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e276]:
+                        - img [ref=e277]
+                        - text: نسخ الرابط
+              - article [ref=e280]:
+                - button "هل يمكنني الحجز لأحد الأقارب (طفل، والد مسن)؟" [ref=e281]:
+                  - heading "هل يمكنني الحجز لأحد الأقارب (طفل، والد مسن)؟" [level=3] [ref=e283]
+                  - img [ref=e284]
+                - region:
+                  - generic [ref=e286]:
+                    - paragraph [ref=e287]: نعم. فقط أدخل اسم المريض في النموذج ورقم هاتفك لاستلام التذكيرات. يظهر أطباء الأطفال في اختصاص « طبيب أطفال » ويقبلون جميع الأطفال من 0 إلى 18 سنة.
+                    - generic [ref=e288]:
+                      - generic [ref=e289]:
+                        - generic [ref=e290]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e291]:
+                          - img [ref=e292]
+                          - text: نعم
+                        - button "لا" [ref=e294]:
+                          - img [ref=e295]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e297]:
+                        - img [ref=e298]
+                        - text: نسخ الرابط
+          - generic [ref=e301]:
+            - generic [ref=e302]:
+              - img [ref=e304]
+              - generic [ref=e307]:
+                - heading "الأطباء" [level=2] [ref=e308]
+                - paragraph [ref=e309]: 4 سؤال
+            - generic [ref=e310]:
+              - article [ref=e311]:
+                - button "كيف يتم التحقق من الأطباء؟" [ref=e312]:
+                  - heading "كيف يتم التحقق من الأطباء؟" [level=3] [ref=e314]
+                  - img [ref=e315]
+                - region:
+                  - generic [ref=e317]:
+                    - paragraph [ref=e318]: يجب على كل طبيب تقديم رقم تسجيله في المجلس الوطني لهيئة الأطباء في تونس أو هيئة أطباء الأسنان. يتحقق فريقنا يدويًا من كل تسجيل خلال 24 ساعة. تظهر فقط الملفات المعتمدة في نتائج البحث — وتوثّق شارة خضراء هذا التحقق.
+                    - generic [ref=e319]:
+                      - generic [ref=e320]:
+                        - generic [ref=e321]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e322]:
+                          - img [ref=e323]
+                          - text: نعم
+                        - button "لا" [ref=e325]:
+                          - img [ref=e326]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e328]:
+                        - img [ref=e329]
+                        - text: نسخ الرابط
+              - article [ref=e332]:
+                - button "هل يمكنني اختيار سبب استشارة محدد؟" [ref=e333]:
+                  - heading "هل يمكنني اختيار سبب استشارة محدد؟" [level=3] [ref=e335]
+                  - img [ref=e336]
+                - region:
+                  - generic [ref=e338]:
+                    - paragraph [ref=e339]: نعم. إذا كان الطبيب قد أعدّ أسباب استشاراته (استشارة أولى، متابعة، فحص، شهادة طبية، تطعيم...)، يمكنك اختيارها في بداية الحجز. يتم تعديل مدة الموعد والسعر تلقائيًا حسب اختيارك.
+                    - generic [ref=e340]:
+                      - generic [ref=e341]:
+                        - generic [ref=e342]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e343]:
+                          - img [ref=e344]
+                          - text: نعم
+                        - button "لا" [ref=e346]:
+                          - img [ref=e347]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e349]:
+                        - img [ref=e350]
+                        - text: نسخ الرابط
+              - article [ref=e353]:
+                - button "هل يتحدث الأطباء بالعربية والفرنسية والإنجليزية؟" [ref=e354]:
+                  - heading "هل يتحدث الأطباء بالعربية والفرنسية والإنجليزية؟" [level=3] [ref=e356]
+                  - img [ref=e357]
+                - region:
+                  - generic [ref=e359]:
+                    - paragraph [ref=e360]: يستشير معظم الأطباء التونسيين بالعربية التونسية والفرنسية. يتحدث كثير من المختصين الإنجليزية أيضًا. يوضح كل ملف طبيب اللغات التي يتحدثها — استخدم فلتر « اللغات » لتحسين بحثك.
+                    - generic [ref=e361]:
+                      - generic [ref=e362]:
+                        - generic [ref=e363]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e364]:
+                          - img [ref=e365]
+                          - text: نعم
+                        - button "لا" [ref=e367]:
+                          - img [ref=e368]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e370]:
+                        - img [ref=e371]
+                        - text: نسخ الرابط
+              - article [ref=e374]:
+                - button "هل يقبل الأطباء بطاقة الصندوق الوطني للتأمين على المرض (CNAM)؟" [ref=e375]:
+                  - heading "هل يقبل الأطباء بطاقة الصندوق الوطني للتأمين على المرض (CNAM)؟" [level=3] [ref=e377]
+                  - img [ref=e378]
+                - region:
+                  - generic [ref=e380]:
+                    - paragraph [ref=e381]: نعم، معظم الأطباء على دكتوري معتمدون لدى CNAM. في ملف الطبيب، يسرد قسم « الاتفاقيات » الجهات المقبولة (CNAM، CNRPS، STAR، GAT، Maghrebia، COMAR…). يمكنك تصفية البحث لعرض الأطباء المعتمدين لدى تأمينك فقط.
+                    - generic [ref=e382]:
+                      - generic [ref=e383]:
+                        - generic [ref=e384]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e385]:
+                          - img [ref=e386]
+                          - text: نعم
+                        - button "لا" [ref=e388]:
+                          - img [ref=e389]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e391]:
+                        - img [ref=e392]
+                        - text: نسخ الرابط
+          - generic [ref=e395]:
+            - generic [ref=e396]:
+              - img [ref=e398]
+              - generic [ref=e401]:
+                - heading "الدفع والأسعار" [level=2] [ref=e402]
+                - paragraph [ref=e403]: 4 سؤال
+            - generic [ref=e404]:
+              - article [ref=e405]:
+                - button "هل يجب أن أدفع ثمن الاستشارة مسبقًا؟" [ref=e406]:
+                  - heading "هل يجب أن أدفع ثمن الاستشارة مسبقًا؟" [level=3] [ref=e408]
+                  - img [ref=e409]
+                - region:
+                  - generic [ref=e411]:
+                    - paragraph [ref=e412]: لا، الدفع المسبق اختياري دائمًا. في نهاية الحجز، يمكنك اختيار الدفع عبر الإنترنت لضمان موعدك (مفيد للعيادات المطلوبة) أو الدفع مباشرة في العيادة يوم الموعد.
+                    - generic [ref=e413]:
+                      - generic [ref=e414]:
+                        - generic [ref=e415]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e416]:
+                          - img [ref=e417]
+                          - text: نعم
+                        - button "لا" [ref=e419]:
+                          - img [ref=e420]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e422]:
+                        - img [ref=e423]
+                        - text: نسخ الرابط
+              - article [ref=e426]:
+                - button "ما هي وسائل الدفع المقبولة؟" [ref=e427]:
+                  - heading "ما هي وسائل الدفع المقبولة؟" [level=3] [ref=e429]
+                  - img [ref=e430]
+                - region:
+                  - generic [ref=e432]:
+                    - paragraph [ref=e433]: "بطاقة بنكية تونسية أو دولية (Visa، Mastercard) عبر شركاء الدفع الآمن Flouci و Paymee. في العيادة: نقدًا، أو بطاقة، أو دفع من طرف ثالث CNAM حسب اتفاقيات الطبيب."
+                    - generic [ref=e434]:
+                      - generic [ref=e435]:
+                        - generic [ref=e436]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e437]:
+                          - img [ref=e438]
+                          - text: نعم
+                        - button "لا" [ref=e440]:
+                          - img [ref=e441]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e443]:
+                        - img [ref=e444]
+                        - text: نسخ الرابط
+              - article [ref=e447]:
+                - button "هل الدفع عبر الإنترنت آمن؟" [ref=e448]:
+                  - heading "هل الدفع عبر الإنترنت آمن؟" [level=3] [ref=e450]
+                  - img [ref=e451]
+                - region:
+                  - generic [ref=e453]:
+                    - paragraph [ref=e454]: نعم. لا يخزن دكتوري أبدًا بيانات بطاقتك البنكية. تتم معالجة جميع المدفوعات عبر شركائنا المعتمدين من البنك المركزي التونسي (Flouci، Paymee) باتصال مشفر 3D Secure. ستستلم إيصالًا عبر SMS بعد كل معاملة.
+                    - generic [ref=e455]:
+                      - generic [ref=e456]:
+                        - generic [ref=e457]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e458]:
+                          - img [ref=e459]
+                          - text: نعم
+                        - button "لا" [ref=e461]:
+                          - img [ref=e462]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e464]:
+                        - img [ref=e465]
+                        - text: نسخ الرابط
+              - article [ref=e468]:
+                - button "هل يمكنني الحصول على فاتورة للاستشارة؟" [ref=e469]:
+                  - heading "هل يمكنني الحصول على فاتورة للاستشارة؟" [level=3] [ref=e471]
+                  - img [ref=e472]
+                - region:
+                  - generic [ref=e474]:
+                    - paragraph [ref=e475]: نعم. يمكن لكل طبيب إصدار فاتورة مباشرة من فضائه. اطلبها في نهاية الاستشارة، وسيتم إنشاؤها بصيغة PDF وإرسالها إلى رقم WhatsApp أو البريد الإلكتروني.
+                    - generic [ref=e476]:
+                      - generic [ref=e477]:
+                        - generic [ref=e478]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e479]:
+                          - img [ref=e480]
+                          - text: نعم
+                        - button "لا" [ref=e482]:
+                          - img [ref=e483]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e485]:
+                        - img [ref=e486]
+                        - text: نسخ الرابط
+          - generic [ref=e489]:
+            - generic [ref=e490]:
+              - img [ref=e492]
+              - generic [ref=e495]:
+                - heading "الحساب والبيانات" [level=2] [ref=e496]
+                - paragraph [ref=e497]: 4 سؤال
+            - generic [ref=e498]:
+              - article [ref=e499]:
+                - button "هل دكتوري مجاني فعلاً للمرضى؟" [ref=e500]:
+                  - heading "هل دكتوري مجاني فعلاً للمرضى؟" [level=3] [ref=e502]
+                  - img [ref=e503]
+                - region:
+                  - generic [ref=e505]:
+                    - paragraph [ref=e506]: نعم، مجاني 100٪، إلى الأبد. لا اشتراكات، لا عمولات على سعر الاستشارة، لا رسوم خفية. يعتمد نموذجنا الاقتصادي حصريًا على اشتراك شهري يدفعه الأطباء.
+                    - generic [ref=e507]:
+                      - generic [ref=e508]:
+                        - generic [ref=e509]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e510]:
+                          - img [ref=e511]
+                          - text: نعم
+                        - button "لا" [ref=e513]:
+                          - img [ref=e514]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e516]:
+                        - img [ref=e517]
+                        - text: نسخ الرابط
+              - article [ref=e520]:
+                - button "هل بياناتي الشخصية والطبية محمية؟" [ref=e521]:
+                  - heading "هل بياناتي الشخصية والطبية محمية؟" [level=3] [ref=e523]
+                  - img [ref=e524]
+                - region:
+                  - generic [ref=e526]:
+                    - paragraph [ref=e527]: يطبق دكتوري القانون الأساسي رقم 2004-63 المتعلق بحماية البيانات في تونس إلى جانب معايير RGPD الأوروبية. نخزن فقط المعلومات الضرورية لحجز المواعيد (الاسم، الهاتف، السجل). لا نخزن أبدًا التشخيصات أو الوصفات أو نتائج الفحوصات. راجع سياسة الخصوصية لمزيد من التفاصيل.
+                    - generic [ref=e528]:
+                      - generic [ref=e529]:
+                        - generic [ref=e530]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e531]:
+                          - img [ref=e532]
+                          - text: نعم
+                        - button "لا" [ref=e534]:
+                          - img [ref=e535]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e537]:
+                        - img [ref=e538]
+                        - text: نسخ الرابط
+              - article [ref=e541]:
+                - button "كيف أحذف حسابي وبياناتي؟" [ref=e542]:
+                  - heading "كيف أحذف حسابي وبياناتي؟" [level=3] [ref=e544]
+                  - img [ref=e545]
+                - region:
+                  - generic [ref=e547]:
+                    - paragraph [ref=e548]: من فضائك كمريض، انقر على « الإعدادات » ثم « حذف حسابي ». الحذف نهائي ويتم خلال 48 ساعة — ستُمحى جميع بياناتك الشخصية، باستثناء المعلومات المحفوظة قانونيًا (سجل الدفع لمدة 10 سنوات، كما يفرضه القانون المحاسبي التونسي).
+                    - generic [ref=e549]:
+                      - generic [ref=e550]:
+                        - generic [ref=e551]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e552]:
+                          - img [ref=e553]
+                          - text: نعم
+                        - button "لا" [ref=e555]:
+                          - img [ref=e556]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e558]:
+                        - img [ref=e559]
+                        - text: نسخ الرابط
+              - article [ref=e562]:
+                - button "هل سأتلقى تذكيرات عبر SMS؟" [ref=e563]:
+                  - heading "هل سأتلقى تذكيرات عبر SMS؟" [level=3] [ref=e565]
+                  - img [ref=e566]
+                - region:
+                  - generic [ref=e568]:
+                    - paragraph [ref=e569]: نعم. تُرسل رسالة تأكيد فور الحجز، ثم تذكير قبل 24 ساعة من الموعد. الرسائل مجانية بالنسبة لك. إذا لم تستلمها، تأكد من أن رقمك بصيغة +216 XX XXX XXX.
+                    - generic [ref=e570]:
+                      - generic [ref=e571]:
+                        - generic [ref=e572]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e573]:
+                          - img [ref=e574]
+                          - text: نعم
+                        - button "لا" [ref=e576]:
+                          - img [ref=e577]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e579]:
+                        - img [ref=e580]
+                        - text: نسخ الرابط
+          - generic [ref=e583]:
+            - generic [ref=e584]:
+              - img [ref=e586]
+              - generic [ref=e589]:
+                - heading "استغاثة طبيب" [level=2] [ref=e590]
+                - paragraph [ref=e591]: 5 سؤال
+            - generic [ref=e592]:
+              - article [ref=e593]:
+                - button "ما هو استغاثة طبيب؟" [ref=e594]:
+                  - heading "ما هو استغاثة طبيب؟" [level=3] [ref=e596]
+                  - img [ref=e597]
+                - region:
+                  - generic [ref=e599]:
+                    - paragraph [ref=e600]: استغاثة طبيب هو خدمة استشارة للطوارئ غير الحيوية (حمى، ألم، عدوى، نوبة قلق…). تصف عرضك، ثم يتصل بك طبيب متاح في منطقتك خلال أقل من دقيقتين لاستشارة عبر الفيديو أو توجيه مناسب.
+                    - generic [ref=e601]:
+                      - generic [ref=e602]:
+                        - generic [ref=e603]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e604]:
+                          - img [ref=e605]
+                          - text: نعم
+                        - button "لا" [ref=e607]:
+                          - img [ref=e608]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e610]:
+                        - img [ref=e611]
+                        - text: نسخ الرابط
+              - article [ref=e614]:
+                - button "كم من الوقت يستغرق الطبيب للرد؟" [ref=e615]:
+                  - heading "كم من الوقت يستغرق الطبيب للرد؟" [level=3] [ref=e617]
+                  - img [ref=e618]
+                - region:
+                  - generic [ref=e620]:
+                    - paragraph [ref=e621]: "تعهدنا: يتصل بك طبيب في أقل من دقيقتين، على مدار الساعة، 7/7. إذا لم يتوفر أي طبيب خلال هذا الوقت، يتم توجيهك فورًا إلى SAMU (190) أو أقرب قسم طوارئ بالمستشفى."
+                    - generic [ref=e622]:
+                      - generic [ref=e623]:
+                        - generic [ref=e624]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e625]:
+                          - img [ref=e626]
+                          - text: نعم
+                        - button "لا" [ref=e628]:
+                          - img [ref=e629]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e631]:
+                        - img [ref=e632]
+                        - text: نسخ الرابط
+              - article [ref=e635]:
+                - button "في أي مدن تتوفر خدمة استغاثة طبيب؟" [ref=e636]:
+                  - heading "في أي مدن تتوفر خدمة استغاثة طبيب؟" [level=3] [ref=e638]
+                  - img [ref=e639]
+                - region:
+                  - generic [ref=e641]:
+                    - paragraph [ref=e642]: "تغطي خدمة استغاثة طبيب حاليًا تونس الكبرى: تونس، أريانة، المرسى، ضفاف البحيرة، السكرة، منوبة وبن عروس. ستتوسع الخدمة إلى صفاقس وسوسة ونابل قبل نهاية 2026."
+                    - generic [ref=e643]:
+                      - generic [ref=e644]:
+                        - generic [ref=e645]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e646]:
+                          - img [ref=e647]
+                          - text: نعم
+                        - button "لا" [ref=e649]:
+                          - img [ref=e650]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e652]:
+                        - img [ref=e653]
+                        - text: نسخ الرابط
+              - article [ref=e656]:
+                - button "ماذا أفعل في حالة طارئة تهدد الحياة؟" [ref=e657]:
+                  - heading "ماذا أفعل في حالة طارئة تهدد الحياة؟" [level=3] [ref=e659]
+                  - img [ref=e660]
+                - region:
+                  - generic [ref=e662]:
+                    - paragraph [ref=e663]: "دكتوري ليس خدمة طوارئ تهدد الحياة. في حالة نوبة قلبية، سكتة دماغية، حادث خطير، فقدان وعي، نزيف، صعوبة تنفس حادة: اتصل فورًا بـ 190 (SAMU) أو 198 (الحماية المدنية). لا تضيع الوقت في البحث عن موعد عبر الإنترنت."
+                    - generic [ref=e664]:
+                      - generic [ref=e665]:
+                        - generic [ref=e666]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e667]:
+                          - img [ref=e668]
+                          - text: نعم
+                        - button "لا" [ref=e670]:
+                          - img [ref=e671]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e673]:
+                        - img [ref=e674]
+                        - text: نسخ الرابط
+              - article [ref=e677]:
+                - button "هل تقدم استغاثة طبيب زيارات منزلية؟" [ref=e678]:
+                  - heading "هل تقدم استغاثة طبيب زيارات منزلية؟" [level=3] [ref=e680]
+                  - img [ref=e681]
+                - region:
+                  - generic [ref=e683]:
+                    - paragraph [ref=e684]: نعم، يقبل بعض أطباء شبكة SOS الزيارات المنزلية للمرضى غير القادرين على التنقل (كبار السن، الأطفال ذوو الحمى الشديدة، ما بعد الجراحة). يتم عرض السعر والتوفر في الوقت الفعلي عند طلب SOS.
+                    - generic [ref=e685]:
+                      - generic [ref=e686]:
+                        - generic [ref=e687]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e688]:
+                          - img [ref=e689]
+                          - text: نعم
+                        - button "لا" [ref=e691]:
+                          - img [ref=e692]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e694]:
+                        - img [ref=e695]
+                        - text: نسخ الرابط
+          - generic [ref=e698]:
+            - generic [ref=e699]:
+              - img [ref=e701]
+              - generic [ref=e704]:
+                - heading "التطبيق" [level=2] [ref=e705]
+                - paragraph [ref=e706]: 4 سؤال
+            - generic [ref=e707]:
+              - article [ref=e708]:
+                - button "هل يوجد تطبيق جوال؟" [ref=e709]:
+                  - heading "هل يوجد تطبيق جوال؟" [level=3] [ref=e711]
+                  - img [ref=e712]
+                - region:
+                  - generic [ref=e714]:
+                    - paragraph [ref=e715]: ستتوفر تطبيقات iOS و Android في النصف الثاني من 2026. في غضون ذلك، تم تصميم موقع دكتوري للجوال كتطبيق — يمكنك تثبيته على شاشتك الرئيسية بنقرة واحدة (PWA) من قائمة المشاركة في متصفحك.
+                    - generic [ref=e716]:
+                      - generic [ref=e717]:
+                        - generic [ref=e718]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e719]:
+                          - img [ref=e720]
+                          - text: نعم
+                        - button "لا" [ref=e722]:
+                          - img [ref=e723]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e725]:
+                        - img [ref=e726]
+                        - text: نسخ الرابط
+              - article [ref=e729]:
+                - button "هل يمكنني استخدام دكتوري بالعربية؟" [ref=e730]:
+                  - heading "هل يمكنني استخدام دكتوري بالعربية؟" [level=3] [ref=e732]
+                  - img [ref=e733]
+                - region:
+                  - generic [ref=e735]:
+                    - paragraph [ref=e736]: نعم. استخدم زر FR/AR أعلى شريط التنقل للتبديل إلى العربية التونسية. تتوفر ملفات الأطباء وأسباب الاستشارات وجميع عناصر مسار الحجز باللغتين.
+                    - generic [ref=e737]:
+                      - generic [ref=e738]:
+                        - generic [ref=e739]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e740]:
+                          - img [ref=e741]
+                          - text: نعم
+                        - button "لا" [ref=e743]:
+                          - img [ref=e744]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e746]:
+                        - img [ref=e747]
+                        - text: نسخ الرابط
+              - article [ref=e750]:
+                - button "كيف يعمل البحث بالموقع الجغرافي؟" [ref=e751]:
+                  - heading "كيف يعمل البحث بالموقع الجغرافي؟" [level=3] [ref=e753]
+                  - img [ref=e754]
+                - region:
+                  - generic [ref=e756]:
+                    - paragraph [ref=e757]: انقر على « أطباء بالقرب مني » في فلتر الموقع. يطلب منك المتصفح الإذن بالوصول إلى موقعك (فقط خط العرض والطول، لا العنوان). يتم بعد ذلك ترتيب الأطباء حسب المسافة الفعلية، وتُعرض المسافة الدقيقة على كل ملف. لا يتم تخزين أي بيانات موقع — تبقى في متصفحك.
+                    - generic [ref=e758]:
+                      - generic [ref=e759]:
+                        - generic [ref=e760]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e761]:
+                          - img [ref=e762]
+                          - text: نعم
+                        - button "لا" [ref=e764]:
+                          - img [ref=e765]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e767]:
+                        - img [ref=e768]
+                        - text: نسخ الرابط
+              - article [ref=e771]:
+                - button "لم أستلم رسالة التأكيد، ماذا أفعل؟" [ref=e772]:
+                  - heading "لم أستلم رسالة التأكيد، ماذا أفعل؟" [level=3] [ref=e774]
+                  - img [ref=e775]
+                - region:
+                  - generic [ref=e777]:
+                    - paragraph [ref=e778]: تحقق أولاً من صيغة رقمك (+216 XX XXX XXX). قد تستغرق الرسائل حتى 5 دقائق في حالة ازدحام شبكة Ooredoo/Orange/Tunisie Telecom. إذا لم تستلم شيئًا، اتصل بدعم WhatsApp الخاص بنا — سنجد موعدك ونرسله إليك مباشرة.
+                    - generic [ref=e779]:
+                      - generic [ref=e780]:
+                        - generic [ref=e781]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e782]:
+                          - img [ref=e783]
+                          - text: نعم
+                        - button "لا" [ref=e785]:
+                          - img [ref=e786]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e788]:
+                        - img [ref=e789]
+                        - text: نسخ الرابط
+          - generic [ref=e792]:
+            - generic [ref=e793]:
+              - img [ref=e795]
+              - generic [ref=e798]:
+                - heading "فضاء الطبيب" [level=2] [ref=e799]
+                - paragraph [ref=e800]: 3 سؤال
+            - generic [ref=e801]:
+              - article [ref=e802]:
+                - button "كيف أنضم إلى دكتوري كطبيب؟" [ref=e803]:
+                  - heading "كيف أنضم إلى دكتوري كطبيب؟" [level=3] [ref=e805]
+                  - img [ref=e806]
+                - region:
+                  - generic [ref=e808]:
+                    - paragraph [ref=e809]: من صفحة « فضاء الطبيب »، املأ نموذج التسجيل (الاسم، الاختصاص، رقم الهيئة، عنوان العيادة). يتحقق فريقنا من ملفك خلال 24 ساعة بعد التحقق من CNOM. بعد ذلك تستلم بيانات الدخول ويمكنك تهيئة جدولك وأسباب استشاراتك واتفاقياتك في أقل من 15 دقيقة.
+                    - generic [ref=e810]:
+                      - generic [ref=e811]:
+                        - generic [ref=e812]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e813]:
+                          - img [ref=e814]
+                          - text: نعم
+                        - button "لا" [ref=e816]:
+                          - img [ref=e817]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e819]:
+                        - img [ref=e820]
+                        - text: نسخ الرابط
+              - article [ref=e823]:
+                - button "كم تكلفة دكتوري للطبيب؟" [ref=e824]:
+                  - heading "كم تكلفة دكتوري للطبيب؟" [level=3] [ref=e826]
+                  - img [ref=e827]
+                - region:
+                  - generic [ref=e829]:
+                    - paragraph [ref=e830]: "يستفيد أول 100 طبيب مسجل من 6 أشهر مجانية (البرنامج التأسيسي). بعد ذلك، الاشتراك هو 49 دت صافي شهريًا، يشمل كل شيء: جدول عبر الإنترنت، تذكيرات SMS تلقائية، ملف معتمد، دعم WhatsApp مخصص. لا توجد عمولات على استشاراتك، أبدًا."
+                    - generic [ref=e831]:
+                      - generic [ref=e832]:
+                        - generic [ref=e833]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e834]:
+                          - img [ref=e835]
+                          - text: نعم
+                        - button "لا" [ref=e837]:
+                          - img [ref=e838]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e840]:
+                        - img [ref=e841]
+                        - text: نسخ الرابط
+              - article [ref=e844]:
+                - button "هل يمكنني مزامنة دكتوري مع تقويمي الحالي (Google، Outlook)؟" [ref=e845]:
+                  - heading "هل يمكنني مزامنة دكتوري مع تقويمي الحالي (Google، Outlook)؟" [level=3] [ref=e847]
+                  - img [ref=e848]
+                - region:
+                  - generic [ref=e850]:
+                    - paragraph [ref=e851]: "نعم. من فضاء الطبيب، قسم « الأجندة »، فعّل تصدير iCal: تتم مزامنة جميع مواعيد دكتوري تلقائيًا مع Google Calendar أو Apple Calendar أو Outlook. يتم اكتشاف التعارضات مع أحداثك الحالية وتُحجب المواعيد المعنية تلقائيًا على دكتوري."
+                    - generic [ref=e852]:
+                      - generic [ref=e853]:
+                        - generic [ref=e854]: هل كانت هذه الإجابة مفيدة؟
+                        - button "نعم" [ref=e855]:
+                          - img [ref=e856]
+                          - text: نعم
+                        - button "لا" [ref=e858]:
+                          - img [ref=e859]
+                          - text: لا
+                      - button "نسخ الرابط" [ref=e861]:
+                        - img [ref=e862]
+                        - text: نسخ الرابط
+        - generic [ref=e865]:
+          - img [ref=e867]
+          - heading "لم تجد إجابتك؟" [level=2] [ref=e869]
+          - paragraph [ref=e870]: فريق الدعم متاح على WhatsApp من الإثنين إلى السبت، من 8 صباحًا حتى 8 مساءً. نضمن الرد في أقل من ساعتين.
+          - generic [ref=e871]:
+            - link "التواصل عبر WhatsApp" [ref=e872] [cursor=pointer]:
+              - /url: mailto:contact@doktori.tn
+              - img [ref=e873]
+              - text: التواصل عبر WhatsApp
+            - link "ابحث عن طبيب" [ref=e875] [cursor=pointer]:
+              - /url: /recherche
+              - img [ref=e876]
+              - text: ابحث عن طبيب
+  - contentinfo [ref=e880]:
+    - generic [ref=e881]:
+      - generic [ref=e882]:
+        - generic [ref=e883]:
+          - generic [ref=e884]:
+            - img [ref=e886]
+            - generic [ref=e890]: Doktori
+          - paragraph [ref=e891]: La prise de rendez-vous médicaux en Tunisie
+          - link "contact@doktori.tn" [ref=e892] [cursor=pointer]:
+            - /url: mailto:contact@doktori.tn
+            - img [ref=e893]
+            - text: contact@doktori.tn
+        - generic [ref=e896]:
+          - paragraph [ref=e897]: Plateforme
+          - list [ref=e898]:
+            - listitem [ref=e899]:
+              - link "À propos" [ref=e900] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e901]:
+              - link "Blog" [ref=e902] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=e903]:
+              - link "FAQ" [ref=e904] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e905]:
+              - link "SOS Médecin" [ref=e906] [cursor=pointer]:
+                - /url: /sos-medecin
+        - generic [ref=e907]:
+          - paragraph [ref=e908]: Légal
+          - list [ref=e909]:
+            - listitem [ref=e910]:
+              - link "Mentions légales" [ref=e911] [cursor=pointer]:
+                - /url: /mentions-legales
+            - listitem [ref=e912]:
+              - link "CGU" [ref=e913] [cursor=pointer]:
+                - /url: /cgu
+            - listitem [ref=e914]:
+              - link "Politique de confidentialité" [ref=e915] [cursor=pointer]:
+                - /url: /confidentialite
+        - generic [ref=e916]:
+          - paragraph [ref=e917]: Espace médecin
+          - paragraph [ref=e918]: Vous êtes médecin et souhaitez rejoindre Doktori ?
+          - link "Espace médecin" [ref=e919] [cursor=pointer]:
+            - /url: /connexion
+            - img [ref=e920]
+            - text: Espace médecin
+      - paragraph [ref=e925]: © 2025-2026 Random Walkers SUARL · Doktori.tn
+  - region "Notifications alt+T"
+  - button "افتح معالج دوكتي" [ref=e926]:
+    - img [ref=e927]
+    - generic [ref=e931]: "!"
+  - button "Open Next.js Dev Tools" [ref=e937] [cursor=pointer]:
+    - img [ref=e938]

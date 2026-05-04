@@ -52,6 +52,13 @@ type Appt = {
 
 type View = "day" | "week" | "month" | "year";
 
+type DayOff = { id: string; startDate: string; endDate: string; reason: string | null };
+
+function isDayOff(date: Date, daysOff: DayOff[]): boolean {
+  const ds = format(date, "yyyy-MM-dd");
+  return daysOff.some((d) => ds >= d.startDate && ds <= d.endDate);
+}
+
 const STATUS_COLOR: Record<string, string> = {
   pending: "bg-orange-200 text-orange-900 border-orange-300",
   confirmed: "bg-teal-200 text-teal-900 border-teal-300",
@@ -70,6 +77,7 @@ export default function SecretaryCalendar() {
   const [appts, setAppts] = useState<Appt[]>([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<Appt | null>(null);
+  const [daysOff, setDaysOff] = useState<DayOff[]>([]);
 
   const range = useMemo(() => {
     if (view === "day") {
@@ -108,6 +116,13 @@ export default function SecretaryCalendar() {
     }
     load();
   }, [range.start, range.end, t]);
+
+  useEffect(() => {
+    fetch("/api/doctor/days-off")
+      .then((r) => r.json())
+      .then((d) => setDaysOff(Array.isArray(d) ? d : []))
+      .catch(() => null);
+  }, []);
 
   function navigate(dir: -1 | 1) {
     if (view === "day") setAnchor(addDays(anchor, dir));
@@ -178,7 +193,7 @@ export default function SecretaryCalendar() {
             className="h-9 w-9 rounded-xl border border-border bg-white flex items-center justify-center hover:bg-secondary"
             aria-label={t("previous")}
           >
-            <ChevronLeft className="h-4 w-4" />
+            {locale === "ar" ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
           <button
             type="button"
@@ -193,7 +208,7 @@ export default function SecretaryCalendar() {
             className="h-9 w-9 rounded-xl border border-border bg-white flex items-center justify-center hover:bg-secondary"
             aria-label={t("next")}
           >
-            <ChevronRight className="h-4 w-4" />
+            {locale === "ar" ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </button>
           <span className="ml-2 text-sm font-semibold capitalize">{title}</span>
         </div>
@@ -215,9 +230,9 @@ export default function SecretaryCalendar() {
       ) : view === "day" ? (
         <DayView appts={filteredAppts} date={anchor} onEdit={setEditing} t={t} />
       ) : view === "week" ? (
-        <WeekView appts={filteredAppts} start={range.start} onEdit={setEditing} t={t} dateFnsLocale={dateFnsLocale} />
+        <WeekView appts={filteredAppts} start={range.start} onEdit={setEditing} t={t} dateFnsLocale={dateFnsLocale} daysOff={daysOff} />
       ) : view === "month" ? (
-        <MonthView appts={filteredAppts} date={anchor} onDayClick={(d) => { setAnchor(d); setView("day"); }} t={t} dateFnsLocale={dateFnsLocale} isArabic={locale === "ar"} />
+        <MonthView appts={filteredAppts} date={anchor} onDayClick={(d) => { setAnchor(d); setView("day"); }} t={t} dateFnsLocale={dateFnsLocale} isArabic={locale === "ar"} daysOff={daysOff} />
       ) : (
         <YearView appts={filteredAppts} year={anchor.getFullYear()} onMonthClick={(m) => { const d = new Date(anchor); d.setMonth(m); setAnchor(d); setView("month"); }} dateFnsLocale={dateFnsLocale} />
       )}
@@ -292,7 +307,7 @@ function DayView({ appts, date, onEdit, t }: { appts: Appt[]; date: Date; onEdit
   );
 }
 
-function WeekView({ appts, start, onEdit, t, dateFnsLocale }: { appts: Appt[]; start: Date; onEdit: (a: Appt) => void; t: TFunc; dateFnsLocale: Locale }) {
+function WeekView({ appts, start, onEdit, t, dateFnsLocale, daysOff }: { appts: Appt[]; start: Date; onEdit: (a: Appt) => void; t: TFunc; dateFnsLocale: Locale; daysOff: DayOff[] }) {
   const days = eachDayOfInterval({ start, end: addDays(start, 6) });
   const HOUR_START = 8;
   const HOUR_END = 20;
@@ -311,17 +326,21 @@ function WeekView({ appts, start, onEdit, t, dateFnsLocale }: { appts: Appt[]; s
     <div className="rounded-2xl border border-border bg-white shadow-sm overflow-x-auto">
       <div className="grid" style={{ gridTemplateColumns: "60px repeat(7, minmax(120px, 1fr))" }}>
         <div className="bg-secondary border-b border-border" />
-        {days.map((d) => (
-          <div
-            key={d.toISOString()}
-            className={`text-center p-2 border-b border-border text-xs font-semibold ${
-              isSameDay(d, new Date()) ? "bg-teal-50 text-teal-700" : "bg-secondary text-gray-600"
-            }`}
-          >
-            <div className="capitalize">{format(d, "EEE", { locale: dateFnsLocale })}</div>
-            <div>{format(d, "d MMM", { locale: dateFnsLocale })}</div>
-          </div>
-        ))}
+        {days.map((d) => {
+          const off = isDayOff(d, daysOff);
+          return (
+            <div
+              key={d.toISOString()}
+              className={`text-center p-2 border-b border-border text-xs font-semibold ${
+                off ? "bg-red-50 text-red-700" : isSameDay(d, new Date()) ? "bg-teal-50 text-teal-700" : "bg-secondary text-gray-600"
+              }`}
+            >
+              <div className="capitalize">{format(d, "EEE", { locale: dateFnsLocale })}</div>
+              <div>{format(d, "d MMM", { locale: dateFnsLocale })}</div>
+              {off && <div className="text-[9px] font-bold text-red-600 uppercase tracking-wide">Congé</div>}
+            </div>
+          );
+        })}
         {/* time rows */}
         <div className="relative" style={{ height: TOTAL_MIN }}>
           {Array.from({ length: HOUR_END - HOUR_START }).map((_, i) => (
@@ -337,8 +356,9 @@ function WeekView({ appts, start, onEdit, t, dateFnsLocale }: { appts: Appt[]; s
         {days.map((d) => {
           const key = format(d, "yyyy-MM-dd");
           const dayAppts = byDay[key] ?? [];
+          const off = isDayOff(d, daysOff);
           return (
-            <div key={key} className="relative border-l border-border" style={{ height: TOTAL_MIN }}>
+            <div key={key} className={`relative border-l border-border ${off ? "bg-red-50/40" : ""}`} style={{ height: TOTAL_MIN }}>
               {Array.from({ length: HOUR_END - HOUR_START }).map((_, i) => (
                 <div
                   key={i}
@@ -375,7 +395,7 @@ function WeekView({ appts, start, onEdit, t, dateFnsLocale }: { appts: Appt[]; s
   );
 }
 
-function MonthView({ appts, date, onDayClick, t, dateFnsLocale, isArabic }: { appts: Appt[]; date: Date; onDayClick: (d: Date) => void; t: TFunc; dateFnsLocale: Locale; isArabic: boolean }) {
+function MonthView({ appts, date, onDayClick, t, dateFnsLocale, isArabic, daysOff }: { appts: Appt[]; date: Date; onDayClick: (d: Date) => void; t: TFunc; dateFnsLocale: Locale; isArabic: boolean; daysOff: DayOff[] }) {
   const start = startOfWeek(startOfMonth(date), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(date), { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start, end });
@@ -403,6 +423,7 @@ function MonthView({ appts, date, onDayClick, t, dateFnsLocale, isArabic }: { ap
         {days.map((d) => {
           const count = byDay[format(d, "yyyy-MM-dd")] ?? 0;
           const isCurrentMonth = d.getMonth() === date.getMonth();
+          const off = isCurrentMonth && isDayOff(d, daysOff);
           return (
             <button
               key={d.toISOString()}
@@ -410,9 +431,10 @@ function MonthView({ appts, date, onDayClick, t, dateFnsLocale, isArabic }: { ap
               onClick={() => onDayClick(d)}
               className={`min-h-[84px] p-2 text-left border-r border-b border-border last-of-type:border-r-0 hover:bg-secondary/40 ${
                 !isCurrentMonth ? "text-gray-300 bg-gray-50" : ""
-              } ${isSameDay(d, new Date()) ? "bg-teal-50" : ""}`}
+              } ${isSameDay(d, new Date()) && !off ? "bg-teal-50" : ""} ${off ? "bg-red-50" : ""}`}
             >
-              <span className="text-sm font-semibold">{d.getDate()}</span>
+              <span className={`text-sm font-semibold ${off ? "text-red-700" : ""}`}>{d.getDate()}</span>
+              {off && <span className="ms-1 text-[9px] font-bold text-red-600 uppercase">Congé</span>}
               {count > 0 && (
                 <p className="mt-1 text-[10px] inline-flex items-center rounded-full bg-primary text-white px-1.5 font-bold">
                   {count} {t("rdv")}

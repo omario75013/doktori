@@ -10,216 +10,227 @@ import {
   NativeScrollEvent,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Svg, { Circle, Rect, Path, Ellipse, Line } from "react-native-svg";
 import { router } from "expo-router";
-import { colors, spacing, radii } from "@doktori/mobile-core";
+import { colors, spacing, radii, t, useLocale } from "@doktori/mobile-core";
 
 const ONBOARDING_KEY = "doktori.onboarding.done";
 const { width: SCREEN_W } = Dimensions.get("window");
 
-// ─── Geometric illustrations (no SVG) ───────────────────────────────────────
+const W = "#FFFFFF";
+const T = colors.teal;        // #0891B2
+const TD = colors.tealDark;   // #0E7490
+const WA = "rgba(255,255,255,0.15)";
+const WB = "rgba(255,255,255,0.25)";
 
-function MedicalCrossIllustration() {
+// ─── Slide 1 — Doctor ────────────────────────────────────────────────────────
+
+function DoctorIllustration() {
   return (
-    <View style={ill.crossContainer}>
-      <View style={ill.crossCircle}>
-        {/* Vertical bar */}
-        <View style={ill.crossV} />
-        {/* Horizontal bar */}
-        <View style={ill.crossH} />
-      </View>
+    <Svg width={210} height={220} viewBox="0 0 210 220">
+      {/* Decorative circles */}
+      <Circle cx={105} cy={105} r={90} fill={WA} />
+      <Circle cx={105} cy={105} r={62} fill={WA} />
+
+      {/* White coat body */}
+      <Rect x={52} y={130} width={106} height={90} rx={26} fill={W} />
+      {/* Coat lapel V lines */}
+      <Path d="M105 145 L80 132" stroke={TD} strokeWidth={2.5} strokeLinecap="round" opacity={0.25} />
+      <Path d="M105 145 L130 132" stroke={TD} strokeWidth={2.5} strokeLinecap="round" opacity={0.25} />
+      {/* Breast pocket */}
+      <Rect x={112} y={150} width={26} height={20} rx={6} fill="rgba(8,145,178,0.12)" />
+      {/* Pen in pocket */}
+      <Rect x={119} y={146} width={4} height={14} rx={2} fill={TD} opacity={0.6} />
+
+      {/* Neck */}
+      <Rect x={90} y={120} width={30} height={22} rx={8} fill="#F0C9A0" />
+
+      {/* Head */}
+      <Ellipse cx={105} cy={97} rx={37} ry={40} fill="#F5D0A9" />
+
+      {/* Hair */}
+      <Path
+        d="M70 90 Q73 60 105 55 Q137 60 140 90 Q138 68 105 64 Q72 68 70 90Z"
+        fill="#4A2C17"
+      />
+      {/* Ear left */}
+      <Ellipse cx={68} cy={100} rx={7} ry={10} fill="#F0C090" />
+      {/* Ear right */}
+      <Ellipse cx={142} cy={100} rx={7} ry={10} fill="#F0C090" />
+
+      {/* Eyebrows */}
+      <Path d="M85 84 Q93 80 100 84" stroke="#4A2C17" strokeWidth={2.5} fill="none" strokeLinecap="round" />
+      <Path d="M110 84 Q117 80 125 84" stroke="#4A2C17" strokeWidth={2.5} fill="none" strokeLinecap="round" />
+
+      {/* Eyes white */}
+      <Ellipse cx={92} cy={96} rx={8} ry={7} fill={W} />
+      <Ellipse cx={118} cy={96} rx={8} ry={7} fill={W} />
+      {/* Iris */}
+      <Circle cx={92} cy={97} r={4.5} fill="#3D2B1F" />
+      <Circle cx={118} cy={97} r={4.5} fill="#3D2B1F" />
+      {/* Highlights */}
+      <Circle cx={94} cy={95} r={1.5} fill={W} />
+      <Circle cx={120} cy={95} r={1.5} fill={W} />
+
+      {/* Nose */}
+      <Path d="M102 105 Q105 113 108 105" stroke="#D4956A" strokeWidth={1.5} fill="none" strokeLinecap="round" />
+
+      {/* Smile */}
+      <Path d="M90 116 Q105 127 120 116" stroke="#C07850" strokeWidth={2.5} fill="none" strokeLinecap="round" />
+
+      {/* Stethoscope */}
+      <Path
+        d="M80 130 Q66 148 68 166 Q70 182 84 182 Q96 182 96 170"
+        stroke={WB}
+        strokeWidth={5}
+        fill="none"
+        strokeLinecap="round"
+      />
+      <Circle cx={96} cy={170} r={11} fill={WB} />
+      <Circle cx={96} cy={170} r={6} fill="rgba(8,145,178,0.4)" />
+
+      {/* Medical cross badge top-right */}
+      <Circle cx={168} cy={46} r={24} fill={W} />
+      <Rect x={159} y={38} width={18} height={7} rx={3.5} fill={T} />
+      <Rect x={164} y={33} width={7} height={18} rx={3.5} fill={T} />
+
+      {/* Small floating dots */}
+      <Circle cx={30} cy={68} r={6} fill={WA} />
+      <Circle cx={185} cy={150} r={5} fill={WA} />
+      <Circle cx={22} cy={145} r={4} fill={WA} />
+    </Svg>
+  );
+}
+
+// ─── Slide 2 — Dossier médical ───────────────────────────────────────────────
+
+function HealthIllustration() {
+  return (
+    <Svg width={200} height={210} viewBox="0 0 200 210">
+      <Circle cx={100} cy={105} r={88} fill={WA} />
+
+      {/* Clipboard body */}
+      <Rect x={28} y={30} width={144} height={168} rx={18} fill={W} />
+
+      {/* Clipboard top band */}
+      <Rect x={28} y={30} width={144} height={46} rx={18} fill="rgba(8,145,178,0.18)" />
+      <Rect x={28} y={58} width={144} height={18} fill="rgba(8,145,178,0.18)" />
+
+      {/* Clip */}
+      <Rect x={72} y={18} width={56} height={22} rx={11} fill={W} />
+      <Rect x={82} y={14} width={36} height={18} rx={9} fill={TD} />
+
+      {/* Header title bar */}
+      <Rect x={48} y={42} width={96} height={9} rx={4.5} fill="rgba(8,145,178,0.55)" />
+
+      {/* Patient info rows */}
+      <Rect x={48} y={90} width={104} height={8} rx={4} fill="rgba(8,145,178,0.3)" />
+      <Rect x={48} y={107} width={80} height={8} rx={4} fill="rgba(8,145,178,0.2)" />
+      <Rect x={48} y={124} width={92} height={8} rx={4} fill="rgba(8,145,178,0.2)" />
+
+      {/* Divider */}
+      <Line x1={38} y1={142} x2={162} y2={142} stroke="rgba(8,145,178,0.15)" strokeWidth={1.5} />
+
+      {/* ECG pulse line */}
+      <Path
+        d="M38 165 L58 165 L65 147 L72 183 L79 155 L86 165 L162 165"
+        stroke={T}
+        strokeWidth={3}
+        fill="none"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        opacity={0.65}
+      />
+
+      {/* Heart icon top-right corner */}
+      <Path
+        d="M156 68 C156 62 151 57 146 61 C141 57 136 62 136 68 C136 78 146 88 146 88 C146 88 156 78 156 68Z"
+        fill={TD}
+        opacity={0.75}
+      />
+
       {/* Decorative dots */}
-      <View style={[ill.dot, { top: 10, right: 18 }]} />
-      <View style={[ill.dot, { bottom: 14, left: 20 }]} />
-      <View style={[ill.dotSm, { top: 30, left: 12 }]} />
-    </View>
+      <Circle cx={22} cy={55} r={5} fill={WA} />
+      <Circle cx={182} cy={160} r={4} fill={WA} />
+    </Svg>
   );
 }
 
-function DossierIllustration() {
+// ─── Slide 3 — Cabinet professionnel ─────────────────────────────────────────
+
+function CabinetIllustration() {
+  const windows = [
+    [44, 118], [88, 118], [132, 118],
+    [44, 155], [88, 155], [132, 155],
+  ];
   return (
-    <View style={ill.dossierContainer}>
-      {[0, 1, 2].map((i) => (
-        <View
-          key={i}
-          style={[
-            ill.dossierBar,
-            {
-              width: 160 - i * 18,
-              opacity: 1 - i * 0.18,
-              backgroundColor: i === 0 ? colors.teal : i === 1 ? colors.tealLight : colors.tealDark,
-            },
-          ]}
-        />
+    <Svg width={210} height={215} viewBox="0 0 210 215">
+      <Circle cx={105} cy={108} r={90} fill={WA} />
+
+      {/* Sky / ground */}
+      <Rect x={15} y={175} width={180} height={18} rx={9} fill={WA} />
+
+      {/* Building body */}
+      <Rect x={28} y={72} width={154} height={115} rx={12} fill={W} />
+
+      {/* Roof band */}
+      <Rect x={28} y={72} width={154} height={32} rx={12} fill="rgba(8,145,178,0.2)" />
+      <Rect x={28} y={92} width={154} height={12} fill="rgba(8,145,178,0.2)" />
+
+      {/* Building name bar */}
+      <Rect x={52} y={82} width={106} height={9} rx={4.5} fill="rgba(8,145,178,0.5)" />
+
+      {/* Windows */}
+      {windows.map(([x, y], i) => (
+        <Rect key={i} x={x} y={y} width={26} height={24} rx={5}
+          fill={i === 1 ? "rgba(8,145,178,0.35)" : "rgba(8,145,178,0.15)"} />
       ))}
-      {/* Small accent line on top bar */}
-      <View style={ill.dossierAccent} />
-    </View>
+
+      {/* Door */}
+      <Rect x={82} y={152} width={46} height={58} rx={10} fill="rgba(14,116,144,0.55)" />
+      <Circle cx={105} cy={180} r={3} fill={WB} />
+
+      {/* Medical cross sign */}
+      <Circle cx={170} cy={48} r={26} fill={W} />
+      <Rect x={160} y={40} width={20} height={7} rx={3.5} fill={T} />
+      <Rect x={166} y={34} width={7} height={20} rx={3.5} fill={T} />
+
+      {/* Flagpole */}
+      <Rect x={103} y={42} width={4} height={34} rx={2} fill={WB} />
+      <Path d="M107 42 L124 48 L107 54Z" fill={W} opacity={0.6} />
+
+      {/* People dots (team) */}
+      <Circle cx={30} cy={42} r={8} fill={WA} />
+      <Circle cx={50} cy={28} r={6} fill={WA} />
+      <Circle cx={20} cy={148} r={5} fill={WA} />
+    </Svg>
   );
 }
-
-function HospitalIllustration() {
-  return (
-    <View style={ill.hospitalContainer}>
-      {/* Building base */}
-      <View style={ill.hospitalBase}>
-        {/* Windows row 1 */}
-        <View style={ill.windowRow}>
-          {[0, 1, 2].map((i) => (
-            <View key={i} style={ill.window} />
-          ))}
-        </View>
-        {/* Windows row 2 */}
-        <View style={ill.windowRow}>
-          {[0, 1, 2].map((i) => (
-            <View key={i} style={ill.window} />
-          ))}
-        </View>
-      </View>
-      {/* Entrance door */}
-      <View style={ill.hospitalDoor} />
-      {/* Roof accent */}
-      <View style={ill.hospitalRoof} />
-      {/* Side decorative dot */}
-      <View style={[ill.dot, { top: 4, right: 8 }]} />
-    </View>
-  );
-}
-
-const ill = StyleSheet.create({
-  // Cross
-  crossContainer: {
-    width: 160,
-    height: 160,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  crossCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: radii.full,
-    backgroundColor: colors.teal,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  crossV: {
-    position: "absolute",
-    width: 20,
-    height: 68,
-    borderRadius: radii.sm,
-    backgroundColor: "#FFFFFF",
-  },
-  crossH: {
-    position: "absolute",
-    width: 68,
-    height: 20,
-    borderRadius: radii.sm,
-    backgroundColor: "#FFFFFF",
-  },
-  dot: {
-    position: "absolute",
-    width: 14,
-    height: 14,
-    borderRadius: radii.full,
-    backgroundColor: colors.tealLight,
-  },
-  dotSm: {
-    position: "absolute",
-    width: 8,
-    height: 8,
-    borderRadius: radii.full,
-    backgroundColor: "rgba(255,255,255,0.6)",
-  },
-  // Dossier
-  dossierContainer: {
-    width: 160,
-    height: 140,
-    alignItems: "center",
-    justifyContent: "center",
-    gap: spacing.sm,
-  },
-  dossierBar: {
-    height: 28,
-    borderRadius: radii.md,
-    alignSelf: "center",
-  },
-  dossierAccent: {
-    position: "absolute",
-    top: 8,
-    left: 32,
-    width: 40,
-    height: 6,
-    borderRadius: radii.full,
-    backgroundColor: "rgba(255,255,255,0.45)",
-  },
-  // Hospital
-  hospitalContainer: {
-    width: 160,
-    height: 160,
-    alignItems: "center",
-    justifyContent: "flex-end",
-  },
-  hospitalRoof: {
-    width: 130,
-    height: 18,
-    borderRadius: radii.sm,
-    backgroundColor: colors.tealDark,
-    marginBottom: -2,
-  },
-  hospitalBase: {
-    width: 120,
-    backgroundColor: colors.teal,
-    borderRadius: radii.md,
-    paddingVertical: spacing.md,
-    paddingHorizontal: spacing.md,
-    gap: spacing.sm,
-    alignItems: "center",
-  },
-  windowRow: {
-    flexDirection: "row",
-    gap: spacing.sm,
-  },
-  window: {
-    width: 20,
-    height: 20,
-    borderRadius: radii.sm - 2,
-    backgroundColor: "rgba(255,255,255,0.75)",
-  },
-  hospitalDoor: {
-    width: 30,
-    height: 36,
-    borderTopLeftRadius: radii.md,
-    borderTopRightRadius: radii.md,
-    backgroundColor: colors.tealDark,
-    marginTop: -2,
-  },
-});
-
-// ─── Slide data ──────────────────────────────────────────────────────────────
-
-const SLIDES = [
-  {
-    key: "welcome",
-    title: "Bienvenue sur Doktori",
-    subtitle: "Prenez rendez-vous avec votre médecin en quelques secondes.",
-    illustration: <MedicalCrossIllustration />,
-  },
-  {
-    key: "health",
-    title: "Gérez votre santé",
-    subtitle: "Accédez à votre dossier médical, ordonnances et historique.",
-    illustration: <DossierIllustration />,
-  },
-  {
-    key: "pro",
-    title: "Espace Professionnel",
-    subtitle: "Médecins et secrétaires : gérez votre cabinet depuis l'appli.",
-    illustration: <HospitalIllustration />,
-  },
-] as const;
 
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
 export default function Onboarding() {
+  const { locale } = useLocale();
+  const SLIDES = [
+    {
+      key: "welcome",
+      title: t("onboarding.slide1Title"),
+      subtitle: t("onboarding.slide1Desc"),
+      illustration: <DoctorIllustration />,
+    },
+    {
+      key: "health",
+      title: t("onboarding.slide2Title"),
+      subtitle: t("onboarding.slide2Desc"),
+      illustration: <HealthIllustration />,
+    },
+    {
+      key: "pro",
+      title: t("onboarding.slide3Title"),
+      subtitle: t("onboarding.slide3Desc"),
+      illustration: <CabinetIllustration />,
+    },
+  ];
   const [activeIndex, setActiveIndex] = useState(0);
   const scrollRef = useRef<ScrollView>(null);
   const isLast = activeIndex === SLIDES.length - 1;
@@ -230,7 +241,7 @@ export default function Onboarding() {
     if (SecureStore) {
       await SecureStore.setItemAsync(ONBOARDING_KEY, "1");
     }
-    router.replace("/(auth)/patient-login");
+    router.replace("/(auth)/role");
   }
 
   function handleScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {
@@ -249,14 +260,12 @@ export default function Onboarding() {
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safe} edges={["top"]}>
-        {/* Skip link — teal zone */}
         <View style={styles.skipRow}>
           <Pressable onPress={markDoneAndContinue} hitSlop={12}>
-            <Text style={styles.skip}>Passer</Text>
+            <Text style={styles.skip}>{t("onboarding.skip")}</Text>
           </Pressable>
         </View>
 
-        {/* Illustration carousel — stays in teal zone */}
         <ScrollView
           ref={scrollRef}
           horizontal
@@ -274,25 +283,22 @@ export default function Onboarding() {
         </ScrollView>
       </SafeAreaView>
 
-      {/* White card — fully below the teal zone */}
       <SafeAreaView style={styles.card} edges={["bottom"]}>
         <Text style={styles.slideTitle}>{slide.title}</Text>
         <Text style={styles.slideSubtitle}>{slide.subtitle}</Text>
 
-        {/* Dots */}
         <View style={styles.dotsRow}>
           {SLIDES.map((_, i) => (
             <View key={i} style={[styles.dot, i === activeIndex && styles.dotActive]} />
           ))}
         </View>
 
-        {/* CTA */}
         <Pressable
           style={({ pressed }) => [styles.primaryBtn, pressed && { opacity: 0.85 }]}
           onPress={goNext}
         >
           <Text style={styles.primaryBtnText}>
-            {isLast ? "Commencer" : "Suivant"}
+            {isLast ? t("onboarding.start") : t("onboarding.next")}
           </Text>
         </Pressable>
       </SafeAreaView>
@@ -301,35 +307,21 @@ export default function Onboarding() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: colors.teal,
-  },
-  safe: {
-    // occupies the top ~55% in teal
-    flex: 1,
-  },
+  root: { flex: 1, backgroundColor: colors.teal },
+  safe: { flex: 1 },
   skipRow: {
     alignItems: "flex-end",
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.md,
     paddingBottom: spacing.sm,
   },
-  skip: {
-    color: "rgba(255,255,255,0.85)",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-  illustrationScroll: {
-    flex: 1,
-  },
+  skip: { color: "rgba(255,255,255,0.85)", fontSize: 14, fontWeight: "600" },
+  illustrationScroll: { flex: 1 },
   illustrationSlide: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
   },
-
-  // White card at the bottom
   card: {
     backgroundColor: colors.bg,
     borderTopLeftRadius: radii["3xl"],
@@ -357,16 +349,8 @@ const styles = StyleSheet.create({
     gap: spacing.xs + 2,
     paddingVertical: spacing.sm,
   },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: radii.full,
-    backgroundColor: colors.border,
-  },
-  dotActive: {
-    width: 24,
-    backgroundColor: colors.teal,
-  },
+  dot: { width: 8, height: 8, borderRadius: radii.full, backgroundColor: colors.border },
+  dotActive: { width: 24, backgroundColor: colors.teal },
   primaryBtn: {
     backgroundColor: colors.teal,
     borderRadius: radii.xl,
@@ -374,9 +358,5 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginTop: spacing.xs,
   },
-  primaryBtnText: {
-    color: "#FFFFFF",
-    fontSize: 17,
-    fontWeight: "700",
-  },
+  primaryBtnText: { color: "#FFFFFF", fontSize: 17, fontWeight: "700" },
 });

@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { MessageCircle, ChevronRight } from "lucide-react";
+import { MessageCircle, ChevronRight, AlertCircle, X, Pencil } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { fr } from "date-fns/locale";
 
@@ -32,6 +32,110 @@ function ConversationSkeleton() {
   );
 }
 
+interface DoctorStatus {
+  statusMessage: string | null;
+  awayMessage: string | null;
+  statusActiveUntil: string | null;
+  isActive: boolean;
+}
+
+function StatusBanner({ status, onEdit }: { status: DoctorStatus; onEdit: () => void }) {
+  const t = useTranslations("medecin.messages");
+  if (!status.isActive || !status.statusMessage) return null;
+  return (
+    <div className="flex items-start gap-3 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-700 rounded-xl px-4 py-3 mb-4 text-sm">
+      <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+      <span className="flex-1 text-amber-800 dark:text-amber-200">
+        <span className="font-medium">{t("statusBanner", { status: status.statusMessage })}</span>
+        {status.statusActiveUntil && (
+          <span className="ml-1 text-amber-600 dark:text-amber-400 text-xs">
+            (jusqu&apos;au {new Date(status.statusActiveUntil).toLocaleDateString("fr-TN")})
+          </span>
+        )}
+      </span>
+      <button onClick={onEdit} className="text-amber-600 hover:text-amber-800 dark:text-amber-400 flex-shrink-0">
+        <Pencil className="w-4 h-4" />
+      </button>
+    </div>
+  );
+}
+
+function StatusModal({ status, onClose, onSaved }: { status: DoctorStatus | null; onClose: () => void; onSaved: (s: DoctorStatus) => void }) {
+  const t = useTranslations("medecin.messages");
+  const [msg, setMsg] = useState(status?.statusMessage ?? "");
+  const [away, setAway] = useState(status?.awayMessage ?? "");
+  const [until, setUntil] = useState(status?.statusActiveUntil ? status.statusActiveUntil.slice(0, 10) : "");
+  const [saving, setSaving] = useState(false);
+
+  async function save() {
+    setSaving(true);
+    await fetch("/api/doctor/status", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        statusMessage: msg || null,
+        awayMessage: away || null,
+        statusActiveUntil: until ? new Date(until).toISOString() : null,
+      }),
+    });
+    setSaving(false);
+    onSaved({
+      statusMessage: msg || null,
+      awayMessage: away || null,
+      statusActiveUntil: until ? new Date(until).toISOString() : null,
+      isActive: !!msg,
+    });
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("statusMessage")}</h2>
+          <button onClick={onClose}><X className="w-5 h-5 text-gray-400" /></button>
+        </div>
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("statusMessage")}</label>
+        <input
+          value={msg}
+          onChange={(e) => setMsg(e.target.value)}
+          placeholder="Ex: En congé jusqu'au 5 mai"
+          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-teal-500"
+        />
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("awayMessage")}</label>
+        <textarea
+          value={away}
+          onChange={(e) => setAway(e.target.value)}
+          rows={3}
+          placeholder="Réponse automatique envoyée aux patients..."
+          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+        />
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("statusUntil")}</label>
+        <input
+          type="date"
+          value={until}
+          onChange={(e) => setUntil(e.target.value)}
+          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={() => { setMsg(""); setAway(""); setUntil(""); }}
+            className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            {t("clearStatus")}
+          </button>
+          <button
+            onClick={save}
+            disabled={saving}
+            className="flex-1 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 disabled:opacity-50"
+          >
+            {saving ? "…" : t("editStatus")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function DoctorMessageriePage() {
   const t = useTranslations("medecin.messages");
   const tNav = useTranslations("medecin.nav");
@@ -39,6 +143,8 @@ export default function DoctorMessageriePage() {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [doctorStatus, setDoctorStatus] = useState<DoctorStatus | null>(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
 
   useEffect(() => {
     fetch("/api/doctor/conversations")
@@ -54,10 +160,23 @@ export default function DoctorMessageriePage() {
         setError(err.message);
         setLoading(false);
       });
+
+    fetch("/api/doctor/status")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => { if (data) setDoctorStatus(data as DoctorStatus); })
+      .catch(() => {});
   }, []);
 
   return (
     <div className="max-w-2xl mx-auto">
+      {showStatusModal && (
+        <StatusModal
+          status={doctorStatus}
+          onClose={() => setShowStatusModal(false)}
+          onSaved={(s) => { setDoctorStatus(s); setShowStatusModal(false); }}
+        />
+      )}
+      {doctorStatus && <StatusBanner status={doctorStatus} onEdit={() => setShowStatusModal(true)} />}
       <div className="flex items-center gap-3 mb-6">
         <div className="p-2 bg-teal-100 rounded-lg">
           <MessageCircle className="w-6 h-6 text-teal-700" />

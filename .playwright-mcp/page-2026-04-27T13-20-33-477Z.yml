@@ -1,0 +1,352 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - img [ref=e4]
+      - generic [ref=e6]:
+        - text: L'app Doktori arrive bientôt sur
+        - strong [ref=e7]: App Store
+        - text: et
+        - strong [ref=e8]: Google Play
+    - button "Fermer" [ref=e9]:
+      - img [ref=e10]
+  - banner [ref=e13]:
+    - generic [ref=e14]:
+      - link "Doktori.tn" [ref=e15] [cursor=pointer]:
+        - /url: /
+        - img [ref=e17]
+        - generic [ref=e24]: Doktori.tn
+      - navigation [ref=e25]:
+        - link "ابحث عن طبيب" [ref=e26] [cursor=pointer]:
+          - /url: /recherche
+          - img [ref=e27]
+          - text: ابحث عن طبيب
+        - link "المدونة" [ref=e30] [cursor=pointer]:
+          - /url: /blog
+          - img [ref=e31]
+          - text: المدونة
+        - link "مساعدة" [ref=e33] [cursor=pointer]:
+          - /url: /faq
+          - img [ref=e34]
+          - text: مساعدة
+        - link "استغاثة" [ref=e37] [cursor=pointer]:
+          - /url: /sos
+          - img [ref=e38]
+          - text: استغاثة
+        - button "Passer en mode sombre" [ref=e43]:
+          - img [ref=e44]
+        - group "Changer de langue" [ref=e46]:
+          - button "Passer en français" [ref=e47]: FR
+          - button "التبديل إلى العربية" [disabled] [pressed] [ref=e48]: AR
+        - link "حسابي" [ref=e49] [cursor=pointer]:
+          - /url: /connexion-patient
+          - img [ref=e50]
+          - text: حسابي
+        - link "فضاء الطبيب" [ref=e53] [cursor=pointer]:
+          - /url: /connexion
+          - img [ref=e54]
+          - generic [ref=e57]: فضاء الطبيب
+  - generic [ref=e61]:
+    - link "Retour à la recherche" [ref=e63] [cursor=pointer]:
+      - /url: /recherche
+      - img [ref=e64]
+      - text: Retour à la recherche
+    - generic [ref=e66]:
+      - generic [ref=e68]:
+        - generic [ref=e69]:
+          - generic [ref=e70]: Dr. Sami Bouaziz
+          - generic [ref=e71]: Médecin Généraliste
+        - link "Prendre RDV" [ref=e72] [cursor=pointer]:
+          - /url: /rdv/dr-sami-bouaziz
+          - img [ref=e73]
+          - text: Prendre RDV
+      - generic [ref=e76]:
+        - generic [ref=e84]:
+          - generic [ref=e86]:
+            - generic [ref=e87]: SB
+            - img [ref=e89]
+          - generic [ref=e92]:
+            - generic [ref=e93]:
+              - generic [ref=e94]:
+                - heading "Dr. Sami Bouaziz" [level=1] [ref=e95]
+                - generic [ref=e96]:
+                  - img [ref=e97]
+                  - generic [ref=e101]: Médecin Généraliste
+                  - generic [ref=e102]:
+                    - img [ref=e103]
+                    - text: Téléconsultation disponible
+              - generic [ref=e106]:
+                - generic [ref=e107]: Téléconsultation
+                - generic [ref=e108]:
+                  - generic [ref=e109]: "60"
+                  - generic [ref=e110]: DT
+            - generic [ref=e111]:
+              - generic [ref=e112]: Disponible aujourd'hui
+              - generic [ref=e114]:
+                - img [ref=e115]
+                - text: 4.5 (2 avis)
+              - generic [ref=e117]:
+                - img [ref=e118]
+                - text: Vérifié par Doktori
+              - generic [ref=e121]:
+                - img [ref=e122]
+                - text: 12ans d'expérience
+            - generic [ref=e125]:
+              - img [ref=e126]
+              - generic [ref=e129]: 15 Avenue de la Liberté, El Manar, Tunis
+        - generic [ref=e130]:
+          - generic [ref=e131]:
+            - img [ref=e132]
+            - generic [ref=e135]: Profil vérifié
+            - generic [ref=e136]: par Doktori
+          - generic [ref=e137]:
+            - img [ref=e138]
+            - generic [ref=e141]: Répond en < 24h
+            - generic [ref=e142]: en moyenne
+          - generic [ref=e143]:
+            - img [ref=e144]
+            - generic [ref=e148]: Nouveaux patients
+            - generic [ref=e149]: acceptés
+          - generic [ref=e150]:
+            - img [ref=e151]
+            - generic [ref=e153]: 4.5 / 5
+            - generic [ref=e154]: 2 avis vérifiés
+        - generic [ref=e155]:
+          - generic [ref=e156]:
+            - img [ref=e158]
+            - heading "À propos" [level=2] [ref=e161]
+          - paragraph [ref=e162]: Médecin généraliste avec plus de 12 ans d'expérience, spécialisé dans la médecine préventive et la prise en charge des maladies chroniques. Dr. Bouaziz est reconnu pour son écoute attentive et son approche globale du patient.
+        - generic [ref=e163]:
+          - generic [ref=e164]:
+            - img [ref=e166]
+            - heading "Lieux de consultation" [level=2] [ref=e169]
+          - generic [ref=e170]:
+            - generic [ref=e171]:
+              - generic [ref=e172]: Cabinet principal
+              - generic [ref=e173]:
+                - img [ref=e174]
+                - generic [ref=e177]:
+                  - generic [ref=e178]: Cabinet Dr. Bouaziz
+                  - generic [ref=e179]: 25 Rue de la Plage, La Marsa
+                  - generic [ref=e180]: La Marsa
+            - generic [ref=e182]:
+              - img [ref=e183]
+              - generic [ref=e187]:
+                - generic [ref=e188]: Clinique El Manar
+                - generic [ref=e189]: 15 Avenue de la Liberté, El Manar
+                - generic [ref=e190]: Tunis
+        - generic [ref=e191]:
+          - generic [ref=e192]:
+            - img [ref=e194]
+            - heading "Expertises" [level=2] [ref=e197]
+          - generic [ref=e198]:
+            - generic [ref=e199]: Médecine préventive
+            - generic [ref=e201]: Maladies chroniques
+            - generic [ref=e203]: Diabète
+            - generic [ref=e205]: Hypertension
+        - generic [ref=e207]:
+          - generic [ref=e208]:
+            - img [ref=e210]
+            - heading "Langues parlées" [level=2] [ref=e214]
+          - generic [ref=e215]:
+            - generic [ref=e216]:
+              - img [ref=e217]
+              - text: Arabe
+            - generic [ref=e221]:
+              - img [ref=e222]
+              - text: Français
+            - generic [ref=e226]:
+              - img [ref=e227]
+              - text: Anglais
+        - generic [ref=e231]:
+          - generic [ref=e232]:
+            - img [ref=e234]
+            - heading "Motifs de consultation" [level=2] [ref=e238]
+          - list [ref=e239]:
+            - listitem [ref=e240]:
+              - generic [ref=e243]:
+                - generic [ref=e244]: Consultation de suivi
+                - generic [ref=e245]: 20 min
+            - listitem [ref=e246]:
+              - generic [ref=e249]:
+                - generic [ref=e250]: Première consultation
+                - generic [ref=e251]: 30 min
+        - generic [ref=e252]:
+          - generic [ref=e254]:
+            - img [ref=e256]
+            - heading "Horaires" [level=2] [ref=e258]
+          - generic [ref=e259]:
+            - generic [ref=e260]:
+              - generic [ref=e261]: Lundi
+              - generic [ref=e262]:
+                - generic [ref=e263]:
+                  - img [ref=e264]
+                  - text: 08:00 — 12:00
+                - generic [ref=e267]:
+                  - img [ref=e268]
+                  - text: 14:00 — 18:00
+            - generic [ref=e271]:
+              - generic [ref=e272]: Mardi
+              - generic [ref=e273]:
+                - generic [ref=e274]:
+                  - img [ref=e275]
+                  - text: 08:00 — 12:00
+                - generic [ref=e278]:
+                  - img [ref=e279]
+                  - text: 14:00 — 18:00
+            - generic [ref=e282]:
+              - generic [ref=e283]: Mercredi
+              - generic [ref=e284]:
+                - generic [ref=e285]:
+                  - img [ref=e286]
+                  - text: 14:00 — 18:00
+                - generic [ref=e289]:
+                  - img [ref=e290]
+                  - text: 08:00 — 12:00
+            - generic [ref=e293]:
+              - generic [ref=e294]: Jeudi
+              - generic [ref=e295]:
+                - generic [ref=e296]:
+                  - img [ref=e297]
+                  - text: 08:00 — 12:00
+                - generic [ref=e300]:
+                  - img [ref=e301]
+                  - text: 14:00 — 18:00
+            - generic [ref=e304]:
+              - generic [ref=e305]: Vendredi
+              - generic [ref=e306]:
+                - generic [ref=e307]:
+                  - img [ref=e308]
+                  - text: 14:00 — 18:00
+                - generic [ref=e311]:
+                  - img [ref=e312]
+                  - text: 08:00 — 12:00
+                - generic [ref=e315]:
+                  - img [ref=e316]
+                  - text: 08:00 — 12:00
+            - generic [ref=e319]:
+              - generic [ref=e320]: Samedi
+              - generic [ref=e322]:
+                - img [ref=e323]
+                - text: 08:00 — 12:00
+            - generic [ref=e326]:
+              - generic [ref=e327]: Dimanche
+              - generic [ref=e328]: Fermé
+        - generic [ref=e329]:
+          - generic [ref=e330]:
+            - generic [ref=e331]:
+              - img [ref=e333]
+              - heading "Avis patients" [level=2] [ref=e335]
+            - generic [ref=e336]:
+              - generic [ref=e337]:
+                - generic [ref=e338]: 4.5/5
+                - generic [ref=e339]: 2 avis vérifiés
+              - generic "4.5 sur 5" [ref=e340]:
+                - img [ref=e341]
+                - img [ref=e343]
+                - img [ref=e345]
+                - img [ref=e347]
+                - img [ref=e349]
+          - list [ref=e351]:
+            - listitem [ref=e352]:
+              - img [ref=e353]
+              - generic [ref=e357]:
+                - generic [ref=e358]: "Y"
+                - generic [ref=e359]:
+                  - generic [ref=e360]:
+                    - generic [ref=e361]: Youssef B.
+                    - generic "Consultation vérifiée" [ref=e362]:
+                      - img [ref=e363]
+                      - text: Vérifié
+                  - generic [ref=e366]:
+                    - generic "4.0 sur 5" [ref=e367]:
+                      - img [ref=e368]
+                      - img [ref=e370]
+                      - img [ref=e372]
+                      - img [ref=e374]
+                      - img [ref=e376]
+                    - generic [ref=e378]: · il y a 1 semaine
+              - paragraph [ref=e379]: Bon médecin généraliste, disponible et efficace. Il connaît bien mes antécédents et le renouvellement d'ordonnance a été rapide. Je suis fidèle à son cabinet depuis 5 ans.
+            - listitem [ref=e380]:
+              - img [ref=e381]
+              - generic [ref=e385]:
+                - generic [ref=e386]: A
+                - generic [ref=e387]:
+                  - generic [ref=e388]:
+                    - generic [ref=e389]: Ahmed S.
+                    - generic "Consultation vérifiée" [ref=e390]:
+                      - img [ref=e391]
+                      - text: Vérifié
+                  - generic [ref=e394]:
+                    - generic "5.0 sur 5" [ref=e395]:
+                      - img [ref=e396]
+                      - img [ref=e398]
+                      - img [ref=e400]
+                      - img [ref=e402]
+                      - img [ref=e404]
+                    - generic [ref=e406]: · il y a 1 semaine
+              - paragraph [ref=e407]: Médecin très à l'écoute et professionnel. Il a pris le temps de bien expliquer mon diagnostic et de répondre à toutes mes questions. Je recommande vivement !
+        - generic [ref=e408]:
+          - generic [ref=e409]:
+            - generic [ref=e410]:
+              - img [ref=e411]
+              - text: Langues
+            - paragraph [ref=e413]: Arabe · Français · Anglais
+          - generic [ref=e414]:
+            - generic [ref=e415]:
+              - img [ref=e416]
+              - text: Moyens de paiement
+            - paragraph [ref=e419]: Espèces · Carte · CNAM
+  - contentinfo [ref=e420]:
+    - generic [ref=e421]:
+      - generic [ref=e422]:
+        - generic [ref=e423]:
+          - generic [ref=e424]:
+            - img [ref=e426]
+            - generic [ref=e430]: Doktori
+          - paragraph [ref=e431]: La prise de rendez-vous médicaux en Tunisie
+          - link "contact@doktori.tn" [ref=e432] [cursor=pointer]:
+            - /url: mailto:contact@doktori.tn
+            - img [ref=e433]
+            - text: contact@doktori.tn
+        - generic [ref=e436]:
+          - paragraph [ref=e437]: Plateforme
+          - list [ref=e438]:
+            - listitem [ref=e439]:
+              - link "À propos" [ref=e440] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e441]:
+              - link "Blog" [ref=e442] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=e443]:
+              - link "FAQ" [ref=e444] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e445]:
+              - link "SOS Médecin" [ref=e446] [cursor=pointer]:
+                - /url: /sos-medecin
+        - generic [ref=e447]:
+          - paragraph [ref=e448]: Légal
+          - list [ref=e449]:
+            - listitem [ref=e450]:
+              - link "Mentions légales" [ref=e451] [cursor=pointer]:
+                - /url: /mentions-legales
+            - listitem [ref=e452]:
+              - link "CGU" [ref=e453] [cursor=pointer]:
+                - /url: /cgu
+            - listitem [ref=e454]:
+              - link "Politique de confidentialité" [ref=e455] [cursor=pointer]:
+                - /url: /confidentialite
+        - generic [ref=e456]:
+          - paragraph [ref=e457]: Espace médecin
+          - paragraph [ref=e458]: Vous êtes médecin et souhaitez rejoindre Doktori ?
+          - link "Espace médecin" [ref=e459] [cursor=pointer]:
+            - /url: /connexion
+            - img [ref=e460]
+            - text: Espace médecin
+      - paragraph [ref=e465]: © 2025-2026 Random Walkers SUARL · Doktori.tn
+  - region "Notifications alt+T"
+  - button "افتح معالج دوكتي" [ref=e466]:
+    - img [ref=e467]
+    - generic [ref=e471]: "!"
+  - button "Open Next.js Dev Tools" [ref=e477] [cursor=pointer]:
+    - img [ref=e478]
+  - alert [ref=e481]

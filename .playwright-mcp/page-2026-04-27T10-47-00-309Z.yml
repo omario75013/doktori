@@ -1,0 +1,545 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e171]:
+    - generic [ref=e172]:
+      - img [ref=e173]
+      - generic [ref=e175]:
+        - text: L'app Doktori arrive bientôt sur
+        - strong [ref=e176]: App Store
+        - text: et
+        - strong [ref=e177]: Google Play
+    - button "Fermer" [ref=e178]:
+      - img [ref=e179]
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Doktori.tn" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e13]: Doktori.tn
+      - navigation [ref=e14]:
+        - link "ابحث عن طبيب" [ref=e15] [cursor=pointer]:
+          - /url: /recherche
+          - img [ref=e16]
+          - text: ابحث عن طبيب
+        - link "المدونة" [ref=e19] [cursor=pointer]:
+          - /url: /blog
+          - img [ref=e20]
+          - text: المدونة
+        - link "مساعدة" [ref=e22] [cursor=pointer]:
+          - /url: /faq
+          - img [ref=e23]
+          - text: مساعدة
+        - link "استغاثة" [ref=e26] [cursor=pointer]:
+          - /url: /sos
+          - img [ref=e27]
+          - text: استغاثة
+        - button "Passer en mode sombre" [ref=e182]:
+          - img [ref=e183]
+        - group "Changer de langue" [ref=e33]:
+          - button "Passer en français" [ref=e34]: FR
+          - button "التبديل إلى العربية" [disabled] [pressed] [ref=e35]: AR
+        - link "حسابي" [ref=e36] [cursor=pointer]:
+          - /url: /connexion-patient
+          - img [ref=e37]
+          - text: حسابي
+        - link "فضاء الطبيب" [ref=e40] [cursor=pointer]:
+          - /url: /connexion
+          - img [ref=e41]
+          - generic [ref=e44]: فضاء الطبيب
+  - generic [ref=e277]:
+    - link "Retour à la recherche" [ref=e279] [cursor=pointer]:
+      - /url: /recherche
+      - img [ref=e280]
+      - text: Retour à la recherche
+    - generic [ref=e282]:
+      - generic [ref=e284]:
+        - generic [ref=e285]:
+          - generic [ref=e286]: Dr. Karim Ben Ali
+          - generic [ref=e287]: Médecin Généraliste
+        - link "Prendre RDV" [ref=e288] [cursor=pointer]:
+          - /url: /rdv/dr-karim-ben-ali-generaliste-la-marsa
+          - img [ref=e289]
+          - text: Prendre RDV
+      - generic [ref=e292]:
+        - generic [ref=e300]:
+          - generic [ref=e302]:
+            - img "Dr. Karim Ben Ali" [ref=e304]
+            - img [ref=e306]
+          - generic [ref=e309]:
+            - generic [ref=e310]:
+              - generic [ref=e311]:
+                - heading "Dr. Karim Ben Ali" [level=1] [ref=e312]
+                - generic [ref=e313]:
+                  - img [ref=e314]
+                  - generic [ref=e318]: Médecin Généraliste
+                  - generic [ref=e319]:
+                    - img [ref=e320]
+                    - text: Téléconsultation disponible
+              - generic [ref=e323]:
+                - generic [ref=e324]: Téléconsultation
+                - generic [ref=e325]:
+                  - generic [ref=e326]: "60"
+                  - generic [ref=e327]: DT
+            - generic [ref=e328]:
+              - generic [ref=e329]: Disponible aujourd'hui
+              - generic [ref=e331]:
+                - img [ref=e332]
+                - text: 4.8 (10 avis)
+              - generic [ref=e334]:
+                - img [ref=e335]
+                - text: Vérifié par Doktori
+              - generic [ref=e338]:
+                - img [ref=e339]
+                - text: 12ans d'expérience
+            - generic [ref=e342]:
+              - img [ref=e343]
+              - generic [ref=e346]: 12 Avenue Habib Bourguiba, La Marsa
+        - generic [ref=e347]:
+          - generic [ref=e348]:
+            - img [ref=e349]
+            - generic [ref=e352]: Profil vérifié
+            - generic [ref=e353]: par Doktori
+          - generic [ref=e354]:
+            - img [ref=e355]
+            - generic [ref=e358]: Répond en < 24h
+            - generic [ref=e359]: en moyenne
+          - generic [ref=e360]:
+            - img [ref=e361]
+            - generic [ref=e365]: Nouveaux patients
+            - generic [ref=e366]: acceptés
+          - generic [ref=e367]:
+            - img [ref=e368]
+            - generic [ref=e370]: 4.8 / 5
+            - generic [ref=e371]: 10 avis vérifiés
+        - generic [ref=e372]:
+          - generic [ref=e373]:
+            - img [ref=e375]
+            - heading "À propos" [level=2] [ref=e378]
+          - paragraph [ref=e379]: Médecin généraliste avec 15 ans d'expérience, spécialisé en médecine familiale.
+        - generic [ref=e380]:
+          - generic [ref=e381]:
+            - img [ref=e383]
+            - heading "Lieux de consultation" [level=2] [ref=e386]
+          - generic [ref=e387]:
+            - generic [ref=e388]:
+              - generic [ref=e389]: Cabinet principal
+              - generic [ref=e390]:
+                - img [ref=e391]
+                - generic [ref=e394]:
+                  - generic [ref=e395]: Cabinet principal
+                  - generic [ref=e396]: 12 Avenue Habib Bourguiba, La Marsa
+                  - generic [ref=e397]: La Marsa
+            - generic [ref=e399]:
+              - img [ref=e400]
+              - generic [ref=e403]:
+                - generic [ref=e404]: Clinique Tawfik
+                - generic [ref=e405]: adr
+                - generic [ref=e406]: Tunis
+        - generic [ref=e407]:
+          - generic [ref=e408]:
+            - img [ref=e410]
+            - heading "Expertises" [level=2] [ref=e413]
+          - generic [ref=e414]:
+            - generic [ref=e415]: Certificats médicaux
+            - generic [ref=e417]: Vaccinations adulte et enfant
+            - generic [ref=e419]: Suivi des maladies chroniques (HTA, diabète)
+            - generic [ref=e421]: Médecine préventive
+        - generic [ref=e423]:
+          - generic [ref=e424]:
+            - img [ref=e426]
+            - heading "Formation" [level=2] [ref=e429]
+          - list [ref=e430]:
+            - listitem [ref=e431]:
+              - generic [ref=e435]: "2020"
+              - generic [ref=e436]: DIU (Diplôme Inter-Universitaire)
+              - generic [ref=e437]: Université Paris Descartes (France)
+            - listitem [ref=e438]:
+              - generic [ref=e442]: "2018"
+              - generic [ref=e443]: Spécialisation en Generaliste
+              - generic [ref=e444]: Faculté de Médecine de Sfax
+            - listitem [ref=e445]:
+              - generic [ref=e448]: "2014"
+              - generic [ref=e449]: Doctorat en médecine
+              - generic [ref=e450]: Faculté de Médecine de Sousse
+        - generic [ref=e451]:
+          - generic [ref=e452]:
+            - img [ref=e454]
+            - heading "Expérience" [level=2] [ref=e457]
+          - list [ref=e458]:
+            - listitem [ref=e459]:
+              - generic [ref=e463]: 2020 – aujourd'hui
+              - generic [ref=e464]: Generaliste en exercice libéral
+              - generic [ref=e465]: Clinique El Manar
+            - listitem [ref=e466]:
+              - generic [ref=e470]: 2018 – 2019
+              - generic [ref=e471]: Fellow en mobilité internationale
+              - generic [ref=e472]: Stage CHU Pitié-Salpêtrière, Paris
+            - listitem [ref=e473]:
+              - generic [ref=e476]: 2014 – 2018
+              - generic [ref=e477]: Interne en médecine
+              - generic [ref=e478]: CHU Fattouma Bourguiba, Monastir
+        - generic [ref=e479]:
+          - generic [ref=e480]:
+            - img [ref=e482]
+            - heading "Langues parlées" [level=2] [ref=e486]
+          - generic [ref=e487]:
+            - generic [ref=e488]:
+              - img [ref=e489]
+              - text: Français
+            - generic [ref=e493]:
+              - img [ref=e494]
+              - text: Arabe
+            - generic [ref=e498]:
+              - img [ref=e499]
+              - text: Anglais
+        - generic [ref=e503]:
+          - generic [ref=e504]:
+            - img [ref=e506]
+            - heading "Motifs de consultation" [level=2] [ref=e510]
+          - list [ref=e511]:
+            - listitem [ref=e512]:
+              - generic [ref=e515]:
+                - generic [ref=e516]: Consultation 1
+                - generic [ref=e517]: 20 min
+            - listitem [ref=e518]:
+              - generic [ref=e521]:
+                - generic [ref=e522]: Operation lasic
+                - generic [ref=e523]: 20 min
+        - generic [ref=e524]:
+          - generic [ref=e526]:
+            - img [ref=e528]
+            - heading "Horaires" [level=2] [ref=e530]
+          - generic [ref=e531]:
+            - generic [ref=e532]:
+              - generic [ref=e533]: Lundi
+              - generic [ref=e534]:
+                - generic [ref=e535]:
+                  - img [ref=e536]
+                  - text: 08:00 — 12:00
+                - generic [ref=e539]:
+                  - img [ref=e540]
+                  - text: 14:00 — 18:00
+            - generic [ref=e543]:
+              - generic [ref=e544]: Mardi
+              - generic [ref=e545]:
+                - generic [ref=e546]:
+                  - img [ref=e547]
+                  - text: 14:00 — 18:00
+                - generic [ref=e550]:
+                  - img [ref=e551]
+                  - text: 08:00 — 12:00
+            - generic [ref=e554]:
+              - generic [ref=e555]: Mercredi
+              - generic [ref=e556]:
+                - generic [ref=e557]:
+                  - img [ref=e558]
+                  - text: 08:00 — 12:00
+                - generic [ref=e561]:
+                  - img [ref=e562]
+                  - text: 14:00 — 18:00
+            - generic [ref=e565]:
+              - generic [ref=e566]: Jeudi
+              - generic [ref=e567]:
+                - generic [ref=e568]:
+                  - img [ref=e569]
+                  - text: 14:00 — 18:00
+                - generic [ref=e572]:
+                  - img [ref=e573]
+                  - text: 08:00 — 12:00
+            - generic [ref=e576]:
+              - generic [ref=e577]: Vendredi
+              - generic [ref=e578]:
+                - generic [ref=e579]:
+                  - img [ref=e580]
+                  - text: 08:00 — 12:00
+                - generic [ref=e583]:
+                  - img [ref=e584]
+                  - text: 14:00 — 18:00
+            - generic [ref=e587]:
+              - generic [ref=e588]: Samedi
+              - generic [ref=e590]:
+                - img [ref=e591]
+                - text: 08:00 — 12:00
+            - generic [ref=e594]:
+              - generic [ref=e595]: Dimanche
+              - generic [ref=e597]:
+                - img [ref=e598]
+                - text: 09:00 — 17:00
+        - generic [ref=e601]:
+          - generic [ref=e602]:
+            - generic [ref=e603]:
+              - img [ref=e605]
+              - heading "Avis patients" [level=2] [ref=e607]
+            - generic [ref=e608]:
+              - generic [ref=e609]:
+                - generic [ref=e610]: 4.8/5
+                - generic [ref=e611]: 10 avis vérifiés
+              - generic "4.8 sur 5" [ref=e612]:
+                - img [ref=e613]
+                - img [ref=e615]
+                - img [ref=e617]
+                - img [ref=e619]
+                - img [ref=e621]
+          - list [ref=e623]:
+            - listitem [ref=e624]:
+              - img [ref=e625]
+              - generic [ref=e629]:
+                - generic [ref=e630]: A
+                - generic [ref=e631]:
+                  - generic [ref=e632]:
+                    - generic [ref=e633]: Amira S.
+                    - generic "Consultation vérifiée" [ref=e634]:
+                      - img [ref=e635]
+                      - text: Vérifié
+                  - generic [ref=e638]:
+                    - generic "5.0 sur 5" [ref=e639]:
+                      - img [ref=e640]
+                      - img [ref=e642]
+                      - img [ref=e644]
+                      - img [ref=e646]
+                      - img [ref=e648]
+                    - generic [ref=e650]: · il y a 2 semaines
+              - paragraph [ref=e651]: Ponctuel, pédagogue. Je reviendrai sans hésiter.
+            - listitem [ref=e652]:
+              - img [ref=e653]
+              - generic [ref=e657]:
+                - generic [ref=e658]: A
+                - generic [ref=e659]:
+                  - generic [ref=e660]:
+                    - generic [ref=e661]: Anas T.
+                    - generic "Consultation vérifiée" [ref=e662]:
+                      - img [ref=e663]
+                      - text: Vérifié
+                  - generic [ref=e666]:
+                    - generic "4.0 sur 5" [ref=e667]:
+                      - img [ref=e668]
+                      - img [ref=e670]
+                      - img [ref=e672]
+                      - img [ref=e674]
+                      - img [ref=e676]
+                    - generic [ref=e678]: · il y a 2 semaines
+              - paragraph [ref=e679]: Docteur très humain, merci pour votre patience.
+            - listitem [ref=e680]:
+              - img [ref=e681]
+              - generic [ref=e685]:
+                - generic [ref=e686]: "Y"
+                - generic [ref=e687]:
+                  - generic [ref=e688]:
+                    - generic [ref=e689]: Yosra J.
+                    - generic "Consultation vérifiée" [ref=e690]:
+                      - img [ref=e691]
+                      - text: Vérifié
+                  - generic [ref=e694]:
+                    - generic "5.0 sur 5" [ref=e695]:
+                      - img [ref=e696]
+                      - img [ref=e698]
+                      - img [ref=e700]
+                      - img [ref=e702]
+                      - img [ref=e704]
+                    - generic [ref=e706]: · il y a 2 semaines
+              - paragraph [ref=e707]: Consultation de qualité, a pris le temps de bien expliquer.
+            - listitem [ref=e708]:
+              - img [ref=e709]
+              - generic [ref=e713]:
+                - generic [ref=e714]: M
+                - generic [ref=e715]:
+                  - generic [ref=e716]:
+                    - generic [ref=e717]: Mehdi T.
+                    - generic "Consultation vérifiée" [ref=e718]:
+                      - img [ref=e719]
+                      - text: Vérifié
+                  - generic [ref=e722]:
+                    - generic "5.0 sur 5" [ref=e723]:
+                      - img [ref=e724]
+                      - img [ref=e726]
+                      - img [ref=e728]
+                      - img [ref=e730]
+                      - img [ref=e732]
+                    - generic [ref=e734]: · il y a 2 semaines
+              - paragraph [ref=e735]: Très bon contact avec les enfants, mes enfants adorent y aller.
+            - listitem [ref=e736]:
+              - img [ref=e737]
+              - generic [ref=e741]:
+                - generic [ref=e742]: S
+                - generic [ref=e743]:
+                  - generic [ref=e744]:
+                    - generic [ref=e745]: Sami Z.
+                    - generic "Consultation vérifiée" [ref=e746]:
+                      - img [ref=e747]
+                      - text: Vérifié
+                  - generic [ref=e750]:
+                    - generic "4.0 sur 5" [ref=e751]:
+                      - img [ref=e752]
+                      - img [ref=e754]
+                      - img [ref=e756]
+                      - img [ref=e758]
+                      - img [ref=e760]
+                    - generic [ref=e762]: · il y a 2 semaines
+              - paragraph [ref=e763]: Consultation de qualité, a pris le temps de bien expliquer.
+            - listitem [ref=e764]:
+              - img [ref=e765]
+              - generic [ref=e769]:
+                - generic [ref=e770]: H
+                - generic [ref=e771]:
+                  - generic [ref=e772]:
+                    - generic [ref=e773]: Hichem S.
+                    - generic "Consultation vérifiée" [ref=e774]:
+                      - img [ref=e775]
+                      - text: Vérifié
+                  - generic [ref=e778]:
+                    - generic "5.0 sur 5" [ref=e779]:
+                      - img [ref=e780]
+                      - img [ref=e782]
+                      - img [ref=e784]
+                      - img [ref=e786]
+                      - img [ref=e788]
+                    - generic [ref=e790]: · il y a 2 semaines
+              - paragraph [ref=e791]: Rien à redire, parfait. Le meilleur de sa spécialité à mon avis.
+            - listitem [ref=e792]:
+              - img [ref=e793]
+              - generic [ref=e797]:
+                - generic [ref=e798]: S
+                - generic [ref=e799]:
+                  - generic [ref=e800]:
+                    - generic [ref=e801]: Sami M.
+                    - generic "Consultation vérifiée" [ref=e802]:
+                      - img [ref=e803]
+                      - text: Vérifié
+                  - generic [ref=e806]:
+                    - generic "5.0 sur 5" [ref=e807]:
+                      - img [ref=e808]
+                      - img [ref=e810]
+                      - img [ref=e812]
+                      - img [ref=e814]
+                      - img [ref=e816]
+                    - generic [ref=e818]: · il y a 2 semaines
+              - paragraph [ref=e819]: Consultation de qualité, a pris le temps de bien expliquer.
+            - listitem [ref=e820]:
+              - img [ref=e821]
+              - generic [ref=e825]:
+                - generic [ref=e826]: "Y"
+                - generic [ref=e827]:
+                  - generic [ref=e828]:
+                    - generic [ref=e829]: Yosra K.
+                    - generic "Consultation vérifiée" [ref=e830]:
+                      - img [ref=e831]
+                      - text: Vérifié
+                  - generic [ref=e834]:
+                    - generic "5.0 sur 5" [ref=e835]:
+                      - img [ref=e836]
+                      - img [ref=e838]
+                      - img [ref=e840]
+                      - img [ref=e842]
+                      - img [ref=e844]
+                    - generic [ref=e846]: · il y a 2 semaines
+              - paragraph [ref=e847]: Ponctuel, pédagogue. Je reviendrai sans hésiter.
+            - listitem [ref=e848]:
+              - img [ref=e849]
+              - generic [ref=e853]:
+                - generic [ref=e854]: S
+                - generic [ref=e855]:
+                  - generic [ref=e856]:
+                    - generic [ref=e857]: Sarra A.
+                    - generic "Consultation vérifiée" [ref=e858]:
+                      - img [ref=e859]
+                      - text: Vérifié
+                  - generic [ref=e862]:
+                    - generic "5.0 sur 5" [ref=e863]:
+                      - img [ref=e864]
+                      - img [ref=e866]
+                      - img [ref=e868]
+                      - img [ref=e870]
+                      - img [ref=e872]
+                    - generic [ref=e874]: · il y a 2 semaines
+              - paragraph [ref=e875]: Diagnostic précis, traitement efficace. Merci docteur.
+            - listitem [ref=e876]:
+              - img [ref=e877]
+              - generic [ref=e881]:
+                - generic [ref=e882]: A
+                - generic [ref=e883]:
+                  - generic [ref=e884]:
+                    - generic [ref=e885]: Anas S.
+                    - generic "Consultation vérifiée" [ref=e886]:
+                      - img [ref=e887]
+                      - text: Vérifié
+                  - generic [ref=e890]:
+                    - generic "5.0 sur 5" [ref=e891]:
+                      - img [ref=e892]
+                      - img [ref=e894]
+                      - img [ref=e896]
+                      - img [ref=e898]
+                      - img [ref=e900]
+                    - generic [ref=e902]: · il y a 2 semaines
+              - paragraph [ref=e903]: Ponctuel, pédagogue. Je reviendrai sans hésiter.
+        - generic [ref=e904]:
+          - generic [ref=e905]:
+            - generic [ref=e906]:
+              - img [ref=e907]
+              - text: Langues
+            - paragraph [ref=e909]: Français · Arabe · Anglais
+          - generic [ref=e910]:
+            - generic [ref=e911]:
+              - img [ref=e912]
+              - text: Moyens de paiement
+            - paragraph [ref=e915]: Espèces · Carte · CNAM
+  - contentinfo [ref=e110]:
+    - generic [ref=e111]:
+      - generic [ref=e112]:
+        - generic [ref=e113]:
+          - generic [ref=e114]:
+            - img [ref=e116]
+            - generic [ref=e120]: Doktori
+          - paragraph [ref=e121]: La prise de rendez-vous médicaux en Tunisie
+          - link "contact@doktori.tn" [ref=e122] [cursor=pointer]:
+            - /url: mailto:contact@doktori.tn
+            - img [ref=e123]
+            - text: contact@doktori.tn
+        - generic [ref=e126]:
+          - paragraph [ref=e127]: Plateforme
+          - list [ref=e128]:
+            - listitem [ref=e129]:
+              - link "À propos" [ref=e130] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e131]:
+              - link "Blog" [ref=e132] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=e133]:
+              - link "FAQ" [ref=e134] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e135]:
+              - link "SOS Médecin" [ref=e136] [cursor=pointer]:
+                - /url: /sos-medecin
+        - generic [ref=e137]:
+          - paragraph [ref=e138]: Légal
+          - list [ref=e139]:
+            - listitem [ref=e140]:
+              - link "Mentions légales" [ref=e141] [cursor=pointer]:
+                - /url: /mentions-legales
+            - listitem [ref=e142]:
+              - link "CGU" [ref=e143] [cursor=pointer]:
+                - /url: /cgu
+            - listitem [ref=e144]:
+              - link "Politique de confidentialité" [ref=e145] [cursor=pointer]:
+                - /url: /confidentialite
+        - generic [ref=e146]:
+          - paragraph [ref=e147]: Espace médecin
+          - paragraph [ref=e148]: Vous êtes médecin et souhaitez rejoindre Doktori ?
+          - link "Espace médecin" [ref=e149] [cursor=pointer]:
+            - /url: /connexion
+            - img [ref=e150]
+            - text: Espace médecin
+      - paragraph [ref=e155]: © 2025-2026 Random Walkers SUARL · Doktori.tn
+  - region "Notifications alt+T"
+  - button "افتح معالج دوكتي" [ref=e156]:
+    - img [ref=e157]
+    - generic [ref=e161]: "!"
+  - button "Open Next.js Dev Tools" [ref=e167] [cursor=pointer]:
+    - img [ref=e168]
+  - alert [ref=e262]: Dr. Karim Ben Ali
+  - generic [ref=e265]:
+    - img [ref=e267]
+    - generic [ref=e269]:
+      - paragraph [ref=e270]: Installer Doktori sur votre téléphone
+      - paragraph [ref=e271]: Accédez rapidement à vos rendez-vous depuis votre écran d'accueil.
+      - button "Installer l'application" [ref=e272]
+    - button "Fermer" [ref=e273]:
+      - img [ref=e274]

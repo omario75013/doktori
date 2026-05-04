@@ -10,11 +10,19 @@ import {
   Platform,
   ActivityIndicator,
   Alert,
+  Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
+
+type DoctorStatus = {
+  statusMessage: string | null;
+  awayMessage: string | null;
+  statusActiveUntil: string | null;
+  isActive: boolean;
+};
 
 type Kind = "patient" | "team" | "peer";
 
@@ -57,6 +65,7 @@ export default function ChatScreen() {
   const kind: Kind =
     params.kind === "team" ? "team" : params.kind === "peer" ? "peer" : "patient";
   const conversationId = params.id;
+  const { locale } = useLocale();
   const peerName = params.peerName || "Conversation";
 
   const [messages, setMessages] = useState<AnyMsg[]>([]);
@@ -65,6 +74,12 @@ export default function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [selfId, setSelfId] = useState<string | null>(null);
   const listRef = useRef<FlatList<AnyMsg>>(null);
+  const [docStatus, setDocStatus] = useState<DoctorStatus | null>(null);
+  const [showStatusModal, setShowStatusModal] = useState(false);
+  const [statusMsg, setStatusMsg] = useState("");
+  const [awayMsg, setAwayMsg] = useState("");
+  const [statusUntil, setStatusUntil] = useState("");
+  const [savingStatus, setSavingStatus] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -116,6 +131,12 @@ export default function ChatScreen() {
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    api<DoctorStatus>("/api/doctor/status", { noRedirect: true })
+      .then(setDocStatus)
+      .catch(() => null);
+  }, []);
 
   // Light polling for new messages every 4 s while the screen is open.
   useEffect(() => {
@@ -170,7 +191,7 @@ export default function ChatScreen() {
     } catch (e) {
       // Rollback optimistic message
       setMessages((prev) => prev.filter((m) => m.id !== tempId));
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Envoi échoué");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("doctor.chat.sendError"));
     } finally {
       setSending(false);
     }
@@ -197,6 +218,44 @@ export default function ChatScreen() {
     router.navigate("/(doctor)/messagerie" as never);
   }
 
+  async function saveStatus() {
+    setSavingStatus(true);
+    try {
+      const updated = await api<DoctorStatus>("/api/doctor/status", {
+        method: "PATCH",
+        body: {
+          statusMessage: statusMsg.trim() || null,
+          awayMessage: awayMsg.trim() || null,
+          statusActiveUntil: statusUntil || null,
+        },
+        noRedirect: true,
+      });
+      setDocStatus(updated);
+      setShowStatusModal(false);
+    } catch {
+      Alert.alert(t("common.error"), t("doctor.status.saveError"));
+    } finally {
+      setSavingStatus(false);
+    }
+  }
+
+  async function clearStatus() {
+    setSavingStatus(true);
+    try {
+      const updated = await api<DoctorStatus>("/api/doctor/status", {
+        method: "PATCH",
+        body: { statusMessage: null, awayMessage: null, statusActiveUntil: null },
+        noRedirect: true,
+      });
+      setDocStatus(updated);
+      setShowStatusModal(false);
+    } catch {
+      Alert.alert(t("common.error"), t("doctor.status.saveError"));
+    } finally {
+      setSavingStatus(false);
+    }
+  }
+
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
       <Stack.Screen options={{ headerShown: false }} />
@@ -206,10 +265,93 @@ export default function ChatScreen() {
           <Ionicons name="chevron-back" size={24} color={colors.foreground} />
         </Pressable>
         <Text style={styles.headerTitle} numberOfLines={1}>{peerName}</Text>
+        <Pressable
+          onPress={() => {
+            setStatusMsg(docStatus?.statusMessage ?? "");
+            setAwayMsg(docStatus?.awayMessage ?? "");
+            setStatusUntil(docStatus?.statusActiveUntil?.slice(0, 10) ?? "");
+            setShowStatusModal(true);
+          }}
+          hitSlop={10}
+          style={styles.headerBtn}
+        >
+          <Ionicons name="radio-button-on" size={20} color={docStatus?.isActive ? "#F59E0B" : colors.foregroundSecondary} />
+        </Pressable>
         <Pressable onPress={startCall} hitSlop={10} style={styles.headerBtn}>
           <Ionicons name="call" size={22} color={colors.teal} />
         </Pressable>
       </View>
+
+      {/* Status banner */}
+      {docStatus?.isActive && docStatus.statusMessage ? (
+        <Pressable
+          style={styles.statusBanner}
+          onPress={() => {
+            setStatusMsg(docStatus.statusMessage ?? "");
+            setAwayMsg(docStatus.awayMessage ?? "");
+            setStatusUntil(docStatus.statusActiveUntil?.slice(0, 10) ?? "");
+            setShowStatusModal(true);
+          }}
+        >
+          <Ionicons name="information-circle" size={15} color="#92400E" />
+          <Text style={styles.statusBannerText} numberOfLines={1}>
+            {t("doctor.status.banner").replace("{msg}", docStatus.statusMessage)}
+          </Text>
+          <Ionicons name="chevron-forward" size={13} color="#92400E" />
+        </Pressable>
+      ) : null}
+
+      {/* Status edit modal */}
+      <Modal visible={showStatusModal} animationType="slide" transparent presentationStyle="overFullScreen">
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>{t("doctor.status.statusMessage")}</Text>
+              <Pressable onPress={() => setShowStatusModal(false)}>
+                <Ionicons name="close" size={22} color={colors.foreground} />
+              </Pressable>
+            </View>
+            <Text style={styles.modalLabel}>{t("doctor.status.statusMessage")}</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={statusMsg}
+              onChangeText={setStatusMsg}
+              placeholder={t("doctor.status.statusMessage")}
+              placeholderTextColor={colors.foregroundSecondary}
+            />
+            <Text style={styles.modalLabel}>{t("doctor.status.awayMessage")}</Text>
+            <TextInput
+              style={[styles.modalInput, { height: 72, textAlignVertical: "top" }]}
+              value={awayMsg}
+              onChangeText={setAwayMsg}
+              placeholder={t("doctor.status.awayMessage")}
+              placeholderTextColor={colors.foregroundSecondary}
+              multiline
+            />
+            <Text style={styles.modalLabel}>{t("doctor.status.until")}</Text>
+            <TextInput
+              style={styles.modalInput}
+              value={statusUntil}
+              onChangeText={setStatusUntil}
+              placeholder="YYYY-MM-DD"
+              placeholderTextColor={colors.foregroundSecondary}
+              keyboardType="numeric"
+            />
+            <View style={{ flexDirection: "row", gap: spacing.sm, marginTop: spacing.sm }}>
+              <Pressable style={[styles.modalBtn, { backgroundColor: colors.danger, flex: 1 }]} onPress={clearStatus} disabled={savingStatus}>
+                <Text style={styles.modalBtnText}>{t("doctor.status.clear")}</Text>
+              </Pressable>
+              <Pressable style={[styles.modalBtn, { flex: 2 }]} onPress={saveStatus} disabled={savingStatus}>
+                {savingStatus
+                  ? <ActivityIndicator color="#fff" size="small" />
+                  : <Text style={styles.modalBtnText}>{t("doctor.status.save")}</Text>
+                }
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={{ flex: 1 }}
@@ -233,7 +375,7 @@ export default function ChatScreen() {
                   color={colors.foregroundSecondary}
                 />
                 <Text style={styles.emptyText}>
-                  Aucun message encore. Envoyez le premier.
+                  {t("doctor.chat.noMessages")}
                 </Text>
               </View>
             }
@@ -245,8 +387,8 @@ export default function ChatScreen() {
           <Pressable
             onPress={() =>
               Alert.alert(
-                "Envoi de fichiers",
-                "L'envoi d'images et documents arrive bientôt sur mobile."
+                t("doctor.chat.attachmentTitle"),
+                t("doctor.chat.attachmentDesc")
               )
             }
             style={styles.attachBtn}
@@ -256,7 +398,7 @@ export default function ChatScreen() {
           <TextInput
             value={text}
             onChangeText={setText}
-            placeholder="Message…"
+            placeholder={t("doctor.chat.placeholder")}
             placeholderTextColor={colors.foregroundSecondary}
             multiline
             style={styles.input}
@@ -332,6 +474,30 @@ const styles = StyleSheet.create({
     backgroundColor: colors.bg,
   },
   headerBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
+  statusBanner: {
+    flexDirection: "row", alignItems: "center", gap: spacing.xs,
+    backgroundColor: "#FEF3C7", paddingHorizontal: spacing.md, paddingVertical: spacing.xs,
+    borderBottomWidth: 1, borderBottomColor: "#FDE68A",
+  },
+  statusBannerText: { flex: 1, fontSize: 12, color: "#92400E", fontWeight: "600" },
+  modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.4)", justifyContent: "flex-end" },
+  modalSheet: {
+    backgroundColor: colors.bg, borderTopLeftRadius: radii.xl, borderTopRightRadius: radii.xl,
+    padding: spacing.xl, gap: spacing.md, paddingBottom: spacing["3xl"],
+  },
+  modalHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  modalTitle: { fontSize: 17, fontWeight: "700", color: colors.foreground },
+  modalLabel: { fontSize: 13, fontWeight: "600", color: colors.foreground },
+  modalInput: {
+    borderWidth: 1, borderColor: colors.border, borderRadius: radii.md,
+    paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
+    fontSize: 14, color: colors.foreground, backgroundColor: colors.bgSecondary,
+  },
+  modalBtn: {
+    backgroundColor: colors.teal, borderRadius: radii.md,
+    paddingVertical: spacing.md, alignItems: "center",
+  },
+  modalBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
   headerTitle: {
     flex: 1,
     fontSize: 16,

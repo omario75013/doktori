@@ -4,8 +4,9 @@ import {
   doctorSchedules,
   patients,
   appointmentTypePractices,
+  doctorDaysOff,
 } from "@doktori/db";
-import { eq, and, gte, lte, not, inArray, sql } from "drizzle-orm";
+import { eq, and, gte, lte, not, inArray, isNull, or, sql } from "drizzle-orm";
 
 // A patient cancellation is flagged as "last-minute" when it lands within this
 // window before the appointment start. Bumped into patients.lastMinuteCancelCount.
@@ -61,6 +62,27 @@ export async function getAvailableSlots(
     );
 
   if (schedules.length === 0) return [];
+
+  // Check if the requested date falls within any declared days-off
+  const daysOff = await db
+    .select({ id: doctorDaysOff.id })
+    .from(doctorDaysOff)
+    .where(
+      and(
+        eq(doctorDaysOff.doctorId, doctorId),
+        lte(doctorDaysOff.startDate, date),
+        gte(doctorDaysOff.endDate, date),
+        or(
+          isNull(doctorDaysOff.practiceId),
+          allowedPracticeIds && allowedPracticeIds.length > 0
+            ? inArray(doctorDaysOff.practiceId, allowedPracticeIds)
+            : undefined
+        )
+      )
+    )
+    .limit(1);
+
+  if (daysOff.length > 0) return [];
 
   const dayStart = new Date(`${date}T00:00:00`);
   const dayEnd = new Date(`${date}T23:59:59`);

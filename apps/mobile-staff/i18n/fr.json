@@ -326,7 +326,39 @@
       "switchRole": "Changer de rôle",
       "switchRoleMessage": "Vous allez retourner au choix du rôle (déconnexion).",
       "continueBtn": "Continuer",
-      "spaceLabel": "Espace Médecin"
+      "spaceLabel": "Espace Médecin",
+      "conges": "Congés",
+      "congesDesc": "Déclarer des périodes d'absence"
+    },
+    "conges": {
+      "title": "Congés",
+      "add": "Déclarer des congés",
+      "from": "Du",
+      "to": "Au",
+      "reason": "Motif",
+      "reasonPlaceholder": "Optionnel",
+      "save": "Enregistrer",
+      "upcoming": "À venir",
+      "past": "Passés",
+      "empty": "Aucun congé déclaré",
+      "deleteTitle": "Supprimer ce congé ?",
+      "deleteConfirm": "Cette période sera de nouveau disponible à la réservation.",
+      "errorDates": "Veuillez saisir les deux dates.",
+      "errorEndBeforeStart": "La date de fin doit être après la date de début.",
+      "errorSave": "Impossible d'enregistrer.",
+      "errorDelete": "Impossible de supprimer."
+    },
+    "status": {
+      "banner": "Statut : {msg}",
+      "edit": "Modifier",
+      "statusMessage": "Message de statut",
+      "awayMessage": "Réponse automatique",
+      "until": "Jusqu'au",
+      "clear": "Effacer le statut",
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "noStatus": "Aucun statut actif",
+      "saveError": "Impossible de sauvegarder le statut."
     },
     "profil": {
       "title": "Mon profil",
@@ -362,7 +394,13 @@
       "modeBoth": "Les deux",
       "modeDomicile": "Domicile",
       "shareWhatsapp": "WhatsApp",
-      "shareCopy": "Copier"
+      "shareCopy": "Copier",
+      "defaultTitle": "Profil Doktori"
+    },
+    "conditions": {
+      "title": "Conditions d'utilisation",
+      "docTitle": "Conditions générales d'utilisation",
+      "updated": "Dernière mise à jour : 1er janvier 2026"
     },
     "parametres": {
       "title": "Paramètres",
@@ -552,7 +590,23 @@
       "deactivateConfirm": "{name} ne pourra plus se connecter.",
       "validationRequired": "Nom, email et mot de passe obligatoires",
       "passwordTooShort": "Mot de passe : 8 caractères minimum",
-      "nameRequired": "Nom requis"
+      "nameRequired": "Nom requis",
+      "perm": {
+        "rendezVous": "Rendez-vous",
+        "rendezVousCreate": "Créer RDV",
+        "rendezVousEdit": "Modifier RDV",
+        "rendezVousCancel": "Annuler RDV",
+        "patients": "Patients (voir)",
+        "patientsCreate": "Créer patient",
+        "patientsEdit": "Modifier patient",
+        "patientsDelete": "Supprimer patient",
+        "messagerie": "Messagerie",
+        "wallet": "Wallet",
+        "factures": "Factures",
+        "motifs": "Motifs",
+        "cabinets": "Cabinets",
+        "teleconsult": "Téléconsult"
+      }
     },
     "motifs": {
       "title": "Motifs",
@@ -1152,6 +1206,16 @@
       "noAppt": "Aucun rendez-vous",
       "rdv": "RDV",
       "yearNoAppt": "Aucun RDV",
+      "freeDayTitle": "Journée libre",
+      "freeDayText": "Aucun rendez-vous ce jour",
+      "freeWeekTitle": "Semaine libre",
+      "freeWeekText": "Aucun rendez-vous cette semaine",
+      "yearTotal": "Total RDV",
+      "yearConfirmed": "Confirmés",
+      "yearPending": "En attente",
+      "weekFree": "Semaine libre",
+      "noApptWeek": "Aucun rendez-vous cette semaine",
+      "conge": "Congé",
       "errorLoad": "Impossible de charger le planning"
     }
   },

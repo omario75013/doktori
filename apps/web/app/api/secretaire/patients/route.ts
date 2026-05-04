@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { requireDoctorOrSecretaryUnified } from "@/lib/require-auth";
 import { db, patients } from "@doktori/db";
+import { assertPlanLimit, PlanLimitError } from "@/lib/plan-gates";
 import { eq, sql } from "drizzle-orm";
 
 // GET /api/secretaire/patients
@@ -55,7 +56,7 @@ export async function POST(req: NextRequest) {
 
   const normalizedPhone = phone.replace(/\s+/g, "").trim();
 
-  // Check for existing patient with same phone
+  // Check for existing patient with same phone (linking doesn't count against plan limit)
   const [existing] = await db
     .select()
     .from(patients)
@@ -77,6 +78,18 @@ export async function POST(req: NextRequest) {
 
   if (typeof dateOfBirth === "string" && dateOfBirth.trim().length > 0) {
     insertValues.dateOfBirth = dateOfBirth.trim();
+  }
+
+  try {
+    await assertPlanLimit(secretary.doctorId, "patients");
+  } catch (e) {
+    if (e instanceof PlanLimitError) {
+      return NextResponse.json(
+        { error: "PLAN_LIMIT_REACHED", resource: e.resource, current: e.current, max: e.max },
+        { status: 402 }
+      );
+    }
+    throw e;
   }
 
   const [created] = await db.insert(patients).values(insertValues).returning();

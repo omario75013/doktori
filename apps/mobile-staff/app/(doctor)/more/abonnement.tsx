@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Card, Kv, Loader, formatMillimes, formatDate, Banner } from "./_ui";
 
 type Subscription = {
@@ -24,6 +24,7 @@ const PLAN_LABELS: Record<string, string> = {
 };
 
 export default function Abonnement() {
+  const { locale } = useLocale();
   const [sub, setSub] = useState<Subscription | undefined>(undefined);
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function Abonnement() {
   if (sub === undefined) {
     return (
       <>
-        <Stack.Screen options={{ title: "Abonnement" }} />
+        <Stack.Screen options={{ title: t("doctor.abonnement.title") }} />
         <Loader />
       </>
     );
@@ -51,20 +52,19 @@ export default function Abonnement() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "Abonnement" }} />
+      <Stack.Screen options={{ title: t("doctor.abonnement.title") }} />
       <Screen>
         {!sub ? (
           <>
             <View style={[styles.hero, { backgroundColor: "#E5E7EB" }]}>
               <Ionicons name="card" size={32} color={colors.foregroundSecondary} />
               <Text style={[styles.heroPlan, { color: colors.foreground }]}>
-                Plan Gratuit
+                {t("doctor.abonnement.freePlan")}
               </Text>
-              <Text style={styles.heroSub}>Aucun abonnement actif.</Text>
+              <Text style={styles.heroSub}>{t("doctor.abonnement.noSubscription")}</Text>
             </View>
             <Banner>
-              Passez à un plan payant pour déverrouiller téléconsult, réseau, SMS
-              illimités et plus. Édition depuis le portail web.
+              {t("doctor.abonnement.noSubDesc")}
             </Banner>
           </>
         ) : (
@@ -78,26 +78,26 @@ export default function Abonnement() {
               </Text>
             </View>
 
-            <Card title="Statut">
-              <Kv label="Statut" value={labelStatus(sub.status)} />
-              <Kv label="Commencé le" value={formatDate(sub.startsAt)} />
+            <Card title={t("doctor.abonnement.status")}>
+              <Kv label={t("doctor.abonnement.status")} value={labelStatus(sub.status)} />
+              <Kv label={t("doctor.abonnement.startedOn")} value={formatDate(sub.startsAt)} />
               {endsAt && (
                 <Kv
-                  label="Expire le"
+                  label={t("doctor.abonnement.expiresOn")}
                   value={`${formatDate(endsAt)}${
                     daysLeft !== null ? ` · ${daysLeft} j restant` : ""
                   }`}
                 />
               )}
               <Kv
-                label="Cycle"
-                value={sub.billingCycle === "annual" ? "Annuel" : "Mensuel"}
+                label={t("doctor.abonnement.cycle")}
+                value={sub.billingCycle === "annual" ? t("doctor.abonnement.annual") : t("doctor.abonnement.monthly")}
               />
             </Card>
 
             {daysLeft !== null && daysLeft < 7 && (
               <Banner tone="warn">
-                Votre abonnement expire bientôt. Renouvelez depuis le portail web.
+                {t("doctor.abonnement.expiringSoon")}
               </Banner>
             )}
           </>

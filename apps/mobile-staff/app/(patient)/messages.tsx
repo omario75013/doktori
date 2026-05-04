@@ -89,7 +89,7 @@ export default function PatientMessages() {
               onPress={() =>
                 router.push({
                   pathname: "/(patient)/chat/[id]" as never,
-                  params: { id: item.id, doctorName: item.doctorName },
+                  params: { id: item.id, doctorName: item.doctorName, doctorId: item.doctorId },
                 })
               }
             >

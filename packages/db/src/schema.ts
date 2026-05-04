@@ -83,6 +83,10 @@ export const doctors = pgTable(
     totpEnrolledAt: timestamp("totp_enrolled_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    // Status / away message (doctor chat)
+    statusMessage: text("status_message"),
+    awayMessage: text("away_message"),
+    statusActiveUntil: timestamp("status_active_until", { withTimezone: true }),
   },
   (table) => [
     uniqueIndex("doctors_email_idx").on(table.email),
@@ -867,6 +871,12 @@ export const subscriptionPlans = pgTable("subscription_plans", {
   features: jsonb("features").$type<string[]>().notNull().default([]),
   isActive: boolean("is_active").notNull().default(true),
   displayOrder: integer("display_order").notNull().default(0),
+  // Plan limits (null = unlimited)
+  maxAppointmentsPerMonth: integer("max_appointments_per_month"),
+  maxSmsPerMonth: integer("max_sms_per_month"),
+  maxPatientsTotal: integer("max_patients_total"),
+  // Feature keys enabled on this plan e.g. ["teleconsult","stats","wallet"]
+  enabledFeatures: jsonb("enabled_features").$type<string[]>().notNull().default([]),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -1086,6 +1096,9 @@ export const messages = pgTable(
     fileUrl: text("file_url"),
     fileName: varchar("file_name", { length: 255 }),
     readAt: timestamp("read_at", { withTimezone: true }),
+    // "system" = automated system message; "auto_reply" = doctor away auto-reply
+    type: varchar("type", { length: 20 }).notNull().default("message"),
+    isAutoReply: boolean("is_auto_reply").notNull().default(false),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
@@ -1511,6 +1524,47 @@ export const templateAuditLogs = pgTable("template_audit_logs", {
 
 export type TemplateAuditLog = typeof templateAuditLogs.$inferSelect;
 export type NewTemplateAuditLog = typeof templateAuditLogs.$inferInsert;
+
+// ── Doctor Days-Off ──────────────────────────────────────────────────────────
+
+export const doctorDaysOff = pgTable(
+  "doctor_days_off",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    // null = applies to all practices
+    practiceId: uuid("practice_id").references(() => doctorPractices.id, { onDelete: "cascade" }),
+    startDate: date("start_date").notNull(),
+    endDate: date("end_date").notNull(),
+    reason: text("reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("doctor_days_off_doctor_idx").on(table.doctorId, table.startDate),
+  ]
+);
+
+// ── Plan Usage (monthly counters) ─────────────────────────────────────────────
+
+export const planUsage = pgTable(
+  "plan_usage",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id")
+      .notNull()
+      .references(() => doctors.id, { onDelete: "cascade" }),
+    // Format: "YYYY-MM" e.g. "2026-04"
+    month: varchar("month", { length: 7 }).notNull(),
+    appointmentsCount: integer("appointments_count").notNull().default(0),
+    smsCount: integer("sms_count").notNull().default(0),
+    patientsCount: integer("patients_count").notNull().default(0),
+  },
+  (table) => [
+    uniqueIndex("plan_usage_doctor_month_idx").on(table.doctorId, table.month),
+  ]
+);
 
 // ── Drizzle relations ─────────────────────────────────────────────────────────
 

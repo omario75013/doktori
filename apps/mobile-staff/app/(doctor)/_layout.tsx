@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { router, Tabs, useSegments } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { api, colors, radii, spacing } from "@doktori/mobile-core";
+import { api, colors, radii, spacing, t, useLocale } from "@doktori/mobile-core";
 import {
   SecretaryQuickActions,
   iconForName,
@@ -36,6 +36,7 @@ const CHIP_H = 60;
 const CHIP_GAP = 8;
 
 export default function DoctorLayout() {
+  useLocale(); // re-render on locale change so tab labels update
   const segments = useSegments();
   const moreActive = segments.includes("more" as never);
 
@@ -140,24 +141,24 @@ export default function DoctorLayout() {
       >
         <Tabs.Screen
           name="home"
-          options={{ title: "Accueil", tabBarIcon: icon("home") }}
+          options={{ title: t("doctor.tabs.home"), tabBarIcon: icon("home") }}
         />
         <Tabs.Screen
           name="calendrier"
-          options={{ title: "Calendrier", tabBarIcon: icon("calendar") }}
+          options={{ title: t("doctor.tabs.calendar"), tabBarIcon: icon("calendar") }}
         />
         <Tabs.Screen
           name="patients"
-          options={{ title: "Patients", tabBarIcon: icon("people") }}
+          options={{ title: t("doctor.tabs.patients"), tabBarIcon: icon("people") }}
         />
         <Tabs.Screen
           name="messagerie"
-          options={{ title: "Messagerie", tabBarIcon: icon("chatbubbles") }}
+          options={{ title: t("doctor.tabs.messages"), tabBarIcon: icon("chatbubbles") }}
         />
         <Tabs.Screen
           name="plus"
           options={{
-            title: "Plus",
+            title: t("doctor.tabs.more"),
             tabBarIcon: icon("grid"),
             tabBarButton: (props) => (
               <PlusTabButton
@@ -357,7 +358,7 @@ function PlusTabButton({
           ]}
           numberOfLines={1}
         >
-          Plus
+          {t("doctor.tabs.more")}
         </Text>
       </View>
       <Animated.View

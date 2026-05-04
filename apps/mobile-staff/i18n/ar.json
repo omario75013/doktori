@@ -326,7 +326,39 @@
       "switchRole": "تغيير الدور",
       "switchRoleMessage": "ستعود إلى اختيار الدور (تسجيل الخروج).",
       "continueBtn": "متابعة",
-      "spaceLabel": "فضاء الطبيب"
+      "spaceLabel": "فضاء الطبيب",
+      "conges": "إجازات",
+      "congesDesc": "الإعلان عن فترات الغياب"
+    },
+    "conges": {
+      "title": "الإجازات",
+      "add": "الإعلان عن إجازة",
+      "from": "من",
+      "to": "إلى",
+      "reason": "السبب",
+      "reasonPlaceholder": "اختياري",
+      "save": "حفظ",
+      "upcoming": "القادمة",
+      "past": "السابقة",
+      "empty": "لا توجد إجازات مسجّلة",
+      "deleteTitle": "حذف هذه الإجازة؟",
+      "deleteConfirm": "ستصبح هذه الفترة متاحة للحجز من جديد.",
+      "errorDates": "يرجى إدخال التاريخين.",
+      "errorEndBeforeStart": "يجب أن يكون تاريخ النهاية بعد تاريخ البداية.",
+      "errorSave": "تعذّر الحفظ.",
+      "errorDelete": "تعذّر الحذف."
+    },
+    "status": {
+      "banner": "الحالة: {msg}",
+      "edit": "تعديل",
+      "statusMessage": "رسالة الحالة",
+      "awayMessage": "الرد التلقائي",
+      "until": "حتى",
+      "clear": "مسح الحالة",
+      "save": "حفظ",
+      "cancel": "إلغاء",
+      "noStatus": "لا توجد حالة نشطة",
+      "saveError": "تعذّر حفظ الحالة."
     },
     "profil": {
       "title": "ملفي الشخصي",
@@ -362,7 +394,13 @@
       "modeBoth": "كلاهما",
       "modeDomicile": "منزل",
       "shareWhatsapp": "واتساب",
-      "shareCopy": "نسخ"
+      "shareCopy": "نسخ",
+      "defaultTitle": "ملف Doktori"
+    },
+    "conditions": {
+      "title": "شروط الاستخدام",
+      "docTitle": "الشروط العامة للاستخدام",
+      "updated": "آخر تحديث: 1 يناير 2026"
     },
     "parametres": {
       "title": "الإعدادات",
@@ -552,7 +590,23 @@
       "deactivateConfirm": "{name} لن تتمكن من تسجيل الدخول.",
       "validationRequired": "الاسم والبريد الإلكتروني وكلمة المرور إلزامية",
       "passwordTooShort": "كلمة المرور: 8 أحرف على الأقل",
-      "nameRequired": "الاسم مطلوب"
+      "nameRequired": "الاسم مطلوب",
+      "perm": {
+        "rendezVous": "المواعيد",
+        "rendezVousCreate": "إنشاء موعد",
+        "rendezVousEdit": "تعديل موعد",
+        "rendezVousCancel": "إلغاء موعد",
+        "patients": "المرضى (عرض)",
+        "patientsCreate": "إنشاء مريض",
+        "patientsEdit": "تعديل مريض",
+        "patientsDelete": "حذف مريض",
+        "messagerie": "الرسائل",
+        "wallet": "المحفظة",
+        "factures": "الفواتير",
+        "motifs": "الأسباب",
+        "cabinets": "العيادات",
+        "teleconsult": "التشاور عن بُعد"
+      }
     },
     "motifs": {
       "title": "الأسباب",
@@ -1152,6 +1206,16 @@
       "noAppt": "لا مواعيد",
       "rdv": "موعد",
       "yearNoAppt": "لا مواعيد",
+      "freeDayTitle": "يوم فارغ",
+      "freeDayText": "لا مواعيد هذا اليوم",
+      "freeWeekTitle": "أسبوع فارغ",
+      "freeWeekText": "لا مواعيد هذا الأسبوع",
+      "yearTotal": "مجموع المواعيد",
+      "yearConfirmed": "مؤكدة",
+      "yearPending": "في الانتظار",
+      "weekFree": "أسبوع خالٍ",
+      "noApptWeek": "لا مواعيد هذا الأسبوع",
+      "conge": "إجازة",
       "errorLoad": "تعذّر تحميل الجدول"
     }
   },

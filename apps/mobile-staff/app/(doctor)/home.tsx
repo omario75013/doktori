@@ -11,8 +11,8 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import Svg, { Rect, Circle, Path, Text as SvgText } from "react-native-svg";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import Svg, { Circle, Path, Text as SvgText } from "react-native-svg";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 
 type Appointment = {
   id: string;
@@ -31,13 +31,15 @@ type DoctorMe = { id: string; name: string; email: string };
 type Secretary = { id: string; name: string; photoUrl: string | null; isActive: boolean };
 type BillingInfo = { plan: string; smsUsed: number; smsLimit: number; renewsAt: string | null };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "À confirmer",
-  confirmed: "Confirmé",
-  completed: "Terminé",
-  cancelled: "Annulé",
-  no_show: "Absent",
-};
+function getStatusLabels(): Record<string, string> {
+  return {
+    pending: t("doctor.home.toConfirm"),
+    confirmed: t("doctor.home.confirmed"),
+    completed: t("doctor.home.done"),
+    cancelled: t("doctor.home.cancelled"),
+    no_show: t("doctor.home.absent"),
+  };
+}
 
 const STATUS_TONES: Record<string, { bg: string; fg: string }> = {
   pending: { bg: "#FED7AA", fg: "#9A3412" },
@@ -48,6 +50,8 @@ const STATUS_TONES: Record<string, { bg: string; fg: string }> = {
 };
 
 export default function Home() {
+  const { locale } = useLocale();
+  const STATUS_LABELS = getStatusLabels();
   const [me, setMe] = useState<DoctorMe | null>(null);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [secretaries, setSecretaries] = useState<Secretary[]>([]);
@@ -164,9 +168,9 @@ export default function Home() {
         }
       >
         <View>
-          <Text style={styles.greeting}>Bonjour, Dr. {lastName}</Text>
+          <Text style={styles.greeting}>{t("doctor.home.greeting")}{lastName}</Text>
           <Text style={styles.sub}>
-            {today.toLocaleDateString("fr-FR", {
+            {today.toLocaleDateString(locale === "ar" ? "ar-TN" : "fr-FR", {
               weekday: "long",
               day: "numeric",
               month: "long",
@@ -175,10 +179,10 @@ export default function Home() {
         </View>
 
         <View style={styles.kpis}>
-          <Kpi label="Aujourd'hui" value={String(todayAppts.length)} />
-          <Kpi label="Terminés" value={String(completedTodayCount)} />
-          <Kpi label="À venir" value={String(pendingTodayCount)} />
-          <Kpi label="Semaine" value={String(upcomingCount)} />
+          <Kpi label={t("doctor.home.today")} value={String(todayAppts.length)} />
+          <Kpi label={t("doctor.home.completed")} value={String(completedTodayCount)} />
+          <Kpi label={t("doctor.home.upcoming")} value={String(pendingTodayCount)} />
+          <Kpi label={t("doctor.home.week")} value={String(upcomingCount)} />
         </View>
 
         {nextAppt ? (
@@ -186,11 +190,11 @@ export default function Home() {
             style={styles.nextCard}
             onPress={() => router.push("/(doctor)/calendrier")}
           >
-            <Text style={styles.nextLabel}>Prochain rendez-vous</Text>
+            <Text style={styles.nextLabel}>{t("doctor.home.nextAppointment")}</Text>
             <View style={styles.nextBody}>
               <View style={styles.nextTime}>
                 <Text style={styles.nextTimeText}>
-                  {new Date(nextAppt.startsAt).toLocaleTimeString("fr-FR", {
+                  {new Date(nextAppt.startsAt).toLocaleTimeString(locale === "ar" ? "ar-TN" : "fr-FR", {
                     hour: "2-digit",
                     minute: "2-digit",
                   })}
@@ -208,9 +212,9 @@ export default function Home() {
         ) : todayAppts.length === 0 ? (
           <View style={styles.emptyCard}>
             <Ionicons name="sunny-outline" size={28} color={colors.teal} />
-            <Text style={styles.emptyTitle}>Journée libre</Text>
+            <Text style={styles.emptyTitle}>{t("doctor.home.freeDay")}</Text>
             <Text style={styles.emptySub}>
-              Aucun rendez-vous prévu aujourd&apos;hui.
+              {t("doctor.home.noAppointmentsToday")}
             </Text>
           </View>
         ) : null}
@@ -219,9 +223,9 @@ export default function Home() {
 
         <View style={styles.chartCard}>
           <View style={styles.chartHead}>
-            <Text style={styles.chartTitle}>Rendez-vous — 7 derniers jours</Text>
+            <Text style={styles.chartTitle}>{t("doctor.home.weeklyChart")}</Text>
             <Text style={styles.chartTotal}>
-              {weeklyCounts.reduce((s, c) => s + c.count, 0)} total
+              {weeklyCounts.reduce((s, c) => s + c.count, 0)} {t("doctor.home.total")}
             </Text>
           </View>
           <BarChart data={weeklyCounts} />
@@ -229,7 +233,7 @@ export default function Home() {
 
         <View style={styles.chartCard}>
           <View style={styles.chartHead}>
-            <Text style={styles.chartTitle}>Statut — 30 derniers jours</Text>
+            <Text style={styles.chartTitle}>{t("doctor.home.monthlyStatus")}</Text>
           </View>
           <StatusDonut distribution={statusDistribution} />
         </View>
@@ -238,9 +242,9 @@ export default function Home() {
         {secretaries.length > 0 && (
           <View style={styles.sectionBlock}>
             <View style={styles.sectionHead}>
-              <Text style={styles.sectionTitle}>Mon équipe</Text>
+              <Text style={styles.sectionTitle}>{t("doctor.home.myTeam")}</Text>
               <Pressable onPress={() => router.push("/(doctor)/more/secretaires" as never)}>
-                <Text style={styles.seeAll}>Gérer</Text>
+                <Text style={styles.seeAll}>{t("doctor.home.manage")}</Text>
               </Pressable>
             </View>
             <View style={styles.teamRow}>
@@ -261,7 +265,7 @@ export default function Home() {
                   <View style={[styles.teamAvatar, { backgroundColor: colors.bgSecondary }]}>
                     <Text style={[styles.teamInitials, { color: colors.foregroundSecondary }]}>+{secretaries.length - 4}</Text>
                   </View>
-                  <Text style={styles.teamName}>autres</Text>
+                  <Text style={styles.teamName}>{t("doctor.home.others")}</Text>
                 </View>
               )}
             </View>
@@ -275,12 +279,12 @@ export default function Home() {
             onPress={() => router.push("/(doctor)/more/abonnement" as never)}
           >
             <View style={styles.planLeft}>
-              <Text style={styles.planLabel}>Plan actuel</Text>
+              <Text style={styles.planLabel}>{t("doctor.home.currentPlan")}</Text>
               <Text style={styles.planName}>{billing.plan}</Text>
               {billing.renewsAt && (
                 <Text style={styles.planRenew}>
-                  Renouvellement :{" "}
-                  {new Date(billing.renewsAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long" })}
+                  {t("doctor.home.renewal")}{" "}
+                  {new Date(billing.renewsAt).toLocaleDateString(locale === "ar" ? "ar-TN" : "fr-FR", { day: "numeric", month: "long" })}
                 </Text>
               )}
             </View>
@@ -288,7 +292,7 @@ export default function Home() {
               <Text style={styles.planSmsValue}>
                 {billing.smsLimit >= 999999 ? "∞" : `${billing.smsUsed}/${billing.smsLimit}`}
               </Text>
-              <Text style={styles.planSmsLabel}>SMS</Text>
+              <Text style={styles.planSmsLabel}>{t("doctor.home.sms")}</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.foregroundSecondary} />
           </Pressable>
@@ -296,7 +300,7 @@ export default function Home() {
 
         {todayAppts.length > 0 && (
           <View style={{ gap: spacing.sm }}>
-            <Text style={styles.sectionTitle}>Agenda du jour</Text>
+            <Text style={styles.sectionTitle}>{t("doctor.home.todayAgenda")}</Text>
             {todayAppts.slice(0, 5).map((a) => (
               <ApptRow key={a.id} appt={a} />
             ))}
@@ -306,7 +310,7 @@ export default function Home() {
                 style={styles.moreBtn}
               >
                 <Text style={styles.moreBtnText}>
-                  Voir les {todayAppts.length - 5} autres
+                  {t("doctor.home.seeMore")}{todayAppts.length - 5} {t("doctor.home.others")}
                 </Text>
                 <Ionicons name="chevron-forward" size={14} color={colors.teal} />
               </Pressable>
@@ -329,10 +333,10 @@ function Kpi({ label, value }: { label: string; value: string }) {
 
 function QuickAccess() {
   const items: Array<{ icon: React.ComponentProps<typeof Ionicons>["name"]; label: string; path: string }> = [
-    { icon: "calendar-number", label: "Rendez-vous", path: "/(doctor)/more/rendez-vous" },
-    { icon: "stats-chart", label: "Statistiques", path: "/(doctor)/more/stats" },
-    { icon: "wallet", label: "Wallet", path: "/(doctor)/more/wallet" },
-    { icon: "person", label: "Mon profil", path: "/(doctor)/more/profil" },
+    { icon: "calendar-number", label: t("doctor.home.appointments"), path: "/(doctor)/more/rendez-vous" },
+    { icon: "stats-chart", label: t("doctor.home.stats"), path: "/(doctor)/more/stats" },
+    { icon: "wallet", label: t("doctor.home.wallet"), path: "/(doctor)/more/wallet" },
+    { icon: "person", label: t("doctor.home.myProfile"), path: "/(doctor)/more/profil" },
   ];
   return (
     <View style={styles.shortcuts}>
@@ -349,148 +353,87 @@ function QuickAccess() {
 }
 
 function BarChart({ data }: { data: Array<{ date: Date; count: number }> }) {
-  const width = 300;
-  const height = 120;
-  const padding = 20;
-  const barW = (width - padding * 2) / data.length - 6;
   const max = Math.max(1, ...data.map((d) => d.count));
   const DOW = ["D", "L", "M", "M", "J", "V", "S"];
-  const today = new Date().toDateString();
+  const todayStr = new Date().toDateString();
 
   return (
-    <View style={{ alignItems: "center" }}>
-      <Svg width={width} height={height}>
-        {data.map((d, i) => {
-          const h = ((height - padding - 20) * d.count) / max;
-          const x = padding + i * (barW + 6);
-          const y = height - padding - h;
-          const isToday = d.date.toDateString() === today;
-          return (
-            <Rect
-              key={i}
-              x={x}
-              y={y}
-              width={barW}
-              height={Math.max(h, 2)}
-              rx={4}
-              fill={isToday ? colors.teal : colors.tealLight}
+    <View style={{ flexDirection: "row", alignItems: "flex-end", height: 100, gap: 4, paddingHorizontal: 4 }}>
+      {data.map((d, i) => {
+        const isToday = d.date.toDateString() === todayStr;
+        const barH = Math.max(4, (72 * d.count) / max);
+        return (
+          <View key={i} style={{ flex: 1, alignItems: "center", justifyContent: "flex-end", gap: 2 }}>
+            {d.count > 0 && (
+              <Text style={{ fontSize: 9, fontWeight: "700", color: colors.foreground }}>
+                {d.count}
+              </Text>
+            )}
+            <View
+              style={{
+                width: "100%",
+                height: barH,
+                borderRadius: 4,
+                backgroundColor: isToday ? colors.teal : colors.tealLight,
+              }}
             />
-          );
-        })}
-        {data.map((d, i) => {
-          const x = padding + i * (barW + 6) + barW / 2;
-          return (
-            <SvgText
-              key={`label-${i}`}
-              x={x}
-              y={height - 6}
-              fontSize={10}
-              textAnchor="middle"
-              fill={colors.foregroundSecondary}
-            >
+            <Text style={{ fontSize: 10, color: colors.foregroundSecondary }}>
               {DOW[d.date.getDay()]}
-            </SvgText>
-          );
-        })}
-        {data.map((d, i) => {
-          if (d.count === 0) return null;
-          const h = ((height - padding - 20) * d.count) / max;
-          const x = padding + i * (barW + 6) + barW / 2;
-          const y = height - padding - h - 4;
-          return (
-            <SvgText
-              key={`val-${i}`}
-              x={x}
-              y={y}
-              fontSize={9}
-              textAnchor="middle"
-              fill={colors.foreground}
-              fontWeight="700"
-            >
-              {d.count}
-            </SvgText>
-          );
-        })}
-      </Svg>
+            </Text>
+          </View>
+        );
+      })}
     </View>
   );
 }
 
 function StatusDonut({ distribution }: { distribution: Record<string, number> }) {
+  const statusLabels = getStatusLabels();
   const total = Object.values(distribution).reduce((s, v) => s + v, 0);
   const entries = Object.entries(distribution).sort(([, a], [, b]) => b - a);
-  const size = 140;
+  const size = 130;
   const cx = size / 2;
   const cy = size / 2;
-  const r = 55;
-  const stroke = 18;
+  const r = 48;
+  const strokeW = 18;
 
-  let start = -Math.PI / 2;
+  let startAngle = -Math.PI / 2;
   const segments = entries.map(([status, count]) => {
     const frac = count / (total || 1);
-    const end = start + frac * Math.PI * 2;
-    const x1 = cx + Math.cos(start) * r;
-    const y1 = cy + Math.sin(start) * r;
-    const x2 = cx + Math.cos(end) * r;
-    const y2 = cy + Math.sin(end) * r;
-    const large = frac > 0.5 ? 1 : 0;
-    const path = `M ${x1} ${y1} A ${r} ${r} 0 ${large} 1 ${x2} ${y2}`;
-    start = end;
-    return { status, count, path, color: STATUS_TONES[status]?.fg ?? colors.teal };
+    const endAngle = startAngle + frac * Math.PI * 2;
+    const x1 = cx + Math.cos(startAngle) * r;
+    const y1 = cy + Math.sin(startAngle) * r;
+    const x2 = cx + Math.cos(endAngle) * r;
+    const y2 = cy + Math.sin(endAngle) * r;
+    const largeArc = frac > 0.5 ? 1 : 0;
+    const d = `M ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2}`;
+    startAngle = endAngle;
+    return { status, count, d, color: STATUS_TONES[status]?.fg ?? colors.teal };
   });
 
   return (
     <View style={styles.donutRow}>
       {total === 0 ? (
-        <Text style={styles.emptyText}>Pas encore de données.</Text>
+        <Text style={styles.emptyText}>{t("common.noData")}</Text>
       ) : (
         <>
           <Svg width={size} height={size}>
-            <Circle
-              cx={cx}
-              cy={cy}
-              r={r}
-              stroke={colors.border}
-              strokeWidth={stroke}
-              fill="none"
-            />
+            <Circle cx={cx} cy={cy} r={r} stroke={colors.border} strokeWidth={strokeW} fill="none" />
             {segments.map((s, i) => (
-              <Path
-                key={i}
-                d={s.path}
-                stroke={s.color}
-                strokeWidth={stroke}
-                fill="none"
-                strokeLinecap="round"
-              />
+              <Path key={i} d={s.d} stroke={s.color} strokeWidth={strokeW} fill="none" strokeLinecap="round" />
             ))}
-            <SvgText
-              x={cx}
-              y={cy - 2}
-              fontSize={22}
-              textAnchor="middle"
-              fill={colors.foreground}
-              fontWeight="800"
-            >
+            <SvgText x={cx} y={cy - 4} fontSize={20} textAnchor="middle" fill={colors.foreground} fontWeight="800">
               {total}
             </SvgText>
-            <SvgText
-              x={cx}
-              y={cy + 14}
-              fontSize={10}
-              textAnchor="middle"
-              fill={colors.foregroundSecondary}
-            >
-              RDV
+            <SvgText x={cx} y={cy + 13} fontSize={9} textAnchor="middle" fill={colors.foregroundSecondary}>
+              {t("doctor.home.rdv")}
             </SvgText>
           </Svg>
-          <View style={{ flex: 1, gap: 4 }}>
+          <View style={{ flex: 1, gap: 5 }}>
             {segments.map((s) => (
               <View key={s.status} style={styles.legendItem}>
                 <View style={[styles.legendDot, { backgroundColor: s.color }]} />
-                <Text style={styles.legendLabel}>
-                  {STATUS_LABELS[s.status] ?? s.status}
-                </Text>
+                <Text style={styles.legendLabel}>{statusLabels[s.status] ?? s.status}</Text>
                 <Text style={styles.legendValue}>{s.count}</Text>
               </View>
             ))}
@@ -502,8 +445,10 @@ function StatusDonut({ distribution }: { distribution: Record<string, number> })
 }
 
 function ApptRow({ appt }: { appt: Appointment }) {
+  const statusLabels = getStatusLabels();
+  const { locale } = useLocale();
   const start = new Date(appt.startsAt);
-  const hhmm = start.toLocaleTimeString("fr-FR", {
+  const hhmm = start.toLocaleTimeString(locale === "ar" ? "ar-TN" : "fr-FR", {
     hour: "2-digit",
     minute: "2-digit",
   });
@@ -519,7 +464,7 @@ function ApptRow({ appt }: { appt: Appointment }) {
       </View>
       <View style={[styles.badge, { backgroundColor: tone.bg }]}>
         <Text style={[styles.badgeText, { color: tone.fg }]}>
-          {STATUS_LABELS[appt.status] ?? appt.status}
+          {statusLabels[appt.status] ?? appt.status}
         </Text>
       </View>
     </Pressable>

@@ -1,0 +1,339 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: Doktori
+        - button "Réduire la barre latérale" [ref=e6]:
+          - img [ref=e7]
+      - navigation [ref=e9]:
+        - generic [ref=e10]:
+          - paragraph [ref=e11]: Principal
+          - list [ref=e12]:
+            - listitem [ref=e13]:
+              - link "لوحة التحكم" [ref=e14] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e16]
+                - generic [ref=e21]: لوحة التحكم
+            - listitem [ref=e22]:
+              - link "Vérification" [ref=e23] [cursor=pointer]:
+                - /url: /verification
+                - img [ref=e25]
+                - generic [ref=e28]: Vérification
+            - listitem [ref=e29]:
+              - link "التقويم" [ref=e30] [cursor=pointer]:
+                - /url: /calendrier
+                - img [ref=e32]
+                - generic [ref=e34]: التقويم
+            - listitem [ref=e35]:
+              - link "المواعيد" [ref=e36] [cursor=pointer]:
+                - /url: /rendez-vous
+                - img [ref=e38]
+                - generic [ref=e42]: المواعيد
+        - generic [ref=e43]:
+          - paragraph [ref=e44]: Patients
+          - list [ref=e45]:
+            - listitem [ref=e46]:
+              - link "مرضاي" [ref=e47] [cursor=pointer]:
+                - /url: /patients
+                - img [ref=e49]
+                - generic [ref=e54]: مرضاي
+        - generic [ref=e55]:
+          - paragraph [ref=e56]: Réseau
+          - list [ref=e57]:
+            - listitem [ref=e58]:
+              - link "Réseau médecins" [ref=e59] [cursor=pointer]:
+                - /url: /reseau
+                - img [ref=e61]
+                - generic [ref=e66]: Réseau médecins
+            - listitem [ref=e67]:
+              - link "Référencements" [ref=e68] [cursor=pointer]:
+                - /url: /reseau/referencements
+                - img [ref=e70]
+                - generic [ref=e73]: Référencements
+        - generic [ref=e74]:
+          - paragraph [ref=e75]: Communication
+          - list [ref=e76]:
+            - listitem [ref=e77]:
+              - link "صندوق البريد" [ref=e78] [cursor=pointer]:
+                - /url: /messagerie
+                - img [ref=e80]
+                - generic [ref=e83]: صندوق البريد
+            - listitem [ref=e84]:
+              - link "Équipe" [ref=e85] [cursor=pointer]:
+                - /url: /messagerie-equipe
+                - img [ref=e87]
+                - generic [ref=e99]: Équipe
+        - generic [ref=e100]:
+          - paragraph [ref=e101]: Cabinet
+          - list [ref=e102]:
+            - listitem [ref=e103]:
+              - link "أسباب الاستشارة" [ref=e104] [cursor=pointer]:
+                - /url: /motifs
+                - img [ref=e106]
+                - generic [ref=e109]: أسباب الاستشارة
+            - listitem [ref=e110]:
+              - link "العيادات" [ref=e111] [cursor=pointer]:
+                - /url: /cabinets
+                - img [ref=e113]
+                - generic [ref=e117]: العيادات
+            - listitem [ref=e118]:
+              - link "زيارات منزلية" [ref=e119] [cursor=pointer]:
+                - /url: /domicile
+                - img [ref=e121]
+                - generic [ref=e124]: زيارات منزلية
+            - listitem [ref=e125]:
+              - link "الاتفاقيات" [ref=e126] [cursor=pointer]:
+                - /url: /conventions
+                - img [ref=e128]
+                - generic [ref=e132]: الاتفاقيات
+            - listitem [ref=e133]:
+              - link "CNAM" [ref=e134] [cursor=pointer]:
+                - /url: /cnam
+                - img [ref=e136]
+                - generic [ref=e139]: CNAM
+            - listitem [ref=e140]:
+              - link "SOS طبيب" [ref=e141] [cursor=pointer]:
+                - /url: /sos-medecin
+                - img [ref=e143]
+                - generic [ref=e148]: SOS طبيب
+            - listitem [ref=e149]:
+              - link "الاستشارة عن بُعد" [ref=e150] [cursor=pointer]:
+                - /url: /teleconsultation
+                - img [ref=e152]
+                - generic [ref=e155]: الاستشارة عن بُعد
+            - listitem [ref=e156]:
+              - link "السكرتيرات" [ref=e157] [cursor=pointer]:
+                - /url: /secretaires
+                - img [ref=e159]
+                - generic [ref=e171]: السكرتيرات
+        - generic [ref=e172]:
+          - paragraph [ref=e173]: Finances
+          - list [ref=e174]:
+            - listitem [ref=e175]:
+              - link "المحفظة" [ref=e176] [cursor=pointer]:
+                - /url: /wallet
+                - img [ref=e178]
+                - generic [ref=e181]: المحفظة
+            - listitem [ref=e182]:
+              - link "الفواتير" [ref=e183] [cursor=pointer]:
+                - /url: /factures
+                - img [ref=e185]
+                - generic [ref=e188]: الفواتير
+            - listitem [ref=e189]:
+              - link "الاشتراك" [ref=e190] [cursor=pointer]:
+                - /url: /abonnement
+                - img [ref=e192]
+                - generic [ref=e194]: الاشتراك
+        - generic [ref=e195]:
+          - paragraph [ref=e196]: Moi
+          - list [ref=e197]:
+            - listitem [ref=e198]:
+              - link "الإحصائيات" [ref=e199] [cursor=pointer]:
+                - /url: /stats
+                - img [ref=e201]
+                - generic [ref=e203]: الإحصائيات
+            - listitem [ref=e204]:
+              - link "الإحالة" [ref=e205] [cursor=pointer]:
+                - /url: /parrainage
+                - img [ref=e207]
+                - generic [ref=e211]: الإحالة
+            - listitem [ref=e212]:
+              - link "ملفي الشخصي" [ref=e213] [cursor=pointer]:
+                - /url: /profil
+                - img [ref=e215]
+                - generic [ref=e219]: ملفي الشخصي
+            - listitem [ref=e220]:
+              - link "Paramètres" [ref=e221] [cursor=pointer]:
+                - /url: /profil/parametres
+                - img [ref=e223]
+                - generic [ref=e226]: Paramètres
+    - generic [ref=e227]:
+      - banner [ref=e228]:
+        - generic [ref=e230]: Doktori
+        - generic [ref=e231]:
+          - group "Changer de langue" [ref=e232]:
+            - button "Passer en français" [ref=e233]: FR
+            - button "التبديل إلى العربية" [disabled] [pressed] [ref=e234]: AR
+          - button "Notifications" [ref=e236]:
+            - img [ref=e237]
+            - generic [ref=e240]: "1"
+          - button "Ouvrir le menu profil" [ref=e242]:
+            - img "Dr. Karim Ben Ali" [ref=e243]
+            - img [ref=e244]
+      - main [ref=e246]:
+        - generic [ref=e248]:
+          - dialog "أعدّ فضاء طبيبك" [ref=e250]:
+            - button "إغلاق" [ref=e251]:
+              - img [ref=e252]
+            - generic [ref=e255]:
+              - img [ref=e258]
+              - paragraph [ref=e261]: مرحباً بك في دكتوري
+              - heading "أعدّ فضاء طبيبك" [level=2] [ref=e262]
+            - generic [ref=e263]:
+              - button "الخطوة 1" [ref=e264]
+              - button "الخطوة 2" [ref=e265]
+              - button "الخطوة 3" [ref=e266]
+              - button "الخطوة 4" [ref=e267]
+            - generic [ref=e269]:
+              - generic [ref=e270]:
+                - img [ref=e272]
+                - heading "Complétez votre profil" [level=3] [ref=e275]
+              - paragraph [ref=e276]: Ajoutez une photo, votre bio et votre parcours pour rassurer vos patients.
+            - generic [ref=e279]:
+              - link "Éditer mon profil" [ref=e280] [cursor=pointer]:
+                - /url: /profil/parcours
+                - img [ref=e281]
+                - text: Éditer mon profil
+              - generic [ref=e283]:
+                - button "تخطي ←" [ref=e284]
+                - generic [ref=e285]: 1 / 4
+          - generic [ref=e286]:
+            - generic [ref=e287]:
+              - heading "مرحباً, Dr. Dr. Karim Ben Ali" [level=1] [ref=e288]
+              - paragraph [ref=e289]: إليك نظرة عامة على نشاطك اليوم.
+            - generic [ref=e290]:
+              - link "Calendrier" [ref=e291] [cursor=pointer]:
+                - /url: /calendrier
+                - img [ref=e292]
+                - text: Calendrier
+              - link "Rendez-vous" [ref=e294] [cursor=pointer]:
+                - /url: /rendez-vous
+                - text: Rendez-vous
+                - img [ref=e295]
+          - generic [ref=e297]:
+            - generic [ref=e300] [cursor=pointer]:
+              - generic [ref=e301]:
+                - generic [ref=e302]: اليوم
+                - generic [ref=e303]: "1"
+                - generic [ref=e304]: مواعيد
+              - img [ref=e306]
+            - generic [ref=e310] [cursor=pointer]:
+              - generic [ref=e311]:
+                - generic [ref=e312]: في انتظار التأكيد
+                - generic [ref=e313]: "0"
+                - generic [ref=e314]: قيد الانتظار
+              - img [ref=e316]
+            - generic [ref=e321] [cursor=pointer]:
+              - generic [ref=e322]:
+                - generic [ref=e323]: الغياب هذا الشهر
+                - generic [ref=e324]: "0"
+                - generic [ref=e325]: فائتة
+              - img [ref=e327]
+            - generic [ref=e331] [cursor=pointer]:
+              - generic [ref=e332]:
+                - generic [ref=e333]: الاستشارات عن بُعد
+                - generic [ref=e334]: "2"
+                - generic [ref=e335]: هذا الشهر · فيديو
+              - img [ref=e337]
+          - link "الرصيد المتاح 0.000 DT المحفظة" [ref=e340] [cursor=pointer]:
+            - /url: /wallet
+            - generic [ref=e343]:
+              - generic [ref=e344]:
+                - generic [ref=e345]: الرصيد المتاح
+                - generic [ref=e346]: 0.000 DT
+                - generic [ref=e347]: المحفظة
+              - img [ref=e349]
+          - generic [ref=e354]:
+            - generic [ref=e355]:
+              - generic [ref=e356]: SMS ce mois
+              - generic [ref=e357]: 0 / 200
+              - generic [ref=e359]: 200 SMS restants
+            - img [ref=e361]
+          - generic [ref=e363]:
+            - generic [ref=e364]:
+              - img [ref=e365]
+              - generic [ref=e368]: Statistiques rapides
+            - generic [ref=e369]:
+              - generic [ref=e370]:
+                - img [ref=e372]
+                - generic [ref=e377]:
+                  - generic [ref=e378]: "16"
+                  - generic [ref=e379]: Patients total
+              - generic [ref=e380]:
+                - img [ref=e382]
+                - generic [ref=e384]:
+                  - generic [ref=e385]: "7"
+                  - generic [ref=e386]: RDV ce mois
+              - generic [ref=e387]:
+                - img [ref=e389]
+                - generic [ref=e391]:
+                  - generic [ref=e392]: 100%
+                  - generic [ref=e393]: Taux de réalisation
+              - generic [ref=e394]:
+                - img [ref=e396]
+                - generic [ref=e398]:
+                  - generic [ref=e399]: "4.8"
+                  - generic [ref=e400]: Note moyenne
+          - generic [ref=e401]:
+            - link "Nouveau RDV" [ref=e403] [cursor=pointer]:
+              - /url: /rendez-vous
+              - img [ref=e404]
+              - text: Nouveau RDV
+            - link "Ajouter un patient" [ref=e407] [cursor=pointer]:
+              - /url: /patients
+              - img [ref=e408]
+              - text: Ajouter un patient
+            - link "Mon calendrier" [ref=e412] [cursor=pointer]:
+              - /url: /calendrier
+              - img [ref=e413]
+              - text: Mon calendrier
+            - link "Mes statistiques" [ref=e416] [cursor=pointer]:
+              - /url: /stats
+              - img [ref=e417]
+              - text: Mes statistiques
+          - generic [ref=e418]:
+            - generic [ref=e419]:
+              - generic [ref=e420]:
+                - img [ref=e422]
+                - generic [ref=e426]: Salle d'attente
+              - generic [ref=e427]: "0"
+            - generic [ref=e428]: Aucun patient en attente pour le moment.
+          - generic [ref=e429]:
+            - heading "مواعيد اليوم" [level=2] [ref=e433]
+            - generic [ref=e435]:
+              - generic [ref=e436]:
+                - generic [ref=e437]:
+                  - generic [ref=e438]: 14:40
+                  - generic [ref=e439]: —
+                  - text: Ashraf hasni
+                  - generic [ref=e440]: العيادة
+                - generic [ref=e441]: "+21696654547"
+              - generic [ref=e442]: مؤكد
+          - generic [ref=e443]:
+            - generic [ref=e444]:
+              - heading "المواعيد القادمة (7 أيام)" [level=2] [ref=e447]
+              - link "عرض الكل →" [ref=e448] [cursor=pointer]:
+                - /url: /rendez-vous
+            - generic [ref=e450]:
+              - generic [ref=e453]:
+                - generic [ref=e454]:
+                  - generic [ref=e455]: mar. 28 avr. 09:00
+                  - generic [ref=e456]: —
+                  - text: Patient Test Doc
+                  - generic [ref=e457]: العيادة
+                - generic [ref=e458]: Consultation générale
+              - generic [ref=e459]: ملغى
+          - generic [ref=e460]:
+            - heading "Activité récente" [level=2] [ref=e464]
+            - generic [ref=e465]:
+              - generic [ref=e468]:
+                - paragraph [ref=e469]: Patient Test Doc a annulé son RDV du 28 avr. à 09:00
+                - paragraph [ref=e470]: 27 avr. à 11:49
+              - generic [ref=e473]:
+                - paragraph [ref=e474]: "Nouveau RDV confirmé : New test — 24 avr. à 17:00"
+                - paragraph [ref=e475]: 24 avr. à 15:02
+              - generic [ref=e478]:
+                - paragraph [ref=e479]: "Nouveau RDV confirmé : Ashraf hasni — 27 avr. à 14:40"
+                - paragraph [ref=e480]: 22 avr. à 18:34
+              - generic [ref=e483]:
+                - paragraph [ref=e484]: "Nouveau RDV confirmé : ashraf hasni — 21 avr. à 15:20"
+                - paragraph [ref=e485]: 21 avr. à 15:06
+              - generic [ref=e488]:
+                - paragraph [ref=e489]: "Consultation terminée : Revenue Test"
+                - paragraph [ref=e490]: 18 avr. à 17:18
+    - button "Notifier la secrétaire" [ref=e491]:
+      - img [ref=e492]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e500] [cursor=pointer]:
+    - img [ref=e501]
+  - alert [ref=e504]

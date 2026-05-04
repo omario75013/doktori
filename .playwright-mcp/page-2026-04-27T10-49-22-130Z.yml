@@ -1,0 +1,56 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e30]:
+      - link "Doktori .tn" [ref=e31] [cursor=pointer]:
+        - /url: /mon-espace
+        - generic [ref=e32]: Doktori
+        - generic [ref=e33]: .tn
+      - generic [ref=e34]:
+        - group "Changer de langue" [ref=e35]:
+          - button "Passer en français" [ref=e36]: FR
+          - button "التبديل إلى العربية" [disabled] [pressed] [ref=e37]: AR
+        - button "Menu" [ref=e39]:
+          - generic [ref=e40]: PT
+          - img [ref=e41]
+    - generic [ref=e5]:
+      - generic [ref=e8]:
+        - generic [ref=e43]:
+          - img [ref=e45]
+          - generic [ref=e47]:
+            - heading "Mes rendez-vous" [level=1] [ref=e48]
+            - paragraph [ref=e49]: 1 rendez-vous au total
+        - generic [ref=e50]:
+          - link "Mes documents" [ref=e51] [cursor=pointer]:
+            - /url: /mes-documents
+          - link "Dossier médical" [ref=e52] [cursor=pointer]:
+            - /url: /dossier-medical
+          - button "Déconnexion" [ref=e53]
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - button "À venir" [ref=e99]
+          - button "Passés" [ref=e58]
+          - button "Annulés 1" [active] [ref=e100]:
+            - text: Annulés
+            - generic [ref=e101]: "1"
+        - generic [ref=e117]:
+          - generic [ref=e118]:
+            - generic [ref=e119]:
+              - generic [ref=e120]: Dr. Karim Ben Ali
+              - generic [ref=e121]: Cabinet
+              - generic [ref=e122]: Annulé
+            - paragraph [ref=e123]: Médecin Généraliste
+            - generic [ref=e124]:
+              - img [ref=e125]
+              - generic [ref=e128]: mardi 28 avril à 09:00
+            - generic [ref=e129]:
+              - img [ref=e130]
+              - generic [ref=e133]: 12 Avenue Habib Bourguiba, La Marsa
+            - paragraph [ref=e134]: Rendez-vous annulé
+          - link "Reprendre RDV" [ref=e136] [cursor=pointer]:
+            - /url: /medecin/dr-karim-ben-ali-generaliste-la-marsa
+            - img [ref=e137]
+            - text: Reprendre RDV
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e26] [cursor=pointer]:
+    - img [ref=e27]
+  - alert [ref=e87]

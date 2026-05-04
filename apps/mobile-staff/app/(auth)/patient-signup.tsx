@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 
 const PATIENT_TOKEN_KEY = "doktori.patient.token";
 
@@ -29,10 +29,11 @@ export default function PatientSignup() {
   const [password, setPassword] = useState("");
   const [dob, setDob] = useState("");
   const [loading, setLoading] = useState(false);
+  const { locale } = useLocale();
 
   async function submit() {
     if (!firstName.trim() || !lastName.trim() || !phone.trim() || !password) {
-      Alert.alert("Champs requis", "Prénom, nom, téléphone et mot de passe obligatoires");
+      Alert.alert(t("patientSignup.missingFields"), t("patientSignup.missingFieldsDesc"));
       return;
     }
     setLoading(true);
@@ -55,7 +56,7 @@ export default function PatientSignup() {
       await SecureStore.setItemAsync(PATIENT_TOKEN_KEY, res.token);
       router.replace("/(patient)/home");
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Erreur inconnue");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("patientSignup.unknownError"));
     } finally {
       setLoading(false);
     }
@@ -69,80 +70,80 @@ export default function PatientSignup() {
       >
         <ScrollView contentContainerStyle={styles.scroll} keyboardShouldPersistTaps="handled">
           <View style={styles.header}>
-            <Text style={styles.brand}>Doktori</Text>
-            <Text style={styles.tagline}>Créer un compte patient</Text>
+            <Text style={styles.brand}>{t("patientAuth.appName")}</Text>
+            <Text style={styles.tagline}>{t("patientSignup.title")}</Text>
           </View>
 
           <View style={styles.card}>
             <View style={styles.row}>
               <View style={[styles.field, { flex: 1 }]}>
-                <Text style={styles.label}>Prénom</Text>
+                <Text style={styles.label}>{t("patientSignup.firstName")}</Text>
                 <TextInput
                   style={styles.input}
                   value={firstName}
                   onChangeText={setFirstName}
-                  placeholder="Karim"
+                  placeholder={t("patientSignup.firstNamePlaceholder")}
                   autoCapitalize="words"
                 />
               </View>
               <View style={[styles.field, { flex: 1 }]}>
-                <Text style={styles.label}>Nom</Text>
+                <Text style={styles.label}>{t("patientSignup.lastName")}</Text>
                 <TextInput
                   style={styles.input}
                   value={lastName}
                   onChangeText={setLastName}
-                  placeholder="Ben Ali"
+                  placeholder={t("patientSignup.lastNamePlaceholder")}
                   autoCapitalize="words"
                 />
               </View>
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>Téléphone</Text>
+              <Text style={styles.label}>{t("patientSignup.phone")}</Text>
               <View style={styles.phoneRow}>
                 <View style={styles.prefix}>
-                  <Text style={styles.prefixText}>+216</Text>
+                  <Text style={styles.prefixText}>{t("patientSignup.phonePrefix")}</Text>
                 </View>
                 <TextInput
                   style={[styles.input, styles.phoneInput]}
                   value={phone}
                   onChangeText={setPhone}
-                  placeholder="22 123 456"
+                  placeholder={t("patientSignup.phonePlaceholder")}
                   keyboardType="phone-pad"
                 />
               </View>
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>Email (optionnel)</Text>
+              <Text style={styles.label}>{t("patientSignup.emailOptional")}</Text>
               <TextInput
                 style={styles.input}
                 value={email}
                 onChangeText={setEmail}
-                placeholder="votre@email.com"
+                placeholder={t("patientSignup.emailPlaceholder")}
                 keyboardType="email-address"
                 autoCapitalize="none"
               />
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>Mot de passe</Text>
+              <Text style={styles.label}>{t("patientSignup.password")}</Text>
               <TextInput
                 style={styles.input}
                 value={password}
                 onChangeText={setPassword}
-                placeholder="••••••••"
+                placeholder={t("patientSignup.passwordPlaceholder")}
                 secureTextEntry
               />
             </View>
 
             <View style={styles.field}>
-              <Text style={styles.label}>Date de naissance (JJ/MM/AAAA)</Text>
+              <Text style={styles.label}>{t("patientSignup.dob")}</Text>
               <TextInput
                 style={styles.input}
                 value={dob}
                 onChangeText={setDob}
-                placeholder="01/01/1990"
+                placeholder={t("patientSignup.dobPlaceholder")}
                 keyboardType="numeric"
                 maxLength={10}
               />
@@ -157,12 +158,12 @@ export default function PatientSignup() {
               disabled={loading}
             >
               <Text style={styles.primaryBtnText}>
-                {loading ? "Création…" : "Créer mon compte"}
+                {loading ? t("patientSignup.creating") : t("patientSignup.createAccount")}
               </Text>
             </Pressable>
 
             <Pressable onPress={() => router.back()} style={styles.link}>
-              <Text style={styles.linkText}>Déjà un compte ? Se connecter</Text>
+              <Text style={styles.linkText}>{t("patientSignup.alreadyAccount")}</Text>
             </Pressable>
           </View>
         </ScrollView>

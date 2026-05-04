@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Loader, Empty, formatDate } from "./_ui";
 
 type Appointment = {
@@ -50,29 +50,35 @@ const STATUS_TONES: Record<string, { bg: string; fg: string }> = {
   cancel_requested:      { bg: "#FEF2F2", fg: "#B91C1C" },
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending:               "À confirmer",
-  confirmed:             "Confirmé",
-  completed:             "Terminé",
-  cancelled:             "Annulé",
-  no_show:               "Absent",
-  reschedule_requested:  "Décalage demandé",
-  cancel_requested:      "Annulation demandée",
-};
+function getStatusLabel(status: string): string {
+  const map: Record<string, string> = {
+    pending:               t("doctor.rdv.statusToConfirm"),
+    confirmed:             t("doctor.rdv.statusConfirmed"),
+    completed:             t("doctor.rdv.statusCompleted"),
+    cancelled:             t("doctor.rdv.statusCancelled"),
+    no_show:               t("doctor.rdv.statusAbsent"),
+    reschedule_requested:  t("doctor.rdv.rescheduleRequest"),
+    cancel_requested:      t("doctor.rdv.cancelRequest"),
+  };
+  return map[status] ?? status;
+}
 
-const FILTERS = [
-  { id: "all",       label: "Tous" },
-  { id: "pending",   label: "À confirmer" },
-  { id: "confirmed", label: "Confirmés" },
-  { id: "completed", label: "Terminés" },
-  { id: "cancelled", label: "Annulés" },
-  { id: "no_show",   label: "Absents" },
-  { id: "requests",  label: "Demandes" },
-] as const;
+function getFilters() {
+  return [
+    { id: "all",       label: t("doctor.rdv.tabAll") },
+    { id: "pending",   label: t("doctor.rdv.tabToConfirm") },
+    { id: "confirmed", label: t("doctor.rdv.tabConfirmed") },
+    { id: "completed", label: t("doctor.rdv.tabCompleted") },
+    { id: "cancelled", label: t("doctor.rdv.tabCancelled") },
+    { id: "no_show",   label: t("doctor.rdv.tabAbsent") },
+    { id: "requests",  label: t("doctor.rdv.tabRequests") },
+  ] as const;
+}
 
-type FilterId = (typeof FILTERS)[number]["id"];
+type FilterId = "all" | "pending" | "confirmed" | "completed" | "cancelled" | "no_show" | "requests";
 
 export default function AllRendezVous() {
+  const { locale } = useLocale();
   const [all, setAll] = useState<Appointment[]>([]);
   const [requests, setRequests] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,7 +115,7 @@ export default function AllRendezVous() {
       });
       setRequests((prev) => prev.filter((r) => r.id !== id));
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Erreur");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("common.error"));
     } finally {
       setRespondingId(null);
     }
@@ -134,7 +140,7 @@ export default function AllRendezVous() {
   if (loading) {
     return (
       <>
-        <Stack.Screen options={{ title: "Rendez-vous" }} />
+        <Stack.Screen options={{ title: t("doctor.rdv.title") }} />
         <Loader />
       </>
     );
@@ -142,12 +148,12 @@ export default function AllRendezVous() {
 
   return (
     <>
-      <Stack.Screen options={{ title: `Rendez-vous (${all.length})` }} />
+      <Stack.Screen options={{ title: `${t("doctor.rdv.title")} (${all.length})` }} />
       <View style={{ flex: 1, backgroundColor: colors.bg }}>
         <View style={styles.searchWrap}>
           <Ionicons name="search" size={16} color={colors.foregroundSecondary} />
           <TextInput
-            placeholder="Patient, téléphone, motif…"
+            placeholder={t("doctor.rdv.searchPlaceholder")}
             placeholderTextColor={colors.foregroundSecondary}
             value={query}
             onChangeText={setQuery}
@@ -167,7 +173,7 @@ export default function AllRendezVous() {
             horizontal
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={{ gap: spacing.xs, paddingHorizontal: spacing.lg }}
-            data={FILTERS}
+            data={getFilters()}
             keyExtractor={(f) => f.id}
             renderItem={({ item }) => (
               <Pressable
@@ -199,7 +205,7 @@ export default function AllRendezVous() {
                 tintColor={colors.teal}
               />
             }
-            ListEmptyComponent={<Empty icon="checkmark-circle-outline" title="Aucune demande" />}
+            ListEmptyComponent={<Empty icon="checkmark-circle-outline" title={t("doctor.rdv.noRequests")} />}
             renderItem={({ item }) => (
               <RequestRow
                 appt={item}
@@ -221,7 +227,7 @@ export default function AllRendezVous() {
                 tintColor={colors.teal}
               />
             }
-            ListEmptyComponent={<Empty icon="calendar-outline" title="Aucun rendez-vous" />}
+            ListEmptyComponent={<Empty icon="calendar-outline" title={t("doctor.rdv.noAppointments")} />}
             renderItem={({ item }) => (
               <ApptRow appt={item} onPress={() => setSelected(item)} />
             )}
@@ -280,7 +286,7 @@ function RequestRow({
         )}
         <View style={[styles.badge, { backgroundColor: tone.bg, marginTop: 4, alignSelf: "flex-start" }]}>
           <Text style={[styles.badgeText, { color: tone.fg }]}>
-            {STATUS_LABELS[appt.status] ?? appt.status}
+            {getStatusLabel(appt.status)}
           </Text>
         </View>
         <View style={styles.requestActions}>
@@ -292,7 +298,7 @@ function RequestRow({
             {isAccepting ? (
               <ActivityIndicator size="small" color="#FFF" />
             ) : (
-              <Text style={styles.acceptBtnText}>Accepter</Text>
+              <Text style={styles.acceptBtnText}>{t("doctor.rdv.accept")}</Text>
             )}
           </Pressable>
           <Pressable
@@ -303,7 +309,7 @@ function RequestRow({
             {isDeclining ? (
               <ActivityIndicator size="small" color={colors.foreground} />
             ) : (
-              <Text style={styles.declineBtnText}>Décliner</Text>
+              <Text style={styles.declineBtnText}>{t("doctor.rdv.decline")}</Text>
             )}
           </Pressable>
         </View>
@@ -330,7 +336,7 @@ function ApptRow({ appt, onPress }: { appt: Appointment; onPress: () => void }) 
       <View style={{ alignItems: "flex-end", gap: 4 }}>
         <View style={[styles.badge, { backgroundColor: tone.bg }]}>
           <Text style={[styles.badgeText, { color: tone.fg }]}>
-            {STATUS_LABELS[appt.status] ?? appt.status}
+            {getStatusLabel(appt.status)}
           </Text>
         </View>
         <Ionicons name="chevron-forward" size={14} color={colors.foregroundSecondary} />
@@ -357,10 +363,10 @@ function ApptDetailModal({
   const tone = STATUS_TONES[appt.status] ?? { bg: colors.bgSecondary, fg: colors.teal };
 
   async function updateStatus(status: string, label: string) {
-    Alert.alert(`Marquer comme "${label}"`, `Confirmer pour ${appt.patientName} ?`, [
-      { text: "Annuler", style: "cancel" },
+    Alert.alert(t("doctor.rdv.markAs", { label }), t("doctor.rdv.confirmFor", { name: appt.patientName }), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Confirmer",
+        text: t("common.confirm"),
         onPress: async () => {
           setBusy(status);
           try {
@@ -370,7 +376,7 @@ function ApptDetailModal({
             });
             onChanged();
           } catch (e) {
-            Alert.alert("Erreur", e instanceof Error ? e.message : "Mise à jour échouée");
+            Alert.alert(t("common.error"), e instanceof Error ? e.message : t("doctor.rdv.updateFailed"));
           } finally {
             setBusy(null);
           }
@@ -388,7 +394,7 @@ function ApptDetailModal({
       });
       onChanged();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Sauvegarde échouée");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("common.error"));
     } finally {
       setSaving(false);
       setEditOpen(false);
@@ -396,10 +402,10 @@ function ApptDetailModal({
   }
 
   const actions = [
-    { status: "confirmed", label: "Confirmer", icon: "checkmark-circle" as const, color: colors.teal },
-    { status: "completed", label: "Terminé", icon: "checkmark-done-circle" as const, color: "#3B82F6" },
-    { status: "no_show",   label: "Absent", icon: "person-remove" as const, color: "#EF4444" },
-    { status: "cancelled", label: "Annuler", icon: "close-circle" as const, color: "#6B7280" },
+    { status: "confirmed", label: t("doctor.rdv.statusConfirmed"), icon: "checkmark-circle" as const, color: colors.teal },
+    { status: "completed", label: t("doctor.rdv.statusCompleted"), icon: "checkmark-done-circle" as const, color: "#3B82F6" },
+    { status: "no_show",   label: t("doctor.rdv.statusAbsent"), icon: "person-remove" as const, color: "#EF4444" },
+    { status: "cancelled", label: t("doctor.rdv.statusCancelled"), icon: "close-circle" as const, color: "#6B7280" },
   ].filter((a) => a.status !== appt.status);
 
   return (
@@ -418,7 +424,7 @@ function ApptDetailModal({
         {/* Status badge */}
         <View style={[styles.statusRow, { backgroundColor: tone.bg }]}>
           <Text style={[styles.statusLabel, { color: tone.fg }]}>
-            {STATUS_LABELS[appt.status] ?? appt.status}
+            {getStatusLabel(appt.status)}
           </Text>
         </View>
 
@@ -430,25 +436,25 @@ function ApptDetailModal({
           <InfoRow icon="time" label="Heure">
             {start.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
           </InfoRow>
-          <InfoRow icon="call" label="Téléphone">{appt.patientPhone}</InfoRow>
+          <InfoRow icon="call" label={t("doctor.patients.fieldPhone")}>{appt.patientPhone}</InfoRow>
           {appt.type && (
-            <InfoRow icon="videocam" label="Type">
-              {{ cabinet: "Cabinet", teleconsult: "Téléconsultation", domicile: "Domicile" }[appt.type] ?? appt.type}
+            <InfoRow icon="videocam" label={t("doctor.motifs.type")}>
+              {{ cabinet: t("doctor.motifs.typeCabinet"), teleconsult: t("doctor.teleconsult.title"), domicile: "Domicile" }[appt.type] ?? appt.type}
             </InfoRow>
           )}
           {appt.reason && (
-            <InfoRow icon="document-text" label="Motif">{appt.reason}</InfoRow>
+            <InfoRow icon="document-text" label={t("doctor.rdv.reasonLabel")}>{appt.reason}</InfoRow>
           )}
         </View>
 
         {/* Edit reason */}
         {editOpen && (
           <View style={styles.editBox}>
-            <Text style={styles.editLabel}>Motif de consultation</Text>
+            <Text style={styles.editLabel}>{t("doctor.rdv.reasonLabel")}</Text>
             <TextInput
               value={editReason}
               onChangeText={setEditReason}
-              placeholder="Ex: Contrôle, Renouvellement ordonnance…"
+              placeholder={t("doctor.rdv.reasonPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               style={styles.editInput}
               multiline
@@ -456,17 +462,17 @@ function ApptDetailModal({
             />
             <View style={{ flexDirection: "row", gap: spacing.sm }}>
               <Pressable onPress={() => setEditOpen(false)} style={styles.editCancelBtn}>
-                <Text style={styles.editCancelText}>Annuler</Text>
+                <Text style={styles.editCancelText}>{t("common.cancel")}</Text>
               </Pressable>
               <Pressable onPress={saveReason} disabled={saving} style={[styles.editSaveBtn, saving && { opacity: 0.6 }]}>
-                <Text style={styles.editSaveText}>{saving ? "…" : "Sauvegarder"}</Text>
+                <Text style={styles.editSaveText}>{saving ? "…" : t("doctor.rdv.save")}</Text>
               </Pressable>
             </View>
           </View>
         )}
 
         {/* Status actions */}
-        <Text style={styles.actionsTitle}>Actions</Text>
+        <Text style={styles.actionsTitle}>{t("doctor.rdv.actions")}</Text>
         <View style={styles.actionsGrid}>
           {actions.map((a) => (
             <Pressable

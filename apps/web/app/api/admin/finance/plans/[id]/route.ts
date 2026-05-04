@@ -29,7 +29,8 @@ export async function PATCH(
     const body = (await req.json()) as Record<string, unknown>;
 
     // Validate allowed fields
-    const allowedFields = ["label", "priceMillimes", "features", "isActive", "displayOrder"];
+    const allowedFields = ["label", "priceMillimes", "features", "isActive", "displayOrder",
+      "maxAppointmentsPerMonth", "maxSmsPerMonth", "maxPatientsTotal", "enabledFeatures"];
     const updates: Partial<typeof subscriptionPlans.$inferInsert> = {};
 
     if ("label" in body) {
@@ -65,6 +66,25 @@ export async function PATCH(
         return NextResponse.json({ error: "displayOrder doit être un entier." }, { status: 422 });
       }
       updates.displayOrder = body.displayOrder;
+    }
+
+    if ("maxAppointmentsPerMonth" in body) {
+      updates.maxAppointmentsPerMonth =
+        body.maxAppointmentsPerMonth === null ? null : Number(body.maxAppointmentsPerMonth);
+    }
+    if ("maxSmsPerMonth" in body) {
+      updates.maxSmsPerMonth =
+        body.maxSmsPerMonth === null ? null : Number(body.maxSmsPerMonth);
+    }
+    if ("maxPatientsTotal" in body) {
+      updates.maxPatientsTotal =
+        body.maxPatientsTotal === null ? null : Number(body.maxPatientsTotal);
+    }
+    if ("enabledFeatures" in body) {
+      if (!Array.isArray(body.enabledFeatures)) {
+        return NextResponse.json({ error: "enabledFeatures doit être un tableau." }, { status: 422 });
+      }
+      updates.enabledFeatures = body.enabledFeatures as string[];
     }
 
     // Ignore unknown fields

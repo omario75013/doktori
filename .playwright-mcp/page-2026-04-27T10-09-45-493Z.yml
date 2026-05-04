@@ -1,0 +1,469 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Doktori.tn" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e13]: Doktori.tn
+      - navigation [ref=e14]:
+        - link "Rechercher un médecin" [ref=e15] [cursor=pointer]:
+          - /url: /recherche
+          - img [ref=e16]
+          - text: Rechercher un médecin
+        - link "Blog" [ref=e19] [cursor=pointer]:
+          - /url: /blog
+          - img [ref=e20]
+          - text: Blog
+        - link "Aide" [ref=e22] [cursor=pointer]:
+          - /url: /faq
+          - img [ref=e23]
+          - text: Aide
+        - link "SOS" [ref=e26] [cursor=pointer]:
+          - /url: /sos
+          - img [ref=e27]
+          - text: SOS
+        - group "Changer de langue" [ref=e33]:
+          - button "Passer en français" [disabled] [pressed] [ref=e34]: FR
+          - button "التبديل إلى العربية" [ref=e35]: AR
+        - link "Mon compte" [ref=e36] [cursor=pointer]:
+          - /url: /connexion-patient
+          - img [ref=e37]
+          - text: Mon compte
+        - link "Espace médecin" [ref=e40] [cursor=pointer]:
+          - /url: /connexion
+          - img [ref=e41]
+          - generic [ref=e44]: Espace médecin
+  - generic [ref=e45]:
+    - generic [ref=e48]:
+      - generic [ref=e49]:
+        - img [ref=e50]
+        - generic [ref=e53]: Plateforme de santé tunisienne
+      - heading "Votre santé. Un rendez-vous." [level=1] [ref=e54]:
+        - text: Votre santé.
+        - generic [ref=e55]:
+          - text: Un
+          - generic [ref=e56]:
+            - text: rendez-vous.
+            - img [ref=e57]
+      - paragraph [ref=e59]:
+        - text: Trouvez un médecin et prenez rendez-vous en ligne en
+        - strong [ref=e60]: moins de 60 secondes
+        - text: . Gratuit pour les patients. Disponible dans le
+        - strong [ref=e61]: Grand Tunis
+        - text: .
+      - generic [ref=e63]:
+        - img [ref=e65]
+        - textbox "Dermatologue, Tunis Centre..." [ref=e68]
+        - button "Rechercher" [ref=e69]:
+          - generic [ref=e70]: Rechercher
+          - img [ref=e71]
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - img [ref=e75]
+          - generic [ref=e78]: 100% sécurisé · RGPD
+        - generic [ref=e79]:
+          - img [ref=e80]
+          - generic [ref=e83]: Disponible 24/7
+        - generic [ref=e84]:
+          - img [ref=e85]
+          - generic [ref=e90]: Pré-inscription ouverte
+    - generic [ref=e91]:
+      - generic [ref=e92]:
+        - generic [ref=e93]:
+          - img [ref=e94]
+          - text: Lancement 2026
+        - paragraph [ref=e97]: Nous constituons notre réseau de médecins à travers la Tunisie. Inscrivez-vous pour être prévenu(e) dès qu'un médecin de votre ville rejoint la plateforme.
+      - generic [ref=e98]:
+        - generic [ref=e99]:
+          - img [ref=e101]
+          - generic [ref=e105]:
+            - generic [ref=e106]: "20"
+            - generic [ref=e107]: Spécialités
+        - generic [ref=e108]:
+          - img [ref=e110]
+          - generic [ref=e113]:
+            - generic [ref=e114]: "23"
+            - generic [ref=e115]: Villes couvertes
+        - generic [ref=e116]:
+          - img [ref=e118]
+          - generic [ref=e121]:
+            - generic [ref=e122]: 24/7
+            - generic [ref=e123]: Disponible
+        - generic [ref=e124]:
+          - img [ref=e126]
+          - generic [ref=e129]:
+            - generic [ref=e130]: 🇹🇳
+            - generic [ref=e131]: Made in Tunisia
+    - generic [ref=e134]:
+      - img [ref=e136]
+      - generic [ref=e144]:
+        - heading "Besoin d'un médecin maintenant ?" [level=3] [ref=e145]
+        - paragraph [ref=e146]: SOS Docteur · Consultation urgente non-vitale · Réponse en moins de 2 minutes
+      - link "Activer SOS" [ref=e147] [cursor=pointer]:
+        - /url: /sos
+        - img [ref=e148]
+        - generic [ref=e150]: Activer SOS
+        - img [ref=e151]
+    - generic [ref=e154]:
+      - generic [ref=e155]:
+        - generic [ref=e156]:
+          - img [ref=e157]
+          - text: 3 étapes simples
+        - heading "Prendre rendez-vous n'a jamais été aussi facile" [level=2] [ref=e160]
+        - paragraph [ref=e161]: De la recherche à la confirmation, en moins de 60 secondes chrono.
+      - generic [ref=e162]:
+        - generic [ref=e163]:
+          - generic [ref=e164]: "01"
+          - generic [ref=e165]:
+            - img [ref=e167]
+            - heading "Cherchez" [level=3] [ref=e170]
+            - paragraph [ref=e171]: Trouvez votre médecin par spécialité, ville ou quartier. Filtrez par disponibilité.
+        - generic [ref=e172]:
+          - generic [ref=e173]: "02"
+          - generic [ref=e174]:
+            - img [ref=e176]
+            - heading "Choisissez" [level=3] [ref=e179]
+            - paragraph [ref=e180]: Consultez les créneaux disponibles en temps réel et sélectionnez celui qui vous convient.
+        - generic [ref=e181]:
+          - generic [ref=e182]: "03"
+          - generic [ref=e183]:
+            - img [ref=e185]
+            - heading "Réservez" [level=3] [ref=e188]
+            - paragraph [ref=e189]: Confirmez en 2 clics. Vous recevrez un SMS de rappel la veille du rendez-vous.
+    - generic [ref=e191]:
+      - generic [ref=e192]:
+        - generic [ref=e193]:
+          - img [ref=e194]
+          - text: Spécialités
+        - heading "Trouvez votre médecin par spécialité" [level=2] [ref=e198]
+        - paragraph [ref=e199]: 10 spécialités disponibles dans le Grand Tunis.
+      - generic [ref=e200]:
+        - link "Médecin Généraliste" [ref=e201] [cursor=pointer]:
+          - /url: /recherche?specialty=generaliste
+          - img [ref=e203]
+          - generic [ref=e207]: Médecin Généraliste
+        - link "Dermatologue" [ref=e208] [cursor=pointer]:
+          - /url: /recherche?specialty=dermatologue
+          - img [ref=e210]
+          - generic [ref=e213]: Dermatologue
+        - link "Ophtalmologue" [ref=e214] [cursor=pointer]:
+          - /url: /recherche?specialty=ophtalmologue
+          - img [ref=e216]
+          - generic [ref=e219]: Ophtalmologue
+        - link "Gynécologue" [ref=e220] [cursor=pointer]:
+          - /url: /recherche?specialty=gynecologue
+          - img [ref=e222]
+          - generic [ref=e224]: Gynécologue
+        - link "Pédiatre" [ref=e225] [cursor=pointer]:
+          - /url: /recherche?specialty=pediatre
+          - img [ref=e227]
+          - generic [ref=e230]: Pédiatre
+        - link "Dentiste" [ref=e231] [cursor=pointer]:
+          - /url: /recherche?specialty=dentiste
+          - img [ref=e233]
+          - generic [ref=e236]: Dentiste
+        - link "ORL" [ref=e237] [cursor=pointer]:
+          - /url: /recherche?specialty=orl
+          - img [ref=e239]
+          - generic [ref=e242]: ORL
+        - link "Cardiologue" [ref=e243] [cursor=pointer]:
+          - /url: /recherche?specialty=cardiologue
+          - img [ref=e245]
+          - generic [ref=e247]: Cardiologue
+        - link "Orthopédiste" [ref=e248] [cursor=pointer]:
+          - /url: /recherche?specialty=orthopediste
+          - img [ref=e250]
+          - generic [ref=e252]: Orthopédiste
+        - link "Gastro-entérologue" [ref=e253] [cursor=pointer]:
+          - /url: /recherche?specialty=gastrologue
+          - img [ref=e255]
+          - generic [ref=e259]: Gastro-entérologue
+        - link "Pneumologue" [ref=e260] [cursor=pointer]:
+          - /url: /recherche?specialty=pneumologue
+          - img [ref=e262]
+          - generic [ref=e266]: Pneumologue
+        - link "Neurologue" [ref=e267] [cursor=pointer]:
+          - /url: /recherche?specialty=neurologue
+          - img [ref=e269]
+          - generic [ref=e277]: Neurologue
+        - link "Rhumatologue" [ref=e278] [cursor=pointer]:
+          - /url: /recherche?specialty=rhumatologue
+          - img [ref=e280]
+          - generic [ref=e282]: Rhumatologue
+        - link "Urologue" [ref=e283] [cursor=pointer]:
+          - /url: /recherche?specialty=urologue
+          - img [ref=e285]
+          - generic [ref=e288]: Urologue
+        - link "Endocrinologue" [ref=e289] [cursor=pointer]:
+          - /url: /recherche?specialty=endocrinologue
+          - img [ref=e291]
+          - generic [ref=e303]: Endocrinologue
+        - link "Néphrologue" [ref=e304] [cursor=pointer]:
+          - /url: /recherche?specialty=nephrologue
+          - img [ref=e306]
+          - generic [ref=e308]: Néphrologue
+        - link "Psychiatre" [ref=e309] [cursor=pointer]:
+          - /url: /recherche?specialty=psychiatre
+          - img [ref=e311]
+          - generic [ref=e319]: Psychiatre
+        - link "Radiologue" [ref=e320] [cursor=pointer]:
+          - /url: /recherche?specialty=radiologue
+          - img [ref=e322]
+          - generic [ref=e327]: Radiologue
+        - link "Chirurgien Général" [ref=e328] [cursor=pointer]:
+          - /url: /recherche?specialty=chirurgien
+          - img [ref=e330]
+          - generic [ref=e336]: Chirurgien Général
+        - link "Allergologue" [ref=e337] [cursor=pointer]:
+          - /url: /recherche?specialty=allergologue
+          - img [ref=e339]
+          - generic [ref=e344]: Allergologue
+      - link "Voir toutes les spécialités" [ref=e346] [cursor=pointer]:
+        - /url: /recherche
+        - text: Voir toutes les spécialités
+        - img [ref=e347]
+    - generic [ref=e350]:
+      - generic [ref=e351]:
+        - generic [ref=e352]:
+          - img [ref=e353]
+          - text: PROGRAMME FONDATEUR · PLACES LIMITÉES
+        - heading "Vous êtes médecin ? Rejoignez-nous." [level=2] [ref=e356]
+        - paragraph [ref=e357]:
+          - text: Les
+          - strong [ref=e358]: 100 premiers médecins
+          - text: inscrits bénéficient de
+          - strong [ref=e359]: 6 mois gratuits
+          - text: . Après, à partir de
+          - strong [ref=e360]: 49 DT/mois
+          - text: .
+        - list [ref=e361]:
+          - listitem [ref=e362]:
+            - img [ref=e364]
+            - generic [ref=e367]: Agenda en ligne disponible 24h/24, 7j/7
+          - listitem [ref=e368]:
+            - img [ref=e370]
+            - generic [ref=e372]: Rappels SMS automatiques pour réduire les no-shows
+          - listitem [ref=e373]:
+            - img [ref=e375]
+            - generic [ref=e378]: Vitrine professionnelle référencée sur Google
+          - listitem [ref=e379]:
+            - img [ref=e381]
+            - generic [ref=e384]: Support dédié WhatsApp en moins de 2 heures
+        - generic [ref=e385]:
+          - link "Créer mon compte gratuit" [ref=e386] [cursor=pointer]:
+            - /url: /inscription
+            - generic [ref=e387]: Créer mon compte gratuit
+            - img [ref=e388]
+          - link "J'ai déjà un compte" [ref=e390] [cursor=pointer]:
+            - /url: /connexion
+      - generic [ref=e393]:
+        - generic [ref=e394]:
+          - img [ref=e396]
+          - generic [ref=e402]:
+            - paragraph [ref=e403]: Dr. Sonia Trabelsi
+            - paragraph [ref=e404]: Dermatologue · Tunis
+          - generic [ref=e406]: Actif
+        - generic [ref=e408]:
+          - generic [ref=e409]:
+            - paragraph [ref=e410]: Aujourd'hui
+            - paragraph [ref=e411]: "12"
+            - paragraph [ref=e412]: rendez-vous
+          - generic [ref=e413]:
+            - paragraph [ref=e414]: Ce mois
+            - paragraph [ref=e415]: 6 200
+            - paragraph [ref=e416]: DT estimés
+        - generic [ref=e417]:
+          - generic [ref=e418]:
+            - generic [ref=e419]:
+              - generic [ref=e420]: 09:00
+              - generic [ref=e421]: Amina B.
+            - generic [ref=e422]: Confirmé
+          - generic [ref=e423]:
+            - generic [ref=e424]:
+              - generic [ref=e425]: 10:30
+              - generic [ref=e426]: Youssef K.
+            - generic [ref=e427]: Confirmé
+          - generic [ref=e428]:
+            - generic [ref=e429]:
+              - generic [ref=e430]: 11:00
+              - generic [ref=e431]: Leila M.
+            - generic [ref=e432]: En attente
+          - generic [ref=e433]:
+            - generic [ref=e434]:
+              - generic [ref=e435]: 14:00
+              - generic [ref=e436]: Mohamed T.
+            - generic [ref=e437]: Confirmé
+    - generic [ref=e442]:
+      - generic [ref=e444]:
+        - generic [ref=e446]:
+          - generic [ref=e448]: Doktori
+          - generic [ref=e449]:
+            - generic [ref=e451]:
+              - img [ref=e453]
+              - generic [ref=e456]: Rechercher un médecin...
+            - generic [ref=e457]:
+              - generic [ref=e458]: K
+              - generic [ref=e459]:
+                - paragraph [ref=e460]: Dr. Karim B.
+                - paragraph [ref=e461]: Généraliste
+              - generic [ref=e462]: RDV
+            - generic [ref=e463]:
+              - generic [ref=e464]: S
+              - generic [ref=e465]:
+                - paragraph [ref=e466]: Dr. Sonia T.
+                - paragraph [ref=e467]: Dermatologue
+              - generic [ref=e468]: RDV
+            - generic [ref=e469]:
+              - generic [ref=e470]: M
+              - generic [ref=e471]:
+                - paragraph [ref=e472]: Dr. Mohamed G.
+                - paragraph [ref=e473]: Pédiatre
+              - generic [ref=e474]: RDV
+            - generic [ref=e475]:
+              - img [ref=e476]
+              - img [ref=e479]
+              - img [ref=e484]
+              - img [ref=e487]
+        - generic [ref=e493]:
+          - img [ref=e495]
+          - generic [ref=e498]: RDV confirmé !
+      - generic [ref=e499]:
+        - generic [ref=e500]:
+          - img [ref=e501]
+          - text: Nouveau
+        - heading "Doktori dans votre poche" [level=2] [ref=e503]:
+          - text: Doktori dans
+          - text: votre poche
+        - paragraph [ref=e504]: Prenez rendez-vous en 2 clics, recevez des rappels automatiques et accédez à SOS Docteur — le tout depuis votre téléphone.
+        - list [ref=e505]:
+          - listitem [ref=e506]:
+            - img [ref=e507]
+            - text: Réservation instantanée 24/7
+          - listitem [ref=e510]:
+            - img [ref=e511]
+            - text: Rappels SMS avant chaque RDV
+          - listitem [ref=e514]:
+            - img [ref=e515]
+            - text: SOS Docteur — médecin en 2 min
+          - listitem [ref=e518]:
+            - img [ref=e519]
+            - text: 100% gratuit pour les patients
+        - generic [ref=e522]:
+          - generic [ref=e523]:
+            - img [ref=e524]
+            - generic [ref=e526]:
+              - generic [ref=e527]: Bientôt sur
+              - generic [ref=e528]: App Store
+          - generic [ref=e529]:
+            - img [ref=e530]
+            - generic [ref=e535]:
+              - generic [ref=e536]: Bientôt sur
+              - generic [ref=e537]: Google Play
+    - contentinfo [ref=e538]:
+      - generic [ref=e539]:
+        - generic [ref=e540]:
+          - generic [ref=e541]:
+            - generic [ref=e542]:
+              - img [ref=e544]
+              - generic [ref=e548]: Doktori.tn
+            - paragraph [ref=e549]: La plateforme de prise de rendez-vous médicaux en ligne en Tunisie. Conçu avec soin pour les patients et les médecins tunisiens.
+            - generic [ref=e550]:
+              - generic [ref=e551]:
+                - img [ref=e552]
+                - generic [ref=e554]:
+                  - generic [ref=e555]: Bientôt sur
+                  - generic [ref=e556]: App Store
+              - generic [ref=e557]:
+                - img [ref=e558]
+                - generic [ref=e563]:
+                  - generic [ref=e564]: Bientôt sur
+                  - generic [ref=e565]: Google Play
+          - generic [ref=e566]:
+            - heading "Produit" [level=4] [ref=e567]
+            - list [ref=e568]:
+              - listitem [ref=e569]:
+                - link "Rechercher" [ref=e570] [cursor=pointer]:
+                  - /url: /recherche
+              - listitem [ref=e571]:
+                - link "SOS Docteur" [ref=e572] [cursor=pointer]:
+                  - /url: /sos
+              - listitem [ref=e573]:
+                - link "Espace médecin" [ref=e574] [cursor=pointer]:
+                  - /url: /inscription
+              - listitem [ref=e575]:
+                - link "Questions fréquentes" [ref=e576] [cursor=pointer]:
+                  - /url: /faq
+          - generic [ref=e577]:
+            - heading "Légal" [level=4] [ref=e578]
+            - list [ref=e579]:
+              - listitem [ref=e580]:
+                - link "CGU" [ref=e581] [cursor=pointer]:
+                  - /url: /legal/cgu
+              - listitem [ref=e582]:
+                - link "Confidentialité" [ref=e583] [cursor=pointer]:
+                  - /url: /legal/confidentialite
+              - listitem [ref=e584]:
+                - link "Mentions légales" [ref=e585] [cursor=pointer]:
+                  - /url: /legal/mentions
+          - generic [ref=e586]:
+            - heading "Contact" [level=4] [ref=e587]
+            - list [ref=e588]:
+              - listitem [ref=e589]:
+                - link "contact@doktori.tn" [ref=e590] [cursor=pointer]:
+                  - /url: mailto:contact@doktori.tn
+              - listitem [ref=e591]: Support WhatsApp
+              - listitem [ref=e592]: Tunis, Tunisie
+        - paragraph [ref=e594]: © 2025–2026 Doktori · Édité par Random Walkers SUARL · RNE 1625867B
+  - contentinfo [ref=e595]:
+    - generic [ref=e596]:
+      - generic [ref=e597]:
+        - generic [ref=e598]:
+          - generic [ref=e599]:
+            - img [ref=e601]
+            - generic [ref=e605]: Doktori
+          - paragraph [ref=e606]: La prise de rendez-vous médicaux en Tunisie
+          - link "contact@doktori.tn" [ref=e607] [cursor=pointer]:
+            - /url: mailto:contact@doktori.tn
+            - img [ref=e608]
+            - text: contact@doktori.tn
+        - generic [ref=e611]:
+          - paragraph [ref=e612]: Plateforme
+          - list [ref=e613]:
+            - listitem [ref=e614]:
+              - link "À propos" [ref=e615] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e616]:
+              - link "Blog" [ref=e617] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=e618]:
+              - link "FAQ" [ref=e619] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e620]:
+              - link "SOS Médecin" [ref=e621] [cursor=pointer]:
+                - /url: /sos-medecin
+        - generic [ref=e622]:
+          - paragraph [ref=e623]: Légal
+          - list [ref=e624]:
+            - listitem [ref=e625]:
+              - link "Mentions légales" [ref=e626] [cursor=pointer]:
+                - /url: /mentions-legales
+            - listitem [ref=e627]:
+              - link "CGU" [ref=e628] [cursor=pointer]:
+                - /url: /cgu
+            - listitem [ref=e629]:
+              - link "Politique de confidentialité" [ref=e630] [cursor=pointer]:
+                - /url: /confidentialite
+        - generic [ref=e631]:
+          - paragraph [ref=e632]: Espace médecin
+          - paragraph [ref=e633]: Vous êtes médecin et souhaitez rejoindre Doktori ?
+          - link "Espace médecin" [ref=e634] [cursor=pointer]:
+            - /url: /connexion
+            - img [ref=e635]
+            - text: Espace médecin
+      - paragraph [ref=e640]: © 2025-2026 Random Walkers SUARL · Doktori.tn
+  - region "Notifications alt+T"
+  - button "Ouvrir l'assistant Dokti" [ref=e641]:
+    - img [ref=e642]
+    - generic [ref=e646]: "!"
+  - button "Open Next.js Dev Tools" [ref=e652] [cursor=pointer]:
+    - img [ref=e653]

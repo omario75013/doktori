@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Card, Loader, Empty, formatDate } from "./_ui";
 
 type Secretary = {
@@ -42,20 +42,20 @@ type Schedule = {
 
 const SECTIONS = [
   { key: "agenda", label: "Agenda" },
-  { key: "rendezVous", label: "Rendez-vous" },
-  { key: "rendezVousCreate", label: "Créer RDV" },
-  { key: "rendezVousEdit", label: "Modifier RDV" },
-  { key: "rendezVousCancel", label: "Annuler RDV" },
-  { key: "patients", label: "Patients (voir)" },
-  { key: "patientsCreate", label: "Créer patient" },
-  { key: "patientsEdit", label: "Modifier patient" },
-  { key: "patientsDelete", label: "Supprimer patient" },
-  { key: "messagerie", label: "Messagerie" },
-  { key: "wallet", label: "Wallet" },
-  { key: "factures", label: "Factures" },
-  { key: "motifs", label: "Motifs" },
-  { key: "cabinets", label: "Cabinets" },
-  { key: "teleconsult", label: "Téléconsult" },
+  { key: "rendezVous", label: t("doctor.secretaires.perm.rendezVous") },
+  { key: "rendezVousCreate", label: t("doctor.secretaires.perm.rendezVousCreate") },
+  { key: "rendezVousEdit", label: t("doctor.secretaires.perm.rendezVousEdit") },
+  { key: "rendezVousCancel", label: t("doctor.secretaires.perm.rendezVousCancel") },
+  { key: "patients", label: t("doctor.secretaires.perm.patients") },
+  { key: "patientsCreate", label: t("doctor.secretaires.perm.patientsCreate") },
+  { key: "patientsEdit", label: t("doctor.secretaires.perm.patientsEdit") },
+  { key: "patientsDelete", label: t("doctor.secretaires.perm.patientsDelete") },
+  { key: "messagerie", label: t("doctor.secretaires.perm.messagerie") },
+  { key: "wallet", label: t("doctor.secretaires.perm.wallet") },
+  { key: "factures", label: t("doctor.secretaires.perm.factures") },
+  { key: "motifs", label: t("doctor.secretaires.perm.motifs") },
+  { key: "cabinets", label: t("doctor.secretaires.perm.cabinets") },
+  { key: "teleconsult", label: t("doctor.secretaires.perm.teleconsult") },
 ];
 
 const DAYS = ["Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam"];
@@ -68,6 +68,7 @@ type Dialog =
   | null;
 
 export default function Secretaires() {
+  const { locale } = useLocale();
   const [rows, setRows] = useState<Secretary[] | null>(null);
   const [dialog, setDialog] = useState<Dialog>(null);
 
@@ -92,22 +93,22 @@ export default function Secretaires() {
       });
       await load();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
     }
   }
 
   async function deleteSecretary(s: Secretary) {
-    Alert.alert("Désactiver", `${s.name} ne pourra plus se connecter.`, [
-      { text: "Annuler", style: "cancel" },
+    Alert.alert(t("doctor.secretaires.actionDeactivate"), t("doctor.secretaires.deactivateConfirm", { name: s.name }), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Désactiver",
+        text: t("doctor.secretaires.actionDeactivate"),
         style: "destructive",
         onPress: async () => {
           try {
             await api(`/api/secretaries/${s.id}`, { method: "DELETE" });
             await load();
           } catch (e) {
-            Alert.alert("Erreur", e instanceof Error ? e.message : "");
+            Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
           }
         },
       },
@@ -117,7 +118,7 @@ export default function Secretaires() {
   if (!rows) {
     return (
       <>
-        <Stack.Screen options={{ title: "Secrétaires" }} />
+        <Stack.Screen options={{ title: t("doctor.secretaires.title") }} />
         <Loader />
       </>
     );
@@ -130,7 +131,7 @@ export default function Secretaires() {
     <>
       <Stack.Screen
         options={{
-          title: "Secrétaires",
+          title: t("doctor.secretaires.title"),
           headerRight: () => (
             <Pressable
               onPress={() => setDialog({ kind: "invite" })}
@@ -145,28 +146,27 @@ export default function Secretaires() {
       <Screen>
         {/* KPIs */}
         <View style={{ flexDirection: "row", gap: spacing.sm }}>
-          <Stat label="Équipe" value={String(rows.length)} />
-          <Stat label="Actives" value={String(active)} accent="#16A34A" />
-          <Stat label="Inactives" value={String(inactive)} accent="#4B5563" />
+          <Stat label={t("doctor.secretaires.team")} value={String(rows.length)} />
+          <Stat label={t("doctor.secretaires.active")} value={String(active)} accent="#16A34A" />
+          <Stat label={t("doctor.secretaires.inactive")} value={String(inactive)} accent="#4B5563" />
         </View>
 
         {/* Actions rapides */}
-        <Card title="Actions rapides">
+        <Card title={t("doctor.secretaires.quickActions")}>
           <QuickRow
             icon="person-add"
-            label="Inviter une secrétaire"
-            sub="Créer un compte avec identifiants"
+            label={t("doctor.secretaires.inviteTitle")}
+            sub={t("doctor.secretaires.createWithCredentials")}
             onPress={() => setDialog({ kind: "invite" })}
           />
           <QuickRow
             icon="share-social"
-            label="Partager un lien d'invitation"
-            sub="Envoyer l'URL de connexion par SMS/WhatsApp"
+            label={t("doctor.secretaires.shareInviteLink")}
+            sub={t("doctor.secretaires.sendLoginUrl")}
             onPress={async () => {
               try {
                 await Share.share({
-                  message:
-                    "Connectez-vous à Doktori en tant que secrétaire : https://doktori.tn/secretaire-login",
+                  message: t("doctor.secretaires.loginUrl"),
                 });
               } catch {
                 /* cancelled */
@@ -175,15 +175,15 @@ export default function Secretaires() {
           />
           <QuickRow
             icon="refresh"
-            label="Rafraîchir la liste"
+            label={t("doctor.secretaires.refresh")}
             onPress={load}
           />
         </Card>
 
         {/* List */}
-        <Card title={`Liste de l'équipe (${rows.length})`}>
+        <Card title={t("doctor.secretaires.teamList", { count: rows.length })}>
           {rows.length === 0 ? (
-            <Empty icon="people-outline" title="Aucune secrétaire" />
+            <Empty icon="people-outline" title={t("doctor.secretaires.noSecretary")} />
           ) : (
             rows.map((s) => (
               <SecretaryRow
@@ -281,33 +281,33 @@ function SecretaryRow({
           <Text style={styles.name}>{secretary.name}</Text>
           {secretary.isActive ? (
             <View style={styles.active}>
-              <Text style={styles.activeText}>Active</Text>
+              <Text style={styles.activeText}>{t("doctor.secretaires.statusActive")}</Text>
             </View>
           ) : (
             <View style={styles.inactive}>
-              <Text style={styles.inactiveText}>Inactive</Text>
+              <Text style={styles.inactiveText}>{t("doctor.secretaires.statusInactive")}</Text>
             </View>
           )}
         </View>
         <Text style={styles.sub}>{secretary.email}</Text>
         {secretary.phone && <Text style={styles.sub}>{secretary.phone}</Text>}
         <View style={styles.actions}>
-          <ActionPill icon="pencil" label="Modifier" onPress={onEdit} />
+          <ActionPill icon="pencil" label={t("doctor.secretaires.actionEdit")} onPress={onEdit} />
           <ActionPill
             icon="shield-checkmark"
-            label="Permissions"
+            label={t("doctor.secretaires.actionPermissions")}
             onPress={onPerms}
           />
-          <ActionPill icon="calendar" label="Planning" onPress={onPlanning} />
+          <ActionPill icon="calendar" label={t("doctor.secretaires.actionSchedule")} onPress={onPlanning} />
           <ActionPill
             icon={secretary.isActive ? "pause" : "play"}
-            label={secretary.isActive ? "Désactiver" : "Activer"}
+            label={secretary.isActive ? t("doctor.secretaires.actionDeactivate") : t("doctor.secretaires.actionActivate")}
             onPress={onToggle}
           />
           {secretary.isActive && (
             <ActionPill
               icon="trash"
-              label="Supprimer"
+              label={t("doctor.secretaires.actionDelete")}
               tone="danger"
               onPress={onDelete}
             />
@@ -399,10 +399,10 @@ function InviteSecretary({
 
   async function submit() {
     if (!name.trim() || !email.trim() || !password.trim()) {
-      return Alert.alert("Erreur", "Nom, email et mot de passe obligatoires");
+      return Alert.alert(t("common.error"), t("doctor.secretaires.validationRequired"));
     }
     if (password.length < 8) {
-      return Alert.alert("Erreur", "Mot de passe : 8 caractères minimum");
+      return Alert.alert(t("common.error"), t("doctor.secretaires.passwordTooShort"));
     }
     setSaving(true);
     try {
@@ -417,28 +417,28 @@ function InviteSecretary({
       });
       await onSaved();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <ModalShell title="Nouvelle secrétaire" onClose={onClose}>
-      <Field label="Nom complet">
+    <ModalShell title={t("doctor.secretaires.newSecretary")} onClose={onClose}>
+      <Field label={t("doctor.secretaires.fullName")}>
         <TextInput value={name} onChangeText={setName} style={styles.input} />
       </Field>
-      <Field label="Email">
+      <Field label={t("doctor.secretaires.email")}>
         <TextInput
           value={email}
           onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
-          placeholder="secretaire@doktori.tn"
+          placeholder={t("doctor.secretaires.emailPlaceholder")}
           style={styles.input}
         />
       </Field>
-      <Field label="Téléphone (optionnel)">
+      <Field label={t("doctor.secretaires.phone")}>
         <TextInput
           value={phone}
           onChangeText={setPhone}
@@ -446,20 +446,20 @@ function InviteSecretary({
           style={styles.input}
         />
       </Field>
-      <Field label="Mot de passe initial">
+      <Field label={t("doctor.secretaires.initialPassword")}>
         <TextInput
           value={password}
           onChangeText={setPassword}
           secureTextEntry
-          placeholder="Min. 8 caractères"
+          placeholder={t("doctor.secretaires.passwordHint")}
           style={styles.input}
         />
         <Text style={styles.hint}>
-          Communique-le à la secrétaire pour sa première connexion.
+          {t("doctor.secretaires.passwordNote")}
         </Text>
       </Field>
 
-      <SubmitBtn label="Créer le compte" onPress={submit} busy={saving} />
+      <SubmitBtn label={t("doctor.secretaires.createAccount")} onPress={submit} busy={saving} />
     </ModalShell>
   );
 }
@@ -490,7 +490,7 @@ function EditSecretary({
   const [saving, setSaving] = useState(false);
 
   async function submit() {
-    if (!name.trim()) return Alert.alert("Erreur", "Nom requis");
+    if (!name.trim()) return Alert.alert(t("common.error"), t("doctor.secretaires.nameRequired"));
     setSaving(true);
     try {
       await api(`/api/secretaries/${secretary.id}`, {
@@ -507,18 +507,18 @@ function EditSecretary({
       });
       await onSaved();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <ModalShell title={`Modifier ${secretary.name}`} onClose={onClose}>
-      <Field label="Nom complet">
+    <ModalShell title={`${t("doctor.secretaires.actionEdit")} ${secretary.name}`} onClose={onClose}>
+      <Field label={t("doctor.secretaires.fullName")}>
         <TextInput value={name} onChangeText={setName} style={styles.input} />
       </Field>
-      <Field label="Téléphone">
+      <Field label={t("doctor.secretaires.phone")}>
         <TextInput
           value={phone}
           onChangeText={setPhone}
@@ -527,7 +527,7 @@ function EditSecretary({
         />
       </Field>
       <View style={{ flexDirection: "row", gap: spacing.sm }}>
-        <Field label="Date naissance">
+        <Field label={t("doctor.secretaires.dobLabel")}>
           <TextInput
             value={dateOfBirth}
             onChangeText={setDateOfBirth}
@@ -535,7 +535,7 @@ function EditSecretary({
             style={styles.input}
           />
         </Field>
-        <Field label="Date embauche">
+        <Field label={t("doctor.secretaires.hireDateLabel")}>
           <TextInput
             value={hireDate}
             onChangeText={setHireDate}
@@ -545,7 +545,7 @@ function EditSecretary({
         </Field>
       </View>
       <View style={{ flexDirection: "row", gap: spacing.sm }}>
-        <Field label="Années exp.">
+        <Field label={t("doctor.secretaires.expYears")}>
           <TextInput
             value={yearsOfExperience}
             onChangeText={setYears}
@@ -553,7 +553,7 @@ function EditSecretary({
             style={styles.input}
           />
         </Field>
-        <Field label="Salaire (DT)">
+        <Field label={t("doctor.secretaires.salary")}>
           <TextInput
             value={monthlySalary}
             onChangeText={setSalary}
@@ -562,17 +562,17 @@ function EditSecretary({
           />
         </Field>
       </View>
-      <Field label="Congés / mois (jours)">
+      <Field label={t("doctor.secretaires.leaveDays")}>
         <TextInput
           value={dayOffAllowance}
           onChangeText={setDayOff}
           keyboardType="numeric"
-          placeholder="ex. 2.0"
+          placeholder={t("doctor.secretaires.leavePlaceholder")}
           style={styles.input}
         />
       </Field>
 
-      <SubmitBtn label="Enregistrer" onPress={submit} busy={saving} />
+      <SubmitBtn label={t("doctor.secretaires.save")} onPress={submit} busy={saving} />
     </ModalShell>
   );
 }
@@ -601,14 +601,14 @@ function PermissionsEditor({
       });
       await onSaved();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <ModalShell title={`Permissions · ${secretary.name}`} onClose={onClose}>
+    <ModalShell title={t("doctor.secretaires.permissionsTitle", { name: secretary.name })} onClose={onClose}>
       {SECTIONS.map((s) => {
         const on = !!perms[s.key];
         return (
@@ -635,7 +635,7 @@ function PermissionsEditor({
         );
       })}
 
-      <SubmitBtn label="Enregistrer" onPress={submit} busy={saving} />
+      <SubmitBtn label={t("doctor.secretaires.save")} onPress={submit} busy={saving} />
     </ModalShell>
   );
 }
@@ -705,23 +705,23 @@ function PlanningEditor({
         method: "PUT",
         body: { slots: active },
       });
-      Alert.alert("Enregistré", "Planning mis à jour");
+      Alert.alert(t("doctor.secretaires.scheduleSaved"), t("doctor.secretaires.scheduleUpdated"));
       onClose();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
     } finally {
       setSaving(false);
     }
   }
 
   return (
-    <ModalShell title={`Planning · ${secretary.name}`} onClose={onClose}>
+    <ModalShell title={t("doctor.secretaires.schedulingTitle", { name: secretary.name })} onClose={onClose}>
       {loading ? (
         <ActivityIndicator color={colors.teal} />
       ) : (
         <>
           <Text style={styles.hint}>
-            Sélectionnez les jours travaillés et leurs horaires.
+            {t("doctor.secretaires.schedulingDesc")}
           </Text>
           {schedule.map((s, i) => (
             <View
@@ -773,7 +773,7 @@ function PlanningEditor({
             </View>
           ))}
 
-          <SubmitBtn label="Enregistrer le planning" onPress={submit} busy={saving} />
+          <SubmitBtn label={t("doctor.secretaires.save")} onPress={submit} busy={saving} />
         </>
       )}
     </ModalShell>
