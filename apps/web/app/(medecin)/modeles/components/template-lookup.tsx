@@ -103,11 +103,10 @@ export function TemplateLookup({ patientId, appointmentId, onPick }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!appointmentId) {
-      setCtxData(null);
-      return;
-    }
-    fetch(`/api/medecin/patients/${patientId}/template-context?appointmentId=${appointmentId}`)
+    const url = appointmentId
+      ? `/api/medecin/patients/${patientId}/template-context?appointmentId=${appointmentId}`
+      : `/api/medecin/patients/${patientId}/template-context`;
+    fetch(url)
       .then((r) => (r.ok ? r.json() : null))
       .then((ctx) => {
         if (ctx) setCtxData(ctx as Record<string, unknown>);

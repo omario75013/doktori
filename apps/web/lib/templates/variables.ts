@@ -232,6 +232,20 @@ export const TEMPLATE_VARIABLES: Record<string, VariableEntry> = {
   },
 };
 
+// ── Aliases ───────────────────────────────────────────────────────────────────
+// Common alternative names some templates use; resolved to the canonical entry.
+const VARIABLE_ALIASES: Record<string, string> = {
+  patient_first_name: "first_name",
+  patient_last_name: "last_name",
+  patient_full_name: "full_name",
+  patient_phone: "phone",
+  patient_age: "age",
+  patient_dob: "dob",
+  patient_cin: "cin",
+  date_today: "today",
+  date_today_long: "today_long",
+};
+
 // ── Public resolver ───────────────────────────────────────────────────────────
 
 /**
@@ -239,7 +253,8 @@ export const TEMPLATE_VARIABLES: Record<string, VariableEntry> = {
  * Returns null for unknown names or when the value is absent.
  */
 export function resolveVariable(name: string, ctx: TemplateContext): unknown {
-  const entry = TEMPLATE_VARIABLES[name];
+  const canonical = VARIABLE_ALIASES[name] ?? name;
+  const entry = TEMPLATE_VARIABLES[canonical];
   if (!entry) return null;
   const value = entry.resolve(ctx);
   return nullIfEmpty(value);

@@ -24,48 +24,55 @@ export async function GET(req: NextRequest, ctx: RouteContext) {
     const { searchParams } = new URL(req.url);
     const appointmentId = searchParams.get("appointmentId");
 
-    if (!appointmentId) {
-      return NextResponse.json({ error: "appointmentId requis" }, { status: 400 });
-    }
+    let appt: typeof appointments.$inferSelect | null = null;
+    let apptTypeId: string | null = null;
 
-    // B2 IDOR: single atomic query — select only stable columns common to all DB versions.
-    // Validate appointmentId + doctorId + patientId simultaneously — if ANY mismatches → 403.
-    // Note: appointmentTypeId excluded here to maintain DB-version compatibility;
-    // it is read separately via a second query below.
-    const [appt] = await db
-      .select({
-        id: appointments.id,
-        doctorId: appointments.doctorId,
-        patientId: appointments.patientId,
-        startsAt: appointments.startsAt,
-        endsAt: appointments.endsAt,
-        status: appointments.status,
-        type: appointments.type,
-        reason: appointments.reason,
-        notes: appointments.notes,
-        createdAt: appointments.createdAt,
-      })
-      .from(appointments)
-      .where(
-        and(
-          eq(appointments.id, appointmentId),
-          eq(appointments.doctorId, user.id),
-          eq(appointments.patientId, patientId)
+    if (appointmentId) {
+      // B2 IDOR: validate appointmentId + doctorId + patientId atomically
+      const [row] = await db
+        .select({
+          id: appointments.id,
+          doctorId: appointments.doctorId,
+          patientId: appointments.patientId,
+          startsAt: appointments.startsAt,
+          endsAt: appointments.endsAt,
+          status: appointments.status,
+          type: appointments.type,
+          reason: appointments.reason,
+          notes: appointments.notes,
+          createdAt: appointments.createdAt,
+        })
+        .from(appointments)
+        .where(
+          and(
+            eq(appointments.id, appointmentId),
+            eq(appointments.doctorId, user.id),
+            eq(appointments.patientId, patientId)
+          )
         )
-      )
-      .limit(1);
+        .limit(1);
+      if (!row) {
+        return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+      }
+      appt = row as typeof appointments.$inferSelect;
 
-    // Fetch appointmentTypeId separately (not available in all DB migration states)
-    const apptTypeId = await db
-      .select({ appointmentTypeId: appointments.appointmentTypeId })
-      .from(appointments)
-      .where(eq(appointments.id, appointmentId))
-      .limit(1)
-      .then(rows => rows[0]?.appointmentTypeId ?? null)
-      .catch(() => null); // graceful fallback if column doesn't exist yet
-
-    if (!appt) {
-      return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+      apptTypeId = await db
+        .select({ appointmentTypeId: appointments.appointmentTypeId })
+        .from(appointments)
+        .where(eq(appointments.id, appointmentId))
+        .limit(1)
+        .then(rows => rows[0]?.appointmentTypeId ?? null)
+        .catch(() => null);
+    } else {
+      // No appointment: verify the doctor has at least one prior appointment with this patient
+      const [link] = await db
+        .select({ id: appointments.id })
+        .from(appointments)
+        .where(and(eq(appointments.doctorId, user.id), eq(appointments.patientId, patientId)))
+        .limit(1);
+      if (!link) {
+        return NextResponse.json({ error: "Accès refusé" }, { status: 403 });
+      }
     }
 
     // Fetch patient — select only stable columns present across DB migration states
