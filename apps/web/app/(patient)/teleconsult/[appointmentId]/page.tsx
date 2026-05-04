@@ -2,8 +2,9 @@
 
 import { use, useEffect, useState, useRef } from "react";
 import { Video, PhoneOff, Clock } from "lucide-react";
+import PreCallCheck from "@/components/precall-check";
 
-type WaitingStatus = "waiting" | "ready" | "joined";
+type WaitingStatus = "precall" | "waiting" | "ready" | "joined";
 
 export default function TeleconsultPage({
   params,
@@ -16,8 +17,9 @@ export default function TeleconsultPage({
   const [error, setError] = useState("");
   const [elapsed, setElapsed] = useState(0);
   const [ended, setEnded] = useState(false);
-  const [waitingStatus, setWaitingStatus] = useState<WaitingStatus>("waiting");
+  const [waitingStatus, setWaitingStatus] = useState<WaitingStatus>("precall");
   const [waitMinutes, setWaitMinutes] = useState(0);
+  const [scheduledAt, setScheduledAt] = useState<string | null>(null);
   const startRef = useRef(Date.now());
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -32,7 +34,8 @@ export default function TeleconsultPage({
       const data = await res.json();
       setRoomUrl(data.roomUrl);
       if (data.doctorName) setDoctorName(data.doctorName);
-      if (data.startedAt) {
+      if (data.scheduledAt) setScheduledAt(data.scheduledAt);
+      if (data.startedAt && waitingStatus !== "precall") {
         setWaitingStatus("ready");
       }
     }
@@ -108,6 +111,16 @@ export default function TeleconsultPage({
           </a>
         </div>
       </div>
+    );
+  }
+
+  // Pre-call check: camera/mic/network test before joining
+  if (roomUrl && waitingStatus === "precall") {
+    return (
+      <PreCallCheck
+        scheduledAt={scheduledAt}
+        onReady={() => setWaitingStatus("waiting")}
+      />
     );
   }
 

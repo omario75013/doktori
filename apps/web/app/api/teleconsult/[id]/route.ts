@@ -26,7 +26,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
 
   try {
     const apptRows = await db.execute(sql`
-      SELECT id, type, payment_status, doctor_id, patient_id
+      SELECT id, type, payment_status, doctor_id, patient_id, scheduled_at
       FROM appointments WHERE id = ${id} LIMIT 1
     `);
     const appt = (apptRows as unknown as Array<{
@@ -35,6 +35,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       payment_status: string | null;
       doctor_id: string;
       patient_id: string;
+      scheduled_at: string | Date | null;
     }>)[0];
 
     if (!appt) return NextResponse.json({ error: "Rendez-vous introuvable" }, { status: 404 });
@@ -73,6 +74,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
       startedAt: tc.startedAt,
       endedAt: tc.endedAt,
       doctorName: doctorRow?.name ?? null,
+      scheduledAt: appt.scheduled_at,
     });
   } catch {
     return NextResponse.json({ error: "Rendez-vous introuvable" }, { status: 404 });
