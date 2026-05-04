@@ -14,6 +14,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { MotionProvider } from "@/components/motion-provider";
 import { Toaster } from "sonner";
 import { KeyboardShortcuts } from "@/components/keyboard-shortcuts";
+import { ServiceWorkerRegister } from "@/components/sw-register";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -119,6 +120,7 @@ export default async function RootLayout({
             </PatientShell>
             <Toaster position="bottom-right" richColors toastOptions={{ style: { borderRadius: "16px" } }} />
             <KeyboardShortcuts />
+            <ServiceWorkerRegister />
             <PatientShell>
               <Chatbot />
               <InstallPrompt />
