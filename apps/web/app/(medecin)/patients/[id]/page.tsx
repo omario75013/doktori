@@ -598,22 +598,20 @@ function PatientDetail({ listPath }: { listPath: string }) {
       {tab === "rdv" && (
         <div className="rounded-2xl border border-border bg-white shadow-sm">
           <div className="p-4 border-b border-border">
-            <h2 className="font-semibold text-foreground">Historique des rendez-vous</h2>
-            <p className="text-xs text-gray-400 mt-0.5">
-              Cliquer sur une note pour la modifier — sauvegarde automatique
-            </p>
+            <h2 className="font-semibold text-foreground">{t("rdvHistoryTitle")}</h2>
+            <p className="text-xs text-gray-400 mt-0.5">{t("rdvHistorySubtitle")}</p>
           </div>
           {appointments.length === 0 ? (
-            <p className="p-6 text-gray-400 text-center text-sm">Aucun rendez-vous.</p>
+            <p className="p-6 text-gray-400 text-center text-sm">{t("rdvEmpty")}</p>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
                 <thead>
-                  <tr className="border-b border-border bg-secondary text-left">
-                    <th className="px-4 py-3 font-medium text-foreground">Date</th>
-                    <th className="px-4 py-3 font-medium text-foreground">Statut</th>
-                    <th className="px-4 py-3 font-medium text-foreground">Motif</th>
-                    <th className="px-4 py-3 font-medium text-foreground w-64">Notes privées</th>
+                  <tr className="border-b border-border bg-secondary text-start">
+                    <th className="px-4 py-3 font-medium text-foreground">{t("colDate")}</th>
+                    <th className="px-4 py-3 font-medium text-foreground">{t("colStatus")}</th>
+                    <th className="px-4 py-3 font-medium text-foreground">{t("colReason")}</th>
+                    <th className="px-4 py-3 font-medium text-foreground w-64">{t("colPrivateNotes")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
