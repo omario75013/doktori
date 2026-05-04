@@ -83,3 +83,10 @@ CREATE TABLE IF NOT EXISTS anonymization_consents (
   user_agent      text,
   updated_at      timestamptz NOT NULL DEFAULT now()
 );
+
+-- Seed chronic disease content (3 starter diseases)
+INSERT INTO chronic_disease_content (slug, name_fr, name_ar, description_fr, description_ar, reminder_default_freq_hours, display_order) VALUES
+('diabete-t2',   'Diabète Type 2',          'السكري النوع 2',     'Maladie chronique caractérisée par une glycémie élevée. Le suivi régulier de la glycémie et la prise rigoureuse du traitement sont essentiels.', 'مرض مزمن يتميز بارتفاع نسبة السكر في الدم. المتابعة المنتظمة للسكر وتناول العلاج بانتظام أمر ضروري.',                                       24, 10),
+('hypertension', 'Hypertension artérielle', 'ارتفاع ضغط الدم',     'Maladie chronique nécessitant un traitement quotidien et un suivi régulier de la tension artérielle.',                                              'مرض مزمن يتطلب علاجًا يوميًا ومتابعة منتظمة لضغط الدم.',                                                                                       24, 20),
+('asthme',       'Asthme',                  'الربو',               'Maladie respiratoire chronique. Les traitements de fond se prennent quotidiennement, même en dehors des crises.',                                  'مرض تنفسي مزمن. يجب أخذ علاجات الوقاية يوميا حتى خارج النوبات.',                                                                               24, 30)
+ON CONFLICT (slug) DO NOTHING;
