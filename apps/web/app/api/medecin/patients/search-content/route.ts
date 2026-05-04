@@ -31,7 +31,10 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const pattern = `%${q.trim()}%`;
+  // Sanitize: strip any existing wildcards, keep plain text only.
+  // Drizzle sql`` interpolations are sent as bound parameters — never
+  // string-concatenated into the query — so ILIKE injection is not possible.
+  const term = q.trim().replace(/%/g, "").replace(/_/g, "\\_");
   const doctorId = actor.doctorId;
 
   const rows = await db.execute(sql`
@@ -39,16 +42,16 @@ export async function POST(req: NextRequest) {
     FROM consultation_notes
     WHERE doctor_id = ${doctorId}
       AND (
-        subjective ILIKE ${pattern}
-        OR objective ILIKE ${pattern}
-        OR assessment ILIKE ${pattern}
-        OR plan ILIKE ${pattern}
+        subjective ILIKE ${"%" + term + "%"}
+        OR objective ILIKE ${"%" + term + "%"}
+        OR assessment ILIKE ${"%" + term + "%"}
+        OR plan ILIKE ${"%" + term + "%"}
       )
     UNION
     SELECT DISTINCT patient_id::text AS "patientId"
     FROM prescriptions
     WHERE doctor_id = ${doctorId}
-      AND content ILIKE ${pattern}
+      AND content ILIKE ${"%" + term + "%"}
   `);
 
   const patientIds = (rows as unknown as Array<{ patientId: string }>).map((r) => r.patientId);
