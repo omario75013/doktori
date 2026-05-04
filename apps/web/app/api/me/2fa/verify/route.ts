@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, patient2fa } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { getPatientFromRequest } from "@/lib/patient-auth";
-import { authenticator } from "otplib";
+import { verifySync } from "otplib";
 import { randomBytes } from "crypto";
 
 function generateBackupCodes(): string[] {
@@ -36,7 +36,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "La 2FA est déjà activée" }, { status: 409 });
   }
 
-  const isValid = authenticator.verify({ token: code, secret: record.totpSecret });
+  const isValid = verifySync({ token: code, secret: record.totpSecret });
   if (!isValid) {
     return NextResponse.json({ error: "Code invalide" }, { status: 400 });
   }

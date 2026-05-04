@@ -740,6 +740,8 @@ function DayView({
   t: ReturnType<typeof useTranslations<"medecin.calendrier">>;
 }) {
   const containerHeight = TOTAL_HOURS * HOUR_HEIGHT;
+  const locale = useLocale();
+  const isArabic = locale === "ar";
   const dayAppts = appointments.filter((a) =>
     isSameDay(new Date(a.startsAt), currentDay)
   );

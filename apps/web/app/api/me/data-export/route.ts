@@ -128,7 +128,7 @@ export async function POST(req: NextRequest) {
 
   const dateStr = format(new Date(), "yyyy-MM-dd");
 
-  return new NextResponse(zip, {
+  return new NextResponse(new Uint8Array(zip).buffer as ArrayBuffer, {
     status: 200,
     headers: {
       "Content-Type": "application/zip",

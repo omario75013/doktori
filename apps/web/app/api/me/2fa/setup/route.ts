@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, patient2fa, patients } from "@doktori/db";
 import { eq, sql } from "drizzle-orm";
 import { getPatientFromRequest } from "@/lib/patient-auth";
-import { authenticator } from "otplib";
+import { generateSecret as _generateSecret, generateURI } from "otplib";
 
 // GET /api/me/2fa/setup — get 2FA status
 export async function GET(req: NextRequest) {
@@ -44,11 +44,19 @@ export async function POST(req: NextRequest) {
   }
 
   // Generate a new TOTP secret
-  const secret = authenticator.generateSecret();
+  const secret = _generateSecret();
   const label = patient.name ?? patient.phone;
   const issuer = "Doktori";
 
-  const otpAuthUrl = authenticator.keyuri(label, issuer, secret);
+  const otpAuthUrl = generateURI({
+    strategy: "totp",
+    issuer,
+    label,
+    secret,
+    algorithm: "sha1",
+    digits: 6,
+    period: 30,
+  });
 
   // Store the secret (not enabled yet — enabled only after verification)
   await db
