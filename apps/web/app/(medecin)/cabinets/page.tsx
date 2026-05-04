@@ -4,9 +4,14 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { MapPin, Phone, Plus, Pencil, Trash2, Star, ArrowLeft, Check, X, Loader2, Building2 } from "lucide-react";
+import { MapPin, Phone, Plus, Pencil, Trash2, Star, ArrowLeft, Check, X, Loader2, Building2, Camera, ImagePlus } from "lucide-react";
 import Link from "next/link";
 import { toast } from "sonner";
+
+interface CabinetPhoto {
+  url: string;
+  alt?: string;
+}
 
 interface Practice {
   id: string;
@@ -19,6 +24,7 @@ interface Practice {
   isPrimary: boolean;
   isActive: boolean;
   createdAt: string;
+  photos: CabinetPhoto[];
 }
 
 interface PracticeForm {
@@ -57,6 +63,11 @@ export default function CabinetsPage() {
   // Delete state
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Photo upload state: practiceId → uploading boolean
+  const [uploadingPhoto, setUploadingPhoto] = useState<string | null>(null);
+  // Photo delete state: `${practiceId}-${index}` → boolean
+  const [deletingPhoto, setDeletingPhoto] = useState<string | null>(null);
 
   async function loadPractices() {
     setLoading(true);
@@ -176,6 +187,63 @@ export default function CabinetsPage() {
       await loadPractices();
     } catch {
       // ignore
+    }
+  }
+
+  async function handlePhotoUpload(practiceId: string, file: File) {
+    const MAX_BYTES = 5 * 1024 * 1024;
+    const ALLOWED = ["image/jpeg", "image/png", "image/webp"];
+
+    if (!ALLOWED.includes(file.type)) {
+      toast.error("Type de fichier non autorisé (jpeg, png, webp uniquement)");
+      return;
+    }
+    if (file.size > MAX_BYTES) {
+      toast.error("Fichier trop volumineux (max 5 Mo)");
+      return;
+    }
+
+    setUploadingPhoto(practiceId);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch(`/api/medecin/cabinets/${practiceId}/photos`, {
+        method: "POST",
+        body: fd,
+      });
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(typeof data.error === "string" ? data.error : "Erreur");
+      }
+      toast.success("Photo ajoutée");
+      await loadPractices();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur inattendue";
+      toast.error(msg);
+    } finally {
+      setUploadingPhoto(null);
+    }
+  }
+
+  async function handlePhotoDelete(practiceId: string, index: number) {
+    const key = `${practiceId}-${index}`;
+    setDeletingPhoto(key);
+    try {
+      const res = await fetch(
+        `/api/medecin/cabinets/${practiceId}/photos?index=${index}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(typeof data.error === "string" ? data.error : "Erreur");
+      }
+      toast.success("Photo supprimée");
+      await loadPractices();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Erreur inattendue";
+      toast.error(msg);
+    } finally {
+      setDeletingPhoto(null);
     }
   }
 
@@ -467,6 +535,80 @@ export default function CabinetsPage() {
                         >
                           <Trash2 className="h-3.5 w-3.5" />
                         </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Photos section */}
+                  <div className="pt-3 border-t border-border/50">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+                        <Camera className="h-3.5 w-3.5" strokeWidth={2.5} />
+                        Photos du cabinet
+                        <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-bold text-doktori-teal-dark">
+                          {(p.photos ?? []).length} / 5
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      {/* Existing photos */}
+                      {(p.photos ?? []).map((photo, idx) => {
+                        const deleteKey = `${p.id}-${idx}`;
+                        const isDeleting = deletingPhoto === deleteKey;
+                        return (
+                          <div key={idx} className="group relative h-20 w-20 shrink-0">
+                            {/* eslint-disable-next-line @next/next/no-img-element */}
+                            <img
+                              src={photo.url}
+                              alt={photo.alt ?? `Photo ${idx + 1}`}
+                              className="h-full w-full rounded-xl object-cover ring-1 ring-border"
+                            />
+                            <button
+                              title="Supprimer cette photo"
+                              disabled={isDeleting}
+                              onClick={() => void handlePhotoDelete(p.id, idx)}
+                              className="absolute -right-1.5 -top-1.5 hidden h-5 w-5 items-center justify-center rounded-full bg-red-500 text-white shadow-sm transition-colors hover:bg-red-600 disabled:opacity-50 group-hover:flex"
+                            >
+                              {isDeleting ? (
+                                <Loader2 className="h-3 w-3 animate-spin" />
+                              ) : (
+                                <X className="h-3 w-3" strokeWidth={3} />
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })}
+
+                      {/* Upload slot — shown only when under the 5 photo limit */}
+                      {(p.photos ?? []).length < 5 && (
+                        <label
+                          className={`relative flex h-20 w-20 shrink-0 cursor-pointer flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-border bg-secondary/50 text-muted-foreground transition-all hover:border-primary hover:bg-secondary hover:text-primary ${
+                            uploadingPhoto === p.id ? "pointer-events-none opacity-60" : ""
+                          }`}
+                          title="Ajouter une photo"
+                        >
+                          <input
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            className="sr-only"
+                            onChange={(e) => {
+                              const file = e.target.files?.[0];
+                              if (file) void handlePhotoUpload(p.id, file);
+                              // Reset input so same file can be re-selected
+                              e.target.value = "";
+                            }}
+                            disabled={uploadingPhoto === p.id}
+                          />
+                          {uploadingPhoto === p.id ? (
+                            <Loader2 className="h-5 w-5 animate-spin" />
+                          ) : (
+                            <ImagePlus className="h-5 w-5" strokeWidth={1.5} />
+                          )}
+                          <span className="text-[10px] font-bold leading-none">
+                            {uploadingPhoto === p.id ? "Envoi..." : "Ajouter"}
+                          </span>
+                        </label>
                       )}
                     </div>
                   </div>
