@@ -1,0 +1,141 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e171]:
+    - generic [ref=e172]:
+      - img [ref=e173]
+      - generic [ref=e175]:
+        - text: L'app Doktori arrive bientôt sur
+        - strong [ref=e176]: App Store
+        - text: et
+        - strong [ref=e177]: Google Play
+    - button "Fermer" [ref=e178]:
+      - img [ref=e179]
+  - banner [ref=e2]:
+    - generic [ref=e3]:
+      - link "Doktori.tn" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e6]
+        - generic [ref=e13]: Doktori.tn
+      - navigation [ref=e14]:
+        - link "ابحث عن طبيب" [ref=e15] [cursor=pointer]:
+          - /url: /recherche
+          - img [ref=e16]
+          - text: ابحث عن طبيب
+        - link "المدونة" [ref=e19] [cursor=pointer]:
+          - /url: /blog
+          - img [ref=e20]
+          - text: المدونة
+        - link "مساعدة" [ref=e22] [cursor=pointer]:
+          - /url: /faq
+          - img [ref=e23]
+          - text: مساعدة
+        - link "استغاثة" [ref=e26] [cursor=pointer]:
+          - /url: /sos
+          - img [ref=e27]
+          - text: استغاثة
+        - button "Passer en mode sombre" [ref=e182]:
+          - img [ref=e183]
+        - group "Changer de langue" [ref=e33]:
+          - button "Passer en français" [ref=e34]: FR
+          - button "التبديل إلى العربية" [disabled] [pressed] [ref=e35]: AR
+        - link "حسابي" [ref=e36] [cursor=pointer]:
+          - /url: /connexion-patient
+          - img [ref=e37]
+          - text: حسابي
+        - link "فضاء الطبيب" [ref=e40] [cursor=pointer]:
+          - /url: /connexion
+          - img [ref=e41]
+          - generic [ref=e44]: فضاء الطبيب
+  - generic [ref=e917]:
+    - generic [ref=e918]:
+      - img "Dr. Karim Ben Ali" [ref=e919]
+      - generic [ref=e920]:
+        - heading "Dr. Karim Ben Ali" [level=1] [ref=e921]
+        - paragraph [ref=e922]: generaliste
+        - paragraph [ref=e923]: la-marsa
+    - generic [ref=e925]:
+      - generic [ref=e927]:
+        - img [ref=e1110]
+        - generic [ref=e930]: Choisir le créneau
+      - generic [ref=e934]:
+        - img [ref=e1145]
+        - generic [ref=e937]: Vos informations
+      - generic [ref=e941]:
+        - generic [ref=e943]: "3"
+        - generic [ref=e944]: Confirmation
+    - generic [ref=e1113]:
+      - img [ref=e1115]
+      - generic [ref=e1117]:
+        - paragraph [ref=e1118]: Votre rendez-vous
+        - paragraph [ref=e1119]:
+          - text: mardi 28 avril à 09:00
+          - generic [ref=e1120]: · 20 min
+    - generic [ref=e1147]:
+      - img [ref=e1149]
+      - generic [ref=e1151]:
+        - heading "Rendez-vous réservé !" [level=2] [ref=e1152]
+        - paragraph [ref=e1153]: Voulez-vous payer votre consultation maintenant pour garantir votre place ?
+      - generic [ref=e1154]:
+        - button "Payer maintenant (sécurisé)" [ref=e1155]
+        - button "Payer sur place" [ref=e1156]
+  - contentinfo [ref=e110]:
+    - generic [ref=e111]:
+      - generic [ref=e112]:
+        - generic [ref=e113]:
+          - generic [ref=e114]:
+            - img [ref=e116]
+            - generic [ref=e120]: Doktori
+          - paragraph [ref=e121]: La prise de rendez-vous médicaux en Tunisie
+          - link "contact@doktori.tn" [ref=e122] [cursor=pointer]:
+            - /url: mailto:contact@doktori.tn
+            - img [ref=e123]
+            - text: contact@doktori.tn
+        - generic [ref=e126]:
+          - paragraph [ref=e127]: Plateforme
+          - list [ref=e128]:
+            - listitem [ref=e129]:
+              - link "À propos" [ref=e130] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e131]:
+              - link "Blog" [ref=e132] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=e133]:
+              - link "FAQ" [ref=e134] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e135]:
+              - link "SOS Médecin" [ref=e136] [cursor=pointer]:
+                - /url: /sos-medecin
+        - generic [ref=e137]:
+          - paragraph [ref=e138]: Légal
+          - list [ref=e139]:
+            - listitem [ref=e140]:
+              - link "Mentions légales" [ref=e141] [cursor=pointer]:
+                - /url: /mentions-legales
+            - listitem [ref=e142]:
+              - link "CGU" [ref=e143] [cursor=pointer]:
+                - /url: /cgu
+            - listitem [ref=e144]:
+              - link "Politique de confidentialité" [ref=e145] [cursor=pointer]:
+                - /url: /confidentialite
+        - generic [ref=e146]:
+          - paragraph [ref=e147]: Espace médecin
+          - paragraph [ref=e148]: Vous êtes médecin et souhaitez rejoindre Doktori ?
+          - link "Espace médecin" [ref=e149] [cursor=pointer]:
+            - /url: /connexion
+            - img [ref=e150]
+            - text: Espace médecin
+      - paragraph [ref=e155]: © 2025-2026 Random Walkers SUARL · Doktori.tn
+  - region "Notifications alt+T"
+  - button "افتح معالج دوكتي" [ref=e156]:
+    - img [ref=e157]
+    - generic [ref=e161]: "!"
+  - button "Open Next.js Dev Tools" [ref=e167] [cursor=pointer]:
+    - img [ref=e168]
+  - alert [ref=e262]: دكتوري - احجز طبيبك عبر الإنترنت في تونس
+  - generic [ref=e265]:
+    - img [ref=e267]
+    - generic [ref=e269]:
+      - paragraph [ref=e270]: Installer Doktori sur votre téléphone
+      - paragraph [ref=e271]: Accédez rapidement à vos rendez-vous depuis votre écran d'accueil.
+      - button "Installer l'application" [ref=e272]
+    - button "Fermer" [ref=e273]:
+      - img [ref=e274]

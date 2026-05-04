@@ -1,0 +1,19 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e6]:
+    - generic [ref=e7]:
+      - img [ref=e9]
+      - heading "Mes rendez-vous" [level=1] [ref=e11]
+      - paragraph [ref=e12]: Entrez votre numéro de téléphone pour accéder à vos RDV
+    - generic [ref=e14]:
+      - generic [ref=e15]:
+        - generic [ref=e16]: Numéro de téléphone
+        - textbox "Numéro de téléphone" [ref=e17]:
+          - /placeholder: +216 XX XXX XXX
+      - button "Recevoir le code par SMS" [ref=e18]
+    - paragraph [ref=e19]:
+      - text: Vous avez un compte email ?
+      - link "Se connecter par email" [ref=e20] [cursor=pointer]:
+        - /url: /connexion-patient
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e26] [cursor=pointer]:
+    - img [ref=e27]

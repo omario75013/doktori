@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 
 const PATIENT_TOKEN_KEY = "doktori.patient.token";
 
@@ -51,6 +51,7 @@ async function getPatientToken(): Promise<string | null> {
 }
 
 export default function PatientHome() {
+  const { locale } = useLocale();
   const [patientName, setPatientName] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
@@ -118,7 +119,7 @@ export default function PatientHome() {
       });
       setResults(data.hits ?? []);
     } catch {
-      setSearchError("Erreur lors de la recherche");
+      setSearchError(t("common.error"));
     } finally {
       setSearching(false);
     }
@@ -154,9 +155,9 @@ export default function PatientHome() {
         <View style={styles.headerBar}>
           <View>
             <Text style={styles.greeting}>
-              Bonjour{patientName ? `, ${patientName}` : ""} 👋
+              {t("patient.home.greeting", { name: patientName ? `, ${patientName}` : "" })}
             </Text>
-            <Text style={styles.subGreeting}>Trouvez votre médecin</Text>
+            <Text style={styles.subGreeting}>{t("patient.home.subGreeting")}</Text>
           </View>
           <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
             <Pressable
@@ -180,7 +181,7 @@ export default function PatientHome() {
             style={styles.searchInput}
             value={query}
             onChangeText={handleQueryChange}
-            placeholder="Médecin, spécialité, ville…"
+            placeholder={t("patient.home.searchPlaceholder")}
             placeholderTextColor={colors.foregroundSecondary}
             returnKeyType="search"
           />
@@ -209,20 +210,20 @@ export default function PatientHome() {
         {isSearchActive ? (
           /* Search results */
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Résultats</Text>
+            <Text style={styles.sectionTitle}>{t("patient.home.searchResults")}</Text>
             {searching ? (
               <ActivityIndicator color={colors.teal} style={{ marginTop: spacing.lg }} />
             ) : searchError ? (
               <View style={styles.emptyState}>
                 <Text style={styles.emptyText}>{searchError}</Text>
                 <Pressable onPress={() => search(query, selectedSpecialty)} style={styles.retryBtn}>
-                  <Text style={styles.retryText}>Réessayer</Text>
+                  <Text style={styles.retryText}>{t("common.retry")}</Text>
                 </Pressable>
               </View>
             ) : results.length === 0 ? (
               <View style={styles.emptyState}>
                 <Ionicons name="search-outline" size={40} color={colors.border} />
-                <Text style={styles.emptyText}>Aucun résultat</Text>
+                <Text style={styles.emptyText}>{t("patient.home.noResults")}</Text>
               </View>
             ) : (
               results.map((doc) => <DoctorCard key={doc.id} doc={doc} />)
@@ -233,7 +234,7 @@ export default function PatientHome() {
             {/* Next appointment card */}
             {nextAppt && (
               <View style={styles.section}>
-                <Text style={styles.sectionTitle}>Prochain RDV</Text>
+                <Text style={styles.sectionTitle}>{t("patient.home.nextRdv")}</Text>
                 <View style={styles.apptCard}>
                   <View style={{ flex: 1 }}>
                     <Text style={styles.apptDoctor}>{nextAppt.doctorName}</Text>
@@ -244,12 +245,12 @@ export default function PatientHome() {
                       })} à {new Date(nextAppt.startsAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
                     </Text>
                     {minutesUntil(nextAppt.startsAt) > 0 && (
-                      <Text style={styles.countdown}>dans {minutesUntil(nextAppt.startsAt)} min</Text>
+                      <Text style={styles.countdown}>{t("patient.home.inMin", { min: minutesUntil(nextAppt.startsAt) })}</Text>
                     )}
                   </View>
                   {canJoin && (
                     <Pressable style={styles.joinBtn}>
-                      <Text style={styles.joinBtnText}>Rejoindre</Text>
+                      <Text style={styles.joinBtnText}>{t("patient.home.join")}</Text>
                     </Pressable>
                   )}
                 </View>
@@ -258,13 +259,13 @@ export default function PatientHome() {
 
             {/* Default doctors list */}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Médecins disponibles</Text>
+              <Text style={styles.sectionTitle}>{t("patient.home.availableDoctors")}</Text>
               {loadingDefault ? (
                 <ActivityIndicator color={colors.teal} style={{ marginTop: spacing.lg }} />
               ) : defaultDoctors.length === 0 ? (
                 <View style={styles.emptyState}>
                   <Ionicons name="medical-outline" size={40} color={colors.border} />
-                  <Text style={styles.emptyText}>Aucun médecin trouvé</Text>
+                  <Text style={styles.emptyText}>{t("patient.home.noDoctors")}</Text>
                 </View>
               ) : (
                 defaultDoctors.map((doc) => <DoctorCard key={doc.id} doc={doc} />)
@@ -300,7 +301,7 @@ function DoctorCard({ doc }: { doc: Doctor }) {
       </View>
       {doc.availableToday && (
         <View style={styles.availBadge}>
-          <Text style={styles.availText}>Disponible</Text>
+          <Text style={styles.availText}>{t("patient.home.available")}</Text>
         </View>
       )}
     </Pressable>

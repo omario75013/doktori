@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Card, Kv, Loader } from "./_ui";
 
 type Me = {
@@ -42,6 +42,7 @@ type DoctorPublic = {
 const WEB_BASE = "https://doktori.tn";
 
 export default function Profil() {
+  const { locale } = useLocale();
   const [me, setMe] = useState<Me | null>(null);
   const [pub, setPub] = useState<DoctorPublic | null>(null);
   const [editOpen, setEditOpen] = useState(false);
@@ -80,7 +81,7 @@ export default function Profil() {
   if (!me) {
     return (
       <>
-        <Stack.Screen options={{ title: "Profil" }} />
+        <Stack.Screen options={{ title: t("doctor.profil.title") }} />
         <Loader />
       </>
     );
@@ -102,7 +103,7 @@ export default function Profil() {
         },
       });
       setMe((prev) => prev ? { ...prev, name: editName.trim() || prev.name } : prev);
-      Alert.alert("Succès", "Profil mis à jour");
+      Alert.alert(t("common.ok"), t("doctor.profil.title"));
       setEditOpen(false);
       // Refresh pub data
       if (me?.slug) {
@@ -110,7 +111,7 @@ export default function Profil() {
         setPub(p);
       }
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Sauvegarde échouée");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("common.error"));
     } finally {
       setSaving(false);
     }
@@ -119,7 +120,7 @@ export default function Profil() {
   async function shareProfile() {
     try {
       await Share.share({
-        title: me ? `Dr. ${me.name}` : "Profil Doktori",
+        title: me ? `Dr. ${me.name}` : t("doctor.profil.defaultTitle"),
         message: `Prenez RDV avec ${me ? me.name : "moi"} sur Doktori :\n${publicUrl}`,
         url: publicUrl,
       });
@@ -139,9 +140,9 @@ export default function Profil() {
   }
 
   function copyLink() {
-    Alert.alert("Lien de votre profil", publicUrl, [
-      { text: "Fermer" },
-      { text: "Partager", onPress: shareProfile },
+    Alert.alert(t("doctor.profil.publicUrl"), publicUrl, [
+      { text: t("common.close") },
+      { text: t("doctor.profil.shareWhatsapp"), onPress: shareProfile },
     ]);
   }
 
@@ -160,7 +161,7 @@ export default function Profil() {
     <>
       <Stack.Screen
         options={{
-          title: "Mon profil",
+          title: t("doctor.profil.title"),
           headerRight: () => (
             <Pressable onPress={() => setEditOpen(true)} hitSlop={10} style={{ padding: spacing.xs, marginRight: spacing.sm }}>
               <Ionicons name="create-outline" size={22} color={colors.teal} />
@@ -200,7 +201,7 @@ export default function Profil() {
         <View style={styles.actionRow}>
           <ShareBtn
             icon="share-social"
-            label="Partager"
+            label={t("doctor.profil.shareWhatsapp")}
             onPress={shareProfile}
           />
           <ShareBtn
@@ -209,15 +210,15 @@ export default function Profil() {
             tint="#25D366"
             onPress={shareWhatsApp}
           />
-          <ShareBtn icon="link" label="Copier" onPress={copyLink} />
+          <ShareBtn icon="link" label={t("doctor.profil.shareCopy")} onPress={copyLink} />
         </View>
 
         {/* QR Code */}
-        <Card title="QR code de votre profil">
+        <Card title={t("doctor.profil.qrTitle")}>
           <View style={styles.qrWrap}>
             <Image source={{ uri: qrUrl }} style={styles.qr} />
             <Text style={styles.qrHint}>
-              Les patients scannent pour prendre RDV directement.
+              {t("doctor.profil.qrDesc")}
             </Text>
             <Pressable onPress={copyLink} style={styles.urlPill}>
               <Ionicons name="globe-outline" size={14} color={colors.teal} />
@@ -231,29 +232,28 @@ export default function Profil() {
 
         {/* Profile info */}
         {pub && (
-          <Card title="Présentation publique">
+          <Card title={t("doctor.profil.bioSection")}>
             {pub.bio ? (
               <Text style={styles.bio}>{pub.bio}</Text>
             ) : (
               <Text style={styles.bioEmpty}>
-                Aucune bio. Ajoutez-en une depuis le portail web pour mieux
-                vous présenter.
+                {t("doctor.profil.noBio")}
               </Text>
             )}
             {pub.yearsOfExperience != null && (
               <Kv
-                label="Expérience"
+                label={t("doctor.profil.experience")}
                 value={`${pub.yearsOfExperience} an${
                   pub.yearsOfExperience > 1 ? "s" : ""
                 }`}
               />
             )}
             {pub.languages && pub.languages.length > 0 && (
-              <Kv label="Langues" value={pub.languages.join(", ")} />
+              <Kv label={t("doctor.profil.languages")} value={pub.languages.join(", ")} />
             )}
             {pub.expertise && pub.expertise.length > 0 && (
               <View style={{ marginTop: spacing.sm }}>
-                <Text style={styles.chipLabel}>Expertise</Text>
+                <Text style={styles.chipLabel}>{t("doctor.profil.expertise")}</Text>
                 <View style={styles.chipsWrap}>
                   {pub.expertise.map((e) => (
                     <View key={e} style={styles.chip}>
@@ -268,34 +268,33 @@ export default function Profil() {
 
         {/* Fees */}
         {pub && (pub.consultationFee || pub.teleconsultFee) && (
-          <Card title="Honoraires">
+          <Card title={t("doctor.profil.fees")}>
             {pub.consultationFee != null && (
               <Kv
-                label="Consultation cabinet"
+                label={t("doctor.profil.feeCabinet")}
                 value={`${(pub.consultationFee / 1000).toFixed(0)} DT`}
               />
             )}
             {pub.teleconsultFee != null && (
               <Kv
-                label="Téléconsultation"
+                label={t("doctor.profil.feeTeleconsult")}
                 value={`${(pub.teleconsultFee / 1000).toFixed(0)} DT`}
               />
             )}
           </Card>
         )}
 
-        {/* Compte */}
-        <Card title="Compte">
-          <Kv label="Email" value={me.email} />
-          <Kv label="URL publique" value={`/${me.slug}`} mono />
-          <Kv label="2FA" value={me.totpEnabled ? "Activée" : "Désactivée"} />
+        <Card title={t("doctor.profil.sectionAccount")}>
+          <Kv label={t("doctor.profil.email")} value={me.email} />
+          <Kv label={t("doctor.profil.publicUrl")} value={`/${me.slug}`} mono />
+          <Kv label={t("doctor.profil.twoFa")} value={me.totpEnabled ? t("doctor.profil.twoFaEnabled") : t("doctor.profil.twoFaDisabled")} />
           <Pressable
             onPress={() => router.push("/(doctor)/more/parametres")}
             style={styles.settingsLink}
           >
             <Ionicons name="settings" size={14} color={colors.teal} />
             <Text style={styles.settingsLinkText}>
-              Modifier les paramètres
+              {t("doctor.profil.editSettings")}
             </Text>
           </Pressable>
         </Card>
@@ -308,65 +307,65 @@ export default function Profil() {
             <Pressable onPress={() => setEditOpen(false)} style={styles.modalClose}>
               <Ionicons name="close" size={22} color={colors.foreground} />
             </Pressable>
-            <Text style={styles.modalTitle}>Modifier le profil</Text>
+            <Text style={styles.modalTitle}>{t("doctor.profil.editProfile")}</Text>
             <Pressable
               onPress={saveProfile}
               disabled={saving}
               style={[styles.saveBtn, saving && { opacity: 0.6 }]}
             >
-              <Text style={styles.saveBtnText}>{saving ? "…" : "Sauvegarder"}</Text>
+              <Text style={styles.saveBtnText}>{saving ? "…" : t("common.save")}</Text>
             </Pressable>
           </View>
           <ScrollView contentContainerStyle={styles.modalBody}>
-            <Text style={styles.fieldLabel}>Nom complet</Text>
+            <Text style={styles.fieldLabel}>{t("doctor.profil.fullName")}</Text>
             <TextInput
               value={editName}
               onChangeText={setEditName}
-              placeholder="Dr. Prénom Nom"
+              placeholder={t("doctor.profil.fullNamePlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               style={styles.input}
               autoCapitalize="words"
             />
 
-            <Text style={styles.fieldLabel}>Biographie</Text>
+            <Text style={styles.fieldLabel}>{t("doctor.profil.bio")}</Text>
             <TextInput
               value={editBio}
               onChangeText={setEditBio}
-              placeholder="Présentez-vous en quelques lignes…"
+              placeholder={t("doctor.profil.bioPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               multiline
               numberOfLines={4}
               style={[styles.input, styles.inputMulti]}
             />
 
-            <Text style={styles.fieldLabel}>Honoraires cabinet (DT)</Text>
+            <Text style={styles.fieldLabel}>{t("doctor.profil.cabinetFee")}</Text>
             <TextInput
               value={editFee}
               onChangeText={setEditFee}
-              placeholder="Ex: 50"
+              placeholder={t("doctor.profil.cabinetFeePlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               keyboardType="number-pad"
               style={styles.input}
             />
 
-            <Text style={styles.fieldLabel}>Honoraires téléconsultation (DT)</Text>
+            <Text style={styles.fieldLabel}>{t("doctor.profil.teleconsultFee")}</Text>
             <TextInput
               value={editTeleFee}
               onChangeText={setEditTeleFee}
-              placeholder="Ex: 40"
+              placeholder={t("doctor.profil.teleconsultFeePlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               keyboardType="number-pad"
               style={styles.input}
             />
 
-            <Text style={styles.fieldLabel}>Mode de consultation</Text>
+            <Text style={styles.fieldLabel}>{t("doctor.profil.consultMode")}</Text>
             <View style={styles.modeGrid}>
               {(["cabinet", "teleconsult", "both", "home"] as const).map((m) => {
                 const labels: Record<string, string> = {
-                  cabinet: "Cabinet",
-                  teleconsult: "Téléconsult",
-                  both: "Les deux",
-                  home: "Domicile",
+                  cabinet: t("doctor.profil.modeCabinet"),
+                  teleconsult: t("doctor.profil.modeTeleconsult"),
+                  both: t("doctor.profil.modeBoth"),
+                  home: t("doctor.profil.modeDomicile"),
                 };
                 return (
                   <Pressable

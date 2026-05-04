@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 
 type Conversation = {
   id: string;
@@ -28,6 +28,7 @@ type Conversation = {
 type Tab = "equipe" | "medecins";
 
 export default function MessagerieScreen() {
+  const { locale } = useLocale();
   const [tab, setTab] = useState<Tab>("equipe");
   const [team, setTeam] = useState<Conversation[]>([]);
   const [peers, setPeers] = useState<Conversation[]>([]);
@@ -61,19 +62,19 @@ export default function MessagerieScreen() {
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
       <View style={styles.header}>
-        <Text style={styles.title}>Messagerie</Text>
+        <Text style={styles.title}>{t("doctor.messagerie.title")}</Text>
       </View>
 
       <View style={styles.tabs}>
         <TabBtn
           icon="medkit"
-          label={`Équipe${team.length ? ` · ${team.length}` : ""}`}
+          label={`${t("doctor.messagerie.team")}${team.length ? ` · ${team.length}` : ""}`}
           active={tab === "equipe"}
           onPress={() => setTab("equipe")}
         />
         <TabBtn
           icon="person"
-          label={`Médecins${peers.length ? ` · ${peers.length}` : ""}`}
+          label={`${t("doctor.messagerie.doctors")}${peers.length ? ` · ${peers.length}` : ""}`}
           active={tab === "medecins"}
           onPress={() => setTab("medecins")}
         />
@@ -100,8 +101,8 @@ export default function MessagerieScreen() {
               <Ionicons name="chatbubbles-outline" size={32} color={colors.foregroundSecondary} />
               <Text style={styles.emptyText}>
                 {tab === "medecins"
-                  ? "Aucun médecin dans votre réseau."
-                  : "Aucun collègue dans votre équipe encore."}
+                  ? t("doctor.messagerie.noDoctors")
+                  : t("doctor.messagerie.noTeam")}
               </Text>
             </View>
           }
@@ -165,7 +166,7 @@ function ConversationRow({ conversation, kind }: { conversation: Conversation; k
           {time && <Text style={styles.rowTime}>{time}</Text>}
         </View>
         <Text style={styles.rowLast} numberOfLines={1}>
-          {conversation.lastMessage ?? (kind === "medecins" ? "Confrère" : "Équipe")}
+          {conversation.lastMessage ?? (kind === "medecins" ? t("doctor.messagerie.peerColleague") : t("doctor.messagerie.peerTeam"))}
         </Text>
       </View>
       {unread > 0 && (

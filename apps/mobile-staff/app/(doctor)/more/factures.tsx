@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Loader, Empty, formatMillimes, formatDate } from "./_ui";
 
 type Invoice = {
@@ -16,6 +16,7 @@ type Invoice = {
 };
 
 export default function Factures() {
+  const { locale } = useLocale();
   const [rows, setRows] = useState<Invoice[] | null>(null);
 
   useEffect(() => {
@@ -32,7 +33,7 @@ export default function Factures() {
   if (!rows) {
     return (
       <>
-        <Stack.Screen options={{ title: "Factures" }} />
+        <Stack.Screen options={{ title: t("doctor.factures.title") }} />
         <Loader />
       </>
     );
@@ -43,7 +44,7 @@ export default function Factures() {
       <Stack.Screen options={{ title: "Factures" }} />
       <Screen>
         {rows.length === 0 ? (
-          <Empty icon="receipt-outline" title="Aucune facture" />
+          <Empty icon="receipt-outline" title={t("doctor.factures.noInvoices")} />
         ) : (
           rows.map((inv) => (
             <View key={inv.id} style={styles.row}>
@@ -85,10 +86,10 @@ export default function Factures() {
                     ]}
                   >
                     {inv.status === "paid"
-                      ? "Payée"
+                      ? t("doctor.factures.paid")
                       : inv.status === "cancelled"
-                      ? "Annulée"
-                      : "En attente"}
+                      ? t("doctor.factures.cancelled")
+                      : t("doctor.factures.pending")}
                   </Text>
                 </View>
               </View>

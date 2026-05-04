@@ -15,7 +15,7 @@ import {
 } from "react-native";
 import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Loader, Empty } from "./_ui";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -142,7 +142,7 @@ function DoctorProfileModal({
       setConnectState("sent");
       onConnected();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Erreur lors de l'envoi");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("common.error"));
       setConnectState("idle");
     }
   }
@@ -166,14 +166,14 @@ function DoctorProfileModal({
         },
       });
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Impossible d'ouvrir la conversation");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("common.error"));
     } finally {
       setMessageSending(false);
     }
   }
 
   function handleRefer() {
-    Alert.alert("Bientôt disponible", "La fonctionnalité de référencement de patients sera disponible prochainement.");
+    Alert.alert(t("doctor.reseau.comingSoon"), t("doctor.reseau.referComingSoon"));
   }
 
   const rating = Number(profile.averageRating ?? 0);
@@ -187,7 +187,7 @@ function DoctorProfileModal({
           <Pressable onPress={onClose} style={styles.modalCloseBtn} hitSlop={10}>
             <Ionicons name="close" size={20} color={colors.foreground} />
           </Pressable>
-          <Text style={styles.modalHeaderTitle}>Profil médecin</Text>
+          <Text style={styles.modalHeaderTitle}>{t("doctor.reseau.doctorProfile")}</Text>
           <View style={styles.modalHeaderSpacer} />
         </View>
 
@@ -219,7 +219,7 @@ function DoctorProfileModal({
                 <Text style={styles.ratingStars}>{renderStars(rating)}</Text>
                 <Text style={styles.ratingValue}>{rating.toFixed(1)}</Text>
                 {reviewCount > 0 ? (
-                  <Text style={styles.ratingCount}>({reviewCount} avis)</Text>
+                  <Text style={styles.ratingCount}>{t("doctor.reseau.reviews", { count: reviewCount })}</Text>
                 ) : null}
               </View>
             ) : null}
@@ -232,19 +232,19 @@ function DoctorProfileModal({
           {/* Bio */}
           {profile.bio ? (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>À propos</Text>
+              <Text style={styles.sectionLabel}>{t("doctor.reseau.aboutSection")}</Text>
               <Text style={styles.bioText}>{profile.bio}</Text>
             </View>
           ) : null}
 
           {/* Info grid */}
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Informations</Text>
+            <Text style={styles.sectionLabel}>{t("doctor.reseau.infoSection")}</Text>
             <View style={styles.infoGrid}>
               {profile.yearsOfExperience != null ? (
                 <View style={styles.infoChip}>
                   <Ionicons name="time-outline" size={14} color={colors.teal} />
-                  <Text style={styles.infoChipText}>{profile.yearsOfExperience} ans d'expérience</Text>
+                  <Text style={styles.infoChipText}>{profile.yearsOfExperience} {t("doctor.reseau.yearsExp")}</Text>
                 </View>
               ) : null}
               {profile.consultationFee != null ? (
@@ -269,7 +269,7 @@ function DoctorProfileModal({
           {/* Languages */}
           {profile.languages && profile.languages.length > 0 ? (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Langues</Text>
+              <Text style={styles.sectionLabel}>{t("doctor.reseau.languagesSection")}</Text>
               <View style={styles.tagRow}>
                 {profile.languages.map((lang) => (
                   <View key={lang} style={styles.tag}>
@@ -283,7 +283,7 @@ function DoctorProfileModal({
           {/* Expertise */}
           {profile.expertise && profile.expertise.length > 0 ? (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Expertise</Text>
+              <Text style={styles.sectionLabel}>{t("doctor.reseau.expertiseSection")}</Text>
               <View style={styles.tagRow}>
                 {profile.expertise.map((ex) => (
                   <View key={ex} style={[styles.tag, styles.tagTeal]}>
@@ -317,7 +317,7 @@ function DoctorProfileModal({
                     color="#FFFFFF"
                   />
                   <Text style={styles.actionBtnPrimaryText}>
-                    {connectState === "sent" ? "Invitation envoyée" : "Se connecter"}
+                    {connectState === "sent" ? t("doctor.reseau.inviteSent") : t("doctor.reseau.connect")}
                   </Text>
                 </>
               )}
@@ -334,14 +334,14 @@ function DoctorProfileModal({
             ) : (
               <>
                 <Ionicons name="chatbubble-outline" size={16} color={colors.teal} />
-                <Text style={styles.actionBtnSecondaryText}>Envoyer un message</Text>
+                <Text style={styles.actionBtnSecondaryText}>{t("doctor.reseau.sendMessage")}</Text>
               </>
             )}
           </Pressable>
 
           <Pressable onPress={handleRefer} style={[styles.actionBtn, styles.actionBtnGhost]}>
             <Ionicons name="arrow-redo-outline" size={16} color={colors.foregroundSecondary} />
-            <Text style={styles.actionBtnGhostText}>Référer un patient</Text>
+            <Text style={styles.actionBtnGhostText}>{t("doctor.reseau.referPatient")}</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -352,6 +352,7 @@ function DoctorProfileModal({
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 
 export default function Reseau() {
+  const { locale } = useLocale();
   const [activeTab, setActiveTab] = useState<Tab>("mon-reseau");
   const [query, setQuery] = useState("");
   const [connections, setConnections] = useState<Connection[]>([]);
@@ -462,7 +463,7 @@ export default function Reseau() {
       });
       await load();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
     } finally {
       setRespondingId(null);
     }
@@ -478,7 +479,7 @@ export default function Reseau() {
       setPendingSentIds((prev) => new Set(prev).add(id));
       await load();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
     } finally {
       setSending(null);
     }
@@ -517,7 +518,7 @@ export default function Reseau() {
   if (loading) {
     return (
       <>
-        <Stack.Screen options={{ title: "Réseau" }} />
+        <Stack.Screen options={{ title: t("doctor.reseau.title") }} />
         <Loader />
       </>
     );
@@ -525,7 +526,7 @@ export default function Reseau() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "Réseau", headerShadowVisible: false }} />
+      <Stack.Screen options={{ title: t("doctor.reseau.title"), headerShadowVisible: false }} />
 
       <View style={styles.root}>
         {/* Tab bar */}
@@ -540,7 +541,7 @@ export default function Reseau() {
               color={activeTab === "mon-reseau" ? "#FFFFFF" : colors.foregroundSecondary}
             />
             <Text style={[styles.tabText, activeTab === "mon-reseau" && styles.tabTextActive]}>
-              Mon réseau
+              {t("doctor.reseau.tabMyNetwork")}
             </Text>
             {connections.length > 0 && (
               <View style={[styles.tabBadge, activeTab === "mon-reseau" && styles.tabBadgeActive]}>
@@ -561,7 +562,7 @@ export default function Reseau() {
               color={activeTab === "decouvrir" ? "#FFFFFF" : colors.foregroundSecondary}
             />
             <Text style={[styles.tabText, activeTab === "decouvrir" && styles.tabTextActive]}>
-              Découvrir
+              {t("doctor.reseau.tabDiscover")}
             </Text>
           </Pressable>
         </View>
@@ -572,7 +573,7 @@ export default function Reseau() {
           <TextInput
             value={query}
             onChangeText={setQuery}
-            placeholder="Rechercher par nom, spécialité, ville…"
+            placeholder={t("doctor.reseau.searchPlaceholder")}
             placeholderTextColor={colors.foregroundSecondary}
             returnKeyType="search"
             style={styles.searchInput}
@@ -638,8 +639,8 @@ function MonReseauTab({
       <View style={styles.emptyContainer}>
         <Empty
           icon="people-outline"
-          title="Aucun confrère dans votre réseau"
-          sub="Passez à l'onglet Découvrir pour trouver des médecins."
+          title={t("doctor.reseau.noConnections")}
+          sub={t("doctor.reseau.noConnectionsHint")}
         />
       </View>
     );
@@ -654,7 +655,7 @@ function MonReseauTab({
       {/* Pending invites */}
       {pending.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Demandes reçues ({pending.length})</Text>
+          <Text style={styles.sectionLabel}>{t("doctor.reseau.pendingRequests", { count: pending.length })}</Text>
           {pending.map((c) => (
             <View key={c.id} style={styles.pendingCard}>
               <Pressable
@@ -680,7 +681,7 @@ function MonReseauTab({
                   ) : (
                     <>
                       <Ionicons name="checkmark" size={13} color="#FFFFFF" />
-                      <Text style={styles.actionPillAcceptText}>Accepter</Text>
+                      <Text style={styles.actionPillAcceptText}>{t("doctor.reseau.accept")}</Text>
                     </>
                   )}
                 </Pressable>
@@ -690,7 +691,7 @@ function MonReseauTab({
                   style={[styles.actionPill, styles.actionPillDecline]}
                 >
                   <Ionicons name="close" size={13} color={colors.danger} />
-                  <Text style={styles.actionPillDeclineText}>Décliner</Text>
+                  <Text style={styles.actionPillDeclineText}>{t("doctor.reseau.decline")}</Text>
                 </Pressable>
               </View>
             </View>
@@ -701,7 +702,7 @@ function MonReseauTab({
       {/* Connected doctors */}
       {connections.length > 0 && (
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Mes confrères ({connections.length})</Text>
+          <Text style={styles.sectionLabel}>{t("doctor.reseau.myConnections", { count: connections.length })}</Text>
           {connections.map((c) => (
             <Pressable
               key={c.id}
@@ -724,8 +725,8 @@ function MonReseauTab({
       {connections.length === 0 && pending.length > 0 && (
         <Empty
           icon="git-network-outline"
-          title="Aucune connexion établie"
-          sub="Acceptez des invitations ou découvrez des confrères."
+          title={t("doctor.reseau.noConnectionsAlt")}
+          sub={t("doctor.reseau.noConnectionsAltHint")}
         />
       )}
     </ScrollView>
@@ -762,8 +763,8 @@ function DecouvrirTab({
       <View style={styles.emptyContainer}>
         <Empty
           icon="compass-outline"
-          title="Aucun médecin trouvé"
-          sub="Modifiez votre recherche pour trouver des confrères."
+          title={t("doctor.reseau.noDoctors")}
+          sub={t("doctor.reseau.noDoctorsHint")}
         />
       </View>
     );
@@ -806,7 +807,7 @@ function DecouvrirTab({
             {isPending ? (
               <View style={styles.pendingBtn}>
                 <Ionicons name="time-outline" size={13} color={colors.foregroundSecondary} />
-                <Text style={styles.pendingBtnText}>En attente</Text>
+                <Text style={styles.pendingBtnText}>{t("doctor.reseau.pending")}</Text>
               </View>
             ) : (
               <Pressable
@@ -820,7 +821,7 @@ function DecouvrirTab({
                 ) : (
                   <>
                     <Ionicons name="person-add" size={13} color="#FFFFFF" />
-                    <Text style={styles.connectBtnText}>Connecter</Text>
+                    <Text style={styles.connectBtnText}>{t("doctor.reseau.connect")}</Text>
                   </>
                 )}
               </Pressable>

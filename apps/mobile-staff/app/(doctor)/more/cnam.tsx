@@ -2,7 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { View, Text, StyleSheet, Pressable, Alert } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Card, Loader, Empty, formatDate } from "./_ui";
 
 type Appointment = {
@@ -19,6 +19,7 @@ type Appointment = {
  * web portal (the PDF flow + e-signature is desktop-only for now).
  */
 export default function Cnam() {
+  const { locale } = useLocale();
   const [appts, setAppts] = useState<Appointment[] | null>(null);
 
   const load = useCallback(async () => {
@@ -37,7 +38,7 @@ export default function Cnam() {
   if (!appts) {
     return (
       <>
-        <Stack.Screen options={{ title: "CNAM" }} />
+        <Stack.Screen options={{ title: t("doctor.cnam.title") }} />
         <Loader />
       </>
     );
@@ -53,26 +54,25 @@ export default function Cnam() {
       <Stack.Screen options={{ title: "CNAM" }} />
       <Screen>
         <View style={{ flexDirection: "row", gap: spacing.sm }}>
-          <Stat label="Consultations 30j" value={String(lastMonth.length)} />
-          <Stat label="Total complétées" value={String(appts.length)} />
+          <Stat label={t("doctor.cnam.consultations30d")} value={String(lastMonth.length)} />
+          <Stat label={t("doctor.cnam.totalCompleted")} value={String(appts.length)} />
         </View>
 
-        <Card title="Guide de facturation CNAM">
+        <Card title={t("doctor.cnam.guideTitle")}>
           <Row icon="document-text">
-            Génère une feuille de soins CNAM pour chaque consultation complétée
-            d&apos;un patient affilié.
+            {t("doctor.cnam.step1")}
           </Row>
           <Row icon="create">
-            La génération PDF + signature électronique se fait depuis le portail web.
+            {t("doctor.cnam.step2")}
           </Row>
           <Row icon="cloud-upload">
-            Soumets ensuite le lot mensuel directement depuis le portail.
+            {t("doctor.cnam.step3")}
           </Row>
         </Card>
 
-        <Card title={`Consultations complétées (${appts.length})`}>
+        <Card title={t("doctor.cnam.listTitle", { count: appts.length })}>
           {appts.length === 0 ? (
-            <Empty icon="document-attach-outline" title="Aucune consultation" />
+            <Empty icon="document-attach-outline" title={t("doctor.cnam.noConsultations")} />
           ) : (
             appts.slice(0, 20).map((a) => (
               <Pressable
@@ -81,7 +81,7 @@ export default function Cnam() {
                 onPress={() =>
                   Alert.alert(
                     a.patientName,
-                    `${formatDate(a.startsAt)}\n${a.patientPhone}\n\nGénère la feuille CNAM depuis le portail web.`
+                    `${formatDate(a.startsAt)}\n${a.patientPhone}\n\n${t("doctor.cnam.webHint")}`
                   )
                 }
               >

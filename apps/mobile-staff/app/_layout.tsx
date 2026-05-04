@@ -6,7 +6,7 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Constants from "expo-constants";
 import * as Notifications from "expo-notifications";
-import { setApiBaseUrl, setLocale, loadMessages, api } from "@doktori/mobile-core";
+import { setApiBaseUrl, loadMessages, loadPersistedLocale, api } from "@doktori/mobile-core";
 
 import fr from "../i18n/fr.json";
 import ar from "../i18n/ar.json";
@@ -143,9 +143,7 @@ export default function RootLayout() {
 
     loadMessages("fr", fr as Record<string, unknown>);
     loadMessages("ar", ar as Record<string, unknown>);
-    setLocale("fr");
-
-    setReady(true);
+    void loadPersistedLocale().then(() => setReady(true));
 
     // Register push token after API base is set
     void registerPushToken();

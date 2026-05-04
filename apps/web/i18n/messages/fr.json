@@ -880,7 +880,13 @@
       "peerDoctor": "Médecin",
       "peerSecretary": "Secrétaire",
       "choosePeer": "Choisir un interlocuteur",
-      "noPeers": "Aucun interlocuteur disponible"
+      "noPeers": "Aucun interlocuteur disponible",
+      "statusBanner": "Statut actuel : {status}",
+      "editStatus": "Enregistrer",
+      "statusMessage": "Message de statut",
+      "awayMessage": "Réponse automatique",
+      "statusUntil": "Actif jusqu'au (optionnel)",
+      "clearStatus": "Effacer le statut"
     },
     "common": {
       "save": "Enregistrer",
@@ -1392,7 +1398,16 @@
       "emptyAddCabinetTitle": "Ajoutez au moins un cabinet",
       "emptyAddCabinetDesc": "Les horaires d'agenda sont définis par cabinet. Créez votre premier cabinet (ou clinique affiliée) pour commencer à configurer vos disponibilités.",
       "managePracticesBtn": "Gérer mes cabinets",
-      "addCabinetBtn": "Ajouter un cabinet"
+      "addCabinetBtn": "Ajouter un cabinet",
+      "declareConge": "Déclarer des congés",
+      "daysOff": "Congés",
+      "daysOffFrom": "Du",
+      "daysOffTo": "Au",
+      "daysOffReason": "Motif (optionnel)",
+      "daysOffReasonPlaceholder": "Ex: Vacances, Formation...",
+      "daysOffSave": "Enregistrer",
+      "daysOffSaveError": "Erreur lors de l'enregistrement",
+      "daysOffEndBeforeStart": "La date de fin doit être après la date de début"
     },
     "questions": {
       "loadError": "Impossible de charger les questions",

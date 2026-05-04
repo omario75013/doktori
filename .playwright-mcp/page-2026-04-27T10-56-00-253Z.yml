@@ -1,0 +1,168 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: Doktori
+        - button "Réduire la barre latérale" [ref=e6]:
+          - img [ref=e7]
+      - navigation [ref=e9]:
+        - generic [ref=e10]:
+          - paragraph [ref=e11]: Principal
+          - list [ref=e12]:
+            - listitem [ref=e13]:
+              - link "لوحة التحكم" [ref=e14] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e16]
+                - generic [ref=e21]: لوحة التحكم
+            - listitem [ref=e22]:
+              - link "Vérification" [ref=e23] [cursor=pointer]:
+                - /url: /verification
+                - img [ref=e25]
+                - generic [ref=e28]: Vérification
+            - listitem [ref=e29]:
+              - link "التقويم" [ref=e30] [cursor=pointer]:
+                - /url: /calendrier
+                - img [ref=e32]
+                - generic [ref=e34]: التقويم
+            - listitem [ref=e35]:
+              - link "المواعيد" [ref=e36] [cursor=pointer]:
+                - /url: /rendez-vous
+                - img [ref=e38]
+                - generic [ref=e42]: المواعيد
+        - generic [ref=e43]:
+          - paragraph [ref=e44]: Patients
+          - list [ref=e45]:
+            - listitem [ref=e46]:
+              - link "مرضاي" [ref=e47] [cursor=pointer]:
+                - /url: /patients
+                - img [ref=e49]
+                - generic [ref=e54]: مرضاي
+        - generic [ref=e55]:
+          - paragraph [ref=e56]: Réseau
+          - list [ref=e57]:
+            - listitem [ref=e58]:
+              - link "Réseau médecins" [ref=e59] [cursor=pointer]:
+                - /url: /reseau
+                - img [ref=e61]
+                - generic [ref=e66]: Réseau médecins
+            - listitem [ref=e67]:
+              - link "Référencements" [ref=e68] [cursor=pointer]:
+                - /url: /reseau/referencements
+                - img [ref=e70]
+                - generic [ref=e73]: Référencements
+        - generic [ref=e74]:
+          - paragraph [ref=e75]: Communication
+          - list [ref=e76]:
+            - listitem [ref=e77]:
+              - link "صندوق البريد" [ref=e78] [cursor=pointer]:
+                - /url: /messagerie
+                - img [ref=e80]
+                - generic [ref=e83]: صندوق البريد
+            - listitem [ref=e84]:
+              - link "Équipe" [ref=e85] [cursor=pointer]:
+                - /url: /messagerie-equipe
+                - img [ref=e87]
+                - generic [ref=e99]: Équipe
+        - generic [ref=e100]:
+          - paragraph [ref=e101]: Cabinet
+          - list [ref=e102]:
+            - listitem [ref=e103]:
+              - link "أسباب الاستشارة" [ref=e104] [cursor=pointer]:
+                - /url: /motifs
+                - img [ref=e106]
+                - generic [ref=e109]: أسباب الاستشارة
+            - listitem [ref=e110]:
+              - link "العيادات" [ref=e111] [cursor=pointer]:
+                - /url: /cabinets
+                - img [ref=e113]
+                - generic [ref=e117]: العيادات
+            - listitem [ref=e118]:
+              - link "زيارات منزلية" [ref=e119] [cursor=pointer]:
+                - /url: /domicile
+                - img [ref=e121]
+                - generic [ref=e124]: زيارات منزلية
+            - listitem [ref=e125]:
+              - link "الاتفاقيات" [ref=e126] [cursor=pointer]:
+                - /url: /conventions
+                - img [ref=e128]
+                - generic [ref=e132]: الاتفاقيات
+            - listitem [ref=e133]:
+              - link "CNAM" [ref=e134] [cursor=pointer]:
+                - /url: /cnam
+                - img [ref=e136]
+                - generic [ref=e139]: CNAM
+            - listitem [ref=e140]:
+              - link "SOS طبيب" [ref=e141] [cursor=pointer]:
+                - /url: /sos-medecin
+                - img [ref=e143]
+                - generic [ref=e148]: SOS طبيب
+            - listitem [ref=e149]:
+              - link "الاستشارة عن بُعد" [ref=e150] [cursor=pointer]:
+                - /url: /teleconsultation
+                - img [ref=e152]
+                - generic [ref=e155]: الاستشارة عن بُعد
+            - listitem [ref=e156]:
+              - link "السكرتيرات" [ref=e157] [cursor=pointer]:
+                - /url: /secretaires
+                - img [ref=e159]
+                - generic [ref=e171]: السكرتيرات
+        - generic [ref=e172]:
+          - paragraph [ref=e173]: Finances
+          - list [ref=e174]:
+            - listitem [ref=e175]:
+              - link "المحفظة" [ref=e176] [cursor=pointer]:
+                - /url: /wallet
+                - img [ref=e178]
+                - generic [ref=e181]: المحفظة
+            - listitem [ref=e182]:
+              - link "الفواتير" [ref=e183] [cursor=pointer]:
+                - /url: /factures
+                - img [ref=e185]
+                - generic [ref=e188]: الفواتير
+            - listitem [ref=e189]:
+              - link "الاشتراك" [ref=e190] [cursor=pointer]:
+                - /url: /abonnement
+                - img [ref=e192]
+                - generic [ref=e194]: الاشتراك
+        - generic [ref=e195]:
+          - paragraph [ref=e196]: Moi
+          - list [ref=e197]:
+            - listitem [ref=e198]:
+              - link "الإحصائيات" [ref=e199] [cursor=pointer]:
+                - /url: /stats
+                - img [ref=e201]
+                - generic [ref=e203]: الإحصائيات
+            - listitem [ref=e204]:
+              - link "الإحالة" [ref=e205] [cursor=pointer]:
+                - /url: /parrainage
+                - img [ref=e207]
+                - generic [ref=e211]: الإحالة
+            - listitem [ref=e212]:
+              - link "ملفي الشخصي" [ref=e213] [cursor=pointer]:
+                - /url: /profil
+                - img [ref=e215]
+                - generic [ref=e219]: ملفي الشخصي
+            - listitem [ref=e220]:
+              - link "Paramètres" [ref=e221] [cursor=pointer]:
+                - /url: /profil/parametres
+                - img [ref=e223]
+                - generic [ref=e226]: Paramètres
+    - generic [ref=e227]:
+      - banner [ref=e228]:
+        - generic [ref=e230]: Doktori
+        - generic [ref=e231]:
+          - group "Changer de langue" [ref=e232]:
+            - button "Passer en français" [ref=e233]: FR
+            - button "التبديل إلى العربية" [disabled] [pressed] [ref=e234]: AR
+          - button "Notifications" [ref=e236]:
+            - img [ref=e237]
+          - button "Ouvrir le menu profil" [ref=e241]:
+            - img "Dr. Karim Ben Ali" [ref=e242]
+            - img [ref=e243]
+      - main [ref=e245]:
+        - paragraph [ref=e247]: Chargement...
+    - button "Notifier la secrétaire" [ref=e248]:
+      - img [ref=e249]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e257] [cursor=pointer]:
+    - img [ref=e258]

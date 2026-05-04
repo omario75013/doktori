@@ -1,0 +1,74 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e30]:
+      - link "Doktori .tn" [ref=e31] [cursor=pointer]:
+        - /url: /mon-espace
+        - generic [ref=e32]: Doktori
+        - generic [ref=e33]: .tn
+      - generic [ref=e34]:
+        - group "Changer de langue" [ref=e35]:
+          - button "Passer en français" [ref=e36]: FR
+          - button "التبديل إلى العربية" [disabled] [pressed] [ref=e37]: AR
+        - button "Menu" [ref=e39]:
+          - generic [ref=e40]: PT
+          - img [ref=e41]
+    - generic [ref=e5]:
+      - generic [ref=e8]:
+        - generic [ref=e43]:
+          - img [ref=e45]
+          - generic [ref=e47]:
+            - heading "Mes rendez-vous" [level=1] [ref=e48]
+            - paragraph [ref=e49]: 3 rendez-vous au total
+        - generic [ref=e50]:
+          - link "Mes documents" [ref=e51] [cursor=pointer]:
+            - /url: /mes-documents
+          - link "Dossier médical" [ref=e52] [cursor=pointer]:
+            - /url: /dossier-medical
+          - button "Déconnexion" [ref=e53]
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - button "À venir 1" [ref=e56]:
+            - text: À venir
+            - generic [ref=e57]: "1"
+          - button "Passés" [ref=e58]
+          - button "Annulés 2" [ref=e59]:
+            - text: Annulés
+            - generic [ref=e60]: "2"
+        - generic [ref=e63]:
+          - generic [ref=e64]:
+            - generic [ref=e65]:
+              - generic [ref=e66]: Dr. Sami Bouaziz
+              - generic [ref=e67]: Cabinet
+              - generic [ref=e68]: Confirmé
+            - paragraph [ref=e69]: Médecin Généraliste
+            - generic [ref=e70]:
+              - img [ref=e71]
+              - generic [ref=e74]: mardi 5 mai à 10:00
+            - generic [ref=e75]:
+              - img [ref=e76]
+              - generic [ref=e79]: 15 Avenue de la Liberté, El Manar, Tunis
+          - generic [ref=e80]:
+            - link "Message" [ref=e81] [cursor=pointer]:
+              - /url: /messages?doctorId=d1000000-0000-0000-0000-000000000001
+              - img [ref=e82]
+              - text: Message
+            - button "Décaler" [active] [ref=e84]:
+              - img [ref=e85]
+              - text: Décaler
+            - button "Annuler" [ref=e89]:
+              - img [ref=e90]
+              - text: Annuler
+      - generic [ref=e95]:
+        - img [ref=e97]
+        - heading "Demander un report ?" [level=3] [ref=e101]
+        - paragraph [ref=e102]: Votre rendez-vous avec Dr. Sami Bouaziz le mardi 5 mai à 10:00 sera marqué comme « report demandé ». Le cabinet vous contactera pour fixer un nouveau créneau.
+        - generic [ref=e103]:
+          - generic [ref=e104]: Message au cabinet (facultatif)
+          - 'textbox "Ex : disponible en soirée à partir du 5 mai..." [ref=e105]'
+        - generic [ref=e106]:
+          - button "Annuler" [ref=e107]
+          - button "Envoyer la demande" [ref=e108]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e26] [cursor=pointer]:
+    - img [ref=e27]
+  - alert [ref=e93]

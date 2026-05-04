@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, useLocalSearchParams } from "expo-router";
-import { colors, spacing, radii, setStoredToken, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, setStoredToken, api, t, useLocale } from "@doktori/mobile-core";
 
 type LoginResponse = {
   token: string;
@@ -30,10 +30,11 @@ export default function StaffLogin() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { locale } = useLocale();
 
   async function submit() {
     if (!email.trim() || !password) {
-      Alert.alert("Champs requis", "Email et mot de passe obligatoires");
+      Alert.alert(t("auth.missingFields"), t("auth.missingFieldsDesc"));
       return;
     }
     setLoading(true);
@@ -48,16 +49,16 @@ export default function StaffLogin() {
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Erreur inconnue";
       if (msg.includes("vérification")) {
-        Alert.alert("Compte en attente", msg);
+        Alert.alert(t("auth.pendingAccount"), msg);
       } else {
-        Alert.alert("Connexion échouée", msg);
+        Alert.alert(t("auth.loginFailed"), msg);
       }
     } finally {
       setLoading(false);
     }
   }
 
-  const roleLabel = role === "doctor" ? "Médecin" : "Secrétaire";
+  const roleLabel = role === "doctor" ? t("auth.doctor") : t("auth.secretary");
   const accent = role === "doctor" ? colors.teal : colors.tealDark;
 
   return (
@@ -67,19 +68,19 @@ export default function StaffLogin() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.content}>
-          <Text style={[styles.brand, { color: accent }]}>Doktori Pro</Text>
-          <Text style={styles.title}>Espace {roleLabel}</Text>
+          <Text style={[styles.brand, { color: accent }]}>{t("auth.appName")}</Text>
+          <Text style={styles.title}>{t("auth.staffSpace")}{roleLabel}</Text>
           <Text style={styles.subtitle}>
-            Connectez-vous avec votre compte {role === "doctor" ? "médecin" : "secrétaire"}.
+            {t("auth.loginWith")}{role === "doctor" ? t("auth.doctor").toLowerCase() : t("auth.secretary").toLowerCase()}.
           </Text>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Email</Text>
+            <Text style={styles.label}>{t("auth.email")}</Text>
             <TextInput
               style={styles.input}
               value={email}
               onChangeText={setEmail}
-              placeholder={role === "doctor" ? "prenom.nom@doktori.tn" : "secretaire@doktori.tn"}
+              placeholder={role === "doctor" ? t("auth.emailPlaceholderDoctor") : t("auth.emailPlaceholderSecretary")}
               keyboardType="email-address"
               autoCapitalize="none"
               autoComplete="email"
@@ -87,12 +88,12 @@ export default function StaffLogin() {
           </View>
 
           <View style={styles.field}>
-            <Text style={styles.label}>Mot de passe</Text>
+            <Text style={styles.label}>{t("auth.password")}</Text>
             <TextInput
               style={styles.input}
               value={password}
               onChangeText={setPassword}
-              placeholder="••••••••"
+              placeholder={t("auth.passwordPlaceholder")}
               secureTextEntry
               autoComplete="password"
             />
@@ -108,7 +109,7 @@ export default function StaffLogin() {
             disabled={loading}
           >
             <Text style={styles.buttonText}>
-              {loading ? "Connexion…" : "Se connecter"}
+              {loading ? t("auth.signingIn") : t("auth.signIn")}
             </Text>
           </Pressable>
 
@@ -117,13 +118,13 @@ export default function StaffLogin() {
             style={styles.link}
           >
             <Text style={[styles.linkText, { color: accent }]}>
-              Pas vous ? Changer de rôle
+              {t("auth.switchRole")}
             </Text>
           </Pressable>
 
           {role === "doctor" && (
             <Pressable onPress={() => router.push("/(auth)/doctor-signup")} style={styles.link}>
-              <Text style={[styles.linkText, { color: accent }]}>Créer un compte médecin</Text>
+              <Text style={[styles.linkText, { color: accent }]}>{t("auth.createDoctorAccount")}</Text>
             </Pressable>
           )}
         </View>

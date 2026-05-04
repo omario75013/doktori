@@ -60,7 +60,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiBaseUrl": "http://localhost:3000",
+      "apiBaseUrl": "https://doktori.tn",
       "eas": {
         "projectId": "doktori-staff"
       }

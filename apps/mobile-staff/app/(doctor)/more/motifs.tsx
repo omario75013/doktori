@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Loader, Empty, formatMillimes } from "./_ui";
 
 type Motif = {
@@ -29,6 +29,7 @@ type Motif = {
 type Practice = { id: string; name: string; city: string; isActive: boolean };
 
 export default function Motifs() {
+  const { locale } = useLocale();
   const [motifs, setMotifs] = useState<Motif[] | null>(null);
   const [practices, setPractices] = useState<Practice[]>([]);
   const [editing, setEditing] = useState<Partial<Motif> | null>(null);
@@ -51,17 +52,17 @@ export default function Motifs() {
   }, [load]);
 
   async function deleteMotif(id: string, name: string) {
-    Alert.alert("Supprimer", `Supprimer le motif "${name}" ?`, [
-      { text: "Annuler", style: "cancel" },
+    Alert.alert(t("common.delete"), `${t("doctor.motifs.noMotifs")} "${name}" ?`, [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Supprimer",
+        text: t("common.delete"),
         style: "destructive",
         onPress: async () => {
           try {
             await api(`/api/appointment-types/${id}`, { method: "DELETE" });
             await load();
           } catch (e) {
-            Alert.alert("Erreur", e instanceof Error ? e.message : "");
+            Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
           }
         },
       },
@@ -71,7 +72,7 @@ export default function Motifs() {
   if (!motifs) {
     return (
       <>
-        <Stack.Screen options={{ title: "Motifs" }} />
+        <Stack.Screen options={{ title: t("doctor.motifs.title") }} />
         <Loader />
       </>
     );
@@ -81,7 +82,7 @@ export default function Motifs() {
     <>
       <Stack.Screen
         options={{
-          title: "Motifs",
+          title: t("doctor.motifs.title"),
           headerRight: () =>
             practices.length > 0 ? (
               <Pressable
@@ -105,7 +106,7 @@ export default function Motifs() {
       />
       <Screen>
         {motifs.length === 0 ? (
-          <Empty icon="list-outline" title="Aucun motif défini" />
+          <Empty icon="list-outline" title={t("doctor.motifs.noMotifs")} />
         ) : (
           motifs.map((m) => (
             <View key={m.id} style={styles.row}>
@@ -116,7 +117,7 @@ export default function Motifs() {
                   {m.mode === "teleconsult" && (
                     <View style={styles.tele}>
                       <Ionicons name="videocam" size={10} color="#1E40AF" />
-                      <Text style={styles.teleText}>Télé</Text>
+                      <Text style={styles.teleText}>{t("doctor.motifs.typeTeleconsult")}</Text>
                     </View>
                   )}
                 </View>
@@ -126,7 +127,7 @@ export default function Motifs() {
                 </Text>
                 <View style={styles.practicesWrap}>
                   {m.practiceIds.length === 0 ? (
-                    <Text style={styles.noPractice}>Aucun cabinet</Text>
+                    <Text style={styles.noPractice}>{t("doctor.motifs.noCabinets")}</Text>
                   ) : (
                     practices
                       .filter((p) => m.practiceIds.includes(p.id))
@@ -158,7 +159,7 @@ export default function Motifs() {
           <View style={styles.warn}>
             <Ionicons name="warning" size={16} color="#9A3412" />
             <Text style={styles.warnText}>
-              Ajoutez un cabinet avant de créer des motifs.
+              {t("doctor.motifs.cabinetRequired")}
             </Text>
           </View>
         )}
@@ -208,12 +209,12 @@ function MotifEditor({
   const [saving, setSaving] = useState(false);
 
   async function submit() {
-    if (!name.trim()) return Alert.alert("Erreur", "Nom requis");
+    if (!name.trim()) return Alert.alert(t("common.error"), t("doctor.motifs.nameRequired"));
     const dur = Number(duration);
     if (isNaN(dur) || dur < 5 || dur > 120)
-      return Alert.alert("Erreur", "Durée entre 5 et 120 min");
+      return Alert.alert(t("common.error"), t("doctor.motifs.durationInvalid"));
     if (mode !== "teleconsult" && practiceIds.size === 0)
-      return Alert.alert("Erreur", "Sélectionnez au moins un cabinet");
+      return Alert.alert(t("common.error"), t("doctor.motifs.cabinetRequired"));
 
     setSaving(true);
     try {
@@ -234,7 +235,7 @@ function MotifEditor({
       }
       await onSaved();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
     } finally {
       setSaving(false);
     }
@@ -247,23 +248,23 @@ function MotifEditor({
           <Ionicons name="close" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={styles.modalTitle}>
-          {motif.id ? "Modifier" : "Nouveau motif"}
+          {motif.id ? t("doctor.motifs.edit") : t("doctor.motifs.newTitle")}
         </Text>
         <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.md }}>
-        <Field label="Nom">
+        <Field label={t("doctor.motifs.name")}>
           <TextInput
             value={name}
             onChangeText={setName}
-            placeholder="ex. Première consultation"
+            placeholder={t("doctor.motifs.namePlaceholder")}
             style={styles.input}
           />
         </Field>
 
         <View style={{ flexDirection: "row", gap: spacing.sm }}>
-          <Field label="Durée (min)">
+          <Field label={t("doctor.motifs.duration")}>
             <TextInput
               value={duration}
               onChangeText={setDuration}
@@ -271,18 +272,18 @@ function MotifEditor({
               style={styles.input}
             />
           </Field>
-          <Field label="Tarif (DT)">
+          <Field label={t("doctor.motifs.fee")}>
             <TextInput
               value={fee}
               onChangeText={setFee}
               keyboardType="numeric"
-              placeholder="optionnel"
+              placeholder={t("doctor.motifs.feeOptional")}
               style={styles.input}
             />
           </Field>
         </View>
 
-        <Field label="Type">
+        <Field label={t("doctor.motifs.type")}>
           <View style={{ flexDirection: "row", gap: spacing.xs }}>
             <Pressable
               style={[styles.segBtn, mode === "cabinet" && styles.segBtnActive]}
@@ -294,7 +295,7 @@ function MotifEditor({
                   mode === "cabinet" && styles.segBtnTextActive,
                 ]}
               >
-                Cabinet
+                {t("doctor.motifs.typeCabinet")}
               </Text>
             </Pressable>
             <Pressable
@@ -307,13 +308,13 @@ function MotifEditor({
                   mode === "teleconsult" && styles.segBtnTextActive,
                 ]}
               >
-                Téléconsult
+                {t("doctor.motifs.typeTeleconsult")}
               </Text>
             </Pressable>
           </View>
         </Field>
 
-        <Field label="Cabinets proposés">
+        <Field label={t("doctor.motifs.cabinets")}>
           <View style={{ gap: spacing.xs }}>
             {practices.map((p) => {
               const on = practiceIds.has(p.id);
@@ -358,7 +359,7 @@ function MotifEditor({
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <Text style={styles.primaryText}>
-              {motif.id ? "Enregistrer" : "Créer"}
+              {motif.id ? t("doctor.motifs.save") : t("doctor.motifs.create")}
             </Text>
           )}
         </Pressable>

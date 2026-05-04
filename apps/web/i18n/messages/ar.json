@@ -880,7 +880,13 @@
       "peerDoctor": "طبيب",
       "peerSecretary": "سكرتيرة",
       "choosePeer": "اختر محاوراً",
-      "noPeers": "لا محاورون متاحون"
+      "noPeers": "لا محاورون متاحون",
+      "statusBanner": "الحالة الحالية: {status}",
+      "editStatus": "حفظ",
+      "statusMessage": "رسالة الحالة",
+      "awayMessage": "الرد التلقائي",
+      "statusUntil": "فعّال حتى (اختياري)",
+      "clearStatus": "مسح الحالة"
     },
     "common": {
       "save": "حفظ",
@@ -1392,7 +1398,16 @@
       "emptyAddCabinetTitle": "أضِف عيادة أولاً",
       "emptyAddCabinetDesc": "تُحدَّد مواعيد الجدول حسب العيادة. أنشئ أول عيادة (أو عيادة مرتبطة) للبدء في ضبط توافرك.",
       "managePracticesBtn": "إدارة عياداتي",
-      "addCabinetBtn": "إضافة عيادة"
+      "addCabinetBtn": "إضافة عيادة",
+      "declareConge": "تسجيل إجازة",
+      "daysOff": "إجازة",
+      "daysOffFrom": "من",
+      "daysOffTo": "إلى",
+      "daysOffReason": "السبب (اختياري)",
+      "daysOffReasonPlaceholder": "مثال: عطلة، تدريب...",
+      "daysOffSave": "حفظ",
+      "daysOffSaveError": "خطأ في الحفظ",
+      "daysOffEndBeforeStart": "يجب أن يكون تاريخ الانتهاء بعد تاريخ البدء"
     },
     "questions": {
       "loadError": "تعذّر تحميل الأسئلة",

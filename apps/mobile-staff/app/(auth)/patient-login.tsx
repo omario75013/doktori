@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Ionicons } from "@expo/vector-icons";
 
 const PATIENT_TOKEN_KEY = "doktori.patient.token";
@@ -25,6 +25,7 @@ type OtpVerifyResponse = {
 };
 
 export default function PatientLogin() {
+  const { locale } = useLocale();
   const [loginTab, setLoginTab] = useState<"phone" | "email">("phone");
   const [step, setStep] = useState<"phone" | "code">("phone");
   const [digits, setDigits] = useState("");
@@ -56,7 +57,7 @@ export default function PatientLogin() {
   async function requestOtp() {
     const trimmed = digits.trim();
     if (trimmed.length < 8) {
-      Alert.alert("Numéro invalide", "Veuillez entrer un numéro valide.");
+      Alert.alert(t("patientAuth.invalidPhone"), t("patientAuth.invalidPhoneDesc"));
       return;
     }
     setLoading(true);
@@ -70,7 +71,7 @@ export default function PatientLogin() {
       setCode("");
       startCooldown();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Impossible d'envoyer le code.");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("patientAuth.sendError"));
     } finally {
       setLoading(false);
     }
@@ -94,7 +95,7 @@ export default function PatientLogin() {
       }
       router.replace("/(patient)/home");
     } catch (e) {
-      Alert.alert("Connexion impossible", e instanceof Error ? e.message : "Identifiant ou mot de passe incorrect.");
+      Alert.alert(t("patientAuth.loginError"), e instanceof Error ? e.message : t("patientAuth.loginErrorDesc"));
     } finally {
       setLoading(false);
     }
@@ -102,7 +103,7 @@ export default function PatientLogin() {
 
   async function verifyOtp() {
     if (code.trim().length !== 6) {
-      Alert.alert("Code invalide", "Le code doit contenir 6 chiffres.");
+      Alert.alert(t("patientAuth.invalidCode"), t("patientAuth.invalidCodeDesc"));
       return;
     }
     setLoading(true);
@@ -118,7 +119,7 @@ export default function PatientLogin() {
       }
       router.replace("/(patient)/home");
     } catch (e) {
-      Alert.alert("Code incorrect", e instanceof Error ? e.message : "Code invalide ou expiré.");
+      Alert.alert(t("patientAuth.wrongCode"), e instanceof Error ? e.message : t("patientAuth.wrongCodeDesc"));
     } finally {
       setLoading(false);
     }
@@ -136,8 +137,8 @@ export default function PatientLogin() {
         >
           {/* Brand header */}
           <View style={styles.header}>
-            <Text style={styles.brand}>Doktori</Text>
-            <Text style={styles.tagline}>Trouvez votre médecin, prenez RDV</Text>
+            <Text style={styles.brand}>{t("patientAuth.appName")}</Text>
+            <Text style={styles.tagline}>{t("patientAuth.tagline")}</Text>
           </View>
 
           {/* Card */}
@@ -150,7 +151,7 @@ export default function PatientLogin() {
                   onPress={() => setLoginTab("phone")}
                 >
                   <Text style={[styles.tabBtnText, loginTab === "phone" && styles.tabBtnTextActive]}>
-                    Téléphone
+                    {t("patientAuth.tabPhone")}
                   </Text>
                 </Pressable>
                 <Pressable
@@ -158,7 +159,7 @@ export default function PatientLogin() {
                   onPress={() => setLoginTab("email")}
                 >
                   <Text style={[styles.tabBtnText, loginTab === "email" && styles.tabBtnTextActive]}>
-                    Email
+                    {t("patientAuth.tabEmail")}
                   </Text>
                 </Pressable>
               </View>
@@ -190,14 +191,14 @@ export default function PatientLogin() {
           {/* Espace Pro link */}
           <View style={styles.proRow}>
             <View style={styles.line} />
-            <Text style={styles.orText}>ou</Text>
+            <Text style={styles.orText}>{t("patientAuth.or")}</Text>
             <View style={styles.line} />
           </View>
           <Pressable
             style={({ pressed }) => [styles.proBtn, pressed && { opacity: 0.8 }]}
             onPress={() => router.push("/(auth)/role")}
           >
-            <Text style={styles.proBtnText}>Espace Pro →</Text>
+            <Text style={styles.proBtnText}>{t("patientAuth.proSpace")}</Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -220,13 +221,13 @@ function PhoneStep({
 }) {
   return (
     <View style={stepStyles.root}>
-      <Text style={stepStyles.title}>Connexion</Text>
+      <Text style={stepStyles.title}>{t("patientAuth.tabPhone")}</Text>
       <Text style={stepStyles.hint}>
-        Entrez votre numéro de téléphone pour recevoir un code de vérification.
+        {t("patientAuth.phoneInstruction")}
       </Text>
 
       <View style={stepStyles.field}>
-        <Text style={stepStyles.label}>Téléphone</Text>
+        <Text style={stepStyles.label}>{t("patientAuth.tabPhone")}</Text>
         <View style={stepStyles.phoneRow}>
           <View style={stepStyles.prefix}>
             <Text style={stepStyles.prefixText}>+216</Text>
@@ -236,7 +237,7 @@ function PhoneStep({
             style={[stepStyles.input, stepStyles.phoneInput]}
             value={digits}
             onChangeText={onChangeDigits}
-            placeholder="22 123 456"
+            placeholder={t("patientAuth.phonePlaceholder")}
             keyboardType="phone-pad"
             autoComplete="tel"
             maxLength={10}
@@ -253,12 +254,12 @@ function PhoneStep({
         disabled={loading}
       >
         <Text style={stepStyles.primaryBtnText}>
-          {loading ? "Envoi…" : "Recevoir le code"}
+          {loading ? t("patientAuth.sending") : t("patientAuth.receiveCode")}
         </Text>
       </Pressable>
 
       <Pressable onPress={() => router.push("/(auth)/patient-signup")} style={stepStyles.link}>
-        <Text style={stepStyles.linkText}>Créer un compte</Text>
+        <Text style={stepStyles.linkText}>{t("patientAuth.createAccount")}</Text>
       </Pressable>
     </View>
   );
@@ -279,16 +280,16 @@ function EmailStep({
 
   return (
     <View style={stepStyles.root}>
-      <Text style={stepStyles.title}>Connexion</Text>
-      <Text style={stepStyles.hint}>Email ou numéro de téléphone et mot de passe.</Text>
+      <Text style={stepStyles.title}>{t("patientAuth.tabEmail")}</Text>
+      <Text style={stepStyles.hint}>{t("patientAuth.emailPasswordHint")}</Text>
 
       <View style={stepStyles.field}>
-        <Text style={stepStyles.label}>Email / Téléphone</Text>
+        <Text style={stepStyles.label}>{t("patientAuth.tabEmail")} / {t("patientAuth.tabPhone")}</Text>
         <TextInput
           style={stepStyles.input}
           value={identifier}
           onChangeText={setIdentifier}
-          placeholder="vous@exemple.com"
+          placeholder={t("patientAuth.emailPlaceholder")}
           keyboardType="email-address"
           autoCapitalize="none"
           autoComplete="email"
@@ -296,13 +297,13 @@ function EmailStep({
       </View>
 
       <View style={stepStyles.field}>
-        <Text style={stepStyles.label}>Mot de passe</Text>
+        <Text style={stepStyles.label}>{t("auth.password")}</Text>
         <View style={stepStyles.pwdRow}>
           <TextInput
             style={[stepStyles.input, { flex: 1 }]}
             value={password}
             onChangeText={setPassword}
-            placeholder="••••••••"
+            placeholder={t("patientAuth.passwordPlaceholder")}
             secureTextEntry={!showPwd}
             autoComplete="password"
           />
@@ -325,12 +326,12 @@ function EmailStep({
         disabled={loading}
       >
         <Text style={stepStyles.primaryBtnText}>
-          {loading ? "Connexion…" : "Se connecter"}
+          {loading ? t("patientAuth.signingIn") : t("patientAuth.signIn")}
         </Text>
       </Pressable>
 
       <Pressable onPress={() => router.push("/(auth)/patient-signup")} style={stepStyles.link}>
-        <Text style={stepStyles.linkText}>Créer un compte</Text>
+        <Text style={stepStyles.linkText}>{t("patientAuth.createAccount")}</Text>
       </Pressable>
     </View>
   );
@@ -367,24 +368,24 @@ function CodeStep({
       {/* Back arrow */}
       <Pressable onPress={onBack} style={stepStyles.backRow} hitSlop={12}>
         <View style={stepStyles.backArrow} />
-        <Text style={stepStyles.backText}>Retour</Text>
+        <Text style={stepStyles.backText}>{t("common.back")}</Text>
       </Pressable>
 
-      <Text style={stepStyles.title}>Vérification</Text>
+      <Text style={stepStyles.title}>{t("patientAuth.verificationTitle")}</Text>
       <Text style={stepStyles.hint}>
-        Code envoyé au{" "}
+        {t("patientAuth.codeSentTo")}{" "}
         <Text style={stepStyles.hintBold}>{maskedPhone}</Text>
       </Text>
 
       {/* 6-digit input */}
       <View style={stepStyles.field}>
-        <Text style={stepStyles.label}>Code à 6 chiffres</Text>
+        <Text style={stepStyles.label}>{t("patientAuth.codeLabel")}</Text>
         <TextInput
           testID="otp-input"
           style={stepStyles.otpInput}
           value={code}
           onChangeText={(v) => onChangeCode(v.replace(/[^0-9]/g, "").slice(0, 6))}
-          placeholder="· · · · · ·"
+          placeholder={t("patientAuth.codePlaceholder")}
           keyboardType="number-pad"
           maxLength={6}
           textAlign="center"
@@ -401,7 +402,7 @@ function CodeStep({
         disabled={loading}
       >
         <Text style={stepStyles.primaryBtnText}>
-          {loading ? "Vérification…" : "Vérifier"}
+          {loading ? t("patientAuth.verifying") : t("patientAuth.verify")}
         </Text>
       </Pressable>
 
@@ -418,8 +419,8 @@ function CodeStep({
           ]}
         >
           {cooldown > 0
-            ? `Renvoyer le code (${cooldown}s)`
-            : "Renvoyer le code"}
+            ? t("patientAuth.resendTimer", { sec: cooldown })
+            : t("patientAuth.resend")}
         </Text>
       </Pressable>
     </View>

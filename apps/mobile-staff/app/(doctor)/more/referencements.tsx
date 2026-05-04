@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, StyleSheet, Pressable } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Loader, Empty, formatDate } from "./_ui";
 
 type Referral = {
@@ -23,14 +23,18 @@ const STATUS_TONES: Record<string, { bg: string; fg: string }> = {
   completed: { bg: "#DBEAFE", fg: "#1E40AF" },
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "En attente",
-  accepted: "Acceptée",
-  declined: "Déclinée",
-  completed: "Terminée",
-};
+function getRefStatusLabel(status: string): string {
+  const map: Record<string, string> = {
+    pending: t("doctor.refs.statusPending"),
+    accepted: t("doctor.refs.statusAccepted"),
+    declined: t("doctor.refs.statusDeclined"),
+    completed: t("doctor.refs.statusDone"),
+  };
+  return map[status] ?? status;
+}
 
 export default function Referencements() {
+  const { locale } = useLocale();
   const [tab, setTab] = useState<"incoming" | "outgoing">("incoming");
   const [incoming, setIncoming] = useState<Referral[]>([]);
   const [outgoing, setOutgoing] = useState<Referral[]>([]);
@@ -54,7 +58,7 @@ export default function Referencements() {
   if (loading) {
     return (
       <>
-        <Stack.Screen options={{ title: "Référencements" }} />
+        <Stack.Screen options={{ title: t("doctor.refs.title") }} />
         <Loader />
       </>
     );
@@ -74,7 +78,7 @@ export default function Referencements() {
             <Text
               style={[styles.tabText, tab === "incoming" && styles.tabTextActive]}
             >
-              Reçus ({incoming.length})
+              {t("doctor.refs.tabReceived", { count: incoming.length })}
             </Text>
           </Pressable>
           <Pressable
@@ -84,13 +88,13 @@ export default function Referencements() {
             <Text
               style={[styles.tabText, tab === "outgoing" && styles.tabTextActive]}
             >
-              Envoyés ({outgoing.length})
+              {t("doctor.refs.tabSent", { count: outgoing.length })}
             </Text>
           </Pressable>
         </View>
 
         {list.length === 0 ? (
-          <Empty icon="swap-horizontal-outline" title="Aucun référencement" />
+          <Empty icon="swap-horizontal-outline" title={t("doctor.refs.noRefs")} />
         ) : (
           list.map((r) => {
             const tone = STATUS_TONES[r.status] ?? { bg: colors.bgSecondary, fg: colors.teal };
@@ -107,7 +111,7 @@ export default function Referencements() {
                       {tab === "incoming" ? r.fromDoctorName : r.toDoctorName}
                     </Text>
                   </View>
-                  <Text style={styles.patient}>Patient : {r.patientName}</Text>
+                  <Text style={styles.patient}>{t("doctor.refs.patient", { name: r.patientName })}</Text>
                   <Text style={styles.reason} numberOfLines={2}>
                     {r.reason}
                   </Text>
@@ -115,7 +119,7 @@ export default function Referencements() {
                 </View>
                 <View style={[styles.badge, { backgroundColor: tone.bg }]}>
                   <Text style={[styles.badgeText, { color: tone.fg }]}>
-                    {STATUS_LABELS[r.status]}
+                    {getRefStatusLabel(r.status)}
                   </Text>
                 </View>
               </View>

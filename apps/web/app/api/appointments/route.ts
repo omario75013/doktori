@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db, patients, doctors, doctorSchedules, doctorPractices, appointmentTypes, patientDependents, appointmentAnswers } from "@doktori/db";
 import { createAppointment, getAvailableSlots } from "@/lib/queries/appointments";
+import { assertPlanLimit, PlanLimitError } from "@/lib/plan-gates";
 import { bookAppointmentSchema } from "@doktori/validation";
 import { formatPhone, SPECIALTIES } from "@doktori/shared";
 import { eq, and, sql } from "drizzle-orm";
@@ -101,6 +102,18 @@ export async function POST(req: Request) {
 
   if (!doctor) {
     return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
+  }
+
+  try {
+    await assertPlanLimit(doctor.id, "appointments");
+  } catch (e) {
+    if (e instanceof PlanLimitError) {
+      return NextResponse.json(
+        { error: "PLAN_LIMIT_REACHED", resource: e.resource, current: e.current, max: e.max },
+        { status: 402 }
+      );
+    }
+    throw e;
   }
 
   let slotDuration: number | undefined;

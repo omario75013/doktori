@@ -48,10 +48,7 @@ export default function Index() {
         setDecision({ kind: "authed", role: storedRole });
         return;
       }
-      if (storedRole) {
-        setDecision({ kind: "needs-login", role: storedRole });
-        return;
-      }
+      // No valid token → always show role picker, never jump straight to a login form
       setDecision({ kind: "needs-role" });
     })();
   }, []);

@@ -27,6 +27,8 @@ export default function PatientConversationPage({
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const [doctorName, setDoctorName] = useState<string>("Médecin");
+  const [doctorStatus, setDoctorStatus] = useState<string | null>(null);
 
   useEffect(() => {
     const stored = localStorage.getItem("doktori_patient_token");
@@ -36,6 +38,26 @@ export default function PatientConversationPage({
     }
     setToken(stored);
   }, [router]);
+
+  useEffect(() => {
+    if (!token) return;
+    // Fetch conversation info to get doctor name + status
+    fetch("/api/conversations", { headers: { Authorization: `Bearer ${token}` } })
+      .then((r) => r.ok ? r.json() : [])
+      .then((convs: Array<{ id: string; doctorName?: string; doctorId?: string }>) => {
+        const conv = convs.find((c) => c.id === conversationId);
+        if (conv?.doctorName) setDoctorName(conv.doctorName);
+        if (conv?.doctorId) {
+          fetch(`/api/doctors/${conv.doctorId}/status`)
+            .then((r) => r.ok ? r.json() : null)
+            .then((s: { statusMessage: string | null; isActive: boolean } | null) => {
+              if (s?.isActive && s.statusMessage) setDoctorStatus(s.statusMessage);
+            })
+            .catch(() => null);
+        }
+      })
+      .catch(() => null);
+  }, [token, conversationId]);
 
   useEffect(() => {
     if (!token) return;
@@ -144,8 +166,12 @@ export default function PatientConversationPage({
           <ArrowLeft className="w-5 h-5 text-gray-600" />
         </button>
         <div>
-          <p className="font-semibold text-gray-900 text-sm">Conversation</p>
-          <p className="text-xs text-teal-600">Médecin</p>
+          <p className="font-semibold text-gray-900 text-sm">{doctorName}</p>
+          {doctorStatus ? (
+            <p className="text-xs text-amber-600 italic">{doctorStatus}</p>
+          ) : (
+            <p className="text-xs text-teal-600">Médecin</p>
+          )}
         </div>
       </header>
 

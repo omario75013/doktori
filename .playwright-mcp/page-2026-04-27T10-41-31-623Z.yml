@@ -1,0 +1,277 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - img [ref=e4]
+      - generic [ref=e6]:
+        - text: L'app Doktori arrive bientôt sur
+        - strong [ref=e7]: App Store
+        - text: et
+        - strong [ref=e8]: Google Play
+    - button "Fermer" [ref=e9]:
+      - img [ref=e10]
+  - banner [ref=e13]:
+    - generic [ref=e14]:
+      - link "Doktori.tn" [ref=e15] [cursor=pointer]:
+        - /url: /
+        - img [ref=e17]
+        - generic [ref=e24]: Doktori.tn
+      - navigation [ref=e25]:
+        - link "ابحث عن طبيب" [ref=e26] [cursor=pointer]:
+          - /url: /recherche
+          - img [ref=e27]
+          - text: ابحث عن طبيب
+        - link "المدونة" [ref=e30] [cursor=pointer]:
+          - /url: /blog
+          - img [ref=e31]
+          - text: المدونة
+        - link "مساعدة" [ref=e33] [cursor=pointer]:
+          - /url: /faq
+          - img [ref=e34]
+          - text: مساعدة
+        - link "استغاثة" [ref=e37] [cursor=pointer]:
+          - /url: /sos
+          - img [ref=e38]
+          - text: استغاثة
+        - button "Passer en mode sombre" [ref=e43]:
+          - img [ref=e44]
+        - group "Changer de langue" [ref=e46]:
+          - button "Passer en français" [ref=e47]: FR
+          - button "التبديل إلى العربية" [disabled] [pressed] [ref=e48]: AR
+        - link "حسابي" [ref=e49] [cursor=pointer]:
+          - /url: /connexion-patient
+          - img [ref=e50]
+          - text: حسابي
+        - link "فضاء الطبيب" [ref=e53] [cursor=pointer]:
+          - /url: /connexion
+          - img [ref=e54]
+          - generic [ref=e57]: فضاء الطبيب
+  - main [ref=e58]:
+    - generic [ref=e60]:
+      - generic [ref=e61]:
+        - img [ref=e62]
+        - text: Blog Santé
+      - heading "Votre santé, nos conseils" [level=1] [ref=e64]
+      - paragraph [ref=e65]: Guides pratiques, conseils de médecins et actualités santé pour mieux prendre soin de vous et de vos proches en Tunisie.
+    - generic [ref=e66]:
+      - generic [ref=e67]:
+        - link "Tous les articles" [ref=e68] [cursor=pointer]:
+          - /url: /blog
+        - link "💡 Conseil" [ref=e69] [cursor=pointer]:
+          - /url: /blog?categorie=conseil
+          - generic [ref=e70]: 💡
+          - text: Conseil
+        - link "💚 Santé" [ref=e71] [cursor=pointer]:
+          - /url: /blog?categorie=sante
+          - generic [ref=e72]: 💚
+          - text: Santé
+        - link "📰 Actualité" [ref=e73] [cursor=pointer]:
+          - /url: /blog?categorie=actualite
+          - generic [ref=e74]: 📰
+          - text: Actualité
+        - link "🩺 Spécialité" [ref=e75] [cursor=pointer]:
+          - /url: /blog?categorie=specialite
+          - generic [ref=e76]: 🩺
+          - text: Spécialité
+        - link "📖 Guide" [ref=e77] [cursor=pointer]:
+          - /url: /blog?categorie=guide
+          - generic [ref=e78]: 📖
+          - text: Guide
+      - 'link "Ramadan et santé : conseils médicaux pour jeûner en toute sécurité 💚 Santé 5 min de lecture Ramadan et santé : conseils médicaux pour jeûner en toute sécurité Médicaments, hydratation, sport et maladies chroniques : tout ce que vous devez savoir pour pratiquer le Ramadan sans risques pour votre santé. 30 avril 2026 · Dr. Équipe Doktori Lire" [ref=e79] [cursor=pointer]':
+        - /url: /blog/ramadan-sante-conseils-medicaux-jeune-securite
+        - generic [ref=e80]:
+          - 'img "Ramadan et santé : conseils médicaux pour jeûner en toute sécurité" [ref=e82]'
+          - generic [ref=e83]:
+            - generic [ref=e84]:
+              - generic [ref=e85]: 💚 Santé
+              - generic [ref=e86]: 5 min de lecture
+            - 'heading "Ramadan et santé : conseils médicaux pour jeûner en toute sécurité" [level=2] [ref=e87]'
+            - paragraph [ref=e88]: "Médicaments, hydratation, sport et maladies chroniques : tout ce que vous devez savoir pour pratiquer le Ramadan sans risques pour votre santé."
+            - generic [ref=e89]:
+              - generic [ref=e90]:
+                - img [ref=e91]
+                - generic [ref=e93]: 30 avril 2026
+                - generic [ref=e94]: ·
+                - generic [ref=e95]: Dr. Équipe Doktori
+              - generic [ref=e96]:
+                - text: Lire
+                - img [ref=e97]
+      - generic [ref=e99]:
+        - 'link "Comment choisir son médecin traitant en Tunisie — les critères essentiels Guide Comment choisir son médecin traitant en Tunisie — les critères essentiels Proximité, disponibilité, communication, spécialisation : découvrez tous les critères pour bien choisir votre médecin traitant en Tunisie et construire une relation de confiance durable. 27 avril 2026 4 min de lecture" [ref=e100] [cursor=pointer]':
+          - /url: /blog/comment-choisir-medecin-traitant-tunisie-criteres
+          - generic [ref=e101]:
+            - img "Comment choisir son médecin traitant en Tunisie — les critères essentiels" [ref=e102]
+            - generic [ref=e104]: Guide
+          - generic [ref=e105]:
+            - heading "Comment choisir son médecin traitant en Tunisie — les critères essentiels" [level=2] [ref=e106]
+            - paragraph [ref=e107]: "Proximité, disponibilité, communication, spécialisation : découvrez tous les critères pour bien choisir votre médecin traitant en Tunisie et construire une relation de confiance durable."
+            - generic [ref=e108]:
+              - generic [ref=e109]:
+                - img [ref=e110]
+                - generic [ref=e112]: 27 avril 2026
+              - generic [ref=e113]: 4 min de lecture
+        - 'link "Santé mentale en Tunisie : briser les tabous et consulter un psychologue Conseil Santé mentale en Tunisie : briser les tabous et consulter un psychologue Dépression, anxiété, burnout : la santé mentale est encore trop souvent taboue en Tunisie. Comment reconnaître les signaux d''alerte et franchir le pas de la consultation ? 25 avril 2026 4 min de lecture" [ref=e114] [cursor=pointer]':
+          - /url: /blog/sante-mentale-tunisie-briser-tabous-consulter-psychologue
+          - generic [ref=e115]:
+            - 'img "Santé mentale en Tunisie : briser les tabous et consulter un psychologue" [ref=e116]'
+            - generic [ref=e118]: Conseil
+          - generic [ref=e119]:
+            - 'heading "Santé mentale en Tunisie : briser les tabous et consulter un psychologue" [level=2] [ref=e120]'
+            - paragraph [ref=e121]: "Dépression, anxiété, burnout : la santé mentale est encore trop souvent taboue en Tunisie. Comment reconnaître les signaux d'alerte et franchir le pas de la consultation ?"
+            - generic [ref=e122]:
+              - generic [ref=e123]:
+                - img [ref=e124]
+                - generic [ref=e126]: 25 avril 2026
+              - generic [ref=e127]: 4 min de lecture
+        - 'link "Orthopédie en Tunisie : mal de dos, arthrose et traumatologie sportive Spécialité Orthopédie en Tunisie : mal de dos, arthrose et traumatologie sportive Lombalgie, arthrose du genou, entorse de cheville : comprendre les pathologies orthopédiques les plus fréquentes en Tunisie et les solutions thérapeutiques disponibles. 23 avril 2026 4 min de lecture" [ref=e128] [cursor=pointer]':
+          - /url: /blog/orthopedie-tunisie-mal-de-dos-arthrose-traumatologie-sportive
+          - generic [ref=e129]:
+            - 'img "Orthopédie en Tunisie : mal de dos, arthrose et traumatologie sportive" [ref=e130]'
+            - generic [ref=e132]: Spécialité
+          - generic [ref=e133]:
+            - 'heading "Orthopédie en Tunisie : mal de dos, arthrose et traumatologie sportive" [level=2] [ref=e134]'
+            - paragraph [ref=e135]: "Lombalgie, arthrose du genou, entorse de cheville : comprendre les pathologies orthopédiques les plus fréquentes en Tunisie et les solutions thérapeutiques disponibles."
+            - generic [ref=e136]:
+              - generic [ref=e137]:
+                - img [ref=e138]
+                - generic [ref=e140]: 23 avril 2026
+              - generic [ref=e141]: 4 min de lecture
+        - 'link "ORL en Tunisie : sinusite, otite et troubles de l''audition Spécialité ORL en Tunisie : sinusite, otite et troubles de l''audition Découvrez les pathologies ORL les plus fréquentes en Tunisie, quand consulter un oto-rhino-laryngologiste et quels traitements sont disponibles. 21 avril 2026 4 min de lecture" [ref=e142] [cursor=pointer]':
+          - /url: /blog/orl-tunisie-sinusite-otite-troubles-audition
+          - generic [ref=e143]:
+            - 'img "ORL en Tunisie : sinusite, otite et troubles de l''audition" [ref=e144]'
+            - generic [ref=e146]: Spécialité
+          - generic [ref=e147]:
+            - 'heading "ORL en Tunisie : sinusite, otite et troubles de l''audition" [level=2] [ref=e148]'
+            - paragraph [ref=e149]: Découvrez les pathologies ORL les plus fréquentes en Tunisie, quand consulter un oto-rhino-laryngologiste et quels traitements sont disponibles.
+            - generic [ref=e150]:
+              - generic [ref=e151]:
+                - img [ref=e152]
+                - generic [ref=e154]: 21 avril 2026
+              - generic [ref=e155]: 4 min de lecture
+        - 'link "Cardiologie en Tunisie : hypertension, cholestérol et prévention cardiovasculaire Spécialité Cardiologie en Tunisie : hypertension, cholestérol et prévention cardiovasculaire Tout ce que vous devez savoir sur la santé cardiaque en Tunisie : chiffres de l''hypertension, risques du cholestérol, signes d''alerte et conseils de prévention. 19 avril 2026 4 min de lecture" [ref=e156] [cursor=pointer]':
+          - /url: /blog/cardiologie-tunisie-hypertension-cholesterol-prevention
+          - generic [ref=e157]:
+            - 'img "Cardiologie en Tunisie : hypertension, cholestérol et prévention cardiovasculaire" [ref=e158]'
+            - generic [ref=e160]: Spécialité
+          - generic [ref=e161]:
+            - 'heading "Cardiologie en Tunisie : hypertension, cholestérol et prévention cardiovasculaire" [level=2] [ref=e162]'
+            - paragraph [ref=e163]: "Tout ce que vous devez savoir sur la santé cardiaque en Tunisie : chiffres de l'hypertension, risques du cholestérol, signes d'alerte et conseils de prévention."
+            - generic [ref=e164]:
+              - generic [ref=e165]:
+                - img [ref=e166]
+                - generic [ref=e168]: 19 avril 2026
+              - generic [ref=e169]: 4 min de lecture
+        - link "Comment prendre rendez-vous chez un médecin à Tunis en 2026 Guide Comment prendre rendez-vous chez un médecin à Tunis en 2026 Guide pratique pour réserver votre consultation médicale en ligne à Tunis grâce à Doktori — la plateforme numéro 1 en Tunisie. 18 avril 2026 3 min de lecture" [ref=e170] [cursor=pointer]:
+          - /url: /blog/comment-prendre-rendez-vous-medecin-tunis-2026
+          - generic [ref=e171]:
+            - img "Comment prendre rendez-vous chez un médecin à Tunis en 2026" [ref=e172]
+            - generic [ref=e174]: Guide
+          - generic [ref=e175]:
+            - heading "Comment prendre rendez-vous chez un médecin à Tunis en 2026" [level=2] [ref=e176]
+            - paragraph [ref=e177]: Guide pratique pour réserver votre consultation médicale en ligne à Tunis grâce à Doktori — la plateforme numéro 1 en Tunisie.
+            - generic [ref=e178]:
+              - generic [ref=e179]:
+                - img [ref=e180]
+                - generic [ref=e182]: 18 avril 2026
+              - generic [ref=e183]: 3 min de lecture
+        - 'link "Doktori.tn : la première plateforme de prise de rendez-vous médicaux en Tunisie Actualité Doktori.tn : la première plateforme de prise de rendez-vous médicaux en Tunisie Découvrez Doktori.tn, la plateforme tunisienne qui révolutionne l''accès aux soins en permettant aux patients de trouver et réserver un médecin en ligne, 24h/24. 18 avril 2026 4 min de lecture" [ref=e184] [cursor=pointer]':
+          - /url: /blog/doktori-tn-premiere-plateforme-rendez-vous-medicaux-tunisie
+          - generic [ref=e185]:
+            - 'img "Doktori.tn : la première plateforme de prise de rendez-vous médicaux en Tunisie" [ref=e186]'
+            - generic [ref=e188]: Actualité
+          - generic [ref=e189]:
+            - 'heading "Doktori.tn : la première plateforme de prise de rendez-vous médicaux en Tunisie" [level=2] [ref=e190]'
+            - paragraph [ref=e191]: Découvrez Doktori.tn, la plateforme tunisienne qui révolutionne l'accès aux soins en permettant aux patients de trouver et réserver un médecin en ligne, 24h/24.
+            - generic [ref=e192]:
+              - generic [ref=e193]:
+                - img [ref=e194]
+                - generic [ref=e196]: 18 avril 2026
+              - generic [ref=e197]: 4 min de lecture
+        - 'link "Diabète en Tunisie : prévention, dépistage et prise en charge Santé Diabète en Tunisie : prévention, dépistage et prise en charge La Tunisie compte plus d''un million de diabétiques. Tout ce qu''il faut savoir sur le dépistage, les symptômes et la prise en charge du diabète de type 2. 16 avril 2026 4 min de lecture" [ref=e198] [cursor=pointer]':
+          - /url: /blog/diabete-tunisie-prevention-depistage-prise-en-charge
+          - generic [ref=e199]:
+            - 'img "Diabète en Tunisie : prévention, dépistage et prise en charge" [ref=e200]'
+            - generic [ref=e202]: Santé
+          - generic [ref=e203]:
+            - 'heading "Diabète en Tunisie : prévention, dépistage et prise en charge" [level=2] [ref=e204]'
+            - paragraph [ref=e205]: La Tunisie compte plus d'un million de diabétiques. Tout ce qu'il faut savoir sur le dépistage, les symptômes et la prise en charge du diabète de type 2.
+            - generic [ref=e206]:
+              - generic [ref=e207]:
+                - img [ref=e208]
+                - generic [ref=e210]: 16 avril 2026
+              - generic [ref=e211]: 4 min de lecture
+      - generic [ref=e212]:
+        - generic [ref=e213]: "1"
+        - generic [ref=e214]: / 2
+        - link "Suivant" [ref=e215] [cursor=pointer]:
+          - /url: /blog?page=2
+          - text: Suivant
+          - img [ref=e216]
+      - generic [ref=e219]:
+        - heading "Restez informé" [level=3] [ref=e220]
+        - paragraph [ref=e221]: Recevez nos derniers articles, conseils santé et guides pratiques directement dans votre boîte mail.
+        - generic [ref=e222]:
+          - textbox "votre@email.com" [ref=e223]
+          - button "S'abonner" [ref=e224]
+  - contentinfo [ref=e225]:
+    - generic [ref=e226]:
+      - generic [ref=e227]:
+        - generic [ref=e228]:
+          - generic [ref=e229]:
+            - img [ref=e231]
+            - generic [ref=e235]: Doktori
+          - paragraph [ref=e236]: La prise de rendez-vous médicaux en Tunisie
+          - link "contact@doktori.tn" [ref=e237] [cursor=pointer]:
+            - /url: mailto:contact@doktori.tn
+            - img [ref=e238]
+            - text: contact@doktori.tn
+        - generic [ref=e241]:
+          - paragraph [ref=e242]: Plateforme
+          - list [ref=e243]:
+            - listitem [ref=e244]:
+              - link "À propos" [ref=e245] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e246]:
+              - link "Blog" [ref=e247] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=e248]:
+              - link "FAQ" [ref=e249] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e250]:
+              - link "SOS Médecin" [ref=e251] [cursor=pointer]:
+                - /url: /sos-medecin
+        - generic [ref=e252]:
+          - paragraph [ref=e253]: Légal
+          - list [ref=e254]:
+            - listitem [ref=e255]:
+              - link "Mentions légales" [ref=e256] [cursor=pointer]:
+                - /url: /mentions-legales
+            - listitem [ref=e257]:
+              - link "CGU" [ref=e258] [cursor=pointer]:
+                - /url: /cgu
+            - listitem [ref=e259]:
+              - link "Politique de confidentialité" [ref=e260] [cursor=pointer]:
+                - /url: /confidentialite
+        - generic [ref=e261]:
+          - paragraph [ref=e262]: Espace médecin
+          - paragraph [ref=e263]: Vous êtes médecin et souhaitez rejoindre Doktori ?
+          - link "Espace médecin" [ref=e264] [cursor=pointer]:
+            - /url: /connexion
+            - img [ref=e265]
+            - text: Espace médecin
+      - paragraph [ref=e270]: © 2025-2026 Random Walkers SUARL · Doktori.tn
+  - region "Notifications alt+T"
+  - button "افتح معالج دوكتي" [ref=e271]:
+    - img [ref=e272]
+    - generic [ref=e276]: "!"
+  - button "Open Next.js Dev Tools" [ref=e282] [cursor=pointer]:
+    - img [ref=e283]
+  - alert [ref=e286]
+  - generic [ref=e289]:
+    - img [ref=e291]
+    - generic [ref=e293]:
+      - paragraph [ref=e294]: Installer Doktori sur votre téléphone
+      - paragraph [ref=e295]: Accédez rapidement à vos rendez-vous depuis votre écran d'accueil.
+      - button "Installer l'application" [ref=e296]
+    - button "Fermer" [ref=e297]:
+      - img [ref=e298]

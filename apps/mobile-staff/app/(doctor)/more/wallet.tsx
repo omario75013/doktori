@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Card, Loader, formatMillimes, formatDate, Empty } from "./_ui";
 
 type WalletData = {
@@ -18,6 +18,7 @@ type WalletData = {
 };
 
 export default function Wallet() {
+  const { locale } = useLocale();
   const [data, setData] = useState<WalletData | null>(null);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function Wallet() {
   if (!data) {
     return (
       <>
-        <Stack.Screen options={{ title: "Wallet" }} />
+        <Stack.Screen options={{ title: t("doctor.wallet.title") }} />
         <Loader />
       </>
     );
@@ -42,31 +43,31 @@ export default function Wallet() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "Wallet" }} />
+      <Stack.Screen options={{ title: t("doctor.wallet.title") }} />
       <Screen>
         <View style={styles.hero}>
-          <Text style={styles.heroLabel}>Solde disponible</Text>
+          <Text style={styles.heroLabel}>{t("doctor.wallet.available")}</Text>
           <Text style={styles.heroValue}>{formatMillimes(data.balance)}</Text>
         </View>
 
         <View style={{ flexDirection: "row", gap: spacing.sm }}>
           <View style={[styles.miniCard, { backgroundColor: "#FED7AA" }]}>
-            <Text style={[styles.miniLabel, { color: "#9A3412" }]}>En attente</Text>
+            <Text style={[styles.miniLabel, { color: "#9A3412" }]}>{t("doctor.wallet.pending")}</Text>
             <Text style={[styles.miniValue, { color: "#9A3412" }]}>
               {formatMillimes(data.pendingBalance)}
             </Text>
           </View>
           <View style={[styles.miniCard, { backgroundColor: "#DBEAFE" }]}>
-            <Text style={[styles.miniLabel, { color: "#1E40AF" }]}>Total gagné</Text>
+            <Text style={[styles.miniLabel, { color: "#1E40AF" }]}>{t("doctor.wallet.totalEarned")}</Text>
             <Text style={[styles.miniValue, { color: "#1E40AF" }]}>
               {formatMillimes(data.totalEarned)}
             </Text>
           </View>
         </View>
 
-        <Card title="Dernières transactions">
+        <Card title={t("doctor.wallet.recentTransactions")}>
           {data.transactions.length === 0 ? (
-            <Empty title="Aucune transaction" />
+            <Empty title={t("doctor.wallet.noTransactions")} />
           ) : (
             data.transactions.slice(0, 15).map((t) => (
               <View key={t.id} style={styles.txRow}>

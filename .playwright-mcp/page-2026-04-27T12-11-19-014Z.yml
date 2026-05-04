@@ -1,0 +1,583 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: Doktori
+        - button "Réduire la barre latérale" [ref=e6]:
+          - img [ref=e7]
+      - navigation [ref=e9]:
+        - generic [ref=e10]:
+          - paragraph [ref=e11]: Principal
+          - list [ref=e12]:
+            - listitem [ref=e13]:
+              - link "لوحة التحكم" [ref=e14] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e16]
+                - generic [ref=e21]: لوحة التحكم
+            - listitem [ref=e22]:
+              - link "Vérification" [ref=e23] [cursor=pointer]:
+                - /url: /verification
+                - img [ref=e25]
+                - generic [ref=e28]: Vérification
+            - listitem [ref=e29]:
+              - link "التقويم" [ref=e30] [cursor=pointer]:
+                - /url: /calendrier
+                - img [ref=e32]
+                - generic [ref=e34]: التقويم
+            - listitem [ref=e35]:
+              - link "المواعيد" [active] [ref=e36] [cursor=pointer]:
+                - /url: /rendez-vous
+                - img [ref=e38]
+                - generic [ref=e42]: المواعيد
+        - generic [ref=e43]:
+          - paragraph [ref=e44]: Patients
+          - list [ref=e45]:
+            - listitem [ref=e46]:
+              - link "مرضاي" [ref=e47] [cursor=pointer]:
+                - /url: /patients
+                - img [ref=e49]
+                - generic [ref=e54]: مرضاي
+        - generic [ref=e55]:
+          - paragraph [ref=e56]: Réseau
+          - list [ref=e57]:
+            - listitem [ref=e58]:
+              - link "Réseau médecins" [ref=e59] [cursor=pointer]:
+                - /url: /reseau
+                - img [ref=e61]
+                - generic [ref=e66]: Réseau médecins
+            - listitem [ref=e67]:
+              - link "Référencements" [ref=e68] [cursor=pointer]:
+                - /url: /reseau/referencements
+                - img [ref=e70]
+                - generic [ref=e73]: Référencements
+        - generic [ref=e74]:
+          - paragraph [ref=e75]: Communication
+          - list [ref=e76]:
+            - listitem [ref=e77]:
+              - link "صندوق البريد" [ref=e78] [cursor=pointer]:
+                - /url: /messagerie
+                - img [ref=e80]
+                - generic [ref=e83]: صندوق البريد
+            - listitem [ref=e84]:
+              - link "Équipe" [ref=e85] [cursor=pointer]:
+                - /url: /messagerie-equipe
+                - img [ref=e87]
+                - generic [ref=e99]: Équipe
+        - generic [ref=e100]:
+          - paragraph [ref=e101]: Cabinet
+          - list [ref=e102]:
+            - listitem [ref=e103]:
+              - link "أسباب الاستشارة" [ref=e104] [cursor=pointer]:
+                - /url: /motifs
+                - img [ref=e106]
+                - generic [ref=e109]: أسباب الاستشارة
+            - listitem [ref=e110]:
+              - link "العيادات" [ref=e111] [cursor=pointer]:
+                - /url: /cabinets
+                - img [ref=e113]
+                - generic [ref=e117]: العيادات
+            - listitem [ref=e118]:
+              - link "زيارات منزلية" [ref=e119] [cursor=pointer]:
+                - /url: /domicile
+                - img [ref=e121]
+                - generic [ref=e124]: زيارات منزلية
+            - listitem [ref=e125]:
+              - link "الاتفاقيات" [ref=e126] [cursor=pointer]:
+                - /url: /conventions
+                - img [ref=e128]
+                - generic [ref=e132]: الاتفاقيات
+            - listitem [ref=e133]:
+              - link "CNAM" [ref=e134] [cursor=pointer]:
+                - /url: /cnam
+                - img [ref=e136]
+                - generic [ref=e139]: CNAM
+            - listitem [ref=e140]:
+              - link "SOS طبيب" [ref=e141] [cursor=pointer]:
+                - /url: /sos-medecin
+                - img [ref=e143]
+                - generic [ref=e148]: SOS طبيب
+            - listitem [ref=e149]:
+              - link "الاستشارة عن بُعد" [ref=e150] [cursor=pointer]:
+                - /url: /teleconsultation
+                - img [ref=e152]
+                - generic [ref=e155]: الاستشارة عن بُعد
+            - listitem [ref=e156]:
+              - link "السكرتيرات" [ref=e157] [cursor=pointer]:
+                - /url: /secretaires
+                - img [ref=e159]
+                - generic [ref=e171]: السكرتيرات
+        - generic [ref=e172]:
+          - paragraph [ref=e173]: Finances
+          - list [ref=e174]:
+            - listitem [ref=e175]:
+              - link "المحفظة" [ref=e176] [cursor=pointer]:
+                - /url: /wallet
+                - img [ref=e178]
+                - generic [ref=e181]: المحفظة
+            - listitem [ref=e182]:
+              - link "الفواتير" [ref=e183] [cursor=pointer]:
+                - /url: /factures
+                - img [ref=e185]
+                - generic [ref=e188]: الفواتير
+            - listitem [ref=e189]:
+              - link "الاشتراك" [ref=e190] [cursor=pointer]:
+                - /url: /abonnement
+                - img [ref=e192]
+                - generic [ref=e194]: الاشتراك
+        - generic [ref=e195]:
+          - paragraph [ref=e196]: Moi
+          - list [ref=e197]:
+            - listitem [ref=e198]:
+              - link "الإحصائيات" [ref=e199] [cursor=pointer]:
+                - /url: /stats
+                - img [ref=e201]
+                - generic [ref=e203]: الإحصائيات
+            - listitem [ref=e204]:
+              - link "الإحالة" [ref=e205] [cursor=pointer]:
+                - /url: /parrainage
+                - img [ref=e207]
+                - generic [ref=e211]: الإحالة
+            - listitem [ref=e212]:
+              - link "ملفي الشخصي" [ref=e213] [cursor=pointer]:
+                - /url: /profil
+                - img [ref=e215]
+                - generic [ref=e219]: ملفي الشخصي
+            - listitem [ref=e220]:
+              - link "Paramètres" [ref=e221] [cursor=pointer]:
+                - /url: /profil/parametres
+                - img [ref=e223]
+                - generic [ref=e226]: Paramètres
+    - generic [ref=e227]:
+      - banner [ref=e228]:
+        - generic [ref=e230]: Doktori
+        - generic [ref=e231]:
+          - group "Changer de langue" [ref=e232]:
+            - button "Passer en français" [ref=e233]: FR
+            - button "التبديل إلى العربية" [disabled] [pressed] [ref=e234]: AR
+          - button "Notifications" [ref=e236]:
+            - img [ref=e237]
+            - generic [ref=e240]: "1"
+          - button "Ouvrir le menu profil" [ref=e242]:
+            - img "Dr. Karim Ben Ali" [ref=e243]
+            - img [ref=e244]
+      - main [ref=e246]:
+        - generic [ref=e378]:
+          - generic [ref=e379]:
+            - generic [ref=e380]:
+              - img [ref=e382]
+              - heading "المواعيد" [level=1] [ref=e384]
+            - generic [ref=e385]:
+              - button "Nouveau RDV" [ref=e386]:
+                - img [ref=e387]
+                - text: Nouveau RDV
+              - button "تحديث" [ref=e389]
+          - generic [ref=e390]:
+            - button "Tous les cabinets" [ref=e391]
+            - button "Cabinet principal" [ref=e392]
+            - button "Clinique Tawfik" [ref=e393]
+          - table [ref=e395]:
+            - rowgroup [ref=e396]:
+              - row "التاريخ / الوقت المريض الهاتف السبب الحالة الإجراءات" [ref=e397]:
+                - columnheader "التاريخ / الوقت" [ref=e398]
+                - columnheader "المريض" [ref=e399]
+                - columnheader "الهاتف" [ref=e400]
+                - columnheader "السبب" [ref=e401]
+                - columnheader "الحالة" [ref=e402]
+                - columnheader "الإجراءات" [ref=e403]
+            - rowgroup [ref=e404]:
+              - row "mar. 28 avr. 2026 09:00 Patient Test Doc +21655888777 Consultation générale ملغى —" [ref=e405]:
+                - cell "mar. 28 avr. 2026 09:00" [ref=e406]
+                - cell "Patient Test Doc" [ref=e407]:
+                  - generic [ref=e409]: Patient Test Doc
+                - cell "+21655888777" [ref=e410]:
+                  - generic [ref=e411]:
+                    - link "Appeler Patient Test Doc" [ref=e412] [cursor=pointer]:
+                      - /url: tel:+21655888777
+                      - img [ref=e413]
+                    - button "Envoyer un SMS" [ref=e415]:
+                      - img [ref=e416]
+                    - generic [ref=e418]: "+21655888777"
+                - cell "Consultation générale" [ref=e419]
+                - cell "ملغى" [ref=e420]
+                - cell "—" [ref=e421]
+              - row "lun. 27 avr. 2026 14:40 Ashraf hasni +21696654547 — مؤكد Arrivé(e) مكتمل غائب Modifier .ics إلغاء" [ref=e422]:
+                - cell "lun. 27 avr. 2026 14:40" [ref=e423]
+                - cell "Ashraf hasni" [ref=e424]:
+                  - generic [ref=e426]: Ashraf hasni
+                - cell "+21696654547" [ref=e427]:
+                  - generic [ref=e428]:
+                    - link "Appeler Ashraf hasni" [ref=e429] [cursor=pointer]:
+                      - /url: tel:+21696654547
+                      - img [ref=e430]
+                    - button "Envoyer un SMS" [ref=e432]:
+                      - img [ref=e433]
+                    - generic [ref=e435]: "+21696654547"
+                - cell "—" [ref=e436]
+                - cell "مؤكد" [ref=e437]
+                - cell "Arrivé(e) مكتمل غائب Modifier .ics إلغاء" [ref=e438]:
+                  - generic [ref=e439]:
+                    - button "Arrivé(e)" [ref=e440]:
+                      - img [ref=e441]
+                      - text: Arrivé(e)
+                    - button "مكتمل" [ref=e445]
+                    - button "غائب" [ref=e446]
+                    - button "Modifier" [ref=e447]:
+                      - img [ref=e448]
+                      - text: Modifier
+                    - link ".ics" [ref=e451] [cursor=pointer]:
+                      - /url: /api/appointments/93e3261f-d63c-4fd5-87ef-7592ebe81f91/calendar
+                      - img [ref=e452]
+                      - text: .ics
+                    - button "إلغاء" [ref=e454]
+              - row "ven. 24 avr. 2026 17:00 New test 911345465 — مؤكد Arrivé(e) مكتمل غائب Modifier .ics إلغاء" [ref=e455]:
+                - cell "ven. 24 avr. 2026 17:00" [ref=e456]
+                - cell "New test" [ref=e457]:
+                  - generic [ref=e459]: New test
+                - cell "911345465" [ref=e460]:
+                  - generic [ref=e461]:
+                    - link "Appeler New test" [ref=e462] [cursor=pointer]:
+                      - /url: tel:911345465
+                      - img [ref=e463]
+                    - button "Envoyer un SMS" [ref=e465]:
+                      - img [ref=e466]
+                    - generic [ref=e468]: "911345465"
+                - cell "—" [ref=e469]
+                - cell "مؤكد" [ref=e470]
+                - cell "Arrivé(e) مكتمل غائب Modifier .ics إلغاء" [ref=e471]:
+                  - generic [ref=e472]:
+                    - button "Arrivé(e)" [ref=e473]:
+                      - img [ref=e474]
+                      - text: Arrivé(e)
+                    - button "مكتمل" [ref=e478]
+                    - button "غائب" [ref=e479]
+                    - button "Modifier" [ref=e480]:
+                      - img [ref=e481]
+                      - text: Modifier
+                    - link ".ics" [ref=e484] [cursor=pointer]:
+                      - /url: /api/appointments/04103983-0202-430e-be9d-65c0a3060a1c/calendar
+                      - img [ref=e485]
+                      - text: .ics
+                    - button "إلغاء" [ref=e487]
+              - row "mar. 21 avr. 2026 15:20 ashraf hasni +21698527434 — مؤكد Arrivé(e) مكتمل غائب Modifier .ics إلغاء" [ref=e488]:
+                - cell "mar. 21 avr. 2026 15:20" [ref=e489]
+                - cell "ashraf hasni" [ref=e490]:
+                  - generic [ref=e492]: ashraf hasni
+                - cell "+21698527434" [ref=e493]:
+                  - generic [ref=e494]:
+                    - link "Appeler ashraf hasni" [ref=e495] [cursor=pointer]:
+                      - /url: tel:+21698527434
+                      - img [ref=e496]
+                    - button "Envoyer un SMS" [ref=e498]:
+                      - img [ref=e499]
+                    - generic [ref=e501]: "+21698527434"
+                - cell "—" [ref=e502]
+                - cell "مؤكد" [ref=e503]
+                - cell "Arrivé(e) مكتمل غائب Modifier .ics إلغاء" [ref=e504]:
+                  - generic [ref=e505]:
+                    - button "Arrivé(e)" [ref=e506]:
+                      - img [ref=e507]
+                      - text: Arrivé(e)
+                    - button "مكتمل" [ref=e511]
+                    - button "غائب" [ref=e512]
+                    - button "Modifier" [ref=e513]:
+                      - img [ref=e514]
+                      - text: Modifier
+                    - link ".ics" [ref=e517] [cursor=pointer]:
+                      - /url: /api/appointments/86fa8fdf-0af6-4cf3-9584-f38f0ad20773/calendar
+                      - img [ref=e518]
+                      - text: .ics
+                    - button "إلغاء" [ref=e520]
+              - row "sam. 18 avr. 2026 16:18 Revenue Test +21655666555 — مكتمل ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e521]:
+                - cell "sam. 18 avr. 2026 16:18" [ref=e522]
+                - cell "Revenue Test" [ref=e523]:
+                  - generic [ref=e525]: Revenue Test
+                - cell "+21655666555" [ref=e526]:
+                  - generic [ref=e527]:
+                    - link "Appeler Revenue Test" [ref=e528] [cursor=pointer]:
+                      - /url: tel:+21655666555
+                      - img [ref=e529]
+                    - button "Envoyer un SMS" [ref=e531]:
+                      - img [ref=e532]
+                    - generic [ref=e534]: "+21655666555"
+                - cell "—" [ref=e535]
+                - cell "مكتمل" [ref=e536]
+                - cell "ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e537]:
+                  - generic [ref=e538]:
+                    - link "ملاحظة SOAP" [ref=e539] [cursor=pointer]:
+                      - /url: /rendez-vous/af1ee0f6-4481-4b24-86ad-53eb613675d1/consultation
+                    - button "جدولة متابعة" [ref=e540]
+                    - button "كشف CNAM" [ref=e541]
+                    - link ".ics" [ref=e542] [cursor=pointer]:
+                      - /url: /api/appointments/af1ee0f6-4481-4b24-86ad-53eb613675d1/calendar
+                      - img [ref=e543]
+                      - text: .ics
+              - row "sam. 18 avr. 2026 16:11 Patient Revenue Test +21655777666 — مكتمل ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e545]:
+                - cell "sam. 18 avr. 2026 16:11" [ref=e546]
+                - cell "Patient Revenue Test" [ref=e547]:
+                  - generic [ref=e549]: Patient Revenue Test
+                - cell "+21655777666" [ref=e550]:
+                  - generic [ref=e551]:
+                    - link "Appeler Patient Revenue Test" [ref=e552] [cursor=pointer]:
+                      - /url: tel:+21655777666
+                      - img [ref=e553]
+                    - button "Envoyer un SMS" [ref=e555]:
+                      - img [ref=e556]
+                    - generic [ref=e558]: "+21655777666"
+                - cell "—" [ref=e559]
+                - cell "مكتمل" [ref=e560]
+                - cell "ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e561]:
+                  - generic [ref=e562]:
+                    - link "ملاحظة SOAP" [ref=e563] [cursor=pointer]:
+                      - /url: /rendez-vous/69d2945b-e7c2-4072-a853-1c2997c49835/consultation
+                    - button "جدولة متابعة" [ref=e564]
+                    - button "كشف CNAM" [ref=e565]
+                    - link ".ics" [ref=e566] [cursor=pointer]:
+                      - /url: /api/appointments/69d2945b-e7c2-4072-a853-1c2997c49835/calendar
+                      - img [ref=e567]
+                      - text: .ics
+              - row "ven. 10 avr. 2026 16:53 Anas Trabelsi +21672556897 Consultation (seed) مكتمل ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e569]:
+                - cell "ven. 10 avr. 2026 16:53" [ref=e570]
+                - cell "Anas Trabelsi" [ref=e571]:
+                  - generic [ref=e573]: Anas Trabelsi
+                - cell "+21672556897" [ref=e574]:
+                  - generic [ref=e575]:
+                    - link "Appeler Anas Trabelsi" [ref=e576] [cursor=pointer]:
+                      - /url: tel:+21672556897
+                      - img [ref=e577]
+                    - button "Envoyer un SMS" [ref=e579]:
+                      - img [ref=e580]
+                    - generic [ref=e582]: "+21672556897"
+                - cell "Consultation (seed)" [ref=e583]
+                - cell "مكتمل" [ref=e584]
+                - cell "ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e585]:
+                  - generic [ref=e586]:
+                    - link "ملاحظة SOAP" [ref=e587] [cursor=pointer]:
+                      - /url: /rendez-vous/5030185d-1b26-4057-a92b-361cc80af037/consultation
+                    - button "جدولة متابعة" [ref=e588]
+                    - button "كشف CNAM" [ref=e589]
+                    - link ".ics" [ref=e590] [cursor=pointer]:
+                      - /url: /api/appointments/5030185d-1b26-4057-a92b-361cc80af037/calendar
+                      - img [ref=e591]
+                      - text: .ics
+              - row "dim. 29 mars 2026 16:53 Anas Ben Salah +21664978292 Consultation (seed) مكتمل ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e593]:
+                - cell "dim. 29 mars 2026 16:53" [ref=e594]
+                - cell "Anas Ben Salah" [ref=e595]:
+                  - generic [ref=e597]: Anas Ben Salah
+                - cell "+21664978292" [ref=e598]:
+                  - generic [ref=e599]:
+                    - link "Appeler Anas Ben Salah" [ref=e600] [cursor=pointer]:
+                      - /url: tel:+21664978292
+                      - img [ref=e601]
+                    - button "Envoyer un SMS" [ref=e603]:
+                      - img [ref=e604]
+                    - generic [ref=e606]: "+21664978292"
+                - cell "Consultation (seed)" [ref=e607]
+                - cell "مكتمل" [ref=e608]
+                - cell "ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e609]:
+                  - generic [ref=e610]:
+                    - link "ملاحظة SOAP" [ref=e611] [cursor=pointer]:
+                      - /url: /rendez-vous/218b78b7-6324-4ebc-b416-8b686483d2b9/consultation
+                    - button "جدولة متابعة" [ref=e612]
+                    - button "كشف CNAM" [ref=e613]
+                    - link ".ics" [ref=e614] [cursor=pointer]:
+                      - /url: /api/appointments/218b78b7-6324-4ebc-b416-8b686483d2b9/calendar
+                      - img [ref=e615]
+                      - text: .ics
+              - row "lun. 19 janv. 2026 16:53 Sami Mansour +21657671895 Consultation (seed) مكتمل ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e617]:
+                - cell "lun. 19 janv. 2026 16:53" [ref=e618]
+                - cell "Sami Mansour" [ref=e619]:
+                  - generic [ref=e621]: Sami Mansour
+                - cell "+21657671895" [ref=e622]:
+                  - generic [ref=e623]:
+                    - link "Appeler Sami Mansour" [ref=e624] [cursor=pointer]:
+                      - /url: tel:+21657671895
+                      - img [ref=e625]
+                    - button "Envoyer un SMS" [ref=e627]:
+                      - img [ref=e628]
+                    - generic [ref=e630]: "+21657671895"
+                - cell "Consultation (seed)" [ref=e631]
+                - cell "مكتمل" [ref=e632]
+                - cell "ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e633]:
+                  - generic [ref=e634]:
+                    - link "ملاحظة SOAP" [ref=e635] [cursor=pointer]:
+                      - /url: /rendez-vous/dd24b907-a389-4970-9c77-4dd595b89ae8/consultation
+                    - button "جدولة متابعة" [ref=e636]
+                    - button "كشف CNAM" [ref=e637]
+                    - link ".ics" [ref=e638] [cursor=pointer]:
+                      - /url: /api/appointments/dd24b907-a389-4970-9c77-4dd595b89ae8/calendar
+                      - img [ref=e639]
+                      - text: .ics
+              - row "lun. 19 janv. 2026 16:53 Sarra Ben Ali +21670376238 Consultation (seed) مكتمل ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e641]:
+                - cell "lun. 19 janv. 2026 16:53" [ref=e642]
+                - cell "Sarra Ben Ali" [ref=e643]:
+                  - generic [ref=e645]: Sarra Ben Ali
+                - cell "+21670376238" [ref=e646]:
+                  - generic [ref=e647]:
+                    - link "Appeler Sarra Ben Ali" [ref=e648] [cursor=pointer]:
+                      - /url: tel:+21670376238
+                      - img [ref=e649]
+                    - button "Envoyer un SMS" [ref=e651]:
+                      - img [ref=e652]
+                    - generic [ref=e654]: "+21670376238"
+                - cell "Consultation (seed)" [ref=e655]
+                - cell "مكتمل" [ref=e656]
+                - cell "ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e657]:
+                  - generic [ref=e658]:
+                    - link "ملاحظة SOAP" [ref=e659] [cursor=pointer]:
+                      - /url: /rendez-vous/82b80fbe-6db1-4398-aed7-0346aabcab21/consultation
+                    - button "جدولة متابعة" [ref=e660]
+                    - button "كشف CNAM" [ref=e661]
+                    - link ".ics" [ref=e662] [cursor=pointer]:
+                      - /url: /api/appointments/82b80fbe-6db1-4398-aed7-0346aabcab21/calendar
+                      - img [ref=e663]
+                      - text: .ics
+              - row "mar. 13 janv. 2026 16:53 Hichem Ben Salah +21691417344 Consultation (seed) مكتمل ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e665]:
+                - cell "mar. 13 janv. 2026 16:53" [ref=e666]
+                - cell "Hichem Ben Salah" [ref=e667]:
+                  - generic [ref=e669]: Hichem Ben Salah
+                - cell "+21691417344" [ref=e670]:
+                  - generic [ref=e671]:
+                    - link "Appeler Hichem Ben Salah" [ref=e672] [cursor=pointer]:
+                      - /url: tel:+21691417344
+                      - img [ref=e673]
+                    - button "Envoyer un SMS" [ref=e675]:
+                      - img [ref=e676]
+                    - generic [ref=e678]: "+21691417344"
+                - cell "Consultation (seed)" [ref=e679]
+                - cell "مكتمل" [ref=e680]
+                - cell "ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e681]:
+                  - generic [ref=e682]:
+                    - link "ملاحظة SOAP" [ref=e683] [cursor=pointer]:
+                      - /url: /rendez-vous/3ce972e3-b13b-46c6-8d2c-6a9a704a1e9a/consultation
+                    - button "جدولة متابعة" [ref=e684]
+                    - button "كشف CNAM" [ref=e685]
+                    - link ".ics" [ref=e686] [cursor=pointer]:
+                      - /url: /api/appointments/3ce972e3-b13b-46c6-8d2c-6a9a704a1e9a/calendar
+                      - img [ref=e687]
+                      - text: .ics
+              - row "lun. 29 déc. 2025 16:53 Mehdi Trabelsi +21674778560 Consultation (seed) مكتمل ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e689]:
+                - cell "lun. 29 déc. 2025 16:53" [ref=e690]
+                - cell "Mehdi Trabelsi" [ref=e691]:
+                  - generic [ref=e693]: Mehdi Trabelsi
+                - cell "+21674778560" [ref=e694]:
+                  - generic [ref=e695]:
+                    - link "Appeler Mehdi Trabelsi" [ref=e696] [cursor=pointer]:
+                      - /url: tel:+21674778560
+                      - img [ref=e697]
+                    - button "Envoyer un SMS" [ref=e699]:
+                      - img [ref=e700]
+                    - generic [ref=e702]: "+21674778560"
+                - cell "Consultation (seed)" [ref=e703]
+                - cell "مكتمل" [ref=e704]
+                - cell "ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e705]:
+                  - generic [ref=e706]:
+                    - link "ملاحظة SOAP" [ref=e707] [cursor=pointer]:
+                      - /url: /rendez-vous/f7f8db67-6a2a-42df-ac13-f019b824800a/consultation
+                    - button "جدولة متابعة" [ref=e708]
+                    - button "كشف CNAM" [ref=e709]
+                    - link ".ics" [ref=e710] [cursor=pointer]:
+                      - /url: /api/appointments/f7f8db67-6a2a-42df-ac13-f019b824800a/calendar
+                      - img [ref=e711]
+                      - text: .ics
+              - row "mar. 23 déc. 2025 16:53 Amira Ben Salah +21683163647 Consultation (seed) مكتمل ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e713]:
+                - cell "mar. 23 déc. 2025 16:53" [ref=e714]
+                - cell "Amira Ben Salah" [ref=e715]:
+                  - generic [ref=e717]: Amira Ben Salah
+                - cell "+21683163647" [ref=e718]:
+                  - generic [ref=e719]:
+                    - link "Appeler Amira Ben Salah" [ref=e720] [cursor=pointer]:
+                      - /url: tel:+21683163647
+                      - img [ref=e721]
+                    - button "Envoyer un SMS" [ref=e723]:
+                      - img [ref=e724]
+                    - generic [ref=e726]: "+21683163647"
+                - cell "Consultation (seed)" [ref=e727]
+                - cell "مكتمل" [ref=e728]
+                - cell "ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e729]:
+                  - generic [ref=e730]:
+                    - link "ملاحظة SOAP" [ref=e731] [cursor=pointer]:
+                      - /url: /rendez-vous/9163e847-7ba1-45fb-a4c3-7f5e5e9803d2/consultation
+                    - button "جدولة متابعة" [ref=e732]
+                    - button "كشف CNAM" [ref=e733]
+                    - link ".ics" [ref=e734] [cursor=pointer]:
+                      - /url: /api/appointments/9163e847-7ba1-45fb-a4c3-7f5e5e9803d2/calendar
+                      - img [ref=e735]
+                      - text: .ics
+              - row "sam. 6 déc. 2025 16:53 Yosra Jemli +21678199463 Consultation (seed) مكتمل ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e737]:
+                - cell "sam. 6 déc. 2025 16:53" [ref=e738]
+                - cell "Yosra Jemli" [ref=e739]:
+                  - generic [ref=e741]: Yosra Jemli
+                - cell "+21678199463" [ref=e742]:
+                  - generic [ref=e743]:
+                    - link "Appeler Yosra Jemli" [ref=e744] [cursor=pointer]:
+                      - /url: tel:+21678199463
+                      - img [ref=e745]
+                    - button "Envoyer un SMS" [ref=e747]:
+                      - img [ref=e748]
+                    - generic [ref=e750]: "+21678199463"
+                - cell "Consultation (seed)" [ref=e751]
+                - cell "مكتمل" [ref=e752]
+                - cell "ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e753]:
+                  - generic [ref=e754]:
+                    - link "ملاحظة SOAP" [ref=e755] [cursor=pointer]:
+                      - /url: /rendez-vous/6b6533d2-0fc4-4791-a3fa-3d33ddd87793/consultation
+                    - button "جدولة متابعة" [ref=e756]
+                    - button "كشف CNAM" [ref=e757]
+                    - link ".ics" [ref=e758] [cursor=pointer]:
+                      - /url: /api/appointments/6b6533d2-0fc4-4791-a3fa-3d33ddd87793/calendar
+                      - img [ref=e759]
+                      - text: .ics
+              - row "sam. 29 nov. 2025 16:53 Yosra Karray +21687955990 Consultation (seed) مكتمل ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e761]:
+                - cell "sam. 29 nov. 2025 16:53" [ref=e762]
+                - cell "Yosra Karray" [ref=e763]:
+                  - generic [ref=e765]: Yosra Karray
+                - cell "+21687955990" [ref=e766]:
+                  - generic [ref=e767]:
+                    - link "Appeler Yosra Karray" [ref=e768] [cursor=pointer]:
+                      - /url: tel:+21687955990
+                      - img [ref=e769]
+                    - button "Envoyer un SMS" [ref=e771]:
+                      - img [ref=e772]
+                    - generic [ref=e774]: "+21687955990"
+                - cell "Consultation (seed)" [ref=e775]
+                - cell "مكتمل" [ref=e776]
+                - cell "ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e777]:
+                  - generic [ref=e778]:
+                    - link "ملاحظة SOAP" [ref=e779] [cursor=pointer]:
+                      - /url: /rendez-vous/b7e1e2e0-b2c8-4bbc-ba3b-0a5a753b039d/consultation
+                    - button "جدولة متابعة" [ref=e780]
+                    - button "كشف CNAM" [ref=e781]
+                    - link ".ics" [ref=e782] [cursor=pointer]:
+                      - /url: /api/appointments/b7e1e2e0-b2c8-4bbc-ba3b-0a5a753b039d/calendar
+                      - img [ref=e783]
+                      - text: .ics
+              - row "dim. 9 nov. 2025 16:53 Sami Zouari +21695089256 Consultation (seed) مكتمل ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e785]:
+                - cell "dim. 9 nov. 2025 16:53" [ref=e786]
+                - cell "Sami Zouari" [ref=e787]:
+                  - generic [ref=e789]: Sami Zouari
+                - cell "+21695089256" [ref=e790]:
+                  - generic [ref=e791]:
+                    - link "Appeler Sami Zouari" [ref=e792] [cursor=pointer]:
+                      - /url: tel:+21695089256
+                      - img [ref=e793]
+                    - button "Envoyer un SMS" [ref=e795]:
+                      - img [ref=e796]
+                    - generic [ref=e798]: "+21695089256"
+                - cell "Consultation (seed)" [ref=e799]
+                - cell "مكتمل" [ref=e800]
+                - cell "ملاحظة SOAP جدولة متابعة كشف CNAM .ics" [ref=e801]:
+                  - generic [ref=e802]:
+                    - link "ملاحظة SOAP" [ref=e803] [cursor=pointer]:
+                      - /url: /rendez-vous/9298fcb4-463d-486b-8d70-06e8a7484466/consultation
+                    - button "جدولة متابعة" [ref=e804]
+                    - button "كشف CNAM" [ref=e805]
+                    - link ".ics" [ref=e806] [cursor=pointer]:
+                      - /url: /api/appointments/9298fcb4-463d-486b-8d70-06e8a7484466/calendar
+                      - img [ref=e807]
+                      - text: .ics
+    - button "Notifier la secrétaire" [ref=e364]:
+      - img [ref=e365]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e373] [cursor=pointer]:
+    - img [ref=e374]
+  - alert [ref=e377]

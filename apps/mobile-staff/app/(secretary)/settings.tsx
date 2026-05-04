@@ -14,7 +14,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { colors, spacing, radii, clearStoredToken, getStoredToken, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, clearStoredToken, getStoredToken, api, t, useLocale } from "@doktori/mobile-core";
 import { clearPermissionsCache } from "../../hooks/useStaffPermissions";
 
 function decodeJwt(token: string): Record<string, unknown> | null {
@@ -46,13 +46,16 @@ type LeaveBalance = {
   allowance: number | null;
 };
 
-const STATUS_META = {
-  pending:  { label: "En attente", color: "#B45309", bg: "#FFFBEB", border: "#F59E0B" },
-  approved: { label: "Approuvé",   color: "#065F46", bg: "#ECFDF5", border: "#10B981" },
-  denied:   { label: "Refusé",     color: "#B91C1C", bg: "#FEF2F2", border: "#EF4444" },
-};
 
 export default function MoreScreen() {
+  const { locale } = useLocale();
+
+  const STATUS_META = {
+    pending:  { label: t("secretary.settings.statusPending"),  color: "#B45309", bg: "#FFFBEB", border: "#F59E0B" },
+    approved: { label: t("secretary.settings.statusApproved"), color: "#065F46", bg: "#ECFDF5", border: "#10B981" },
+    denied:   { label: t("secretary.settings.statusDenied"),   color: "#B91C1C", bg: "#FEF2F2", border: "#EF4444" },
+  };
+
   const [staff, setStaff] = useState<StaffInfo | null>(null);
   const [loading, setLoading] = useState(true);
   const [leaveRequests, setLeaveRequests] = useState<LeaveRequest[]>([]);
@@ -106,10 +109,10 @@ export default function MoreScreen() {
   const onRefresh = useCallback(() => { setRefreshing(true); loadLeave(); }, [loadLeave]);
 
   async function logout() {
-    Alert.alert("Déconnexion", "Voulez-vous vous déconnecter ?", [
-      { text: "Annuler", style: "cancel" },
+    Alert.alert(t("secretary.settings.logoutTitle"), t("secretary.settings.logoutConfirm"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Se déconnecter",
+        text: t("secretary.settings.logout"),
         style: "destructive",
         onPress: async () => {
           clearPermissionsCache();
@@ -122,11 +125,11 @@ export default function MoreScreen() {
 
   async function submitLeave() {
     if (!leaveStart.match(/^\d{4}-\d{2}-\d{2}$/) || !leaveEnd.match(/^\d{4}-\d{2}-\d{2}$/)) {
-      Alert.alert("Format invalide", "Dates au format AAAA-MM-JJ (ex: 2026-05-15)");
+      Alert.alert(t("secretary.settings.invalidDateFormat"), t("secretary.settings.invalidDateFormatDesc"));
       return;
     }
     if (leaveEnd < leaveStart) {
-      Alert.alert("Dates invalides", "La date de fin doit être après le début");
+      Alert.alert(t("secretary.settings.endBeforeStart"), t("secretary.settings.endBeforeStartDesc"));
       return;
     }
     setSubmitting(true);
@@ -139,9 +142,9 @@ export default function MoreScreen() {
       setShowLeaveModal(false);
       setLeaveStart(""); setLeaveEnd(""); setLeaveReason("");
       await loadLeave();
-      Alert.alert("Demande envoyée", "Votre demande de congé a été soumise au médecin.");
+      Alert.alert(t("secretary.settings.leaveRequestSent"), t("secretary.settings.leaveRequestSentDesc"));
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Erreur lors de l'envoi");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("secretary.settings.sendError"));
     } finally {
       setSubmitting(false);
     }
@@ -169,7 +172,7 @@ export default function MoreScreen() {
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.teal} />}
       >
-        <Text style={styles.pageTitle}>Plus</Text>
+        <Text style={styles.pageTitle}>{t("secretary.settings.title")}</Text>
 
         {/* Identity card */}
         <View style={styles.identityCard}>
@@ -177,10 +180,10 @@ export default function MoreScreen() {
             <Text style={styles.avatarText}>{initials}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.staffName}>{staff?.name ?? "Secrétaire"}</Text>
+            <Text style={styles.staffName}>{staff?.name ?? t("auth.secretary")}</Text>
             <View style={styles.roleBadge}>
               <Ionicons name="clipboard-outline" size={12} color={colors.teal} />
-              <Text style={styles.roleText}>Espace Secrétaire</Text>
+              <Text style={styles.roleText}>{t("secretary.settings.spaceLabel")}</Text>
             </View>
           </View>
           <Ionicons name="person-circle-outline" size={28} color={colors.border} />
@@ -188,24 +191,24 @@ export default function MoreScreen() {
 
         {/* Mon compte */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Mon compte</Text>
+          <Text style={styles.sectionLabel}>{t("secretary.settings.sectionAccount")}</Text>
           <View style={styles.menuCard}>
             <MenuRow
               icon="person-outline"
-              label="Informations personnelles"
-              sublabel="Nom, téléphone, bio"
+              label={t("secretary.settings.personalInfo")}
+              sublabel={t("secretary.settings.personalInfoDesc")}
               onPress={() => router.push("/(secretary)/informations-personnelles")}
             />
             <MenuRow
               icon="notifications-outline"
-              label="Notifications"
-              sublabel="Paramètres des alertes"
+              label={t("secretary.settings.notifications")}
+              sublabel={t("secretary.settings.notificationsDesc")}
               onPress={() => router.push("/(secretary)/notifications")}
             />
             <MenuRow
               icon="settings-outline"
-              label="Paramètres"
-              sublabel="Langue, apparence"
+              label={t("secretary.settings.parametres")}
+              sublabel={t("secretary.settings.parametresDesc")}
               onPress={() => router.push("/(secretary)/parametres")}
               last
             />
@@ -214,19 +217,19 @@ export default function MoreScreen() {
 
         {/* Congés */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Congés</Text>
+          <Text style={styles.sectionLabel}>{t("secretary.settings.sectionLeave")}</Text>
 
           {/* Balance card */}
           {leaveLoading && !leaveBalance ? (
             <ActivityIndicator color={colors.teal} style={{ marginVertical: spacing.sm }} />
           ) : leaveBalance ? (
             <View style={styles.balanceCard}>
-              <BalanceStat label="Acquis" value={leaveBalance.accrued} unit="j" color={colors.teal} />
+              <BalanceStat label={t("secretary.settings.leaveAcquired")} value={leaveBalance.accrued} unit="j" color={colors.teal} />
               <View style={styles.balanceDivider} />
-              <BalanceStat label="Utilisés" value={leaveBalance.used} unit="j" color="#B45309" />
+              <BalanceStat label={t("secretary.settings.leaveUsed")} value={leaveBalance.used} unit="j" color="#B45309" />
               <View style={styles.balanceDivider} />
               <BalanceStat
-                label="Solde"
+                label={t("secretary.settings.leaveBalance")}
                 value={leaveBalance.balance}
                 unit="j"
                 color={leaveBalance.balance >= 0 ? "#059669" : "#DC2626"}
@@ -237,14 +240,14 @@ export default function MoreScreen() {
           <View style={styles.menuCard}>
             <MenuRow
               icon="calendar-outline"
-              label="Demander un congé"
-              sublabel="Soumettre une nouvelle demande"
+              label={t("secretary.settings.requestLeave")}
+              sublabel={t("secretary.settings.requestLeaveDesc")}
               onPress={() => setShowLeaveModal(true)}
             />
             <MenuRow
               icon="list-outline"
-              label="Mes demandes"
-              sublabel={pendingCount > 0 ? `${pendingCount} en attente` : "Historique des congés"}
+              label={t("secretary.settings.myRequests")}
+              sublabel={pendingCount > 0 ? t("secretary.settings.pendingLeave", { count: pendingCount }) : t("secretary.settings.myRequestsDesc")}
               badge={pendingCount > 0 ? String(pendingCount) : undefined}
               onPress={() => setShowHistory(true)}
               last
@@ -254,11 +257,11 @@ export default function MoreScreen() {
 
         {/* Compte */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Compte</Text>
+          <Text style={styles.sectionLabel}>{t("secretary.settings.sectionLogout")}</Text>
           <View style={styles.menuCard}>
             <MenuRow
               icon="log-out-outline"
-              label="Se déconnecter"
+              label={t("secretary.settings.logout")}
               onPress={logout}
               danger
               last
@@ -266,7 +269,7 @@ export default function MoreScreen() {
           </View>
         </View>
 
-        <Text style={styles.version}>Doktori · Espace Secrétaire</Text>
+        <Text style={styles.version}>{t("secretary.settings.footer")}</Text>
       </ScrollView>
 
       {/* Leave request modal */}
@@ -274,29 +277,29 @@ export default function MoreScreen() {
         <Pressable style={styles.overlay} onPress={() => setShowLeaveModal(false)} />
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Demander un congé</Text>
+          <Text style={styles.sheetTitle}>{t("secretary.settings.requestLeave")}</Text>
           <ScrollView contentContainerStyle={{ gap: spacing.md }} keyboardShouldPersistTaps="handled">
             <FormField
-              label="Date de début (AAAA-MM-JJ)"
+              label={t("secretary.settings.leaveStartLabel")}
               value={leaveStart}
               onChange={setLeaveStart}
-              placeholder="2026-05-15"
+              placeholder={t("secretary.settings.leaveStartPlaceholder")}
               keyboardType="numeric"
               maxLength={10}
             />
             <FormField
-              label="Date de fin (AAAA-MM-JJ)"
+              label={t("secretary.settings.leaveEndLabel")}
               value={leaveEnd}
               onChange={setLeaveEnd}
-              placeholder="2026-05-20"
+              placeholder={t("secretary.settings.leaveEndPlaceholder")}
               keyboardType="numeric"
               maxLength={10}
             />
             <FormField
-              label="Motif (optionnel)"
+              label={t("secretary.settings.leaveReasonLabel")}
               value={leaveReason}
               onChange={setLeaveReason}
-              placeholder="Raison de la demande…"
+              placeholder={t("secretary.settings.leaveReasonPlaceholder")}
               multiline
             />
             {leaveStart && leaveEnd && leaveEnd >= leaveStart && (
@@ -305,7 +308,7 @@ export default function MoreScreen() {
                 <Text style={styles.durationHintText}>
                   {(() => {
                     const diff = (new Date(leaveEnd).getTime() - new Date(leaveStart).getTime()) / 86400000 + 1;
-                    return `${diff} jour${diff > 1 ? "s" : ""} de congé`;
+                    return t(diff > 1 ? "secretary.settings.leaveDurationPlural" : "secretary.settings.leaveDuration", { count: diff });
                   })()}
                 </Text>
               </View>
@@ -317,7 +320,7 @@ export default function MoreScreen() {
             >
               {submitting
                 ? <ActivityIndicator color="#FFF" />
-                : <Text style={styles.submitBtnText}>Envoyer la demande</Text>}
+                : <Text style={styles.submitBtnText}>{t("secretary.settings.submitLeave")}</Text>}
             </Pressable>
           </ScrollView>
         </View>
@@ -328,11 +331,11 @@ export default function MoreScreen() {
         <Pressable style={styles.overlay} onPress={() => setShowHistory(false)} />
         <View style={[styles.sheet, { maxHeight: "80%" }]}>
           <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Mes demandes de congé</Text>
+          <Text style={styles.sheetTitle}>{t("secretary.settings.historyTitle")}</Text>
           {leaveRequests.length === 0 ? (
             <View style={styles.emptyLeave}>
               <Ionicons name="calendar-clear-outline" size={40} color={colors.border} />
-              <Text style={styles.emptyLeaveText}>Aucune demande</Text>
+              <Text style={styles.emptyLeaveText}>{t("secretary.settings.noRequests")}</Text>
             </View>
           ) : (
             <ScrollView contentContainerStyle={{ gap: spacing.sm }}>
@@ -349,7 +352,7 @@ export default function MoreScreen() {
                         <Text style={[styles.leaveBadgeText, { color: meta.color }]}>{meta.label}</Text>
                       </View>
                     </View>
-                    <Text style={styles.leaveDays}>{days} jour{days > 1 ? "s" : ""}</Text>
+                    <Text style={styles.leaveDays}>{t(days > 1 ? "secretary.settings.leaveDurationPlural" : "secretary.settings.leaveDuration", { count: days })}</Text>
                     {r.reason && <Text style={styles.leaveReason}>{r.reason}</Text>}
                   </View>
                 );

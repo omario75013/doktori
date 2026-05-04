@@ -12,7 +12,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import * as Notifications from "expo-notifications";
 import Constants from "expo-constants";
-import { api, colors, spacing, radii } from "@doktori/mobile-core";
+import { api, colors, spacing, radii, t, useLocale } from "@doktori/mobile-core";
 
 const isExpoGo = Constants.executionEnvironment === "storeClient";
 
@@ -24,13 +24,6 @@ type Bell = {
   createdAt: string;
 };
 
-const QUICK_REPLIES = [
-  "J'arrive tout de suite",
-  "J'arrive dans 2 minutes",
-  "Je suis avec un patient, j'arrive",
-  "Noté, merci",
-  "Vu — j'arrive",
-];
 
 async function scheduleLocalBell(bell: Bell) {
   if (isExpoGo) return;
@@ -38,7 +31,7 @@ async function scheduleLocalBell(bell: Bell) {
     await Notifications.scheduleNotificationAsync({
       content: {
         title: `🔔 ${bell.label}`,
-        body: bell.message ?? "Le médecin vous sollicite",
+        body: bell.message ?? t("secretary.bell.doctorCalling"),
         sound: "default",
         data: { type: "bell", bellId: bell.id },
         ...(Platform.OS === "android" ? { channelId: "bells" } : {}),
@@ -51,6 +44,16 @@ async function scheduleLocalBell(bell: Bell) {
 }
 
 export function SecretaryBellListener() {
+  const { locale } = useLocale();
+
+  const QUICK_REPLIES = [
+    t("secretary.bell.reply1"),
+    t("secretary.bell.reply2"),
+    t("secretary.bell.reply3"),
+    t("secretary.bell.reply4"),
+    t("secretary.bell.reply5"),
+  ];
+
   const [bell, setBell] = useState<Bell | null>(null);
   const [acking, setAcking] = useState(false);
   const [customMode, setCustomMode] = useState(false);
@@ -112,7 +115,7 @@ export function SecretaryBellListener() {
             <Text style={s.message}>{bell.message}</Text>
           ) : null}
           <Text style={s.time}>
-            Du médecin · {new Date(bell.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
+            {t("secretary.bell.from")} {new Date(bell.createdAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
           </Text>
 
           {customMode ? (
@@ -121,7 +124,7 @@ export function SecretaryBellListener() {
                 style={s.customInput}
                 value={customText}
                 onChangeText={setCustomText}
-                placeholder="Votre réponse…"
+                placeholder={t("secretary.bell.replyPlaceholder")}
                 placeholderTextColor={colors.foregroundSecondary}
                 multiline
                 autoFocus
@@ -131,7 +134,7 @@ export function SecretaryBellListener() {
                   style={[s.btn, s.btnSecondary]}
                   onPress={() => setCustomMode(false)}
                 >
-                  <Text style={s.btnSecondaryText}>Retour</Text>
+                  <Text style={s.btnSecondaryText}>{t("secretary.bell.back")}</Text>
                 </Pressable>
                 <Pressable
                   style={[s.btn, s.btnPrimary, acking && { opacity: 0.6 }]}
@@ -140,7 +143,7 @@ export function SecretaryBellListener() {
                 >
                   {acking
                     ? <ActivityIndicator color="#FFF" size="small" />
-                    : <Text style={s.btnPrimaryText}>Envoyer</Text>}
+                    : <Text style={s.btnPrimaryText}>{t("secretary.bell.send")}</Text>}
                 </Pressable>
               </View>
             </View>
@@ -162,7 +165,7 @@ export function SecretaryBellListener() {
                 onPress={() => setCustomMode(true)}
                 disabled={acking}
               >
-                <Text style={s.customLinkText}>Écrire une réponse personnalisée…</Text>
+                <Text style={s.customLinkText}>{t("secretary.bell.customReplyPlaceholder")}</Text>
               </Pressable>
             </View>
           )}

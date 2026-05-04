@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { api, colors, radii, spacing } from "@doktori/mobile-core";
+import { api, colors, radii, spacing, t, useLocale } from "@doktori/mobile-core";
 
 export type QuickAction = {
   id: string;
@@ -72,6 +72,7 @@ export function SecretaryQuickActions({
   visible: boolean;
   onClose: () => void;
 }) {
+  const { locale } = useLocale();
   const [actions, setActions] = useState<QuickAction[]>([]);
   const [secretaries, setSecretaries] = useState<Secretary[]>([]);
   const [targetId, setTargetId] = useState<string>(""); // "" = broadcast
@@ -115,12 +116,12 @@ export function SecretaryQuickActions({
     try {
       await sendBell({ ...args, secretaryId: args.secretaryId ?? targetId ?? null });
       const targetLabel = targetId
-        ? secretaries.find((x) => x.id === targetId)?.name ?? "votre secrétaire"
-        : "toutes vos secrétaires actives";
-      Alert.alert("Envoyé", `Notification envoyée à ${targetLabel}.`);
+        ? secretaries.find((x) => x.id === targetId)?.name ?? t("secretary.quickActions.yourSecretary")
+        : t("secretary.quickActions.allActive");
+      Alert.alert(t("secretary.quickActions.sent"), t("secretary.quickActions.sentTo", { target: targetLabel }));
       onClose();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Envoi échoué");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("secretary.quickActions.sendFailed"));
     } finally {
       setSending(null);
     }
@@ -146,17 +147,17 @@ export function SecretaryQuickActions({
   }
 
   function confirmDelete(id: string, label: string) {
-    Alert.alert("Supprimer ?", `Retirer « ${label} » de vos actions rapides ?`, [
-      { text: "Annuler", style: "cancel" },
+    Alert.alert(t("secretary.quickActions.deleteTitle"), t("secretary.quickActions.deleteBody", { label }), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Supprimer",
+        text: t("secretary.quickActions.deleteConfirm"),
         style: "destructive",
         onPress: async () => {
           try {
             await api(`/api/doctor/quick-actions/${id}`, { method: "DELETE" });
             setActions((prev) => prev.filter((a) => a.id !== id));
           } catch (e) {
-            Alert.alert("Erreur", e instanceof Error ? e.message : "Suppression échouée");
+            Alert.alert(t("common.error"), e instanceof Error ? e.message : t("secretary.quickActions.deleteFailed"));
           }
         },
       },
@@ -180,10 +181,8 @@ export function SecretaryQuickActions({
             <Ionicons name="notifications" size={20} color="#FFFFFF" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.title}>Notifier la secrétaire</Text>
-            <Text style={styles.subtitle}>
-              Envoyer une action rapide ou un message libre
-            </Text>
+            <Text style={styles.title}>{t("secretary.quickActions.sheetTitle")}</Text>
+            <Text style={styles.subtitle}>{t("secretary.quickActions.sheetDesc")}</Text>
           </View>
           <Pressable onPress={onClose} hitSlop={10} style={styles.closeBtn}>
             <Ionicons name="close" size={22} color={colors.foregroundSecondary} />
@@ -198,7 +197,7 @@ export function SecretaryQuickActions({
         >
           {secretaries.length > 0 && (
             <View style={styles.section}>
-              <Text style={styles.sectionLabel}>Destinataire</Text>
+              <Text style={styles.sectionLabel}>{t("secretary.quickActions.recipient")}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -216,7 +215,7 @@ export function SecretaryQuickActions({
                   <Text
                     style={[styles.pillText, targetId === "" && { color: "#FFFFFF" }]}
                   >
-                    Toutes actives
+                    {t("secretary.quickActions.allActive")}
                   </Text>
                 </Pressable>
                 {secretaries.map((s) => {
@@ -243,7 +242,7 @@ export function SecretaryQuickActions({
           )}
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Actions rapides</Text>
+            <Text style={styles.sectionLabel}>{t("secretary.quickActions.quickActionsSection")}</Text>
             {actions.length === 0 ? (
               <View style={styles.emptyActions}>
                 <Ionicons
@@ -253,8 +252,8 @@ export function SecretaryQuickActions({
                 />
                 <Text style={styles.emptyText}>
                   {loading
-                    ? "Chargement…"
-                    : "Aucune action rapide. Créez-en une ci-dessous (cochez « sauver comme action rapide »)."}
+                    ? t("common.loading")
+                    : t("secretary.quickActions.noActions")}
                 </Text>
               </View>
             ) : (
@@ -296,12 +295,12 @@ export function SecretaryQuickActions({
           </View>
 
           <View style={styles.section}>
-            <Text style={styles.sectionLabel}>Notification personnalisée</Text>
+            <Text style={styles.sectionLabel}>{t("secretary.quickActions.customSection")}</Text>
             <View style={styles.customCard}>
               <TextInput
                 value={customLabel}
                 onChangeText={setCustomLabel}
-                placeholder="Ex : Veuillez m'apporter le dossier…"
+                placeholder={t("secretary.quickActions.customPlaceholder")}
                 placeholderTextColor={colors.foregroundSecondary}
                 style={styles.input}
                 maxLength={100}
@@ -309,14 +308,14 @@ export function SecretaryQuickActions({
               <TextInput
                 value={customMessage}
                 onChangeText={setCustomMessage}
-                placeholder="Message (facultatif)"
+                placeholder={t("secretary.quickActions.messageOptional")}
                 placeholderTextColor={colors.foregroundSecondary}
                 multiline
                 style={[styles.input, styles.inputMulti]}
                 maxLength={500}
               />
 
-              <Text style={styles.iconLabel}>Icône</Text>
+              <Text style={styles.iconLabel}>{t("secretary.quickActions.iconLabel")}</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
@@ -357,7 +356,7 @@ export function SecretaryQuickActions({
                     )}
                   </View>
                   <Text style={styles.templateLabel}>
-                    Sauver comme action rapide
+                    {t("secretary.quickActions.saveAsAction")}
                   </Text>
                 </Pressable>
                 <Pressable
@@ -370,7 +369,7 @@ export function SecretaryQuickActions({
                   ]}
                 >
                   <Ionicons name="paper-plane" size={14} color="#FFFFFF" />
-                  <Text style={styles.sendText}>Envoyer</Text>
+                  <Text style={styles.sendText}>{t("secretary.quickActions.send")}</Text>
                 </Pressable>
               </View>
             </View>

@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, clearStoredToken, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, clearStoredToken, api, t, useLocale } from "@doktori/mobile-core";
 
 const ROLE_KEY = "doktori.staff.role";
 
@@ -29,6 +29,7 @@ type Entry = {
 };
 
 export default function PlusScreen() {
+  const { locale } = useLocale();
   const [me, setMe] = useState<DoctorMe | null>(null);
   const [pub, setPub] = useState<DoctorPub | null>(null);
 
@@ -52,10 +53,10 @@ export default function PlusScreen() {
     .join("");
 
   async function logout() {
-    Alert.alert("Déconnexion", "Vous allez être déconnecté.", [
-      { text: "Annuler", style: "cancel" },
+    Alert.alert(t("doctor.more.logoutTitle"), t("doctor.more.logoutMessage"), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Se déconnecter",
+        text: t("doctor.more.logout"),
         style: "destructive",
         onPress: async () => {
           await clearStoredToken();
@@ -69,12 +70,12 @@ export default function PlusScreen() {
 
   async function changeRole() {
     Alert.alert(
-      "Changer de rôle",
-      "Vous allez retourner au choix du rôle (déconnexion).",
+      t("doctor.more.switchRole"),
+      t("doctor.more.switchRoleMessage"),
       [
-        { text: "Annuler", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Continuer",
+          text: t("doctor.more.continueBtn"),
           onPress: async () => {
             await clearStoredToken();
             const SecureStore = await import("expo-secure-store").catch(() => null);
@@ -90,120 +91,126 @@ export default function PlusScreen() {
 
   const groups: Array<{ title: string; entries: Entry[] }> = [
     {
-      title: "Activité",
+      title: t("doctor.more.sectionActivity"),
       entries: [
         {
-          label: "Rendez-vous",
+          label: t("doctor.more.rdvAll"),
           icon: "calendar-number",
-          description: "Tous les RDV + filtres",
+          description: t("doctor.more.rdvAllDesc"),
           onPress: () => go("/(doctor)/more/rendez-vous"),
         },
         {
-          label: "Téléconsultation",
+          label: t("doctor.more.teleconsult"),
           icon: "videocam",
-          description: "Sessions vidéo à venir",
+          description: t("doctor.more.teleconsultDesc"),
           onPress: () => go("/(doctor)/more/teleconsultation"),
         },
         {
-          label: "Stats",
+          label: t("doctor.more.stats"),
           icon: "stats-chart",
-          description: "KPIs & performance",
+          description: t("doctor.more.statsDesc"),
           onPress: () => go("/(doctor)/more/stats"),
+        },
+        {
+          label: t("doctor.more.conges"),
+          icon: "umbrella",
+          description: t("doctor.more.congesDesc"),
+          onPress: () => go("/(doctor)/more/conges"),
         },
       ],
     },
     {
-      title: "Cabinet",
+      title: t("doctor.more.sectionCabinet"),
       entries: [
         {
-          label: "Motifs",
+          label: t("doctor.more.motifs"),
           icon: "list",
-          description: "Types de consultation",
+          description: t("doctor.more.motifsDesc"),
           onPress: () => go("/(doctor)/more/motifs"),
         },
         {
-          label: "Cabinets",
+          label: t("doctor.more.cabinets"),
           icon: "business",
-          description: "Lieux de consultation",
+          description: t("doctor.more.cabinetsDesc"),
           onPress: () => go("/(doctor)/more/cabinets"),
         },
         {
-          label: "Secrétaires",
+          label: t("doctor.more.secretaries"),
           icon: "people-circle",
-          description: "Gérer votre équipe",
+          description: t("doctor.more.secretariesDesc"),
           onPress: () => go("/(doctor)/more/secretaires"),
         },
         {
-          label: "CNAM",
+          label: t("doctor.more.cnam"),
           icon: "document-attach",
-          description: "Feuilles de soins",
+          description: t("doctor.more.cnamDesc"),
           onPress: () => go("/(doctor)/more/cnam"),
         },
       ],
     },
     {
-      title: "Réseau",
+      title: t("doctor.more.sectionNetwork"),
       entries: [
         {
-          label: "Réseau confrères",
+          label: t("doctor.more.reseau"),
           icon: "git-network",
-          description: "Connexions médecins",
+          description: t("doctor.more.reseauDesc"),
           onPress: () => go("/(doctor)/more/reseau"),
         },
         {
-          label: "Référencements",
+          label: t("doctor.more.refs"),
           icon: "swap-horizontal",
-          description: "Patients référés",
+          description: t("doctor.more.refsDesc"),
           onPress: () => go("/(doctor)/more/referencements"),
         },
         {
-          label: "Parrainage",
+          label: t("doctor.more.parrainage"),
           icon: "gift",
-          description: "Code de parrainage",
+          description: t("doctor.more.parrainageDesc"),
           onPress: () => go("/(doctor)/more/parrainage"),
         },
       ],
     },
     {
-      title: "Finances",
+      title: t("doctor.more.sectionFinances"),
       entries: [
         {
-          label: "Wallet",
+          label: t("doctor.more.wallet"),
           icon: "wallet",
-          description: "Solde & transactions",
+          description: t("doctor.more.walletDesc"),
           onPress: () => go("/(doctor)/more/wallet"),
         },
         {
-          label: "Factures",
+          label: t("doctor.more.factures"),
           icon: "receipt",
-          description: "Historique des factures",
+          description: t("doctor.more.facturesDesc"),
           onPress: () => go("/(doctor)/more/factures"),
         },
         {
-          label: "Abonnement",
+          label: t("doctor.more.abonnement"),
           icon: "card",
-          description: "Plan actuel & limites",
+          description: t("doctor.more.abonnementDesc"),
           onPress: () => go("/(doctor)/more/abonnement"),
         },
       ],
     },
     {
-      title: "Compte",
+      title: t("doctor.more.sectionAccount"),
       entries: [
         {
-          label: "Profil",
+          label: t("doctor.more.profil"),
           icon: "person",
-          description: "Informations publiques",
+          description: t("doctor.more.profilDesc"),
           onPress: () => go("/(doctor)/more/profil"),
         },
         {
-          label: "Paramètres",
+          label: t("doctor.more.parametres"),
           icon: "settings",
-          description: "Notifications, 2FA, Système",
+          description: t("doctor.more.parametresDesc"),
           onPress: () => go("/(doctor)/more/parametres"),
         },
         {
-          label: "Se déconnecter",
+          label: t("doctor.more.logout"),
           icon: "log-out",
           tint: colors.danger,
           onPress: logout,
@@ -215,8 +222,8 @@ export default function PlusScreen() {
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
       <View style={styles.header}>
-        <Text style={styles.title}>Plus</Text>
-        <Text style={styles.sub}>Accéder à toutes les fonctionnalités</Text>
+        <Text style={styles.title}>{t("doctor.more.title")}</Text>
+        <Text style={styles.sub}>{t("doctor.more.subtitle")}</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.scroll}>
@@ -233,7 +240,7 @@ export default function PlusScreen() {
             <Text style={styles.identityName}>{me?.name ?? "Médecin"}</Text>
             <View style={styles.roleBadge}>
               <Ionicons name="medical-outline" size={11} color={colors.teal} />
-              <Text style={styles.roleText}>Espace Médecin</Text>
+              <Text style={styles.roleText}>{t("doctor.more.spaceLabel")}</Text>
             </View>
           </View>
           <Ionicons name="chevron-forward" size={18} color={colors.foregroundSecondary} />
