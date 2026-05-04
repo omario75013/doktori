@@ -13,7 +13,7 @@ export default async function ModelesPage() {
   }
 
   if (!(await isEnabled("prescription_templates_enabled"))) {
-    redirect("/medecin");
+    redirect("/dashboard");
   }
 
   const doctorId = session.user.id;

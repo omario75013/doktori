@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { toast } from "sonner";
 import { Search, Plus, Copy, Pencil, Trash2, Eye, FileText, Loader2 } from "lucide-react";
@@ -25,29 +26,32 @@ interface Props {
   doctorId: string;
 }
 
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("fr-TN", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
-
 export function TemplateList({ templates, doctorId }: Props) {
   const router = useRouter();
+  const t = useTranslations("medecin.modeles");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? "ar-TN" : "fr-TN";
   const [search, setSearch] = useState("");
   const [lang, setLang] = useState<"all" | "fr" | "ar">("all");
   const [cloningId, setCloningId] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
 
-  const filtered = templates.filter((t) => {
-    const matchSearch = t.title.toLowerCase().includes(search.toLowerCase());
-    const matchLang = lang === "all" || t.language === lang;
+  function formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString(dateLocale, {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+    });
+  }
+
+  const filtered = templates.filter((tpl) => {
+    const matchSearch = tpl.title.toLowerCase().includes(search.toLowerCase());
+    const matchLang = lang === "all" || tpl.language === lang;
     return matchSearch && matchLang;
   });
 
-  const official = filtered.filter((t) => t.isOfficial);
-  const mine = filtered.filter((t) => !t.isOfficial && t.doctorId === doctorId);
+  const official = filtered.filter((tpl) => tpl.isOfficial);
+  const mine = filtered.filter((tpl) => !tpl.isOfficial && tpl.doctorId === doctorId);
 
   async function handleClone(id: string) {
     setCloningId(id);
@@ -55,39 +59,39 @@ export function TemplateList({ templates, doctorId }: Props) {
       const res = await fetch(`/api/medecin/templates/${id}/clone`, { method: "POST" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error ?? "Erreur lors de la duplication");
+        throw new Error((data as { error?: string }).error ?? t("errorDuplicate"));
       }
       const cloned = await res.json();
-      toast.success("Modèle dupliqué");
-      toast.warning(
-        "Le médecin reste seul responsable de la prescription, des doses et de la pertinence clinique.",
-        { duration: 2000 }
-      );
+      toast.success(t("duplicated"));
+      toast.warning(t("duplicateWarning"), { duration: 2000 });
       router.push(`/modeles/${cloned.id}/edit`);
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur serveur");
+      toast.error(e instanceof Error ? e.message : t("errorServer"));
     } finally {
       setCloningId(null);
     }
   }
 
   async function handleDelete(id: string, title: string) {
-    if (!confirm(`Supprimer le modèle "${title}" ? Cette action est irréversible.`)) return;
+    if (!confirm(t("confirmDelete", { title }))) return;
     setDeletingId(id);
     try {
       const res = await fetch(`/api/medecin/templates/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        throw new Error((data as { error?: string }).error ?? "Erreur lors de la suppression");
+        throw new Error((data as { error?: string }).error ?? t("errorDelete"));
       }
-      toast.success("Modèle supprimé");
+      toast.success(t("deleted"));
       router.refresh();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur serveur");
+      toast.error(e instanceof Error ? e.message : t("errorServer"));
     } finally {
       setDeletingId(null);
     }
   }
+
+  const totalCount = templates.length;
+  const countLabel = totalCount > 1 ? t("countOther", { count: totalCount }) : t("countOne", { count: totalCount });
 
   return (
     <div className="space-y-6">
@@ -98,10 +102,8 @@ export function TemplateList({ templates, doctorId }: Props) {
             <FileText className="size-5 text-blue-600" />
           </div>
           <div>
-            <h1 className="text-xl font-semibold text-gray-900">Modèles de documents</h1>
-            <p className="text-sm text-gray-500">
-              {templates.length} modèle{templates.length > 1 ? "s" : ""}
-            </p>
+            <h1 className="text-xl font-semibold text-gray-900">{t("title")}</h1>
+            <p className="text-sm text-gray-500">{countLabel}</p>
           </div>
         </div>
         <Link
@@ -109,7 +111,7 @@ export function TemplateList({ templates, doctorId }: Props) {
           className="inline-flex items-center justify-center rounded-lg border border-transparent bg-primary text-primary-foreground h-7 gap-1 px-2.5 text-[0.8rem] font-medium whitespace-nowrap transition-all hover:opacity-90"
         >
           <Plus className="size-3.5" />
-          Nouveau modèle
+          {t("newTemplate")}
         </Link>
       </div>
 
@@ -120,7 +122,7 @@ export function TemplateList({ templates, doctorId }: Props) {
           <Input
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            placeholder="Rechercher un modèle…"
+            placeholder={t("searchPlaceholder")}
             className="pl-9 rounded-xl"
           />
         </div>
@@ -129,69 +131,69 @@ export function TemplateList({ templates, doctorId }: Props) {
           onChange={(e) => setLang(e.target.value as "all" | "fr" | "ar")}
           className="h-9 rounded-lg border border-input bg-white px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
-          <option value="all">Toutes les langues</option>
-          <option value="fr">Français</option>
-          <option value="ar">العربية</option>
+          <option value="all">{t("filterAll")}</option>
+          <option value="fr">{t("filterFr")}</option>
+          <option value="ar">{t("filterAr")}</option>
         </select>
       </div>
 
       {/* Official templates */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-gray-600 flex items-center gap-2">
-          <span>📌 Officiels Doktori</span>
+          <span>{t("officialSection")}</span>
           <span className="text-xs font-normal text-gray-400">({official.length})</span>
         </h2>
         {official.length === 0 ? (
           <p className="text-sm text-gray-400 italic px-2">
-            Aucun modèle officiel {search || lang !== "all" ? "pour cette recherche" : "disponible"}.
+            {search || lang !== "all" ? t("noOfficialFiltered") : t("noOfficial")}
           </p>
         ) : (
           <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
-            {official.map((t, i) => (
+            {official.map((tpl, i) => (
               <div
-                key={t.id}
+                key={tpl.id}
                 className={`flex items-center justify-between px-4 py-3 gap-4 ${
                   i < official.length - 1 ? "border-b border-border" : ""
                 }`}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-900 truncate">{t.title}</span>
+                    <span className="text-sm font-medium text-gray-900 truncate">{tpl.title}</span>
                     <span
                       className={`shrink-0 text-[10px] font-semibold rounded-full px-2 py-0.5 ${
-                        t.language === "ar"
+                        tpl.language === "ar"
                           ? "bg-orange-50 text-orange-600"
                           : "bg-blue-50 text-blue-600"
                       }`}
                     >
-                      {t.language.toUpperCase()}
+                      {tpl.language.toUpperCase()}
                     </span>
                   </div>
-                  {t.description && (
-                    <p className="text-xs text-gray-400 mt-0.5 truncate">{t.description}</p>
+                  {tpl.description && (
+                    <p className="text-xs text-gray-400 mt-0.5 truncate">{tpl.description}</p>
                   )}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Link
-                    href={`/modeles/${t.id}/edit`}
+                    href={`/modeles/${tpl.id}/edit`}
                     className="inline-flex items-center gap-1 h-7 px-2 text-xs font-medium rounded-md border border-border bg-background hover:bg-muted transition-colors"
                   >
                     <Eye className="size-3" />
-                    Voir
+                    {t("view")}
                   </Link>
                   <Button
                     variant="outline"
                     size="sm"
                     className="h-7 px-2 text-xs gap-1"
-                    disabled={cloningId === t.id}
-                    onClick={() => handleClone(t.id)}
+                    disabled={cloningId === tpl.id}
+                    onClick={() => handleClone(tpl.id)}
                   >
-                    {cloningId === t.id ? (
+                    {cloningId === tpl.id ? (
                       <Loader2 className="size-3 animate-spin" />
                     ) : (
                       <Copy className="size-3" />
                     )}
-                    Dupliquer
+                    {t("duplicate")}
                   </Button>
                 </div>
               </div>
@@ -203,74 +205,72 @@ export function TemplateList({ templates, doctorId }: Props) {
       {/* Personal templates */}
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-gray-600 flex items-center gap-2">
-          <span>📋 Mes modèles</span>
+          <span>{t("mySection")}</span>
           <span className="text-xs font-normal text-gray-400">({mine.length})</span>
         </h2>
         {mine.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border bg-gray-50/50 px-6 py-10 text-center">
             <FileText className="size-8 text-gray-300 mx-auto mb-3" />
-            <p className="text-sm font-medium text-gray-600">Aucun modèle personnel</p>
-            <p className="text-xs text-gray-400 mt-1 mb-4">
-              Créez votre premier modèle ou dupliquez un modèle officiel.
-            </p>
+            <p className="text-sm font-medium text-gray-600">{t("noPersonal")}</p>
+            <p className="text-xs text-gray-400 mt-1 mb-4">{t("noPersonalDesc")}</p>
             <Link
               href="/modeles/nouveau"
               className="inline-flex items-center gap-1.5 h-8 px-2.5 text-sm font-medium rounded-lg border border-border bg-background hover:bg-muted transition-colors"
             >
               <Plus className="size-4" />
-              Créer un modèle
+              {t("createTemplate")}
             </Link>
           </div>
         ) : (
           <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
-            {mine.map((t, i) => (
+            {mine.map((tpl, i) => (
               <div
-                key={t.id}
+                key={tpl.id}
                 className={`flex items-center justify-between px-4 py-3 gap-4 ${
                   i < mine.length - 1 ? "border-b border-border" : ""
                 }`}
               >
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium text-gray-900 truncate">{t.title}</span>
+                    <span className="text-sm font-medium text-gray-900 truncate">{tpl.title}</span>
                     <span
                       className={`shrink-0 text-[10px] font-semibold rounded-full px-2 py-0.5 ${
-                        t.language === "ar"
+                        tpl.language === "ar"
                           ? "bg-orange-50 text-orange-600"
                           : "bg-blue-50 text-blue-600"
                       }`}
                     >
-                      {t.language.toUpperCase()}
+                      {tpl.language.toUpperCase()}
                     </span>
                   </div>
-                  {t.description && (
-                    <p className="text-xs text-gray-400 mt-0.5 truncate">{t.description}</p>
+                  {tpl.description && (
+                    <p className="text-xs text-gray-400 mt-0.5 truncate">{tpl.description}</p>
                   )}
                   <p className="text-[10px] text-gray-300 mt-0.5">
-                    Modifié le {formatDate(t.updatedAt)}
+                    {t("modifiedOn", { date: formatDate(tpl.updatedAt) })}
                   </p>
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
                   <Link
-                    href={`/modeles/${t.id}/edit`}
+                    href={`/modeles/${tpl.id}/edit`}
                     className="inline-flex items-center gap-1 h-7 px-2 text-xs font-medium rounded-md border border-border bg-background hover:bg-muted transition-colors"
                   >
                     <Pencil className="size-3" />
-                    Éditer
+                    {t("edit")}
                   </Link>
                   <Button
                     variant="outline"
                     size="sm"
                     className="h-7 px-2 text-xs gap-1 text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 hover:border-red-300"
-                    disabled={deletingId === t.id}
-                    onClick={() => handleDelete(t.id, t.title)}
+                    disabled={deletingId === tpl.id}
+                    onClick={() => handleDelete(tpl.id, tpl.title)}
                   >
-                    {deletingId === t.id ? (
+                    {deletingId === tpl.id ? (
                       <Loader2 className="size-3 animate-spin" />
                     ) : (
                       <Trash2 className="size-3" />
                     )}
-                    Supprimer
+                    {t("delete")}
                   </Button>
                 </div>
               </div>

@@ -16,7 +16,7 @@ export default async function EditModelePage({ params }: PageProps) {
   }
 
   if (!(await isEnabled("prescription_templates_enabled"))) {
-    redirect("/medecin");
+    redirect("/dashboard");
   }
 
   const { id } = await params;
