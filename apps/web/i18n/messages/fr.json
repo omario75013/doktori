@@ -695,7 +695,8 @@
       "unsavedConfirm": "Modifications non sauvegardées. Quitter quand même ?",
       "previewTitle": "Aperçu (patient fictif : Sami Trabelsi, 35 ans)",
       "previewLoading": "Chargement de l'aperçu…",
-      "unresolved": "{count, plural, one {# variable non résolue} other {# variables non résolues}} : {list}"
+      "unresolved": "{count, plural, one {# variable non résolue} other {# variables non résolues}} : {list}",
+      "duplicateAndEdit": "Dupliquer et modifier"
     },
     "motifs": {
       "title": "Motifs de consultation",

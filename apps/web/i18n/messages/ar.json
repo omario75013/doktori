@@ -695,7 +695,8 @@
       "unsavedConfirm": "تغييرات غير محفوظة. هل تريد المغادرة على أي حال؟",
       "previewTitle": "معاينة (مريض وهمي: سامي الطرابلسي، 35 سنة)",
       "previewLoading": "جارٍ تحميل المعاينة…",
-      "unresolved": "{count, plural, one {# متغير غير محلول} other {# متغيرات غير محلولة}}: {list}"
+      "unresolved": "{count, plural, one {# متغير غير محلول} other {# متغيرات غير محلولة}}: {list}",
+      "duplicateAndEdit": "نسخ وتعديل"
     },
     "motifs": {
       "title": "أسباب الاستشارة",

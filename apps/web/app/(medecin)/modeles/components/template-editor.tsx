@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Loader2, Save, ArrowLeft } from "lucide-react";
+import { Loader2, Save, ArrowLeft, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,6 +42,27 @@ export function TemplateEditor({ mode, initialData }: Props) {
   const [isOfficialLocked] = useState(mode === "admin" && !!initialData?.id);
   const [saving, setSaving] = useState(false);
   const [dirty, setDirty] = useState(false);
+  const [cloning, setCloning] = useState(false);
+
+  const handleClone = useCallback(async () => {
+    if (!initialData?.id) return;
+    setCloning(true);
+    try {
+      const res = await fetch(`/api/medecin/templates/${initialData.id}/clone`, { method: "POST" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? t("errorDuplicate"));
+      }
+      const cloned = await res.json();
+      toast.success(t("duplicated"));
+      toast.warning(t("duplicateWarning"), { duration: 2000 });
+      router.push(`/modeles/${cloned.id}/edit`);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : t("errorServer"));
+    } finally {
+      setCloning(false);
+    }
+  }, [initialData?.id, router, t]);
 
   // Track dirty state
   useEffect(() => {
@@ -170,6 +191,20 @@ export function TemplateEditor({ mode, initialData }: Props) {
             <ArrowLeft className="size-4 mr-2" />
             {t("back")}
           </Button>
+          {readOnly && (
+            <Button
+              onClick={handleClone}
+              disabled={cloning}
+              size="sm"
+            >
+              {cloning ? (
+                <Loader2 className="size-4 mr-2 animate-spin" />
+              ) : (
+                <Copy className="size-4 mr-2" />
+              )}
+              {t("duplicateAndEdit")}
+            </Button>
+          )}
           {!readOnly && (
             <Button
               onClick={handleSave}
