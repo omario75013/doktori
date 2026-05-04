@@ -256,6 +256,10 @@ export const patients = pgTable(
     emailVerified: boolean("email_verified").notNull().default(false),
     authMethod: varchar("auth_method", { length: 10 }).notNull().default("otp"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    // ── Patient frontend v2 (0073) ──
+    photoUrl: varchar("photo_url", { length: 500 }),
+    cnamCardUrl: varchar("cnam_card_url", { length: 500 }),
+    insuranceCardUrl: varchar("insurance_card_url", { length: 500 }),
   },
   (table) => [
     uniqueIndex("patients_phone_idx").on(table.phone),
@@ -403,12 +407,16 @@ export const appointments = pgTable(
     checkedInAt: timestamp("checked_in_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    // ── Patient frontend v2 (0073) ──
+    rescheduledFromId: uuid("rescheduled_from_id").references((): any => appointments.id, { onDelete: "set null" }),
+    cancellationReason: text("cancellation_reason"),
   },
   (table) => [
     index("appointments_doctor_date_idx").on(table.doctorId, table.startsAt),
     index("appointments_patient_idx").on(table.patientId),
     index("appointments_status_idx").on(table.status),
     index("appointments_appointment_type_idx").on(table.appointmentTypeId),
+    index("appointments_rescheduled_from_idx").on(table.rescheduledFromId),
   ]
 );
 
@@ -489,6 +497,11 @@ export const reviews = pgTable("reviews", {
   moderatedBy: uuid("moderated_by").references(() => adminUsers.id),
   moderatedAt: timestamp("moderated_at", { withTimezone: true }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  // ── Patient frontend v2 (0073) — multi-criteria ratings ──
+  punctualityRating: integer("punctuality_rating"),
+  communicationRating: integer("communication_rating"),
+  cleanlinessRating: integer("cleanliness_rating"),
+  staffRating: integer("staff_rating"),
 }, (table) => [
   index("reviews_doctor_idx").on(table.doctorId),
   index("reviews_rating_idx").on(table.rating),
@@ -1533,3 +1546,217 @@ export const templateAuditLogsRelations = relations(templateAuditLogs, ({ one })
     references: [prescriptionTemplates.id],
   }),
 }));
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PATIENT FRONTEND v2 — added by 0073_patient_features_foundation
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// ─── Stream 2 (RGPD) ─────────────────────────────────────────────────────────
+
+export const accountDeletionRequests = pgTable("account_deletion_requests", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+  reason: text("reason"),
+  requestedAt: timestamp("requested_at", { withTimezone: true }).notNull().defaultNow(),
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }).notNull(),
+  cancelledAt: timestamp("cancelled_at", { withTimezone: true }),
+  executedAt: timestamp("executed_at", { withTimezone: true }),
+});
+
+export type AccountDeletionRequest = typeof accountDeletionRequests.$inferSelect;
+export type NewAccountDeletionRequest = typeof accountDeletionRequests.$inferInsert;
+
+export const patientConsents = pgTable("patient_consents", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+  consentType: varchar("consent_type", { length: 40 }).notNull(),
+  granted: boolean("granted").notNull(),
+  grantedAt: timestamp("granted_at", { withTimezone: true }).notNull().defaultNow(),
+  ip: varchar("ip", { length: 50 }),
+  userAgent: text("user_agent"),
+});
+
+export type PatientConsent = typeof patientConsents.$inferSelect;
+export type NewPatientConsent = typeof patientConsents.$inferInsert;
+
+export const patientSessions = pgTable("patient_sessions", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+  sessionToken: varchar("session_token", { length: 255 }).notNull().unique(),
+  ip: varchar("ip", { length: 50 }),
+  userAgent: text("user_agent"),
+  deviceLabel: varchar("device_label", { length: 100 }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  lastActiveAt: timestamp("last_active_at", { withTimezone: true }).notNull().defaultNow(),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+});
+
+export type PatientSession = typeof patientSessions.$inferSelect;
+export type NewPatientSession = typeof patientSessions.$inferInsert;
+
+export const patient2fa = pgTable("patient_2fa", {
+  patientId: uuid("patient_id").primaryKey().references(() => patients.id, { onDelete: "cascade" }),
+  totpSecret: text("totp_secret").notNull(),
+  enabled: boolean("enabled").notNull().default(false),
+  backupCodes: jsonb("backup_codes").notNull().default([]),
+  enabledAt: timestamp("enabled_at", { withTimezone: true }),
+  lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+});
+
+export type Patient2fa = typeof patient2fa.$inferSelect;
+export type NewPatient2fa = typeof patient2fa.$inferInsert;
+
+// ─── Stream 3 (UX) ───────────────────────────────────────────────────────────
+
+export const patientFavorites = pgTable("patient_favorites", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type PatientFavorite = typeof patientFavorites.$inferSelect;
+export type NewPatientFavorite = typeof patientFavorites.$inferInsert;
+
+// patient_dependents already exists in schema — not re-declared here (see line 342)
+
+export const patientNotificationPrefs = pgTable("patient_notification_prefs", {
+  patientId: uuid("patient_id").primaryKey().references(() => patients.id, { onDelete: "cascade" }),
+  emailAppointments: boolean("email_appointments").notNull().default(true),
+  emailMarketing: boolean("email_marketing").notNull().default(false),
+  emailNews: boolean("email_news").notNull().default(false),
+  smsAppointments: boolean("sms_appointments").notNull().default(true),
+  smsReminders: boolean("sms_reminders").notNull().default(true),
+  smsOtp: boolean("sms_otp").notNull().default(true),
+  pushAppointments: boolean("push_appointments").notNull().default(true),
+  pushMessages: boolean("push_messages").notNull().default(true),
+  reminderOffsetHours: integer("reminder_offset_hours").notNull().default(24),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type PatientNotificationPrefs = typeof patientNotificationPrefs.$inferSelect;
+export type NewPatientNotificationPrefs = typeof patientNotificationPrefs.$inferInsert;
+
+export const patientNotifications = pgTable(
+  "patient_notifications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    type: varchar("type", { length: 40 }).notNull(),
+    title: varchar("title", { length: 200 }).notNull(),
+    body: text("body"),
+    link: varchar("link", { length: 500 }),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("patient_notifications_patient_idx").on(table.patientId, table.createdAt),
+    index("patient_notifications_unread_idx").on(table.patientId),
+  ]
+);
+
+export type PatientNotification = typeof patientNotifications.$inferSelect;
+export type NewPatientNotification = typeof patientNotifications.$inferInsert;
+
+// ─── Stream 4 (Différenciateurs) ─────────────────────────────────────────────
+
+export const patientReferralCodes = pgTable("patient_referral_codes", {
+  patientId: uuid("patient_id").primaryKey().references(() => patients.id, { onDelete: "cascade" }),
+  code: varchar("code", { length: 20 }).notNull().unique(),
+  usesCount: integer("uses_count").notNull().default(0),
+  rewardsEarned: integer("rewards_earned").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type PatientReferralCode = typeof patientReferralCodes.$inferSelect;
+export type NewPatientReferralCode = typeof patientReferralCodes.$inferInsert;
+
+export const patientReferralUsages = pgTable(
+  "patient_referral_usages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    referrerId: uuid("referrer_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    referredId: uuid("referred_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    appointmentId: uuid("appointment_id").references(() => appointments.id, { onDelete: "set null" }),
+    rewardGranted: boolean("reward_granted").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("referral_usages_referrer_idx").on(table.referrerId)]
+);
+
+export type PatientReferralUsage = typeof patientReferralUsages.$inferSelect;
+export type NewPatientReferralUsage = typeof patientReferralUsages.$inferInsert;
+
+// ─── Stream 5 (Nice-to-have) ──────────────────────────────────────────────────
+
+export const patientVaccinations = pgTable(
+  "patient_vaccinations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    vaccineName: varchar("vaccine_name", { length: 120 }).notNull(),
+    dateReceived: date("date_received").notNull(),
+    batchNumber: varchar("batch_number", { length: 60 }),
+    givenBy: varchar("given_by", { length: 120 }),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("patient_vaccinations_patient_idx").on(table.patientId, table.dateReceived)]
+);
+
+export type PatientVaccination = typeof patientVaccinations.$inferSelect;
+export type NewPatientVaccination = typeof patientVaccinations.$inferInsert;
+
+export const patientMedications = pgTable(
+  "patient_medications",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    medicationName: varchar("medication_name", { length: 160 }).notNull(),
+    dosage: varchar("dosage", { length: 80 }),
+    frequency: varchar("frequency", { length: 80 }),
+    startedAt: date("started_at"),
+    endedAt: date("ended_at"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("patient_medications_patient_idx").on(table.patientId)]
+);
+
+export type PatientMedication = typeof patientMedications.$inferSelect;
+export type NewPatientMedication = typeof patientMedications.$inferInsert;
+
+export const patientAllergies = pgTable(
+  "patient_allergies",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    allergen: varchar("allergen", { length: 160 }).notNull(),
+    severity: varchar("severity", { length: 20 }),
+    reaction: text("reaction"),
+    diagnosedAt: date("diagnosed_at"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("patient_allergies_patient_idx").on(table.patientId)]
+);
+
+export type PatientAllergy = typeof patientAllergies.$inferSelect;
+export type NewPatientAllergy = typeof patientAllergies.$inferInsert;
+
+export const patientAnalyses = pgTable(
+  "patient_analyses",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    title: varchar("title", { length: 200 }).notNull(),
+    labName: varchar("lab_name", { length: 160 }),
+    testDate: date("test_date"),
+    fileUrl: varchar("file_url", { length: 500 }),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("patient_analyses_patient_idx").on(table.patientId, table.testDate)]
+);
+
+export type PatientAnalysis = typeof patientAnalyses.$inferSelect;
+export type NewPatientAnalysis = typeof patientAnalyses.$inferInsert;
