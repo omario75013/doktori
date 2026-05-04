@@ -692,7 +692,10 @@
       "saveError": "Erreur lors de la sauvegarde",
       "created": "Modèle créé avec succès",
       "updated": "Modèle mis à jour",
-      "unsavedConfirm": "Modifications non sauvegardées. Quitter quand même ?"
+      "unsavedConfirm": "Modifications non sauvegardées. Quitter quand même ?",
+      "previewTitle": "Aperçu (patient fictif : Sami Trabelsi, 35 ans)",
+      "previewLoading": "Chargement de l'aperçu…",
+      "unresolved": "{count, plural, one {# variable non résolue} other {# variables non résolues}} : {list}"
     },
     "motifs": {
       "title": "Motifs de consultation",

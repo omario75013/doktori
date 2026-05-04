@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { VariableHelperPanel } from "./variable-helper-panel";
 import { TemplatePreview } from "./template-preview";
-import { HighlightedTextarea } from "./highlighted-textarea";
+import { QuillEditor } from "./quill-editor";
 
 interface InitialData {
   id: string;
@@ -284,11 +284,12 @@ export function TemplateEditor({ mode, initialData }: Props) {
               <Label htmlFor="body" className="text-sm font-medium">
                 {t("fieldContent")} {!readOnly && <span className="text-red-500">*</span>}
               </Label>
-              <HighlightedTextarea
+              <QuillEditor
                 value={body}
                 onChange={readOnly ? () => {} : setBody}
                 placeholder={t("fieldContentPlaceholder")}
                 dir={language === "ar" ? "rtl" : "ltr"}
+                readOnly={readOnly}
                 minHeight="400px"
               />
               {!readOnly && (
