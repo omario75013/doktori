@@ -89,6 +89,9 @@ export const doctors = pgTable(
     statusMessage: text("status_message"),
     awayMessage: text("away_message"),
     statusActiveUntil: timestamp("status_active_until", { withTimezone: true }),
+    // Phase 1 (migration 0079) — Onboarding tour
+    onboardingTourCompletedAt: timestamp("onboarding_tour_completed_at", { withTimezone: true }),
+    onboardingTourSkipped: boolean("onboarding_tour_skipped").notNull().default(false),
   },
   (table) => [
     uniqueIndex("doctors_email_idx").on(table.email),
@@ -1835,3 +1838,279 @@ export const patientAnalyses = pgTable(
 
 export type PatientAnalysis = typeof patientAnalyses.$inferSelect;
 export type NewPatientAnalysis = typeof patientAnalyses.$inferInsert;
+
+// ─── Phase 1 — Stream A: Marketing (migration 0076) ───────────────────────────
+
+export const newsletterSubscribers = pgTable(
+  "newsletter_subscribers",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    email: varchar("email", { length: 255 }).notNull().unique(),
+    patientId: uuid("patient_id").references(() => patients.id, { onDelete: "set null" }),
+    language: varchar("language", { length: 2 }).notNull().default("fr"),
+    source: varchar("source", { length: 40 }),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    unsubscribedAt: timestamp("unsubscribed_at", { withTimezone: true }),
+    unsubscribeToken: varchar("unsubscribe_token", { length: 64 }).unique(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  }
+);
+
+export type NewsletterSubscriber = typeof newsletterSubscribers.$inferSelect;
+export type NewNewsletterSubscriber = typeof newsletterSubscribers.$inferInsert;
+
+export const newsletterIssues = pgTable("newsletter_issues", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  titleFr: varchar("title_fr", { length: 200 }).notNull(),
+  titleAr: varchar("title_ar", { length: 200 }),
+  contentHtmlFr: text("content_html_fr").notNull(),
+  contentHtmlAr: text("content_html_ar"),
+  scheduledAt: timestamp("scheduled_at", { withTimezone: true }),
+  sentAt: timestamp("sent_at", { withTimezone: true }),
+  recipientCount: integer("recipient_count").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  createdByAdmin: uuid("created_by_admin"),
+});
+
+export type NewsletterIssue = typeof newsletterIssues.$inferSelect;
+export type NewNewsletterIssue = typeof newsletterIssues.$inferInsert;
+
+export const pregnancyWeekContent = pgTable("pregnancy_week_content", {
+  weekNumber: integer("week_number").primaryKey(),
+  titleFr: varchar("title_fr", { length: 200 }).notNull(),
+  titleAr: varchar("title_ar", { length: 200 }),
+  babySizeFr: varchar("baby_size_fr", { length: 120 }),
+  babySizeAr: varchar("baby_size_ar", { length: 120 }),
+  contentMdFr: text("content_md_fr").notNull(),
+  contentMdAr: text("content_md_ar"),
+  tipsFr: jsonb("tips_fr").$type<string[]>().default([]),
+  tipsAr: jsonb("tips_ar").$type<string[]>().default([]),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type PregnancyWeekContent = typeof pregnancyWeekContent.$inferSelect;
+export type NewPregnancyWeekContent = typeof pregnancyWeekContent.$inferInsert;
+
+export const patientPregnancies = pgTable(
+  "patient_pregnancies",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    dueDate: date("due_date").notNull(),
+    startDate: date("start_date"),
+    endedAt: date("ended_at"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("patient_pregnancies_active_idx").on(table.patientId)]
+);
+
+export type PatientPregnancy = typeof patientPregnancies.$inferSelect;
+export type NewPatientPregnancy = typeof patientPregnancies.$inferInsert;
+
+export const vaccineInfoContent = pgTable("vaccine_info_content", {
+  slug: varchar("slug", { length: 60 }).primaryKey(),
+  nameFr: varchar("name_fr", { length: 120 }).notNull(),
+  nameAr: varchar("name_ar", { length: 120 }),
+  ageMinMonths: integer("age_min_months").notNull().default(0),
+  ageMaxMonths: integer("age_max_months"),
+  descriptionFr: text("description_fr").notNull(),
+  descriptionAr: text("description_ar"),
+  dosesCount: integer("doses_count").notNull().default(1),
+  isMandatoryTn: boolean("is_mandatory_tn").notNull().default(false),
+  displayOrder: integer("display_order").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type VaccineInfoContent = typeof vaccineInfoContent.$inferSelect;
+export type NewVaccineInfoContent = typeof vaccineInfoContent.$inferInsert;
+
+export const childVaccinationRecords = pgTable(
+  "child_vaccination_records",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    dependentId: uuid("dependent_id").references(() => patientDependents.id, { onDelete: "cascade" }),
+    vaccineSlug: varchar("vaccine_slug", { length: 60 }).notNull().references(() => vaccineInfoContent.slug, { onDelete: "restrict" }),
+    doseNumber: integer("dose_number").notNull().default(1),
+    dateReceived: date("date_received").notNull(),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("child_vaccination_records_patient_idx").on(table.patientId, table.dependentId)]
+);
+
+export type ChildVaccinationRecord = typeof childVaccinationRecords.$inferSelect;
+export type NewChildVaccinationRecord = typeof childVaccinationRecords.$inferInsert;
+
+// ─── Phase 1 — Stream B: Retention (migration 0077) ───────────────────────────
+
+export const chronicDiseaseContent = pgTable("chronic_disease_content", {
+  slug: varchar("slug", { length: 60 }).primaryKey(),
+  nameFr: varchar("name_fr", { length: 120 }).notNull(),
+  nameAr: varchar("name_ar", { length: 120 }),
+  descriptionFr: text("description_fr").notNull(),
+  descriptionAr: text("description_ar"),
+  reminderDefaultFreqHours: integer("reminder_default_freq_hours").notNull().default(24),
+  displayOrder: integer("display_order").notNull().default(0),
+});
+
+export type ChronicDiseaseContent = typeof chronicDiseaseContent.$inferSelect;
+export type NewChronicDiseaseContent = typeof chronicDiseaseContent.$inferInsert;
+
+export const chronicTreatmentReminders = pgTable(
+  "chronic_treatment_reminders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    diseaseSlug: varchar("disease_slug", { length: 60 }).references(() => chronicDiseaseContent.slug, { onDelete: "set null" }),
+    medicationName: varchar("medication_name", { length: 160 }).notNull(),
+    dosage: varchar("dosage", { length: 80 }),
+    frequencyHours: integer("frequency_hours").notNull().default(24),
+    nextReminderAt: timestamp("next_reminder_at", { withTimezone: true }).notNull(),
+    notificationChannel: varchar("notification_channel", { length: 10 }).notNull().default("sms"),
+    active: boolean("active").notNull().default(true),
+    pausedUntil: timestamp("paused_until", { withTimezone: true }),
+    lastSentAt: timestamp("last_sent_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("chronic_reminders_due_idx").on(table.nextReminderAt)]
+);
+
+export type ChronicTreatmentReminder = typeof chronicTreatmentReminders.$inferSelect;
+export type NewChronicTreatmentReminder = typeof chronicTreatmentReminders.$inferInsert;
+
+export const doctorReferrals = pgTable(
+  "doctor_referrals",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    referrerDoctorId: uuid("referrer_doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+    referredDoctorId: uuid("referred_doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    commissionPct: numeric("commission_pct", { precision: 4, scale: 2 }).notNull().default("5.00"),
+    rewardsEarnedTnd: numeric("rewards_earned_tnd", { precision: 10, scale: 2 }).notNull().default("0"),
+    validatedAt: timestamp("validated_at", { withTimezone: true }),
+    validatedByAdmin: uuid("validated_by_admin"),
+    rejectionReason: text("rejection_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("doctor_referrals_referrer_idx").on(table.referrerDoctorId),
+    index("doctor_referrals_pending_idx").on(table.status),
+  ]
+);
+
+export type DoctorReferral = typeof doctorReferrals.$inferSelect;
+export type NewDoctorReferral = typeof doctorReferrals.$inferInsert;
+
+export const retentionPolicies = pgTable("retention_policies", {
+  resourceType: varchar("resource_type", { length: 40 }).primaryKey(),
+  retentionDays: integer("retention_days").notNull(),
+  description: text("description"),
+  hardDelete: boolean("hard_delete").notNull().default(false),
+  lastRunAt: timestamp("last_run_at", { withTimezone: true }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type RetentionPolicy = typeof retentionPolicies.$inferSelect;
+export type NewRetentionPolicy = typeof retentionPolicies.$inferInsert;
+
+export const anonymizationConsents = pgTable("anonymization_consents", {
+  patientId: uuid("patient_id")
+    .primaryKey()
+    .references(() => patients.id, { onDelete: "cascade" }),
+  granted: boolean("granted").notNull().default(false),
+  grantedAt: timestamp("granted_at", { withTimezone: true }),
+  revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  scope: jsonb("scope").$type<string[]>().notNull().default(["aggregate_stats"]),
+  ip: varchar("ip", { length: 50 }),
+  userAgent: text("user_agent"),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type AnonymizationConsent = typeof anonymizationConsents.$inferSelect;
+export type NewAnonymizationConsent = typeof anonymizationConsents.$inferInsert;
+
+// ─── Phase 1 — Stream C: Tech & API (migration 0078) ──────────────────────────
+
+export const apiKeys = pgTable(
+  "api_keys",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    keyHash: varchar("key_hash", { length: 128 }).notNull().unique(),
+    prefix: varchar("prefix", { length: 20 }).notNull(),
+    name: varchar("name", { length: 120 }).notNull(),
+    ownerEmail: varchar("owner_email", { length: 255 }),
+    scopes: jsonb("scopes")
+      .$type<string[]>()
+      .notNull()
+      .default(["read:doctors", "read:specialties", "read:cities"]),
+    rateLimitPerMinute: integer("rate_limit_per_minute").notNull().default(60),
+    active: boolean("active").notNull().default(true),
+    lastUsedAt: timestamp("last_used_at", { withTimezone: true }),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    createdByAdmin: uuid("created_by_admin"),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  },
+  (table) => [index("api_keys_hash_idx").on(table.keyHash)]
+);
+
+export type ApiKey = typeof apiKeys.$inferSelect;
+export type NewApiKey = typeof apiKeys.$inferInsert;
+
+export const apiRequestLogs = pgTable(
+  "api_request_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    apiKeyId: uuid("api_key_id").references(() => apiKeys.id, { onDelete: "set null" }),
+    method: varchar("method", { length: 10 }).notNull(),
+    path: varchar("path", { length: 255 }).notNull(),
+    statusCode: integer("status_code"),
+    durationMs: integer("duration_ms"),
+    ip: varchar("ip", { length: 50 }),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index("api_request_logs_key_time_idx").on(table.apiKeyId, table.createdAt)]
+);
+
+export type ApiRequestLog = typeof apiRequestLogs.$inferSelect;
+export type NewApiRequestLog = typeof apiRequestLogs.$inferInsert;
+
+export const cnamActs = pgTable("cnam_acts", {
+  code: varchar("code", { length: 20 }).primaryKey(),
+  nameFr: varchar("name_fr", { length: 200 }).notNull(),
+  nameAr: varchar("name_ar", { length: 200 }),
+  baseFeeTnd: numeric("base_fee_tnd", { precision: 8, scale: 2 }).notNull(),
+  reimbursementPct: numeric("reimbursement_pct", { precision: 5, scale: 2 }).notNull().default("70.00"),
+  category: varchar("category", { length: 40 }),
+  notesFr: text("notes_fr"),
+  notesAr: text("notes_ar"),
+  displayOrder: integer("display_order").notNull().default(0),
+});
+
+export type CnamAct = typeof cnamActs.$inferSelect;
+export type NewCnamAct = typeof cnamActs.$inferInsert;
+
+// ─── Phase 1 — Stream D: Polish (migration 0079) ──────────────────────────────
+
+export const doctorBenchmarkSnapshots = pgTable("doctor_benchmark_snapshots", {
+  doctorId: uuid("doctor_id")
+    .primaryKey()
+    .references(() => doctors.id, { onDelete: "cascade" }),
+  specialty: varchar("specialty", { length: 100 }),
+  city: varchar("city", { length: 100 }),
+  noShowRate: numeric("no_show_rate", { precision: 5, scale: 2 }),
+  noShowRankSpecialty: integer("no_show_rank_specialty"),
+  noShowTotalSpecialty: integer("no_show_total_specialty"),
+  avgRating: numeric("avg_rating", { precision: 3, scale: 2 }),
+  ratingRankSpecialty: integer("rating_rank_specialty"),
+  totalAppointments30d: integer("total_appointments_30d"),
+  appointmentsRankSpecialty: integer("appointments_rank_specialty"),
+  computedAt: timestamp("computed_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+export type DoctorBenchmarkSnapshot = typeof doctorBenchmarkSnapshots.$inferSelect;
+export type NewDoctorBenchmarkSnapshot = typeof doctorBenchmarkSnapshots.$inferInsert;
