@@ -20,7 +20,7 @@ export default function ConfidentialitePage() {
           </div>
           <div>
             <h1 className="text-2xl font-bold">Politique de Confidentialité</h1>
-            <p className="text-cyan-100 text-sm mt-0.5">Dernière mise à jour : 10 avril 2026</p>
+            <p className="text-cyan-100 text-sm mt-0.5">Dernière mise à jour : 4 mai 2026</p>
           </div>
         </div>
       </div>
@@ -30,16 +30,33 @@ export default function ConfidentialitePage() {
         <div className="rounded-2xl border border-border bg-white p-8 shadow-sm">
           <div className="space-y-6 text-sm leading-relaxed text-gray-700">
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">1. Engagement de Doktori</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">1. Responsable du traitement</h2>
               <p>
-                Doktori s'engage à protéger la vie privée de ses utilisateurs et à traiter leurs données personnelles
+                Le responsable du traitement de vos données personnelles est <strong>Random Walkers SUARL</strong>,
+                immatriculée au Registre National des Entreprises sous le n° <strong>1625867B</strong>, ayant son
+                siège social à Immeuble Babel, Bloc D, Montplaisir 1073, Bab Bhar, Tunis — Tunisie.
+              </p>
+              <p className="mt-2">
+                Email : <a href="mailto:contact@doktori.tn" className="text-primary hover:text-doktori-teal-dark hover:underline">contact@doktori.tn</a>
+              </p>
+              <p className="mt-2">
+                La présente politique est établie en conformité avec la <strong>loi tunisienne n° 2004-63 du 27 juillet 2004</strong> relative
+                à la protection des données à caractère personnel, ainsi que le <strong>Règlement Général sur la Protection des
+                Données (RGPD)</strong> pour les utilisateurs européens.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-foreground mb-3">2. Engagement de Doktori</h2>
+              <p>
+                Doktori s&apos;engage à protéger la vie privée de ses utilisateurs et à traiter leurs données personnelles
                 dans le respect de la loi organique n°2004-63 du 27 juillet 2004 relative à la protection des
                 données personnelles en Tunisie, ainsi que des standards internationaux (RGPD européen).
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">2. Données collectées</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">3. Données collectées</h2>
               <p><strong>Pour les patients :</strong></p>
               <ul className="list-disc pl-6 space-y-1 mt-2">
                 <li>Nom, prénom</li>
@@ -58,7 +75,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">3. Ce que nous ne stockons JAMAIS</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">4. Ce que nous ne stockons JAMAIS</h2>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Diagnostics médicaux, pathologies, antécédents</li>
                 <li>Allergies, traitements en cours, médicaments</li>
@@ -72,7 +89,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">4. Finalités du traitement</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">5. Finalités du traitement</h2>
               <ul className="list-disc pl-6 space-y-1">
                 <li>Permettre la prise de rendez-vous et leur gestion</li>
                 <li>Envoyer des rappels SMS et WhatsApp</li>
@@ -83,7 +100,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">5. Sécurité</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">6. Sécurité</h2>
               <p>
                 Les données sont stockées sur des serveurs sécurisés. Les mots de passe sont chiffrés (bcrypt).
                 Les communications transitent via HTTPS. Des sauvegardes chiffrées sont effectuées quotidiennement.
@@ -91,7 +108,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">6. Vos droits</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">7. Vos droits</h2>
               <p>Conformément à la loi, vous disposez des droits suivants :</p>
               <ul className="list-disc pl-6 space-y-1 mt-2">
                 <li><strong>Droit d'accès</strong> : obtenir une copie de vos données</li>
@@ -106,7 +123,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">7. Cookies</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">8. Cookies</h2>
               <p>
                 Doktori utilise uniquement des cookies essentiels au fonctionnement (authentification, préférences
                 linguistiques). Aucun cookie publicitaire ou de tracking tiers.
@@ -114,7 +131,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">8. Conservation des données</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">9. Conservation des données</h2>
               <p>
                 Les données des rendez-vous sont conservées tant que le compte est actif. En cas de suppression
                 de compte, les données sont effacées sous 30 jours, à l'exception des données comptables et
@@ -123,7 +140,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">9. Partage avec des tiers</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">10. Partage avec des tiers</h2>
               <p>
                 Doktori ne vend ni ne loue aucune donnée personnelle. Les données sont partagées uniquement avec :
               </p>
@@ -136,7 +153,7 @@ export default function ConfidentialitePage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-foreground mb-3">10. Contact</h2>
+              <h2 className="text-lg font-bold text-foreground mb-3">11. Contact</h2>
               <p>
                 Délégué à la protection des données : <a href="mailto:privacy@doktori.tn" className="text-primary hover:text-doktori-teal-dark hover:underline">privacy@doktori.tn</a>
               </p>

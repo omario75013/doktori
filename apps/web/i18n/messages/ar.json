@@ -1520,6 +1520,11 @@
       "tabGeneral": "المعلومات العامة",
       "tabDossier": "الملف الطبي",
       "tabTimeline": "الجدول الزمني",
+      "tabAppointments": "المواعيد",
+      "tabPrescriptions": "الوصفات",
+      "tabDocuments": "الوثائق",
+      "chooseTemplate": "اختيار نموذج",
+      "templateApplied": "تم تطبيق النموذج",
       "docDeleted": "تم حذف الوثيقة",
       "docDeleteFailed": "فشل الحذف",
       "patientUpdated": "تم تحديث المريض",
@@ -2032,7 +2037,8 @@
       "sectionOrganisations": "المنظمات",
       "sectionOperations": "العمليات",
       "sectionAnalytics": "التحليلات",
-      "sectionSysteme": "النظام"
+      "sectionSysteme": "النظام",
+      "templates": "نماذج الوصفات"
     }
   }
 }

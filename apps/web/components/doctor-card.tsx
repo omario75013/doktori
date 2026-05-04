@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 import { MapPin, ArrowRight, Star, Clock, BadgeCheck, Navigation, Video, Building2 } from "lucide-react";
@@ -19,6 +22,85 @@ interface Props {
     review_count?: number | null; // from Meilisearch document
     clinicName?: string | null; // from Meilisearch document (added in migration 0053)
   };
+  showSlots?: boolean; // pass true on /recherche to show 3-day slot pills
+}
+
+type SlotDay = {
+  date: string;
+  slots: Array<{ startTime: string; endTime: string; practiceId: string }>;
+};
+
+function toISODate(d: Date): string {
+  return d.toISOString().slice(0, 10);
+}
+
+function DoctorSlots({ slug }: { slug: string }) {
+  const [days, setDays] = useState<SlotDay[]>([]);
+
+  useEffect(() => {
+    const today = toISODate(new Date());
+    fetch(`/api/doctors/by-slug/${slug}/availability?start=${today}&days=3`)
+      .then((r) => r.json())
+      .then((data: { days: SlotDay[] }) => setDays(data.days ?? []))
+      .catch(() => {/* silently ignore */});
+  }, [slug]);
+
+  // Show only the first 3 days regardless of slot availability
+  const displayDays = days.slice(0, 3);
+  if (displayDays.length === 0) return null;
+
+  const hasAnySlots = displayDays.some((d) => d.slots.length > 0);
+  if (!hasAnySlots) return null;
+
+  const DAY_SHORT: Record<number, string> = { 0: "Dim", 1: "Lun", 2: "Mar", 3: "Mer", 4: "Jeu", 5: "Ven", 6: "Sam" };
+
+  return (
+    <div className="relative mt-4 border-t border-border dark:border-gray-700 pt-3">
+      <div className="grid grid-cols-3 gap-2">
+        {displayDays.map((day) => {
+          const date = new Date(day.date + "T00:00:00");
+          const dayLabel = DAY_SHORT[date.getDay()] ?? "";
+          const dateLabel = `${date.getDate()}/${date.getMonth() + 1}`;
+          const shownSlots = day.slots.slice(0, 4);
+          const extra = day.slots.length - 4;
+          return (
+            <div key={day.date} className="space-y-1">
+              <div className="text-center text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                {dayLabel} {dateLabel}
+              </div>
+              <div className="flex flex-wrap gap-1 justify-center">
+                {shownSlots.length === 0 ? (
+                  <span className="text-[10px] text-gray-300 italic">—</span>
+                ) : (
+                  <>
+                    {shownSlots.map((slot) => (
+                      <Link
+                        key={slot.startTime}
+                        href={`/rdv/${slug}?date=${day.date}&time=${slot.startTime}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center rounded-lg bg-secondary border border-border px-2 py-0.5 text-[10px] font-bold text-primary hover:bg-primary hover:text-white hover:border-primary transition-colors"
+                      >
+                        {slot.startTime.slice(0, 5)}
+                      </Link>
+                    ))}
+                    {extra > 0 && (
+                      <Link
+                        href={`/medecin/${slug}`}
+                        onClick={(e) => e.stopPropagation()}
+                        className="inline-flex items-center rounded-lg bg-secondary border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-primary transition-colors"
+                      >
+                        +{extra}
+                      </Link>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
 }
 
 function formatDistance(meters: number): string {
@@ -27,7 +109,7 @@ function formatDistance(meters: number): string {
   return km < 10 ? `${km.toFixed(1)} km` : `${Math.round(km)} km`;
 }
 
-export function DoctorCard({ doctor }: Props) {
+export function DoctorCard({ doctor, showSlots }: Props) {
   const t = useTranslations("doctorCard");
   const locale = useLocale();
   const specialty = SPECIALTIES.find((s) => s.id === doctor.specialty);
@@ -133,6 +215,9 @@ export function DoctorCard({ doctor }: Props) {
 
         {/* Price removed — like Doctolib, fees are not shown publicly */}
       </div>
+
+      {/* 3-day slot pills */}
+      {showSlots && <DoctorSlots slug={doctor.slug} />}
 
       {/* CTA row */}
       <div className="relative mt-5 flex items-center justify-between border-t border-border dark:border-gray-700 pt-4">

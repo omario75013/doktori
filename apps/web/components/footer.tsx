@@ -14,9 +14,9 @@ const FOOTER_LINKS = {
   legal: {
     title: "Légal",
     links: [
-      { label: "Mentions légales", href: "/mentions-legales" },
-      { label: "CGU", href: "/cgu" },
-      { label: "Politique de confidentialité", href: "/confidentialite" },
+      { label: "Mentions légales", href: "/legal/mentions" },
+      { label: "CGU", href: "/legal/cgu" },
+      { label: "Politique de confidentialité", href: "/legal/confidentialite" },
     ],
   },
 };

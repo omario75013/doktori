@@ -353,6 +353,7 @@
       "agenda": "Agenda",
       "rendezVous": "Rendez-vous",
       "patients": "Mes patients",
+      "modeles": "Modèles d'ordonnance",
       "motifs": "Motifs",
       "cabinets": "Cabinets",
       "domicile": "Visites à domicile",
@@ -1520,6 +1521,11 @@
       "tabGeneral": "Infos générales",
       "tabDossier": "Dossier médical",
       "tabTimeline": "Chronologie",
+      "tabAppointments": "Rendez-vous",
+      "tabPrescriptions": "Ordonnances",
+      "tabDocuments": "Documents",
+      "chooseTemplate": "Choisir un modèle",
+      "templateApplied": "Modèle appliqué",
       "docDeleted": "Document supprimé",
       "docDeleteFailed": "Suppression échouée",
       "patientUpdated": "Patient mis à jour",
@@ -2032,7 +2038,8 @@
       "sectionOrganisations": "Organisations",
       "sectionOperations": "Opérations",
       "sectionAnalytics": "Analytics",
-      "sectionSysteme": "Système"
+      "sectionSysteme": "Système",
+      "templates": "Modèles ordonnances"
     }
   }
 }

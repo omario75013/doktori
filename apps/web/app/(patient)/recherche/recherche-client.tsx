@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { DoctorCard } from "@/components/doctor-card";
+import { DoctorMap } from "@/components/doctor-map-wrapper";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
 import {
   Search,
@@ -19,7 +20,6 @@ import {
   Crosshair,
   SlidersHorizontal,
   ArrowUpDown,
-  Filter,
   Check,
   DollarSign,
   Clock,
@@ -27,6 +27,8 @@ import {
   Video,
   Building2,
   ArrowRight,
+  Map,
+  List,
 } from "lucide-react";
 
 interface Doctor {
@@ -39,6 +41,7 @@ interface Doctor {
   consultationFee: number | null;
   photoUrl: string | null;
   _geoDistance?: number; // meters from user, added by Meili when sorting by geo
+  _geo?: { lat: number; lng: number }; // Meilisearch geo coordinates
   consultation_mode?: string; // 'cabinet' | 'teleconsult' | 'both'
 }
 
@@ -185,6 +188,7 @@ function RechercheInner() {
   const [loading, setLoading] = useState(false);
   const [searched, setSearched] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   const fetchResults = useCallback(
     async (
@@ -437,8 +441,8 @@ function RechercheInner() {
       </div>
 
       {/* ═══════════════ MAIN LAYOUT ═══════════════ */}
-      <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6">
-        <div className="grid gap-6 lg:grid-cols-[280px_1fr]">
+      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
+        <div className="grid gap-6 lg:grid-cols-[280px_1fr_400px]">
           {/* ═══════════════ SIDEBAR FILTERS ═══════════════ */}
           <aside className={`${mobileFiltersOpen ? "fixed inset-0 z-50 overflow-y-auto bg-white dark:bg-gray-900 p-4 lg:static lg:p-0" : "hidden lg:block"}`}>
             {mobileFiltersOpen && (
@@ -784,15 +788,68 @@ function RechercheInner() {
               </div>
             )}
 
-            {/* Results */}
+            {/* Mobile map/list toggle */}
             {results.length > 0 && (
-              <div className="grid gap-3">
+              <div className="mb-4 flex items-center gap-2 lg:hidden">
+                <button
+                  type="button"
+                  onClick={() => setShowMap(false)}
+                  className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-xs font-bold transition-all ${
+                    !showMap
+                      ? "border-primary bg-primary text-white"
+                      : "border-border bg-white text-foreground hover:border-primary/40"
+                  }`}
+                >
+                  <List className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  Liste
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowMap(true)}
+                  className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-xs font-bold transition-all ${
+                    showMap
+                      ? "border-primary bg-primary text-white"
+                      : "border-border bg-white text-foreground hover:border-primary/40"
+                  }`}
+                >
+                  <Map className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  Carte ({results.length})
+                </button>
+              </div>
+            )}
+
+            {/* Mobile map view */}
+            {showMap && results.length > 0 && (
+              <div className="h-[500px] lg:hidden">
+                <DoctorMap doctors={results} />
+              </div>
+            )}
+
+            {/* Results — hidden on mobile when map is shown */}
+            {results.length > 0 && (
+              <div className={`grid gap-3 ${showMap ? "hidden lg:grid" : ""}`}>
                 {results.map((doctor) => (
-                  <DoctorCard key={doctor.id} doctor={doctor} />
+                  <DoctorCard key={doctor.id} doctor={doctor} showSlots />
                 ))}
               </div>
             )}
           </div>
+
+          {/* ═══════════════ STICKY MAP COLUMN (desktop only) ═══════════════ */}
+          <aside className="hidden lg:block">
+            <div className="sticky top-24 h-[600px]">
+              {results.length > 0 ? (
+                <DoctorMap doctors={results} />
+              ) : (
+                <div className="h-full rounded-2xl border border-dashed border-border bg-white dark:bg-gray-800 flex flex-col items-center justify-center gap-3 text-center p-6">
+                  <MapPin className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
+                  <p className="text-sm font-medium text-muted-foreground">
+                    Lancez une recherche pour afficher les médecins sur la carte
+                  </p>
+                </div>
+              )}
+            </div>
+          </aside>
         </div>
       </div>
     </div>

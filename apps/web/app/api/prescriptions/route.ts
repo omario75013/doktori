@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
-import { db, prescriptions, appointments } from "@doktori/db";
-import { eq, and, desc } from "drizzle-orm";
+import { db, prescriptions, appointments, prescriptionTemplates } from "@doktori/db";
+import { eq, and, desc, sql } from "drizzle-orm";
 import { randomBytes } from "crypto";
+import { logTemplateAudit } from "@/lib/templates/audit";
 
 export async function GET(req: NextRequest) {
   try {
@@ -48,7 +49,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
 
-    const { appointmentId, content } = await req.json();
+    const { appointmentId, content, templateId } = await req.json();
     if (!appointmentId || typeof content !== "string" || content.length < 3 || content.length > 5000) {
       return NextResponse.json({ error: "Contenu invalide (3-5000 caractères)" }, { status: 400 });
     }
@@ -68,7 +69,34 @@ export async function POST(req: NextRequest) {
       patientId: appt.patientId,
       content,
       verificationToken,
+      // B4: store templateId if provided
+      templateId: templateId ?? null,
     }).returning();
+
+    // B3 + B4: if templateId provided, increment applyCount + lastUsedAt on own template
+    if (templateId) {
+      await db
+        .update(prescriptionTemplates)
+        .set({
+          applyCount: sql`${prescriptionTemplates.applyCount} + 1`,
+          lastUsedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(prescriptionTemplates.id, templateId),
+            eq(prescriptionTemplates.doctorId, user.id)
+          )
+        );
+
+      // B5 audit bilateral
+      await logTemplateAudit({
+        actorType: "doctor",
+        actorId: user.id,
+        templateId,
+        action: "applied",
+        context: { prescriptionId: created.id, appointmentId },
+      });
+    }
 
     return NextResponse.json(created, { status: 201 });
   } catch (e) {

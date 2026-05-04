@@ -25,8 +25,10 @@ import {
   Pill,
   FileUp,
   Activity,
+  Printer,
 } from "lucide-react";
 import { toast } from "sonner";
+import { PrescriptionTemplateModal } from "../../modeles/components/prescription-template-modal";
 
 type Appointment = {
   id: string;
@@ -329,7 +331,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
   const [deleting, setDeleting] = useState(false);
   const [viewerRole, setViewerRole] = useState<"doctor" | "secretary">("doctor");
   const [viewerPerms, setViewerPerms] = useState<Record<string, boolean> | null>(null);
-  const [tab, setTab] = useState<"general" | "dossier" | "timeline">("general");
+  const [tab, setTab] = useState<"general" | "dossier" | "rdv" | "ordonnances" | "documents" | "timeline">("general");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -422,6 +424,15 @@ function PatientDetail({ listPath }: { listPath: string }) {
     if (tab === "dossier") {
       void loadAttachments();
       void loadPrescriptions();
+    }
+    if (tab === "rdv") {
+      // appointments already loaded on mount
+    }
+    if (tab === "ordonnances") {
+      void loadPrescriptions();
+    }
+    if (tab === "documents") {
+      void loadAttachments();
     }
     if (tab === "timeline") {
       void loadTimeline();
@@ -518,28 +529,32 @@ function PatientDetail({ listPath }: { listPath: string }) {
       </div>
 
       {/* Tabs */}
-      <div className="flex gap-1 p-1 bg-slate-100 rounded-lg w-fit flex-wrap">
-        {([
-          { id: "general", label: t("tabGeneral"), icon: IdCard },
-          { id: "dossier", label: t("tabDossier"), icon: ClipboardList },
-          { id: "timeline", label: t("tabTimeline"), icon: History },
-        ] as const).map((tabItem) => {
-          const Icon = tabItem.icon;
-          return (
-            <button
-              key={tabItem.id}
-              onClick={() => setTab(tabItem.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                tab === tabItem.id
-                  ? "bg-white text-slate-900 shadow-sm"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              <Icon className="w-4 h-4" />
-              {tabItem.label}
-            </button>
-          );
-        })}
+      <div className="sticky top-0 z-10 -mx-1 px-1 pt-1 pb-0 bg-background/95 backdrop-blur-sm">
+        <div className="flex gap-1 p-1 bg-slate-100 dark:bg-gray-800 rounded-lg flex-wrap">
+          {([
+            { id: "general", label: t("tabGeneral"), icon: IdCard },
+            { id: "dossier", label: t("tabDossier"), icon: ClipboardList },
+            { id: "rdv", label: t("tabAppointments"), icon: Calendar },
+            { id: "ordonnances", label: t("tabPrescriptions"), icon: Pill },
+            { id: "documents", label: t("tabDocuments"), icon: FileUp },
+          ] as const).map((tabItem) => {
+            const Icon = tabItem.icon;
+            return (
+              <button
+                key={tabItem.id}
+                onClick={() => setTab(tabItem.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
+                  tab === tabItem.id
+                    ? "bg-white dark:bg-gray-900 text-slate-900 dark:text-white shadow-sm"
+                    : "text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tabItem.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {tab === "general" && (
@@ -574,6 +589,148 @@ function PatientDetail({ listPath }: { listPath: string }) {
           prescriptions={prescriptions}
           onNewPrescription={() => setPrescModalOpen(true)}
         />
+      )}
+
+      {tab === "rdv" && (
+        <div className="rounded-2xl border border-border bg-white shadow-sm">
+          <div className="p-4 border-b border-border">
+            <h2 className="font-semibold text-foreground">Historique des rendez-vous</h2>
+            <p className="text-xs text-gray-400 mt-0.5">
+              Cliquer sur une note pour la modifier — sauvegarde automatique
+            </p>
+          </div>
+          {appointments.length === 0 ? (
+            <p className="p-6 text-gray-400 text-center text-sm">Aucun rendez-vous.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-border bg-secondary text-left">
+                    <th className="px-4 py-3 font-medium text-foreground">Date</th>
+                    <th className="px-4 py-3 font-medium text-foreground">Statut</th>
+                    <th className="px-4 py-3 font-medium text-foreground">Motif</th>
+                    <th className="px-4 py-3 font-medium text-foreground w-64">Notes privées</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {appointments.map((appt) => (
+                    <tr key={appt.id} className="hover:bg-secondary transition-colors align-top">
+                      <td className="px-4 py-3 whitespace-nowrap text-gray-700">
+                        {format(new Date(appt.startsAt), "d MMM yyyy HH:mm", { locale: fr })}
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`text-xs px-2.5 py-1 rounded-full font-medium ${
+                            STATUS_STYLES[appt.status] ?? "bg-gray-100"
+                          }`}
+                        >
+                          {STATUS_LABELS[appt.status] ?? appt.status}
+                        </span>
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">
+                        {appt.reason ?? <span className="text-gray-300">—</span>}
+                      </td>
+                      <td className="px-4 py-3">
+                        <NotesCell appointment={appt} />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {tab === "ordonnances" && viewerRole === "doctor" && (
+        <OrdonnancesSection
+          prescriptions={prescriptions}
+          onNewPrescription={() => setPrescModalOpen(true)}
+        />
+      )}
+      {tab === "ordonnances" && viewerRole !== "doctor" && (
+        <div className="rounded-2xl border border-border bg-white shadow-sm p-10 text-center text-sm text-gray-400">
+          Accès aux ordonnances réservé au médecin.
+        </div>
+      )}
+
+      {tab === "documents" && (
+        <div className="rounded-2xl border border-border bg-white shadow-sm">
+          <div className="p-4 border-b border-border flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold text-foreground">Documents et fichiers</h2>
+              <p className="text-xs text-gray-400 mt-0.5">
+                Analyses, imagerie, ordonnances, certificats
+              </p>
+            </div>
+            {(viewerRole === "doctor" || viewerPerms?.patientsEdit) && (
+              <button
+                onClick={() => setUploadOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3 py-2 text-sm font-medium hover:opacity-90"
+              >
+                <Upload className="h-4 w-4" />
+                Ajouter un document
+              </button>
+            )}
+          </div>
+          {attachments.length === 0 ? (
+            <div className="p-10 text-center text-sm text-gray-400">
+              Aucun document pour le moment.
+            </div>
+          ) : (
+            <ul className="divide-y divide-border">
+              {attachments.map((a) => (
+                <li key={a.id} className="p-4 flex items-center gap-3">
+                  <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary shrink-0">
+                    <FileText className="h-5 w-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="font-medium text-foreground">{a.title}</span>
+                      <span className="text-xs rounded-full bg-border px-2 py-0.5 text-gray-600">
+                        {ATTACHMENT_CATEGORIES.find((c) => c.value === a.category)?.label ?? a.category}
+                      </span>
+                    </div>
+                    <div className="text-xs text-gray-500 truncate">
+                      {a.filename} · {(a.sizeBytes / 1024).toFixed(0)} Ko ·{" "}
+                      {format(new Date(a.uploadedAt), "d MMM yyyy HH:mm", { locale: fr })}
+                    </div>
+                    {a.description && (
+                      <div className="text-xs text-gray-500 mt-0.5 line-clamp-2">{a.description}</div>
+                    )}
+                  </div>
+                  <a
+                    href={a.fileUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="h-9 w-9 rounded-xl border border-border hover:bg-secondary flex items-center justify-center text-gray-500 hover:text-primary transition-colors"
+                    title="Ouvrir"
+                  >
+                    <Download className="h-4 w-4" />
+                  </a>
+                  {(viewerRole === "doctor" || viewerPerms?.patientsEdit) && (
+                    <button
+                      onClick={async () => {
+                        if (!confirm("Supprimer ce document ?")) return;
+                        const res = await fetch(`/api/patients/${params.id}/attachments/${a.id}`, { method: "DELETE" });
+                        if (res.ok) {
+                          setAttachments((prev) => prev.filter((att) => att.id !== a.id));
+                          toast.success("Document supprimé");
+                        } else {
+                          toast.error("Suppression échouée");
+                        }
+                      }}
+                      className="h-9 w-9 rounded-xl border border-red-200 hover:bg-red-50 flex items-center justify-center text-red-500 transition-colors"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
       )}
 
       {tab === "timeline" && (
@@ -1852,9 +2009,22 @@ function OrdonnancesSection({
                   )}
                 </button>
                 {isExpanded && (
-                  <div className="mt-3 ml-11 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap">
-                    {p.content}
-                  </div>
+                  <>
+                    <div className="mt-3 ml-11 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap">
+                      {p.content}
+                    </div>
+                    <div className="mt-2 ml-11 flex items-center gap-2">
+                      <a
+                        href={`/ordonnance/${p.id}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium transition-colors"
+                      >
+                        <Printer className="h-3.5 w-3.5" />
+                        Imprimer
+                      </a>
+                    </div>
+                  </>
                 )}
               </li>
             );
@@ -1868,7 +2038,7 @@ function OrdonnancesSection({
 // ─── Prescription modal ───────────────────────────────────────────────────────
 
 function PrescriptionModal({
-  patientId: _patientId,
+  patientId,
   completedAppointments,
   onClose,
   onCreated,
@@ -1885,6 +2055,8 @@ function PrescriptionModal({
   );
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
+  const [templateModalOpen, setTemplateModalOpen] = useState(false);
+  const [usedTemplateId, setUsedTemplateId] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -1901,7 +2073,11 @@ function PrescriptionModal({
       const res = await fetch("/api/prescriptions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ appointmentId, content: content.trim() }),
+        body: JSON.stringify({
+          appointmentId,
+          content: content.trim(),
+          ...(usedTemplateId ? { templateId: usedTemplateId } : {}),
+        }),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -1955,7 +2131,22 @@ function PrescriptionModal({
             )}
           </Field>
 
-          <Field label={t("fieldMedications")}>
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-sm font-medium text-gray-700">
+                {t("fieldMedications")}
+              </label>
+              {appointmentId && (
+                <button
+                  type="button"
+                  onClick={() => setTemplateModalOpen(true)}
+                  className="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-medium border border-primary/40 text-primary hover:bg-primary/5 transition-colors"
+                >
+                  <FileText className="h-3 w-3" />
+                  {t("chooseTemplate")}
+                </button>
+              )}
+            </div>
             <textarea
               rows={6}
               value={content}
@@ -1967,10 +2158,30 @@ function PrescriptionModal({
               className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
               required
             />
-            <div className="text-right text-xs text-gray-400 mt-0.5">
-              {content.length} / 5000
+            <div className="flex items-center justify-between">
+              {usedTemplateId && (
+                <p className="text-xs text-primary">Modèle appliqué</p>
+              )}
+              <div className="ml-auto text-right text-xs text-gray-400">
+                {content.length} / 5000
+              </div>
             </div>
-          </Field>
+          </div>
+
+          {templateModalOpen && appointmentId && (
+            <PrescriptionTemplateModal
+              open={templateModalOpen}
+              onClose={() => setTemplateModalOpen(false)}
+              patientId={patientId}
+              appointmentId={appointmentId}
+              onApply={(markdown, templateId) => {
+                setContent((prev) =>
+                  prev.trim() ? prev + "\n\n" + markdown : markdown
+                );
+                setUsedTemplateId(templateId);
+              }}
+            />
+          )}
 
           <div className="flex justify-end gap-2 pt-1">
             <button

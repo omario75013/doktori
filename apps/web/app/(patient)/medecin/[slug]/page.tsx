@@ -186,11 +186,15 @@ export default async function DoctorProfilePage({
       isPrimary: doctorPractices.isPrimary,
       clinicId: doctorPractices.clinicId,
       clinicName: clinics.name,
+      photos: doctorPractices.photos,
     })
     .from(doctorPractices)
     .leftJoin(clinics, eq(doctorPractices.clinicId, clinics.id))
     .where(and(eq(doctorPractices.doctorId, doctor.id), eq(doctorPractices.isActive, true)))
     .orderBy(desc(doctorPractices.isPrimary), asc(doctorPractices.createdAt));
+
+  // Collect all cabinet photos across practices (max 6 shown)
+  const cabinetPhotos = practiceRows.flatMap((p) => p.photos ?? []).slice(0, 6);
 
   // Reviews — aggregate + latest 10 (joined with patient name)
   const [aggregateRow] = await db
@@ -492,6 +496,45 @@ export default async function DoctorProfilePage({
                     `${doctor.name} est ${specialtyLabel.toLowerCase()} à ${cityLabel}. Passionné(e) par la santé de ses patients, le Dr vous accueille dans un cabinet moderne et bienveillant. Réservez votre consultation en quelques clics via Doktori.`}
                 </p>
               </AnimatedSection>
+
+              {/* Cabinet photo gallery — only shown when at least one photo exists */}
+              {cabinetPhotos.length > 0 && (
+                <AnimatedSection index={2} className="rounded-3xl border border-border bg-white p-6 shadow-sm sm:p-8">
+                  <div className="flex items-center gap-2 mb-4">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
+                      <Building2 className="h-4 w-4" strokeWidth={2.5} />
+                    </div>
+                    <h2 className="font-heading text-lg font-bold text-foreground">
+                      Photos du cabinet
+                    </h2>
+                  </div>
+                  <div className={`grid gap-2 ${cabinetPhotos.length === 1 ? "grid-cols-1" : cabinetPhotos.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                    {cabinetPhotos.slice(0, 3).map((photo, i) => (
+                      <a
+                        key={i}
+                        href={photo.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block overflow-hidden rounded-2xl aspect-video bg-secondary hover:opacity-90 transition-opacity"
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={photo.url}
+                          alt={photo.alt ?? `Photo du cabinet ${i + 1}`}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                  {cabinetPhotos.length > 3 && (
+                    <p className="mt-2 text-xs text-muted-foreground text-center">
+                      +{cabinetPhotos.length - 3} photo{cabinetPhotos.length - 3 > 1 ? "s" : ""} supplémentaire{cabinetPhotos.length - 3 > 1 ? "s" : ""}
+                    </p>
+                  )}
+                </AnimatedSection>
+              )}
 
               {/* Lieux de consultation */}
               {practiceRows.length > 0 && doctor.consultationMode !== "teleconsult" && (

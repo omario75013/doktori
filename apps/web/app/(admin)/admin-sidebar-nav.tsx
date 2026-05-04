@@ -49,6 +49,7 @@ const links: NavLink[] = [
 
 const contentLinks: NavLink[] = [
   { href: "/admin/blog", key: "blog", icon: BookOpen },
+  { href: "/admin/templates", key: "templates", icon: FileText },
 ];
 
 const orgLinks: NavLink[] = [
