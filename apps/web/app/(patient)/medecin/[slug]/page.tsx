@@ -473,6 +473,19 @@ export default async function DoctorProfilePage({
                       </div>
                     )}
 
+                    {/* CNAM price estimator link */}
+                    {doctor.consultationFee != null && (
+                      <div className="mt-3">
+                        <Link
+                          href={`/devis/${doctor.id}`}
+                          className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-bold text-primary transition hover:border-primary"
+                        >
+                          <span aria-hidden>💰</span>
+                          Estimer le prix CNAM / mutuelle
+                        </Link>
+                      </div>
+                    )}
+
                     {/* Teleconsult-only info box */}
                     {doctor.consultationMode === "teleconsult" && (
                       <div className="mt-4 flex items-start gap-2 rounded-xl bg-purple-50 px-4 py-3 text-sm text-purple-900 ring-1 ring-purple-200">
