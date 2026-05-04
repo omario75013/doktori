@@ -1,0 +1,128 @@
+- generic [active] [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - generic [ref=e11]:
+    - generic [ref=e12]:
+      - img [ref=e13]
+      - generic [ref=e15]:
+        - text: L'app Doktori arrive bientôt sur
+        - strong [ref=e16]: App Store
+        - text: et
+        - strong [ref=e17]: Google Play
+    - button "Fermer" [ref=e18]:
+      - img [ref=e19]
+  - banner [ref=e22]:
+    - generic [ref=e23]:
+      - link "Doktori.tn" [ref=e24] [cursor=pointer]:
+        - /url: /
+        - img [ref=e26]
+        - generic [ref=e33]: Doktori.tn
+      - navigation [ref=e34]:
+        - link "ابحث عن طبيب" [ref=e35] [cursor=pointer]:
+          - /url: /recherche
+          - img [ref=e36]
+          - text: ابحث عن طبيب
+        - link "المدونة" [ref=e39] [cursor=pointer]:
+          - /url: /blog
+          - img [ref=e40]
+          - text: المدونة
+        - link "مساعدة" [ref=e42] [cursor=pointer]:
+          - /url: /faq
+          - img [ref=e43]
+          - text: مساعدة
+        - link "استغاثة" [ref=e46] [cursor=pointer]:
+          - /url: /sos
+          - img [ref=e47]
+          - text: استغاثة
+        - button "Passer en mode sombre" [ref=e52]:
+          - img [ref=e53]
+        - group "Changer de langue" [ref=e55]:
+          - button "Passer en français" [ref=e56]: FR
+          - button "التبديل إلى العربية" [disabled] [pressed] [ref=e57]: AR
+        - link "حسابي" [ref=e58] [cursor=pointer]:
+          - /url: /connexion-patient
+          - img [ref=e59]
+          - text: حسابي
+        - link "فضاء الطبيب" [ref=e62] [cursor=pointer]:
+          - /url: /connexion
+          - img [ref=e63]
+          - generic [ref=e66]: فضاء الطبيب
+  - generic [ref=e70]:
+    - banner [ref=e71]:
+      - link "Doktori.tn" [ref=e73] [cursor=pointer]:
+        - /url: /
+        - img [ref=e75]
+        - generic [ref=e79]: Doktori.tn
+    - main [ref=e80]:
+      - generic [ref=e81]:
+        - text: "404"
+        - generic [ref=e83]: "404"
+      - heading "Page introuvable" [level=1] [ref=e84]
+      - paragraph [ref=e85]: La page que vous recherchez n'existe pas ou a été déplacée. Utilisez la recherche pour trouver un médecin près de chez vous.
+      - generic [ref=e87]:
+        - img [ref=e88]
+        - textbox "Trouver un médecin, une spécialité…" [ref=e91]
+        - button "Rechercher" [ref=e92]
+      - generic [ref=e93]:
+        - link "Accueil" [ref=e94] [cursor=pointer]:
+          - /url: /
+          - img [ref=e95]
+          - text: Accueil
+        - link "Rechercher un médecin" [ref=e98] [cursor=pointer]:
+          - /url: /recherche
+          - img [ref=e99]
+          - text: Rechercher un médecin
+    - contentinfo [ref=e102]:
+      - paragraph [ref=e103]: © 2026 Doktori.tn — Votre santé, notre priorité
+  - contentinfo [ref=e104]:
+    - generic [ref=e105]:
+      - generic [ref=e106]:
+        - generic [ref=e107]:
+          - generic [ref=e108]:
+            - img [ref=e110]
+            - generic [ref=e114]: Doktori
+          - paragraph [ref=e115]: La prise de rendez-vous médicaux en Tunisie
+          - link "contact@doktori.tn" [ref=e116] [cursor=pointer]:
+            - /url: mailto:contact@doktori.tn
+            - img [ref=e117]
+            - text: contact@doktori.tn
+        - generic [ref=e120]:
+          - paragraph [ref=e121]: Plateforme
+          - list [ref=e122]:
+            - listitem [ref=e123]:
+              - link "À propos" [ref=e124] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e125]:
+              - link "Blog" [ref=e126] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=e127]:
+              - link "FAQ" [ref=e128] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e129]:
+              - link "SOS Médecin" [ref=e130] [cursor=pointer]:
+                - /url: /sos-medecin
+        - generic [ref=e131]:
+          - paragraph [ref=e132]: Légal
+          - list [ref=e133]:
+            - listitem [ref=e134]:
+              - link "Mentions légales" [ref=e135] [cursor=pointer]:
+                - /url: /mentions-legales
+            - listitem [ref=e136]:
+              - link "CGU" [ref=e137] [cursor=pointer]:
+                - /url: /cgu
+            - listitem [ref=e138]:
+              - link "Politique de confidentialité" [ref=e139] [cursor=pointer]:
+                - /url: /confidentialite
+        - generic [ref=e140]:
+          - paragraph [ref=e141]: Espace médecin
+          - paragraph [ref=e142]: Vous êtes médecin et souhaitez rejoindre Doktori ?
+          - link "Espace médecin" [ref=e143] [cursor=pointer]:
+            - /url: /connexion
+            - img [ref=e144]
+            - text: Espace médecin
+      - paragraph [ref=e149]: © 2025-2026 Random Walkers SUARL · Doktori.tn
+  - region "Notifications alt+T"
+  - button "افتح معالج دوكتي" [ref=e150]:
+    - img [ref=e151]
+    - generic [ref=e155]: "!"
+  - alert [ref=e156]

@@ -13,6 +13,7 @@ import {
   Compass,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 type DoctorCard = {
   id: string;
@@ -35,6 +36,7 @@ export function ReseauClient({
   doctors: DoctorCard[];
   connections: DoctorCard[];
 }) {
+  const t = useTranslations("medecin.reseau");
   const [tab, setTab] = useState<Tab>("mon-reseau");
   const [query, setQuery] = useState("");
   const [specialtyFilter, setSpecialtyFilter] = useState("");
@@ -63,26 +65,25 @@ export function ReseauClient({
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground">Réseau médecins</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("pageTitle")}</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Connectez-vous avec vos confrères, référencez des patients, échangez sur des cas cliniques.
+          {t("pageSubtitle")}
         </p>
       </div>
 
-      {/* Tabs */}
       <div className="inline-flex rounded-2xl border border-border bg-white p-1 shadow-sm">
         <TabButton
           active={tab === "mon-reseau"}
           onClick={() => setTab("mon-reseau")}
           icon={<Users className="h-4 w-4" />}
-          label="Mon réseau"
+          label={t("myNetwork")}
           count={connections.length}
         />
         <TabButton
           active={tab === "decouvrir"}
           onClick={() => setTab("decouvrir")}
           icon={<Compass className="h-4 w-4" />}
-          label="Découvrir"
+          label={t("discover")}
           count={doctors.length}
         />
       </div>
@@ -94,7 +95,7 @@ export function ReseauClient({
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher par nom, spécialité, ville…"
+            placeholder={t("searchPlaceholder")}
             className="w-full h-10 rounded-xl border border-border bg-white pl-10 pr-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
         </div>
@@ -103,7 +104,7 @@ export function ReseauClient({
           onChange={(e) => setSpecialtyFilter(e.target.value)}
           className="h-10 rounded-xl border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary md:w-64"
         >
-          <option value="">Toutes les spécialités</option>
+          <option value="">{t("allSpecialties")}</option>
           {specialties.map((s) => (
             <option key={s} value={s}>
               {s}
@@ -165,10 +166,11 @@ function TabButton({
 }
 
 function EmptyState({ tab, hasQuery }: { tab: Tab; hasQuery: boolean }) {
+  const t = useTranslations("medecin.reseau");
   if (hasQuery) {
     return (
       <div className="rounded-2xl border border-border bg-white p-8 text-center text-sm text-gray-500">
-        Aucun médecin ne correspond à votre recherche.
+        {t("noResults")}
       </div>
     );
   }
@@ -176,17 +178,16 @@ function EmptyState({ tab, hasQuery }: { tab: Tab; hasQuery: boolean }) {
     return (
       <div className="rounded-2xl border border-dashed border-border bg-white p-10 text-center">
         <Users className="h-10 w-10 text-gray-300 mx-auto" />
-        <h3 className="mt-3 font-semibold text-foreground">Aucun confrère dans votre réseau</h3>
+        <h3 className="mt-3 font-semibold text-foreground">{t("noNetwork")}</h3>
         <p className="mt-1 text-sm text-gray-500">
-          Passez à l&apos;onglet <span className="font-semibold">Découvrir</span> pour trouver des médecins et
-          envoyer une invitation de connexion.
+          {t("noNetworkDesc")}
         </p>
       </div>
     );
   }
   return (
     <div className="rounded-2xl border border-border bg-white p-8 text-center text-sm text-gray-500">
-      Aucun médecin disponible.
+      {t("noDoctors")}
     </div>
   );
 }
@@ -198,6 +199,7 @@ function DoctorCardView({
   doctor: DoctorCard;
   connected: boolean;
 }) {
+  const t = useTranslations("medecin.reseau");
   const rating = Number(doctor.averageRating ?? 0);
   const reviewCount = Number(doctor.reviewCount ?? 0);
   const initials = doctor.name
@@ -249,7 +251,7 @@ function DoctorCardView({
             {rating.toFixed(1)}
           </div>
           <span className="text-xs text-gray-400">
-            {reviewCount} avis
+            {t("reviews", { count: reviewCount })}
           </span>
         </div>
 
@@ -266,6 +268,8 @@ function DoctorCardView({
 }
 
 function ConnectButton({ doctorId, connected }: { doctorId: string; connected: boolean }) {
+  const t = useTranslations("medecin.reseau");
+  const tCommon = useTranslations("medecin.common");
   const [state, setState] = useState<"idle" | "sending" | "sent" | "connected">(
     connected ? "connected" : "idle"
   );
@@ -282,9 +286,9 @@ function ConnectButton({ doctorId, connected }: { doctorId: string; connected: b
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erreur");
       if (data.already) {
-        toast.info("Invitation déjà envoyée");
+        toast.info(t("alreadyInvited"));
       } else {
-        toast.success("Invitation envoyée");
+        toast.success(t("invitationSent"));
       }
       setState("sent");
     } catch (err) {
@@ -306,12 +310,12 @@ function ConnectButton({ doctorId, connected }: { doctorId: string; connected: b
     >
       <UserPlus className="h-3.5 w-3.5" />
       {state === "connected"
-        ? "Connecté"
+        ? t("connected")
         : state === "sent"
-          ? "Invitation envoyée"
+          ? t("invitationSent")
           : state === "sending"
-            ? "Envoi…"
-            : "Se connecter"}
+            ? tCommon("sending")
+            : t("connect")}
     </button>
   );
 }

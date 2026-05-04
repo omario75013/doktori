@@ -5,6 +5,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import { User as UserIcon, Settings, LogOut, ChevronDown, Repeat } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { signOut } from "next-auth/react";
 
 type Role = "doctor" | "admin" | "clinic" | "secretary" | "patient";
 
@@ -49,6 +51,7 @@ export function ProfileMenu({ name, email, image, role }: Props) {
   const [open, setOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
+  const t = useTranslations("common");
 
   useEffect(() => {
     try {
@@ -109,11 +112,11 @@ export function ProfileMenu({ name, email, image, role }: Props) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-12 z-50 w-60 rounded-2xl bg-white dark:bg-gray-900 shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden"
+            className="absolute end-0 top-12 z-50 w-60 rounded-2xl bg-white dark:bg-gray-900 shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden"
           >
             <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800">
               <p className="text-sm font-semibold text-gray-900 dark:text-gray-100 truncate">
-                {name ?? email ?? "Utilisateur"}
+                {name ?? email ?? t("utilisateur")}
               </p>
               {email && (
                 <p className="text-xs text-gray-500 truncate">{email}</p>
@@ -126,7 +129,7 @@ export function ProfileMenu({ name, email, image, role }: Props) {
                 className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 <UserIcon className="h-4 w-4" />
-                Profil
+                {t("profil")}
               </Link>
               <Link
                 href={settingsHrefFor(role)}
@@ -134,7 +137,7 @@ export function ProfileMenu({ name, email, image, role }: Props) {
                 className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
               >
                 <Settings className="h-4 w-4" />
-                Paramètres
+                {t("parametres")}
               </Link>
             </div>
             {isDesktop && (
@@ -152,22 +155,23 @@ export function ProfileMenu({ name, email, image, role }: Props) {
                   className="flex items-center gap-3 px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800"
                 >
                   <Repeat className="h-4 w-4" />
-                  Changer de rôle
+                  {t("changerRole")}
                 </Link>
               </div>
             )}
             <div className="py-1 border-t border-gray-100 dark:border-gray-800">
-              <Link
-                href={
-                  isDesktop
-                    ? `/api/auth/signout?callbackUrl=${encodeURIComponent("/app-picker")}`
-                    : "/api/auth/signout"
-                }
-                className="flex items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+              <button
+                type="button"
+                onClick={async () => {
+                  setOpen(false);
+                  await signOut({ redirect: false });
+                  window.location.href = isDesktop ? "/app-picker" : "/connexion";
+                }}
+                className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
               >
                 <LogOut className="h-4 w-4" />
-                Déconnexion
-              </Link>
+                {t("deconnexion")}
+              </button>
             </div>
           </motion.div>
         )}

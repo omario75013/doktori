@@ -6,6 +6,7 @@ import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import { getTranslations } from "next-intl/server";
 
 type Referral = {
   id: string;
@@ -22,7 +23,10 @@ type Referral = {
   counterpartSpecialty: string | null;
 };
 
+type T = Awaited<ReturnType<typeof getTranslations<"medecin.reseau">>>;
+
 export default async function ReferencementsPage() {
+  const t = await getTranslations("medecin.reseau");
   const session = await auth();
   if (!session?.user?.id || session.user.role !== "doctor") {
     redirect("/connexion");
@@ -63,43 +67,41 @@ export default async function ReferencementsPage() {
         className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-primary"
       >
         <ArrowLeft className="h-4 w-4" />
-        Retour au réseau
+        {t("backToNetwork")}
       </Link>
 
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <Share2 className="h-5 w-5" />
-          Référencements
+          {t("referralsTitle")}
         </h1>
         <p className="text-sm text-gray-500 mt-1">
-          Patients envoyés vers d&apos;autres médecins et patients reçus de confrères.
+          {t("referralsSubtitle")}
         </p>
       </div>
 
       <section className="rounded-2xl border border-border bg-white shadow-sm p-5">
         <h2 className="font-semibold text-foreground mb-3">
-          Reçus ({incoming.length})
+          {t("incomingTitle", { count: incoming.length })}
         </h2>
-        <ReferralList rows={incoming} direction="in" />
+        <ReferralList rows={incoming} direction="in" t={t} />
       </section>
 
       <section className="rounded-2xl border border-border bg-white shadow-sm p-5">
         <h2 className="font-semibold text-foreground mb-3">
-          Envoyés ({outgoing.length})
+          {t("outgoingTitle", { count: outgoing.length })}
         </h2>
-        <ReferralList rows={outgoing} direction="out" />
+        <ReferralList rows={outgoing} direction="out" t={t} />
       </section>
     </div>
   );
 }
 
-function ReferralList({ rows, direction }: { rows: Referral[]; direction: "in" | "out" }) {
+function ReferralList({ rows, direction, t }: { rows: Referral[]; direction: "in" | "out"; t: T }) {
   if (rows.length === 0) {
     return (
       <p className="text-sm text-gray-400 italic py-4">
-        {direction === "in"
-          ? "Aucun patient reçu pour le moment."
-          : "Vous n'avez référencé aucun patient."}
+        {direction === "in" ? t("emptyIncoming") : t("emptyOutgoing")}
       </p>
     );
   }
@@ -113,7 +115,7 @@ function ReferralList({ rows, direction }: { rows: Referral[]; direction: "in" |
               <span className="text-gray-400 font-normal"> · {r.patientPhone}</span>
             </p>
             <p className="text-xs text-gray-500">
-              {direction === "in" ? "de " : "vers "}
+              {direction === "in" ? t("fromLabel") : t("toLabel")}
               Dr. {r.counterpartName}
               {r.counterpartSpecialty && ` · ${r.counterpartSpecialty}`}
             </p>
@@ -123,9 +125,9 @@ function ReferralList({ rows, direction }: { rows: Referral[]; direction: "in" |
             </p>
           </div>
           <div className="flex flex-col items-end gap-1 shrink-0">
-            <StatusBadge status={r.status} />
+            <StatusBadge status={r.status} t={t} />
             {r.shareMedicalRecord && (
-              <ConsentBadge status={r.patientConsentStatus} />
+              <ConsentBadge status={r.patientConsentStatus} t={t} />
             )}
           </div>
         </li>
@@ -134,12 +136,12 @@ function ReferralList({ rows, direction }: { rows: Referral[]; direction: "in" |
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
+function StatusBadge({ status, t }: { status: string; t: T }) {
   const map: Record<string, { label: string; className: string; icon: React.ReactNode }> = {
-    pending: { label: "En attente", className: "bg-orange-100 text-orange-700", icon: <Clock className="h-3 w-3" /> },
-    accepted: { label: "Accepté", className: "bg-green-100 text-green-700", icon: <CheckCircle2 className="h-3 w-3" /> },
-    declined: { label: "Refusé", className: "bg-gray-100 text-gray-500", icon: <XCircle className="h-3 w-3" /> },
-    completed: { label: "Terminé", className: "bg-blue-100 text-blue-700", icon: <CheckCircle2 className="h-3 w-3" /> },
+    pending: { label: t("statusPending"), className: "bg-orange-100 text-orange-700", icon: <Clock className="h-3 w-3" /> },
+    accepted: { label: t("statusAccepted"), className: "bg-green-100 text-green-700", icon: <CheckCircle2 className="h-3 w-3" /> },
+    declined: { label: t("statusDeclined"), className: "bg-gray-100 text-gray-500", icon: <XCircle className="h-3 w-3" /> },
+    completed: { label: t("statusCompleted"), className: "bg-blue-100 text-blue-700", icon: <CheckCircle2 className="h-3 w-3" /> },
   };
   const cfg = map[status] ?? map.pending;
   return (
@@ -150,11 +152,11 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ConsentBadge({ status }: { status: string }) {
+function ConsentBadge({ status, t }: { status: string; t: T }) {
   const map: Record<string, { label: string; className: string }> = {
-    pending: { label: "Consentement en attente", className: "bg-orange-50 text-orange-600 border border-orange-200" },
-    granted: { label: "Consentement accordé", className: "bg-green-50 text-green-700 border border-green-200" },
-    denied: { label: "Consentement refusé", className: "bg-red-50 text-red-600 border border-red-200" },
+    pending: { label: t("consentPending"), className: "bg-orange-50 text-orange-600 border border-orange-200" },
+    granted: { label: t("consentGranted"), className: "bg-green-50 text-green-700 border border-green-200" },
+    denied: { label: t("consentDenied"), className: "bg-red-50 text-red-600 border border-red-200" },
   };
   const cfg = map[status] ?? map.pending;
   return (

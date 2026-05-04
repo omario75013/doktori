@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import ReactMarkdown from "react-markdown";
+import { useTranslations } from "next-intl";
 import { render, type RenderResult } from "@/lib/templates/render";
 import type { TemplateContext } from "@/lib/templates/variables";
 
@@ -11,6 +11,7 @@ interface Props {
 }
 
 export function TemplatePreview({ body, language }: Props) {
+  const t = useTranslations("medecin.modeles");
   const [ctx, setCtx] = useState<TemplateContext | null>(null);
   const [result, setResult] = useState<RenderResult | null>(null);
 
@@ -71,29 +72,23 @@ export function TemplatePreview({ body, language }: Props) {
   return (
     <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
       <div className="px-4 py-3 border-b border-border bg-gray-50">
-        <h3 className="text-sm font-semibold text-gray-700">
-          Aperçu (patient fictif: Sami Trabelsi, 35 ans)
-        </h3>
+        <h3 className="text-sm font-semibold text-gray-700">{t("previewTitle")}</h3>
       </div>
       <div className="p-4 min-h-[120px]">
         {!result ? (
-          <p className="text-xs text-gray-400 italic">Chargement de l'aperçu…</p>
+          <p className="text-xs text-gray-400 italic">{t("previewLoading")}</p>
         ) : (
           <>
             {result.unresolved.length > 0 && (
               <div className="mb-3 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-xs text-amber-700">
-                ⚠ {result.unresolved.length} variable
-                {result.unresolved.length > 1 ? "s" : ""} non résolue
-                {result.unresolved.length > 1 ? "s" : ""} :{" "}
-                {result.unresolved.join(", ")}
+                ⚠ {t("unresolved", { count: result.unresolved.length, list: result.unresolved.join(", ") })}
               </div>
             )}
             <div
               dir={language === "ar" ? "rtl" : "ltr"}
               className="prose prose-sm max-w-none text-gray-800"
-            >
-              <ReactMarkdown>{result.body}</ReactMarkdown>
-            </div>
+              dangerouslySetInnerHTML={{ __html: result.body }}
+            />
           </>
         )}
       </div>

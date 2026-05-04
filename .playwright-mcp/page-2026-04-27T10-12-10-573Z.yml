@@ -1,0 +1,480 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - img [ref=e4]
+      - generic [ref=e6]:
+        - text: L'app Doktori arrive bientôt sur
+        - strong [ref=e7]: App Store
+        - text: et
+        - strong [ref=e8]: Google Play
+    - button "Fermer" [ref=e9]:
+      - img [ref=e10]
+  - banner [ref=e13]:
+    - generic [ref=e14]:
+      - link "Doktori.tn" [ref=e15] [cursor=pointer]:
+        - /url: /
+        - img [ref=e17]
+        - generic [ref=e24]: Doktori.tn
+      - navigation [ref=e25]:
+        - link "ابحث عن طبيب" [ref=e26] [cursor=pointer]:
+          - /url: /recherche
+          - img [ref=e27]
+          - text: ابحث عن طبيب
+        - link "المدونة" [ref=e30] [cursor=pointer]:
+          - /url: /blog
+          - img [ref=e31]
+          - text: المدونة
+        - link "مساعدة" [ref=e33] [cursor=pointer]:
+          - /url: /faq
+          - img [ref=e34]
+          - text: مساعدة
+        - link "استغاثة" [ref=e37] [cursor=pointer]:
+          - /url: /sos
+          - img [ref=e38]
+          - text: استغاثة
+        - button "Passer en mode sombre" [ref=e43]:
+          - img [ref=e44]
+        - group "Changer de langue" [ref=e46]:
+          - button "Passer en français" [ref=e47]: FR
+          - button "التبديل إلى العربية" [disabled] [pressed] [ref=e48]: AR
+        - link "حسابي" [ref=e49] [cursor=pointer]:
+          - /url: /connexion-patient
+          - img [ref=e50]
+          - text: حسابي
+        - link "فضاء الطبيب" [ref=e53] [cursor=pointer]:
+          - /url: /connexion
+          - img [ref=e54]
+          - generic [ref=e57]: فضاء الطبيب
+  - generic [ref=e58]:
+    - generic [ref=e61]:
+      - generic [ref=e62]:
+        - img [ref=e63]
+        - generic [ref=e66]: المنصة الصحية التونسية - أكثر من 65 طبيباً معتمداً
+      - heading "صحتك. موعد موعد واحد." [level=1] [ref=e67]:
+        - text: صحتك.
+        - generic [ref=e68]:
+          - text: موعد
+          - generic [ref=e69]:
+            - text: موعد واحد.
+            - img [ref=e70]
+      - paragraph [ref=e72]:
+        - text: ابحث عن طبيب واحجز موعداً عبر الإنترنت في
+        - strong [ref=e73]: أقل من 60 ثانية
+        - text: . مجاناً للمرضى. متوفر في تونس العاصمة وأريانة ومنوبة.
+      - generic [ref=e75]:
+        - img [ref=e77]
+        - textbox "طبيب الأمراض الجلدية، مركز تونس..." [ref=e80]
+        - button "بحث" [ref=e81]:
+          - generic [ref=e82]: بحث
+          - img [ref=e83]
+      - generic [ref=e85]:
+        - generic [ref=e86]:
+          - img [ref=e87]
+          - generic [ref=e90]: آمن 100٪ · متوافق مع RGPD
+        - generic [ref=e91]:
+          - img [ref=e92]
+          - generic [ref=e95]: متاح 24/7
+        - generic [ref=e96]:
+          - img [ref=e97]
+          - generic [ref=e102]: +1000 مريض نشط
+    - generic [ref=e103]:
+      - generic [ref=e104]:
+        - generic [ref=e105]:
+          - img [ref=e106]
+          - text: إطلاق 2026
+        - paragraph [ref=e109]: نحن نبني شبكة أطبائنا عبر تونس. سجّل لتكون أول من يُبلَّغ عندما ينضم طبيب في مدينتك.
+      - generic [ref=e110]:
+        - generic [ref=e111]:
+          - img [ref=e113]
+          - generic [ref=e117]:
+            - generic [ref=e118]: "20"
+            - generic [ref=e119]: التخصصات
+        - generic [ref=e120]:
+          - img [ref=e122]
+          - generic [ref=e125]:
+            - generic [ref=e126]: "23"
+            - generic [ref=e127]: مدن مغطاة
+        - generic [ref=e128]:
+          - img [ref=e130]
+          - generic [ref=e133]:
+            - generic [ref=e134]: 24/7
+            - generic [ref=e135]: متاح
+        - generic [ref=e136]:
+          - img [ref=e138]
+          - generic [ref=e141]:
+            - generic [ref=e142]: 🇹🇳
+            - generic [ref=e143]: صنع في تونس
+    - generic [ref=e146]:
+      - img [ref=e148]
+      - generic [ref=e156]:
+        - heading "هل تحتاج إلى طبيب الآن؟" [level=3] [ref=e157]
+        - paragraph [ref=e158]: استغاثة طبيب · استشارة عاجلة غير حيوية · استجابة في أقل من دقيقتين
+      - link "تفعيل SOS" [ref=e159] [cursor=pointer]:
+        - /url: /sos
+        - img [ref=e160]
+        - generic [ref=e162]: تفعيل SOS
+        - img [ref=e163]
+    - generic [ref=e166]:
+      - generic [ref=e167]:
+        - generic [ref=e168]:
+          - img [ref=e169]
+          - text: 3 خطوات بسيطة
+        - heading "حجز موعد لم يكن أسهل من أي وقت مضى" [level=2] [ref=e172]
+        - paragraph [ref=e173]: من البحث إلى التأكيد، في أقل من 60 ثانية فقط.
+      - generic [ref=e174]:
+        - generic [ref=e175]:
+          - generic [ref=e176]: "01"
+          - generic [ref=e177]:
+            - img [ref=e179]
+            - heading "ابحث" [level=3] [ref=e182]
+            - paragraph [ref=e183]: اعثر على طبيب حسب الاختصاص أو المدينة أو الحي
+        - generic [ref=e184]:
+          - generic [ref=e185]: "02"
+          - generic [ref=e186]:
+            - img [ref=e188]
+            - heading "اختر" [level=3] [ref=e191]
+            - paragraph [ref=e192]: اطلع على المواعيد المتاحة في الوقت الفعلي
+        - generic [ref=e193]:
+          - generic [ref=e194]: "03"
+          - generic [ref=e195]:
+            - img [ref=e197]
+            - heading "احجز" [level=3] [ref=e200]
+            - paragraph [ref=e201]: أكد موعدك بنقرتين
+    - generic [ref=e203]:
+      - generic [ref=e204]:
+        - generic [ref=e205]:
+          - img [ref=e206]
+          - text: التخصصات
+        - heading "اعثر على طبيبك حسب الاختصاص" [level=2] [ref=e210]
+        - paragraph [ref=e211]: 10 تخصصات متوفرة في تونس الكبرى
+      - generic [ref=e212]:
+        - link "طبيب عام" [ref=e213] [cursor=pointer]:
+          - /url: /recherche?specialty=generaliste
+          - img [ref=e215]
+          - generic [ref=e219]: طبيب عام
+        - link "طبيب جلد" [ref=e220] [cursor=pointer]:
+          - /url: /recherche?specialty=dermatologue
+          - img [ref=e222]
+          - generic [ref=e225]: طبيب جلد
+        - link "طبيب عيون" [ref=e226] [cursor=pointer]:
+          - /url: /recherche?specialty=ophtalmologue
+          - img [ref=e228]
+          - generic [ref=e231]: طبيب عيون
+        - link "طبيب نساء" [ref=e232] [cursor=pointer]:
+          - /url: /recherche?specialty=gynecologue
+          - img [ref=e234]
+          - generic [ref=e236]: طبيب نساء
+        - link "طبيب أطفال" [ref=e237] [cursor=pointer]:
+          - /url: /recherche?specialty=pediatre
+          - img [ref=e239]
+          - generic [ref=e242]: طبيب أطفال
+        - link "طبيب أسنان" [ref=e243] [cursor=pointer]:
+          - /url: /recherche?specialty=dentiste
+          - img [ref=e245]
+          - generic [ref=e248]: طبيب أسنان
+        - link "طبيب أنف وأذن" [ref=e249] [cursor=pointer]:
+          - /url: /recherche?specialty=orl
+          - img [ref=e251]
+          - generic [ref=e254]: طبيب أنف وأذن
+        - link "طبيب قلب" [ref=e255] [cursor=pointer]:
+          - /url: /recherche?specialty=cardiologue
+          - img [ref=e257]
+          - generic [ref=e259]: طبيب قلب
+        - link "طبيب عظام" [ref=e260] [cursor=pointer]:
+          - /url: /recherche?specialty=orthopediste
+          - img [ref=e262]
+          - generic [ref=e264]: طبيب عظام
+        - link "طبيب جهاز هضمي" [ref=e265] [cursor=pointer]:
+          - /url: /recherche?specialty=gastrologue
+          - img [ref=e267]
+          - generic [ref=e271]: طبيب جهاز هضمي
+        - link "طبيب رئة" [ref=e272] [cursor=pointer]:
+          - /url: /recherche?specialty=pneumologue
+          - img [ref=e274]
+          - generic [ref=e278]: طبيب رئة
+        - link "طبيب أعصاب" [ref=e279] [cursor=pointer]:
+          - /url: /recherche?specialty=neurologue
+          - img [ref=e281]
+          - generic [ref=e289]: طبيب أعصاب
+        - link "طبيب روماتيزم" [ref=e290] [cursor=pointer]:
+          - /url: /recherche?specialty=rhumatologue
+          - img [ref=e292]
+          - generic [ref=e294]: طبيب روماتيزم
+        - link "طبيب مسالك بولية" [ref=e295] [cursor=pointer]:
+          - /url: /recherche?specialty=urologue
+          - img [ref=e297]
+          - generic [ref=e300]: طبيب مسالك بولية
+        - link "طبيب غدد" [ref=e301] [cursor=pointer]:
+          - /url: /recherche?specialty=endocrinologue
+          - img [ref=e303]
+          - generic [ref=e315]: طبيب غدد
+        - link "طبيب كلى" [ref=e316] [cursor=pointer]:
+          - /url: /recherche?specialty=nephrologue
+          - img [ref=e318]
+          - generic [ref=e320]: طبيب كلى
+        - link "طبيب نفسي" [ref=e321] [cursor=pointer]:
+          - /url: /recherche?specialty=psychiatre
+          - img [ref=e323]
+          - generic [ref=e331]: طبيب نفسي
+        - link "طبيب أشعة" [ref=e332] [cursor=pointer]:
+          - /url: /recherche?specialty=radiologue
+          - img [ref=e334]
+          - generic [ref=e339]: طبيب أشعة
+        - link "جراح عام" [ref=e340] [cursor=pointer]:
+          - /url: /recherche?specialty=chirurgien
+          - img [ref=e342]
+          - generic [ref=e348]: جراح عام
+        - link "طبيب حساسية" [ref=e349] [cursor=pointer]:
+          - /url: /recherche?specialty=allergologue
+          - img [ref=e351]
+          - generic [ref=e356]: طبيب حساسية
+      - link "عرض كل التخصصات" [ref=e358] [cursor=pointer]:
+        - /url: /recherche
+        - text: عرض كل التخصصات
+        - img [ref=e359]
+    - generic [ref=e362]:
+      - generic [ref=e363]:
+        - generic [ref=e364]:
+          - img [ref=e365]
+          - text: البرنامج التأسيسي - أماكن محدودة
+        - heading "هل أنت طبيب؟ تعال وانضم إلينا." [level=2] [ref=e368]
+        - paragraph [ref=e369]:
+          - text: أول
+          - strong [ref=e370]: 100 طبيب مسجل
+          - text: يستفيدون من
+          - strong [ref=e371]: 6 أشهر مجانًا
+          - text: . بعد ذلك، ابتداءً من
+          - strong [ref=e372]: 49 دت شهريًا
+          - text: .
+        - list [ref=e373]:
+          - listitem [ref=e374]:
+            - img [ref=e376]
+            - generic [ref=e379]: جدول مواعيد عبر الإنترنت 24/7
+          - listitem [ref=e380]:
+            - img [ref=e382]
+            - generic [ref=e384]: تذكيرات SMS تلقائية
+          - listitem [ref=e385]:
+            - img [ref=e387]
+            - generic [ref=e390]: واجهة احترافية مفهرسة على Google
+          - listitem [ref=e391]:
+            - img [ref=e393]
+            - generic [ref=e396]: دعم WhatsApp مخصص
+        - generic [ref=e397]:
+          - link "أنشئ حسابي المجاني" [ref=e398] [cursor=pointer]:
+            - /url: /inscription
+            - generic [ref=e399]: أنشئ حسابي المجاني
+            - img [ref=e400]
+          - link "لدي حساب بالفعل" [ref=e402] [cursor=pointer]:
+            - /url: /connexion
+      - generic [ref=e405]:
+        - generic [ref=e406]:
+          - img [ref=e408]
+          - generic [ref=e414]:
+            - paragraph [ref=e415]: Dr. Sonia Trabelsi
+            - paragraph [ref=e416]: طبيبة جلد · تونس
+          - generic [ref=e418]: نشط
+        - generic [ref=e420]:
+          - generic [ref=e421]:
+            - paragraph [ref=e422]: اليوم
+            - paragraph [ref=e423]: "12"
+            - paragraph [ref=e424]: مواعيد
+          - generic [ref=e425]:
+            - paragraph [ref=e426]: هذا الشهر
+            - paragraph [ref=e427]: 6 200
+            - paragraph [ref=e428]: دت متوقعة
+        - generic [ref=e429]:
+          - generic [ref=e430]:
+            - generic [ref=e431]:
+              - generic [ref=e432]: 09:00
+              - generic [ref=e433]: Amina B.
+            - generic [ref=e434]: مؤكد
+          - generic [ref=e435]:
+            - generic [ref=e436]:
+              - generic [ref=e437]: 10:30
+              - generic [ref=e438]: Youssef K.
+            - generic [ref=e439]: مؤكد
+          - generic [ref=e440]:
+            - generic [ref=e441]:
+              - generic [ref=e442]: 11:00
+              - generic [ref=e443]: Leila M.
+            - generic [ref=e444]: قيد الانتظار
+          - generic [ref=e445]:
+            - generic [ref=e446]:
+              - generic [ref=e447]: 14:00
+              - generic [ref=e448]: Mohamed T.
+            - generic [ref=e449]: مؤكد
+    - generic [ref=e454]:
+      - generic [ref=e456]:
+        - generic [ref=e458]:
+          - generic [ref=e460]: Doktori
+          - generic [ref=e461]:
+            - generic [ref=e463]:
+              - img [ref=e465]
+              - generic [ref=e468]: Rechercher un médecin...
+            - generic [ref=e469]:
+              - generic [ref=e470]: K
+              - generic [ref=e471]:
+                - paragraph [ref=e472]: Dr. Karim B.
+                - paragraph [ref=e473]: Généraliste
+              - generic [ref=e474]: RDV
+            - generic [ref=e475]:
+              - generic [ref=e476]: S
+              - generic [ref=e477]:
+                - paragraph [ref=e478]: Dr. Sonia T.
+                - paragraph [ref=e479]: Dermatologue
+              - generic [ref=e480]: RDV
+            - generic [ref=e481]:
+              - generic [ref=e482]: M
+              - generic [ref=e483]:
+                - paragraph [ref=e484]: Dr. Mohamed G.
+                - paragraph [ref=e485]: Pédiatre
+              - generic [ref=e486]: RDV
+            - generic [ref=e487]:
+              - img [ref=e488]
+              - img [ref=e491]
+              - img [ref=e496]
+              - img [ref=e499]
+        - generic [ref=e505]:
+          - img [ref=e507]
+          - generic [ref=e510]: RDV confirmé !
+      - generic [ref=e511]:
+        - generic [ref=e512]:
+          - img [ref=e513]
+          - text: Nouveau
+        - heading "Doktori dans votre poche" [level=2] [ref=e515]:
+          - text: Doktori dans
+          - text: votre poche
+        - paragraph [ref=e516]: Prenez rendez-vous en 2 clics, recevez des rappels automatiques et accédez à SOS Docteur — le tout depuis votre téléphone.
+        - list [ref=e517]:
+          - listitem [ref=e518]:
+            - img [ref=e519]
+            - text: Réservation instantanée 24/7
+          - listitem [ref=e522]:
+            - img [ref=e523]
+            - text: Rappels SMS avant chaque RDV
+          - listitem [ref=e526]:
+            - img [ref=e527]
+            - text: SOS Docteur — médecin en 2 min
+          - listitem [ref=e530]:
+            - img [ref=e531]
+            - text: 100% gratuit pour les patients
+        - generic [ref=e534]:
+          - generic [ref=e535]:
+            - img [ref=e536]
+            - generic [ref=e538]:
+              - generic [ref=e539]: Bientôt sur
+              - generic [ref=e540]: App Store
+          - generic [ref=e541]:
+            - img [ref=e542]
+            - generic [ref=e547]:
+              - generic [ref=e548]: Bientôt sur
+              - generic [ref=e549]: Google Play
+    - contentinfo [ref=e550]:
+      - generic [ref=e551]:
+        - generic [ref=e552]:
+          - generic [ref=e553]:
+            - generic [ref=e554]:
+              - img [ref=e556]
+              - generic [ref=e560]: Doktori.tn
+            - paragraph [ref=e561]: منصة حجز المواعيد الطبية عبر الإنترنت في تونس. مصممة مع وضع المرضى والأطباء التونسيين في الاعتبار.
+            - generic [ref=e562]:
+              - generic [ref=e563]:
+                - img [ref=e564]
+                - generic [ref=e566]:
+                  - generic [ref=e567]: Bientôt sur
+                  - generic [ref=e568]: App Store
+              - generic [ref=e569]:
+                - img [ref=e570]
+                - generic [ref=e575]:
+                  - generic [ref=e576]: Bientôt sur
+                  - generic [ref=e577]: Google Play
+          - generic [ref=e578]:
+            - heading "المنتج" [level=4] [ref=e579]
+            - list [ref=e580]:
+              - listitem [ref=e581]:
+                - link "بحث" [ref=e582] [cursor=pointer]:
+                  - /url: /recherche
+              - listitem [ref=e583]:
+                - link "استغاثة طبيب" [ref=e584] [cursor=pointer]:
+                  - /url: /sos
+              - listitem [ref=e585]:
+                - link "منطقة الطبيب" [ref=e586] [cursor=pointer]:
+                  - /url: /inscription
+              - listitem [ref=e587]:
+                - link "الأسئلة الشائعة" [ref=e588] [cursor=pointer]:
+                  - /url: /faq
+          - generic [ref=e589]:
+            - heading "قانوني" [level=4] [ref=e590]
+            - list [ref=e591]:
+              - listitem [ref=e592]:
+                - link "CGU" [ref=e593] [cursor=pointer]:
+                  - /url: /legal/cgu
+              - listitem [ref=e594]:
+                - link "السرية" [ref=e595] [cursor=pointer]:
+                  - /url: /legal/confidentialite
+              - listitem [ref=e596]:
+                - link "المعلومات القانونية" [ref=e597] [cursor=pointer]:
+                  - /url: /legal/mentions
+          - generic [ref=e598]:
+            - heading "اتصل بنا" [level=4] [ref=e599]
+            - list [ref=e600]:
+              - listitem [ref=e601]:
+                - link "contact@doktori.tn" [ref=e602] [cursor=pointer]:
+                  - /url: mailto:contact@doktori.tn
+              - listitem [ref=e603]: دعم واتساب
+              - listitem [ref=e604]: تونس العاصمة، تونس
+        - paragraph [ref=e606]: © 2025–2026 دكتوري · من إنتاج Random Walkers SUARL · RNE 1625867B
+  - contentinfo [ref=e607]:
+    - generic [ref=e608]:
+      - generic [ref=e609]:
+        - generic [ref=e610]:
+          - generic [ref=e611]:
+            - img [ref=e613]
+            - generic [ref=e617]: Doktori
+          - paragraph [ref=e618]: La prise de rendez-vous médicaux en Tunisie
+          - link "contact@doktori.tn" [ref=e619] [cursor=pointer]:
+            - /url: mailto:contact@doktori.tn
+            - img [ref=e620]
+            - text: contact@doktori.tn
+        - generic [ref=e623]:
+          - paragraph [ref=e624]: Plateforme
+          - list [ref=e625]:
+            - listitem [ref=e626]:
+              - link "À propos" [ref=e627] [cursor=pointer]:
+                - /url: /a-propos
+            - listitem [ref=e628]:
+              - link "Blog" [ref=e629] [cursor=pointer]:
+                - /url: /blog
+            - listitem [ref=e630]:
+              - link "FAQ" [ref=e631] [cursor=pointer]:
+                - /url: /faq
+            - listitem [ref=e632]:
+              - link "SOS Médecin" [ref=e633] [cursor=pointer]:
+                - /url: /sos-medecin
+        - generic [ref=e634]:
+          - paragraph [ref=e635]: Légal
+          - list [ref=e636]:
+            - listitem [ref=e637]:
+              - link "Mentions légales" [ref=e638] [cursor=pointer]:
+                - /url: /mentions-legales
+            - listitem [ref=e639]:
+              - link "CGU" [ref=e640] [cursor=pointer]:
+                - /url: /cgu
+            - listitem [ref=e641]:
+              - link "Politique de confidentialité" [ref=e642] [cursor=pointer]:
+                - /url: /confidentialite
+        - generic [ref=e643]:
+          - paragraph [ref=e644]: Espace médecin
+          - paragraph [ref=e645]: Vous êtes médecin et souhaitez rejoindre Doktori ?
+          - link "Espace médecin" [ref=e646] [cursor=pointer]:
+            - /url: /connexion
+            - img [ref=e647]
+            - text: Espace médecin
+      - paragraph [ref=e652]: © 2025-2026 Random Walkers SUARL · Doktori.tn
+  - region "Notifications alt+T"
+  - button "افتح معالج دوكتي" [ref=e653]:
+    - img [ref=e654]
+    - generic [ref=e658]: "!"
+  - button "Open Next.js Dev Tools" [ref=e664] [cursor=pointer]:
+    - img [ref=e665]
+  - alert [ref=e668]

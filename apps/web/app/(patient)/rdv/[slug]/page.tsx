@@ -213,6 +213,19 @@ export default function RdvPage({
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
   const [payingNow, setPayingNow] = useState(false);
 
+  // Pre-fill patient info from stored JWT if the patient is already logged in
+  useEffect(() => {
+    const token = localStorage.getItem("doktori_patient_token");
+    if (!token) return;
+    try {
+      const payload = JSON.parse(atob(token.split(".")[1]!));
+      if (payload.name) setPatientName(payload.name);
+      if (payload.phone) setPatientPhone(payload.phone);
+    } catch {
+      // malformed token — ignore
+    }
+  }, []);
+
   useEffect(() => {
     fetch(`/api/doctors/by-slug/${slug}`)
       .then((r) => {

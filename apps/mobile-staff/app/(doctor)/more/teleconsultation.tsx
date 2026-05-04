@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Card, Kv, Loader, Empty, formatDate, Banner } from "./_ui";
 
 type TeleSettings = {
@@ -20,6 +20,7 @@ type Appointment = {
 };
 
 export default function Teleconsultation() {
+  const { locale } = useLocale();
   const [settings, setSettings] = useState<TeleSettings | null>(null);
   const [upcoming, setUpcoming] = useState<Appointment[] | null>(null);
 
@@ -52,7 +53,7 @@ export default function Teleconsultation() {
   if (!upcoming) {
     return (
       <>
-        <Stack.Screen options={{ title: "Téléconsultation" }} />
+        <Stack.Screen options={{ title: t("doctor.teleconsult.title") }} />
         <Loader />
       </>
     );
@@ -62,30 +63,30 @@ export default function Teleconsultation() {
     <>
       <Stack.Screen options={{ title: "Téléconsultation" }} />
       <Screen>
-        <Card title="Configuration">
+        <Card title={t("doctor.teleconsult.configSection")}>
           <Kv
-            label="Mode"
+            label={t("doctor.teleconsult.mode")}
             value={
               settings?.consultationMode === "both"
-                ? "Cabinet + Téléconsult"
+                ? t("doctor.teleconsult.modeBoth")
                 : settings?.consultationMode === "teleconsult"
-                ? "Téléconsult uniquement"
-                : "Cabinet uniquement"
+                ? t("doctor.teleconsult.modeTeleOnly")
+                : t("doctor.teleconsult.modeCabinetOnly")
             }
           />
           <Kv
-            label="Tarif téléconsult"
+            label={t("doctor.teleconsult.feeTeleconsult")}
             value={
               settings?.teleconsultFee
                 ? `${(settings.teleconsultFee / 1000).toFixed(3).replace(".", ",")} DT`
-                : "Non défini"
+                : t("doctor.teleconsult.feeNotSet")
             }
           />
         </Card>
 
-        <Card title={`Sessions à venir (${upcoming.length})`}>
+        <Card title={t("doctor.teleconsult.upcomingSessions", { count: upcoming.length })}>
           {upcoming.length === 0 ? (
-            <Empty icon="videocam-outline" title="Aucune session programmée" />
+            <Empty icon="videocam-outline" title={t("doctor.teleconsult.noSessions")} />
           ) : (
             upcoming.slice(0, 20).map((a) => (
               <View key={a.id} style={styles.row}>
@@ -109,8 +110,7 @@ export default function Teleconsultation() {
         </Card>
 
         <Banner>
-          Lancer une consultation vidéo depuis cette app arrive bientôt. Pour
-          l&apos;instant, utilise le portail web.
+          {t("doctor.teleconsult.webOnlyHint")}
         </Banner>
       </Screen>
     </>

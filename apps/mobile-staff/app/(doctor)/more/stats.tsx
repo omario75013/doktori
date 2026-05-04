@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
 import Svg, { Rect, Text as SvgText } from "react-native-svg";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Card, Kv, Loader } from "./_ui";
 
 type Appointment = {
@@ -12,6 +12,7 @@ type Appointment = {
 };
 
 export default function Stats() {
+  const { locale } = useLocale();
   const [appts, setAppts] = useState<Appointment[] | null>(null);
 
   useEffect(() => {
@@ -28,7 +29,7 @@ export default function Stats() {
   if (!appts) {
     return (
       <>
-        <Stack.Screen options={{ title: "Stats" }} />
+        <Stack.Screen options={{ title: t("doctor.stats.title") }} />
         <Loader />
       </>
     );
@@ -61,28 +62,28 @@ export default function Stats() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "Stats" }} />
+      <Stack.Screen options={{ title: t("doctor.stats.title") }} />
       <Screen>
         <View style={{ flexDirection: "row", gap: spacing.sm }}>
-          <Kpi label="Ce mois" value={String(monthAppts.length)} />
-          <Kpi label="Terminés" value={String(completed)} accent="#1E40AF" />
-          <Kpi label="Absents" value={String(noShow)} accent="#991B1B" />
+          <Kpi label={t("doctor.stats.thisMonth")} value={String(monthAppts.length)} />
+          <Kpi label={t("doctor.stats.completed")} value={String(completed)} accent="#1E40AF" />
+          <Kpi label={t("doctor.stats.absent")} value={String(noShow)} accent="#991B1B" />
         </View>
         <View style={{ flexDirection: "row", gap: spacing.sm }}>
-          <Kpi label="Taux présence" value={`${showRate}%`} accent="#16A34A" />
-          <Kpi label="Annulations" value={`${cancelRate}%`} accent="#C2410C" />
+          <Kpi label={t("doctor.stats.presenceRate")} value={`${showRate}%`} accent="#16A34A" />
+          <Kpi label={t("doctor.stats.cancellations")} value={`${cancelRate}%`} accent="#C2410C" />
         </View>
 
-        <Card title="RDV par semaine — 12 dernières semaines">
+        <Card title={t("doctor.stats.weeklyChart")}>
           <BarChart data={last12Weeks} />
         </Card>
 
-        <Card title="Performance du mois">
-          <Kv label="Total RDV" value={String(monthAppts.length)} />
-          <Kv label="Terminés" value={String(completed)} />
-          <Kv label="Annulés" value={String(cancelled)} />
-          <Kv label="No-show" value={String(noShow)} />
-          <Kv label="Taux présence" value={`${showRate}%`} />
+        <Card title={t("doctor.stats.monthlyPerf")}>
+          <Kv label={t("doctor.stats.totalRdv")} value={String(monthAppts.length)} />
+          <Kv label={t("doctor.stats.completed")} value={String(completed)} />
+          <Kv label={t("doctor.stats.cancelled")} value={String(cancelled)} />
+          <Kv label={t("doctor.stats.noShow")} value={String(noShow)} />
+          <Kv label={t("doctor.stats.presenceRate")} value={`${showRate}%`} />
         </Card>
       </Screen>
     </>

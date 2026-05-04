@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 
 type Appointment = {
   id: string;
@@ -31,13 +31,6 @@ const STATUS_COLOR: Record<string, string> = {
   no_show: "#DC2626",
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  pending: "À confirmer",
-  confirmed: "Confirmé",
-  completed: "Terminé",
-  cancelled: "Annulé",
-  no_show: "Absent",
-};
 
 function isToday(dateStr: string): boolean {
   const d = new Date(dateStr);
@@ -46,6 +39,16 @@ function isToday(dateStr: string): boolean {
 }
 
 export default function SecretaryDashboard() {
+  const { locale } = useLocale();
+
+  const STATUS_LABEL: Record<string, string> = {
+    pending: t("secretary.dashboard.statusToConfirm"),
+    confirmed: t("secretary.dashboard.statusConfirmed"),
+    completed: t("secretary.dashboard.statusCompleted"),
+    cancelled: t("secretary.dashboard.statusCancelled"),
+    no_show: t("secretary.dashboard.statusAbsent"),
+  };
+
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -97,26 +100,26 @@ export default function SecretaryDashboard() {
       >
         {/* Header */}
         <View style={styles.headerBlock}>
-          <Text style={styles.greeting}>Tableau de bord</Text>
+          <Text style={styles.greeting}>{t("secretary.dashboard.title")}</Text>
           <Text style={styles.dateText} numberOfLines={1}>{todayStr}</Text>
         </View>
 
         {/* KPI cards */}
         <View style={styles.kpiRow}>
-          <KpiCard label="Aujourd'hui" value={todayAppts.length} icon="calendar" iconColor={colors.teal} />
-          <KpiCard label="À confirmer" value={pending} icon="time-outline" iconColor="#D97706" />
-          <KpiCard label="Confirmés" value={confirmed} icon="checkmark-circle-outline" iconColor="#059669" />
-          <KpiCard label="Absences" value={noShow} icon="alert-circle-outline" iconColor="#DC2626" />
+          <KpiCard label={t("secretary.dashboard.today")} value={todayAppts.length} icon="calendar" iconColor={colors.teal} />
+          <KpiCard label={t("secretary.dashboard.toConfirm")} value={pending} icon="time-outline" iconColor="#D97706" />
+          <KpiCard label={t("secretary.dashboard.confirmed")} value={confirmed} icon="checkmark-circle-outline" iconColor="#059669" />
+          <KpiCard label={t("secretary.dashboard.absences")} value={noShow} icon="alert-circle-outline" iconColor="#DC2626" />
         </View>
 
         {/* Today's schedule */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Planning du jour</Text>
+          <Text style={styles.sectionTitle}>{t("secretary.dashboard.planningSection")}</Text>
 
           {todayAppts.length === 0 ? (
             <View style={styles.emptyCard}>
               <Ionicons name="calendar-outline" size={36} color={colors.border} />
-              <Text style={styles.emptyText}>Aucun rendez-vous aujourd'hui</Text>
+              <Text style={styles.emptyText}>{t("secretary.dashboard.noAppointments")}</Text>
             </View>
           ) : (
             <View style={styles.timelineCard}>

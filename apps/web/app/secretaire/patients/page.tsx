@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, ar as arLocale } from "date-fns/locale";
 import { Users, Search, UserPlus, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 
@@ -37,6 +38,9 @@ function AddPatientModal({
   onClose: () => void;
   onSuccess: (patient: PatientRow) => void;
 }) {
+  const t = useTranslations("secretaire.patients");
+  const locale = useLocale();
+  const dateFnsLocale = locale === "ar" ? arLocale : fr;
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -60,11 +64,11 @@ function AddPatientModal({
         }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error ?? "Erreur lors de la création");
+      if (!res.ok) throw new Error(data.error ?? t("errorUnknown"));
       if (data.linked) {
-        toast.success("Patient existant retrouvé et lié.");
+        toast.success(t("successLinked"));
       } else {
-        toast.success("Patient créé avec succès.");
+        toast.success(t("successCreated"));
       }
       onSuccess({
         id: data.id,
@@ -76,7 +80,7 @@ function AddPatientModal({
         last_visit: new Date().toISOString(),
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur inconnue");
+      setError(e instanceof Error ? e.message : t("errorUnknown"));
     } finally {
       setSubmitting(false);
     }
@@ -92,7 +96,7 @@ function AddPatientModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Ajouter un patient</h2>
+          <h2 className="text-base font-semibold text-foreground">{t("modalTitle")}</h2>
           <button
             onClick={onClose}
             className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-secondary hover:text-foreground transition-colors"
@@ -104,7 +108,7 @@ function AddPatientModal({
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Nom complet <span className="text-red-500">*</span>
+              {t("fullName")} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -119,7 +123,7 @@ function AddPatientModal({
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Téléphone <span className="text-red-500">*</span>
+              {t("phone")} <span className="text-red-500">*</span>
             </label>
             <input
               type="tel"
@@ -133,7 +137,7 @@ function AddPatientModal({
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Email <span className="text-gray-300 font-normal normal-case">(optionnel)</span>
+              {t("email")} <span className="text-gray-300 font-normal normal-case">(optionnel)</span>
             </label>
             <input
               type="email"
@@ -146,7 +150,7 @@ function AddPatientModal({
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Date de naissance <span className="text-gray-300 font-normal normal-case">(optionnel)</span>
+              {t("dateOfBirth")} <span className="text-gray-300 font-normal normal-case">(optionnel)</span>
             </label>
             <input
               type="date"
@@ -164,7 +168,7 @@ function AddPatientModal({
               onClick={onClose}
               className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 transition-colors"
             >
-              Annuler
+              {t("cancel")}
             </button>
             <button
               type="submit"
@@ -172,7 +176,7 @@ function AddPatientModal({
               className="px-4 py-2 text-sm rounded-xl text-white font-bold disabled:opacity-40 transition-colors"
               style={{ background: "#0891B2" }}
             >
-              {submitting ? "Création…" : "Ajouter"}
+              {submitting ? t("creating") : t("add")}
             </button>
           </div>
         </form>
@@ -184,6 +188,9 @@ function AddPatientModal({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function SecretairePatientsPage() {
+  const t = useTranslations("secretaire.patients");
+  const locale = useLocale();
+  const dateFnsLocale = locale === "ar" ? arLocale : fr;
   const [patientList, setPatientList] = useState<PatientRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -196,9 +203,9 @@ export default function SecretairePatientsPage() {
     fetch("/api/secretaire/patients")
       .then((r) => r.json())
       .then((data: PatientRow[]) => setPatientList(Array.isArray(data) ? data : []))
-      .catch(() => setError("Erreur lors du chargement"))
+      .catch(() => setError(t("errorLoad")))
       .finally(() => setLoading(false));
-  }, []);
+  }, [t]);
 
   const normalizedQuery = debouncedQuery.trim().toLowerCase();
 
@@ -266,9 +273,9 @@ export default function SecretairePatientsPage() {
             <Users className="h-5 w-5" style={{ color: "#0891B2" }} />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Patients</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
             <p className="text-sm text-muted-foreground">
-              {patientList.length} patient{patientList.length !== 1 ? "s" : ""} suivis
+              {t("patientCount", { count: patientList.length })}
             </p>
           </div>
         </div>
@@ -279,7 +286,7 @@ export default function SecretairePatientsPage() {
           style={{ background: "#0891B2" }}
         >
           <UserPlus className="h-4 w-4" />
-          Ajouter un patient
+          {t("addPatient")}
         </button>
       </div>
 
@@ -290,7 +297,7 @@ export default function SecretairePatientsPage() {
           type="text"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Rechercher par nom ou téléphone…"
+          placeholder={t("searchPlaceholder")}
           className="w-full pl-9 pr-4 py-2.5 text-sm rounded-2xl border border-border bg-white shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 transition"
         />
       </div>
@@ -298,35 +305,33 @@ export default function SecretairePatientsPage() {
       {patientList.length === 0 ? (
         <div className="rounded-2xl border border-border bg-white p-12 text-center shadow-sm">
           <Users className="h-10 w-10 text-gray-200 mx-auto mb-3" strokeWidth={1.5} />
-          <p className="text-foreground font-medium mb-1">Aucun patient pour le moment</p>
-          <p className="text-sm text-gray-400 mb-4">
-            Les patients apparaîtront ici après leurs premiers rendez-vous.
-          </p>
+          <p className="text-foreground font-medium mb-1">{t("noPatients")}</p>
+          <p className="text-sm text-gray-400 mb-4">{t("noPatientsDesc")}</p>
           <button
             onClick={() => setShowAddModal(true)}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-medium"
             style={{ background: "#0891B2" }}
           >
             <UserPlus className="h-4 w-4" />
-            Ajouter un premier patient
+            {t("addFirstPatient")}
           </button>
         </div>
       ) : filtered.length === 0 ? (
         <div className="rounded-2xl border border-border bg-white p-12 text-center shadow-sm">
           <Users className="h-10 w-10 text-gray-200 mx-auto mb-3" strokeWidth={1.5} />
-          <p className="text-foreground font-medium">Aucun patient trouvé</p>
-          <p className="text-sm text-gray-400">Essayez un autre nom ou numéro de téléphone.</p>
+          <p className="text-foreground font-medium">{t("noPatientFound")}</p>
+          <p className="text-sm text-gray-400">{t("noPatientFoundDesc")}</p>
         </div>
       ) : (
         <>
           <div className="rounded-2xl border border-border bg-white shadow-sm overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="border-b border-border bg-gray-50 text-left">
-                  <th className="px-4 py-3 font-medium text-foreground">Patient</th>
-                  <th className="px-4 py-3 font-medium text-foreground">Téléphone</th>
-                  <th className="px-4 py-3 font-medium text-foreground">Visites</th>
-                  <th className="px-4 py-3 font-medium text-foreground">Dernière visite</th>
+                <tr className="border-b border-border bg-gray-50 text-start">
+                  <th className="px-4 py-3 font-medium text-foreground">{t("colPatient")}</th>
+                  <th className="px-4 py-3 font-medium text-foreground">{t("colPhone")}</th>
+                  <th className="px-4 py-3 font-medium text-foreground">{t("colVisits")}</th>
+                  <th className="px-4 py-3 font-medium text-foreground">{t("colLastVisit")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -343,7 +348,7 @@ export default function SecretairePatientsPage() {
                         <div className="text-xs text-muted-foreground">{p.email}</div>
                       )}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{p.phone}</td>
+                    <td className="px-4 py-3 text-gray-500 whitespace-nowrap" dir="ltr">{p.phone}</td>
                     <td className="px-4 py-3">
                       <span
                         className="inline-flex items-center justify-center h-6 w-6 rounded-full text-white text-xs font-bold"
@@ -354,7 +359,7 @@ export default function SecretairePatientsPage() {
                     </td>
                     <td className="px-4 py-3 text-gray-500 whitespace-nowrap">
                       {p.last_visit && p.total_visits > 0
-                        ? format(new Date(p.last_visit), "d MMM yyyy", { locale: fr })
+                        ? format(new Date(p.last_visit), "d MMM yyyy", { locale: dateFnsLocale })
                         : "—"}
                     </td>
                   </tr>
@@ -367,7 +372,12 @@ export default function SecretairePatientsPage() {
           {totalPages > 1 && (
             <div className="flex items-center justify-between pt-1">
               <p className="text-sm text-muted-foreground">
-                Page {safePage} sur {totalPages} — {filtered.length} patient{filtered.length !== 1 ? "s" : ""}
+                {t("pageInfo", {
+                  page: safePage,
+                  total: totalPages,
+                  count: filtered.length,
+                  plural: filtered.length !== 1 ? "s" : "",
+                })}
               </p>
               <div className="flex items-center gap-2">
                 <button
@@ -376,14 +386,14 @@ export default function SecretairePatientsPage() {
                   className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-xl border border-border bg-white text-foreground hover:bg-secondary transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
                   <ChevronLeft className="h-4 w-4" />
-                  Précédent
+                  {t("prevPage")}
                 </button>
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={safePage === totalPages}
                   className="inline-flex items-center gap-1 px-3 py-1.5 text-sm rounded-xl border border-border bg-white text-foreground hover:bg-secondary transition disabled:opacity-40 disabled:cursor-not-allowed"
                 >
-                  Suivant
+                  {t("nextPage")}
                   <ChevronRight className="h-4 w-4" />
                 </button>
               </div>

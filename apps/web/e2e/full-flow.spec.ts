@@ -212,6 +212,42 @@ test.describe("API — Health Checks", () => {
     expect(plans[1].id).toBe("pro");
   });
 
+  test("new feature APIs require auth (days-off, status, plan)", async ({ request }) => {
+    const authRequired = [
+      "/api/doctor/days-off",
+      "/api/doctor/status",
+      "/api/doctor/plan",
+    ];
+    for (const url of authRequired) {
+      const res = await request.get(`${BASE}${url}`);
+      expect(res.status(), `${url} should require auth`).toBeGreaterThanOrEqual(401);
+    }
+  });
+
+  test("public doctor status endpoint accessible without auth", async ({ request }) => {
+    // Use a known doctor slug from production to get a doctorId
+    const searchRes = await request.get(`${BASE}/api/search?q=&limit=1`);
+    if (!searchRes.ok()) return; // skip if search fails
+    const results = await searchRes.json() as Array<{ id?: string }>;
+    if (!results.length || !results[0].id) return;
+    const doctorId = results[0].id;
+    const res = await request.get(`${BASE}/api/doctors/${doctorId}/status`);
+    // Should be 200 or 404 (if doctor not found) — never 401
+    expect(res.status()).not.toBe(401);
+    expect(res.status()).toBeLessThan(500);
+  });
+
+  test("public days-off endpoint accessible without auth", async ({ request }) => {
+    const searchRes = await request.get(`${BASE}/api/search?q=&limit=1`);
+    if (!searchRes.ok()) return;
+    const results = await searchRes.json() as Array<{ slug?: string }>;
+    if (!results.length || !results[0].slug) return;
+    const slug = results[0].slug;
+    const res = await request.get(`${BASE}/api/doctors/by-slug/${slug}/days-off`);
+    expect(res.status()).not.toBe(401);
+    expect(res.status()).toBeLessThan(500);
+  });
+
   test("protected APIs require auth", async ({ request }) => {
     const endpoints = [
       { method: "GET", url: "/api/doctor/wallet" },

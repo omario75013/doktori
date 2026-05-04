@@ -16,7 +16,7 @@ export default async function EditModelePage({ params }: PageProps) {
   }
 
   if (!(await isEnabled("prescription_templates_enabled"))) {
-    redirect("/medecin");
+    redirect("/dashboard");
   }
 
   const { id } = await params;
@@ -31,19 +31,15 @@ export default async function EditModelePage({ params }: PageProps) {
     notFound();
   }
 
-  // Official templates cannot be edited — redirect to list
-  if (template.isOfficial) {
-    redirect("/modeles");
-  }
-
-  // Must own the template
-  if (template.doctorId !== session.user.id) {
+  // Official templates → read-only view; mine → edit; others' → list
+  const isOwner = template.doctorId === session.user.id;
+  if (!template.isOfficial && !isOwner) {
     redirect("/modeles");
   }
 
   return (
     <TemplateEditor
-      mode="edit"
+      mode={template.isOfficial ? "view" : "edit"}
       initialData={{
         id: template.id,
         title: template.title,

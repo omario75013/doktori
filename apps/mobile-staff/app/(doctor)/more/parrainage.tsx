@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { View, Text, Pressable, StyleSheet, Alert } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Card, Loader } from "./_ui";
 
 type Referral = {
@@ -13,6 +13,7 @@ type Referral = {
 };
 
 export default function Parrainage() {
+  const { locale } = useLocale();
   const [data, setData] = useState<Referral | null>(null);
 
   useEffect(() => {
@@ -34,7 +35,7 @@ export default function Parrainage() {
   if (!data) {
     return (
       <>
-        <Stack.Screen options={{ title: "Parrainage" }} />
+        <Stack.Screen options={{ title: t("doctor.parrainage.title") }} />
         <Loader />
       </>
     );
@@ -43,15 +44,15 @@ export default function Parrainage() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "Parrainage" }} />
+      <Stack.Screen options={{ title: t("doctor.parrainage.title") }} />
       <Screen>
         <View style={styles.hero}>
           <Ionicons name="gift" size={28} color="#FFFFFF" />
-          <Text style={styles.heroTitle}>Votre code de parrainage</Text>
+          <Text style={styles.heroTitle}>{t("doctor.parrainage.codeSection")}</Text>
           {data.code ? (
             <Pressable
               onPress={() =>
-                data?.code && Alert.alert("Votre code", data.code, [{ text: "OK" }])
+                data?.code && Alert.alert(t("doctor.parrainage.codeSection"), data.code, [{ text: t("common.ok") }])
               }
               style={styles.codeBox}
             >
@@ -60,32 +61,32 @@ export default function Parrainage() {
             </Pressable>
           ) : (
             <Text style={styles.heroEmpty}>
-              Aucun code généré. Contactez l&apos;admin.
+              {t("doctor.parrainage.noCode")}
             </Text>
           )}
         </View>
 
         <View style={{ flexDirection: "row", gap: spacing.sm }}>
-          <Stat label="Parrainés" value={String(data.totalReferred)} />
-          <Stat label="Validés" value={String(data.validated)} />
+          <Stat label={t("doctor.parrainage.sponsored")} value={String(data.totalReferred)} />
+          <Stat label={t("doctor.parrainage.validated")} value={String(data.validated)} />
           <Stat
-            label="Gains"
+            label={t("doctor.parrainage.earnings")}
             value={`${((data.rewardEarnedMillimes ?? 0) / 1000).toFixed(0)} DT`}
           />
         </View>
 
-        <Card title="Comment ça marche ?">
+        <Card title={t("doctor.parrainage.howTitle")}>
           <Row
             icon="share"
-            text="Partagez votre code avec un confrère qui s'inscrit sur Doktori."
+            text={t("doctor.parrainage.step1")}
           />
           <Row
             icon="checkmark-circle"
-            text="Dès sa validation par l'équipe Doktori, vous gagnez un crédit."
+            text={t("doctor.parrainage.step2")}
           />
           <Row
             icon="wallet"
-            text="Le crédit est ajouté à votre wallet et utilisable immédiatement."
+            text={t("doctor.parrainage.step3")}
           />
         </Card>
       </Screen>

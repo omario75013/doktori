@@ -1,0 +1,9 @@
+﻿
+
+> doktori-desktop@0.1.0 dev C:\Users\user2024\Desktop\doktori\apps\desktop
+> tauri dev
+
+     Running DevCommand (`cargo  run --no-default-features --color always --`)
+        Info Watching C:\Users\user2024\Desktop\doktori\apps\desktop\src-tauri for changes...
+[1m[92m    Finished[0m ]8;;https://doc.rust-lang.org/cargo/reference/profiles.html#default-profiles\`dev` profile [unoptimized + debuginfo]]8;;\ target(s) in 15.13s
+[1m[92m     Running[0m `target\debug\doktori-desktop.exe`

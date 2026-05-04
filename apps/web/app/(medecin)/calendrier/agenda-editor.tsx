@@ -110,6 +110,8 @@ const timeInputClass =
 
 export function AgendaEditor() {
   const t = useTranslations("medecin.agenda");
+  const tCal = useTranslations("medecin.calendrier");
+  const tCommon = useTranslations("medecin.common");
 
   const DAY_LABELS: Record<number, string> = {
     1: t("days.1"),
@@ -136,7 +138,7 @@ export function AgendaEditor() {
     async function fetchPractices() {
       try {
         const res = await fetch("/api/doctor/practices");
-        if (!res.ok) throw new Error("Erreur chargement cabinets");
+        if (!res.ok) throw new Error(t("loadError"));
         const data: Practice[] = await res.json();
         const active = data.filter((p) => p.isActive);
         setPractices(active);
@@ -145,7 +147,7 @@ export function AgendaEditor() {
           setSelectedPracticeId(primary.id);
         }
       } catch {
-        setFeedback({ type: "error", message: "Erreur chargement cabinets" });
+        setFeedback({ type: "error", message: t("loadError") });
       } finally {
         setLoadingPractices(false);
       }
@@ -200,7 +202,7 @@ export function AgendaEditor() {
       if (!day.morningOpen && !day.afternoonOpen) {
         setFeedback({
           type: "error",
-          message: `${DAY_LABELS[day.dayOfWeek]} : activez au moins une plage (matin ou après-midi)`,
+          message: tCal("errorAtLeastOnePeriod", { day: DAY_LABELS[day.dayOfWeek] }),
         });
         setSaving(false);
         return;
@@ -285,18 +287,17 @@ export function AgendaEditor() {
             <Building2 className="h-7 w-7 text-primary" />
           </div>
           <h3 className="mt-4 text-lg font-bold text-foreground">
-            Ajoutez au moins un cabinet
+            {tCal("emptyAddCabinetTitle")}
           </h3>
           <p className="mt-2 text-sm text-foreground/60 max-w-md mx-auto">
-            Les horaires d'agenda sont définis par cabinet. Créez votre premier cabinet (ou
-            clinique affiliée) pour commencer à configurer vos disponibilités.
+            {tCal("emptyAddCabinetDesc")}
           </p>
           <Link
             href="/cabinets"
             className="mt-6 inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90"
           >
             <Plus className="h-4 w-4" />
-            Gérer mes cabinets
+            {tCal("managePracticesBtn")}
           </Link>
         </div>
       </div>
@@ -333,12 +334,12 @@ export function AgendaEditor() {
             {p.name}
             {p.isPrimary && (
               <span className="text-[10px] rounded-full bg-white/20 px-1.5 py-0.5">
-                Principal
+                {tCommon("primary")}
               </span>
             )}
             {p.kind === "clinic" && (
               <span className="text-[10px] rounded-full bg-blue-100 text-blue-700 px-1.5 py-0.5">
-                Clinique
+                {tCommon("clinic")}
               </span>
             )}
           </button>
@@ -348,7 +349,7 @@ export function AgendaEditor() {
           className="inline-flex items-center gap-1 rounded-xl border border-dashed border-border px-3 py-1.5 text-sm font-medium text-foreground/60 hover:bg-secondary"
         >
           <Plus className="h-3.5 w-3.5" />
-          Ajouter un cabinet
+          {tCal("addCabinetBtn")}
         </Link>
       </div>
 

@@ -693,7 +693,7 @@ export default function PatientDashboardPage() {
         {cancelConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div className="mx-4 w-full max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-xl border border-border dark:border-gray-700">
-              <h3 className="text-lg font-bold text-foreground">
+              <h3 dir="ltr" className="text-lg font-bold text-foreground">
                 Annuler ce rendez-vous ?
               </h3>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">

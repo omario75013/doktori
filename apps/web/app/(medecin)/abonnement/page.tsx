@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -37,6 +38,7 @@ interface Subscription {
 }
 
 export default function AbonnementPage() {
+  const t = useTranslations("medecin.abonnement");
   const [plans, setPlans] = useState<Plan[]>([]);
   const [current, setCurrent] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
@@ -78,7 +80,7 @@ export default function AbonnementPage() {
       setPromoCode("");
     } else {
       const data = await res.json();
-      setPromoError(data.error ?? "Erreur lors de l'application du code promo.");
+      setPromoError(data.error ?? t("promoErrorFallback"));
     }
 
     setPromoLoading(false);
@@ -95,7 +97,7 @@ export default function AbonnementPage() {
       const data = await res.json();
       window.location.href = data.paymentUrl;
     } else {
-      setCheckoutError("Erreur lors du checkout. Veuillez réessayer.");
+      setCheckoutError(t("checkoutErrorRetry"));
       setCheckingOut(null);
     }
   }
@@ -105,7 +107,7 @@ export default function AbonnementPage() {
       <div className="flex items-center justify-center py-20">
         <div className="flex items-center gap-3 text-primary">
           <div className="h-5 w-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
-          <span className="text-sm font-medium">Chargement des plans...</span>
+          <span className="text-sm font-medium">{t("loading")}</span>
         </div>
       </div>
     );
@@ -150,7 +152,7 @@ export default function AbonnementPage() {
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-1">
               <span className="text-sm font-bold text-foreground">
-                {isTrial ? "Essai gratuit" : `Plan ${current.plan}`}
+                {isTrial ? t("trialLabel") : t("planLabel", { plan: current.plan })}
               </span>
               <span
                 className={`inline-flex items-center rounded-md px-2 py-0.5 text-xs font-semibold ${
@@ -161,31 +163,29 @@ export default function AbonnementPage() {
                     : "bg-gray-100 text-gray-600"
                 }`}
               >
-                {isTrial ? "Essai" : current.status === "active" ? "Actif" : current.status}
+                {isTrial ? t("statusTrial") : current.status === "active" ? t("statusActive") : current.status}
               </span>
             </div>
             {current.endsAt && (
               <p className="text-sm text-gray-600">
                 {isTrial ? (
                   <>
-                    Votre essai expire le{" "}
-                    <strong>{format(new Date(current.endsAt), "d MMMM yyyy", { locale: fr })}</strong>
+                    {t("trialExpiresOn", { date: format(new Date(current.endsAt), "d MMMM yyyy", { locale: fr }) })}
                     {daysLeft > 0 && (
-                      <span className="text-amber-600 font-semibold"> ({daysLeft} jours restants)</span>
+                      <span className="text-amber-600 font-semibold"> ({t("daysLeft", { count: daysLeft })})</span>
                     )}
-                    . Choisissez un plan pour continuer sans interruption.
+                    {" "}{t("trialChoosePlan")}
                   </>
                 ) : (
                   <>
-                    Renouvellement le{" "}
-                    <strong>{format(new Date(current.endsAt), "d MMMM yyyy", { locale: fr })}</strong>
+                    {t("renewalDate", { date: format(new Date(current.endsAt), "d MMMM yyyy", { locale: fr }) })}
                   </>
                 )}
               </p>
             )}
             {isTrial && (
               <p className="text-xs text-amber-600 mt-1.5">
-                Pendant l&apos;essai, vous avez accès à toutes les fonctionnalités du plan Pro.
+                {t("trialNote")}
               </p>
             )}
           </div>
@@ -202,7 +202,7 @@ export default function AbonnementPage() {
           <button
             onClick={() => setCheckoutError(null)}
             className="text-red-400 hover:text-red-600"
-            aria-label="Fermer"
+            aria-label={t("closeBtnLabel")}
           >
             <X className="h-4 w-4" />
           </button>
@@ -213,13 +213,13 @@ export default function AbonnementPage() {
       <div className="rounded-2xl border border-border bg-white p-5">
         <div className="flex items-center gap-2 mb-3">
           <Tag className="h-4 w-4 text-primary" />
-          <h2 className="font-semibold text-foreground text-sm">Code promo</h2>
+          <h2 className="font-semibold text-foreground text-sm">{t("promoCodeSection")}</h2>
         </div>
 
         {promoSuccess && (
           <div className="mb-3 rounded-lg bg-green-50 border border-green-200 px-4 py-2.5 text-sm text-green-700 flex items-center gap-2">
             <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-            Code appliqué ! {promoSuccess}
+            {t("promoApplied") + " " + promoSuccess}
           </div>
         )}
 
@@ -234,7 +234,7 @@ export default function AbonnementPage() {
               setPromoError(null);
               setPromoSuccess(null);
             }}
-            placeholder="Entrez votre code promo"
+            placeholder={t("promoPlaceholder")}
             className="flex-1 border border-border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary uppercase"
             onKeyDown={(e) => {
               if (e.key === "Enter") applyPromo();
@@ -245,7 +245,7 @@ export default function AbonnementPage() {
             disabled={promoLoading || !promoCode.trim()}
             className="px-5 py-2.5 bg-primary text-white rounded-xl text-sm font-bold hover:bg-doktori-teal-dark transition-colors disabled:opacity-60 whitespace-nowrap"
           >
-            {promoLoading ? "..." : "Appliquer"}
+            {promoLoading ? "..." : t("applyButton")}
           </button>
         </div>
       </div>
@@ -270,7 +270,7 @@ export default function AbonnementPage() {
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                   <span className="inline-flex items-center gap-1 rounded-full bg-primary px-3 py-1 text-xs font-bold text-white shadow-sm">
                     <Sparkles className="h-3 w-3" />
-                    Recommandé
+                    {t("recommendedBadge")}
                   </span>
                 </div>
               )}
@@ -288,7 +288,7 @@ export default function AbonnementPage() {
                 {isCurrent && (
                   <span className="inline-flex items-center gap-1 rounded-lg bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
                     <CheckCircle2 className="h-3 w-3" />
-                    Votre plan
+                    {t("yourPlanBadge")}
                   </span>
                 )}
               </div>
@@ -303,16 +303,16 @@ export default function AbonnementPage() {
                 <span className="text-4xl font-black text-foreground">
                   {plan.priceMillimes / 1000}
                 </span>
-                <span className="text-gray-500 text-sm"> DT/mois</span>
+                <span className="text-gray-500 text-sm"> {t("currencyPerMonth")}</span>
                 <p className="text-xs text-gray-400 mt-1">
-                  Soit {((plan.priceMillimes / 1000) * 12 * 0.85).toFixed(0)} DT/an avec -15% annuel
+                  {t("annualDiscountCalc", { price: ((plan.priceMillimes / 1000) * 12 * 0.85).toFixed(0) })}
                 </p>
               </div>
 
               {/* Features */}
               <div className="mb-5">
                 <p className="text-xs font-bold text-foreground uppercase tracking-wide mb-3">
-                  Inclus dans ce plan
+                  {t("includedFeatures")}
                 </p>
                 <ul className="space-y-2.5 text-sm">
                   {plan.features.map((f, i) => (
@@ -328,7 +328,7 @@ export default function AbonnementPage() {
               {plan.notIncluded && plan.notIncluded.length > 0 && (
                 <div className="mb-5">
                   <p className="text-xs font-bold text-gray-400 uppercase tracking-wide mb-3">
-                    Non inclus
+                    {t("notIncluded")}
                   </p>
                   <ul className="space-y-2 text-sm">
                     {plan.notIncluded.map((f, i) => (
@@ -362,10 +362,10 @@ export default function AbonnementPage() {
                 disabled={isCurrent || checkingOut !== null}
               >
                 {isCurrent
-                  ? "Plan actuel"
+                  ? t("currentPlanButton")
                   : checkingOut === plan.id
-                  ? "Redirection vers le paiement..."
-                  : `Choisir ${plan.name}`}
+                  ? t("redirecting")
+                  : t("choosePlan", { plan: plan.name })}
               </Button>
             </div>
           );
@@ -376,23 +376,23 @@ export default function AbonnementPage() {
       <div className="rounded-2xl bg-gray-50 border border-gray-100 p-5 text-sm text-gray-500 space-y-2">
         <div className="flex items-center gap-2 font-semibold text-foreground mb-2">
           <Shield className="h-4 w-4 text-primary" />
-          Informations de facturation
+          {t("billingInfoTitle")}
         </div>
         <ul className="space-y-1.5 text-xs leading-relaxed">
           <li>
-            <strong>Paiement sécurisé</strong> via Flouci ou Paymee — vos données bancaires ne sont jamais stockées sur nos serveurs.
+            <strong>{t("securePayment")}</strong> {t("securePaymentDesc")}
           </li>
           <li>
-            <strong>Facturation mensuelle</strong> — votre abonnement se renouvelle automatiquement chaque mois.
+            <strong>{t("billingMonthly")}</strong> — {t("billingMonthlyDesc")}
           </li>
           <li>
-            <strong>Annulable à tout moment</strong> — sans frais ni engagement. L&apos;accès reste actif jusqu&apos;à la fin de la période payée.
+            <strong>{t("billingCancel")}</strong> — {t("billingCancelDesc")}
           </li>
           <li>
-            <strong>Essai gratuit de 2 mois</strong> — tous les nouveaux médecins bénéficient de 2 mois d&apos;essai avec accès à toutes les fonctionnalités.
+            <strong>{t("billingTrial")}</strong> — {t("billingTrialDesc")}
           </li>
           <li>
-            <strong>Commissions sur consultations</strong> — le patient paie les téléconsultations (15% de commission Doktori) et interventions SOS (10% de commission). Le reste est crédité sur votre portefeuille Doktori et reversé mensuellement.
+            <strong>{t("billingCommissions")}</strong> — {t("billingCommissionsDesc")}
           </li>
         </ul>
       </div>

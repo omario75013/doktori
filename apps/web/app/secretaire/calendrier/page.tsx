@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import Link from "next/link";
 import {
   ChevronLeft,
@@ -12,6 +13,7 @@ import {
   Loader2,
   Pencil,
 } from "lucide-react";
+import type { Locale } from "date-fns";
 import {
   format,
   startOfWeek,
@@ -33,7 +35,7 @@ import {
   getMinutes,
   differenceInMinutes,
 } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, ar as arLocale } from "date-fns/locale";
 import { toast } from "sonner";
 
 type Appt = {
@@ -50,6 +52,13 @@ type Appt = {
 
 type View = "day" | "week" | "month" | "year";
 
+type DayOff = { id: string; startDate: string; endDate: string; reason: string | null };
+
+function isDayOff(date: Date, daysOff: DayOff[]): boolean {
+  const ds = format(date, "yyyy-MM-dd");
+  return daysOff.some((d) => ds >= d.startDate && ds <= d.endDate);
+}
+
 const STATUS_COLOR: Record<string, string> = {
   pending: "bg-orange-200 text-orange-900 border-orange-300",
   confirmed: "bg-teal-200 text-teal-900 border-teal-300",
@@ -59,12 +68,16 @@ const STATUS_COLOR: Record<string, string> = {
 };
 
 export default function SecretaryCalendar() {
+  const t = useTranslations("secretaire.calendrier");
+  const locale = useLocale();
+  const dateFnsLocale = locale === "ar" ? arLocale : fr;
   const [view, setView] = useState<View>("week");
   const [anchor, setAnchor] = useState(new Date());
   const [workingHoursOnly, setWorkingHoursOnly] = useState(true);
   const [appts, setAppts] = useState<Appt[]>([]);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState<Appt | null>(null);
+  const [daysOff, setDaysOff] = useState<DayOff[]>([]);
 
   const range = useMemo(() => {
     if (view === "day") {
@@ -96,13 +109,20 @@ export default function SecretaryCalendar() {
         if (!res.ok) throw new Error();
         setAppts(await res.json());
       } catch {
-        toast.error("Erreur chargement RDV");
+        toast.error(t("loadError"));
       } finally {
         setLoading(false);
       }
     }
     load();
-  }, [range.start, range.end]);
+  }, [range.start, range.end, t]);
+
+  useEffect(() => {
+    fetch("/api/doctor/days-off")
+      .then((r) => r.json())
+      .then((d) => setDaysOff(Array.isArray(d) ? d : []))
+      .catch(() => null);
+  }, []);
 
   function navigate(dir: -1 | 1) {
     if (view === "day") setAnchor(addDays(anchor, dir));
@@ -122,33 +142,33 @@ export default function SecretaryCalendar() {
 
   const title =
     view === "day"
-      ? format(anchor, "EEEE d MMMM yyyy", { locale: fr })
+      ? format(anchor, "EEEE d MMMM yyyy", { locale: dateFnsLocale })
       : view === "week"
-        ? `${format(range.start, "d MMM", { locale: fr })} – ${format(range.end, "d MMM yyyy", { locale: fr })}`
+        ? `${format(range.start, "d MMM", { locale: dateFnsLocale })} – ${format(range.end, "d MMM yyyy", { locale: dateFnsLocale })}`
         : view === "month"
-          ? format(anchor, "MMMM yyyy", { locale: fr })
-          : format(anchor, "yyyy", { locale: fr });
+          ? format(anchor, "MMMM yyyy", { locale: dateFnsLocale })
+          : format(anchor, "yyyy", { locale: dateFnsLocale });
+
+  const viewOptions = [
+    { key: "day" as const, label: t("day"), icon: CalendarClock },
+    { key: "week" as const, label: t("week"), icon: CalendarDays },
+    { key: "month" as const, label: t("month"), icon: CalendarRange },
+    { key: "year" as const, label: t("year"), icon: CalendarIcon },
+  ];
 
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
         <CalendarDays className="h-6 w-6 text-primary" />
         <div>
-          <h1 className="text-2xl font-bold">Calendrier</h1>
-          <p className="text-sm text-gray-500">Rendez-vous du cabinet</p>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <p className="text-sm text-gray-500">{t("subtitle")}</p>
         </div>
       </div>
 
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
         <div className="flex items-center gap-1 rounded-2xl bg-white border border-border p-1">
-          {(
-            [
-              { key: "day" as const, label: "Jour", icon: CalendarClock },
-              { key: "week" as const, label: "Semaine", icon: CalendarDays },
-              { key: "month" as const, label: "Mois", icon: CalendarRange },
-              { key: "year" as const, label: "Année", icon: CalendarIcon },
-            ]
-          ).map((v) => {
+          {viewOptions.map((v) => {
             const Icon = v.icon;
             return (
               <button
@@ -171,24 +191,24 @@ export default function SecretaryCalendar() {
             type="button"
             onClick={() => navigate(-1)}
             className="h-9 w-9 rounded-xl border border-border bg-white flex items-center justify-center hover:bg-secondary"
-            aria-label="Précédent"
+            aria-label={t("previous")}
           >
-            <ChevronLeft className="h-4 w-4" />
+            {locale === "ar" ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
           </button>
           <button
             type="button"
             onClick={() => setAnchor(new Date())}
             className="rounded-xl border border-border bg-white px-3 py-2 text-sm font-medium hover:bg-secondary"
           >
-            Aujourd&apos;hui
+            {t("today")}
           </button>
           <button
             type="button"
             onClick={() => navigate(1)}
             className="h-9 w-9 rounded-xl border border-border bg-white flex items-center justify-center hover:bg-secondary"
-            aria-label="Suivant"
+            aria-label={t("next")}
           >
-            <ChevronRight className="h-4 w-4" />
+            {locale === "ar" ? <ChevronLeft className="h-4 w-4" /> : <ChevronRight className="h-4 w-4" />}
           </button>
           <span className="ml-2 text-sm font-semibold capitalize">{title}</span>
         </div>
@@ -199,7 +219,7 @@ export default function SecretaryCalendar() {
             checked={workingHoursOnly}
             onChange={(e) => setWorkingHoursOnly(e.target.checked)}
           />
-          Filtrer heures ouvrées
+          {t("filterWorkingHours")}
         </label>
       </div>
 
@@ -208,13 +228,13 @@ export default function SecretaryCalendar() {
           <Loader2 className="h-6 w-6 animate-spin text-primary" />
         </div>
       ) : view === "day" ? (
-        <DayView appts={filteredAppts} date={anchor} onEdit={setEditing} />
+        <DayView appts={filteredAppts} date={anchor} onEdit={setEditing} t={t} />
       ) : view === "week" ? (
-        <WeekView appts={filteredAppts} start={range.start} onEdit={setEditing} />
+        <WeekView appts={filteredAppts} start={range.start} onEdit={setEditing} t={t} dateFnsLocale={dateFnsLocale} daysOff={daysOff} />
       ) : view === "month" ? (
-        <MonthView appts={filteredAppts} date={anchor} onDayClick={(d) => { setAnchor(d); setView("day"); }} />
+        <MonthView appts={filteredAppts} date={anchor} onDayClick={(d) => { setAnchor(d); setView("day"); }} t={t} dateFnsLocale={dateFnsLocale} isArabic={locale === "ar"} daysOff={daysOff} />
       ) : (
-        <YearView appts={filteredAppts} year={anchor.getFullYear()} onMonthClick={(m) => { const d = new Date(anchor); d.setMonth(m); setAnchor(d); setView("month"); }} />
+        <YearView appts={filteredAppts} year={anchor.getFullYear()} onMonthClick={(m) => { const d = new Date(anchor); d.setMonth(m); setAnchor(d); setView("month"); }} dateFnsLocale={dateFnsLocale} />
       )}
 
       {editing && (
@@ -223,17 +243,19 @@ export default function SecretaryCalendar() {
           onClose={() => setEditing(null)}
           onSaved={() => {
             setEditing(null);
-            // Reload
             fetch(`/api/secretary/appointments?from=${range.start.toISOString()}&to=${range.end.toISOString()}`)
               .then((r) => r.json())
               .then(setAppts)
               .catch(() => {});
           }}
+          t={t}
         />
       )}
     </div>
   );
 }
+
+type TFunc = ReturnType<typeof useTranslations>;
 
 function StatusPill({ status }: { status: string }) {
   return (
@@ -247,12 +269,12 @@ function StatusPill({ status }: { status: string }) {
   );
 }
 
-function DayView({ appts, date, onEdit }: { appts: Appt[]; date: Date; onEdit: (a: Appt) => void }) {
+function DayView({ appts, date, onEdit, t }: { appts: Appt[]; date: Date; onEdit: (a: Appt) => void; t: TFunc }) {
   const list = appts.filter((a) => isSameDay(new Date(a.startsAt), date));
   if (list.length === 0) {
     return (
       <div className="rounded-2xl border border-border bg-white p-10 text-center text-sm text-gray-400">
-        Aucun rendez-vous ce jour.
+        {t("noDayAppointments")}
       </div>
     );
   }
@@ -275,7 +297,7 @@ function DayView({ appts, date, onEdit }: { appts: Appt[]; date: Date; onEdit: (
             type="button"
             onClick={() => onEdit(a)}
             className="h-8 w-8 rounded-lg border border-border bg-white flex items-center justify-center hover:bg-secondary"
-            title="Décaler"
+            title={t("reschedule")}
           >
             <Pencil className="h-3.5 w-3.5" />
           </button>
@@ -285,7 +307,7 @@ function DayView({ appts, date, onEdit }: { appts: Appt[]; date: Date; onEdit: (
   );
 }
 
-function WeekView({ appts, start, onEdit }: { appts: Appt[]; start: Date; onEdit: (a: Appt) => void }) {
+function WeekView({ appts, start, onEdit, t, dateFnsLocale, daysOff }: { appts: Appt[]; start: Date; onEdit: (a: Appt) => void; t: TFunc; dateFnsLocale: Locale; daysOff: DayOff[] }) {
   const days = eachDayOfInterval({ start, end: addDays(start, 6) });
   const HOUR_START = 8;
   const HOUR_END = 20;
@@ -304,17 +326,21 @@ function WeekView({ appts, start, onEdit }: { appts: Appt[]; start: Date; onEdit
     <div className="rounded-2xl border border-border bg-white shadow-sm overflow-x-auto">
       <div className="grid" style={{ gridTemplateColumns: "60px repeat(7, minmax(120px, 1fr))" }}>
         <div className="bg-secondary border-b border-border" />
-        {days.map((d) => (
-          <div
-            key={d.toISOString()}
-            className={`text-center p-2 border-b border-border text-xs font-semibold ${
-              isSameDay(d, new Date()) ? "bg-teal-50 text-teal-700" : "bg-secondary text-gray-600"
-            }`}
-          >
-            <div className="capitalize">{format(d, "EEE", { locale: fr })}</div>
-            <div>{format(d, "d MMM", { locale: fr })}</div>
-          </div>
-        ))}
+        {days.map((d) => {
+          const off = isDayOff(d, daysOff);
+          return (
+            <div
+              key={d.toISOString()}
+              className={`text-center p-2 border-b border-border text-xs font-semibold ${
+                off ? "bg-red-50 text-red-700" : isSameDay(d, new Date()) ? "bg-teal-50 text-teal-700" : "bg-secondary text-gray-600"
+              }`}
+            >
+              <div className="capitalize">{format(d, "EEE", { locale: dateFnsLocale })}</div>
+              <div>{format(d, "d MMM", { locale: dateFnsLocale })}</div>
+              {off && <div className="text-[9px] font-bold text-red-600 uppercase tracking-wide">Congé</div>}
+            </div>
+          );
+        })}
         {/* time rows */}
         <div className="relative" style={{ height: TOTAL_MIN }}>
           {Array.from({ length: HOUR_END - HOUR_START }).map((_, i) => (
@@ -330,8 +356,9 @@ function WeekView({ appts, start, onEdit }: { appts: Appt[]; start: Date; onEdit
         {days.map((d) => {
           const key = format(d, "yyyy-MM-dd");
           const dayAppts = byDay[key] ?? [];
+          const off = isDayOff(d, daysOff);
           return (
-            <div key={key} className="relative border-l border-border" style={{ height: TOTAL_MIN }}>
+            <div key={key} className={`relative border-l border-border ${off ? "bg-red-50/40" : ""}`} style={{ height: TOTAL_MIN }}>
               {Array.from({ length: HOUR_END - HOUR_START }).map((_, i) => (
                 <div
                   key={i}
@@ -368,7 +395,7 @@ function WeekView({ appts, start, onEdit }: { appts: Appt[]; start: Date; onEdit
   );
 }
 
-function MonthView({ appts, date, onDayClick }: { appts: Appt[]; date: Date; onDayClick: (d: Date) => void }) {
+function MonthView({ appts, date, onDayClick, t, dateFnsLocale, isArabic, daysOff }: { appts: Appt[]; date: Date; onDayClick: (d: Date) => void; t: TFunc; dateFnsLocale: Locale; isArabic: boolean; daysOff: DayOff[] }) {
   const start = startOfWeek(startOfMonth(date), { weekStartsOn: 1 });
   const end = endOfWeek(endOfMonth(date), { weekStartsOn: 1 });
   const days = eachDayOfInterval({ start, end });
@@ -377,10 +404,16 @@ function MonthView({ appts, date, onDayClick }: { appts: Appt[]; date: Date; onD
     const key = format(new Date(a.startsAt), "yyyy-MM-dd");
     byDay[key] = (byDay[key] ?? 0) + 1;
   }
+
+  // Jan 1 2024 = Monday; use it to generate Mon..Sun names
+  const dayAbbrevs = Array.from({ length: 7 }, (_, i) =>
+    format(new Date(2024, 0, 1 + i), isArabic ? "EEEE" : "EEE", { locale: dateFnsLocale })
+  );
+
   return (
     <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
       <div className="grid grid-cols-7 bg-secondary text-xs font-semibold text-center">
-        {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((d) => (
+        {dayAbbrevs.map((d) => (
           <div key={d} className="py-2 border-r last:border-r-0 border-border">
             {d}
           </div>
@@ -390,6 +423,7 @@ function MonthView({ appts, date, onDayClick }: { appts: Appt[]; date: Date; onD
         {days.map((d) => {
           const count = byDay[format(d, "yyyy-MM-dd")] ?? 0;
           const isCurrentMonth = d.getMonth() === date.getMonth();
+          const off = isCurrentMonth && isDayOff(d, daysOff);
           return (
             <button
               key={d.toISOString()}
@@ -397,12 +431,13 @@ function MonthView({ appts, date, onDayClick }: { appts: Appt[]; date: Date; onD
               onClick={() => onDayClick(d)}
               className={`min-h-[84px] p-2 text-left border-r border-b border-border last-of-type:border-r-0 hover:bg-secondary/40 ${
                 !isCurrentMonth ? "text-gray-300 bg-gray-50" : ""
-              } ${isSameDay(d, new Date()) ? "bg-teal-50" : ""}`}
+              } ${isSameDay(d, new Date()) && !off ? "bg-teal-50" : ""} ${off ? "bg-red-50" : ""}`}
             >
-              <span className="text-sm font-semibold">{d.getDate()}</span>
+              <span className={`text-sm font-semibold ${off ? "text-red-700" : ""}`}>{d.getDate()}</span>
+              {off && <span className="ms-1 text-[9px] font-bold text-red-600 uppercase">Congé</span>}
               {count > 0 && (
                 <p className="mt-1 text-[10px] inline-flex items-center rounded-full bg-primary text-white px-1.5 font-bold">
-                  {count} RDV
+                  {count} {t("rdv")}
                 </p>
               )}
             </button>
@@ -413,7 +448,7 @@ function MonthView({ appts, date, onDayClick }: { appts: Appt[]; date: Date; onD
   );
 }
 
-function YearView({ appts, year, onMonthClick }: { appts: Appt[]; year: number; onMonthClick: (m: number) => void }) {
+function YearView({ appts, year, onMonthClick, dateFnsLocale }: { appts: Appt[]; year: number; onMonthClick: (m: number) => void; dateFnsLocale: Locale }) {
   const counts = Array.from({ length: 12 }).map((_, i) => {
     return appts.filter((a) => {
       const d = new Date(a.startsAt);
@@ -421,7 +456,7 @@ function YearView({ appts, year, onMonthClick }: { appts: Appt[]; year: number; 
     }).length;
   });
   const maxCount = Math.max(1, ...counts);
-  const monthName = (i: number) => format(new Date(year, i, 1), "MMMM", { locale: fr });
+  const monthName = (i: number) => format(new Date(year, i, 1), "MMMM", { locale: dateFnsLocale });
   return (
     <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
       {counts.map((c, i) => (
@@ -450,10 +485,12 @@ function RescheduleDialog({
   appt,
   onClose,
   onSaved,
+  t,
 }: {
   appt: Appt;
   onClose: () => void;
   onSaved: () => void;
+  t: TFunc;
 }) {
   const start = new Date(appt.startsAt);
   const end = new Date(appt.endsAt);
@@ -468,7 +505,7 @@ function RescheduleDialog({
     try {
       const s = new Date(`${date}T${startTime}:00`);
       const e2 = new Date(`${date}T${endTime}:00`);
-      if (e2 <= s) throw new Error("Heure fin doit être après début");
+      if (e2 <= s) throw new Error(t("endTimeError"));
       const res = await fetch(`/api/appointments/${appt.id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -476,12 +513,12 @@ function RescheduleDialog({
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Erreur");
+        throw new Error(err.error ?? t("endTimeError"));
       }
-      toast.success("RDV décalé");
+      toast.success(t("reschedule"));
       onSaved();
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Erreur");
+      toast.error(err instanceof Error ? err.message : t("endTimeError"));
     } finally {
       setSaving(false);
     }
@@ -494,10 +531,10 @@ function RescheduleDialog({
         className="w-full max-w-sm rounded-2xl bg-white shadow-xl p-5 space-y-3"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="text-base font-semibold">Décaler le RDV</h2>
+        <h2 className="text-base font-semibold">{t("rescheduleTitle")}</h2>
         <p className="text-sm text-gray-500">{appt.patientName}</p>
         <label className="block space-y-1 text-xs font-medium text-gray-600">
-          <span>Date</span>
+          <span>{t("dateLabel")}</span>
           <input
             type="date"
             required
@@ -508,7 +545,7 @@ function RescheduleDialog({
         </label>
         <div className="grid grid-cols-2 gap-2">
           <label className="block space-y-1 text-xs font-medium text-gray-600">
-            <span>Début</span>
+            <span>{t("startLabel")}</span>
             <input
               type="time"
               required
@@ -518,7 +555,7 @@ function RescheduleDialog({
             />
           </label>
           <label className="block space-y-1 text-xs font-medium text-gray-600">
-            <span>Fin</span>
+            <span>{t("endLabel")}</span>
             <input
               type="time"
               required
@@ -530,10 +567,10 @@ function RescheduleDialog({
         </div>
         <div className="flex justify-end gap-2 pt-1">
           <button type="button" onClick={onClose} disabled={saving} className="rounded-xl border border-border px-4 py-2 text-sm font-medium hover:bg-secondary">
-            Annuler
+            {t("cancel")}
           </button>
           <button type="submit" disabled={saving} className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60">
-            {saving ? "Enregistrement…" : "Valider"}
+            {saving ? t("saving") : t("validate")}
           </button>
         </div>
       </form>

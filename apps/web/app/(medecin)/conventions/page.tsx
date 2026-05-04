@@ -7,8 +7,10 @@ import { Label } from "@/components/ui/label";
 import { INSURANCES } from "@doktori/shared";
 import { Shield, Loader2 } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 export default function ConventionsPage() {
+  const t = useTranslations("medecin.conventions");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,7 +57,7 @@ export default function ConventionsPage() {
     return (
       <div className="flex items-center gap-3 p-6 text-primary">
         <Loader2 className="h-5 w-5 animate-spin" />
-        <span className="text-sm font-medium">Chargement...</span>
+        <span className="text-sm font-medium">{t("loading")}</span>
       </div>
     );
   }
@@ -68,9 +70,9 @@ export default function ConventionsPage() {
           <Shield className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Conventions & Assurances</h1>
+          <h1 className="text-2xl font-bold text-foreground">{t("pageTitle")}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Indiquez les mutuelles et caisses d&apos;assurance maladie que vous acceptez.
+            {t("pageSubtitle")}
           </p>
         </div>
       </div>
@@ -100,10 +102,10 @@ export default function ConventionsPage() {
             disabled={saving}
             className="bg-primary hover:bg-doktori-teal-dark h-12 rounded-xl font-bold text-white"
           >
-            {saving ? "Enregistrement..." : "Enregistrer"}
+            {saving ? t("savingButton") : t("saveButton")}
           </Button>
           {savedAt && (
-            <span className="text-sm text-primary font-medium">&#x2713; Enregistré</span>
+            <span className="text-sm text-primary font-medium">{t("savedConfirmation")}</span>
           )}
         </div>
       </div>

@@ -1,0 +1,88 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e51]:
+      - link "Doktori .tn" [ref=e52] [cursor=pointer]:
+        - /url: /mon-espace
+        - generic [ref=e53]: Doktori
+        - generic [ref=e54]: .tn
+      - generic [ref=e55]:
+        - group "Changer de langue" [ref=e56]:
+          - button "Passer en français" [ref=e57]: FR
+          - button "التبديل إلى العربية" [disabled] [pressed] [ref=e58]: AR
+        - button "Menu" [ref=e60]:
+          - generic [ref=e61]: PT
+          - img [ref=e62]
+    - generic [ref=e64]:
+      - generic [ref=e66]:
+        - generic [ref=e67]:
+          - generic [ref=e68]:
+            - img [ref=e69]
+            - generic [ref=e72]: Guide · Étape 1/3
+          - button "Fermer le guide" [ref=e73]:
+            - img [ref=e74]
+        - generic [ref=e77]:
+          - heading "Actions rapides" [level=3] [ref=e78]
+          - paragraph [ref=e79]: Trouvez un médecin, consultez votre dossier médical, vos documents ou lancez un SOS en un clic.
+        - button "Suivant" [ref=e86]:
+          - text: Suivant
+          - img [ref=e87]
+      - generic [ref=e89]:
+        - generic [ref=e90]:
+          - generic [ref=e91]:
+            - img [ref=e93]
+            - generic [ref=e96]: Mon espace
+          - button "Se déconnecter" [ref=e97]:
+            - img [ref=e98]
+            - text: Se déconnecter
+        - generic [ref=e101]:
+          - img [ref=e102]
+          - paragraph [ref=e105]: Activez les notifications pour recevoir des rappels de rendez-vous
+          - generic [ref=e106]:
+            - link "Activer" [ref=e107] [cursor=pointer]:
+              - /url: /mon-espace/notifications
+            - button "Fermer" [ref=e108]:
+              - img [ref=e109]
+        - generic [ref=e112]:
+          - paragraph [ref=e113]: Bonjour,
+          - heading "+21655888777" [level=2] [ref=e114]
+          - paragraph [ref=e115]: Aucun rendez-vous à venir
+        - generic [ref=e116]:
+          - heading "Actions rapides" [level=3] [ref=e117]
+          - generic [ref=e118]:
+            - link "Trouver un médecin Rechercher par spécialité" [ref=e119] [cursor=pointer]:
+              - /url: /recherche
+              - img [ref=e121]
+              - generic [ref=e124]: Trouver un médecin
+              - generic [ref=e125]: Rechercher par spécialité
+            - link "SOS Médecin Urgence médicale rapide" [ref=e126] [cursor=pointer]:
+              - /url: /sos
+              - img [ref=e128]
+              - generic [ref=e133]: SOS Médecin
+              - generic [ref=e134]: Urgence médicale rapide
+            - link "Mes rendez-vous Consulter l'historique" [ref=e135] [cursor=pointer]:
+              - /url: /mes-rdv
+              - img [ref=e137]
+              - generic [ref=e139]: Mes rendez-vous
+              - generic [ref=e140]: Consulter l'historique
+            - link "Mon dossier Données & documents médicaux" [ref=e141] [cursor=pointer]:
+              - /url: /dossier-medical
+              - img [ref=e143]
+              - generic [ref=e146]: Mon dossier
+              - generic [ref=e147]: Données & documents médicaux
+        - generic [ref=e148]:
+          - generic [ref=e149]:
+            - heading "Rendez-vous à venir" [level=3] [ref=e150]
+            - link "Voir tout" [ref=e151] [cursor=pointer]:
+              - /url: /mes-rdv
+          - generic [ref=e152]:
+            - img [ref=e154]
+            - paragraph [ref=e156]: Pas de rendez-vous à venir
+            - paragraph [ref=e157]: Votre agenda est vide. Trouvez un médecin et prenez rendez-vous en quelques clics.
+            - link "Trouver un médecin" [ref=e158] [cursor=pointer]:
+              - /url: /recherche
+              - img [ref=e159]
+              - text: Trouver un médecin
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e38] [cursor=pointer]:
+    - img [ref=e39]
+  - alert [ref=e42]

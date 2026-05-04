@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ArrowLeft, Plus, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 type QuestionKind = "text" | "choice" | "file" | "yesno";
 
@@ -33,13 +34,14 @@ export default function QuestionsPage({
   params: Promise<{ typeId: string }>;
 }) {
   const { typeId } = use(params);
+  const t = useTranslations("medecin.questions");
+  const tCommon = useTranslations("medecin.common");
 
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Add form state
   const [label, setLabel] = useState("");
   const [kind, setKind] = useState<QuestionKind>("text");
   const [choicesRaw, setChoicesRaw] = useState("");
@@ -49,7 +51,7 @@ export default function QuestionsPage({
     setError(null);
     const res = await fetch(`/api/appointment-types/${typeId}/questions`);
     if (!res.ok) {
-      setError("Impossible de charger les questions");
+      setError(t("loadError"));
       setLoading(false);
       return;
     }
@@ -90,7 +92,7 @@ export default function QuestionsPage({
 
     if (!res.ok) {
       const data = await res.json();
-      setError(typeof data.error === "string" ? data.error : "Erreur lors de la création");
+      setError(typeof data.error === "string" ? data.error : t("creationError"));
       setSaving(false);
       return;
     }
@@ -117,7 +119,6 @@ export default function QuestionsPage({
     if (newOrder < 0 || newOrder >= questions.length) return;
 
     const target = questions[newOrder];
-    // Swap display orders
     await Promise.all([
       fetch(`/api/appointment-types/${typeId}/questions/${id}`, {
         method: "PATCH",
@@ -141,13 +142,13 @@ export default function QuestionsPage({
           className="inline-flex items-center gap-1.5 text-sm font-bold text-primary hover:underline"
         >
           <ArrowLeft className="h-4 w-4" />
-          Retour aux motifs
+          {t("backToMotifs")}
         </Link>
       </div>
 
-      <h1 className="text-2xl font-bold text-foreground mb-1">Questionnaire pré-consultation</h1>
+      <h1 className="text-2xl font-bold text-foreground mb-1">{t("pageTitle")}</h1>
       <p className="text-sm text-foreground/60 mb-6">
-        Ces questions seront posées au patient lors de la prise de rendez-vous pour ce motif.
+        {t("pageSubtitle")}
       </p>
 
       {error && (
@@ -156,20 +157,19 @@ export default function QuestionsPage({
         </div>
       )}
 
-      {/* Add question form */}
       <div className="rounded-2xl border border-border bg-white shadow-sm p-5 mb-6">
         <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
           <Plus className="h-4 w-4 text-primary" />
-          Ajouter une question
+          {t("addQuestion")}
         </h2>
         <form onSubmit={handleAdd} className="space-y-4">
           <div>
-            <Label htmlFor="label">Question</Label>
+            <Label htmlFor="label">{t("questionLabel")}</Label>
             <Input
               id="label"
               value={label}
               onChange={(e) => setLabel(e.target.value)}
-              placeholder="ex: Avez-vous des antécédents cardiaques ?"
+              placeholder={t("questionPlaceholder")}
               required
               maxLength={500}
               className="mt-1"
@@ -178,7 +178,7 @@ export default function QuestionsPage({
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <Label htmlFor="kind">Type de réponse</Label>
+              <Label htmlFor="kind">{t("responseType")}</Label>
               <select
                 id="kind"
                 value={kind}
@@ -200,7 +200,7 @@ export default function QuestionsPage({
                   onChange={(e) => setRequired(e.target.checked)}
                   className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 />
-                Obligatoire
+                {t("requiredLabel")}
               </label>
             </div>
           </div>
@@ -208,7 +208,7 @@ export default function QuestionsPage({
           {kind === "choice" && (
             <div>
               <Label htmlFor="choices">
-                Options (une par ligne, minimum 2)
+                {t("optionsLabel")}
               </Label>
               <textarea
                 id="choices"
@@ -224,28 +224,27 @@ export default function QuestionsPage({
 
           {kind === "file" && (
             <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-              Note : le téléchargement de fichiers sera disponible dans une prochaine version. Pour l&apos;instant le nom du fichier est enregistré.
+              {t("fileNote")}
             </div>
           )}
 
           <Button type="submit" disabled={saving} className="bg-primary hover:bg-doktori-teal-dark">
-            {saving ? "Ajout..." : "Ajouter la question"}
+            {saving ? t("adding") : t("addBtn")}
           </Button>
         </form>
       </div>
 
-      {/* Questions list */}
       <div className="rounded-2xl border border-border bg-white shadow-sm">
         <div className="p-4 border-b border-border">
           <h2 className="font-semibold text-foreground">
-            Questions ({loading ? "…" : questions.length})
+            {t("countLabel", { count: loading ? "…" : questions.length })}
           </h2>
         </div>
         {loading ? (
-          <p className="p-6 text-center text-sm text-foreground/40">Chargement...</p>
+          <p className="p-6 text-center text-sm text-foreground/40">{t("loading")}</p>
         ) : questions.length === 0 ? (
           <p className="p-6 text-center text-sm text-foreground/40">
-            Aucune question — ajoutez-en une ci-dessus.
+            {t("noQuestions")}
           </p>
         ) : (
           <ul className="divide-y divide-border">
@@ -280,7 +279,7 @@ export default function QuestionsPage({
                     </span>
                     {q.required && (
                       <span className="rounded-full bg-red-50 border border-red-100 text-red-600 px-2 py-0.5">
-                        Obligatoire
+                        {t("requiredLabel")}
                       </span>
                     )}
                   </div>
@@ -302,7 +301,7 @@ export default function QuestionsPage({
                   type="button"
                   onClick={() => handleDelete(q.id)}
                   className="text-red-400 hover:text-red-600 hover:bg-red-50 rounded p-1 transition-colors flex-shrink-0"
-                  title="Supprimer"
+                  title={tCommon("delete")}
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>

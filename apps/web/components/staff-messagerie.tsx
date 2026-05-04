@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { CallButton } from "@/components/call-ui";
+import { useTranslations } from "next-intl";
 
 type Thread = {
   id: string;
@@ -43,6 +44,7 @@ export function StaffMessagerie({
   selfType: "doctor" | "secretary";
   selfId: string;
 }) {
+  const t = useTranslations("medecin.messages");
   const [threads, setThreads] = useState<Thread[]>([]);
   const [peers, setPeers] = useState<Peer[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
@@ -148,7 +150,7 @@ export function StaffMessagerie({
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <MessagesSquare className="h-5 w-5" />
-          Messagerie équipe
+          {t("staffTitle")}
         </h1>
         <button
           type="button"
@@ -156,7 +158,7 @@ export function StaffMessagerie({
           className="inline-flex items-center gap-2 rounded-xl bg-primary px-3 py-2 text-sm font-semibold text-white hover:opacity-90"
         >
           <Plus className="h-4 w-4" />
-          Nouvelle conversation
+          {t("newConversation")}
         </button>
       </div>
 
@@ -168,30 +170,30 @@ export function StaffMessagerie({
             </div>
           ) : threads.length === 0 ? (
             <p className="p-6 text-center text-sm text-gray-400">
-              Aucune conversation. Cliquez sur « Nouvelle conversation ».
+              {t("noThreads")}
             </p>
           ) : (
             <ul className="divide-y divide-border">
-              {threads.map((t) => (
-                <li key={t.id}>
+              {threads.map((thread) => (
+                <li key={thread.id}>
                   <button
                     type="button"
-                    onClick={() => setActiveId(t.id)}
+                    onClick={() => setActiveId(thread.id)}
                     className={`w-full text-left p-3 flex gap-3 hover:bg-secondary/40 transition-colors ${
-                      activeId === t.id ? "bg-secondary" : ""
+                      activeId === thread.id ? "bg-secondary" : ""
                     }`}
                   >
-                    {t.peerPhotoUrl ? (
+                    {thread.peerPhotoUrl ? (
                       <Image
-                        src={t.peerPhotoUrl}
-                        alt={t.peerName}
+                        src={thread.peerPhotoUrl}
+                        alt={thread.peerName}
                         width={40}
                         height={40}
                         className="h-10 w-10 rounded-2xl object-cover shrink-0"
                       />
                     ) : (
                       <div className="h-10 w-10 rounded-2xl bg-teal-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
-                        {t.peerName
+                        {thread.peerName
                           .split(/\s+/)
                           .map((p) => p[0])
                           .slice(0, 2)
@@ -200,18 +202,18 @@ export function StaffMessagerie({
                     )}
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-semibold truncate">{t.peerName}</p>
-                        {t.unread > 0 && (
+                        <p className="text-sm font-semibold truncate">{thread.peerName}</p>
+                        {thread.unread > 0 && (
                           <span className="text-[10px] px-1.5 bg-red-500 text-white rounded-full font-bold">
-                            {t.unread}
+                            {thread.unread}
                           </span>
                         )}
                       </div>
                       <p className="text-[10px] text-gray-400 uppercase tracking-wide">
-                        {t.peerType === "doctor" ? "Médecin" : "Secrétaire"}
+                        {thread.peerType === "doctor" ? t("peerDoctor") : t("peerSecretary")}
                       </p>
-                      {t.lastMessage && (
-                        <p className="text-xs text-gray-500 truncate mt-0.5">{t.lastMessage}</p>
+                      {thread.lastMessage && (
+                        <p className="text-xs text-gray-500 truncate mt-0.5">{thread.lastMessage}</p>
                       )}
                     </div>
                   </button>
@@ -224,7 +226,7 @@ export function StaffMessagerie({
         <section className="rounded-2xl border border-border bg-white shadow-sm flex flex-col">
           {!active ? (
             <div className="flex-1 flex items-center justify-center text-sm text-gray-400">
-              Sélectionnez une conversation pour commencer
+              {t("selectThread")}
             </div>
           ) : (
             <>
@@ -245,7 +247,7 @@ export function StaffMessagerie({
                 <div className="flex-1">
                   <p className="font-semibold text-foreground">{active.peerName}</p>
                   <p className="text-xs text-gray-500 capitalize">
-                    {active.peerType === "doctor" ? "Médecin" : "Secrétaire"}
+                    {active.peerType === "doctor" ? t("peerDoctor") : t("peerSecretary")}
                   </p>
                 </div>
                 <CallButton
@@ -257,7 +259,7 @@ export function StaffMessagerie({
               <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-2">
                 {messages.length === 0 ? (
                   <p className="text-center text-sm text-gray-400 italic py-8">
-                    Aucun message encore
+                    {t("staffNoMessages")}
                   </p>
                 ) : (
                   messages.map((m) => {
@@ -290,7 +292,7 @@ export function StaffMessagerie({
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Écrivez un message…"
+                  placeholder={t("staffPlaceholder")}
                   className="flex-1 h-10 rounded-xl border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   disabled={sending}
                 />
@@ -311,13 +313,13 @@ export function StaffMessagerie({
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={() => setShowPeerPicker(false)}>
           <div className="w-full max-w-md rounded-2xl bg-white shadow-xl p-5 space-y-3" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between">
-              <h3 className="font-semibold">Choisir un interlocuteur</h3>
+              <h3 className="font-semibold">{t("choosePeer")}</h3>
               <button onClick={() => setShowPeerPicker(false)} className="h-8 w-8 rounded-lg text-gray-400 hover:bg-secondary flex items-center justify-center">
                 <X className="h-4 w-4" />
               </button>
             </div>
             {peers.length === 0 ? (
-              <p className="text-sm text-gray-400 italic">Aucun interlocuteur disponible</p>
+              <p className="text-sm text-gray-400 italic">{t("noPeers")}</p>
             ) : (
               <ul className="divide-y divide-border">
                 {peers.map((p) => (
@@ -337,7 +339,7 @@ export function StaffMessagerie({
                       <div>
                         <p className="text-sm font-semibold">{p.name}</p>
                         <p className="text-[10px] text-gray-400 uppercase">
-                          {p.type === "doctor" ? "Médecin" : "Secrétaire"}
+                          {p.type === "doctor" ? t("peerDoctor") : t("peerSecretary")}
                         </p>
                       </div>
                     </button>

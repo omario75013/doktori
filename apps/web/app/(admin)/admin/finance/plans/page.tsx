@@ -15,6 +15,10 @@ interface Plan {
   isActive: boolean;
   displayOrder: number;
   createdAt: string;
+  maxAppointmentsPerMonth: number | null;
+  maxSmsPerMonth: number | null;
+  maxPatientsTotal: number | null;
+  enabledFeatures: string[];
 }
 
 interface ApiResponse {
@@ -46,6 +50,10 @@ function EditModal({ plan, onClose, onSaved }: EditModalProps) {
   const [features, setFeatures] = useState(plan.features.join("\n"));
   const [isActive, setIsActive] = useState(plan.isActive);
   const [displayOrder, setDisplayOrder] = useState(String(plan.displayOrder));
+  const [maxAppts, setMaxAppts] = useState(plan.maxAppointmentsPerMonth !== null ? String(plan.maxAppointmentsPerMonth) : "");
+  const [maxSms, setMaxSms] = useState(plan.maxSmsPerMonth !== null ? String(plan.maxSmsPerMonth) : "");
+  const [maxPatients, setMaxPatients] = useState(plan.maxPatientsTotal !== null ? String(plan.maxPatientsTotal) : "");
+  const [enabledFeatures, setEnabledFeatures] = useState((plan.enabledFeatures ?? []).join("\n"));
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -77,6 +85,10 @@ function EditModal({ plan, onClose, onSaved }: EditModalProps) {
           features: featuresArr,
           isActive,
           displayOrder: orderNum,
+          maxAppointmentsPerMonth: maxAppts.trim() ? parseInt(maxAppts, 10) : null,
+          maxSmsPerMonth: maxSms.trim() ? parseInt(maxSms, 10) : null,
+          maxPatientsTotal: maxPatients.trim() ? parseInt(maxPatients, 10) : null,
+          enabledFeatures: enabledFeatures.split("\n").map((f) => f.trim()).filter(Boolean),
         }),
       });
       if (!r.ok) {
@@ -161,6 +173,37 @@ function EditModal({ plan, onClose, onSaved }: EditModalProps) {
               onChange={(e) => setDisplayOrder(e.target.value)}
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
             />
+          </div>
+
+          <div className="border-t border-slate-100 pt-4">
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide mb-3">Limites du plan (vide = illimité)</p>
+            <div className="grid grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">RDV / mois</label>
+                <input type="number" min={0} value={maxAppts} onChange={(e) => setMaxAppts(e.target.value)}
+                  placeholder="∞" className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">SMS / mois</label>
+                <input type="number" min={0} value={maxSms} onChange={(e) => setMaxSms(e.target.value)}
+                  placeholder="∞" className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-slate-600 mb-1">Patients total</label>
+                <input type="number" min={0} value={maxPatients} onChange={(e) => setMaxPatients(e.target.value)}
+                  placeholder="∞" className="w-full px-2 py-1.5 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-700 mb-1">
+              Fonctionnalités activées
+              <span className="ml-1 text-xs text-slate-400 font-normal">(une par ligne : teleconsult, stats, wallet, parrainage, cnam, reseau)</span>
+            </label>
+            <textarea value={enabledFeatures} onChange={(e) => setEnabledFeatures(e.target.value)}
+              rows={3} className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
+              placeholder="teleconsult&#10;stats&#10;wallet" />
           </div>
 
           <label className="flex items-center gap-3 cursor-pointer select-none">

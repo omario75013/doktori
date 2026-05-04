@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { useStaffPermissions } from "../../hooks/useStaffPermissions";
 
 type Patient = {
@@ -29,6 +29,8 @@ type Patient = {
 };
 
 export default function SecretaryPatients() {
+  const { locale } = useLocale();
+  const dateLocale = locale === "ar" ? "ar-TN" : "fr-FR";
   const { permissions } = useStaffPermissions();
   const [query, setQuery] = useState("");
   const [all, setAll] = useState<Patient[]>([]);
@@ -50,7 +52,7 @@ export default function SecretaryPatients() {
       const list = await api<Patient[]>("/api/doctor/patients", { noRedirect: true });
       setAll(list);
     } catch {
-      setError("Impossible de charger les patients");
+      setError(t("secretary.patients.errorLoad"));
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -74,7 +76,7 @@ export default function SecretaryPatients() {
 
   async function createPatient() {
     if (!newName.trim() || !newPhone.trim()) {
-      Alert.alert("Champs requis", "Nom et téléphone obligatoires");
+      Alert.alert(t("secretary.patients.requiredTitle"), t("secretary.patients.requiredDesc"));
       return;
     }
     setCreating(true);
@@ -87,7 +89,7 @@ export default function SecretaryPatients() {
       setNewName(""); setNewPhone(""); setNewEmail(""); setNewDob("");
       load();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Erreur");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("common.error"));
     } finally {
       setCreating(false);
     }
@@ -106,13 +108,13 @@ export default function SecretaryPatients() {
     return (
       <SafeAreaView edges={["top"]} style={styles.root}>
         <View style={styles.header}>
-          <Text style={styles.title}>Patients</Text>
+          <Text style={styles.title}>{t("secretary.patients.title")}</Text>
         </View>
         <View style={styles.locked}>
           <Ionicons name="lock-closed-outline" size={48} color={colors.border} />
-          <Text style={styles.lockedTitle}>Accès restreint</Text>
+          <Text style={styles.lockedTitle}>{t("secretary.patients.lockedTitle")}</Text>
           <Text style={styles.lockedText}>
-            Votre accès à la liste des patients a été désactivé par le médecin.
+            {t("secretary.patients.lockedText")}
           </Text>
         </View>
       </SafeAreaView>
@@ -122,7 +124,7 @@ export default function SecretaryPatients() {
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
       <View style={styles.header}>
-        <Text style={styles.title}>Patients</Text>
+        <Text style={styles.title}>{t("secretary.patients.title")}</Text>
         {permissions?.patientsCreate && (
           <Pressable onPress={() => setShowNew(true)} style={styles.addBtn}>
             <Ionicons name="person-add-outline" size={18} color={colors.teal} />
@@ -136,7 +138,7 @@ export default function SecretaryPatients() {
           style={styles.searchInput}
           value={query}
           onChangeText={setQuery}
-          placeholder="Rechercher un patient…"
+          placeholder={t("secretary.patients.searchPlaceholder")}
           placeholderTextColor={colors.foregroundSecondary}
         />
       </View>
@@ -145,7 +147,7 @@ export default function SecretaryPatients() {
         <View style={styles.emptyState}>
           <Text style={styles.emptyText}>{error}</Text>
           <Pressable onPress={load} style={styles.retryBtn}>
-            <Text style={styles.retryText}>Réessayer</Text>
+            <Text style={styles.retryText}>{t("common.retry")}</Text>
           </Pressable>
         </View>
       ) : (
@@ -157,7 +159,7 @@ export default function SecretaryPatients() {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Ionicons name="people-outline" size={40} color={colors.border} />
-              <Text style={styles.emptyText}>Aucun patient</Text>
+              <Text style={styles.emptyText}>{t("secretary.patients.empty")}</Text>
             </View>
           }
           renderItem={({ item }) => (
@@ -172,10 +174,10 @@ export default function SecretaryPatients() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.patientName}>{item.name}</Text>
-                <Text style={styles.patientMeta}>{item.phone}</Text>
+                <Text style={[styles.patientMeta, { writingDirection: "ltr" }]}>{item.phone}</Text>
               </View>
               {item.appointmentCount > 0 && (
-                <Text style={styles.apptCount}>{item.appointmentCount} RDV</Text>
+                <Text style={styles.apptCount}>{item.appointmentCount} {t("secretary.patients.rdvSuffix")}</Text>
               )}
               <Ionicons name="chevron-forward" size={16} color={colors.border} />
             </Pressable>
@@ -188,18 +190,18 @@ export default function SecretaryPatients() {
         <Pressable style={styles.overlay} onPress={() => setShowNew(false)} />
         <View style={styles.sheet}>
           <View style={styles.sheetHandle} />
-          <Text style={styles.sheetTitle}>Nouveau patient</Text>
+          <Text style={styles.sheetTitle}>{t("secretary.patients.newTitle")}</Text>
           <ScrollView contentContainerStyle={{ gap: spacing.md }} keyboardShouldPersistTaps="handled">
-            <Field label="Nom complet" value={newName} onChange={setNewName} placeholder="Karim Ben Ali" autoCapitalize="words" />
-            <Field label="Téléphone" value={newPhone} onChange={setNewPhone} placeholder="22123456" keyboardType="phone-pad" />
-            <Field label="Email (optionnel)" value={newEmail} onChange={setNewEmail} placeholder="email@..." keyboardType="email-address" autoCapitalize="none" />
-            <Field label="Date de naissance (JJ/MM/AAAA)" value={newDob} onChange={setNewDob} placeholder="01/01/1990" keyboardType="numeric" maxLength={10} />
+            <Field label={t("secretary.patients.fieldName")} value={newName} onChange={setNewName} placeholder={t("secretary.patients.placeholderName")} autoCapitalize="words" />
+            <Field label={t("secretary.patients.fieldPhone")} value={newPhone} onChange={setNewPhone} placeholder={t("secretary.patients.placeholderPhone")} keyboardType="phone-pad" />
+            <Field label={t("secretary.patients.fieldEmail")} value={newEmail} onChange={setNewEmail} placeholder={t("secretary.patients.placeholderEmail")} keyboardType="email-address" autoCapitalize="none" />
+            <Field label={t("secretary.patients.fieldDob")} value={newDob} onChange={setNewDob} placeholder={t("secretary.patients.placeholderDob")} keyboardType="numeric" maxLength={10} />
             <Pressable
               style={({ pressed }) => [styles.createBtn, (creating || pressed) && { opacity: 0.75 }]}
               onPress={createPatient}
               disabled={creating}
             >
-              {creating ? <ActivityIndicator color="#FFF" /> : <Text style={styles.createBtnText}>Créer le patient</Text>}
+              {creating ? <ActivityIndicator color="#FFF" /> : <Text style={styles.createBtnText}>{t("secretary.patients.createBtn")}</Text>}
             </Pressable>
           </ScrollView>
         </View>

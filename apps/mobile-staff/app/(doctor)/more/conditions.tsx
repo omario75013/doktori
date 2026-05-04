@@ -1,7 +1,7 @@
 import { View, Text, ScrollView, StyleSheet, Pressable } from "react-native";
 import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii } from "@doktori/mobile-core";
+import { colors, spacing, radii, t } from "@doktori/mobile-core";
 
 function Section({ title, children }: { title: string; children: string }) {
   return (
@@ -17,7 +17,7 @@ export default function ConditionsScreen() {
     <>
       <Stack.Screen
         options={{
-          title: "Conditions d'utilisation",
+          title: t("doctor.conditions.title"),
           headerLeft: () => (
             <Pressable onPress={() => router.back()} hitSlop={10} style={{ paddingHorizontal: spacing.sm }}>
               <Ionicons name="chevron-back" size={24} color={colors.foreground} />
@@ -27,8 +27,8 @@ export default function ConditionsScreen() {
       />
       <ScrollView style={s.root} contentContainerStyle={s.content}>
         <View style={s.header}>
-          <Text style={s.title}>Conditions générales d'utilisation</Text>
-          <Text style={s.updated}>Dernière mise à jour : 1er janvier 2026</Text>
+          <Text style={s.title}>{t("doctor.conditions.docTitle")}</Text>
+          <Text style={s.updated}>{t("doctor.conditions.updated")}</Text>
         </View>
 
         <Section title="1. Acceptation des conditions">

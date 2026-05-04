@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { colors, spacing, radii } from "@doktori/mobile-core";
+import { colors, spacing, radii, t, useLocale, changeLocale } from "@doktori/mobile-core";
 
 type MenuRowProps = {
   icon: React.ComponentProps<typeof Ionicons>["name"];
@@ -43,24 +43,25 @@ function MenuRow({ icon, label, sublabel, value, onPress, last, danger }: MenuRo
 }
 
 export default function ParametresScreen() {
+  const { locale } = useLocale();
   const [cacheCleared, setCacheCleared] = useState(false);
 
   function handleSoon() {
-    Alert.alert("Bientôt disponible", "Cette fonctionnalité arrive prochainement.");
+    Alert.alert(t("doctor.parametres.comingSoon"), t("doctor.parametres.comingSoonDesc"));
   }
 
   function handleClearCache() {
     Alert.alert(
-      "Vider le cache",
-      "Cette action supprimera les données temporaires de l'application. Continuer ?",
+      t("doctor.parametres.clearCacheTitle"),
+      t("doctor.parametres.clearCacheConfirm"),
       [
-        { text: "Annuler", style: "cancel" },
+        { text: t("common.cancel"), style: "cancel" },
         {
-          text: "Vider",
+          text: t("doctor.parametres.clearCacheBtn"),
           style: "destructive",
           onPress: () => {
             setCacheCleared(true);
-            Alert.alert("Cache vidé", "Les données temporaires ont été supprimées.");
+            Alert.alert(t("doctor.parametres.cacheCleared"), t("doctor.parametres.cacheClearedDesc"));
           },
         },
       ]
@@ -69,56 +70,72 @@ export default function ParametresScreen() {
 
   function handleSupport() {
     Linking.openURL("mailto:support@doktori.tn").catch(() => {
-      Alert.alert("Erreur", "Impossible d'ouvrir le client mail.");
+      Alert.alert(t("common.error"), t("doctor.parametres.mailError"));
     });
   }
 
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
       <ScrollView contentContainerStyle={styles.content}>
-        {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={() => router.navigate("/(secretary)/settings" as never)} style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
             <Ionicons name="arrow-back" size={22} color={colors.foreground} />
           </Pressable>
-          <Text style={styles.title}>Paramètres</Text>
+          <Text style={styles.title}>{t("doctor.parametres.title")}</Text>
         </View>
 
-        {/* Section: Affichage */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Affichage</Text>
+          <Text style={styles.sectionLabel}>{t("doctor.parametres.displaySection")}</Text>
           <View style={styles.card}>
-            <MenuRow
-              icon="language-outline"
-              label="Langue"
-              sublabel="Choisissez la langue de l'interface"
-              value="Français"
-              onPress={handleSoon}
-            />
+            <View style={[styles.menuRow, styles.menuRowBorder]}>
+              <View style={styles.menuIconWrap}>
+                <Ionicons name="language-outline" size={18} color={colors.teal} />
+              </View>
+              <View style={styles.menuText}>
+                <Text style={styles.menuLabel}>{t("doctor.parametres.language")}</Text>
+              </View>
+              <View style={styles.langRow}>
+                <Pressable
+                  onPress={() => changeLocale("fr")}
+                  style={[styles.langBtn, locale === "fr" && styles.langBtnActive]}
+                >
+                  <Text style={[styles.langBtnText, locale === "fr" && styles.langBtnTextActive]}>
+                    {t("doctor.parametres.languageFr")}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => changeLocale("ar")}
+                  style={[styles.langBtn, locale === "ar" && styles.langBtnActive]}
+                >
+                  <Text style={[styles.langBtnText, locale === "ar" && styles.langBtnTextActive]}>
+                    {t("doctor.parametres.languageAr")}
+                  </Text>
+                </Pressable>
+              </View>
+            </View>
             <MenuRow
               icon="contrast-outline"
-              label="Thème"
-              sublabel="Clair, sombre ou automatique"
-              value="Automatique"
+              label={t("doctor.parametres.theme")}
+              sublabel={t("doctor.parametres.themeHint")}
+              value={t("doctor.parametres.themeAuto")}
               onPress={handleSoon}
               last
             />
           </View>
         </View>
 
-        {/* Section: Données */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Données</Text>
+          <Text style={styles.sectionLabel}>{t("doctor.parametres.dataSection")}</Text>
           <View style={styles.card}>
             <MenuRow
               icon="trash-outline"
-              label="Vider le cache"
-              sublabel={cacheCleared ? "Cache vidé" : "Supprimer les données temporaires"}
+              label={t("doctor.parametres.clearCache")}
+              sublabel={cacheCleared ? t("doctor.parametres.cacheCleared") : t("doctor.parametres.clearCacheDesc")}
               onPress={handleClearCache}
             />
             <MenuRow
               icon="information-circle-outline"
-              label="Version de l'application"
+              label={t("doctor.parametres.appVersion")}
               value="1.0.0"
               onPress={() => {}}
               last
@@ -126,39 +143,38 @@ export default function ParametresScreen() {
           </View>
         </View>
 
-        {/* Section: À propos */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>À propos</Text>
+          <Text style={styles.sectionLabel}>{t("doctor.parametres.aboutSection")}</Text>
           <View style={styles.card}>
             <MenuRow
               icon="document-text-outline"
-              label="Conditions d'utilisation"
-              sublabel="Lire nos conditions générales"
+              label={t("doctor.parametres.conditions")}
+              sublabel={t("doctor.parametres.conditionsDesc")}
               onPress={() => router.navigate("/(secretary)/conditions" as never)}
             />
             <MenuRow
               icon="shield-checkmark-outline"
-              label="Politique de confidentialité"
-              sublabel="Comment nous traitons vos données"
+              label={t("doctor.parametres.privacy")}
+              sublabel={t("doctor.parametres.privacyDesc")}
               onPress={() => router.navigate("/(secretary)/confidentialite" as never)}
             />
             <MenuRow
               icon="information-circle-outline"
-              label="À propos de Doktori"
-              sublabel="Version, équipe et contact"
+              label={t("doctor.parametres.about")}
+              sublabel={t("doctor.parametres.aboutDesc")}
               onPress={() => router.navigate("/(secretary)/a-propos" as never)}
             />
             <MenuRow
               icon="mail-outline"
-              label="Contacter le support"
-              sublabel="support@doktori.tn"
+              label={t("doctor.parametres.support")}
+              sublabel={t("doctor.parametres.supportEmail")}
               onPress={handleSupport}
               last
             />
           </View>
         </View>
 
-        <Text style={styles.footer}>Doktori · Espace Secrétaire · v1.0.0</Text>
+        <Text style={styles.footer}>Doktori · {t("secretary.settings.spaceLabel")} · v1.0.0</Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -167,7 +183,6 @@ export default function ParametresScreen() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
   content: { paddingBottom: spacing["3xl"], gap: spacing.lg },
-
   header: {
     flexDirection: "row",
     paddingHorizontal: spacing.xl,
@@ -177,52 +192,37 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   title: { fontSize: 18, fontWeight: "700", color: colors.foreground },
-
   section: { gap: spacing.sm, paddingHorizontal: spacing.xl },
   sectionLabel: {
-    fontSize: 11,
-    fontWeight: "700",
-    color: colors.foregroundSecondary,
-    textTransform: "uppercase",
-    letterSpacing: 0.5,
-    paddingHorizontal: 4,
+    fontSize: 11, fontWeight: "700", color: colors.foregroundSecondary,
+    textTransform: "uppercase", letterSpacing: 0.5, paddingHorizontal: 4,
   },
-
   card: {
-    backgroundColor: colors.bgSecondary,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
-    overflow: "hidden",
+    backgroundColor: colors.bgSecondary, borderWidth: 1, borderColor: colors.border,
+    borderRadius: radii.lg, overflow: "hidden",
   },
-
   menuRow: {
-    flexDirection: "row",
-    alignItems: "center",
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.md,
-    gap: spacing.md,
-    backgroundColor: colors.bgSecondary,
+    flexDirection: "row", alignItems: "center", padding: spacing.md,
+    gap: spacing.md, backgroundColor: colors.bg,
   },
   menuRowBorder: { borderBottomWidth: 1, borderBottomColor: colors.border },
   menuIconWrap: {
-    width: 34,
-    height: 34,
-    borderRadius: radii.md,
-    backgroundColor: colors.bg,
-    alignItems: "center",
-    justifyContent: "center",
+    width: 34, height: 34, borderRadius: radii.md, backgroundColor: colors.bgSecondary,
+    alignItems: "center", justifyContent: "center",
   },
   menuIconWrapDanger: { backgroundColor: "#FEF2F2" },
   menuText: { flex: 1 },
   menuLabel: { fontSize: 14, fontWeight: "600", color: colors.foreground },
   menuSublabel: { fontSize: 12, color: colors.foregroundSecondary, marginTop: 1 },
-  menuValue: { fontSize: 13, color: colors.foregroundSecondary, marginRight: 4 },
-
-  footer: {
-    textAlign: "center",
-    fontSize: 12,
-    color: colors.border,
-    marginTop: spacing.sm,
+  menuValue: { fontSize: 13, color: colors.foregroundSecondary },
+  langRow: { flexDirection: "row", gap: spacing.xs },
+  langBtn: {
+    paddingHorizontal: spacing.sm, paddingVertical: 5,
+    borderRadius: radii.md, borderWidth: 1, borderColor: colors.border,
+    backgroundColor: colors.bgSecondary,
   },
+  langBtnActive: { backgroundColor: colors.teal, borderColor: colors.teal },
+  langBtnText: { fontSize: 13, fontWeight: "600", color: colors.foregroundSecondary },
+  langBtnTextActive: { color: "#FFFFFF" },
+  footer: { textAlign: "center", fontSize: 12, color: colors.border, marginTop: spacing.sm },
 });

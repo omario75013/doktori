@@ -4,6 +4,7 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { Loader2, CheckCircle2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Education = { degree: string; institution: string; year: number };
 type Experience = { role: string; place: string; startYear: number; endYear: number | null };
@@ -19,6 +20,8 @@ type Props = {
 };
 
 export function ParcoursEditor({ initial }: Props) {
+  const t = useTranslations("medecin.parcours");
+  const tCommon = useTranslations("medecin.common");
   const [educations, setEducations] = useState<Education[]>(initial.educations);
   const [experiences, setExperiences] = useState<Experience[]>(initial.experiences);
   const [languages, setLanguages] = useState<string[]>(initial.languages);
@@ -59,11 +62,11 @@ export function ParcoursEditor({ initial }: Props) {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error ?? "Échec de la sauvegarde");
+        throw new Error(body.error ?? tCommon("error"));
       }
-      toast.success("Parcours enregistré avec succès");
+      toast.success(t("savedSuccess"));
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur inconnue");
+      toast.error(e instanceof Error ? e.message : tCommon("unknownError"));
     } finally {
       setSaving(false);
     }
@@ -79,7 +82,7 @@ export function ParcoursEditor({ initial }: Props) {
       transition={{ duration: 0.3, ease: "easeOut" }}
     >
       <section className="bg-white dark:bg-gray-800 rounded-xl border border-border dark:border-gray-700 p-5 shadow-sm">
-        <h2 className="font-semibold mb-3 text-foreground">Années d&apos;expérience</h2>
+        <h2 className="font-semibold mb-3 text-foreground">{t("yearsExperience")}</h2>
         <input
           type="number"
           min={0}
@@ -87,36 +90,36 @@ export function ParcoursEditor({ initial }: Props) {
           value={years ?? ""}
           onChange={(e) => setYears(e.target.value === "" ? null : Number(e.target.value))}
           className={`w-32 ${inputCls}`}
-          placeholder="ex. 12"
+          placeholder={t("yearsPlaceholder")}
         />
       </section>
 
       <section className="bg-white dark:bg-gray-800 rounded-xl border border-border dark:border-gray-700 p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-foreground">Formation</h2>
+          <h2 className="font-semibold text-foreground">{t("educationLabel")}</h2>
           <button
             type="button"
             onClick={addEducation}
             className="text-sm text-teal-600 hover:text-teal-700 font-medium transition-colors"
           >
-            + Ajouter
+            {t("addButton")}
           </button>
         </div>
         {educations.length === 0 && (
-          <p className="text-sm text-gray-400 dark:text-gray-500">Aucune formation renseignée.</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">{t("noEducation")}</p>
         )}
         <div className="space-y-3">
           {educations.map((edu, i) => (
             <div key={i} className="grid grid-cols-12 gap-2 items-start">
               <input
                 className={`col-span-5 ${inputCls}`}
-                placeholder="Diplôme (ex. MD)"
+                placeholder={t("degreePlaceholder")}
                 value={edu.degree}
                 onChange={(e) => updateEducation(i, { degree: e.target.value })}
               />
               <input
                 className={`col-span-5 ${inputCls}`}
-                placeholder="Établissement"
+                placeholder={t("institutionLabel")}
                 value={edu.institution}
                 onChange={(e) => updateEducation(i, { institution: e.target.value })}
               />
@@ -131,7 +134,7 @@ export function ParcoursEditor({ initial }: Props) {
                 onClick={() => removeEducation(i)}
                 className="col-span-1 text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
               >
-                Suppr.
+                {tCommon("deleteShort")}
               </button>
             </div>
           ))}
@@ -140,44 +143,44 @@ export function ParcoursEditor({ initial }: Props) {
 
       <section className="bg-white dark:bg-gray-800 rounded-xl border border-border dark:border-gray-700 p-5 shadow-sm">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="font-semibold text-foreground">Expérience professionnelle</h2>
+          <h2 className="font-semibold text-foreground">{t("experienceLabel")}</h2>
           <button
             type="button"
             onClick={addExperience}
             className="text-sm text-teal-600 hover:text-teal-700 font-medium transition-colors"
           >
-            + Ajouter
+            {t("addButton")}
           </button>
         </div>
         {experiences.length === 0 && (
-          <p className="text-sm text-gray-400 dark:text-gray-500">Aucune expérience renseignée.</p>
+          <p className="text-sm text-gray-400 dark:text-gray-500">{t("noExperience")}</p>
         )}
         <div className="space-y-3">
           {experiences.map((exp, i) => (
             <div key={i} className="grid grid-cols-12 gap-2 items-start">
               <input
                 className={`col-span-4 ${inputCls}`}
-                placeholder="Poste"
+                placeholder={t("positionLabel")}
                 value={exp.role}
                 onChange={(e) => updateExperience(i, { role: e.target.value })}
               />
               <input
                 className={`col-span-4 ${inputCls}`}
-                placeholder="Lieu"
+                placeholder={t("locationLabel")}
                 value={exp.place}
                 onChange={(e) => updateExperience(i, { place: e.target.value })}
               />
               <input
                 type="number"
                 className={`col-span-1 ${inputCls}`}
-                placeholder="Début"
+                placeholder={t("startLabel")}
                 value={exp.startYear}
                 onChange={(e) => updateExperience(i, { startYear: Number(e.target.value) })}
               />
               <input
                 type="number"
                 className={`col-span-2 ${inputCls}`}
-                placeholder="Fin"
+                placeholder={t("endLabel")}
                 value={exp.endYear ?? ""}
                 onChange={(e) =>
                   updateExperience(i, {
@@ -190,7 +193,7 @@ export function ParcoursEditor({ initial }: Props) {
                 onClick={() => removeExperience(i)}
                 className="col-span-1 text-xs text-red-500 hover:text-red-700 font-medium transition-colors"
               >
-                Suppr.
+                {tCommon("deleteShort")}
               </button>
             </div>
           ))}
@@ -198,11 +201,11 @@ export function ParcoursEditor({ initial }: Props) {
       </section>
 
       <section className="bg-white dark:bg-gray-800 rounded-xl border border-border dark:border-gray-700 p-5 shadow-sm">
-        <h2 className="font-semibold mb-3 text-foreground">Langues parlées</h2>
+        <h2 className="font-semibold mb-3 text-foreground">{t("languagesLabel")}</h2>
         <input
           type="text"
           className={`w-full ${inputCls}`}
-          placeholder="Français, Arabe, Anglais (séparées par virgule)"
+          placeholder={t("languagesPlaceholder")}
           value={languages.join(", ")}
           onChange={(e) =>
             setLanguages(
@@ -216,11 +219,11 @@ export function ParcoursEditor({ initial }: Props) {
       </section>
 
       <section className="bg-white dark:bg-gray-800 rounded-xl border border-border dark:border-gray-700 p-5 shadow-sm">
-        <h2 className="font-semibold mb-3 text-foreground">Expertises / sur-spécialités</h2>
+        <h2 className="font-semibold mb-3 text-foreground">{t("expertiseLabel")}</h2>
         <input
           type="text"
           className={`w-full ${inputCls}`}
-          placeholder="Diabète, Hypertension, Cardiologie du sport (séparées par virgule)"
+          placeholder={t("expertisePlaceholder")}
           value={expertise.join(", ")}
           onChange={(e) =>
             setExpertise(
@@ -243,12 +246,12 @@ export function ParcoursEditor({ initial }: Props) {
           {saving ? (
             <>
               <Loader2 className="w-4 h-4 animate-spin" />
-              Enregistrement…
+              {t("saving")}
             </>
           ) : (
             <>
               <CheckCircle2 className="w-4 h-4" />
-              Enregistrer
+              {t("save")}
             </>
           )}
         </button>

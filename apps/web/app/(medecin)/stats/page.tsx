@@ -4,8 +4,10 @@ import { db, doctors } from "@doktori/db";
 import { sql, eq } from "drizzle-orm";
 import { BarChart3 } from "lucide-react";
 import { StatsClient } from "./stats-client";
+import { getTranslations } from "next-intl/server";
 
 export default async function StatsPage() {
+  const t = await getTranslations("medecin.stats");
   const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
 
@@ -142,8 +144,8 @@ export default async function StatsPage() {
           <BarChart3 className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Statistiques</h1>
-          <p className="text-sm text-gray-500">Analyse des 6 derniers mois</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
+          <p className="text-sm text-gray-500">{t("subtitle")}</p>
         </div>
       </div>
 

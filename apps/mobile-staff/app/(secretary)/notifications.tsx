@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { colors, spacing, radii } from "@doktori/mobile-core";
+import { colors, spacing, radii, t, useLocale } from "@doktori/mobile-core";
 
 const STORAGE_KEY = "doktori.secretary.notif_prefs";
 
@@ -87,6 +87,8 @@ function ToggleRow({ icon, label, sublabel, value, onChange, last }: ToggleRowPr
 }
 
 export default function NotificationsScreen() {
+  const { locale } = useLocale();
+  const dateLocale = locale === "ar" ? "ar-TN" : "fr-FR";
   const [prefs, setPrefs] = useState<NotifPrefs>(DEFAULT_PREFS);
   const [saving, setSaving] = useState(false);
 
@@ -102,7 +104,7 @@ export default function NotificationsScreen() {
     setSaving(true);
     await savePrefs(prefs);
     setSaving(false);
-    Alert.alert("Enregistré", "Vos préférences de notifications ont été sauvegardées.");
+    Alert.alert(t("secretary.notifications.savedTitle"), t("secretary.notifications.savedDesc"));
   }
 
   return (
@@ -113,24 +115,24 @@ export default function NotificationsScreen() {
           <Pressable onPress={() => router.navigate("/(secretary)/settings" as never)} style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
             <Ionicons name="arrow-back" size={22} color={colors.foreground} />
           </Pressable>
-          <Text style={styles.title}>Notifications</Text>
+          <Text style={styles.title}>{t("secretary.notifications.title")}</Text>
         </View>
 
         {/* Section: Rappels */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Rappels</Text>
+          <Text style={styles.sectionLabel}>{t("secretary.notifications.sectionReminders")}</Text>
           <View style={styles.card}>
             <ToggleRow
               icon="alarm-outline"
-              label="Rappel avant RDV (15 min)"
-              sublabel="Notification 15 minutes avant le rendez-vous"
+              label={t("secretary.notifications.reminder15Label")}
+              sublabel={t("secretary.notifications.reminder15Desc")}
               value={prefs.reminder15}
               onChange={set("reminder15")}
             />
             <ToggleRow
               icon="time-outline"
-              label="Rappel avant RDV (1h)"
-              sublabel="Notification 1 heure avant le rendez-vous"
+              label={t("secretary.notifications.reminder60Label")}
+              sublabel={t("secretary.notifications.reminder60Desc")}
               value={prefs.reminder60}
               onChange={set("reminder60")}
               last
@@ -140,33 +142,33 @@ export default function NotificationsScreen() {
 
         {/* Section: Activité */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Activité</Text>
+          <Text style={styles.sectionLabel}>{t("secretary.notifications.sectionActivity")}</Text>
           <View style={styles.card}>
             <ToggleRow
               icon="calendar-outline"
-              label="Nouveau rendez-vous"
-              sublabel="Quand un patient réserve un créneau"
+              label={t("secretary.notifications.newApptLabel")}
+              sublabel={t("secretary.notifications.newApptDesc")}
               value={prefs.newAppointment}
               onChange={set("newAppointment")}
             />
             <ToggleRow
               icon="close-circle-outline"
-              label="RDV annulé"
-              sublabel="Quand un rendez-vous est annulé"
+              label={t("secretary.notifications.cancelledLabel")}
+              sublabel={t("secretary.notifications.cancelledDesc")}
               value={prefs.appointmentCancelled}
               onChange={set("appointmentCancelled")}
             />
             <ToggleRow
               icon="chatbubble-outline"
-              label="Message reçu"
-              sublabel="Quand vous recevez un nouveau message"
+              label={t("secretary.notifications.messageLabel")}
+              sublabel={t("secretary.notifications.messageDesc")}
               value={prefs.messageReceived}
               onChange={set("messageReceived")}
             />
             <ToggleRow
               icon="checkmark-circle-outline"
-              label="Congé approuvé"
-              sublabel="Quand votre demande de congé est traitée"
+              label={t("secretary.notifications.leaveLabel")}
+              sublabel={t("secretary.notifications.leaveDesc")}
               value={prefs.leaveApproved}
               onChange={set("leaveApproved")}
               last
@@ -176,12 +178,12 @@ export default function NotificationsScreen() {
 
         {/* Section: Système */}
         <View style={styles.section}>
-          <Text style={styles.sectionLabel}>Système</Text>
+          <Text style={styles.sectionLabel}>{t("secretary.notifications.sectionSystem")}</Text>
           <View style={styles.card}>
             <ToggleRow
               icon="download-outline"
-              label="Mises à jour de l'application"
-              sublabel="Nouveautés et améliorations disponibles"
+              label={t("secretary.notifications.updatesLabel")}
+              sublabel={t("secretary.notifications.updatesDesc")}
               value={prefs.appUpdates}
               onChange={set("appUpdates")}
               last
@@ -195,7 +197,7 @@ export default function NotificationsScreen() {
           onPress={handleSave}
           disabled={saving}
         >
-          <Text style={styles.saveBtnText}>Enregistrer les préférences</Text>
+          <Text style={styles.saveBtnText}>{t("secretary.notifications.saveBtn")}</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

@@ -18,6 +18,7 @@ import {
   fetchCallStatus,
   radii,
   spacing,
+  t,
 } from "@doktori/mobile-core";
 import type { CallSession } from "@doktori/mobile-core";
 
@@ -221,14 +222,14 @@ export default function CallScreen() {
     } else if (status === "declined") {
       stopPolling();
       stopTimer();
-      Alert.alert("Appel refusé", undefined, [
-        { text: "OK", onPress: returnToConversation },
+      Alert.alert(t("doctor.call.callRefused"), undefined, [
+        { text: t("common.ok"), onPress: returnToConversation },
       ]);
     } else if (status === "ended") {
       stopPolling();
       stopTimer();
-      Alert.alert("Appel terminé", undefined, [
-        { text: "OK", onPress: returnToConversation },
+      Alert.alert(t("doctor.call.callEnded"), undefined, [
+        { text: t("common.ok"), onPress: returnToConversation },
       ]);
     }
   }
@@ -240,13 +241,13 @@ export default function CallScreen() {
       // Create the call session first, then start polling
       const peerId = params.peerId ?? "";
       const peerType = (params.peerType ?? "doctor") as "doctor" | "secretary";
-      if (!peerId) { Alert.alert("Erreur", "Destinataire manquant"); returnToConversation(); return; }
+      if (!peerId) { Alert.alert(t("common.error"), t("doctor.call.missingRecipient")); returnToConversation(); return; }
       createCall(peerType, peerId)
         .then((session) => {
           setSessionId(session.id);
         })
         .catch(() => {
-          Alert.alert("Erreur", "Impossible de lancer l'appel");
+          Alert.alert(t("common.error"), t("doctor.call.cannotStart"));
           returnToConversation();
         });
     } else {
@@ -275,7 +276,7 @@ export default function CallScreen() {
       setPhase("connected");
       startTimer();
     } catch {
-      Alert.alert("Erreur", "Impossible de décrocher. Réessayez.");
+      Alert.alert(t("common.error"), t("doctor.call.cannotAnswer"));
     }
   }
 
@@ -313,7 +314,7 @@ export default function CallScreen() {
       <View style={styles.topSection}>
         {phase === "ringing" && (
           <>
-            <Text style={styles.statusLabel}>Appel en cours...</Text>
+            <Text style={styles.statusLabel}>{t("doctor.call.inProgress")}</Text>
             <Text style={styles.peerName}>{peerName}</Text>
             <PulsingRing />
           </>
@@ -321,7 +322,7 @@ export default function CallScreen() {
 
         {phase === "incoming" && (
           <>
-            <Text style={styles.statusLabel}>Appel entrant</Text>
+            <Text style={styles.statusLabel}>{t("doctor.call.incoming")}</Text>
             <Text style={styles.peerName}>{peerName}</Text>
             <AvatarCircle label={peerInitials} />
           </>
@@ -329,7 +330,7 @@ export default function CallScreen() {
 
         {phase === "connected" && (
           <>
-            <Text style={styles.statusLabel}>Appel connecté</Text>
+            <Text style={styles.statusLabel}>{t("doctor.call.connected")}</Text>
             <Text style={styles.peerName}>{peerName}</Text>
             <AvatarCircle label={peerInitials} />
             <Text style={styles.timer}>{formatDuration(elapsed)}</Text>
@@ -341,7 +342,7 @@ export default function CallScreen() {
         {phase === "ringing" && (
           <ActionBtn
             icon="call"
-            label="Raccrocher"
+            label={t("doctor.call.hangup")}
             color={colors.danger}
             onPress={handleHangUp}
           />
@@ -351,13 +352,13 @@ export default function CallScreen() {
           <View style={styles.incomingRow}>
             <ActionBtn
               icon="call"
-              label="Décrocher"
+              label={t("doctor.call.answer")}
               color={colors.green}
               onPress={handleAnswer}
             />
             <ActionBtn
               icon="call"
-              label="Refuser"
+              label={t("doctor.call.reject")}
               color={colors.danger}
               onPress={handleDecline}
             />
@@ -368,19 +369,19 @@ export default function CallScreen() {
           <View style={styles.connectedRow}>
             <ActionBtn
               icon={muted ? "mic-off" : "mic"}
-              label={muted ? "Muet" : "Micro"}
+              label={muted ? t("doctor.call.mute") : t("doctor.call.unmute")}
               active={muted}
               onPress={() => setMuted((v) => !v)}
             />
             <ActionBtn
               icon={speakerOn ? "volume-high" : "volume-medium"}
-              label="Haut-parleur"
+              label={t("doctor.call.speaker")}
               active={speakerOn}
               onPress={() => setSpeakerOn((v) => !v)}
             />
             <ActionBtn
               icon="call"
-              label="Raccrocher"
+              label={t("doctor.call.hangup")}
               color={colors.danger}
               onPress={handleHangUp}
             />

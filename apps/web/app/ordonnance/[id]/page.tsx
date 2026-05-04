@@ -96,9 +96,16 @@ export default async function PrescriptionPage({ params }: { params: Promise<{ i
 
         {/* Prescription content */}
         <div className="mb-16 min-h-[200px]">
-          <div className="whitespace-pre-wrap text-sm leading-loose text-gray-800 print:text-base">
-            {result.content}
-          </div>
+          {/^\s*<\w+/.test(result.content) ? (
+            <div
+              className="prose prose-sm max-w-none text-gray-800 print:text-base"
+              dangerouslySetInnerHTML={{ __html: result.content }}
+            />
+          ) : (
+            <div className="whitespace-pre-wrap text-sm leading-loose text-gray-800 print:text-base">
+              {result.content}
+            </div>
+          )}
         </div>
 
         {/* Signature block */}

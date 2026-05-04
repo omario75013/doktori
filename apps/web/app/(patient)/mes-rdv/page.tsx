@@ -23,11 +23,13 @@ import {
   Star,
   RefreshCw,
   CalendarPlus,
+  CalendarClock,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 type Step = "phone" | "code" | "loggedIn";
 type CancelState = { id: string; doctorName: string; startsAt: string } | null;
+type RescheduleState = { id: string; doctorName: string; startsAt: string } | null;
 type ActiveTab = "upcoming" | "past" | "cancelled";
 
 const RELATION_LABELS: Record<string, string> = {
@@ -86,6 +88,14 @@ function TypeBadge({ type }: { type: string }) {
 }
 
 function StatusBadge({ status }: { status: string }) {
+  if (status === "reschedule_requested") {
+    return (
+      <span className="inline-flex items-center gap-1 rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+        <CalendarClock className="h-3 w-3" />
+        Report demandé
+      </span>
+    );
+  }
   if (status === "confirmed") {
     return (
       <span className="inline-flex items-center gap-1 rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-semibold text-green-700">
@@ -129,7 +139,7 @@ function cardBorderColor(status: string, type: string) {
 }
 
 function isUpcoming(a: Appointment) {
-  return (a.status === "confirmed" || a.status === "pending") && !isPast(new Date(a.startsAt));
+  return (a.status === "confirmed" || a.status === "pending" || a.status === "reschedule_requested") && !isPast(new Date(a.startsAt));
 }
 
 function isPastAppointment(a: Appointment) {
@@ -158,6 +168,8 @@ export default function MesRdvPage() {
   const [sessionExpiredMsg, setSessionExpiredMsg] = useState("");
   const [cancelConfirm, setCancelConfirm] = useState<CancelState>(null);
   const [cancelReason, setCancelReason] = useState("");
+  const [rescheduleConfirm, setRescheduleConfirm] = useState<RescheduleState>(null);
+  const [rescheduleNote, setRescheduleNote] = useState("");
   const [activeTab, setActiveTab] = useState<ActiveTab>("upcoming");
   const [dismissedSatisfaction, setDismissedSatisfaction] = useState<Set<string>>(new Set());
 
@@ -225,6 +237,26 @@ export default function MesRdvPage() {
     localStorage.setItem("doktori_patient_token", data.token);
     setToken(data.token);
     setStep("loggedIn");
+  }
+
+  async function requestReschedule(id: string, note: string) {
+    if (!token) return;
+    const res = await fetch(`/api/appointments/${id}/change-request`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ type: "reschedule", ...(note.trim() ? { note: note.trim() } : {}) }),
+    });
+    if (res.ok) {
+      setAppointments((prev) => prev.map((a) => a.id === id ? { ...a, status: "reschedule_requested" } : a));
+      toast.success("Demande de report envoyée — le cabinet vous contactera pour confirmer le nouveau créneau");
+    } else {
+      toast.error("Erreur lors de la demande de report");
+    }
+    setRescheduleConfirm(null);
+    setRescheduleNote("");
   }
 
   async function cancelAppointment(id: string, reason: string) {
@@ -624,6 +656,15 @@ export default function MesRdvPage() {
                                 <MessageCircle className="h-3 w-3" />
                                 Message
                               </a>
+                              {a.status !== "reschedule_requested" && (
+                                <button
+                                  onClick={() => setRescheduleConfirm({ id: a.id, doctorName: a.doctorName, startsAt: a.startsAt })}
+                                  className="inline-flex items-center gap-1 text-xs font-medium text-amber-700 border border-amber-200 bg-amber-50 hover:bg-amber-100 rounded-lg px-3 py-1.5 transition-colors"
+                                >
+                                  <CalendarClock className="h-3 w-3" />
+                                  Décaler
+                                </button>
+                              )}
                               <button
                                 onClick={() => void downloadIcs(a.id)}
                                 className="inline-flex items-center gap-1 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-lg px-3 py-1.5 transition-colors"
@@ -696,6 +737,71 @@ export default function MesRdvPage() {
         )}
       </div>
 
+      {/* Reschedule request modal */}
+      <AnimatePresence>
+        {rescheduleConfirm && (
+          <motion.div
+            key="reschedule-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4"
+            onClick={() => { setRescheduleConfirm(null); setRescheduleNote(""); }}
+          >
+            <motion.div
+              key="reschedule-card"
+              initial={{ opacity: 0, scale: 0.95, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 8 }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
+              className="w-full max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-2xl border border-border dark:border-gray-700"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-amber-50 mx-auto mb-4">
+                <CalendarClock className="h-6 w-6 text-amber-500" />
+              </div>
+              <h3 dir="ltr" className="text-lg font-bold text-foreground text-center">Demander un report ?</h3>
+              <p className="mt-2 text-sm text-foreground/60 text-center">
+                Votre rendez-vous avec{" "}
+                <span className="font-semibold text-foreground">{rescheduleConfirm.doctorName}</span>{" "}
+                le{" "}
+                <span className="font-semibold text-foreground">
+                  {format(new Date(rescheduleConfirm.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
+                </span>{" "}
+                sera marqué comme « report demandé ». Le cabinet vous contactera pour fixer un nouveau créneau.
+              </p>
+              <div className="mt-4">
+                <label className="block text-xs font-semibold text-foreground mb-1.5">
+                  Message au cabinet <span className="text-foreground/40 font-normal">(facultatif)</span>
+                </label>
+                <textarea
+                  value={rescheduleNote}
+                  onChange={(e) => setRescheduleNote(e.target.value)}
+                  placeholder="Ex : disponible en soirée à partir du 5 mai..."
+                  rows={3}
+                  className="w-full rounded-xl border border-border dark:border-gray-600 bg-white dark:bg-gray-700 text-sm text-foreground px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400 resize-none"
+                />
+              </div>
+              <div className="mt-5 flex gap-3">
+                <button
+                  onClick={() => { setRescheduleConfirm(null); setRescheduleNote(""); }}
+                  className="flex-1 rounded-xl border border-border dark:border-gray-600 px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary dark:hover:bg-gray-700 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  onClick={() => requestReschedule(rescheduleConfirm.id, rescheduleNote)}
+                  className="flex-1 rounded-xl bg-amber-500 px-4 py-2.5 text-sm font-bold text-white hover:bg-amber-600 transition-colors"
+                >
+                  Envoyer la demande
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Cancel confirmation modal */}
       <AnimatePresence>
         {cancelConfirm && (
@@ -720,7 +826,7 @@ export default function MesRdvPage() {
               <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-red-50 mx-auto mb-4">
                 <X className="h-6 w-6 text-red-500" />
               </div>
-              <h3 className="text-lg font-bold text-foreground text-center">Annuler ce rendez-vous ?</h3>
+              <h3 dir="ltr" className="text-lg font-bold text-foreground text-center">Annuler ce rendez-vous ?</h3>
               <p className="mt-2 text-sm text-foreground/60 text-center">
                 Êtes-vous sûr de vouloir annuler ce rendez-vous avec{" "}
                 <span className="font-semibold text-foreground">{cancelConfirm.doctorName}</span>{" "}

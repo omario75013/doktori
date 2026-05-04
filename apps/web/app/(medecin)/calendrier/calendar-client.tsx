@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import {
   format,
   addWeeks,
@@ -16,7 +16,6 @@ import {
   isSameDay,
   isSameMonth,
   isToday,
-  parseISO,
   eachDayOfInterval,
   differenceInMinutes,
   getHours,
@@ -47,6 +46,7 @@ import {
   History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useTranslations, useLocale } from "next-intl";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -64,6 +64,18 @@ type Appointment = {
 
 type View = "week" | "day";
 
+type DayOff = {
+  id: string;
+  startDate: string;
+  endDate: string;
+  reason: string | null;
+};
+
+function isDayOff(date: Date, daysOff: DayOff[]): boolean {
+  const d = format(date, "yyyy-MM-dd");
+  return daysOff.some((o) => d >= o.startDate && d <= o.endDate);
+}
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const HOUR_START = 8;
@@ -72,18 +84,23 @@ const TOTAL_HOURS = HOUR_END - HOUR_START;
 // Each hour = 60px tall → 1 min = 1px
 const HOUR_HEIGHT = 60;
 
-const STATUS_CONFIG: Record<string, { bg: string; border: string; text: string; label: string }> = {
-  confirmed:  { bg: "bg-teal-500",  border: "border-teal-600",  text: "text-white", label: "Confirmé" },
-  pending:    { bg: "bg-orange-400", border: "border-orange-500", text: "text-white", label: "En attente" },
-  teleconsult:{ bg: "bg-purple-500", border: "border-purple-600", text: "text-white", label: "Téléconsult" },
-  completed:  { bg: "bg-blue-500",  border: "border-blue-600",  text: "text-white", label: "Terminé" },
-  cancelled:  { bg: "bg-gray-400",  border: "border-gray-500",  text: "text-white", label: "Annulé" },
-  no_show:    { bg: "bg-red-400",   border: "border-red-500",   text: "text-white", label: "Absent" },
-};
+function getStatusConfig(t: ReturnType<typeof useTranslations<"medecin.calendrier">>) {
+  return {
+    confirmed:   { bg: "bg-teal-500",   border: "border-teal-600",   text: "text-white", label: t("statusConfirmed") },
+    pending:     { bg: "bg-orange-400", border: "border-orange-500", text: "text-white", label: t("statusPending") },
+    teleconsult: { bg: "bg-purple-500", border: "border-purple-600", text: "text-white", label: t("statusTeleconsult") },
+    completed:   { bg: "bg-blue-500",   border: "border-blue-600",   text: "text-white", label: t("statusCompleted") },
+    cancelled:   { bg: "bg-gray-400",   border: "border-gray-500",   text: "text-white", label: t("statusCancelled") },
+    no_show:     { bg: "bg-red-400",    border: "border-red-500",    text: "text-white", label: t("statusNoShow") },
+  } as Record<string, { bg: string; border: string; text: string; label: string }>;
+}
 
-function getApptConfig(appt: Appointment) {
-  if (appt.type === "teleconsult" && appt.status !== "cancelled") return STATUS_CONFIG.teleconsult;
-  return STATUS_CONFIG[appt.status] ?? STATUS_CONFIG.pending;
+function getApptConfig(
+  appt: Appointment,
+  statusConfig: ReturnType<typeof getStatusConfig>
+) {
+  if (appt.type === "teleconsult" && appt.status !== "cancelled") return statusConfig.teleconsult;
+  return statusConfig[appt.status] ?? statusConfig.pending;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -160,8 +177,8 @@ function CurrentTimeIndicator({ containerHeight }: { containerHeight: number }) 
   const [now, setNow] = useState(new Date());
 
   useEffect(() => {
-    const t = setInterval(() => setNow(new Date()), 60_000);
-    return () => clearInterval(t);
+    const timer = setInterval(() => setNow(new Date()), 60_000);
+    return () => clearInterval(timer);
   }, []);
 
   const top = getTopPx(now);
@@ -182,12 +199,15 @@ function AppointmentBlock({
   appt,
   onClick,
   isDay = false,
+  t,
 }: {
   appt: Appointment;
   onClick: (appt: Appointment) => void;
   isDay?: boolean;
+  t: ReturnType<typeof useTranslations<"medecin.calendrier">>;
 }) {
-  const config = getApptConfig(appt);
+  const STATUS_CONFIG = getStatusConfig(t);
+  const config = getApptConfig(appt, STATUS_CONFIG);
   const top = getTopPx(new Date(appt.startsAt));
   const height = getHeightPx(new Date(appt.startsAt), new Date(appt.endsAt));
 
@@ -221,6 +241,7 @@ function AppointmentBlock({
 // ─── Calendar Sync Modal ───────────────────────────────────────────────────────
 
 function CalendarSyncModal({ onClose }: { onClose: () => void }) {
+  const t = useTranslations("medecin.calendrier");
   const [feedUrl, setFeedUrl] = useState<string | null>(null);
   const [generating, setGenerating] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -231,11 +252,11 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
     setError(null);
     try {
       const res = await fetch("/api/doctor/calendar/feed", { method: "POST" });
-      if (!res.ok) throw new Error("Erreur lors de la génération");
+      if (!res.ok) throw new Error(t("feedGenerationError"));
       const data = await res.json();
       setFeedUrl(data.url ?? data.feedUrl ?? null);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur inconnue");
+      setError(e instanceof Error ? e.message : t("feedGenerationError"));
     } finally {
       setGenerating(false);
     }
@@ -270,7 +291,7 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
               <RefreshCw className="h-4 w-4 text-primary" />
             </div>
-            <h2 className="text-lg font-black text-foreground">Synchroniser mon calendrier</h2>
+            <h2 className="text-lg font-black text-foreground">{t("syncModalTitle")}</h2>
           </div>
           <button
             onClick={onClose}
@@ -284,7 +305,7 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
           {/* Generate URL */}
           <div className="bg-secondary rounded-xl p-4 border border-border">
             <p className="text-sm text-foreground/70 mb-3">
-              Générez un lien d'abonnement unique pour synchroniser vos rendez-vous Doktori avec votre application de calendrier préférée.
+              {t("syncDescription")}
             </p>
             {!feedUrl ? (
               <Button
@@ -295,10 +316,10 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
                 {generating ? (
                   <>
                     <Loader2 className="h-3.5 w-3.5 mr-2 animate-spin" />
-                    Génération...
+                    {t("generating")}
                   </>
                 ) : (
-                  "Générer l'URL de synchronisation"
+                  t("generateSyncUrl")
                 )}
               </Button>
             ) : (
@@ -328,7 +349,7 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
               </p>
             )}
             <p className="mt-2 text-[10px] text-foreground/50">
-              Synchronisation en lecture seule — vos rendez-vous Doktori apparaîtront dans votre calendrier.
+              {t("syncReadonlyNote")}
             </p>
           </div>
 
@@ -336,13 +357,13 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
           <div className="border border-border rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Globe className="h-4 w-4 text-blue-500" />
-              <span className="font-bold text-sm text-foreground">Google Agenda</span>
+              <span className="font-bold text-sm text-foreground">{t("googleCalendar")}</span>
             </div>
             <ol className="space-y-1 text-xs text-foreground/70 list-decimal list-inside">
-              <li>Copiez l'URL ci-dessus</li>
+              <li>Copiez l&apos;URL ci-dessus</li>
               <li>Ouvrez <strong>Google Agenda</strong></li>
-              <li>Cliquez sur <strong>Autres agendas</strong> → <strong>À partir de l'URL</strong></li>
-              <li>Collez l'URL et cliquez sur <strong>Ajouter un agenda</strong></li>
+              <li>Cliquez sur <strong>Autres agendas</strong> → <strong>À partir de l&apos;URL</strong></li>
+              <li>Collez l&apos;URL et cliquez sur <strong>Ajouter un agenda</strong></li>
             </ol>
           </div>
 
@@ -350,12 +371,12 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
           <div className="border border-border rounded-xl p-4">
             <div className="flex items-center gap-2 mb-2">
               <Apple className="h-4 w-4 text-gray-700" />
-              <span className="font-bold text-sm text-foreground">Apple Calendrier / Outlook</span>
+              <span className="font-bold text-sm text-foreground">{t("appleOutlook")}</span>
             </div>
             <ol className="space-y-1 text-xs text-foreground/70 list-decimal list-inside">
-              <li>Copiez l'URL ci-dessus</li>
+              <li>Copiez l&apos;URL ci-dessus</li>
               <li>Ouvrez <strong>Calendrier</strong> → <strong>Fichier</strong> → <strong>Nouvel abonnement à un calendrier</strong></li>
-              <li>Collez l'URL et confirmez</li>
+              <li>Collez l&apos;URL et confirmez</li>
             </ol>
           </div>
 
@@ -368,7 +389,7 @@ function CalendarSyncModal({ onClose }: { onClose: () => void }) {
             <Download className="h-4 w-4 text-primary group-hover:scale-110 transition-transform" />
             <div>
               <p className="font-bold text-sm text-foreground">Télécharger .ics</p>
-              <p className="text-xs text-foreground/60">Exporter les rendez-vous du mois en cours</p>
+              <p className="text-xs text-foreground/60">{t("exportCurrentMonth")}</p>
             </div>
           </a>
         </div>
@@ -386,7 +407,9 @@ function AppointmentPanel({
   appt: Appointment;
   onClose: () => void;
 }) {
-  const config = getApptConfig(appt);
+  const t = useTranslations("medecin.calendrier");
+  const STATUS_CONFIG = getStatusConfig(t);
+  const config = getApptConfig(appt, STATUS_CONFIG);
   const starts = new Date(appt.startsAt);
   const ends = new Date(appt.endsAt);
 
@@ -426,7 +449,7 @@ function AppointmentPanel({
             <Clock className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="text-xs text-foreground/50 font-medium">Horaire</p>
+            <p className="text-xs text-foreground/50 font-medium">{t("timeLabel")}</p>
             <p className="text-sm font-bold text-foreground">
               {format(starts, "HH:mm")} – {format(ends, "HH:mm")}
             </p>
@@ -438,7 +461,7 @@ function AppointmentPanel({
             <User className="h-4 w-4 text-primary" />
           </div>
           <div>
-            <p className="text-xs text-foreground/50 font-medium">Patient</p>
+            <p className="text-xs text-foreground/50 font-medium">{t("patientLabel")}</p>
             <p className="text-sm font-bold text-foreground">{appt.patientName}</p>
           </div>
         </div>
@@ -449,7 +472,7 @@ function AppointmentPanel({
               <Phone className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-foreground/50 font-medium">Téléphone</p>
+              <p className="text-xs text-foreground/50 font-medium">{t("phoneLabel")}</p>
               <a
                 href={`tel:${appt.patientPhone}`}
                 className="text-sm font-bold text-primary hover:underline"
@@ -469,9 +492,9 @@ function AppointmentPanel({
             )}
           </div>
           <div>
-            <p className="text-xs text-foreground/50 font-medium">Type</p>
+            <p className="text-xs text-foreground/50 font-medium">{t("typeLabel")}</p>
             <p className="text-sm font-bold text-foreground">
-              {appt.type === "teleconsult" ? "Téléconsultation" : "Cabinet"}
+              {appt.type === "teleconsult" ? t("teleconsultType") : "Cabinet"}
             </p>
           </div>
         </div>
@@ -482,7 +505,7 @@ function AppointmentPanel({
               <FileText className="h-4 w-4 text-primary" />
             </div>
             <div>
-              <p className="text-xs text-foreground/50 font-medium">Motif</p>
+              <p className="text-xs text-foreground/50 font-medium">{t("reasonLabel")}</p>
               <p className="text-sm text-foreground">{appt.reason}</p>
             </div>
           </div>
@@ -504,13 +527,13 @@ function AppointmentPanel({
         {appt.status === "pending" && (
           <Button className="w-full h-10 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold text-sm">
             <CheckCircle2 className="h-4 w-4 mr-2" />
-            Confirmer le RDV
+            {t("confirmAppointment")}
           </Button>
         )}
         {appt.type === "teleconsult" && appt.status === "confirmed" && (
           <Button className="w-full h-10 rounded-xl bg-purple-500 hover:bg-purple-600 text-white font-bold text-sm">
             <Video className="h-4 w-4 mr-2" />
-            Rejoindre la téléconsultation
+            {t("joinTeleconsult")}
           </Button>
         )}
         <Link
@@ -518,7 +541,7 @@ function AppointmentPanel({
           className="inline-flex w-full h-10 items-center justify-center gap-2 rounded-xl border border-border bg-white text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
         >
           <History className="h-4 w-4" />
-          Voir l&apos;historique du patient
+          {t("viewPatientHistory")}
         </Link>
       </div>
     </motion.div>
@@ -531,10 +554,12 @@ function MiniCalendar({
   currentDate,
   onSelectDay,
   appointments,
+  isArabic = false,
 }: {
   currentDate: Date;
   onSelectDay: (d: Date) => void;
   appointments: Appointment[];
+  isArabic?: boolean;
 }) {
   const [monthRef, setMonthRef] = useState(currentDate);
 
@@ -556,7 +581,7 @@ function MiniCalendar({
           onClick={() => setMonthRef((m) => subMonths(m, 1))}
           className="p-1 rounded-lg hover:bg-secondary transition-colors"
         >
-          <ChevronLeft className="h-4 w-4 text-foreground/60" />
+          {isArabic ? <ChevronRight className="h-4 w-4 text-foreground/60" /> : <ChevronLeft className="h-4 w-4 text-foreground/60" />}
         </button>
         <span className="text-sm font-bold text-foreground capitalize">
           {format(monthRef, "MMMM yyyy", { locale: fr })}
@@ -565,7 +590,7 @@ function MiniCalendar({
           onClick={() => setMonthRef((m) => addMonths(m, 1))}
           className="p-1 rounded-lg hover:bg-secondary transition-colors"
         >
-          <ChevronRight className="h-4 w-4 text-foreground/60" />
+          {isArabic ? <ChevronLeft className="h-4 w-4 text-foreground/60" /> : <ChevronRight className="h-4 w-4 text-foreground/60" />}
         </button>
       </div>
 
@@ -619,10 +644,14 @@ function WeekView({
   weekStart,
   appointments,
   onSelectAppt,
+  daysOff = [],
+  t,
 }: {
   weekStart: Date;
   appointments: Appointment[];
   onSelectAppt: (appt: Appointment) => void;
+  daysOff?: DayOff[];
+  t: ReturnType<typeof useTranslations<"medecin.calendrier">>;
 }) {
   const days = eachDayOfInterval({
     start: weekStart,
@@ -639,7 +668,8 @@ function WeekView({
         {days.map((day) => (
           <div
             key={day.toISOString()}
-            className={`flex-1 py-2 text-center border-l border-border ${isToday(day) ? "bg-secondary" : ""}`}
+            className={`flex-1 py-2 text-center border-l border-border ${isToday(day) ? "bg-secondary" : isDayOff(day, daysOff) ? "bg-red-50 dark:bg-red-950/30" : ""}`}
+            title={isDayOff(day, daysOff) ? (daysOff.find((o) => { const d = format(day, "yyyy-MM-dd"); return d >= o.startDate && d <= o.endDate; })?.reason ?? t("daysOff")) : undefined}
           >
             <p className="text-[10px] font-bold uppercase text-foreground/50 tracking-wider">
               {format(day, "EEE", { locale: fr })}
@@ -673,7 +703,7 @@ function WeekView({
           return (
             <div
               key={day.toISOString()}
-              className={`flex-1 relative border-l border-border ${isToday(day) ? "bg-secondary/40" : ""}`}
+              className={`flex-1 relative border-l border-border ${isToday(day) ? "bg-secondary/40" : isDayOff(day, daysOff) ? "bg-red-50/60 dark:bg-red-950/20" : ""}`}
               style={{ height: containerHeight }}
             >
               <GridLines />
@@ -683,6 +713,7 @@ function WeekView({
                   key={appt.id}
                   appt={appt}
                   onClick={onSelectAppt}
+                  t={t}
                 />
               ))}
             </div>
@@ -700,11 +731,13 @@ function DayView({
   appointments,
   onSelectAppt,
   onSelectDay,
+  t,
 }: {
   currentDay: Date;
   appointments: Appointment[];
   onSelectAppt: (appt: Appointment) => void;
   onSelectDay: (d: Date) => void;
+  t: ReturnType<typeof useTranslations<"medecin.calendrier">>;
 }) {
   const containerHeight = TOTAL_HOURS * HOUR_HEIGHT;
   const dayAppts = appointments.filter((a) =>
@@ -719,6 +752,7 @@ function DayView({
           currentDate={currentDay}
           onSelectDay={onSelectDay}
           appointments={appointments}
+          isArabic={isArabic}
         />
       </div>
 
@@ -732,7 +766,7 @@ function DayView({
             {format(currentDay, "d MMMM yyyy", { locale: fr })}
           </p>
           <p className="text-xs text-foreground/50 mt-0.5">
-            {dayAppts.length} rendez-vous
+            {t("appointmentsCount", { count: dayAppts.length })}
           </p>
         </div>
 
@@ -753,6 +787,7 @@ function DayView({
                 appt={appt}
                 onClick={onSelectAppt}
                 isDay
+                t={t}
               />
             ))}
           </div>
@@ -762,17 +797,101 @@ function DayView({
   );
 }
 
+// ─── Declare Days-Off Modal ───────────────────────────────────────────────────
+
+function DeclareDaysOffModal({
+  onClose,
+  onSaved,
+}: {
+  onClose: () => void;
+  onSaved: (row: DayOff) => void;
+}) {
+  const t = useTranslations("medecin.calendrier");
+  const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [endDate, setEndDate] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [reason, setReason] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  async function save() {
+    if (endDate < startDate) { setErr(t("daysOffEndBeforeStart")); return; }
+    setSaving(true);
+    setErr(null);
+    const res = await fetch("/api/doctor/days-off", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ startDate, endDate, reason: reason || null }),
+    });
+    setSaving(false);
+    if (!res.ok) { setErr(t("daysOffSaveError")); return; }
+    const row = await res.json() as DayOff;
+    onSaved(row);
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
+      <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-xl w-full max-w-md p-6">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("declareConge")}</h2>
+          <button onClick={onClose}><X className="w-5 h-5 text-gray-400" /></button>
+        </div>
+        {err && <p className="text-red-500 text-sm mb-3">{err}</p>}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t("daysOffFrom")}</label>
+            <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t("daysOffTo")}</label>
+            <input type="date" value={endDate} onChange={(e) => setEndDate(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500" />
+          </div>
+        </div>
+        <label className="block text-xs font-medium text-gray-600 dark:text-gray-400 mb-1">{t("daysOffReason")}</label>
+        <input value={reason} onChange={(e) => setReason(e.target.value)}
+          placeholder={t("daysOffReasonPlaceholder")}
+          className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+        <div className="flex gap-2">
+          <button onClick={onClose}
+            className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
+            Annuler
+          </button>
+          <button onClick={save} disabled={saving}
+            className="flex-1 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 disabled:opacity-50">
+            {saving ? "…" : t("daysOffSave")}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Component ────────────────────────────────────────────────────────────
 
 export function CalendarClient({ appointments }: { appointments: Appointment[] }) {
+  const t = useTranslations("medecin.calendrier");
+  const locale = useLocale();
+  const isArabic = locale === "ar";
+  const STATUS_CONFIG = getStatusConfig(t);
+
   const [view, setView] = useState<View>("week");
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedAppt, setSelectedAppt] = useState<Appointment | null>(null);
   const [showSync, setShowSync] = useState(false);
+  const [daysOff, setDaysOff] = useState<DayOff[]>([]);
+  const [showDaysOffModal, setShowDaysOffModal] = useState(false);
 
   // On mobile default to day view
   useEffect(() => {
     if (window.innerWidth < 768) setView("day");
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/doctor/days-off")
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => setDaysOff(Array.isArray(data) ? data as DayOff[] : []))
+      .catch(() => {});
   }, []);
 
   // Derived navigation state
@@ -811,18 +930,26 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
             <CalendarDays className="h-4 w-4 text-primary" strokeWidth={2} />
           </div>
           <div>
-            <h1 className="text-2xl font-black text-foreground leading-tight">Calendrier</h1>
-            <p className="text-xs text-foreground/50">Visualisez vos rendez-vous</p>
+            <h1 className="text-2xl font-black text-foreground leading-tight">{t("pageTitle")}</h1>
+            <p className="text-xs text-foreground/50">{t("pageSubtitle")}</p>
           </div>
         </div>
 
-        <button
-          onClick={() => setShowSync(true)}
-          className="inline-flex items-center gap-2 px-4 h-9 rounded-xl border border-border bg-white hover:bg-secondary text-sm font-semibold text-foreground transition-colors shadow-sm"
-        >
-          <RefreshCw className="h-3.5 w-3.5 text-primary" />
-          Synchroniser
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setShowDaysOffModal(true)}
+            className="inline-flex items-center gap-2 px-4 h-9 rounded-xl border border-red-200 bg-red-50 hover:bg-red-100 text-sm font-semibold text-red-700 transition-colors shadow-sm"
+          >
+            {t("declareConge")}
+          </button>
+          <button
+            onClick={() => setShowSync(true)}
+            className="inline-flex items-center gap-2 px-4 h-9 rounded-xl border border-border bg-white hover:bg-secondary text-sm font-semibold text-foreground transition-colors shadow-sm"
+          >
+            <RefreshCw className="h-3.5 w-3.5 text-primary" />
+            {t("syncButton")}
+          </button>
+        </div>
       </div>
 
       {/* ── Toolbar ── */}
@@ -833,13 +960,13 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
             onClick={goBack}
             className="p-1.5 rounded-lg border border-border bg-white hover:bg-secondary transition-colors"
           >
-            <ChevronLeft className="h-4 w-4 text-foreground" />
+            {isArabic ? <ChevronRight className="h-4 w-4 text-foreground" /> : <ChevronLeft className="h-4 w-4 text-foreground" />}
           </button>
           <button
             onClick={goForward}
             className="p-1.5 rounded-lg border border-border bg-white hover:bg-secondary transition-colors"
           >
-            <ChevronRight className="h-4 w-4 text-foreground" />
+            {isArabic ? <ChevronLeft className="h-4 w-4 text-foreground" /> : <ChevronRight className="h-4 w-4 text-foreground" />}
           </button>
           <motion.span
             key={headerLabel}
@@ -857,7 +984,7 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
             onClick={goToday}
             className="px-3 h-8 rounded-lg border border-border bg-white hover:bg-secondary text-xs font-semibold text-foreground transition-colors"
           >
-            Aujourd&apos;hui
+            {t("todayButton")}
           </button>
 
           {/* View toggle */}
@@ -872,7 +999,7 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
                     : "text-foreground/60 hover:bg-secondary"
                 }`}
               >
-                {v === "week" ? "Semaine" : "Jour"}
+                {v === "week" ? t("weekView") : t("dayView")}
               </button>
             ))}
           </div>
@@ -895,6 +1022,8 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
                 weekStart={weekStart}
                 appointments={appointments}
                 onSelectAppt={setSelectedAppt}
+                daysOff={daysOff}
+                t={t}
               />
             ) : (
               <DayView
@@ -902,6 +1031,7 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
                 appointments={appointments}
                 onSelectAppt={setSelectedAppt}
                 onSelectDay={setCurrentDate}
+                t={t}
               />
             )}
           </motion.div>
@@ -920,7 +1050,7 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
           ))}
         <div className="flex items-center gap-1.5">
           <span className="w-2.5 h-2.5 rounded-sm bg-purple-500" />
-          <span className="text-[10px] text-foreground/60 font-medium">Téléconsult</span>
+          <span className="text-[10px] text-foreground/60 font-medium">{t("teleconsultLegend")}</span>
         </div>
       </div>
 
@@ -947,6 +1077,17 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
       <AnimatePresence>
         {showSync && <CalendarSyncModal onClose={() => setShowSync(false)} />}
       </AnimatePresence>
+
+      {/* ── Declare days-off modal ── */}
+      {showDaysOffModal && (
+        <DeclareDaysOffModal
+          onClose={() => setShowDaysOffModal(false)}
+          onSaved={(row) => {
+            setDaysOff((prev) => [...prev, row]);
+            setShowDaysOffModal(false);
+          }}
+        />
+      )}
     </div>
   );
 }

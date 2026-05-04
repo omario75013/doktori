@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import {
@@ -25,9 +26,12 @@ import {
   FileUp,
   Activity,
   Printer,
+  Eye,
+  Edit3,
 } from "lucide-react";
 import { toast } from "sonner";
-import { PrescriptionTemplateModal } from "../../modeles/components/prescription-template-modal";
+import { QuillEditor } from "../../modeles/components/quill-editor";
+import { TemplateLookup } from "../../modeles/components/template-lookup";
 
 type Appointment = {
   id: string;
@@ -144,14 +148,16 @@ type TimelineEvent = {
   meta?: Record<string, unknown>;
 };
 
-const ATTACHMENT_CATEGORIES: Array<{ value: string; label: string }> = [
-  { value: "labo", label: "Analyses de laboratoire" },
-  { value: "imagerie", label: "Imagerie (radio, scan, IRM)" },
-  { value: "ordonnance", label: "Ordonnance scannée" },
-  { value: "certificat", label: "Certificat médical" },
-  { value: "lettre", label: "Lettre / compte-rendu" },
-  { value: "autre", label: "Autre" },
-];
+function getAttachmentCategories(t: ReturnType<typeof useTranslations<"medecin.patientDetail">>): Array<{ value: string; label: string }> {
+  return [
+    { value: "labo", label: t("catLabo") },
+    { value: "imagerie", label: t("catImagerie") },
+    { value: "ordonnance", label: t("catOrdonnance") },
+    { value: "certificat", label: t("catCertificat") },
+    { value: "lettre", label: t("catLettre") },
+    { value: "autre", label: t("catAutre") },
+  ];
+}
 
 type Icd10Entry = { code: string; label: string };
 
@@ -176,13 +182,15 @@ type Prescription = {
   verificationToken: string | null;
 };
 
-const STATUS_LABELS: Record<string, string> = {
-  pending: "À confirmer",
-  confirmed: "Confirmé",
-  cancelled: "Annulé",
-  completed: "Terminé",
-  no_show: "Absent",
-};
+function getStatusLabels(t: ReturnType<typeof useTranslations<"medecin.patientDetail">>): Record<string, string> {
+  return {
+    pending: t("statusPending"),
+    confirmed: t("statusConfirmed"),
+    cancelled: t("statusCancelled"),
+    completed: t("statusCompleted"),
+    no_show: t("statusNoShow"),
+  };
+}
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-orange-100 text-orange-700",
@@ -208,6 +216,7 @@ function MedBlock({
   value?: string | null;
   highlight: "red" | "orange" | "blue" | "gray";
 }) {
+  const tCommon = useTranslations("medecin.common");
   const hasValue = value && value.trim().length > 0;
   return (
     <div>
@@ -217,13 +226,14 @@ function MedBlock({
           {value}
         </div>
       ) : (
-        <div className="text-gray-300 italic text-sm">Non renseigné</div>
+        <div className="text-gray-300 italic text-sm">{tCommon("notProvided")}</div>
       )}
     </div>
   );
 }
 
 function NotesCell({ appointment }: { appointment: Appointment }) {
+  const t = useTranslations("medecin.patientDetail");
   const [notes, setNotes] = useState(appointment.notes ?? "");
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -268,7 +278,7 @@ function NotesCell({ appointment }: { appointment: Appointment }) {
           maxLength={2000}
           rows={3}
           className="w-full text-sm border border-border rounded-xl px-2 py-1 resize-none focus:outline-none focus:ring-2 focus:ring-primary"
-          placeholder="Notes privées..."
+          placeholder={t("notesPrivatePlaceholder")}
           disabled={saving}
         />
         {saveError && <span className="text-xs text-red-500">{saveError}</span>}
@@ -280,12 +290,12 @@ function NotesCell({ appointment }: { appointment: Appointment }) {
     <button
       onClick={() => setEditing(true)}
       className="text-left w-full min-h-[2rem] text-sm text-gray-600 hover:bg-secondary rounded-xl px-2 py-1 border border-transparent hover:border-border transition-colors"
-      title="Cliquer pour modifier"
+      title={t("clickToEdit")}
     >
       {notes ? (
         <span className="whitespace-pre-wrap">{notes}</span>
       ) : (
-        <span className="text-gray-300 italic">Ajouter une note...</span>
+        <span className="text-gray-300 italic">{t("addNoteInline")}</span>
       )}
     </button>
   );
@@ -307,6 +317,9 @@ export default function PatientDetailPage({ listPath = "/patients" }: { listPath
 }
 
 function PatientDetail({ listPath }: { listPath: string }) {
+  const t = useTranslations("medecin.patientDetail");
+  const tCommon = useTranslations("medecin.common");
+  const STATUS_LABELS = getStatusLabels(t);
   const params = useParams<{ id: string }>();
   const router = useRouter();
   const [patient, setPatient] = useState<Patient | null>(null);
@@ -335,10 +348,10 @@ function PatientDetail({ listPath }: { listPath: string }) {
       try {
         const res = await fetch(`/api/patients/${params.id}`);
         if (res.status === 404) {
-          setError("Patient introuvable");
+          setError(t("patientNotFound"));
           return;
         }
-        if (!res.ok) throw new Error("Erreur lors du chargement");
+        if (!res.ok) throw new Error(t("loadError"));
         const data = await res.json();
         setPatient(data.patient);
         setAppointments(data.appointments);
@@ -346,7 +359,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
         if (data.viewerRole) setViewerRole(data.viewerRole);
         if (data.viewerPermissions) setViewerPerms(data.viewerPermissions);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Erreur inconnue");
+        setError(e instanceof Error ? e.message : tCommon("unknownError"));
       } finally {
         setLoading(false);
       }
@@ -440,19 +453,19 @@ function PatientDetail({ listPath }: { listPath: string }) {
   };
 
   if (loading) {
-    return <p className="text-primary text-sm p-6">Chargement...</p>;
+    return <p className="text-primary text-sm p-6">{tCommon("loading")}</p>;
   }
 
   if (error || !patient) {
     return (
       <div className="p-6 space-y-3">
-        <p className="text-red-500 text-sm">{error ?? "Patient introuvable"}</p>
+        <p className="text-red-500 text-sm">{error ?? t("patientNotFound")}</p>
         <button
           onClick={() => router.back()}
           className="text-sm text-primary hover:underline flex items-center gap-1"
         >
           <ArrowLeft className="h-4 w-4" />
-          Retour
+          {tCommon("back")}
         </button>
       </div>
     );
@@ -479,7 +492,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
                 className="inline-flex items-center gap-1 rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-bold text-red-700"
                 title="Nombre de rendez-vous où ce patient ne s'est pas présenté"
               >
-                ⚠ {patient.noShowCount} absence{patient.noShowCount > 1 ? "s" : ""}
+                ⚠ {t("noShowBadge", { count: patient.noShowCount, s: patient.noShowCount > 1 ? "s" : "" })}
               </span>
             )}
             {patient.lastMinuteCancelCount > 0 && (
@@ -487,7 +500,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
                 className="inline-flex items-center gap-1 rounded-full bg-orange-100 px-2.5 py-0.5 text-xs font-bold text-orange-700"
                 title="Annulations dans les 2h avant le rendez-vous"
               >
-                {patient.lastMinuteCancelCount} annulation{patient.lastMinuteCancelCount > 1 ? "s" : ""} tardive{patient.lastMinuteCancelCount > 1 ? "s" : ""}
+                {t("lateCancelBadge", { count: patient.lastMinuteCancelCount, s: patient.lastMinuteCancelCount > 1 ? "s" : "" })}
               </span>
             )}
           </div>
@@ -503,7 +516,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
               className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
             >
               <Pencil className="h-4 w-4" />
-              Modifier
+              {tCommon("edit")}
             </button>
           )}
           {(viewerRole === "doctor" || viewerPerms?.patientsDelete) && (
@@ -512,7 +525,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
               className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 transition-colors"
             >
               <Trash2 className="h-4 w-4" />
-              Supprimer
+              {tCommon("delete")}
             </button>
           )}
         </div>
@@ -522,25 +535,25 @@ function PatientDetail({ listPath }: { listPath: string }) {
       <div className="sticky top-0 z-10 -mx-1 px-1 pt-1 pb-0 bg-background/95 backdrop-blur-sm">
         <div className="flex gap-1 p-1 bg-slate-100 dark:bg-gray-800 rounded-lg flex-wrap">
           {([
-            { id: "general", label: "Infos générales", icon: IdCard },
-            { id: "dossier", label: "Dossier médical", icon: ClipboardList },
-            { id: "rdv", label: "Rendez-vous", icon: Calendar },
-            { id: "ordonnances", label: "Ordonnances", icon: Pill },
-            { id: "documents", label: "Documents", icon: FileUp },
-          ] as const).map((t) => {
-            const Icon = t.icon;
+            { id: "general", label: t("tabGeneral"), icon: IdCard },
+            { id: "dossier", label: t("tabDossier"), icon: ClipboardList },
+            { id: "rdv", label: t("tabAppointments"), icon: Calendar },
+            { id: "ordonnances", label: t("tabPrescriptions"), icon: Pill },
+            { id: "documents", label: t("tabDocuments"), icon: FileUp },
+          ] as const).map((tabItem) => {
+            const Icon = tabItem.icon;
             return (
               <button
-                key={t.id}
-                onClick={() => setTab(t.id)}
+                key={tabItem.id}
+                onClick={() => setTab(tabItem.id)}
                 className={`flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium rounded-md transition-colors ${
-                  tab === t.id
+                  tab === tabItem.id
                     ? "bg-white dark:bg-gray-900 text-slate-900 dark:text-white shadow-sm"
                     : "text-slate-600 dark:text-gray-400 hover:text-slate-900 dark:hover:text-white"
                 }`}
               >
                 <Icon className="w-4 h-4" />
-                {t.label}
+                {tabItem.label}
               </button>
             );
           })}
@@ -569,9 +582,9 @@ function PatientDetail({ listPath }: { listPath: string }) {
             );
             if (res.ok) {
               setAttachments((prev) => prev.filter((a) => a.id !== attId));
-              toast.success("Document supprimé");
+              toast.success(t("docDeleted"));
             } else {
-              toast.error("Suppression échouée");
+              toast.error(t("docDeleteFailed"));
             }
           }}
           viewerRole={viewerRole}
@@ -740,7 +753,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
             setPatient((p) => (p ? { ...p, ...updatedPatient } : p));
             if (updatedMedical) setMedical(updatedMedical);
             setEditOpen(false);
-            toast.success("Patient mis à jour");
+            toast.success(t("patientUpdated"));
           }}
         />
       )}
@@ -752,7 +765,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
           onUploaded={(att) => {
             setAttachments((prev) => [att, ...prev]);
             setUploadOpen(false);
-            toast.success("Document ajouté au dossier");
+            toast.success(t("docAdded"));
           }}
         />
       )}
@@ -760,12 +773,13 @@ function PatientDetail({ listPath }: { listPath: string }) {
       {prescModalOpen && (
         <PrescriptionModal
           patientId={params.id!}
+          patientName={patient?.name ?? "—"}
           completedAppointments={appointments.filter((a) => a.status === "completed")}
           onClose={() => setPrescModalOpen(false)}
           onCreated={(presc) => {
             setPrescriptions((prev) => [presc, ...prev]);
             setPrescModalOpen(false);
-            toast.success("Ordonnance enregistrée");
+            toast.success(t("prescCreated"));
           }}
         />
       )}
@@ -785,8 +799,8 @@ function PatientDetail({ listPath }: { listPath: string }) {
               const data = await res.json();
               toast.success(
                 data.removedFutureAppointments > 0
-                  ? `${data.removedFutureAppointments} RDV futur(s) supprimé(s). Historique conservé.`
-                  : "Patient retiré de votre liste."
+                  ? t("removedAppointments", { count: data.removedFutureAppointments })
+                  : t("patientRemoved")
               );
               router.push(listPath);
             } catch (e) {
@@ -815,6 +829,8 @@ function PatientEditDialog({
   onClose: () => void;
   onSaved: (patient: Partial<Patient>, medical: MedicalProfile) => void;
 }) {
+  const t = useTranslations("medecin.patientDetail");
+  const tCommon = useTranslations("medecin.common");
   const [form, setForm] = useState({
     name: patient.name,
     phone: patient.phone,
@@ -909,18 +925,18 @@ function PatientEditDialog({
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-xl">
         <div className="sticky top-0 flex items-center justify-between border-b border-border bg-white px-5 py-4">
-          <h2 className="text-lg font-semibold text-foreground">Modifier le patient</h2>
+          <h2 className="text-lg font-semibold text-foreground">{t("editTitle")}</h2>
           <button
             onClick={onClose}
             className="h-8 w-8 rounded-lg hover:bg-secondary flex items-center justify-center text-gray-500"
-            aria-label="Fermer"
+            aria-label={tCommon("close")}
           >
             <XIcon className="h-4 w-4" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-5">
           <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-3" disabled={saving}>
-            <Field label="Nom complet *">
+            <Field label={t("fieldFullName")}>
               <input
                 type="text"
                 required
@@ -929,7 +945,7 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </Field>
-            <Field label="Téléphone *">
+            <Field label={t("fieldPhone")}>
               <input
                 type="tel"
                 required
@@ -938,7 +954,7 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </Field>
-            <Field label="Email">
+            <Field label={t("fieldEmail")}>
               <input
                 type="email"
                 value={form.email}
@@ -946,7 +962,7 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </Field>
-            <Field label="Date de naissance">
+            <Field label={t("fieldDateOfBirth")}>
               <input
                 type="date"
                 value={form.dateOfBirth}
@@ -954,18 +970,18 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </Field>
-            <Field label="Sexe">
+            <Field label={t("fieldGender")}>
               <select
                 value={form.gender}
                 onChange={(e) => setForm({ ...form, gender: e.target.value })}
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">—</option>
-                <option value="M">Homme</option>
-                <option value="F">Femme</option>
+                <option value="M">{t("genderMale")}</option>
+                <option value="F">{t("genderFemale")}</option>
               </select>
             </Field>
-            <Field label="Groupe sanguin">
+            <Field label={t("fieldBloodType")}>
               <select
                 value={form.bloodType}
                 onChange={(e) => setForm({ ...form, bloodType: e.target.value })}
@@ -979,7 +995,7 @@ function PatientEditDialog({
                 ))}
               </select>
             </Field>
-            <Field label="N° CNAM">
+            <Field label={t("fieldCNAM")}>
               <input
                 type="text"
                 value={form.cnamNumber}
@@ -987,7 +1003,7 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </Field>
-            <Field label="CIN">
+            <Field label={t("fieldCIN")}>
               <input
                 type="text"
                 value={form.cin}
@@ -995,7 +1011,7 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </Field>
-            <Field label="Profession">
+            <Field label={t("fieldOccupation")}>
               <input
                 type="text"
                 value={form.occupation}
@@ -1003,31 +1019,31 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </Field>
-            <Field label="Situation familiale">
+            <Field label={t("fieldMaritalStatus")}>
               <select
                 value={form.maritalStatus}
                 onChange={(e) => setForm({ ...form, maritalStatus: e.target.value })}
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
                 <option value="">—</option>
-                <option value="single">Célibataire</option>
-                <option value="married">Marié(e)</option>
-                <option value="divorced">Divorcé(e)</option>
-                <option value="widowed">Veuf(ve)</option>
+                <option value="single">{t("maritalSingle")}</option>
+                <option value="married">{t("maritalMarried")}</option>
+                <option value="divorced">{t("maritalDivorced")}</option>
+                <option value="widowed">{t("maritalWidowed")}</option>
               </select>
             </Field>
-            <Field label="Langue préférée">
+            <Field label={t("fieldLanguage")}>
               <select
                 value={form.preferredLanguage}
                 onChange={(e) => setForm({ ...form, preferredLanguage: e.target.value })}
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               >
-                <option value="fr">Français</option>
-                <option value="ar">العربية</option>
-                <option value="en">English</option>
+                <option value="fr">{t("langFr")}</option>
+                <option value="ar">{t("langAr")}</option>
+                <option value="en">{t("langEn")}</option>
               </select>
             </Field>
-            <Field label="Taille (cm)">
+            <Field label={t("fieldHeight")}>
               <input
                 type="number"
                 min={30}
@@ -1037,7 +1053,7 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </Field>
-            <Field label="Poids (kg)">
+            <Field label={t("fieldWeight")}>
               <input
                 type="number"
                 min={1}
@@ -1051,8 +1067,8 @@ function PatientEditDialog({
           </fieldset>
 
           <fieldset className="grid grid-cols-1 md:grid-cols-2 gap-3" disabled={saving}>
-            <h3 className="md:col-span-2 text-sm font-semibold text-foreground">Assurance</h3>
-            <Field label="Organisme">
+            <h3 className="md:col-span-2 text-sm font-semibold text-foreground">{t("sectionInsurance")}</h3>
+            <Field label={t("fieldInsuranceOrg")}>
               <select
                 value={form.insuranceProvider}
                 onChange={(e) => setForm({ ...form, insuranceProvider: e.target.value })}
@@ -1068,7 +1084,7 @@ function PatientEditDialog({
                 <option value="AUTRE">Autre</option>
               </select>
             </Field>
-            <Field label="N° de police">
+            <Field label={t("fieldInsuranceNum")}>
               <input
                 type="text"
                 value={form.insuranceNumber}
@@ -1079,8 +1095,8 @@ function PatientEditDialog({
           </fieldset>
 
           <fieldset className="grid grid-cols-1 md:grid-cols-3 gap-3" disabled={saving}>
-            <h3 className="md:col-span-3 text-sm font-semibold text-foreground">Contact d&apos;urgence</h3>
-            <Field label="Nom">
+            <h3 className="md:col-span-3 text-sm font-semibold text-foreground">{t("sectionEmergency")}</h3>
+            <Field label={t("fieldEmergencyName")}>
               <input
                 type="text"
                 value={form.emergencyContactName}
@@ -1088,7 +1104,7 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </Field>
-            <Field label="Téléphone">
+            <Field label={t("fieldEmergencyPhone")}>
               <input
                 type="tel"
                 value={form.emergencyContactPhone}
@@ -1096,20 +1112,20 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </Field>
-            <Field label="Relation">
+            <Field label={t("fieldEmergencyRelation")}>
               <input
                 type="text"
                 value={form.emergencyContactRelation}
                 onChange={(e) => setForm({ ...form, emergencyContactRelation: e.target.value })}
-                placeholder="Conjoint, parent, enfant…"
+                placeholder={t("emergencyPlaceholder")}
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </Field>
           </fieldset>
 
           <fieldset className="space-y-3" disabled={saving}>
-            <h3 className="text-sm font-semibold text-foreground">Dossier médical</h3>
-            <Field label="Allergies">
+            <h3 className="text-sm font-semibold text-foreground">{t("sectionMedical")}</h3>
+            <Field label={t("fieldAllergies")}>
               <textarea
                 rows={2}
                 value={form.allergies}
@@ -1117,7 +1133,7 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
               />
             </Field>
-            <Field label="Maladies chroniques">
+            <Field label={t("fieldChronicConditions")}>
               <textarea
                 rows={2}
                 value={form.chronicConditions}
@@ -1125,7 +1141,7 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
               />
             </Field>
-            <Field label="Traitements en cours">
+            <Field label={t("fieldCurrentMeds")}>
               <textarea
                 rows={2}
                 value={form.currentMeds}
@@ -1133,7 +1149,7 @@ function PatientEditDialog({
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
               />
             </Field>
-            <Field label="Autres remarques">
+            <Field label={t("fieldMedNotes")}>
               <textarea
                 rows={2}
                 value={form.notes}
@@ -1150,14 +1166,14 @@ function PatientEditDialog({
               disabled={saving}
               className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary"
             >
-              Annuler
+              {tCommon("cancel")}
             </button>
             <button
               type="submit"
               disabled={saving}
               className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
             >
-              {saving ? "Enregistrement..." : "Enregistrer"}
+              {saving ? tCommon("saving") : tCommon("save")}
             </button>
           </div>
         </form>
@@ -1184,6 +1200,8 @@ function DeleteDialog({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const t = useTranslations("medecin.patientDetail");
+  const tCommon = useTranslations("medecin.common");
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="w-full max-w-md rounded-2xl bg-white p-5 shadow-xl">
@@ -1192,10 +1210,9 @@ function DeleteDialog({
             <Trash2 className="h-5 w-5" />
           </div>
           <div>
-            <h3 className="text-base font-semibold text-foreground">Retirer ce patient ?</h3>
+            <h3 className="text-base font-semibold text-foreground">{t("deleteTitle")}</h3>
             <p className="mt-1 text-sm text-gray-600">
-              Les rendez-vous futurs (à confirmer ou confirmés) seront supprimés.
-              L&apos;historique médical et les consultations passées sont conservés pour la traçabilité.
+              {t("deleteMessage")}
             </p>
           </div>
         </div>
@@ -1205,14 +1222,14 @@ function DeleteDialog({
             disabled={loading}
             className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary"
           >
-            Annuler
+            {tCommon("cancel")}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
             className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:opacity-60"
           >
-            {loading ? "Suppression..." : "Confirmer"}
+            {loading ? t("deletingButton") : tCommon("confirm")}
           </button>
         </div>
       </div>
@@ -1229,6 +1246,7 @@ function GeneralTab({
   patient: Patient;
   appointments: Appointment[];
 }) {
+  const t = useTranslations("medecin.patientDetail");
   const lastVisit = appointments.find((a) => a.status === "completed");
   const upcomingVisit = appointments.find(
     (a) => new Date(a.startsAt) > new Date() && (a.status === "confirmed" || a.status === "pending")
@@ -1241,13 +1259,13 @@ function GeneralTab({
     <div className="space-y-4">
       {/* KPIs */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-        <Kpi label="Total visites" value={String(appointments.length)} />
+        <Kpi label={t("kpiTotalVisits")} value={String(appointments.length)} />
         <Kpi
-          label="Patient depuis"
+          label={t("kpiPatientSince")}
           value={format(new Date(patient.createdAt), "MMM yyyy", { locale: fr })}
         />
         <Kpi
-          label="Dernière visite"
+          label={t("kpiLastVisit")}
           value={
             lastVisit
               ? format(new Date(lastVisit.startsAt), "d MMM yyyy", { locale: fr })
@@ -1255,7 +1273,7 @@ function GeneralTab({
           }
         />
         <Kpi
-          label="Prochain RDV"
+          label={t("kpiNextAppt")}
           value={
             upcomingVisit
               ? format(new Date(upcomingVisit.startsAt), "d MMM HH:mm", { locale: fr })
@@ -1265,11 +1283,11 @@ function GeneralTab({
       </div>
 
       {/* Identity */}
-      <Card title="Identité">
+      <Card title={t("cardIdentity")}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <Info label="Nom complet" value={patient.name} />
+          <Info label={t("fieldFullNameDisplay")} value={patient.name} />
           <Info
-            label="Date de naissance"
+            label={t("fieldDateOfBirthDisplay")}
             value={
               patient.dateOfBirth
                 ? format(new Date(patient.dateOfBirth), "d MMM yyyy", { locale: fr })
@@ -1277,22 +1295,22 @@ function GeneralTab({
             }
           />
           <Info
-            label="Sexe"
-            value={patient.gender === "M" ? "Homme" : patient.gender === "F" ? "Femme" : null}
+            label={t("fieldGenderDisplay")}
+            value={patient.gender === "M" ? t("genderMale") : patient.gender === "F" ? t("genderFemale") : null}
           />
-          <Info label="CIN" value={patient.cin} mono />
-          <Info label="Nationalité" value={patient.nationality} />
+          <Info label={t("fieldCINDisplay")} value={patient.cin} mono />
+          <Info label={t("fieldNationality")} value={patient.nationality} />
           <Info
-            label="Situation matrimoniale"
+            label={t("fieldMaritalStatusDisplay")}
             value={
               patient.maritalStatus === "single"
-                ? "Célibataire"
+                ? t("maritalSingle")
                 : patient.maritalStatus === "married"
-                ? "Marié(e)"
+                ? t("maritalMarried")
                 : patient.maritalStatus === "divorced"
-                ? "Divorcé(e)"
+                ? t("maritalDivorced")
                 : patient.maritalStatus === "widowed"
-                ? "Veuf/Veuve"
+                ? t("maritalWidowedDisplay")
                 : null
             }
           />
@@ -1300,12 +1318,12 @@ function GeneralTab({
       </Card>
 
       {/* Contact */}
-      <Card title="Coordonnées">
+      <Card title={t("cardContact")}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <Info label="Téléphone" value={patient.phone} mono />
-          <Info label="Email" value={patient.email} />
+          <Info label={t("fieldPhoneDisplay")} value={patient.phone} mono />
+          <Info label={t("fieldEmailDisplay")} value={patient.email} />
           <Info
-            label="Adresse"
+            label={t("fieldAddress")}
             value={
               [patient.addressStreet, patient.addressPostalCode, patient.addressCity]
                 .filter(Boolean)
@@ -1313,54 +1331,54 @@ function GeneralTab({
             }
           />
           <Info
-            label="Langue préférée"
+            label={t("fieldPrefLang")}
             value={
               patient.preferredLanguage === "ar"
-                ? "Arabe"
+                ? t("langArDisplay")
                 : patient.preferredLanguage === "en"
-                ? "Anglais"
-                : "Français"
+                ? t("langEnDisplay")
+                : t("langFrDisplay")
             }
           />
         </div>
       </Card>
 
       {/* Insurance */}
-      <Card title="Assurance">
+      <Card title={t("cardInsurance")}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <Info label="CNAM" value={patient.cnamNumber} mono />
-          <Info label="Assureur" value={patient.insuranceProvider} />
-          <Info label="N° d'assurance" value={patient.insuranceNumber} mono />
+          <Info label={t("fieldCNAMDisplay")} value={patient.cnamNumber} mono />
+          <Info label={t("fieldInsurer")} value={patient.insuranceProvider} />
+          <Info label={t("fieldInsuranceNumDisplay")} value={patient.insuranceNumber} mono />
         </div>
       </Card>
 
       {/* Emergency contact */}
-      <Card title="Contact d'urgence">
+      <Card title={t("cardEmergency")}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <Info label="Nom" value={patient.emergencyContactName} />
-          <Info label="Téléphone" value={patient.emergencyContactPhone} mono />
-          <Info label="Relation" value={patient.emergencyContactRelation} />
+          <Info label={t("fieldEmergencyName")} value={patient.emergencyContactName} />
+          <Info label={t("fieldEmergencyPhone")} value={patient.emergencyContactPhone} mono />
+          <Info label={t("fieldEmergencyRelation")} value={patient.emergencyContactRelation} />
         </div>
       </Card>
 
       {/* Biometrics */}
-      <Card title="Morphologie">
+      <Card title={t("cardMorphology")}>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <Info label="Groupe sanguin" value={patient.bloodType} />
-          <Info label="Taille" value={patient.heightCm ? `${patient.heightCm} cm` : null} />
+          <Info label={t("fieldBloodTypeDisplay")} value={patient.bloodType} />
+          <Info label={t("fieldHeightDisplay")} value={patient.heightCm ? `${patient.heightCm} cm` : null} />
           <Info
-            label="Poids"
+            label={t("fieldWeightDisplay")}
             value={weightKg ? `${weightKg} kg` : null}
           />
-          <Info label="IMC" value={bmi ? bmi : null} />
+          <Info label={t("fieldBMI")} value={bmi ? bmi : null} />
         </div>
       </Card>
 
       {/* Profession */}
-      <Card title="Profession">
+      <Card title={t("cardOccupation")}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <Info label="Profession" value={patient.occupation} />
-          <Info label="Notes profession / expositions" value={patient.professionNotes} />
+          <Info label={t("fieldOccupation")} value={patient.occupation} />
+          <Info label={t("fieldProfessionNotes")} value={patient.professionNotes} />
         </div>
       </Card>
     </div>
@@ -1396,6 +1414,7 @@ function Info({
   value: string | null | undefined;
   mono?: boolean;
 }) {
+  const tCommon = useTranslations("medecin.common");
   return (
     <div>
       <div className="text-xs text-gray-500 uppercase tracking-wide">{label}</div>
@@ -1404,7 +1423,7 @@ function Info({
           mono ? "font-mono" : ""
         }`}
       >
-        {value ?? "Non renseigné"}
+        {value ?? tCommon("notProvided")}
       </div>
     </div>
   );
@@ -1441,6 +1460,10 @@ function DossierTab({
   prescriptions: Prescription[];
   onNewPrescription: () => void;
 }) {
+  const t = useTranslations("medecin.patientDetail");
+  const tCommon = useTranslations("medecin.common");
+  const STATUS_LABELS = getStatusLabels(t);
+  const ATTACHMENT_CATEGORIES = getAttachmentCategories(t);
   const canUpload = viewerRole === "doctor" || viewerPerms?.patientsEdit;
   const fam = medical?.familyHistory;
   const lifestyle = medical?.lifestyle;
@@ -1448,38 +1471,38 @@ function DossierTab({
   return (
     <div className="space-y-4">
       {/* Medical summary */}
-      <Card title="Dossier médical — synthèse">
+      <Card title={t("cardMedicalSummary")}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <MedBlock title="Allergies" value={medical?.allergies} highlight="red" />
+          <MedBlock title={t("fieldAllergiesDisplay")} value={medical?.allergies} highlight="red" />
           <MedBlock
-            title="Maladies chroniques"
+            title={t("fieldChronicDisplay")}
             value={medical?.chronicConditions}
             highlight="orange"
           />
           <MedBlock
-            title="Traitements en cours"
+            title={t("fieldCurrentMedsDisplay")}
             value={medical?.currentMeds}
             highlight="blue"
           />
-          <MedBlock title="Autres remarques" value={medical?.notes} highlight="gray" />
+          <MedBlock title={t("fieldNotesDisplay")} value={medical?.notes} highlight="gray" />
         </div>
         {medical?.updatedAt && (
           <div className="text-xs text-gray-400 mt-4">
-            Mis à jour le {format(new Date(medical.updatedAt), "d MMM yyyy", { locale: fr })}
+            {t("updatedAt")} {format(new Date(medical.updatedAt), "d MMM yyyy", { locale: fr })}
           </div>
         )}
       </Card>
 
       {/* Family history */}
-      <Card title="Antécédents familiaux">
+      <Card title={t("cardFamilyHistory")}>
         {fam && Object.values(fam).some(Boolean) ? (
           <div className="flex flex-wrap gap-2 text-sm">
-            {fam.heart && <Tag label="Cardiopathie" tone="red" />}
-            {fam.diabetes && <Tag label="Diabète" tone="blue" />}
-            {fam.cancer && <Tag label="Cancer" tone="purple" />}
-            {fam.hypertension && <Tag label="HTA" tone="orange" />}
-            {fam.stroke && <Tag label="AVC" tone="red" />}
-            {fam.mentalHealth && <Tag label="Santé mentale" tone="teal" />}
+            {fam.heart && <Tag label={t("famHeart")} tone="red" />}
+            {fam.diabetes && <Tag label={t("famDiabetes")} tone="blue" />}
+            {fam.cancer && <Tag label={t("famCancer")} tone="purple" />}
+            {fam.hypertension && <Tag label={t("famHypertension")} tone="orange" />}
+            {fam.stroke && <Tag label={t("famStroke")} tone="red" />}
+            {fam.mentalHealth && <Tag label={t("famMentalHealth")} tone="teal" />}
             {fam.notes && (
               <div className="w-full mt-2 text-gray-700 whitespace-pre-wrap">{fam.notes}</div>
             )}
@@ -1490,50 +1513,50 @@ function DossierTab({
       </Card>
 
       {/* Lifestyle */}
-      <Card title="Mode de vie">
+      <Card title={t("cardLifestyle")}>
         {lifestyle && Object.values(lifestyle).some((v) => v != null) ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <Info
-              label="Tabagisme"
+              label={t("fieldSmoking")}
               value={
                 lifestyle.smoking === "never"
-                  ? "Jamais"
+                  ? t("smokingNever")
                   : lifestyle.smoking === "former"
-                  ? "Ancien fumeur"
+                  ? t("smokingFormer")
                   : lifestyle.smoking === "current"
-                  ? `Fumeur${
-                      lifestyle.smokingPacksPerDay ? ` (${lifestyle.smokingPacksPerDay} p/j)` : ""
-                    }`
+                  ? lifestyle.smokingPacksPerDay
+                    ? t("smokingCurrent", { packs: lifestyle.smokingPacksPerDay })
+                    : t("smokingCurrentNoCount")
                   : null
               }
             />
             <Info
-              label="Alcool"
+              label={t("fieldAlcohol")}
               value={
                 lifestyle.alcohol === "none"
-                  ? "Aucune"
+                  ? t("alcoholNone")
                   : lifestyle.alcohol === "occasional"
-                  ? "Occasionnel"
+                  ? t("alcoholOccasional")
                   : lifestyle.alcohol === "moderate"
-                  ? "Modéré"
+                  ? t("alcoholModerate")
                   : lifestyle.alcohol === "heavy"
-                  ? "Important"
+                  ? t("alcoholHeavy")
                   : null
               }
             />
             <Info
-              label="Activité physique"
+              label={t("fieldActivity")}
               value={
                 lifestyle.activity === "sedentary"
-                  ? "Sédentaire"
+                  ? t("activitySedentary")
                   : lifestyle.activity === "moderate"
-                  ? "Modérée"
+                  ? t("activityModerate")
                   : lifestyle.activity === "active"
-                  ? "Régulière"
+                  ? t("activityActive")
                   : null
               }
             />
-            <Info label="Régime / Diète" value={lifestyle.diet ?? null} />
+            <Info label={t("fieldDiet")} value={lifestyle.diet ?? null} />
           </div>
         ) : (
           <EmptyInline />
@@ -1541,7 +1564,7 @@ function DossierTab({
       </Card>
 
       {/* Past surgeries */}
-      <Card title="Antécédents chirurgicaux">
+      <Card title={t("cardSurgeries")}>
         {medical?.pastSurgeries && medical.pastSurgeries.length > 0 ? (
           <ul className="space-y-2 text-sm">
             {medical.pastSurgeries.map((s, i) => (
@@ -1565,7 +1588,7 @@ function DossierTab({
       </Card>
 
       {/* Past hospitalizations */}
-      <Card title="Hospitalisations antérieures">
+      <Card title={t("cardHospitalizations")}>
         {medical?.pastHospitalizations && medical.pastHospitalizations.length > 0 ? (
           <ul className="space-y-2 text-sm">
             {medical.pastHospitalizations.map((h, i) => (
@@ -1578,7 +1601,7 @@ function DossierTab({
                 )}
                 <div className="flex-1">
                   <div className="font-medium text-foreground">{h.reason}</div>
-                  {h.days && <div className="text-xs text-gray-500">{h.days} jours</div>}
+                  {h.days && <div className="text-xs text-gray-500">{t("hospitalizationDays", { count: h.days })}</div>}
                 </div>
               </li>
             ))}
@@ -1589,15 +1612,15 @@ function DossierTab({
       </Card>
 
       {/* Vaccinations */}
-      <Card title="Vaccinations">
+      <Card title={t("cardVaccinations")}>
         {medical?.vaccinations && medical.vaccinations.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-left text-xs uppercase text-gray-500 border-b border-border">
-                  <th className="pb-2 pr-4 font-medium">Vaccin</th>
-                  <th className="pb-2 pr-4 font-medium">Date</th>
-                  <th className="pb-2 font-medium">Lot</th>
+                  <th className="pb-2 pr-4 font-medium">{t("vaccineHeader")}</th>
+                  <th className="pb-2 pr-4 font-medium">{tCommon("date")}</th>
+                  <th className="pb-2 font-medium">{t("lotHeader")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -1622,11 +1645,11 @@ function DossierTab({
 
       {/* Women's health (only if gender=F) */}
       {patient.gender === "F" && (
-        <Card title="Gynécologie / Obstétrique">
+        <Card title={t("cardWomensHealth")}>
           {medical?.womensHealth && Object.values(medical.womensHealth).some((v) => v != null) ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <Info
-                label="Grossesses"
+                label={t("fieldPregnancies")}
                 value={
                   medical.womensHealth.pregnancies != null
                     ? String(medical.womensHealth.pregnancies)
@@ -1634,7 +1657,7 @@ function DossierTab({
                 }
               />
               <Info
-                label="Enfants vivants"
+                label={t("fieldLivingChildren")}
                 value={
                   medical.womensHealth.livingChildren != null
                     ? String(medical.womensHealth.livingChildren)
@@ -1642,7 +1665,7 @@ function DossierTab({
                 }
               />
               <Info
-                label="Dernières règles"
+                label={t("fieldLastMenstruation")}
                 value={
                   medical.womensHealth.lastMenstruation
                     ? format(new Date(medical.womensHealth.lastMenstruation), "d MMM yyyy", {
@@ -1651,10 +1674,10 @@ function DossierTab({
                     : null
                 }
               />
-              <Info label="Contraception" value={medical.womensHealth.contraception ?? null} />
+              <Info label={t("fieldContraception")} value={medical.womensHealth.contraception ?? null} />
               {medical.womensHealth.menopause && (
                 <div className="md:col-span-4">
-                  <Tag label="Ménopause" tone="orange" />
+                  <Tag label={t("tagMenopause")} tone="orange" />
                 </div>
               )}
               {medical.womensHealth.notes && (
@@ -1673,9 +1696,9 @@ function DossierTab({
       <div className="rounded-2xl border border-border bg-white shadow-sm">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <div>
-            <h2 className="font-semibold text-foreground">Documents et fichiers</h2>
+            <h2 className="font-semibold text-foreground">{t("cardDocuments")}</h2>
             <p className="text-xs text-gray-400 mt-0.5">
-              Analyses, imagerie, ordonnances, certificats
+              {t("documentsSubtitle")}
             </p>
           </div>
           {canUpload && (
@@ -1684,13 +1707,13 @@ function DossierTab({
               className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3 py-2 text-sm font-medium hover:opacity-90"
             >
               <Upload className="h-4 w-4" />
-              Ajouter un document
+              {t("addDocumentButton")}
             </button>
           )}
         </div>
         {attachments.length === 0 ? (
           <div className="p-10 text-center text-sm text-gray-400">
-            Aucun document pour le moment.
+            {t("noDocuments")}
           </div>
         ) : (
           <ul className="divide-y divide-border">
@@ -1743,9 +1766,9 @@ function DossierTab({
       {consultNotes.length > 0 && (
         <div className="rounded-2xl border border-border bg-white shadow-sm">
           <div className="p-4 border-b border-border">
-            <h2 className="font-semibold text-foreground">Historique de consultations (SOAP)</h2>
+            <h2 className="font-semibold text-foreground">{t("cardSOAP")}</h2>
             <p className="text-xs text-gray-400 mt-0.5">
-              Cliquer sur une consultation pour voir la note complète
+              {t("soapSubtitle")}
             </p>
           </div>
           <div className="divide-y divide-border">
@@ -1786,7 +1809,7 @@ function DossierTab({
                       {cn.vitals && Object.keys(cn.vitals).length > 0 && (
                         <div>
                           <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">
-                            Constantes
+                            {t("soapVitals")}
                           </div>
                           <div className="flex flex-wrap gap-2">
                             {Object.entries(cn.vitals).map(([k, v]) => {
@@ -1805,10 +1828,10 @@ function DossierTab({
                         </div>
                       )}
                       {[
-                        { letter: "S", key: "subjective" as const, label: "Subjectif" },
-                        { letter: "O", key: "objective" as const, label: "Objectif" },
-                        { letter: "A", key: "assessment" as const, label: "Assessment" },
-                        { letter: "P", key: "plan" as const, label: "Plan" },
+                        { letter: "S", key: "subjective" as const, label: t("soapSubjective") },
+                        { letter: "O", key: "objective" as const, label: t("soapObjective") },
+                        { letter: "A", key: "assessment" as const, label: t("soapAssessment") },
+                        { letter: "P", key: "plan" as const, label: t("soapPlan") },
                       ].map(({ letter, key, label }) =>
                         cn[key] ? (
                           <div key={key}>
@@ -1844,22 +1867,22 @@ function DossierTab({
       {/* Appointments table */}
       <div className="rounded-2xl border border-border bg-white shadow-sm">
         <div className="p-4 border-b border-border">
-          <h2 className="font-semibold text-foreground">Historique des rendez-vous</h2>
+          <h2 className="font-semibold text-foreground">{t("cardApptHistory")}</h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Cliquer sur une note pour la modifier — sauvegarde automatique
+            {t("apptHistorySubtitle")}
           </p>
         </div>
         {appointments.length === 0 ? (
-          <p className="p-6 text-gray-400 text-center text-sm">Aucun rendez-vous.</p>
+          <p className="p-6 text-gray-400 text-center text-sm">{t("noAppointments")}</p>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-secondary text-left">
-                  <th className="px-4 py-3 font-medium text-foreground">Date</th>
-                  <th className="px-4 py-3 font-medium text-foreground">Statut</th>
-                  <th className="px-4 py-3 font-medium text-foreground">Motif</th>
-                  <th className="px-4 py-3 font-medium text-foreground w-64">Notes privées</th>
+                  <th className="px-4 py-3 font-medium text-foreground">{tCommon("date")}</th>
+                  <th className="px-4 py-3 font-medium text-foreground">{tCommon("status")}</th>
+                  <th className="px-4 py-3 font-medium text-foreground">{t("colReason")}</th>
+                  <th className="px-4 py-3 font-medium text-foreground w-64">{t("colNotes")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
@@ -1916,7 +1939,8 @@ function Tag({
 }
 
 function EmptyInline() {
-  return <div className="text-sm text-gray-300 italic">Aucune donnée enregistrée.</div>;
+  const t = useTranslations("medecin.patientDetail");
+  return <div className="text-sm text-gray-300 italic">{t("noData")}</div>;
 }
 
 // ─── Ordonnances section ──────────────────────────────────────────────────────
@@ -1928,6 +1952,7 @@ function OrdonnancesSection({
   prescriptions: Prescription[];
   onNewPrescription: () => void;
 }) {
+  const t = useTranslations("medecin.patientDetail");
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
   return (
@@ -1936,10 +1961,10 @@ function OrdonnancesSection({
         <div>
           <h2 className="font-semibold text-foreground flex items-center gap-2">
             <FileText className="h-4 w-4 text-primary" />
-            Ordonnances
+            {t("cardPrescriptions")}
           </h2>
           <p className="text-xs text-gray-400 mt-0.5">
-            Ordonnances rédigées après consultation
+            {t("prescSubtitle")}
           </p>
         </div>
         <button
@@ -1947,13 +1972,13 @@ function OrdonnancesSection({
           className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3 py-2 text-sm font-medium hover:opacity-90"
         >
           <Plus className="h-4 w-4" />
-          Nouvelle ordonnance
+          {t("newPrescriptionButton")}
         </button>
       </div>
 
       {prescriptions.length === 0 ? (
         <div className="p-8 text-center text-sm text-gray-400">
-          Aucune ordonnance pour ce patient.
+          {t("noPrescriptions")}
         </div>
       ) : (
         <ul className="divide-y divide-border">
@@ -2018,43 +2043,53 @@ function OrdonnancesSection({
 
 function PrescriptionModal({
   patientId,
+  patientName,
   completedAppointments,
   onClose,
   onCreated,
 }: {
   patientId: string;
+  patientName: string;
   completedAppointments: Appointment[];
   onClose: () => void;
   onCreated: (presc: Prescription) => void;
 }) {
+  const t = useTranslations("medecin.patientDetail");
+  const tCommon = useTranslations("medecin.common");
   const [appointmentId, setAppointmentId] = useState(
     completedAppointments[0]?.id ?? ""
   );
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
-  const [templateModalOpen, setTemplateModalOpen] = useState(false);
   const [usedTemplateId, setUsedTemplateId] = useState<string | null>(null);
+  const [previewing, setPreviewing] = useState(false);
+  const [withoutAppointment, setWithoutAppointment] = useState(
+    completedAppointments.length === 0
+  );
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!appointmentId) {
-      toast.error("Veuillez sélectionner un rendez-vous");
+    if (!withoutAppointment && !appointmentId) {
+      toast.error(t("prescRequireAppt"));
       return;
     }
     if (content.trim().length < 3) {
-      toast.error("L'ordonnance doit contenir au moins 3 caractères");
+      toast.error(t("prescTooShort"));
       return;
     }
     setSaving(true);
     try {
+      const body: Record<string, unknown> = { content: content.trim() };
+      if (withoutAppointment) {
+        body.patientId = patientId;
+      } else {
+        body.appointmentId = appointmentId;
+      }
+      if (usedTemplateId && usedTemplateId !== "__blank__") body.templateId = usedTemplateId;
       const res = await fetch("/api/prescriptions", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          appointmentId,
-          content: content.trim(),
-          ...(usedTemplateId ? { templateId: usedTemplateId } : {}),
-        }),
+        body: JSON.stringify(body),
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -2075,90 +2110,136 @@ function PrescriptionModal({
         <div className="sticky top-0 flex items-center justify-between border-b border-border bg-white px-5 py-4 rounded-t-2xl">
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
             <FileText className="h-5 w-5 text-primary" />
-            Nouvelle ordonnance
+            {t("newPrescModalTitle")}
           </h2>
           <button
             onClick={onClose}
             className="h-8 w-8 rounded-lg hover:bg-secondary flex items-center justify-center text-gray-500"
-            aria-label="Fermer"
+            aria-label={tCommon("close")}
           >
             <XIcon className="h-4 w-4" />
           </button>
         </div>
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
-          <Field label="Rendez-vous (consulté)">
-            {completedAppointments.length === 0 ? (
-              <p className="text-sm text-gray-400 italic">
-                Aucun rendez-vous terminé pour ce patient.
-              </p>
-            ) : (
-              <select
-                value={appointmentId}
-                onChange={(e) => setAppointmentId(e.target.value)}
-                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                required
-              >
-                {completedAppointments.map((a) => (
-                  <option key={a.id} value={a.id}>
-                    {format(new Date(a.startsAt), "d MMM yyyy HH:mm", { locale: fr })}
-                    {a.reason ? ` — ${a.reason}` : ""}
-                  </option>
-                ))}
-              </select>
-            )}
-          </Field>
+          <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={withoutAppointment}
+              onChange={(e) => setWithoutAppointment(e.target.checked)}
+              className="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+            />
+            {t("withoutAppointment")}
+          </label>
+          {!withoutAppointment && (
+            <Field label={t("fieldAppointment")}>
+              {completedAppointments.length === 0 ? (
+                <p className="text-sm text-gray-400 italic">{t("noCompletedAppts")}</p>
+              ) : (
+                <select
+                  value={appointmentId}
+                  onChange={(e) => setAppointmentId(e.target.value)}
+                  className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  required
+                >
+                  {completedAppointments.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {format(new Date(a.startsAt), "d MMM yyyy HH:mm", { locale: fr })}
+                      {a.reason ? ` — ${a.reason}` : ""}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </Field>
+          )}
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="text-sm font-medium text-gray-700">
-                Médicaments et posologies
+              <label className="text-sm font-medium text-gray-700 block">
+                {t("fieldMedications")}
               </label>
-              {appointmentId && (
-                <button
-                  type="button"
-                  onClick={() => setTemplateModalOpen(true)}
-                  className="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-medium border border-primary/40 text-primary hover:bg-primary/5 transition-colors"
-                >
-                  <FileText className="h-3 w-3" />
-                  Choisir un modèle
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={() => setPreviewing((p) => !p)}
+                className="inline-flex items-center gap-1.5 h-7 px-3 rounded-lg text-xs font-medium border border-primary/40 text-primary hover:bg-primary/5 transition-colors"
+              >
+                {previewing ? (
+                  <>
+                    <Edit3 className="h-3 w-3" />
+                    {t("editPrescription")}
+                  </>
+                ) : (
+                  <>
+                    <Eye className="h-3 w-3" />
+                    {t("previewPrescription")}
+                  </>
+                )}
+              </button>
             </div>
-            <textarea
-              rows={6}
-              value={content}
-              onChange={(e) => {
-                if (e.target.value.length <= 5000) setContent(e.target.value);
-              }}
-              maxLength={5000}
-              placeholder="Ex: Amoxicilline 500mg — 1 cp matin, midi, soir pendant 7 jours..."
-              className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
-              required
-            />
-            <div className="flex items-center justify-between">
-              {usedTemplateId && (
-                <p className="text-xs text-primary">Modèle appliqué</p>
-              )}
-              <div className="ml-auto text-right text-xs text-gray-400">
-                {content.length} / 5000
+            {!previewing && (
+              <TemplateLookup
+                patientId={patientId}
+                appointmentId={appointmentId || undefined}
+                onPick={(rendered, templateId) => {
+                  if (templateId === "__blank__") {
+                    setContent("");
+                  } else {
+                    setContent((prev) =>
+                      prev.trim() ? prev + rendered : rendered
+                    );
+                  }
+                  setUsedTemplateId(templateId);
+                }}
+              />
+            )}
+            {previewing ? (
+              <div className="rounded-xl border-2 border-dashed border-primary/30 bg-white shadow-sm p-6 min-h-[300px]">
+                <div className="flex items-center gap-2 text-[10px] uppercase tracking-widest text-primary font-bold mb-4">
+                  <Eye className="h-3 w-3" />
+                  {t("previewLabel")}
+                </div>
+                <div className="border-b-2 border-primary pb-3 mb-4 flex justify-between items-start">
+                  <div>
+                    <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Patient</p>
+                    <p className="text-sm font-semibold text-gray-800">{patientName}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-[10px] uppercase tracking-wider text-gray-400 mb-0.5">Date</p>
+                    <p className="text-sm font-semibold text-gray-800">
+                      {format(new Date(), "d MMMM yyyy", { locale: fr })}
+                    </p>
+                  </div>
+                </div>
+                {content.trim() ? (
+                  <div
+                    className="prose prose-sm max-w-none text-gray-800 mb-8"
+                    dangerouslySetInnerHTML={{ __html: content }}
+                  />
+                ) : (
+                  <p className="text-sm text-gray-400 italic mb-8">{t("previewEmpty")}</p>
+                )}
+                <div className="mt-8 flex justify-end">
+                  <div className="text-center min-w-[160px]">
+                    <div className="h-12 border-b border-gray-300 mb-1" />
+                    <p className="text-[10px] text-gray-400">{t("signatureLabel")}</p>
+                  </div>
+                </div>
               </div>
-            </div>
+            ) : (
+              <QuillEditor
+                value={content}
+                onChange={setContent}
+                placeholder={t("prescPlaceholder")}
+                minHeight="240px"
+              />
+            )}
+            {!previewing && (
+              <div className="flex items-center justify-between">
+                {usedTemplateId && usedTemplateId !== "__blank__" && (
+                  <p className="text-xs text-primary">{t("templateApplied")}</p>
+                )}
+              </div>
+            )}
           </div>
-
-          {templateModalOpen && appointmentId && (
-            <PrescriptionTemplateModal
-              open={templateModalOpen}
-              onClose={() => setTemplateModalOpen(false)}
-              patientId={patientId}
-              appointmentId={appointmentId}
-              onApply={(markdown, templateId) => {
-                setContent((prev) =>
-                  prev.trim() ? prev + "\n\n" + markdown : markdown
-                );
-                setUsedTemplateId(templateId);
-              }}
-            />
-          )}
 
           <div className="flex justify-end gap-2 pt-1">
             <button
@@ -2167,14 +2248,14 @@ function PrescriptionModal({
               disabled={saving}
               className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary"
             >
-              Annuler
+              {tCommon("cancel")}
             </button>
             <button
               type="submit"
-              disabled={saving || completedAppointments.length === 0}
+              disabled={saving || (!withoutAppointment && completedAppointments.length === 0)}
               className="rounded-xl bg-primary px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-60"
             >
-              {saving ? "Enregistrement..." : "Enregistrer l'ordonnance"}
+              {saving ? tCommon("saving") : t("saveOrdonnance")}
             </button>
           </div>
         </form>
@@ -2194,6 +2275,8 @@ function TimelineTab({
   events: TimelineEvent[];
   onRefresh: () => void | Promise<void>;
 }) {
+  const t = useTranslations("medecin.patientDetail");
+  const tCommon = useTranslations("medecin.common");
   const [addOpen, setAddOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [body, setBody] = useState("");
@@ -2215,7 +2298,7 @@ function TimelineTab({
       setTitle("");
       setBody("");
       setAddOpen(false);
-      toast.success("Note ajoutée");
+      toast.success(t("noteAdded"));
       await onRefresh();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erreur");
@@ -2229,9 +2312,9 @@ function TimelineTab({
       <div className="rounded-2xl border border-border bg-white shadow-sm">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <div>
-            <h2 className="font-semibold text-foreground">Chronologie du dossier</h2>
+            <h2 className="font-semibold text-foreground">{t("cardTimeline")}</h2>
             <p className="text-xs text-gray-400 mt-0.5">
-              Tous les événements : visites, notes, ordonnances, documents
+              {t("timelineSubtitle")}
             </p>
           </div>
           <button
@@ -2239,7 +2322,7 @@ function TimelineTab({
             className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3 py-2 text-sm font-medium hover:opacity-90"
           >
             <Plus className="h-4 w-4" />
-            Ajouter une note
+            {t("addNoteButton")}
           </button>
         </div>
 
@@ -2249,13 +2332,13 @@ function TimelineTab({
               <input
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Titre de l'événement"
+                placeholder={t("titlePlaceholder")}
                 className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
               <textarea
                 value={body}
                 onChange={(e) => setBody(e.target.value)}
-                placeholder="Détails (optionnel)"
+                placeholder={t("detailsPlaceholder")}
                 rows={3}
                 className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-y"
               />
@@ -2268,14 +2351,14 @@ function TimelineTab({
                   }}
                   className="rounded-xl border border-border bg-white px-3 py-1.5 text-sm hover:bg-secondary"
                 >
-                  Annuler
+                  {tCommon("cancel")}
                 </button>
                 <button
                   onClick={submit}
                   disabled={saving || !title.trim()}
                   className="rounded-xl bg-primary text-white px-3 py-1.5 text-sm hover:opacity-90 disabled:opacity-60"
                 >
-                  {saving ? "Ajout..." : "Ajouter"}
+                  {saving ? t("addingButton") : tCommon("add")}
                 </button>
               </div>
             </div>
@@ -2284,7 +2367,7 @@ function TimelineTab({
 
         {events.length === 0 ? (
           <div className="p-10 text-center text-sm text-gray-400">
-            Aucun événement enregistré pour ce patient.
+            {t("noEvents")}
           </div>
         ) : (
           <ol className="relative p-5">
@@ -2354,6 +2437,9 @@ function UploadDialog({
   onClose: () => void;
   onUploaded: (a: Attachment) => void;
 }) {
+  const t = useTranslations("medecin.patientDetail");
+  const tCommon = useTranslations("medecin.common");
+  const ATTACHMENT_CATEGORIES = getAttachmentCategories(t);
   const [file, setFile] = useState<File | null>(null);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("labo");
@@ -2363,7 +2449,7 @@ function UploadDialog({
 
   async function submit() {
     if (!file || !title.trim()) {
-      toast.error("Fichier et titre obligatoires");
+      toast.error(t("uploadFileRequired"));
       return;
     }
     setUploading(true);
@@ -2380,7 +2466,7 @@ function UploadDialog({
       });
       if (!res.ok) {
         const e = await res.json().catch(() => ({}));
-        throw new Error(e.error ?? "Upload échoué");
+        throw new Error(e.error ?? t("uploadFailed"));
       }
       const data = await res.json();
       onUploaded(data.attachment);
@@ -2395,7 +2481,7 @@ function UploadDialog({
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/40 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-auto">
         <div className="flex items-center justify-between p-5 border-b border-border">
-          <h3 className="text-base font-semibold text-foreground">Ajouter un document</h3>
+          <h3 className="text-base font-semibold text-foreground">{t("uploadTitle")}</h3>
           <button
             onClick={onClose}
             className="h-8 w-8 rounded-xl hover:bg-secondary flex items-center justify-center text-gray-500"
@@ -2405,7 +2491,7 @@ function UploadDialog({
         </div>
         <div className="p-5 space-y-3 text-sm">
           <div>
-            <label className="text-xs text-gray-500 uppercase tracking-wide">Fichier</label>
+            <label className="text-xs text-gray-500 uppercase tracking-wide">{t("fileLabel")}</label>
             <input
               type="file"
               accept="image/*,.pdf,.doc,.docx,.txt"
@@ -2413,22 +2499,22 @@ function UploadDialog({
               className="mt-1 w-full text-sm"
             />
             <p className="text-xs text-gray-400 mt-1">
-              Max 15 Mo · PDF, image, Word, texte
+              {t("fileHint")}
             </p>
           </div>
           <div>
-            <label className="text-xs text-gray-500 uppercase tracking-wide">Titre *</label>
+            <label className="text-xs text-gray-500 uppercase tracking-wide">{t("titleLabel")}</label>
             <input
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="ex: Prise de sang — février 2026"
+              placeholder={t("titleDocPlaceholder")}
               className="mt-1 w-full rounded-xl border border-border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary"
               maxLength={200}
             />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="text-xs text-gray-500 uppercase tracking-wide">Catégorie</label>
+              <label className="text-xs text-gray-500 uppercase tracking-wide">{t("categoryLabel")}</label>
               <select
                 value={category}
                 onChange={(e) => setCategory(e.target.value)}
@@ -2442,7 +2528,7 @@ function UploadDialog({
               </select>
             </div>
             <div>
-              <label className="text-xs text-gray-500 uppercase tracking-wide">Date du document</label>
+              <label className="text-xs text-gray-500 uppercase tracking-wide">{t("issuedAtLabel")}</label>
               <input
                 type="date"
                 value={issuedAt}
@@ -2452,13 +2538,13 @@ function UploadDialog({
             </div>
           </div>
           <div>
-            <label className="text-xs text-gray-500 uppercase tracking-wide">Description</label>
+            <label className="text-xs text-gray-500 uppercase tracking-wide">{t("descriptionLabel")}</label>
             <textarea
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
               className="mt-1 w-full rounded-xl border border-border px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary resize-y"
-              placeholder="Détails, commentaires..."
+              placeholder={t("descriptionPlaceholder")}
             />
           </div>
         </div>
@@ -2467,14 +2553,14 @@ function UploadDialog({
             onClick={onClose}
             className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary"
           >
-            Annuler
+            {tCommon("cancel")}
           </button>
           <button
             onClick={submit}
             disabled={uploading}
             className="rounded-xl bg-primary text-white px-4 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-60"
           >
-            {uploading ? "Envoi..." : "Téléverser"}
+            {uploading ? t("uploadingButton") : t("uploadButton")}
           </button>
         </div>
       </div>

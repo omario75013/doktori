@@ -1,0 +1,33 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e4]:
+    - link "Doktori.tn" [ref=e5] [cursor=pointer]:
+      - /url: /
+      - img [ref=e7]
+      - generic [ref=e11]: Doktori.tn
+    - generic [ref=e12]:
+      - generic [ref=e13]:
+        - heading "Bon retour 👋" [level=1] [ref=e14]
+        - paragraph [ref=e15]: Connectez-vous à votre espace médecin Doktori.
+      - generic [ref=e16]:
+        - generic [ref=e17]:
+          - generic [ref=e18]: البريد الإلكتروني
+          - generic [ref=e19]:
+            - img [ref=e20]
+            - textbox "البريد الإلكتروني" [ref=e23]:
+              - /placeholder: votre.email@exemple.tn
+        - generic [ref=e24]:
+          - generic [ref=e26]: كلمة السر
+          - generic [ref=e27]:
+            - img [ref=e28]
+            - textbox "كلمة السر" [ref=e31]:
+              - /placeholder: ••••••••
+        - button "تسجيل الدخول" [ref=e32]:
+          - generic [ref=e33]: تسجيل الدخول
+          - img [ref=e34]
+      - paragraph [ref=e36]:
+        - text: ليس لديك حساب؟
+        - link "إنشاء حساب" [ref=e37] [cursor=pointer]:
+          - /url: /inscription
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e43] [cursor=pointer]:
+    - img [ref=e44]

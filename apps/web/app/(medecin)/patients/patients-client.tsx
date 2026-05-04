@@ -6,6 +6,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Search, Users, ChevronLeft, ChevronRight, UserPlus, X, Columns3, Check, SlidersHorizontal, RotateCcw, Download, FileSearch } from "lucide-react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 type PatientRow = {
   id: string;
@@ -35,18 +36,20 @@ type ColumnKey =
   | "total_visits"
   | "last_visit";
 
-const COLUMN_LABELS: Record<ColumnKey, string> = {
-  email: "Email",
-  date_of_birth: "Naissance",
-  gender: "Sexe",
-  blood_type: "Groupe sanguin",
-  cin: "CIN",
-  cnam_number: "N° CNAM",
-  insurance_provider: "Assurance",
-  occupation: "Profession",
-  total_visits: "Visites",
-  last_visit: "Dernière visite",
-};
+function getColumnLabels(t: ReturnType<typeof useTranslations<"medecin.patients">>): Record<ColumnKey, string> {
+  return {
+    email: t("colEmail"),
+    date_of_birth: t("colDateOfBirth"),
+    gender: t("colGender"),
+    blood_type: t("colBloodType"),
+    cin: t("colCIN"),
+    cnam_number: t("colCNAMNumber"),
+    insurance_provider: t("colInsuranceProvider"),
+    occupation: t("colOccupation"),
+    total_visits: t("colVisits"),
+    last_visit: t("colLastVisit"),
+  };
+}
 
 const ALL_COLUMNS: ColumnKey[] = [
   "total_visits",
@@ -85,6 +88,7 @@ function AddPatientModal({
   onClose: () => void;
   onSuccess: (patient: PatientRow) => void;
 }) {
+  const t = useTranslations("medecin.patients");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
@@ -109,12 +113,12 @@ function AddPatientModal({
       });
       const data = await res.json();
       if (!res.ok) {
-        throw new Error(data.error ?? "Erreur lors de la création");
+        throw new Error(data.error ?? t("creationError"));
       }
       if (data.linked) {
-        toast.success("Patient existant retrouvé et lié.");
+        toast.success(t("toastExistingLinked"));
       } else {
-        toast.success("Patient créé avec succès.");
+        toast.success(t("toastCreatedSuccess"));
       }
       onSuccess({
         id: data.id,
@@ -132,7 +136,7 @@ function AddPatientModal({
         last_visit: new Date().toISOString(),
       });
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Erreur inconnue");
+      setError(e instanceof Error ? e.message : t("unknownError"));
     } finally {
       setSubmitting(false);
     }
@@ -148,7 +152,7 @@ function AddPatientModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between">
-          <h2 className="text-base font-semibold text-foreground">Ajouter un patient</h2>
+          <h2 className="text-base font-semibold text-foreground">{t("addPatientTitle")}</h2>
           <button
             onClick={onClose}
             className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-secondary hover:text-foreground transition-colors"
@@ -160,14 +164,14 @@ function AddPatientModal({
         <form onSubmit={handleSubmit} className="space-y-3">
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Nom complet <span className="text-red-500">*</span>
+              {t("labelFullName")} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              placeholder="Ex : Ahmed Ben Salah"
+              placeholder={t("placeholderName")}
               className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
               autoFocus
             />
@@ -175,34 +179,34 @@ function AddPatientModal({
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Téléphone <span className="text-red-500">*</span>
+              {t("labelPhone")} <span className="text-red-500">*</span>
             </label>
             <input
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               required
-              placeholder="Ex : 21234567"
+              placeholder={t("placeholderPhone")}
               className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
             />
           </div>
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Email <span className="text-gray-300 font-normal normal-case">(optionnel)</span>
+              {t("labelEmail")}
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="patient@email.com"
+              placeholder={t("placeholderEmail")}
               className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
             />
           </div>
 
           <div>
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-              Date de naissance <span className="text-gray-300 font-normal normal-case">(optionnel)</span>
+              {t("labelDateOfBirth")}
             </label>
             <input
               type="date"
@@ -220,14 +224,14 @@ function AddPatientModal({
               onClick={onClose}
               className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 dark:text-gray-400 transition-colors"
             >
-              Annuler
+              {t("cancelButton")}
             </button>
             <button
               type="submit"
               disabled={submitting}
               className="px-4 py-2 text-sm rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold disabled:opacity-40 transition-colors"
             >
-              {submitting ? "Création…" : "Ajouter"}
+              {submitting ? t("creatingButton") : t("addButton")}
             </button>
           </div>
         </form>
@@ -283,6 +287,8 @@ function computeAge(dob: string | null): number | null {
 }
 
 export function PatientsClient({ patients }: { patients: PatientRow[] }) {
+  const t = useTranslations("medecin.patients");
+  const COLUMN_LABELS = getColumnLabels(t);
   const [query, setQuery] = useState("");
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<PageSize>(20);
@@ -477,9 +483,9 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
             <Users className="h-5 w-5" />
           </div>
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Patients</h1>
+            <h1 className="text-2xl font-bold text-foreground">{t("pageTitle")}</h1>
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              {patientList.length} patient{patientList.length !== 1 ? "s" : ""} suivis
+              {t("patientCount", { count: patientList.length, s: patientList.length !== 1 ? "s" : "" })}
             </p>
           </div>
         </div>
@@ -489,7 +495,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
           className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white text-sm font-medium transition-colors shadow-sm"
         >
           <UserPlus className="h-4 w-4" />
-          Ajouter un patient
+          {t("addPatientButton")}
         </button>
       </div>
 
@@ -501,7 +507,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
             type="text"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Rechercher par nom ou téléphone…"
+            placeholder={t("searchPlaceholder")}
             className="w-full pl-9 pr-4 py-2.5 text-sm rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition"
           />
         </div>
@@ -539,7 +545,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
             className="inline-flex items-center gap-2 h-10 px-3 rounded-2xl border border-border bg-white dark:bg-gray-900 text-sm text-foreground hover:bg-secondary transition-colors"
           >
             <Columns3 className="h-4 w-4" />
-            Colonnes
+            {t("columnsButton")}
             <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-secondary px-1.5 text-[10px] font-bold text-primary">
               {visibleColumns.length + 2}
             </span>
@@ -547,9 +553,9 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
           {columnsMenuOpen && (
             <div className="absolute right-0 top-12 z-30 w-64 rounded-2xl bg-white dark:bg-gray-900 shadow-xl border border-border overflow-hidden">
               <div className="px-3 py-2 border-b border-border">
-                <p className="text-xs font-semibold text-foreground">Colonnes affichées</p>
+                <p className="text-xs font-semibold text-foreground">{t("columnsDisplayedLabel")}</p>
                 <p className="text-[10px] text-gray-400 mt-0.5">
-                  Nom et téléphone sont toujours affichés
+                  {t("columnsAlwaysDisplayed")}
                 </p>
               </div>
               <div className="max-h-72 overflow-y-auto py-1">
@@ -582,14 +588,14 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                   onClick={() => setVisibleColumns(DEFAULT_COLUMNS)}
                   className="flex-1 text-xs text-gray-600 hover:text-primary"
                 >
-                  Réinitialiser
+                  {t("resetColumns")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setVisibleColumns([...ALL_COLUMNS])}
                   className="flex-1 text-xs text-gray-600 hover:text-primary"
                 >
-                  Tout afficher
+                  {t("showAllColumns")}
                 </button>
               </div>
             </div>
@@ -780,8 +786,8 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
       {normalizedQuery && (
         <p className="text-sm text-gray-500 dark:text-gray-400 -mt-2">
           {filtered.length === 0
-            ? "Aucun résultat"
-            : `${filtered.length} résultat${filtered.length !== 1 ? "s" : ""} pour « ${debouncedQuery.trim()} »`}
+            ? t("noResults")
+            : t("searchResultsCount", { count: filtered.length, s: filtered.length !== 1 ? "s" : "", query: debouncedQuery.trim() })}
         </p>
       )}
 
@@ -791,16 +797,16 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
           <div className="h-14 w-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
             <Users className="h-7 w-7 text-primary" />
           </div>
-          <p className="text-foreground font-medium mb-1">Aucun patient pour le moment</p>
+          <p className="text-foreground font-medium mb-1">{t("noPatients")}</p>
           <p className="text-sm text-gray-400 dark:text-gray-500 mb-4">
-            Les patients apparaîtront ici après leurs premiers rendez-vous.
+            {t("noPatientsDesc")}
           </p>
           <button
             onClick={() => setShowAddModal(true)}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white text-sm font-medium transition-colors"
           >
             <UserPlus className="h-4 w-4" />
-            Ajouter un premier patient
+            {t("addFirstPatient")}
           </button>
         </div>
       ) : filtered.length === 0 ? (
@@ -809,9 +815,9 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
           <div className="h-14 w-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
             <Users className="h-7 w-7 text-primary" />
           </div>
-          <p className="text-foreground font-medium mb-1">Aucun patient trouvé</p>
+          <p className="text-foreground font-medium mb-1">{t("noPatientFound")}</p>
           <p className="text-sm text-gray-400 dark:text-gray-500">
-            Essayez un autre nom ou numéro de téléphone.
+            {t("tryAnotherSearch")}
           </p>
         </div>
       ) : (
@@ -821,8 +827,8 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b border-border bg-secondary text-left">
-                  <th className="px-4 py-3 font-medium text-foreground">Patient</th>
-                  <th className="px-4 py-3 font-medium text-foreground">Téléphone</th>
+                  <th className="px-4 py-3 font-medium text-foreground">{t("colPatient")}</th>
+                  <th className="px-4 py-3 font-medium text-foreground">{t("colPhone")}</th>
                   {visibleColumns.map((col) => (
                     <th
                       key={col}
@@ -844,7 +850,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                         {p.name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap">
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap" dir="ltr">
                       {p.phone}
                     </td>
                     {visibleColumns.map((col) => (
@@ -860,7 +866,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 pt-1">
             <div className="flex items-center gap-3 text-sm text-gray-500 dark:text-gray-400">
               <label className="inline-flex items-center gap-2">
-                <span>Afficher</span>
+                <span>{t("showLabel")}</span>
                 <select
                   value={pageSize}
                   onChange={(e) => setPageSize(Number(e.target.value) as PageSize)}
@@ -872,13 +878,17 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                     </option>
                   ))}
                 </select>
-                <span>par page</span>
+                <span>{t("perPageLabel")}</span>
               </label>
               <span className="hidden sm:inline text-gray-300">·</span>
               <span>
                 {filtered.length === 0
-                  ? "0 patient"
-                  : `${(safePage - 1) * pageSize + 1}–${Math.min(safePage * pageSize, filtered.length)} sur ${filtered.length}`}
+                  ? t("zeroPatients")
+                  : t("paginationInfo", {
+                      start: (safePage - 1) * pageSize + 1,
+                      end: Math.min(safePage * pageSize, filtered.length),
+                      total: filtered.length,
+                    })}
               </span>
             </div>
             {totalPages > 1 && (
@@ -887,7 +897,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                   onClick={() => setPage(1)}
                   disabled={safePage === 1}
                   className="inline-flex items-center justify-center h-8 w-8 text-sm rounded-lg border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
-                  aria-label="Première page"
+                  aria-label={t("firstPageAriaLabel")}
                 >
                   «
                 </button>
@@ -895,7 +905,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={safePage === 1}
                   className="inline-flex items-center justify-center h-8 w-8 text-sm rounded-lg border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
-                  aria-label="Page précédente"
+                  aria-label={t("prevPageAriaLabel")}
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </button>
@@ -906,7 +916,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={safePage === totalPages}
                   className="inline-flex items-center justify-center h-8 w-8 text-sm rounded-lg border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
-                  aria-label="Page suivante"
+                  aria-label={t("nextPageAriaLabel")}
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
@@ -914,7 +924,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
                   onClick={() => setPage(totalPages)}
                   disabled={safePage === totalPages}
                   className="inline-flex items-center justify-center h-8 w-8 text-sm rounded-lg border border-border bg-white dark:bg-gray-900 text-foreground hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed"
-                  aria-label="Dernière page"
+                  aria-label={t("lastPageAriaLabel")}
                 >
                   »
                 </button>
@@ -936,6 +946,7 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
 }
 
 function PatientCell({ col, patient }: { col: ColumnKey; patient: PatientRow }) {
+  const t = useTranslations("medecin.patients");
   const cls = "px-4 py-3 text-gray-500 dark:text-gray-400 whitespace-nowrap";
   switch (col) {
     case "email":
@@ -957,7 +968,7 @@ function PatientCell({ col, patient }: { col: ColumnKey; patient: PatientRow }) 
     case "gender":
       return (
         <td className={cls}>
-          {patient.gender === "M" ? "Homme" : patient.gender === "F" ? "Femme" : <span className="text-gray-300">—</span>}
+          {patient.gender === "M" ? t("genderMale") : patient.gender === "F" ? t("genderFemale") : <span className="text-gray-300">—</span>}
         </td>
       );
     case "blood_type":

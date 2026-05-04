@@ -1,0 +1,331 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - complementary [ref=e3]:
+      - generic [ref=e4]:
+        - generic [ref=e5]: Doktori
+        - button "Réduire la barre latérale" [ref=e6]:
+          - img [ref=e7]
+      - navigation [ref=e9]:
+        - generic [ref=e10]:
+          - paragraph [ref=e11]: Principal
+          - list [ref=e12]:
+            - listitem [ref=e13]:
+              - link "لوحة التحكم" [ref=e14] [cursor=pointer]:
+                - /url: /dashboard
+                - img [ref=e16]
+                - generic [ref=e21]: لوحة التحكم
+            - listitem [ref=e22]:
+              - link "Vérification" [ref=e23] [cursor=pointer]:
+                - /url: /verification
+                - img [ref=e25]
+                - generic [ref=e28]: Vérification
+            - listitem [ref=e29]:
+              - link "التقويم" [ref=e30] [cursor=pointer]:
+                - /url: /calendrier
+                - img [ref=e32]
+                - generic [ref=e34]: التقويم
+            - listitem [ref=e35]:
+              - link "المواعيد" [ref=e36] [cursor=pointer]:
+                - /url: /rendez-vous
+                - img [ref=e38]
+                - generic [ref=e42]: المواعيد
+        - generic [ref=e43]:
+          - paragraph [ref=e44]: Patients
+          - list [ref=e45]:
+            - listitem [ref=e46]:
+              - link "مرضاي" [ref=e47] [cursor=pointer]:
+                - /url: /patients
+                - img [ref=e49]
+                - generic [ref=e54]: مرضاي
+        - generic [ref=e55]:
+          - paragraph [ref=e56]: Réseau
+          - list [ref=e57]:
+            - listitem [ref=e58]:
+              - link "Réseau médecins" [ref=e59] [cursor=pointer]:
+                - /url: /reseau
+                - img [ref=e61]
+                - generic [ref=e66]: Réseau médecins
+            - listitem [ref=e67]:
+              - link "Référencements" [ref=e68] [cursor=pointer]:
+                - /url: /reseau/referencements
+                - img [ref=e70]
+                - generic [ref=e73]: Référencements
+        - generic [ref=e74]:
+          - paragraph [ref=e75]: Communication
+          - list [ref=e76]:
+            - listitem [ref=e77]:
+              - link "صندوق البريد" [ref=e78] [cursor=pointer]:
+                - /url: /messagerie
+                - img [ref=e80]
+                - generic [ref=e83]: صندوق البريد
+            - listitem [ref=e84]:
+              - link "Équipe" [ref=e85] [cursor=pointer]:
+                - /url: /messagerie-equipe
+                - img [ref=e87]
+                - generic [ref=e99]: Équipe
+        - generic [ref=e100]:
+          - paragraph [ref=e101]: Cabinet
+          - list [ref=e102]:
+            - listitem [ref=e103]:
+              - link "أسباب الاستشارة" [ref=e104] [cursor=pointer]:
+                - /url: /motifs
+                - img [ref=e106]
+                - generic [ref=e109]: أسباب الاستشارة
+            - listitem [ref=e110]:
+              - link "العيادات" [ref=e111] [cursor=pointer]:
+                - /url: /cabinets
+                - img [ref=e113]
+                - generic [ref=e117]: العيادات
+            - listitem [ref=e118]:
+              - link "زيارات منزلية" [ref=e119] [cursor=pointer]:
+                - /url: /domicile
+                - img [ref=e121]
+                - generic [ref=e124]: زيارات منزلية
+            - listitem [ref=e125]:
+              - link "الاتفاقيات" [ref=e126] [cursor=pointer]:
+                - /url: /conventions
+                - img [ref=e128]
+                - generic [ref=e132]: الاتفاقيات
+            - listitem [ref=e133]:
+              - link "CNAM" [ref=e134] [cursor=pointer]:
+                - /url: /cnam
+                - img [ref=e136]
+                - generic [ref=e139]: CNAM
+            - listitem [ref=e140]:
+              - link "SOS طبيب" [ref=e141] [cursor=pointer]:
+                - /url: /sos-medecin
+                - img [ref=e143]
+                - generic [ref=e148]: SOS طبيب
+            - listitem [ref=e149]:
+              - link "الاستشارة عن بُعد" [ref=e150] [cursor=pointer]:
+                - /url: /teleconsultation
+                - img [ref=e152]
+                - generic [ref=e155]: الاستشارة عن بُعد
+            - listitem [ref=e156]:
+              - link "السكرتيرات" [ref=e157] [cursor=pointer]:
+                - /url: /secretaires
+                - img [ref=e159]
+                - generic [ref=e171]: السكرتيرات
+        - generic [ref=e172]:
+          - paragraph [ref=e173]: Finances
+          - list [ref=e174]:
+            - listitem [ref=e175]:
+              - link "المحفظة" [ref=e176] [cursor=pointer]:
+                - /url: /wallet
+                - img [ref=e178]
+                - generic [ref=e181]: المحفظة
+            - listitem [ref=e182]:
+              - link "الفواتير" [ref=e183] [cursor=pointer]:
+                - /url: /factures
+                - img [ref=e185]
+                - generic [ref=e188]: الفواتير
+            - listitem [ref=e189]:
+              - link "الاشتراك" [ref=e190] [cursor=pointer]:
+                - /url: /abonnement
+                - img [ref=e192]
+                - generic [ref=e194]: الاشتراك
+        - generic [ref=e195]:
+          - paragraph [ref=e196]: Moi
+          - list [ref=e197]:
+            - listitem [ref=e198]:
+              - link "الإحصائيات" [ref=e199] [cursor=pointer]:
+                - /url: /stats
+                - img [ref=e201]
+                - generic [ref=e203]: الإحصائيات
+            - listitem [ref=e204]:
+              - link "الإحالة" [ref=e205] [cursor=pointer]:
+                - /url: /parrainage
+                - img [ref=e207]
+                - generic [ref=e211]: الإحالة
+            - listitem [ref=e212]:
+              - link "ملفي الشخصي" [ref=e213] [cursor=pointer]:
+                - /url: /profil
+                - img [ref=e215]
+                - generic [ref=e219]: ملفي الشخصي
+            - listitem [ref=e220]:
+              - link "Paramètres" [ref=e221] [cursor=pointer]:
+                - /url: /profil/parametres
+                - img [ref=e223]
+                - generic [ref=e226]: Paramètres
+    - generic [ref=e227]:
+      - banner [ref=e228]:
+        - generic [ref=e230]: Doktori
+        - generic [ref=e231]:
+          - group "Changer de langue" [ref=e232]:
+            - button "Passer en français" [ref=e233]: FR
+            - button "التبديل إلى العربية" [disabled] [pressed] [ref=e234]: AR
+          - button "Notifications" [ref=e236]:
+            - img [ref=e237]
+          - button "Ouvrir le menu profil" [ref=e241]:
+            - img "Dr. Karim Ben Ali" [ref=e242]
+            - img [ref=e243]
+      - main [ref=e245]:
+        - generic [ref=e247]:
+          - generic [ref=e248]:
+            - generic [ref=e249]:
+              - img [ref=e251]
+              - generic [ref=e256]:
+                - heading "Patients" [level=1] [ref=e257]
+                - paragraph [ref=e258]: 16 patients suivis
+            - button "Ajouter un patient" [ref=e259]:
+              - img [ref=e260]
+              - text: Ajouter un patient
+          - generic [ref=e263]:
+            - generic [ref=e264]:
+              - img
+              - textbox "Rechercher par nom ou téléphone…" [ref=e265]
+            - button "Colonnes 4" [ref=e267]:
+              - img [ref=e268]
+              - text: Colonnes
+              - generic [ref=e270]: "4"
+          - table [ref=e272]:
+            - rowgroup [ref=e273]:
+              - row "Patient Téléphone Visites Dernière visite" [ref=e274]:
+                - columnheader "Patient" [ref=e275]
+                - columnheader "Téléphone" [ref=e276]
+                - columnheader "Visites" [ref=e277]
+                - columnheader "Dernière visite" [ref=e278]
+            - rowgroup [ref=e279]:
+              - row "Patient Test Doc +21655888777 1 28 avr. 2026" [ref=e280]:
+                - cell "Patient Test Doc" [ref=e281]:
+                  - link "Patient Test Doc" [ref=e282] [cursor=pointer]:
+                    - /url: /patients/885738e6-5442-465d-b60e-8bb367059028
+                - cell "+21655888777" [ref=e283]
+                - cell "1" [ref=e284]:
+                  - generic [ref=e285]: "1"
+                - cell "28 avr. 2026" [ref=e286]
+              - row "Ashraf hasni +21696654547 1 27 avr. 2026" [ref=e287]:
+                - cell "Ashraf hasni" [ref=e288]:
+                  - link "Ashraf hasni" [ref=e289] [cursor=pointer]:
+                    - /url: /patients/6f53a025-dbbf-4807-8062-2cb44694f26d
+                - cell "+21696654547" [ref=e290]
+                - cell "1" [ref=e291]:
+                  - generic [ref=e292]: "1"
+                - cell "27 avr. 2026" [ref=e293]
+              - row "New test 911345465 1 24 avr. 2026" [ref=e294]:
+                - cell "New test" [ref=e295]:
+                  - link "New test" [ref=e296] [cursor=pointer]:
+                    - /url: /patients/e1ccb406-622a-4305-b1ed-3bbd0953a8e9
+                - cell "911345465" [ref=e297]
+                - cell "1" [ref=e298]:
+                  - generic [ref=e299]: "1"
+                - cell "24 avr. 2026" [ref=e300]
+              - row "ashraf hasni +21698527434 1 21 avr. 2026" [ref=e301]:
+                - cell "ashraf hasni" [ref=e302]:
+                  - link "ashraf hasni" [ref=e303] [cursor=pointer]:
+                    - /url: /patients/0063aef1-9dde-4688-a89f-1fc25587afc7
+                - cell "+21698527434" [ref=e304]
+                - cell "1" [ref=e305]:
+                  - generic [ref=e306]: "1"
+                - cell "21 avr. 2026" [ref=e307]
+              - row "Revenue Test +21655666555 1 18 avr. 2026" [ref=e308]:
+                - cell "Revenue Test" [ref=e309]:
+                  - link "Revenue Test" [ref=e310] [cursor=pointer]:
+                    - /url: /patients/d22caecf-b5e8-433a-900a-dc7c23f5999b
+                - cell "+21655666555" [ref=e311]
+                - cell "1" [ref=e312]:
+                  - generic [ref=e313]: "1"
+                - cell "18 avr. 2026" [ref=e314]
+              - row "Patient Revenue Test +21655777666 1 18 avr. 2026" [ref=e315]:
+                - cell "Patient Revenue Test" [ref=e316]:
+                  - link "Patient Revenue Test" [ref=e317] [cursor=pointer]:
+                    - /url: /patients/df7502b0-7240-4562-8093-87c63f63f54c
+                - cell "+21655777666" [ref=e318]
+                - cell "1" [ref=e319]:
+                  - generic [ref=e320]: "1"
+                - cell "18 avr. 2026" [ref=e321]
+              - row "Anas Trabelsi +21672556897 1 10 avr. 2026" [ref=e322]:
+                - cell "Anas Trabelsi" [ref=e323]:
+                  - link "Anas Trabelsi" [ref=e324] [cursor=pointer]:
+                    - /url: /patients/1b6e5160-fe38-48d6-b8f1-b986fd09c8a4
+                - cell "+21672556897" [ref=e325]
+                - cell "1" [ref=e326]:
+                  - generic [ref=e327]: "1"
+                - cell "10 avr. 2026" [ref=e328]
+              - row "Anas Ben Salah +21664978292 1 29 mars 2026" [ref=e329]:
+                - cell "Anas Ben Salah" [ref=e330]:
+                  - link "Anas Ben Salah" [ref=e331] [cursor=pointer]:
+                    - /url: /patients/120af2f0-3e9d-4309-b9a7-3f891cacc49e
+                - cell "+21664978292" [ref=e332]
+                - cell "1" [ref=e333]:
+                  - generic [ref=e334]: "1"
+                - cell "29 mars 2026" [ref=e335]
+              - row "Sami Mansour +21657671895 1 19 janv. 2026" [ref=e336]:
+                - cell "Sami Mansour" [ref=e337]:
+                  - link "Sami Mansour" [ref=e338] [cursor=pointer]:
+                    - /url: /patients/d79d2946-94cc-4679-af8f-685be5a514c7
+                - cell "+21657671895" [ref=e339]
+                - cell "1" [ref=e340]:
+                  - generic [ref=e341]: "1"
+                - cell "19 janv. 2026" [ref=e342]
+              - row "Sarra Ben Ali +21670376238 1 19 janv. 2026" [ref=e343]:
+                - cell "Sarra Ben Ali" [ref=e344]:
+                  - link "Sarra Ben Ali" [ref=e345] [cursor=pointer]:
+                    - /url: /patients/17a0eded-5013-44af-96db-37f74e3053bf
+                - cell "+21670376238" [ref=e346]
+                - cell "1" [ref=e347]:
+                  - generic [ref=e348]: "1"
+                - cell "19 janv. 2026" [ref=e349]
+              - row "Hichem Ben Salah +21691417344 1 13 janv. 2026" [ref=e350]:
+                - cell "Hichem Ben Salah" [ref=e351]:
+                  - link "Hichem Ben Salah" [ref=e352] [cursor=pointer]:
+                    - /url: /patients/21679143-a386-4eaf-9e6d-93ffc5ab8d84
+                - cell "+21691417344" [ref=e353]
+                - cell "1" [ref=e354]:
+                  - generic [ref=e355]: "1"
+                - cell "13 janv. 2026" [ref=e356]
+              - row "Mehdi Trabelsi +21674778560 1 29 déc. 2025" [ref=e357]:
+                - cell "Mehdi Trabelsi" [ref=e358]:
+                  - link "Mehdi Trabelsi" [ref=e359] [cursor=pointer]:
+                    - /url: /patients/22f30399-9481-42ef-ace3-7c7c1876080a
+                - cell "+21674778560" [ref=e360]
+                - cell "1" [ref=e361]:
+                  - generic [ref=e362]: "1"
+                - cell "29 déc. 2025" [ref=e363]
+              - row "Amira Ben Salah +21683163647 1 23 déc. 2025" [ref=e364]:
+                - cell "Amira Ben Salah" [ref=e365]:
+                  - link "Amira Ben Salah" [ref=e366] [cursor=pointer]:
+                    - /url: /patients/b57a5862-f178-43b3-a3fc-c28165394a56
+                - cell "+21683163647" [ref=e367]
+                - cell "1" [ref=e368]:
+                  - generic [ref=e369]: "1"
+                - cell "23 déc. 2025" [ref=e370]
+              - row "Yosra Jemli +21678199463 1 6 déc. 2025" [ref=e371]:
+                - cell "Yosra Jemli" [ref=e372]:
+                  - link "Yosra Jemli" [ref=e373] [cursor=pointer]:
+                    - /url: /patients/b1fd46f0-14c0-4a8e-99ba-74725f055e33
+                - cell "+21678199463" [ref=e374]
+                - cell "1" [ref=e375]:
+                  - generic [ref=e376]: "1"
+                - cell "6 déc. 2025" [ref=e377]
+              - row "Yosra Karray +21687955990 1 29 nov. 2025" [ref=e378]:
+                - cell "Yosra Karray" [ref=e379]:
+                  - link "Yosra Karray" [ref=e380] [cursor=pointer]:
+                    - /url: /patients/1b9a0311-7df9-4257-bc89-655af4d35544
+                - cell "+21687955990" [ref=e381]
+                - cell "1" [ref=e382]:
+                  - generic [ref=e383]: "1"
+                - cell "29 nov. 2025" [ref=e384]
+              - row "Sami Zouari +21695089256 1 9 nov. 2025" [ref=e385]:
+                - cell "Sami Zouari" [ref=e386]:
+                  - link "Sami Zouari" [ref=e387] [cursor=pointer]:
+                    - /url: /patients/9d18ed8d-e1f6-4805-bbba-5ffdbf77f62a
+                - cell "+21695089256" [ref=e388]
+                - cell "1" [ref=e389]:
+                  - generic [ref=e390]: "1"
+                - cell "9 nov. 2025" [ref=e391]
+          - generic [ref=e393]:
+            - generic [ref=e394]:
+              - generic [ref=e395]: Afficher
+              - combobox "Afficher par page" [ref=e396]:
+                - option "10"
+                - option "20" [selected]
+                - option "50"
+              - generic [ref=e397]: par page
+            - generic [ref=e398]: ·
+            - generic [ref=e399]: 1–16 sur 16
+    - button "Notifier la secrétaire" [ref=e400]:
+      - img [ref=e401]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e409] [cursor=pointer]:
+    - img [ref=e410]

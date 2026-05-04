@@ -36,16 +36,20 @@ import {
 
 // ─── Doctor steps ────────────────────────────────────────────────────────────
 
-const DOCTOR_STEPS = [
-  { id: "identity", label: "Identité", icon: User },
-  { id: "practice", label: "Cabinet", icon: MapPin },
-  { id: "finish", label: "Finaliser", icon: Shield },
-];
+function getDoctorSteps(t: ReturnType<typeof useTranslations<"auth">>) {
+  return [
+    { id: "identity", label: t("stepIdentity"), icon: User },
+    { id: "practice", label: t("stepPractice"), icon: MapPin },
+    { id: "finish", label: t("stepFinish"), icon: Shield },
+  ];
+}
 
-const CLINIC_STEPS = [
-  { id: "info", label: "Informations", icon: Building2 },
-  { id: "confirm", label: "Confirmation", icon: Shield },
-];
+function getClinicSteps(t: ReturnType<typeof useTranslations<"auth">>) {
+  return [
+    { id: "info", label: t("stepInfo"), icon: Building2 },
+    { id: "confirm", label: t("stepConfirmation"), icon: Shield },
+  ];
+}
 
 const fadeSlide = {
   enter: (dir: number) => ({ x: dir > 0 ? 60 : -60, opacity: 0 }),
@@ -70,10 +74,11 @@ function RoleToggle({
   role: Role;
   onChange: (r: Role) => void;
 }) {
+  const t = useTranslations("auth");
   return (
     <div className="mb-8">
       <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
-        Vous êtes…
+        {t("youAre")}
       </p>
       <div className="grid grid-cols-2 gap-3">
         {(
@@ -81,14 +86,14 @@ function RoleToggle({
             {
               id: "doctor" as Role,
               icon: Stethoscope,
-              title: "Médecin",
-              sub: "Créez votre profil personnel",
+              title: t("roleDoctor"),
+              sub: t("roleDoctorSub"),
             },
             {
               id: "clinic" as Role,
               icon: Building2,
-              title: "Clinique",
-              sub: "Gérez plusieurs médecins",
+              title: t("roleClinic"),
+              sub: t("roleClinicSub"),
             },
           ] as const
         ).map(({ id, icon: Icon, title, sub }) => {
@@ -139,6 +144,8 @@ function RoleToggle({
 
 function ClinicForm() {
   const router = useRouter();
+  const t = useTranslations("auth");
+  const CLINIC_STEPS = getClinicSteps(t);
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -208,7 +215,7 @@ function ClinicForm() {
         setError(
           typeof data.error === "string"
             ? data.error
-            : "Veuillez vérifier les informations saisies."
+            : t("checkFormError")
         );
         return;
       }
@@ -227,7 +234,7 @@ function ClinicForm() {
         );
       }
     } catch {
-      setError("Une erreur est survenue. Veuillez réessayer.");
+      setError(t("registerError"));
     } finally {
       setLoading(false);
     }
@@ -287,21 +294,21 @@ function ClinicForm() {
             <div className="space-y-5">
               <div>
                 <h2 className="text-xl font-bold text-foreground">
-                  Informations de la clinique
+                  {t("clinicInfoTitle")}
                 </h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Ces informations seront visibles sur votre profil.
+                  {t("clinicInfoSubtitle")}
                 </p>
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="c-name" className="text-foreground font-semibold">
-                  Nom de la clinique
+                  {t("clinicName")}
                 </Label>
                 <Input
                   id="c-name"
                   name="name"
-                  placeholder="Ex: Clinique Al Amal"
+                  placeholder={t("clinicNamePlaceholder")}
                   required
                   value={form.name}
                   onChange={handleChange}
@@ -312,13 +319,13 @@ function ClinicForm() {
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label htmlFor="c-email" className="text-foreground font-semibold">
-                    Email
+                    {t("email")}
                   </Label>
                   <Input
                     id="c-email"
                     name="email"
                     type="email"
-                    placeholder="contact@clinique.tn"
+                    placeholder={t("clinicEmailPlaceholder")}
                     autoComplete="email"
                     required
                     value={form.email}
@@ -328,7 +335,7 @@ function ClinicForm() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="c-phone" className="text-foreground font-semibold">
-                    Téléphone
+                    {t("phone")}
                   </Label>
                   <Input
                     id="c-phone"
@@ -345,12 +352,12 @@ function ClinicForm() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="c-address" className="text-foreground font-semibold">
-                  Adresse
+                  {t("address")}
                 </Label>
                 <Input
                   id="c-address"
                   name="address"
-                  placeholder="Rue, numéro, quartier"
+                  placeholder={t("addressPlaceholder")}
                   required
                   value={form.address}
                   onChange={handleChange}
@@ -359,13 +366,13 @@ function ClinicForm() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-foreground font-semibold">Ville</Label>
+                <Label className="text-foreground font-semibold">{t("city")}</Label>
                 <Select
                   value={form.city}
                   onValueChange={(v) => setForm((p) => ({ ...p, city: v ?? "" }))}
                 >
                   <SelectTrigger className="h-12 rounded-xl border-border">
-                    <SelectValue placeholder="Choisir une ville..." />
+                    <SelectValue placeholder={t("chooseCity")} />
                   </SelectTrigger>
                   <SelectContent>
                     {CITIES.map((c) => (
@@ -379,13 +386,13 @@ function ClinicForm() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="c-password" className="text-foreground font-semibold">
-                  Mot de passe
+                  {t("password")}
                 </Label>
                 <Input
                   id="c-password"
                   name="password"
                   type="password"
-                  placeholder="Minimum 8 caractères"
+                  placeholder={t("passwordPlaceholder")}
                   autoComplete="new-password"
                   required
                   value={form.password}
@@ -394,7 +401,7 @@ function ClinicForm() {
                 />
                 {form.password.length > 0 && form.password.length < 8 && (
                   <p className="text-xs text-amber-600 mt-1">
-                    Le mot de passe doit contenir au moins 8 caractères
+                    {t("passwordTooShort")}
                   </p>
                 )}
               </div>
@@ -405,9 +412,9 @@ function ClinicForm() {
           {step === 1 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-xl font-bold text-foreground">Confirmation</h2>
+                <h2 className="text-xl font-bold text-foreground">{t("clinicConfirmTitle")}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Vérifiez vos informations avant de créer votre espace.
+                  {t("clinicConfirmSubtitle")}
                 </p>
               </div>
 
@@ -415,29 +422,29 @@ function ClinicForm() {
               <div className="rounded-2xl border border-border bg-white p-5 space-y-3">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <BadgeCheck className="h-4 w-4 text-accent" />
-                  Récapitulatif
+                  {t("summaryTitle")}
                 </h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Nom:</span>{" "}
+                    <span className="text-muted-foreground">{t("summaryName")}</span>{" "}
                     <span className="font-medium text-foreground">{form.name || "—"}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Email:</span>{" "}
+                    <span className="text-muted-foreground">{t("summaryEmail")}</span>{" "}
                     <span className="font-medium text-foreground">{form.email || "—"}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Téléphone:</span>{" "}
+                    <span className="text-muted-foreground">{t("summaryPhone")}</span>{" "}
                     <span className="font-medium text-foreground">{form.phone || "—"}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Ville:</span>{" "}
+                    <span className="text-muted-foreground">{t("summaryCity")}</span>{" "}
                     <span className="font-medium text-foreground">
                       {CITIES.find((c) => c.id === form.city)?.label || "—"}
                     </span>
                   </div>
                   <div className="col-span-2">
-                    <span className="text-muted-foreground">Adresse:</span>{" "}
+                    <span className="text-muted-foreground">{t("summaryAddress")}</span>{" "}
                     <span className="font-medium text-foreground">{form.address || "—"}</span>
                   </div>
                 </div>
@@ -453,21 +460,21 @@ function ClinicForm() {
                   className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 />
                 <label htmlFor="c-cgu" className="text-sm text-muted-foreground">
-                  J&apos;accepte les{" "}
+                  {t("cguAccept")}{" "}
                   <a
                     href="/legal/cgu"
                     target="_blank"
                     className="text-primary font-bold hover:underline"
                   >
-                    Conditions Générales d&apos;Utilisation
+                    {t("cguLink")}
                   </a>{" "}
-                  et la{" "}
+                  {t("cguAnd")}{" "}
                   <a
                     href="/legal/confidentialite"
                     target="_blank"
                     className="text-primary font-bold hover:underline"
                   >
-                    Politique de Confidentialité
+                    {t("privacyLink")}
                   </a>
                 </label>
               </div>
@@ -495,7 +502,7 @@ function ClinicForm() {
             className="flex items-center gap-1 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
-            Retour
+            {t("back")}
           </button>
         ) : (
           <div />
@@ -508,7 +515,7 @@ function ClinicForm() {
             disabled={!canProceed()}
             className="h-12 px-8 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold shadow-lg shadow-primary/20 disabled:opacity-40"
           >
-            Continuer
+            {t("continue")}
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         ) : (
@@ -520,11 +527,11 @@ function ClinicForm() {
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Création...
+                {t("creating")}
               </>
             ) : (
               <>
-                Créer mon espace
+                {t("createSpace")}
                 <Check className="h-4 w-4 ml-1" />
               </>
             )}
@@ -540,6 +547,7 @@ function ClinicForm() {
 function DoctorForm() {
   const router = useRouter();
   const t = useTranslations("auth");
+  const DOCTOR_STEPS = getDoctorSteps(t);
   const [step, setStep] = useState(0);
   const [dir, setDir] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -569,7 +577,7 @@ function DoctorForm() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      setError("La photo ne doit pas dépasser 5 Mo");
+      setError(t("photoTooLarge"));
       return;
     }
     setPhotoFile(file);
@@ -624,7 +632,7 @@ function DoctorForm() {
         setError(
           typeof data.error === "string"
             ? data.error
-            : "Veuillez vérifier les informations saisies."
+            : t("checkFormError")
         );
         return;
       }
@@ -649,7 +657,7 @@ function DoctorForm() {
         router.push(`/connexion?registered=1&email=${encodeURIComponent(form.email)}`);
       }
     } catch {
-      setError("Une erreur est survenue. Veuillez réessayer.");
+      setError(t("registerError"));
     } finally {
       setLoading(false);
     }
@@ -708,9 +716,9 @@ function DoctorForm() {
           {step === 0 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-xl font-bold text-foreground">Vos informations personnelles</h2>
+                <h2 className="text-xl font-bold text-foreground">{t("personalInfoTitle")}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Ces informations apparaîtront sur votre profil public.
+                  {t("personalInfoSubtitle")}
                 </p>
               </div>
 
@@ -738,7 +746,7 @@ function DoctorForm() {
                     />
                   </label>
                 </div>
-                <p className="text-xs text-muted-foreground">Photo de profil (recommandé)</p>
+                <p className="text-xs text-muted-foreground">{t("profilePhoto")}</p>
               </div>
 
               <div className="space-y-1.5">
@@ -748,7 +756,7 @@ function DoctorForm() {
                 <Input
                   id="name"
                   name="name"
-                  placeholder="Dr. Prénom Nom"
+                  placeholder={t("namePlaceholder")}
                   required
                   value={form.name}
                   onChange={handleChange}
@@ -798,7 +806,7 @@ function DoctorForm() {
                   id="password"
                   name="password"
                   type="password"
-                  placeholder="Minimum 8 caractères"
+                  placeholder={t("passwordPlaceholder")}
                   autoComplete="new-password"
                   required
                   value={form.password}
@@ -807,7 +815,7 @@ function DoctorForm() {
                 />
                 {form.password.length > 0 && form.password.length < 8 && (
                   <p className="text-xs text-amber-600 mt-1">
-                    Le mot de passe doit contenir au moins 8 caractères
+                    {t("passwordTooShort")}
                   </p>
                 )}
               </div>
@@ -818,9 +826,9 @@ function DoctorForm() {
           {step === 1 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-xl font-bold text-foreground">Votre cabinet</h2>
+                <h2 className="text-xl font-bold text-foreground">{t("practiceTitle")}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Ces informations aident les patients à vous trouver.
+                  {t("practiceSubtitle")}
                 </p>
               </div>
 
@@ -832,7 +840,7 @@ function DoctorForm() {
                     onValueChange={(v) => setForm((p) => ({ ...p, specialty: v ?? "" }))}
                   >
                     <SelectTrigger className="h-12 rounded-xl border-border">
-                      <SelectValue placeholder="Choisir..." />
+                      <SelectValue placeholder={t("chooseOne")} />
                     </SelectTrigger>
                     <SelectContent>
                       {SPECIALTIES.map((s) => (
@@ -850,7 +858,7 @@ function DoctorForm() {
                     onValueChange={(v) => setForm((p) => ({ ...p, city: v ?? "" }))}
                   >
                     <SelectTrigger className="h-12 rounded-xl border-border">
-                      <SelectValue placeholder="Choisir..." />
+                      <SelectValue placeholder={t("chooseOne")} />
                     </SelectTrigger>
                     <SelectContent>
                       {CITIES.map((c) => (
@@ -870,7 +878,7 @@ function DoctorForm() {
                 <Input
                   id="address"
                   name="address"
-                  placeholder="Rue, numéro, quartier"
+                  placeholder={t("addressPlaceholder")}
                   required
                   value={form.address}
                   onChange={handleChange}
@@ -884,22 +892,22 @@ function DoctorForm() {
           {step === 2 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-xl font-bold text-foreground">Derniers détails</h2>
+                <h2 className="text-xl font-bold text-foreground">{t("finishTitle")}</h2>
                 <p className="text-sm text-muted-foreground mt-1">
-                  Optionnel — vous pouvez compléter plus tard.
+                  {t("finishSubtitle")}
                 </p>
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="bio" className="text-foreground font-semibold">
-                  Biographie <span className="text-muted-foreground font-normal">(optionnel)</span>
+                  {t("bioLabel")} <span className="text-muted-foreground font-normal">{t("bioOptional")}</span>
                 </Label>
                 <textarea
                   id="bio"
                   name="bio"
                   rows={4}
                   maxLength={500}
-                  placeholder="Présentez-vous en quelques mots : parcours, spécialités, approche..."
+                  placeholder={t("bioPlaceholder")}
                   value={form.bio}
                   onChange={handleChange}
                   className="w-full rounded-xl border border-border bg-white px-4 py-3 text-sm transition-colors outline-none placeholder:text-muted-foreground/50 focus:border-primary focus:ring-2 focus:ring-primary/20 resize-none"
@@ -917,21 +925,21 @@ function DoctorForm() {
                   className="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 />
                 <label htmlFor="cgu" className="text-sm text-muted-foreground">
-                  J&apos;accepte les{" "}
+                  {t("cguAccept")}{" "}
                   <a
                     href="/legal/cgu"
                     target="_blank"
                     className="text-primary font-bold hover:underline"
                   >
-                    Conditions Générales d&apos;Utilisation
+                    {t("cguLink")}
                   </a>{" "}
-                  et la{" "}
+                  {t("cguAnd")}{" "}
                   <a
                     href="/legal/confidentialite"
                     target="_blank"
                     className="text-primary font-bold hover:underline"
                   >
-                    Politique de Confidentialité
+                    {t("privacyLink")}
                   </a>
                 </label>
               </div>
@@ -940,25 +948,25 @@ function DoctorForm() {
               <div className="rounded-2xl border border-border bg-white p-5 space-y-3">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2">
                   <BadgeCheck className="h-4 w-4 text-accent" />
-                  Récapitulatif
+                  {t("summaryTitle")}
                 </h3>
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
-                    <span className="text-muted-foreground">Nom:</span>{" "}
+                    <span className="text-muted-foreground">{t("summaryName")}</span>{" "}
                     <span className="font-medium text-foreground">{form.name || "—"}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Email:</span>{" "}
+                    <span className="text-muted-foreground">{t("summaryEmail")}</span>{" "}
                     <span className="font-medium text-foreground">{form.email || "—"}</span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Spécialité:</span>{" "}
+                    <span className="text-muted-foreground">{t("summarySpecialty")}</span>{" "}
                     <span className="font-medium text-foreground">
                       {SPECIALTIES.find((s) => s.id === form.specialty)?.label || "—"}
                     </span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Ville:</span>{" "}
+                    <span className="text-muted-foreground">{t("summaryCity")}</span>{" "}
                     <span className="font-medium text-foreground">
                       {CITIES.find((c) => c.id === form.city)?.label || "—"}
                     </span>
@@ -989,7 +997,7 @@ function DoctorForm() {
             className="flex items-center gap-1 text-sm font-semibold text-muted-foreground hover:text-foreground transition-colors"
           >
             <ChevronLeft className="h-4 w-4" />
-            Retour
+            {t("back")}
           </button>
         ) : (
           <div />
@@ -1002,7 +1010,7 @@ function DoctorForm() {
             disabled={!canProceed()}
             className="h-12 px-8 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold shadow-lg shadow-primary/20 disabled:opacity-40"
           >
-            Continuer
+            {t("continue")}
             <ChevronRight className="h-4 w-4 ml-1" />
           </Button>
         ) : (
@@ -1014,11 +1022,11 @@ function DoctorForm() {
             {loading ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Création...
+                {t("creating")}
               </>
             ) : (
               <>
-                Créer mon espace
+                {t("createSpace")}
                 <Check className="h-4 w-4 ml-1" />
               </>
             )}
@@ -1032,6 +1040,7 @@ function DoctorForm() {
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function InscriptionPage() {
+  const t = useTranslations("auth");
   const [role, setRole] = useState<Role>("doctor");
 
   function handleRoleChange(next: Role) {
@@ -1061,20 +1070,19 @@ export default function InscriptionPage() {
           </div>
 
           <h1 className="font-heading text-3xl xl:text-4xl font-black leading-tight tracking-tight">
-            Rejoignez la plateforme médicale n°1 en Tunisie
+            {t("registerHeroTitle")}
           </h1>
           <p className="mt-4 text-white/70 text-sm leading-relaxed max-w-sm">
-            Des milliers de patients vous cherchent chaque jour. Créez votre profil en 2 minutes et
-            recevez vos premiers rendez-vous.
+            {t("registerHeroDesc")}
           </p>
         </div>
 
         <div className="relative z-10 space-y-5 mt-auto">
           {[
-            { icon: Calendar, text: "Agenda en ligne avec créneaux en temps réel" },
-            { icon: Video, text: "Téléconsultation vidéo intégrée" },
-            { icon: Users, text: "Gérez vos patients, SOAP notes, et CNAM" },
-            { icon: Shield, text: "Données sécurisées et conformes" },
+            { icon: Calendar, text: t("registerHeroBenefit1") },
+            { icon: Video, text: t("registerHeroBenefit2") },
+            { icon: Users, text: t("registerHeroBenefit3") },
+            { icon: Shield, text: t("registerHeroBenefit4") },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
@@ -1098,7 +1106,7 @@ export default function InscriptionPage() {
             <Stethoscope className="h-5 w-5" />
             <span className="font-bold">Doktori</span>
           </div>
-          <h1 className="text-lg font-bold">Créer votre espace</h1>
+          <h1 className="text-lg font-bold">{t("registerMobileTitle")}</h1>
         </div>
 
         <div className="flex-1 flex items-center justify-center px-4 py-8 sm:px-8 lg:px-12">
@@ -1121,9 +1129,9 @@ export default function InscriptionPage() {
             </AnimatePresence>
 
             <p className="text-center text-sm text-muted-foreground mt-8">
-              Déjà inscrit ?{" "}
+              {t("alreadyRegistered")}{" "}
               <a href="/connexion" className="font-bold text-primary hover:underline">
-                Se connecter
+                {t("signIn")}
               </a>
             </p>
           </div>

@@ -13,7 +13,7 @@ import {
 } from "react-native";
 import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale, changeLocale } from "@doktori/mobile-core";
 import { Screen, Card, Loader, Banner } from "./_ui";
 
 type Prefs = {
@@ -34,6 +34,7 @@ type Me = {
 type Tab = "notifications" | "security" | "systeme";
 
 export default function Parametres() {
+  const { locale } = useLocale();
   const [tab, setTab] = useState<Tab>("notifications");
   const [prefs, setPrefs] = useState<Prefs | null>(null);
   const [me, setMe] = useState<Me | null>(null);
@@ -43,22 +44,22 @@ export default function Parametres() {
   const [cacheCleared, setCacheCleared] = useState(false);
 
   function handleSoon() {
-    Alert.alert("Bientôt disponible", "Cette fonctionnalité arrive prochainement.");
+    Alert.alert(t("doctor.parametres.comingSoon"), t("doctor.parametres.comingSoonDesc"));
   }
 
   function handleClearCache() {
     Alert.alert(
-      "Vider le cache",
-      "Cette action supprimera les données temporaires de l'application. Continuer ?",
+      t("doctor.parametres.clearCacheTitle"),
+      t("doctor.parametres.clearCacheConfirm"),
       [
-        { text: "Annuler", style: "cancel" },
-        { text: "Vider", style: "destructive", onPress: () => { setCacheCleared(true); Alert.alert("Cache vidé", "Les données temporaires ont été supprimées."); } },
+        { text: t("common.cancel"), style: "cancel" },
+        { text: t("doctor.parametres.clearCacheBtn"), style: "destructive", onPress: () => { setCacheCleared(true); Alert.alert(t("doctor.parametres.cacheCleared"), t("doctor.parametres.cacheClearedDesc")); } },
       ]
     );
   }
 
   function handleSupport() {
-    Linking.openURL("mailto:support@doktori.tn").catch(() => Alert.alert("Erreur", "Impossible d'ouvrir le client mail."));
+    Linking.openURL("mailto:support@doktori.tn").catch(() => Alert.alert(t("common.error"), t("doctor.parametres.mailError")));
   }
 
   // Password change
@@ -105,7 +106,7 @@ export default function Parametres() {
     try {
       await api("/api/doctor/notification-prefs", { method: "PUT", body: next });
     } catch {
-      Alert.alert("Erreur", "Sauvegarde échouée");
+      Alert.alert(t("common.error"), t("common.error"));
       setPrefs(prefs);
     } finally {
       setSaving(null);
@@ -114,11 +115,11 @@ export default function Parametres() {
 
   async function changePassword() {
     if (pwNew !== pwConfirm) {
-      Alert.alert("Erreur", "Les mots de passe ne correspondent pas");
+      Alert.alert(t("common.error"), t("doctor.parametres.passwordMismatch"));
       return;
     }
     if (pwNew.length < 8) {
-      Alert.alert("Erreur", "Minimum 8 caractères");
+      Alert.alert(t("common.error"), t("doctor.parametres.passwordTooShort"));
       return;
     }
     setPwBusy(true);
@@ -127,13 +128,13 @@ export default function Parametres() {
         method: "POST",
         body: { currentPassword: pwCurrent, newPassword: pwNew },
       });
-      Alert.alert("Succès", "Mot de passe mis à jour");
+      Alert.alert(t("doctor.parametres.success"), t("doctor.parametres.passwordUpdated"));
       setPwModal(false);
       setPwCurrent("");
       setPwNew("");
       setPwConfirm("");
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Mot de passe actuel incorrect");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("doctor.parametres.wrongCurrentPassword"));
     } finally {
       setPwBusy(false);
     }
@@ -150,7 +151,7 @@ export default function Parametres() {
       setTfaStep("qr");
       setTfaModal(true);
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Erreur");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("common.error"));
     } finally {
       setTfaBusy(false);
     }
@@ -158,7 +159,7 @@ export default function Parametres() {
 
   async function verifyTfa() {
     if (!/^\d{6}$/.test(tfaCode)) {
-      Alert.alert("Erreur", "Code à 6 chiffres requis");
+      Alert.alert(t("common.error"), t("doctor.parametres.codeRequired"));
       return;
     }
     setTfaBusy(true);
@@ -171,7 +172,7 @@ export default function Parametres() {
       setTfaStep("codes");
       setMe((m) => m ? { ...m, totpEnabled: true } : m);
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Code incorrect");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("common.error"));
     } finally {
       setTfaBusy(false);
     }
@@ -179,7 +180,7 @@ export default function Parametres() {
 
   async function disableTfa() {
     if (!disablePw) {
-      Alert.alert("Erreur", "Entrez votre mot de passe pour confirmer");
+      Alert.alert(t("common.error"), t("doctor.parametres.passwordRequired"));
       return;
     }
     setDisableBusy(true);
@@ -188,12 +189,12 @@ export default function Parametres() {
         method: "POST",
         body: { password: disablePw },
       });
-      Alert.alert("2FA désactivé", "L'authentification à deux facteurs a été désactivée.");
+      Alert.alert(t("doctor.parametres.twoFaDisabledMsg"), t("doctor.parametres.twoFaDisabledDesc"));
       setDisableModal(false);
       setDisablePw("");
       setMe((m) => m ? { ...m, totpEnabled: false } : m);
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Mot de passe incorrect");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("common.error"));
     } finally {
       setDisableBusy(false);
     }
@@ -202,7 +203,7 @@ export default function Parametres() {
   if (!prefs || !me) {
     return (
       <>
-        <Stack.Screen options={{ title: "Paramètres" }} />
+        <Stack.Screen options={{ title: t("doctor.parametres.title") }} />
         <Loader />
       </>
     );
@@ -214,7 +215,7 @@ export default function Parametres() {
 
   return (
     <>
-      <Stack.Screen options={{ title: "Paramètres" }} />
+      <Stack.Screen options={{ title: t("doctor.parametres.title") }} />
 
       {/* Tab bar */}
       <View style={styles.tabBar}>
@@ -228,7 +229,7 @@ export default function Parametres() {
             color={tab === "notifications" ? "#FFFFFF" : colors.foreground}
           />
           <Text style={[styles.tabBtnText, tab === "notifications" && { color: "#FFFFFF" }]}>
-            Notifications
+            {t("doctor.parametres.tabNotifs")}
           </Text>
         </Pressable>
         <Pressable
@@ -241,7 +242,7 @@ export default function Parametres() {
             color={tab === "security" ? "#FFFFFF" : colors.foreground}
           />
           <Text style={[styles.tabBtnText, tab === "security" && { color: "#FFFFFF" }]}>
-            Sécurité
+            {t("doctor.parametres.tabSecurity")}
           </Text>
         </Pressable>
         <Pressable
@@ -254,7 +255,7 @@ export default function Parametres() {
             color={tab === "systeme" ? "#FFFFFF" : colors.foreground}
           />
           <Text style={[styles.tabBtnText, tab === "systeme" && { color: "#FFFFFF" }]}>
-            Système
+            {t("doctor.parametres.tabSystem")}
           </Text>
         </Pressable>
       </View>
@@ -262,42 +263,42 @@ export default function Parametres() {
       <Screen>
         {tab === "notifications" ? (
           <>
-            <Card title="Notifications email">
-              <Toggle label="Nouveau rendez-vous" value={prefs.emailNewBooking} onChange={() => toggle("emailNewBooking")} disabled={saving === "emailNewBooking"} />
-              <Toggle label="Annulation patient" value={prefs.emailCancellation} onChange={() => toggle("emailCancellation")} disabled={saving === "emailCancellation"} />
-              <Toggle label="Résumé quotidien" value={prefs.emailDailyDigest} onChange={() => toggle("emailDailyDigest")} disabled={saving === "emailDailyDigest"} />
+            <Card title={t("doctor.parametres.emailNotifs")}>
+              <Toggle label={t("doctor.parametres.newBooking")} value={prefs.emailNewBooking} onChange={() => toggle("emailNewBooking")} disabled={saving === "emailNewBooking"} />
+              <Toggle label={t("doctor.parametres.patientCancel")} value={prefs.emailCancellation} onChange={() => toggle("emailCancellation")} disabled={saving === "emailCancellation"} />
+              <Toggle label={t("doctor.parametres.dailySummary")} value={prefs.emailDailyDigest} onChange={() => toggle("emailDailyDigest")} disabled={saving === "emailDailyDigest"} />
             </Card>
 
-            <Card title="Notifications push">
-              <Toggle label="Nouveau rendez-vous" value={prefs.pushNewBooking} onChange={() => toggle("pushNewBooking")} disabled={saving === "pushNewBooking"} />
-              <Toggle label="Annulation" value={prefs.pushCancellation} onChange={() => toggle("pushCancellation")} disabled={saving === "pushCancellation"} />
-              <Toggle label="Rappels patients J-X" value={prefs.pushRemindersEnabled} onChange={() => toggle("pushRemindersEnabled")} disabled={saving === "pushRemindersEnabled"} />
+            <Card title={t("doctor.parametres.pushNotifs")}>
+              <Toggle label={t("doctor.parametres.newBooking")} value={prefs.pushNewBooking} onChange={() => toggle("pushNewBooking")} disabled={saving === "pushNewBooking"} />
+              <Toggle label={t("doctor.parametres.cancelPush")} value={prefs.pushCancellation} onChange={() => toggle("pushCancellation")} disabled={saving === "pushCancellation"} />
+              <Toggle label={t("doctor.parametres.reminders")} value={prefs.pushRemindersEnabled} onChange={() => toggle("pushRemindersEnabled")} disabled={saving === "pushRemindersEnabled"} />
             </Card>
 
-            <Card title="SMS">
-              <Toggle label="Activer SMS (facturé)" value={prefs.smsEnabled} onChange={() => toggle("smsEnabled")} disabled={saving === "smsEnabled"} />
+            <Card title={t("doctor.parametres.smsSection")}>
+              <Toggle label={t("doctor.parametres.smsToggle")} value={prefs.smsEnabled} onChange={() => toggle("smsEnabled")} disabled={saving === "smsEnabled"} />
             </Card>
 
             <Banner>
-              Offsets de rappels et alertes d&apos;annulation détaillés configurables sur le portail web.
+              {t("doctor.parametres.offsetsHint")}
             </Banner>
           </>
         ) : tab === "security" ? (
           <>
-            <Card title="Mot de passe">
+            <Card title={t("doctor.parametres.passwordSection")}>
               <View style={styles.secRow}>
                 <Ionicons name="lock-closed" size={16} color={colors.teal} />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.secLabel}>Mot de passe</Text>
-                  <Text style={styles.secSub}>Dernière modification : inconnue</Text>
+                  <Text style={styles.secLabel}>{t("doctor.parametres.passwordSection")}</Text>
+                  <Text style={styles.secSub}>{t("doctor.parametres.lastChanged")}</Text>
                 </View>
                 <Pressable onPress={() => setPwModal(true)} style={styles.secBtn}>
-                  <Text style={styles.secBtnText}>Modifier</Text>
+                  <Text style={styles.secBtnText}>{t("doctor.parametres.changePassword")}</Text>
                 </Pressable>
               </View>
             </Card>
 
-            <Card title="Authentification à deux facteurs">
+            <Card title={t("doctor.parametres.twoFaSection")}>
               <View style={styles.secRow}>
                 <Ionicons
                   name="shield-checkmark"
@@ -305,9 +306,9 @@ export default function Parametres() {
                   color={me.totpEnabled ? colors.teal : colors.foregroundSecondary}
                 />
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.secLabel}>2FA TOTP</Text>
+                  <Text style={styles.secLabel}>{t("doctor.parametres.twoFaLabel")}</Text>
                   <Text style={[styles.secSub, me.totpEnabled && { color: colors.teal }]}>
-                    {me.totpEnabled ? "Activée" : "Désactivée"}
+                    {me.totpEnabled ? t("doctor.parametres.twoFaEnabled") : t("doctor.parametres.twoFaDisabled")}
                   </Text>
                 </View>
                 {me.totpEnabled ? (
@@ -316,7 +317,7 @@ export default function Parametres() {
                     style={[styles.secBtn, styles.secBtnDanger]}
                   >
                     <Text style={[styles.secBtnText, { color: colors.danger }]}>
-                      Désactiver
+                      {t("doctor.parametres.disable")}
                     </Text>
                   </Pressable>
                 ) : (
@@ -325,61 +326,84 @@ export default function Parametres() {
                     disabled={tfaBusy}
                     style={[styles.secBtn, tfaBusy && { opacity: 0.6 }]}
                   >
-                    <Text style={styles.secBtnText}>Activer</Text>
+                    <Text style={styles.secBtnText}>{t("doctor.parametres.enable")}</Text>
                   </Pressable>
                 )}
               </View>
               {me.totpEnabled && (
                 <Text style={styles.tfaNote}>
-                  L&apos;application d&apos;authentification vérifie chaque connexion par code temporaire.
+                  {t("doctor.parametres.twoFaHint1")}
                 </Text>
               )}
             </Card>
 
             <Banner>
-              Utilisez Google Authenticator, Authy ou toute application TOTP compatible.
+              {t("doctor.parametres.twoFaHint2")}
             </Banner>
           </>
         ) : (
           <>
-            <Card title="Affichage">
-              <SysRow icon="language-outline" label="Langue" value="Français" onPress={handleSoon} />
-              <SysRow icon="contrast-outline" label="Thème" sublabel="Clair, sombre ou automatique" value="Automatique" onPress={handleSoon} last />
+            <Card title={t("doctor.parametres.displaySection")}>
+              <View style={styles.sysRow}>
+                <View style={styles.sysIconWrap}>
+                  <Ionicons name="language-outline" size={18} color={colors.teal} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.sysLabel}>{t("doctor.parametres.language")}</Text>
+                </View>
+                <Pressable
+                  onPress={() => changeLocale("fr")}
+                  style={[styles.secBtn, locale === "fr" && { backgroundColor: colors.teal }]}
+                >
+                  <Text style={[styles.secBtnText, locale === "fr" && { color: "#FFFFFF" }]}>
+                    {t("doctor.parametres.languageFr")}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => changeLocale("ar")}
+                  style={[styles.secBtn, locale === "ar" && { backgroundColor: colors.teal }]}
+                >
+                  <Text style={[styles.secBtnText, locale === "ar" && { color: "#FFFFFF" }]}>
+                    {t("doctor.parametres.languageAr")}
+                  </Text>
+                </Pressable>
+              </View>
+              <SysRow icon="contrast-outline" label={t("doctor.parametres.theme")} sublabel={t("doctor.parametres.themeHint")} value={t("doctor.parametres.themeAuto")} onPress={handleSoon} last />
             </Card>
 
-            <Card title="Données">
+            <Card title={t("doctor.parametres.dataSection")}>
               <SysRow
                 icon="trash-outline"
-                label="Vider le cache"
-                sublabel={cacheCleared ? "Cache vidé" : "Supprimer les données temporaires"}
+                label={t("doctor.parametres.clearCache")}
+                sublabel={cacheCleared ? t("doctor.parametres.cacheCleared") : t("doctor.parametres.clearCacheDesc")}
                 onPress={handleClearCache}
               />
-              <SysRow icon="information-circle-outline" label="Version de l'application" value="1.0.0" onPress={() => {}} last />
+              <SysRow icon="information-circle-outline" label={t("doctor.parametres.appVersion")} value="1.0.0" onPress={() => {}} last />
             </Card>
 
-            <Card title="À propos">
+            <Card title={t("doctor.parametres.aboutSection")}>
               <SysRow
                 icon="document-text-outline"
-                label="Conditions d'utilisation"
-                sublabel="Lire nos conditions générales"
+                label={t("doctor.parametres.conditions")}
+                sublabel={t("doctor.parametres.conditionsDesc")}
                 onPress={() => router.push("/(doctor)/more/conditions" as never)}
               />
               <SysRow
                 icon="shield-checkmark-outline"
-                label="Politique de confidentialité"
-                sublabel="Comment nous traitons vos données"
+                label={t("doctor.parametres.privacy")}
+                sublabel={t("doctor.parametres.privacyDesc")}
                 onPress={() => router.push("/(doctor)/more/confidentialite" as never)}
               />
               <SysRow
                 icon="information-circle"
-                label="À propos de Doktori"
-                sublabel="Version, équipe et contact"
+                label={t("doctor.parametres.about")}
+                sublabel={t("doctor.parametres.aboutDesc")}
                 onPress={() => router.push("/(doctor)/more/a-propos" as never)}
               />
               <SysRow
                 icon="mail-outline"
-                label="Contacter le support"
-                sublabel="support@doktori.tn"
+                label={t("doctor.parametres.support")}
+                sublabel={t("doctor.parametres.supportEmail")}
                 onPress={handleSupport}
                 last
               />
@@ -395,12 +419,12 @@ export default function Parametres() {
             <Pressable onPress={() => setPwModal(false)} style={styles.modalClose}>
               <Ionicons name="close" size={22} color={colors.foreground} />
             </Pressable>
-            <Text style={styles.modalTitle}>Changer mot de passe</Text>
+            <Text style={styles.modalTitle}>{t("doctor.parametres.changePasswordTitle")}</Text>
             <View style={{ width: 36 }} />
           </View>
           <ScrollView contentContainerStyle={styles.modalBody}>
             <TextInput
-              placeholder="Mot de passe actuel"
+              placeholder={t("doctor.parametres.currentPassword")}
               placeholderTextColor={colors.foregroundSecondary}
               secureTextEntry
               value={pwCurrent}
@@ -408,7 +432,7 @@ export default function Parametres() {
               style={styles.input}
             />
             <TextInput
-              placeholder="Nouveau mot de passe (min 8 caractères)"
+              placeholder={t("doctor.parametres.newPassword")}
               placeholderTextColor={colors.foregroundSecondary}
               secureTextEntry
               value={pwNew}
@@ -416,7 +440,7 @@ export default function Parametres() {
               style={styles.input}
             />
             <TextInput
-              placeholder="Confirmer le nouveau mot de passe"
+              placeholder={t("doctor.parametres.confirmPassword")}
               placeholderTextColor={colors.foregroundSecondary}
               secureTextEntry
               value={pwConfirm}
@@ -429,7 +453,7 @@ export default function Parametres() {
               style={[styles.submitBtn, pwBusy && { opacity: 0.6 }]}
             >
               <Text style={styles.submitBtnText}>
-                {pwBusy ? "Enregistrement…" : "Mettre à jour"}
+                {pwBusy ? t("doctor.parametres.saving") : t("doctor.parametres.updatePassword")}
               </Text>
             </Pressable>
           </ScrollView>
@@ -443,34 +467,34 @@ export default function Parametres() {
             <Pressable onPress={() => { setTfaModal(false); setTfaCode(""); }} style={styles.modalClose}>
               <Ionicons name="close" size={22} color={colors.foreground} />
             </Pressable>
-            <Text style={styles.modalTitle}>Activer la 2FA</Text>
+            <Text style={styles.modalTitle}>{t("doctor.parametres.enable2faTitle")}</Text>
             <View style={{ width: 36 }} />
           </View>
           <ScrollView contentContainerStyle={styles.modalBody}>
             {tfaStep === "qr" && (
               <>
                 <Text style={styles.tfaInstr}>
-                  1. Scannez ce QR code avec Google Authenticator ou Authy.
+                  {t("doctor.parametres.twoFaStep1")}
                 </Text>
                 {qrImageUrl && (
                   <View style={styles.qrWrap}>
                     <Image source={{ uri: qrImageUrl }} style={styles.qr} />
                   </View>
                 )}
-                <Text style={styles.tfaSecretLabel}>Ou entrez manuellement :</Text>
+                <Text style={styles.tfaSecretLabel}>{t("doctor.parametres.twoFaManual")}</Text>
                 <Text style={styles.tfaSecret} selectable>{tfaSecret}</Text>
                 <Pressable onPress={() => setTfaStep("verify")} style={styles.submitBtn}>
-                  <Text style={styles.submitBtnText}>Suivant →</Text>
+                  <Text style={styles.submitBtnText}>{t("doctor.parametres.twoFaNextStep")}</Text>
                 </Pressable>
               </>
             )}
             {tfaStep === "verify" && (
               <>
                 <Text style={styles.tfaInstr}>
-                  2. Entrez le code à 6 chiffres affiché dans votre application.
+                  {t("doctor.parametres.twoFaStep2")}
                 </Text>
                 <TextInput
-                  placeholder="000000"
+                  placeholder={t("doctor.parametres.twoFaCodePlaceholder")}
                   placeholderTextColor={colors.foregroundSecondary}
                   keyboardType="number-pad"
                   maxLength={6}
@@ -484,7 +508,7 @@ export default function Parametres() {
                   style={[styles.submitBtn, tfaBusy && { opacity: 0.6 }]}
                 >
                   <Text style={styles.submitBtnText}>
-                    {tfaBusy ? "Vérification…" : "Vérifier et activer"}
+                    {tfaBusy ? t("doctor.parametres.verifying") : t("doctor.parametres.verifyActivate")}
                   </Text>
                 </Pressable>
               </>
@@ -495,7 +519,7 @@ export default function Parametres() {
                   <Ionicons name="shield-checkmark" size={48} color={colors.teal} />
                 </View>
                 <Text style={styles.tfaInstr}>
-                  2FA activé. Conservez ces codes de secours en lieu sûr — chacun est utilisable une seule fois.
+                  {t("doctor.parametres.backupCodesHint")}
                 </Text>
                 <View style={styles.backupGrid}>
                   {tfaBackupCodes.map((c) => (
@@ -505,7 +529,7 @@ export default function Parametres() {
                   ))}
                 </View>
                 <Pressable onPress={() => setTfaModal(false)} style={styles.submitBtn}>
-                  <Text style={styles.submitBtnText}>Terminer</Text>
+                  <Text style={styles.submitBtnText}>{t("doctor.parametres.done")}</Text>
                 </Pressable>
               </>
             )}
@@ -520,15 +544,15 @@ export default function Parametres() {
             <Pressable onPress={() => setDisableModal(false)} style={styles.modalClose}>
               <Ionicons name="close" size={22} color={colors.foreground} />
             </Pressable>
-            <Text style={styles.modalTitle}>Désactiver la 2FA</Text>
+            <Text style={styles.modalTitle}>{t("doctor.parametres.disable2faTitle")}</Text>
             <View style={{ width: 36 }} />
           </View>
           <ScrollView contentContainerStyle={styles.modalBody}>
             <Text style={styles.tfaInstr}>
-              Entrez votre mot de passe pour confirmer la désactivation de la 2FA.
+              {t("doctor.parametres.disable2faPrompt")}
             </Text>
             <TextInput
-              placeholder="Mot de passe"
+              placeholder={t("doctor.parametres.currentPassword")}
               placeholderTextColor={colors.foregroundSecondary}
               secureTextEntry
               value={disablePw}
@@ -541,7 +565,7 @@ export default function Parametres() {
               style={[styles.submitBtn, styles.submitBtnDanger, disableBusy && { opacity: 0.6 }]}
             >
               <Text style={styles.submitBtnText}>
-                {disableBusy ? "Désactivation…" : "Désactiver la 2FA"}
+                {disableBusy ? t("doctor.parametres.disabling") : t("doctor.parametres.disable2faBtn")}
               </Text>
             </Pressable>
           </ScrollView>

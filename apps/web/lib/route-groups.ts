@@ -25,6 +25,7 @@ export const AUTHENTICATED_PREFIXES = [
   "/profil",
   "/verification",
   "/reseau",
+  "/modeles",
   "/admin",
   "/admin-login",
   "/clinique",
@@ -79,7 +80,8 @@ export function roleFromPath(pathname: string): AuthenticatedRole | null {
     pathname.startsWith("/factures") ||
     pathname.startsWith("/profil") ||
     pathname.startsWith("/verification") ||
-    pathname.startsWith("/reseau")
+    pathname.startsWith("/reseau") ||
+    pathname.startsWith("/modeles")
   ) {
     return "doctor";
   }

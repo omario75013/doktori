@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 
 type Patient = {
   id: string;
@@ -60,6 +60,7 @@ type PatientDetail = {
 };
 
 export default function PatientsScreen() {
+  const { locale } = useLocale();
   const [query, setQuery] = useState("");
   const [all, setAll] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,7 +109,7 @@ export default function PatientsScreen() {
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
       <View style={styles.header}>
-        <Text style={styles.title}>Patients</Text>
+        <Text style={styles.title}>{t("doctor.patients.title")}</Text>
         <View style={styles.headerRight}>
           <Text style={styles.count}>
             {filtered.length} / {all.length}
@@ -125,7 +126,7 @@ export default function PatientsScreen() {
       <View style={styles.searchWrap}>
         <Ionicons name="search" size={16} color={colors.foregroundSecondary} />
         <TextInput
-          placeholder="Nom, téléphone, email, CIN…"
+          placeholder={t("doctor.patients.searchPlaceholder")}
           placeholderTextColor={colors.foregroundSecondary}
           value={query}
           onChangeText={setQuery}
@@ -158,7 +159,7 @@ export default function PatientsScreen() {
           <View style={styles.empty}>
             <Ionicons name="people-outline" size={32} color={colors.foregroundSecondary} />
             <Text style={styles.emptyText}>
-              {query ? "Aucun patient trouvé." : "Aucun patient encore."}
+              {query ? t("doctor.patients.noResults") : t("doctor.patients.noPatients")}
             </Text>
           </View>
         }
@@ -214,11 +215,11 @@ function NewPatientModal({
 
   async function handleSubmit() {
     if (!name.trim()) {
-      setError("Le nom est requis.");
+      setError(t("doctor.patients.nameRequired"));
       return;
     }
     if (!phone.trim()) {
-      setError("Le téléphone est requis.");
+      setError(t("doctor.patients.phoneRequired"));
       return;
     }
     setSaving(true);
@@ -235,7 +236,7 @@ function NewPatientModal({
       });
       await onCreated();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Échec de la création");
+      setError(e instanceof Error ? e.message : t("doctor.patients.createFailed"));
     } finally {
       setSaving(false);
     }
@@ -247,7 +248,7 @@ function NewPatientModal({
         <Pressable onPress={onClose} style={styles.modalClose}>
           <Ionicons name="close" size={22} color={colors.foreground} />
         </Pressable>
-        <Text style={styles.detailTitle}>Nouveau patient</Text>
+        <Text style={styles.detailTitle}>{t("doctor.patients.newPatient")}</Text>
         <Pressable
           onPress={handleSubmit}
           style={[styles.modalClose, styles.saveBtn]}
@@ -264,22 +265,22 @@ function NewPatientModal({
       <ScrollView contentContainerStyle={styles.formScroll}>
         {error && <Text style={styles.formError}>{error}</Text>}
 
-        <Text style={styles.formLabel}>Nom *</Text>
+        <Text style={styles.formLabel}>{t("doctor.patients.fieldName")} *</Text>
         <TextInput
           style={styles.formInput}
           value={name}
           onChangeText={setName}
-          placeholder="Prénom Nom"
+          placeholder={t("doctor.patients.namePlaceholder")}
           placeholderTextColor={colors.foregroundSecondary}
           autoCapitalize="words"
         />
 
-        <Text style={styles.formLabel}>Téléphone *</Text>
+        <Text style={styles.formLabel}>{t("doctor.patients.fieldPhone")} *</Text>
         <TextInput
           style={styles.formInput}
           value={phone}
           onChangeText={setPhone}
-          placeholder="+216 XX XXX XXX"
+          placeholder={t("doctor.patients.phonePlaceholder")}
           placeholderTextColor={colors.foregroundSecondary}
           keyboardType="phone-pad"
         />
@@ -289,18 +290,18 @@ function NewPatientModal({
           style={styles.formInput}
           value={email}
           onChangeText={setEmail}
-          placeholder="patient@email.com"
+          placeholder={t("doctor.patients.emailPlaceholder")}
           placeholderTextColor={colors.foregroundSecondary}
           keyboardType="email-address"
           autoCapitalize="none"
         />
 
-        <Text style={styles.formLabel}>Date de naissance (AAAA-MM-JJ)</Text>
+        <Text style={styles.formLabel}>{t("doctor.patients.dobLabel")}</Text>
         <TextInput
           style={styles.formInput}
           value={dateOfBirth}
           onChangeText={setDateOfBirth}
-          placeholder="1990-01-15"
+          placeholder={t("doctor.patients.dobPlaceholder")}
           placeholderTextColor={colors.foregroundSecondary}
         />
       </ScrollView>
@@ -392,16 +393,16 @@ function EditPatientModal({
       });
       await onSaved();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Échec de la sauvegarde");
+      setError(e instanceof Error ? e.message : t("common.error"));
     } finally {
       setSaving(false);
     }
   }
 
   const editTabs: Array<{ id: "infos" | "dossier" | "assurance"; label: string }> = [
-    { id: "infos", label: "Infos" },
-    { id: "dossier", label: "Dossier" },
-    { id: "assurance", label: "Assurance" },
+    { id: "infos", label: t("doctor.patients.tabInfo") },
+    { id: "dossier", label: t("doctor.patients.tabRecord") },
+    { id: "assurance", label: t("doctor.patients.tabInsurance") },
   ];
 
   return (
@@ -411,7 +412,7 @@ function EditPatientModal({
           <Ionicons name="close" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={styles.detailTitle} numberOfLines={1}>
-          Modifier {p.name}
+          {t("common.edit")} {p.name}
         </Text>
         <Pressable
           onPress={handleSave}
@@ -445,22 +446,22 @@ function EditPatientModal({
       <ScrollView contentContainerStyle={styles.formScroll}>
         {editTab === "infos" && (
           <View style={styles.formSection}>
-            <Text style={styles.formLabel}>Nom</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.fieldName")}</Text>
             <TextInput
               style={styles.formInput}
               value={name}
               onChangeText={setName}
-              placeholder="Prénom Nom"
+              placeholder={t("doctor.patients.namePlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               autoCapitalize="words"
             />
 
-            <Text style={styles.formLabel}>Téléphone</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.fieldPhone")}</Text>
             <TextInput
               style={styles.formInput}
               value={phone}
               onChangeText={setPhone}
-              placeholder="+216 XX XXX XXX"
+              placeholder={t("doctor.patients.phonePlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               keyboardType="phone-pad"
             />
@@ -470,22 +471,22 @@ function EditPatientModal({
               style={styles.formInput}
               value={email}
               onChangeText={setEmail}
-              placeholder="patient@email.com"
+              placeholder={t("doctor.patients.emailPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               keyboardType="email-address"
               autoCapitalize="none"
             />
 
-            <Text style={styles.formLabel}>Date de naissance (AAAA-MM-JJ)</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.dobLabel")}</Text>
             <TextInput
               style={styles.formInput}
               value={dateOfBirth}
               onChangeText={setDateOfBirth}
-              placeholder="1990-01-15"
+              placeholder={t("doctor.patients.dobPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
             />
 
-            <Text style={styles.formLabel}>Genre</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.fieldGender")}</Text>
             <View style={styles.genderRow}>
               <Pressable
                 style={[styles.genderBtn, gender === "M" && styles.genderBtnActive]}
@@ -494,7 +495,7 @@ function EditPatientModal({
                 <Text
                   style={[styles.genderBtnText, gender === "M" && styles.genderBtnTextActive]}
                 >
-                  Homme
+                  {t("doctor.patients.genderMale")}
                 </Text>
               </Pressable>
               <Pressable
@@ -504,26 +505,26 @@ function EditPatientModal({
                 <Text
                   style={[styles.genderBtnText, gender === "F" && styles.genderBtnTextActive]}
                 >
-                  Femme
+                  {t("doctor.patients.genderFemale")}
                 </Text>
               </Pressable>
             </View>
 
-            <Text style={styles.formLabel}>CIN</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.fieldCin")}</Text>
             <TextInput
               style={styles.formInput}
               value={cin}
               onChangeText={setCin}
-              placeholder="XXXXXXXX"
+              placeholder={t("doctor.patients.cinPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
             />
 
-            <Text style={styles.formLabel}>Nationalité</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.fieldNationality")}</Text>
             <TextInput
               style={styles.formInput}
               value={nationality}
               onChangeText={setNationality}
-              placeholder="Tunisienne"
+              placeholder={t("doctor.patients.nationalityDefault")}
               placeholderTextColor={colors.foregroundSecondary}
               autoCapitalize="words"
             />
@@ -532,45 +533,45 @@ function EditPatientModal({
 
         {editTab === "dossier" && (
           <View style={styles.formSection}>
-            <Text style={styles.formLabel}>Allergies</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.fieldAllergies")}</Text>
             <TextInput
               style={[styles.formInput, styles.formTextarea]}
               value={allergies}
               onChangeText={setAllergies}
-              placeholder="Pénicilline, arachides…"
+              placeholder={t("doctor.patients.allergiesPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               multiline
               numberOfLines={3}
             />
 
-            <Text style={styles.formLabel}>Maladies chroniques</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.fieldChronicDiseases")}</Text>
             <TextInput
               style={[styles.formInput, styles.formTextarea]}
               value={chronicConditions}
               onChangeText={setChronicConditions}
-              placeholder="Diabète, hypertension…"
+              placeholder={t("doctor.patients.chronicPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               multiline
               numberOfLines={3}
             />
 
-            <Text style={styles.formLabel}>Traitements en cours</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.fieldTreatments")}</Text>
             <TextInput
               style={[styles.formInput, styles.formTextarea]}
               value={currentMeds}
               onChangeText={setCurrentMeds}
-              placeholder="Metformine 500mg…"
+              placeholder={t("doctor.patients.treatmentsPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               multiline
               numberOfLines={3}
             />
 
-            <Text style={styles.formLabel}>Autres remarques</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.fieldNotes")}</Text>
             <TextInput
               style={[styles.formInput, styles.formTextarea]}
               value={notes}
               onChangeText={setNotes}
-              placeholder="Observations particulières…"
+              placeholder={t("doctor.patients.notesPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               multiline
               numberOfLines={4}
@@ -580,49 +581,49 @@ function EditPatientModal({
 
         {editTab === "assurance" && (
           <View style={styles.formSection}>
-            <Text style={styles.formLabel}>Numéro CNAM</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.fieldCnam")}</Text>
             <TextInput
               style={styles.formInput}
               value={cnamNumber}
               onChangeText={setCnamNumber}
-              placeholder="XXXXXXXXXXXXXXX"
+              placeholder={t("doctor.patients.cnamPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
             />
 
-            <Text style={styles.formLabel}>Assureur</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.fieldInsurer")}</Text>
             <TextInput
               style={styles.formInput}
               value={insuranceProvider}
               onChangeText={setInsuranceProvider}
-              placeholder="CNAM, CNRPS…"
+              placeholder={t("doctor.patients.insurerPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
             />
 
-            <Text style={styles.formLabel}>N° assurance</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.fieldInsuranceNo")}</Text>
             <TextInput
               style={styles.formInput}
               value={insuranceNumber}
               onChangeText={setInsuranceNumber}
-              placeholder="Numéro de police"
+              placeholder={t("doctor.patients.insuranceNoPlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
             />
 
-            <Text style={styles.formLabel}>Contact d'urgence — Nom</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.emergencyContactName")}</Text>
             <TextInput
               style={styles.formInput}
               value={emergencyContactName}
               onChangeText={setEmergencyContactName}
-              placeholder="Prénom Nom"
+              placeholder={t("doctor.patients.namePlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               autoCapitalize="words"
             />
 
-            <Text style={styles.formLabel}>Contact d'urgence — Téléphone</Text>
+            <Text style={styles.formLabel}>{t("doctor.patients.emergencyContactPhone")}</Text>
             <TextInput
               style={styles.formInput}
               value={emergencyContactPhone}
               onChangeText={setEmergencyContactPhone}
-              placeholder="+216 XX XXX XXX"
+              placeholder={t("doctor.patients.phonePlaceholder")}
               placeholderTextColor={colors.foregroundSecondary}
               keyboardType="phone-pad"
             />
@@ -647,19 +648,19 @@ function PatientRow({ patient, onPress }: { patient: Patient; onPress: () => voi
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.rowName}>{patient.name}</Text>
-        <Text style={styles.rowSub} numberOfLines={1}>
+        <Text style={[styles.rowSub, { writingDirection: "ltr" }]} numberOfLines={1}>
           {patient.phone}
           {patient.email ? ` · ${patient.email}` : ""}
         </Text>
         <View style={styles.rowBadges}>
           <View style={styles.rowStat}>
             <Ionicons name="calendar-outline" size={11} color={colors.foregroundSecondary} />
-            <Text style={styles.rowStatText}>{patient.appointmentCount} RDV</Text>
+            <Text style={styles.rowStatText}>{patient.appointmentCount} {t("doctor.patients.rdv")}</Text>
           </View>
           {patient.noShowCount > 0 && (
             <View style={[styles.rowStat, styles.rowStatWarn]}>
               <Text style={styles.rowStatTextWarn}>
-                ⚠ {patient.noShowCount} absence{patient.noShowCount > 1 ? "s" : ""}
+                ⚠ {patient.noShowCount > 1 ? t("doctor.patients.noShowCountPlural", { count: patient.noShowCount }) : t("doctor.patients.noShowCount", { count: patient.noShowCount })}
               </Text>
             </View>
           )}
@@ -688,7 +689,7 @@ function PatientDetailView({
       const res = await api<PatientDetail>(`/api/patients/${patientId}`);
       setData(res);
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Chargement échoué");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("common.error"));
       onClose();
     }
   }, [patientId, onClose]);
@@ -716,10 +717,10 @@ function PatientDetailView({
     : null;
 
   async function deletePatient() {
-    Alert.alert("Supprimer le patient", `Retirer ${p.name} de votre liste ?`, [
-      { text: "Annuler", style: "cancel" },
+    Alert.alert(t("doctor.patients.deletePatient"), t("doctor.patients.deleteConfirm", { name: p.name }), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Supprimer",
+        text: t("common.delete"),
         style: "destructive",
         onPress: async () => {
           try {
@@ -727,7 +728,7 @@ function PatientDetailView({
             await onChanged();
             onClose();
           } catch (e) {
-            Alert.alert("Erreur", e instanceof Error ? e.message : "Suppression échouée");
+            Alert.alert(t("common.error"), e instanceof Error ? e.message : t("doctor.patients.deleteFailed"));
           }
         },
       },
@@ -754,19 +755,19 @@ function PatientDetailView({
       </View>
 
       <View style={styles.detailMeta}>
-        <Text style={styles.detailMetaText}>
+        <Text style={[styles.detailMetaText, { writingDirection: "ltr" }]}>
           {p.phone}
           {age !== null ? ` · ${age} ans` : ""}
-          {p.gender ? ` · ${p.gender === "M" ? "Homme" : "Femme"}` : ""}
+          {p.gender ? ` · ${p.gender === "M" ? t("doctor.patients.genderMale") : t("doctor.patients.genderFemale")}` : ""}
         </Text>
       </View>
 
       <View style={styles.tabs}>
         {(
           [
-            { id: "infos" as const, label: "Infos", icon: "person" as const },
-            { id: "dossier" as const, label: "Dossier", icon: "document-text" as const },
-            { id: "rdv" as const, label: "RDV", icon: "calendar" as const },
+            { id: "infos" as const, label: t("doctor.patients.tabInfo"), icon: "person" as const },
+            { id: "dossier" as const, label: t("doctor.patients.tabRecord"), icon: "document-text" as const },
+            { id: "rdv" as const, label: t("doctor.patients.rdv"), icon: "calendar" as const },
           ]
         ).map((t) => (
           <Pressable
@@ -789,10 +790,10 @@ function PatientDetailView({
       <ScrollView contentContainerStyle={styles.detailScroll}>
         {tab === "infos" && (
           <View style={{ gap: spacing.md }}>
-            <DetailCard title="Identité">
-              <Kv label="Nom" value={p.name} />
+            <DetailCard title={t("doctor.patients.sectionIdentity")}>
+              <Kv label={t("doctor.patients.fieldName")} value={p.name} />
               <Kv
-                label="Date de naissance"
+                label={t("doctor.patients.sectionDob")}
                 value={
                   p.dateOfBirth
                     ? new Date(p.dateOfBirth).toLocaleDateString("fr-FR", {
@@ -803,57 +804,57 @@ function PatientDetailView({
                     : "—"
                 }
               />
-              <Kv label="CIN" value={p.cin ?? "—"} mono />
-              <Kv label="Nationalité" value={p.nationality ?? "—"} />
+              <Kv label={t("doctor.patients.fieldCin")} value={p.cin ?? "—"} mono />
+              <Kv label={t("doctor.patients.fieldNationality")} value={p.nationality ?? "—"} />
             </DetailCard>
 
-            <DetailCard title="Contact">
-              <Kv label="Téléphone" value={p.phone} mono />
+            <DetailCard title={t("doctor.patients.sectionContact")}>
+              <Kv label={t("doctor.patients.fieldPhone")} value={p.phone} mono ltr />
               <Kv label="Email" value={p.email ?? "—"} />
               <Kv
-                label="Adresse"
+                label={t("doctor.patients.sectionAddress")}
                 value={
                   [p.addressStreet, p.addressCity].filter(Boolean).join(", ") || "—"
                 }
               />
             </DetailCard>
 
-            <DetailCard title="Assurance">
-              <Kv label="CNAM" value={p.cnamNumber ?? "—"} mono />
-              <Kv label="Assureur" value={p.insuranceProvider ?? "—"} />
-              <Kv label="N°" value={p.insuranceNumber ?? "—"} mono />
+            <DetailCard title={t("doctor.patients.tabInsurance")}>
+              <Kv label={t("doctor.patients.fieldCnam")} value={p.cnamNumber ?? "—"} mono />
+              <Kv label={t("doctor.patients.fieldInsurer")} value={p.insuranceProvider ?? "—"} />
+              <Kv label={t("doctor.patients.fieldInsuranceNo")} value={p.insuranceNumber ?? "—"} mono />
             </DetailCard>
 
-            <DetailCard title="Contact d'urgence">
-              <Kv label="Nom" value={p.emergencyContactName ?? "—"} />
-              <Kv label="Téléphone" value={p.emergencyContactPhone ?? "—"} mono />
+            <DetailCard title={t("doctor.patients.emergencyContactName").split(" —")[0]}>
+              <Kv label={t("doctor.patients.fieldName")} value={p.emergencyContactName ?? "—"} />
+              <Kv label={t("doctor.patients.fieldPhone")} value={p.emergencyContactPhone ?? "—"} mono />
             </DetailCard>
 
-            <DetailCard title="Morphologie">
-              <Kv label="Groupe" value={p.bloodType ?? "—"} />
-              <Kv label="Taille" value={p.heightCm ? `${p.heightCm} cm` : "—"} />
-              <Kv label="Poids" value={p.weightKg ? `${p.weightKg} kg` : "—"} />
+            <DetailCard title={t("doctor.patients.sectionMorphology")}>
+              <Kv label={t("doctor.patients.fieldBloodGroup")} value={p.bloodType ?? "—"} />
+              <Kv label={t("doctor.patients.fieldHeight")} value={p.heightCm ? `${p.heightCm} cm` : "—"} />
+              <Kv label={t("doctor.patients.fieldWeight")} value={p.weightKg ? `${p.weightKg} kg` : "—"} />
             </DetailCard>
           </View>
         )}
 
         {tab === "dossier" && (
           <View style={{ gap: spacing.md }}>
-            <DetailCard title="Allergies" highlight="red">
+            <DetailCard title={t("doctor.patients.fieldAllergies")} highlight="red">
               <Text style={styles.medText}>
-                {data.medical?.allergies || "Non renseigné"}
+                {data.medical?.allergies || t("common.notProvided")}
               </Text>
             </DetailCard>
-            <DetailCard title="Maladies chroniques" highlight="orange">
+            <DetailCard title={t("doctor.patients.fieldChronicDiseases")} highlight="orange">
               <Text style={styles.medText}>
-                {data.medical?.chronicConditions || "Non renseigné"}
+                {data.medical?.chronicConditions || t("common.notProvided")}
               </Text>
             </DetailCard>
-            <DetailCard title="Traitements en cours" highlight="blue">
-              <Text style={styles.medText}>{data.medical?.currentMeds || "Non renseigné"}</Text>
+            <DetailCard title={t("doctor.patients.fieldTreatments")} highlight="blue">
+              <Text style={styles.medText}>{data.medical?.currentMeds || t("common.notProvided")}</Text>
             </DetailCard>
-            <DetailCard title="Autres remarques">
-              <Text style={styles.medText}>{data.medical?.notes || "Non renseigné"}</Text>
+            <DetailCard title={t("doctor.patients.fieldNotes")}>
+              <Text style={styles.medText}>{data.medical?.notes || t("common.notProvided")}</Text>
             </DetailCard>
           </View>
         )}
@@ -861,7 +862,7 @@ function PatientDetailView({
         {tab === "rdv" && (
           <View style={{ gap: spacing.sm }}>
             {data.appointments.length === 0 ? (
-              <Text style={styles.medText}>Aucun rendez-vous.</Text>
+              <Text style={styles.medText}>{t("doctor.patients.noAppointments")}</Text>
             ) : (
               data.appointments.map((a) => (
                 <View key={a.id} style={styles.apptItem}>
@@ -941,15 +942,17 @@ function Kv({
   label,
   value,
   mono,
+  ltr,
 }: {
   label: string;
   value: string;
   mono?: boolean;
+  ltr?: boolean;
 }) {
   return (
     <View style={styles.kv}>
       <Text style={styles.kvLabel}>{label}</Text>
-      <Text style={[styles.kvValue, mono && { fontFamily: "monospace" }]}>{value}</Text>
+      <Text style={[styles.kvValue, mono && { fontFamily: "monospace" }, ltr && { writingDirection: "ltr" }]}>{value}</Text>
     </View>
   );
 }

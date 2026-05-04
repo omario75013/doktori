@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, conversations, messages, appointments } from "@doktori/db";
+import { db, conversations, messages, appointments, doctors } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 import { getPatientFromRequest } from "@/lib/patient-auth";
 
@@ -71,6 +71,29 @@ export async function POST(req: NextRequest) {
 
       return { conversation: conv, message: msg };
     });
+
+    // Auto-reply: if doctor has an active away message, send it automatically
+    const [doc] = await db
+      .select({ awayMessage: doctors.awayMessage, statusActiveUntil: doctors.statusActiveUntil })
+      .from(doctors)
+      .where(eq(doctors.id, doctorId))
+      .limit(1);
+
+    if (doc?.awayMessage) {
+      const isActive =
+        !doc.statusActiveUntil || new Date(doc.statusActiveUntil) > now;
+      if (isActive) {
+        await db.insert(messages).values({
+          conversationId: result.conversation.id,
+          senderType: "doctor",
+          senderId: doctorId,
+          content: doc.awayMessage,
+          type: "auto_reply",
+          isAutoReply: true,
+          createdAt: new Date(now.getTime() + 1000),
+        });
+      }
+    }
 
     return NextResponse.json(result, { status: 201 });
   } catch (e) {

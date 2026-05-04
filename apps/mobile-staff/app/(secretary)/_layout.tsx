@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@doktori/mobile-core";
+import { colors, t, useLocale } from "@doktori/mobile-core";
 import { SecretaryBellListener } from "../../components/secretary-bell-listener";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -12,6 +12,7 @@ function icon(name: IconName) {
 }
 
 export default function SecretaryLayout() {
+  useLocale(); // re-render on locale change so tab labels update
   return (
     <>
       <SecretaryBellListener />
@@ -24,11 +25,11 @@ export default function SecretaryLayout() {
           tabBarStyle: { borderTopColor: colors.border },
         }}
       >
-        <Tabs.Screen name="dashboard"  options={{ title: "Accueil",    tabBarIcon: icon("grid") }} />
-        <Tabs.Screen name="planning"   options={{ title: "Planning",   tabBarIcon: icon("calendar") }} />
-        <Tabs.Screen name="patients"   options={{ title: "Patients",   tabBarIcon: icon("people") }} />
-        <Tabs.Screen name="messages"   options={{ title: "Messagerie", tabBarIcon: icon("chatbubbles") }} />
-        <Tabs.Screen name="settings"   options={{ title: "Plus",       tabBarIcon: icon("ellipsis-horizontal-circle") }} />
+        <Tabs.Screen name="dashboard"  options={{ title: t("secretary.tabs.dashboard"), tabBarIcon: icon("grid") }} />
+        <Tabs.Screen name="planning"   options={{ title: t("secretary.tabs.planning"),  tabBarIcon: icon("calendar") }} />
+        <Tabs.Screen name="patients"   options={{ title: t("secretary.tabs.patients"),  tabBarIcon: icon("people") }} />
+        <Tabs.Screen name="messages"   options={{ title: t("secretary.tabs.messages"),  tabBarIcon: icon("chatbubbles") }} />
+        <Tabs.Screen name="settings"   options={{ title: t("secretary.tabs.more"),      tabBarIcon: icon("ellipsis-horizontal-circle") }} />
 
         {/* Hidden screens */}
         <Tabs.Screen name="a-propos"                  options={{ href: null }} />

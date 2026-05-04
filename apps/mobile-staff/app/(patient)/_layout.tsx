@@ -1,6 +1,6 @@
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors } from "@doktori/mobile-core";
+import { colors, t, useLocale } from "@doktori/mobile-core";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
 
@@ -11,6 +11,7 @@ function icon(name: IconName) {
 }
 
 export default function PatientLayout() {
+  useLocale(); // re-render on locale change so tab labels update
   return (
     <Tabs
       screenOptions={{
@@ -22,19 +23,19 @@ export default function PatientLayout() {
     >
       <Tabs.Screen
         name="home"
-        options={{ title: "Accueil", tabBarIcon: icon("home-outline") }}
+        options={{ title: t("patient.tabs.home"), tabBarIcon: icon("home-outline") }}
       />
       <Tabs.Screen
         name="rendez-vous"
-        options={{ title: "Rendez-vous", tabBarIcon: icon("calendar-outline") }}
+        options={{ title: t("patient.tabs.rdv"), tabBarIcon: icon("calendar-outline") }}
       />
       <Tabs.Screen
         name="ordonnances"
-        options={{ title: "Ordonnances", tabBarIcon: icon("document-text-outline") }}
+        options={{ title: t("patient.tabs.ordonnances"), tabBarIcon: icon("document-text-outline") }}
       />
       <Tabs.Screen
         name="profil"
-        options={{ title: "Profil", tabBarIcon: icon("person-outline") }}
+        options={{ title: t("patient.tabs.profil"), tabBarIcon: icon("person-outline") }}
       />
       {/* Hidden routes */}
       <Tabs.Screen name="messages" options={{ href: null }} />

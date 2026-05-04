@@ -127,6 +127,7 @@ function SMSCounterCard({
   plan: string;
   index?: number;
 }) {
+  const tDash = useTranslations("medecin.dashboard");
   const isUnlimited = limit >= 999999;
   const pct = isUnlimited ? 0 : Math.min(100, Math.round((used / limit) * 100));
   const isExhausted = !isUnlimited && used >= limit;
@@ -147,10 +148,10 @@ function SMSCounterCard({
       <div className="flex items-start justify-between gap-3 pl-3">
         <div className="min-w-0 flex-1">
           <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
-            SMS ce mois
+            {tDash("smsThisMonth")}
           </div>
           <div className="text-xl font-black mt-1 text-slate-900 dark:text-white tabular-nums">
-            {isUnlimited ? "Illimité" : `${used} / ${limit}`}
+            {isUnlimited ? tDash("unlimited") : `${used} / ${limit}`}
           </div>
           {!isUnlimited && (
             <div className="mt-2 h-1.5 w-full rounded-full bg-slate-100 dark:bg-gray-700">
@@ -168,19 +169,19 @@ function SMSCounterCard({
                 href="/abonnement"
                 className="text-xs font-semibold text-red-600 hover:text-red-700 underline"
               >
-                Passer au Pro
+                {tDash("upgradeToPro")}
               </a>
             </div>
           )}
           {!isExhausted && !isUnlimited && (
             <div className="text-xs text-slate-400 mt-1">
               {isNearLimit
-                ? `${limit - used} restants — bientôt épuisé`
-                : `${limit - used} SMS restants`}
+                ? tDash("smsNearLimit", { remaining: limit - used })
+                : tDash("smsRemaining", { remaining: limit - used })}
             </div>
           )}
           {isUnlimited && (
-            <div className="text-xs text-teal-600 mt-1 font-medium">Plan {plan}</div>
+            <div className="text-xs text-teal-600 mt-1 font-medium">{tDash("planLabel", { plan })}</div>
           )}
         </div>
         <div
@@ -333,22 +334,25 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 
 // ─── Activity event label ──────────────────────────────────────────────────────
 
-function activityLabel(item: ActivityItem): { text: string; dot: string } {
+function activityLabel(
+  item: ActivityItem,
+  t: ReturnType<typeof useTranslations<"medecin.dashboard">>
+): { text: string; dot: string } {
   const date = new Date(item.startsAt);
   const dateStr = format(date, "d MMM à HH:mm", { locale: fr });
   switch (item.status) {
     case "confirmed":
-      return { text: `Nouveau RDV confirmé : ${item.patientName} — ${dateStr}`, dot: "bg-green-400" };
+      return { text: t("activityNewApptConfirmed", { name: item.patientName, date: dateStr }), dot: "bg-green-400" };
     case "pending":
-      return { text: `Nouveau RDV en attente : ${item.patientName} — ${dateStr}`, dot: "bg-orange-400" };
+      return { text: t("activityNewApptPending", { name: item.patientName, date: dateStr }), dot: "bg-orange-400" };
     case "cancelled":
-      return { text: `${item.patientName} a annulé son RDV du ${dateStr}`, dot: "bg-gray-400" };
+      return { text: t("activityApptCancelled", { name: item.patientName, date: dateStr }), dot: "bg-gray-400" };
     case "completed":
-      return { text: `Consultation terminée : ${item.patientName}`, dot: "bg-blue-400" };
+      return { text: t("activityConsultationDone", { name: item.patientName }), dot: "bg-blue-400" };
     case "no_show":
-      return { text: `Absence notée : ${item.patientName} — ${dateStr}`, dot: "bg-red-400" };
+      return { text: t("activityNoShow", { name: item.patientName, date: dateStr }), dot: "bg-red-400" };
     default:
-      return { text: `Mise à jour RDV : ${item.patientName}`, dot: "bg-slate-300" };
+      return { text: t("activityApptUpdated", { name: item.patientName }), dot: "bg-slate-300" };
   }
 }
 
@@ -442,14 +446,14 @@ export function DashboardClient({
           <Shield className="w-5 h-5 text-amber-600 shrink-0" />
           <div className="flex-1 min-w-0">
             <span className="text-sm font-medium text-amber-800">
-              Complétez votre vérification pour apparaître dans les résultats de recherche.
+              {t("verificationPending")}
             </span>
           </div>
           <Link
             href="/verification"
             className="shrink-0 text-xs font-semibold text-amber-700 hover:text-amber-900 border border-amber-300 px-3 py-1.5 rounded-lg hover:bg-amber-100 transition-colors"
           >
-            Vérifier mon compte
+            {t("verifyAccount")}
           </Link>
         </motion.div>
       )}
@@ -462,8 +466,7 @@ export function DashboardClient({
         >
           <Clock className="w-5 h-5 text-blue-600 shrink-0" />
           <span className="text-sm font-medium text-blue-800">
-            Vos documents sont en cours de vérification par notre équipe. Vous serez notifié par
-            email.
+            {t("verificationDocumentsSubmitted")}
           </span>
         </motion.div>
       )}
@@ -477,7 +480,7 @@ export function DashboardClient({
           <XCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" />
           <div className="flex-1 min-w-0">
             <span className="text-sm font-medium text-red-800">
-              Vos documents ont été refusés
+              {t("verificationRejected")}
               {verificationNote ? ` : ${verificationNote}` : "."}
             </span>
           </div>
@@ -485,7 +488,7 @@ export function DashboardClient({
             href="/verification"
             className="shrink-0 text-xs font-semibold text-red-700 hover:text-red-900 border border-red-300 px-3 py-1.5 rounded-lg hover:bg-red-100 transition-colors"
           >
-            Resoumettre
+            {t("resubmit")}
           </Link>
         </motion.div>
       )}
@@ -499,26 +502,26 @@ export function DashboardClient({
         steps={[
           {
             target: "[data-tour='kpi-grid']",
-            title: "Vos indicateurs clés",
-            content: "Suivez en un coup d'œil vos rendez-vous du jour, les confirmations en attente et vos absences. Ces chiffres se mettent à jour en temps réel.",
+            title: t("tourKpiTitle"),
+            content: t("tourKpiContent"),
             position: "bottom",
           },
           {
             target: "[data-tour='today-appts']",
-            title: "Rendez-vous d'aujourd'hui",
-            content: "Retrouvez tous vos patients du jour avec l'heure, le nom et le type de consultation (cabinet ou vidéo). Cliquez sur un RDV pour accéder au dossier.",
+            title: t("tourTodayTitle"),
+            content: t("tourTodayContent"),
             position: "top",
           },
           {
             target: "[data-tour='upcoming-appts']",
-            title: "Prochains 7 jours",
-            content: "Planifiez votre semaine avec la liste des rendez-vous à venir. Les badges colorés indiquent le statut de chaque consultation.",
+            title: t("tourUpcomingTitle"),
+            content: t("tourUpcomingContent"),
             position: "top",
           },
           {
             target: "[data-tour='sidebar-nav']",
-            title: "Votre menu de navigation",
-            content: "Accédez à toutes vos fonctionnalités : agenda, patients, motifs, cabinets, téléconsultation, portefeuille, messages et plus encore.",
+            title: t("tourNavTitle"),
+            content: t("tourNavContent"),
             position: "right",
           },
         ]}
@@ -546,13 +549,13 @@ export function DashboardClient({
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-doktori-teal-dark transition-colors"
           >
             <CalendarDays className="h-4 w-4" />
-            Calendrier
+            {t("quickActionMyCalendar")}
           </Link>
           <Link
             href="/rendez-vous"
             className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-gray-300 shadow-sm hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
           >
-            Rendez-vous
+            {t("quickActionNewAppt")}
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
@@ -593,12 +596,12 @@ export function DashboardClient({
         <div className="flex items-center gap-2 mb-3">
           <TrendingUp className="h-4 w-4 text-primary" strokeWidth={2.5} />
           <span className="text-sm font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wide">
-            Statistiques rapides
+            {t("quickStats")}
           </span>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           <MiniStatCard
-            label="Patients total"
+            label={t("totalPatients")}
             value={totalPatients}
             icon={Users}
             iconColor="#0891B2"
@@ -606,7 +609,7 @@ export function DashboardClient({
             index={0}
           />
           <MiniStatCard
-            label="RDV ce mois"
+            label={t("appointmentsThisMonth")}
             value={monthTotal}
             icon={CalendarDays}
             iconColor="#7C3AED"
@@ -614,7 +617,7 @@ export function DashboardClient({
             index={1}
           />
           <MiniStatCard
-            label="Taux de réalisation"
+            label={t("completionRate")}
             value={completionRate !== null ? `${completionRate}%` : "—"}
             icon={Activity}
             iconColor="#059669"
@@ -622,7 +625,7 @@ export function DashboardClient({
             index={2}
           />
           <MiniStatCard
-            label="Note moyenne"
+            label={t("averageRating")}
             value={averageRating > 0 ? averageRating.toFixed(1) : "—"}
             icon={Star}
             iconColor="#D97706"
@@ -643,14 +646,14 @@ export function DashboardClient({
           {
             href: "/rendez-vous",
             icon: CalendarPlus,
-            label: "Nouveau RDV",
+            label: t("quickActionNewAppt"),
             style: { background: "#0891B2", color: "#fff" },
             hoverClass: "hover:opacity-90",
           },
           {
             href: "/patients",
             icon: UserPlus,
-            label: "Ajouter un patient",
+            label: t("quickActionAddPatient"),
             style: {},
             hoverClass: "hover:bg-slate-50 dark:hover:bg-gray-800",
             bordered: true,
@@ -658,7 +661,7 @@ export function DashboardClient({
           {
             href: "/calendrier",
             icon: CalendarDays,
-            label: "Mon calendrier",
+            label: t("quickActionMyCalendar"),
             style: {},
             hoverClass: "hover:bg-slate-50 dark:hover:bg-gray-800",
             bordered: true,
@@ -666,7 +669,7 @@ export function DashboardClient({
           {
             href: "/stats",
             icon: BarChart2,
-            label: "Mes statistiques",
+            label: t("quickActionMyStats"),
             style: {},
             hoverClass: "hover:bg-slate-50 dark:hover:bg-gray-800",
             bordered: true,
@@ -702,7 +705,7 @@ export function DashboardClient({
               <UserCheck className="h-4 w-4 text-green-600 dark:text-green-400" strokeWidth={2.5} />
             </div>
             <span className="font-bold text-green-900 dark:text-green-200 text-sm">
-              Salle d&apos;attente
+              {t("waitingRoom")}
             </span>
           </div>
           <span className="text-2xl font-black text-green-700 dark:text-green-300 tabular-nums">
@@ -711,7 +714,7 @@ export function DashboardClient({
         </div>
         {waitingPatients.length === 0 ? (
           <div className="px-5 py-4 text-sm text-green-700/60 dark:text-green-400/60">
-            Aucun patient en attente pour le moment.
+            {t("noWaitingPatients")}
           </div>
         ) : (
           <div className="divide-y divide-green-100 dark:divide-green-900">
@@ -729,7 +732,7 @@ export function DashboardClient({
                   </div>
                   <div className="flex items-center gap-2 shrink-0 text-xs text-green-700 dark:text-green-400">
                     <Clock className="h-3.5 w-3.5" strokeWidth={2} />
-                    <span>Arrivé à {format(new Date(p.checkedInAt), "HH:mm")}</span>
+                    <span>{t("arrivedAt", { time: format(new Date(p.checkedInAt), "HH:mm") })}</span>
                     {waitMinutes > 0 && (
                       <span className="text-green-600/70 dark:text-green-500/70">
                         ({waitMinutes} min)
@@ -896,11 +899,11 @@ export function DashboardClient({
           className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden"
         >
           <div className="px-5 py-4 border-b border-slate-100 dark:border-gray-700">
-            <SectionHeader>Activité récente</SectionHeader>
+            <SectionHeader>{t("recentActivity")}</SectionHeader>
           </div>
           <div className="divide-y divide-slate-50 dark:divide-gray-800">
             {recentActivity.map((item, i) => {
-              const { text, dot } = activityLabel(item);
+              const { text, dot } = activityLabel(item, t);
               const updatedDate = new Date(item.updatedAt);
               return (
                 <motion.div

@@ -1,0 +1,66 @@
+- generic [ref=e1]:
+  - generic [ref=e2]:
+    - banner [ref=e30]:
+      - link "Doktori .tn" [ref=e31] [cursor=pointer]:
+        - /url: /mon-espace
+        - generic [ref=e32]: Doktori
+        - generic [ref=e33]: .tn
+      - generic [ref=e34]:
+        - group "Changer de langue" [ref=e35]:
+          - button "Passer en français" [ref=e36]: FR
+          - button "التبديل إلى العربية" [disabled] [pressed] [ref=e37]: AR
+        - button "Menu" [ref=e39]:
+          - generic [ref=e40]: PT
+          - img [ref=e41]
+    - generic [ref=e5]:
+      - generic [ref=e8]:
+        - generic [ref=e43]:
+          - img [ref=e45]
+          - generic [ref=e47]:
+            - heading "Mes rendez-vous" [level=1] [ref=e48]
+            - paragraph [ref=e49]: 1 rendez-vous au total
+        - generic [ref=e50]:
+          - link "Mes documents" [ref=e51] [cursor=pointer]:
+            - /url: /mes-documents
+          - link "Dossier médical" [ref=e52] [cursor=pointer]:
+            - /url: /dossier-medical
+          - button "Déconnexion" [ref=e53]
+      - generic [ref=e54]:
+        - generic [ref=e55]:
+          - button "À venir 1" [ref=e56]:
+            - text: À venir
+            - generic [ref=e57]: "1"
+          - button "Passés" [ref=e58]
+          - button "Annulés" [ref=e59]
+        - generic [ref=e62]:
+          - generic [ref=e63]:
+            - generic [ref=e64]:
+              - generic [ref=e65]: Dr. Karim Ben Ali
+              - generic [ref=e66]: Cabinet
+              - generic [ref=e67]: Confirmé
+            - paragraph [ref=e68]: Médecin Généraliste
+            - generic [ref=e69]:
+              - img [ref=e70]
+              - generic [ref=e73]: mardi 28 avril à 09:00
+            - generic [ref=e74]:
+              - img [ref=e75]
+              - generic [ref=e78]: 12 Avenue Habib Bourguiba, La Marsa
+          - generic [ref=e79]:
+            - link "Message" [ref=e80] [cursor=pointer]:
+              - /url: /messages?doctorId=32eba0b0-d1cb-4c3f-976d-a9cf00ad88f0
+              - img [ref=e81]
+              - text: Message
+            - button "Annuler" [active] [ref=e83]:
+              - img [ref=e84]
+              - text: Annuler
+      - generic [ref=e89]:
+        - img [ref=e91]
+        - heading "Annuler ce rendez-vous ?" [level=3] [ref=e94]
+        - paragraph [ref=e95]: Êtes-vous sûr de vouloir annuler ce rendez-vous avec Dr. Karim Ben Ali le mardi 28 avril à 09:00 ?
+        - generic [ref=e96]:
+          - button "Non, garder" [ref=e97]
+          - button "Oui, annuler" [ref=e98]
+  - region "Notifications alt+T"
+  - button "Open Next.js Dev Tools" [ref=e26] [cursor=pointer]:
+    - img [ref=e27]
+  - alert [ref=e87]

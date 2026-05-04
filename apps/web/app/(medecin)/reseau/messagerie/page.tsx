@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import { useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, Send, Loader2, MessagesSquare } from "lucide-react";
@@ -31,6 +32,7 @@ type Message = {
 };
 
 export default function PeerMessagingPage() {
+  const t = useTranslations("medecin.reseau");
   const [threads, setThreads] = useState<Thread[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -140,13 +142,13 @@ export default function PeerMessagingPage() {
         className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-primary"
       >
         <ArrowLeft className="h-4 w-4" />
-        Retour au réseau
+        {t("backToNetwork")}
       </Link>
 
       <div>
         <h1 className="text-2xl font-bold text-foreground flex items-center gap-2">
           <MessagesSquare className="h-5 w-5" />
-          Messagerie confrères
+          {t("messagerieTitle")}
         </h1>
       </div>
 
@@ -158,7 +160,7 @@ export default function PeerMessagingPage() {
             </div>
           ) : threads.length === 0 ? (
             <p className="p-6 text-center text-sm text-gray-400">
-              Aucune conversation. Démarrez-en une depuis le profil d&apos;un médecin.
+              {t("noConversations")}
             </p>
           ) : (
             <ul className="divide-y divide-border">
@@ -214,7 +216,7 @@ export default function PeerMessagingPage() {
         <section className="rounded-2xl border border-border bg-white shadow-sm flex flex-col">
           {!activeThread ? (
             <div className="flex-1 flex items-center justify-center text-sm text-gray-400">
-              Sélectionnez une conversation pour commencer
+              {t("selectConversation")}
             </div>
           ) : (
             <>
@@ -247,7 +249,7 @@ export default function PeerMessagingPage() {
               <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-2">
                 {messages.length === 0 ? (
                   <p className="text-center text-sm text-gray-400 italic py-8">
-                    Aucun message. Écrivez le premier.
+                    {t("noMessages")}
                   </p>
                 ) : (
                   messages.map((m) => {
@@ -286,7 +288,7 @@ export default function PeerMessagingPage() {
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Écrivez un message…"
+                  placeholder={t("messagePlaceholder")}
                   className="flex-1 h-10 rounded-xl border border-border bg-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                   disabled={sending}
                 />

@@ -1,11 +1,12 @@
 import { View, Text, Pressable, StyleSheet, ScrollView } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
-import { colors, spacing, radii } from "@doktori/mobile-core";
+import { colors, spacing, radii, t, useLocale } from "@doktori/mobile-core";
 
 const ROLE_KEY = "doktori.staff.role";
 
 export default function RolePicker() {
+  const { locale } = useLocale();
   async function choose(role: "doctor" | "secretary") {
     const SecureStore = await import("expo-secure-store").catch(() => null);
     if (SecureStore) {
@@ -24,22 +25,22 @@ export default function RolePicker() {
             <View style={styles.logoCircle} />
             <View style={styles.logoCut} />
           </View>
-          <Text style={styles.brand}>Doktori Pro</Text>
-          <Text style={styles.tagline}>L'espace professionnel de santé</Text>
+          <Text style={styles.brand}>{t("auth.appName")}</Text>
+          <Text style={styles.tagline}>{t("auth.tagline")}</Text>
         </View>
 
         {/* Cards */}
         <View style={styles.cards}>
           <RoleCard
-            label="Médecin"
-            description="Agenda, dossiers patients, téléconsultations et plus"
+            label={t("auth.doctor")}
+            description={t("auth.doctorDesc")}
             accentColor={colors.teal}
             onPress={() => choose("doctor")}
             illustration={<StethoscopeIllustration />}
           />
           <RoleCard
-            label="Secrétaire"
-            description="Gestion des rendez-vous, accueil et messagerie cabinet"
+            label={t("auth.secretary")}
+            description={t("auth.secretaryDesc")}
             accentColor={colors.tealDark}
             onPress={() => choose("secretary")}
             illustration={<CalendarIllustration />}
@@ -55,8 +56,8 @@ export default function RolePicker() {
             style={({ pressed }) => pressed && { opacity: 0.7 }}
           >
             <Text style={styles.patientLink}>
-              Vous êtes patient ?{" "}
-              <Text style={styles.patientLinkBold}>Connexion ici</Text>
+              {t("auth.isPatient")}{" "}
+              <Text style={styles.patientLinkBold}>{t("auth.patientLogin")}</Text>
             </Text>
           </Pressable>
         </View>

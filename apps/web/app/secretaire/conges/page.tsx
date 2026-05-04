@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import { Plane, Clock, CheckCircle2, XCircle, Loader2 } from "lucide-react";
 import { format, differenceInCalendarDays } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -16,6 +17,7 @@ type TimeOff = {
 };
 
 export default function SecretaryConges() {
+  const t = useTranslations("secretaire.conges");
   const [list, setList] = useState<TimeOff[]>([]);
   const [loading, setLoading] = useState(true);
   const [meId, setMeId] = useState<string | null>(null);
@@ -72,15 +74,15 @@ export default function SecretaryConges() {
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Erreur");
+        throw new Error(err.error ?? t("send"));
       }
-      toast.success("Demande envoyée");
+      toast.success(t("successSent"));
       setStartDate("");
       setEndDate("");
       setReason("");
       await load();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur");
+      toast.error(e instanceof Error ? e.message : t("send"));
     } finally {
       setSubmitting(false);
     }
@@ -99,8 +101,8 @@ export default function SecretaryConges() {
           <Plane className="h-5 w-5" />
         </div>
         <div>
-          <h1 className="text-2xl font-bold">Mes congés</h1>
-          <p className="text-sm text-gray-500">Demandes à valider par le médecin</p>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <p className="text-sm text-gray-500">{t("subtitle")}</p>
         </div>
       </div>
 
@@ -115,7 +117,7 @@ export default function SecretaryConges() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide text-gray-500">
-                Solde total
+                {t("totalBalance")}
               </p>
               <p
                 className={`text-3xl font-bold mt-1 ${
@@ -126,7 +128,7 @@ export default function SecretaryConges() {
                 {balance.balance.toFixed(1)} j
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                {balance.accrued.toFixed(1)} jours cumulés − {balance.used} jours pris
+                {t("accruedMinusUsed", { accrued: balance.accrued.toFixed(1), used: balance.used })}
               </p>
             </div>
             <Plane
@@ -137,8 +139,7 @@ export default function SecretaryConges() {
           </div>
           {balance.balance < 0 && (
             <p className="mt-3 text-xs text-red-700 font-medium">
-              ⚠ Solde négatif — vous avez pris plus de jours que votre quota cumulé
-              depuis votre date d&apos;embauche.
+              {t("negativeBalance")}
             </p>
           )}
         </div>
@@ -147,25 +148,25 @@ export default function SecretaryConges() {
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         <StatCard
           icon={<Plane className="h-4 w-4 text-primary" />}
-          label="Quota mensuel"
+          label={t("monthlyQuota")}
           value={allowance != null ? allowance : "—"}
           color="teal"
         />
-        <StatCard icon={<CheckCircle2 className="h-4 w-4 text-green-600" />} label="Jours pris" value={approvedDays} color="green" />
-        <StatCard icon={<Clock className="h-4 w-4 text-orange-600" />} label="En attente" value={pending} color="orange" />
-        <StatCard icon={<XCircle className="h-4 w-4 text-gray-500" />} label="Refusés" value={denied} color="gray" />
+        <StatCard icon={<CheckCircle2 className="h-4 w-4 text-green-600" />} label={t("daysTaken")} value={approvedDays} color="green" />
+        <StatCard icon={<Clock className="h-4 w-4 text-orange-600" />} label={t("pending")} value={pending} color="orange" />
+        <StatCard icon={<XCircle className="h-4 w-4 text-gray-500" />} label={t("denied")} value={denied} color="gray" />
       </div>
       {allowance != null && (
         <p className="text-xs text-gray-500">
-          Vous disposez de <strong>{allowance} jour(s)</strong> de congé par mois. Les demandes dépassant ce quota nécessiteront une validation exceptionnelle du médecin.
+          {t("allowanceNote", { count: allowance })}
         </p>
       )}
 
       <form onSubmit={submit} className="rounded-2xl border border-border bg-white shadow-sm p-5 space-y-3">
-        <h2 className="font-semibold text-foreground">Nouvelle demande</h2>
+        <h2 className="font-semibold text-foreground">{t("newRequest")}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
           <label className="space-y-1">
-            <span className="text-xs font-medium text-gray-600">Date début *</span>
+            <span className="text-xs font-medium text-gray-600">{t("startDate")} *</span>
             <input
               type="date"
               required
@@ -175,7 +176,7 @@ export default function SecretaryConges() {
             />
           </label>
           <label className="space-y-1">
-            <span className="text-xs font-medium text-gray-600">Date fin *</span>
+            <span className="text-xs font-medium text-gray-600">{t("endDate")} *</span>
             <input
               type="date"
               required
@@ -186,7 +187,7 @@ export default function SecretaryConges() {
           </label>
         </div>
         <label className="block space-y-1">
-          <span className="text-xs font-medium text-gray-600">Motif (facultatif)</span>
+          <span className="text-xs font-medium text-gray-600">{t("reasonOptional")}</span>
           <textarea
             rows={2}
             value={reason}
@@ -200,19 +201,19 @@ export default function SecretaryConges() {
             disabled={submitting}
             className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
           >
-            {submitting ? "Envoi…" : "Envoyer la demande"}
+            {submitting ? t("sending") : t("send")}
           </button>
         </div>
       </form>
 
       <section className="rounded-2xl border border-border bg-white shadow-sm p-5">
-        <h2 className="font-semibold text-foreground mb-3">Historique</h2>
+        <h2 className="font-semibold text-foreground mb-3">{t("history")}</h2>
         {loading ? (
           <div className="py-6 text-center">
             <Loader2 className="h-4 w-4 animate-spin inline" />
           </div>
         ) : list.length === 0 ? (
-          <p className="py-4 text-sm text-gray-400 italic">Aucune demande</p>
+          <p className="py-4 text-sm text-gray-400 italic">{t("noRequests")}</p>
         ) : (
           <ul className="divide-y divide-border">
             {list.map((r) => {
@@ -227,10 +228,10 @@ export default function SecretaryConges() {
                     </p>
                     {r.reason && <p className="text-xs text-gray-500 mt-0.5">{r.reason}</p>}
                     <p className="text-[10px] text-gray-400 mt-0.5">
-                      Demande du {format(new Date(r.createdAt), "d MMM yyyy", { locale: fr })}
+                      {t("requestedOn", { date: format(new Date(r.createdAt), "d MMM yyyy", { locale: fr }) })}
                     </p>
                   </div>
-                  <StatusBadge status={r.status} />
+                  <StatusBadge status={r.status} t={t} />
                 </li>
               );
             })}
@@ -269,16 +270,24 @@ function StatCard({
   );
 }
 
-function StatusBadge({ status }: { status: string }) {
-  const m: Record<string, { label: string; cls: string }> = {
-    pending: { label: "En attente", cls: "bg-orange-100 text-orange-700" },
-    approved: { label: "Approuvé", cls: "bg-green-100 text-green-700" },
-    denied: { label: "Refusé", cls: "bg-gray-100 text-gray-500" },
+type TFunc = ReturnType<typeof useTranslations>;
+
+function StatusBadge({ status, t }: { status: string; t: TFunc }) {
+  const labelMap: Record<string, string> = {
+    pending: t("statusPending"),
+    approved: t("statusApproved"),
+    denied: t("statusDenied"),
   };
-  const cfg = m[status] ?? m.pending;
+  const clsMap: Record<string, string> = {
+    pending: "bg-orange-100 text-orange-700",
+    approved: "bg-green-100 text-green-700",
+    denied: "bg-gray-100 text-gray-500",
+  };
+  const label = labelMap[status] ?? labelMap.pending;
+  const cls = clsMap[status] ?? clsMap.pending;
   return (
-    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold shrink-0 ${cfg.cls}`}>
-      {cfg.label}
+    <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold shrink-0 ${cls}`}>
+      {label}
     </span>
   );
 }

@@ -182,7 +182,7 @@ export function WalletClient({
               {formatDT(balanceMillimes)}
             </p>
             <p className="text-teal-300/60 text-xs mt-2">
-              Solde disponible pour retrait
+              {t("balanceSubtitle")}
             </p>
           </div>
           <Button
@@ -213,7 +213,7 @@ export function WalletClient({
           </div>
           <p className="text-2xl font-bold text-green-700">{formatDTShort(totalEarnedMillimes)}</p>
           <p className="text-xs text-gray-400 mt-1">
-            Revenus téléconsultations + SOS
+            {t("earnedSubtitle")}
           </p>
         </div>
 
@@ -228,7 +228,7 @@ export function WalletClient({
           </div>
           <p className="text-2xl font-bold text-amber-600">{formatDTShort(totalCommissionMillimes)}</p>
           <p className="text-xs text-gray-400 mt-1">
-            15% téléconsult · 10% SOS
+            {t("commissionSubtitle")}
           </p>
         </div>
 
@@ -243,7 +243,7 @@ export function WalletClient({
           </div>
           <p className="text-2xl font-bold text-blue-600">{formatDTShort(totalWithdrawnMillimes)}</p>
           <p className="text-xs text-gray-400 mt-1">
-            Total retiré vers votre compte
+            {t("withdrawnSubtitle")}
           </p>
         </div>
       </div>
@@ -253,19 +253,19 @@ export function WalletClient({
         <div className="flex items-start gap-3">
           <Info className="h-5 w-5 text-primary shrink-0 mt-0.5" />
           <div className="text-sm text-foreground space-y-1.5">
-            <p className="font-semibold">Comment fonctionne votre portefeuille ?</p>
+            <p className="font-semibold">{t("howItWorksTitle")}</p>
             <ul className="space-y-1 text-xs text-gray-600">
               <li className="flex items-start gap-2">
                 <ArrowRight className="h-3 w-3 text-primary shrink-0 mt-0.5" />
-                <span>Le patient paie la <strong>téléconsultation</strong> ou l&apos;intervention <strong>SOS</strong> via Flouci.</span>
+                <span>{t("explanation1")}</span>
               </li>
               <li className="flex items-start gap-2">
                 <ArrowRight className="h-3 w-3 text-primary shrink-0 mt-0.5" />
-                <span>Doktori prélève une commission (<strong>15%</strong> téléconsult, <strong>10%</strong> SOS) et crédite le reste sur votre portefeuille.</span>
+                <span>{t("explanation2")}</span>
               </li>
               <li className="flex items-start gap-2">
                 <ArrowRight className="h-3 w-3 text-primary shrink-0 mt-0.5" />
-                <span>Vous pouvez demander un <strong>retrait à tout moment</strong>. Le virement est effectué sous 3-5 jours ouvrés.</span>
+                <span>{t("explanation3")}</span>
               </li>
             </ul>
           </div>
@@ -280,11 +280,11 @@ export function WalletClient({
             {/* Filter pills */}
             {(["all", "credit", "commission", "withdrawal", "refund"] as const).map((type) => {
               const labels: Record<string, string> = {
-                all: "Tout",
-                credit: "Crédits",
-                commission: "Commissions",
-                withdrawal: "Retraits",
-                refund: "Remboursements",
+                all: t("filterAll"),
+                credit: t("typeCredit"),
+                commission: t("typeCommission"),
+                withdrawal: t("typeWithdrawal"),
+                refund: t("typeRefund"),
               };
               return (
                 <button
@@ -445,7 +445,7 @@ export function WalletClient({
               <button
                 onClick={() => setModalOpen(false)}
                 className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 hover:text-gray-600 transition-colors"
-                aria-label="Fermer"
+                aria-label={tCommon("close")}
               >
                 <X className="h-4 w-4" />
               </button>
@@ -453,7 +453,7 @@ export function WalletClient({
 
             {/* Balance reminder */}
             <div className="rounded-xl bg-secondary border border-border p-4">
-              <p className="text-xs text-gray-500 mb-0.5">Solde disponible</p>
+              <p className="text-xs text-gray-500 mb-0.5">{t("availableBalance")}</p>
               <p className="text-2xl font-bold text-foreground">{formatDT(balanceMillimes)}</p>
             </div>
 
@@ -498,7 +498,7 @@ export function WalletClient({
                   onClick={() => setAmount((balanceMillimes / 1000).toFixed(3))}
                   className="rounded-lg bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20 transition-colors"
                 >
-                  Tout
+                  {t("filterAll")}
                 </button>
               </div>
             </div>

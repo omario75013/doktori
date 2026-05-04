@@ -16,12 +16,16 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api, t, tArray } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, tArray, useLocale, getLocale } from "@doktori/mobile-core";
 import { useStaffPermissions } from "../../hooks/useStaffPermissions";
+
+function intlLocale() { return getLocale() === "ar" ? "ar-TN" : "fr-FR"; }
 
 const { width: SCREEN_W } = Dimensions.get("window");
 
 type ViewMode = "day" | "week" | "month" | "year";
+
+type DayOff = { id: string; startDate: string; endDate: string; reason: string | null };
 
 function getMonthsShort(): string[] {
   return tArray("secretary.planning.monthsShort");
@@ -97,8 +101,14 @@ function getMonthGrid(year: number, month: number): (Date | null)[] {
   return cells;
 }
 
+function isDayOff(date: Date, daysOff: DayOff[]): boolean {
+  const ds = isoDate(date);
+  return daysOff.some((d) => ds >= d.startDate && ds <= d.endDate);
+}
+
 // ── Root component ────────────────────────────────────────────────────────────
 export default function SecretaryPlanning() {
+  useLocale(); // subscribe so locale changes trigger a re-render
   const { permissions } = useStaffPermissions();
   const [view, setView] = useState<ViewMode>("day");
   const [anchor, setAnchor] = useState<Date>(new Date());
@@ -111,6 +121,7 @@ export default function SecretaryPlanning() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [showNewAppt, setShowNewAppt] = useState(false);
+  const [daysOff, setDaysOff] = useState<DayOff[]>([]);
 
   const load = useCallback(async () => {
     setError(null);
@@ -126,6 +137,11 @@ export default function SecretaryPlanning() {
   }, []);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    api<DayOff[]>("/api/doctor/days-off", { noRedirect: true })
+      .then((d) => setDaysOff(Array.isArray(d) ? d : []))
+      .catch(() => null);
+  }, []);
   const onRefresh = useCallback(() => { setRefreshing(true); load(); }, [load]);
 
   async function updateStatus(id: string, status: string) {
@@ -175,26 +191,26 @@ export default function SecretaryPlanning() {
 
   function periodLabel(): string {
     if (view === "day") {
-      return anchor.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+      return anchor.toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" });
     }
     if (view === "week") {
       const mon = weekDates[0];
       const sun = weekDates[6];
-      const monShort = mon.toLocaleDateString("fr-FR", { month: "short" });
-      const sunShort = sun.toLocaleDateString("fr-FR", { month: "short" });
+      const monShort = mon.toLocaleDateString(intlLocale(), { month: "short" });
+      const sunShort = sun.toLocaleDateString(intlLocale(), { month: "short" });
       if (mon.getMonth() === sun.getMonth()) {
         return `${mon.getDate()} – ${sun.getDate()} ${monShort} ${mon.getFullYear()}`;
       }
       return `${mon.getDate()} ${monShort} – ${sun.getDate()} ${sunShort} ${sun.getFullYear()}`;
     }
     if (view === "month") {
-      const s = anchor.toLocaleDateString("fr-FR", { month: "long", year: "numeric" });
+      const s = anchor.toLocaleDateString(intlLocale(), { month: "long", year: "numeric" });
       return s.charAt(0).toUpperCase() + s.slice(1);
     }
     return String(anchor.getFullYear());
   }
 
-  const todayStr = new Date().toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" });
+  const todayStr = new Date().toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" });
 
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
@@ -240,11 +256,11 @@ export default function SecretaryPlanning() {
       {/* Period navigator */}
       <View style={styles.navRow}>
         <Pressable onPress={() => navigate(-1)} style={styles.navArrow} hitSlop={14}>
-          <Ionicons name="chevron-back" size={20} color={colors.foreground} />
+          <Ionicons name={getLocale() === "ar" ? "chevron-forward" : "chevron-back"} size={20} color={colors.foreground} />
         </Pressable>
         <Text style={styles.navLabel} numberOfLines={1}>{periodLabel()}</Text>
         <Pressable onPress={() => navigate(1)} style={styles.navArrow} hitSlop={14}>
-          <Ionicons name="chevron-forward" size={20} color={colors.foreground} />
+          <Ionicons name={getLocale() === "ar" ? "chevron-back" : "chevron-forward"} size={20} color={colors.foreground} />
         </Pressable>
       </View>
 
@@ -256,7 +272,7 @@ export default function SecretaryPlanning() {
           <Ionicons name="cloud-offline-outline" size={48} color={colors.border} />
           <Text style={styles.emptyText}>{error}</Text>
           <Pressable onPress={load} style={styles.retryBtn}>
-            <Text style={styles.retryText}>Réessayer</Text>
+            <Text style={styles.retryText}>{t("common.retry")}</Text>
           </Pressable>
         </View>
       ) : view === "day" ? (
@@ -266,6 +282,7 @@ export default function SecretaryPlanning() {
           appts={weekAppts}
           weekDates={weekDates}
           anchor={anchor}
+          daysOff={daysOff}
           onSelectDay={(d) => { setAnchor(d); setView("day"); }}
           onSelect={setSelected}
           refreshing={refreshing}
@@ -277,6 +294,7 @@ export default function SecretaryPlanning() {
           appts={monthAppts}
           grid={monthGrid}
           anchor={anchor}
+          daysOff={daysOff}
           onDrillDay={(d) => { setAnchor(d); setView("day"); }}
           refreshing={refreshing}
           onRefresh={onRefresh}
@@ -337,8 +355,8 @@ function DayView({ appts, refreshing, onRefresh, onSelect }: {
     return (
       <View style={styles.emptyState}>
         <Ionicons name="sunny-outline" size={52} color={colors.border} />
-        <Text style={styles.emptyTitle}>Journée libre</Text>
-        <Text style={styles.emptyText}>Aucun rendez-vous ce jour</Text>
+        <Text style={styles.emptyTitle}>{t("secretary.planning.freeDayTitle")}</Text>
+        <Text style={styles.emptyText}>{t("secretary.planning.freeDayText")}</Text>
       </View>
     );
   }
@@ -356,10 +374,11 @@ function DayView({ appts, refreshing, onRefresh, onSelect }: {
 }
 
 // ── Week View ─────────────────────────────────────────────────────────────────
-function WeekView({ appts, weekDates, anchor, onSelectDay, onSelect, refreshing, onRefresh }: {
+function WeekView({ appts, weekDates, anchor, daysOff, onSelectDay, onSelect, refreshing, onRefresh }: {
   appts: Appointment[];
   weekDates: Date[];
   anchor: Date;
+  daysOff: DayOff[];
   onSelectDay: (d: Date) => void;
   onSelect: (a: Appointment) => void;
   refreshing: boolean;
@@ -382,17 +401,23 @@ function WeekView({ appts, weekDates, anchor, onSelectDay, onSelect, refreshing,
           const ds = isoDate(d);
           const isToday = ds === today;
           const isSelected = ds === isoDate(anchor);
+          const isOff = isDayOff(d, daysOff);
           const count = appts.filter((a) => isoDate(new Date(a.startsAt)) === ds).length;
           return (
             <Pressable
               key={ds}
               onPress={() => onSelectDay(d)}
-              style={[styles.weekStripCell, isSelected && styles.weekStripCellActive, isToday && !isSelected && styles.weekStripCellToday]}
+              style={[
+                styles.weekStripCell,
+                isSelected && styles.weekStripCellActive,
+                isToday && !isSelected && styles.weekStripCellToday,
+                isOff && !isSelected && { backgroundColor: "#FEE2E2" },
+              ]}
             >
-              <Text style={[styles.weekStripLetter, isSelected && { color: "#FFF" }, isToday && !isSelected && { color: colors.teal }]}>
+              <Text style={[styles.weekStripLetter, isSelected && { color: "#FFF" }, isToday && !isSelected && { color: colors.teal }, isOff && !isSelected && { color: "#B91C1C" }]}>
                 {(tArray("secretary.planning.dayLetters"))[i]}
               </Text>
-              <Text style={[styles.weekStripNum, isSelected && { color: "#FFF" }, isToday && !isSelected && { color: colors.teal }]}>
+              <Text style={[styles.weekStripNum, isSelected && { color: "#FFF" }, isToday && !isSelected && { color: colors.teal }, isOff && !isSelected && { color: "#B91C1C" }]}>
                 {d.getDate()}
               </Text>
               {count > 0 ? (
@@ -411,20 +436,22 @@ function WeekView({ appts, weekDates, anchor, onSelectDay, onSelect, refreshing,
       {grouped.every((g) => g.appts.length === 0) ? (
         <View style={[styles.emptyState, { marginTop: spacing.xl }]}>
           <Ionicons name="calendar-clear-outline" size={48} color={colors.border} />
-          <Text style={styles.emptyTitle}>Semaine libre</Text>
-          <Text style={styles.emptyText}>Aucun rendez-vous cette semaine</Text>
+          <Text style={styles.emptyTitle}>{t("secretary.planning.weekFree")}</Text>
+          <Text style={styles.emptyText}>{t("secretary.planning.noApptWeek")}</Text>
         </View>
       ) : (
         grouped.map(({ date, appts: dayAppts }) => {
           if (dayAppts.length === 0) return null;
           const isToday = isoDate(date) === today;
+          const isOff = isDayOff(date, daysOff);
           return (
             <View key={isoDate(date)}>
-              <View style={styles.weekDayHeader}>
-                <View style={[styles.weekDayHeaderDot, isToday && { backgroundColor: colors.teal }]} />
-                <Text style={[styles.weekDayHeaderText, isToday && { color: colors.teal }]}>
-                  {date.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "short" })}
+              <View style={[styles.weekDayHeader, isOff && { backgroundColor: "#FEF2F2" }]}>
+                <View style={[styles.weekDayHeaderDot, isToday && { backgroundColor: colors.teal }, isOff && { backgroundColor: "#EF4444" }]} />
+                <Text style={[styles.weekDayHeaderText, isToday && { color: colors.teal }, isOff && { color: "#B91C1C" }]}>
+                  {date.toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "short" })}
                 </Text>
+                {isOff && <Text style={styles.congéChip}>{t("secretary.planning.conge")}</Text>}
                 <Text style={styles.weekDayHeaderCount}>{dayAppts.length} {t("secretary.planning.rdv")}</Text>
               </View>
               {dayAppts.map((a) => <CompactCard key={a.id} appt={a} onSelect={onSelect} />)}
@@ -437,10 +464,11 @@ function WeekView({ appts, weekDates, anchor, onSelectDay, onSelect, refreshing,
 }
 
 // ── Month View ────────────────────────────────────────────────────────────────
-function MonthView({ appts, grid, anchor, onDrillDay, onSelect, refreshing, onRefresh }: {
+function MonthView({ appts, grid, anchor, daysOff, onDrillDay, onSelect, refreshing, onRefresh }: {
   appts: Appointment[];
   grid: (Date | null)[];
   anchor: Date;
+  daysOff: DayOff[];
   onDrillDay: (d: Date) => void;
   onSelect: (a: Appointment) => void;
   refreshing: boolean;
@@ -476,21 +504,24 @@ function MonthView({ appts, grid, anchor, onDrillDay, onSelect, refreshing, onRe
           const ds = isoDate(d);
           const isToday = ds === today;
           const isSelected = ds === calSelected;
+          const isOff = isDayOff(d, daysOff);
           const dots = appts
             .filter((a) => isoDate(new Date(a.startsAt)) === ds)
             .slice(0, 3)
             .map((a) => (STATUS_META[a.status] ?? STATUS_META.pending).border);
           return (
-            <Pressable key={ds} onPress={() => setCalSelected(ds)} style={[styles.monthCell, { width: cellW }]}>
+            <Pressable key={ds} onPress={() => setCalSelected(ds)} style={[styles.monthCell, { width: cellW }, isOff && !isSelected && { backgroundColor: "#FEF2F2" }]}>
               <View style={[
                 styles.monthCellInner,
                 isSelected && { backgroundColor: colors.teal },
                 isToday && !isSelected && { borderWidth: 1.5, borderColor: colors.teal },
+                isOff && !isSelected && { backgroundColor: "#FEE2E2" },
               ]}>
                 <Text style={[
                   styles.monthCellNum,
                   isSelected && { color: "#FFF" },
                   isToday && !isSelected && { color: colors.teal, fontWeight: "800" },
+                  isOff && !isSelected && { color: "#B91C1C" },
                 ]}>
                   {d.getDate()}
                 </Text>
@@ -507,7 +538,7 @@ function MonthView({ appts, grid, anchor, onDrillDay, onSelect, refreshing, onRe
       <View style={styles.monthPanel}>
         <View style={styles.monthPanelHeader}>
           <Text style={styles.monthPanelTitle} numberOfLines={1}>
-            {new Date(calSelected + "T12:00:00").toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+            {new Date(calSelected + "T12:00:00").toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}
           </Text>
           {selAppts.length > 0 && (
             <Pressable onPress={() => onDrillDay(new Date(calSelected + "T12:00:00"))} style={styles.drillBtn}>
@@ -614,17 +645,17 @@ function YearView({ all, year, onSelectMonth, refreshing, onRefresh }: {
       <View style={yearStyles.banner}>
         <View style={yearStyles.bannerStat}>
           <Text style={yearStyles.bannerNum}>{yearTotal}</Text>
-          <Text style={yearStyles.bannerLabel}>Total RDV</Text>
+          <Text style={yearStyles.bannerLabel}>{t("secretary.planning.yearTotal")}</Text>
         </View>
         <View style={yearStyles.bannerDivider} />
         <View style={yearStyles.bannerStat}>
           <Text style={[yearStyles.bannerNum, { color: "#0891B2" }]}>{yearConfirmed}</Text>
-          <Text style={yearStyles.bannerLabel}>Confirmés</Text>
+          <Text style={yearStyles.bannerLabel}>{t("secretary.planning.yearConfirmed")}</Text>
         </View>
         <View style={yearStyles.bannerDivider} />
         <View style={yearStyles.bannerStat}>
           <Text style={[yearStyles.bannerNum, { color: "#F59E0B" }]}>{yearPending}</Text>
-          <Text style={yearStyles.bannerLabel}>En attente</Text>
+          <Text style={yearStyles.bannerLabel}>{t("secretary.planning.yearPending")}</Text>
         </View>
       </View>
 
@@ -1006,7 +1037,7 @@ function NewAppointmentModal({ visible, defaultDate, onClose, onCreated, canCrea
                       </View>
                       <View style={{ flex: 1 }}>
                         <Text style={newApptStyles.patientName}>{item.name}</Text>
-                        <Text style={newApptStyles.patientPhone}>{item.phone}</Text>
+                        <Text style={[newApptStyles.patientPhone, { writingDirection: "ltr" }]}>{item.phone}</Text>
                       </View>
                       <Ionicons name="chevron-forward" size={16} color={colors.border} />
                     </Pressable>
@@ -1082,7 +1113,7 @@ function NewAppointmentModal({ visible, defaultDate, onClose, onCreated, canCrea
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={newApptStyles.chipName}>{selectedPatient!.name}</Text>
-                <Text style={newApptStyles.chipPhone}>{selectedPatient!.phone}</Text>
+                <Text style={[newApptStyles.chipPhone, { writingDirection: "ltr" }]}>{selectedPatient!.phone}</Text>
               </View>
               <Text style={newApptStyles.changeBtn}>{t("secretary.planning.changePatient")}</Text>
             </Pressable>
@@ -1169,7 +1200,7 @@ function NewAppointmentModal({ visible, defaultDate, onClose, onCreated, canCrea
               <View style={newApptStyles.summary}>
                 <Ionicons name="calendar-outline" size={16} color={colors.teal} />
                 <Text style={newApptStyles.summaryText}>
-                  {new Date(`${date}T${time}:00`).toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" })}
+                  {new Date(`${date}T${time}:00`).toLocaleDateString(intlLocale(), { weekday: "long", day: "numeric", month: "long" })}
                   {t("secretary.planning.summaryAt")}{time} · {duration} min · {apptType === "cabinet" ? t("secretary.planning.typeCabinet") : apptType === "teleconsult" ? t("secretary.planning.typeTeleconsult") : t("secretary.planning.typeDomicile")}
                 </Text>
               </View>
@@ -1340,7 +1371,7 @@ function SearchModal({ visible, query, onQueryChange, all, onSelect, onClose }: 
             renderItem={({ item }) => {
               const meta = STATUS_META[item.status] ?? STATUS_META.pending;
               const initials = item.patientName.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase();
-              const dateStr = new Date(item.startsAt).toLocaleDateString("fr-FR", { weekday: "short", day: "numeric", month: "short" });
+              const dateStr = new Date(item.startsAt).toLocaleDateString(intlLocale(), { weekday: "short", day: "numeric", month: "short" });
               return (
                 <Pressable onPress={() => onSelect(item)} style={({ pressed }) => [styles.searchItem, pressed && { opacity: 0.75 }]}>
                   <View style={[styles.searchItemAvatar, { backgroundColor: meta.bg }]}>
@@ -1384,7 +1415,7 @@ function AppointmentSheet({ appt, updating, onUpdateStatus }: {
         <View style={{ flex: 1 }}>
           <Text style={styles.sheetName}>{appt.patientName}</Text>
           <Pressable onPress={() => Linking.openURL(`tel:${appt.patientPhone}`)}>
-            <Text style={styles.sheetPhone}>{appt.patientPhone}</Text>
+            <Text style={[styles.sheetPhone, { writingDirection: "ltr" }]}>{appt.patientPhone}</Text>
           </Pressable>
         </View>
         <View style={[styles.sheetStatusBadge, { backgroundColor: meta.bg, borderColor: meta.border }]}>
@@ -1632,6 +1663,7 @@ const styles = StyleSheet.create({
   weekDayHeaderDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: colors.border },
   weekDayHeaderText: { flex: 1, fontSize: 13, fontWeight: "700", color: colors.foreground, textTransform: "capitalize" },
   weekDayHeaderCount: { fontSize: 11, color: colors.foregroundSecondary },
+  congéChip: { fontSize: 10, fontWeight: "700", color: "#B91C1C", backgroundColor: "#FEE2E2", borderRadius: 4, paddingHorizontal: 5, paddingVertical: 1 },
 
   // Month view
   monthDowRow: { flexDirection: "row", paddingTop: spacing.sm, paddingBottom: spacing.xs },

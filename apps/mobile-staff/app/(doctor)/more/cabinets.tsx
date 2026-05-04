@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Loader, Empty } from "./_ui";
 
 type Practice = {
@@ -27,6 +27,7 @@ type Practice = {
 };
 
 export default function Cabinets() {
+  const { locale } = useLocale();
   const [rows, setRows] = useState<Practice[] | null>(null);
   const [editing, setEditing] = useState<Partial<Practice> | null>(null);
 
@@ -44,17 +45,17 @@ export default function Cabinets() {
   }, [load]);
 
   async function deletePractice(id: string, name: string) {
-    Alert.alert("Supprimer", `Supprimer "${name}" ?`, [
-      { text: "Annuler", style: "cancel" },
+    Alert.alert(t("doctor.cabinets.delete"), t("doctor.cabinets.deleteConfirm", { name }), [
+      { text: t("common.cancel"), style: "cancel" },
       {
-        text: "Supprimer",
+        text: t("common.delete"),
         style: "destructive",
         onPress: async () => {
           try {
             await api(`/api/doctor/practices/${id}`, { method: "DELETE" });
             await load();
           } catch (e) {
-            Alert.alert("Erreur", e instanceof Error ? e.message : "");
+            Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
           }
         },
       },
@@ -69,14 +70,14 @@ export default function Cabinets() {
       });
       await load();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
     }
   }
 
   if (!rows) {
     return (
       <>
-        <Stack.Screen options={{ title: "Cabinets" }} />
+        <Stack.Screen options={{ title: t("doctor.cabinets.title") }} />
         <Loader />
       </>
     );
@@ -86,7 +87,7 @@ export default function Cabinets() {
     <>
       <Stack.Screen
         options={{
-          title: "Cabinets",
+          title: t("doctor.cabinets.title"),
           headerRight: () => (
             <Pressable
               onPress={() => setEditing({ name: "", address: "", city: "", phone: "" })}
@@ -100,7 +101,7 @@ export default function Cabinets() {
       />
       <Screen>
         {rows.length === 0 ? (
-          <Empty icon="business-outline" title="Aucun cabinet" />
+          <Empty icon="business-outline" title={t("doctor.cabinets.noCabinets")} />
         ) : (
           rows.map((p) => (
             <View
@@ -122,17 +123,17 @@ export default function Cabinets() {
                   <Text style={styles.title}>{p.name}</Text>
                   {p.isPrimary && (
                     <View style={styles.primaryBadge}>
-                      <Text style={styles.primaryBadgeText}>Principal</Text>
+                      <Text style={styles.primaryBadgeText}>{t("doctor.cabinets.main")}</Text>
                     </View>
                   )}
                   {p.kind === "clinic" && (
                     <View style={styles.clinicBadge}>
-                      <Text style={styles.clinicText}>Clinique</Text>
+                      <Text style={styles.clinicText}>{t("doctor.cabinets.clinic")}</Text>
                     </View>
                   )}
                   {!p.isActive && (
                     <View style={styles.inactive}>
-                      <Text style={styles.inactiveText}>Inactif</Text>
+                      <Text style={styles.inactiveText}>{t("doctor.cabinets.inactive")}</Text>
                     </View>
                   )}
                 </View>
@@ -203,7 +204,7 @@ function PracticeEditor({
 
   async function submit() {
     if (!name.trim() || !address.trim() || !city.trim())
-      return Alert.alert("Erreur", "Nom, adresse et ville sont obligatoires");
+      return Alert.alert(t("common.error"), t("doctor.cabinets.validationError"));
     setSaving(true);
     try {
       const body = {
@@ -223,7 +224,7 @@ function PracticeEditor({
       }
       await onSaved();
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : "");
     } finally {
       setSaving(false);
     }
@@ -236,41 +237,41 @@ function PracticeEditor({
           <Ionicons name="close" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={styles.modalTitle}>
-          {practice.id ? "Modifier le cabinet" : "Nouveau cabinet"}
+          {practice.id ? t("doctor.cabinets.editTitle") : t("doctor.cabinets.newTitle")}
         </Text>
         <View style={{ width: 36 }} />
       </View>
 
       <ScrollView contentContainerStyle={{ padding: spacing.lg, gap: spacing.md }}>
-        <Field label="Nom">
+        <Field label={t("doctor.cabinets.name")}>
           <TextInput
             value={name}
             onChangeText={setName}
-            placeholder="ex. Cabinet Médical Carthage"
+            placeholder={t("doctor.cabinets.namePlaceholder")}
             style={styles.input}
           />
         </Field>
-        <Field label="Adresse">
+        <Field label={t("doctor.cabinets.address")}>
           <TextInput
             value={address}
             onChangeText={setAddress}
-            placeholder="Rue + numéro"
+            placeholder={t("doctor.cabinets.addressPlaceholder")}
             style={styles.input}
           />
         </Field>
-        <Field label="Ville">
+        <Field label={t("doctor.cabinets.city")}>
           <TextInput
             value={city}
             onChangeText={setCity}
-            placeholder="Tunis, Sfax…"
+            placeholder={t("doctor.cabinets.cityPlaceholder")}
             style={styles.input}
           />
         </Field>
-        <Field label="Téléphone (optionnel)">
+        <Field label={t("doctor.cabinets.phone")}>
           <TextInput
             value={phone}
             onChangeText={setPhone}
-            placeholder="+216 XX XXX XXX"
+            placeholder={t("doctor.cabinets.phonePlaceholder")}
             keyboardType="phone-pad"
             style={styles.input}
           />
@@ -289,7 +290,7 @@ function PracticeEditor({
             {isPrimary && <Ionicons name="checkmark" size={12} color="#FFFFFF" />}
           </View>
           <Text style={styles.toggleText}>
-            Marquer comme cabinet principal
+            {t("doctor.cabinets.markAsMain")}
           </Text>
         </Pressable>
 
@@ -302,7 +303,7 @@ function PracticeEditor({
             <ActivityIndicator color="#FFFFFF" />
           ) : (
             <Text style={styles.primaryText}>
-              {practice.id ? "Enregistrer" : "Créer"}
+              {practice.id ? t("doctor.cabinets.save") : t("doctor.cabinets.create")}
             </Text>
           )}
         </Pressable>

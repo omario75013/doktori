@@ -75,6 +75,7 @@ export default function SecretaryChatScreen() {
   const [sending, setSending] = useState(false);
   const selfRef = useRef<{ id: string; type: "doctor" | "secretary" } | null>(null);
   const listRef = useRef<FlatList<AnyMsg>>(null);
+  const [doctorStatus, setDoctorStatus] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     try {
@@ -108,6 +109,15 @@ export default function SecretaryChatScreen() {
     const t = setInterval(() => void load(), 4000);
     return () => clearInterval(t);
   }, [load]);
+
+  useEffect(() => {
+    api<{ statusMessage: string | null; isActive: boolean }>(
+      "/api/doctor/status",
+      { noRedirect: true }
+    )
+      .then((s) => setDoctorStatus(s.isActive ? s.statusMessage : null))
+      .catch(() => null);
+  }, []);
 
   useEffect(() => {
     if (messages.length > 0) {
@@ -168,6 +178,13 @@ export default function SecretaryChatScreen() {
           <Ionicons name="call" size={22} color={colors.teal} />
         </Pressable>
       </View>
+
+      {doctorStatus ? (
+        <View style={styles.statusBanner}>
+          <Ionicons name="information-circle" size={14} color="#92400E" />
+          <Text style={styles.statusBannerText} numberOfLines={1}>{doctorStatus}</Text>
+        </View>
+      ) : null}
 
       <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         {loading ? (
@@ -234,6 +251,12 @@ const styles = StyleSheet.create({
   },
   headerBtn: { width: 40, height: 40, alignItems: "center", justifyContent: "center" },
   headerTitle: { flex: 1, fontSize: 16, fontWeight: "700", color: colors.foreground },
+  statusBanner: {
+    flexDirection: "row", alignItems: "center", gap: spacing.xs,
+    backgroundColor: "#FEF3C7", paddingHorizontal: spacing.md, paddingVertical: spacing.xs,
+    borderBottomWidth: 1, borderBottomColor: "#FDE68A",
+  },
+  statusBannerText: { flex: 1, fontSize: 12, color: "#92400E", fontStyle: "italic" },
   loader: { flex: 1, alignItems: "center", justifyContent: "center" },
   list: { padding: spacing.lg, gap: spacing.xs, flexGrow: 1 },
   empty: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.sm, paddingTop: spacing["3xl"] },

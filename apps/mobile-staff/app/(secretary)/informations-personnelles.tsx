@@ -12,7 +12,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { colors, spacing, radii, api } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 
 type ProfileData = {
   name: string;
@@ -23,6 +23,8 @@ type ProfileData = {
 };
 
 export default function InformationsPersonnellesScreen() {
+  const { locale } = useLocale();
+  const dateLocale = locale === "ar" ? "ar-TN" : "fr-FR";
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [email, setEmail] = useState("");
@@ -41,7 +43,7 @@ export default function InformationsPersonnellesScreen() {
         setEmail(data.email ?? "");
         setBio(data.bio ?? "");
       } catch (e) {
-        Alert.alert("Erreur", e instanceof Error ? e.message : "Impossible de charger le profil");
+        Alert.alert(t("common.error"), e instanceof Error ? e.message : t("secretary.personalInfo.errorLoad"));
       } finally {
         setLoading(false);
       }
@@ -52,7 +54,7 @@ export default function InformationsPersonnellesScreen() {
   async function handleSave() {
     const trimmedName = name.trim();
     if (!trimmedName) {
-      Alert.alert("Nom requis", "Le nom complet ne peut pas être vide.");
+      Alert.alert(t("secretary.personalInfo.requiredTitle"), t("secretary.personalInfo.requiredDesc"));
       return;
     }
     setSaving(true);
@@ -62,9 +64,9 @@ export default function InformationsPersonnellesScreen() {
         body: { name: trimmedName, phone: phone.trim(), bio: bio.trim() },
         noRedirect: true,
       });
-      Alert.alert("Enregistré", "Vos informations ont été mises à jour.");
+      Alert.alert(t("secretary.personalInfo.savedTitle"), t("secretary.personalInfo.savedDesc"));
     } catch (e) {
-      Alert.alert("Erreur", e instanceof Error ? e.message : "Impossible d'enregistrer");
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("secretary.personalInfo.errorSave"));
     } finally {
       setSaving(false);
     }
@@ -95,7 +97,7 @@ export default function InformationsPersonnellesScreen() {
           <Pressable onPress={() => router.navigate("/(secretary)/settings" as never)} style={({ pressed }) => [{ opacity: pressed ? 0.6 : 1 }]}>
             <Ionicons name="arrow-back" size={22} color={colors.foreground} />
           </Pressable>
-          <Text style={styles.title}>Informations personnelles</Text>
+          <Text style={styles.title}>{t("secretary.personalInfo.title")}</Text>
         </View>
 
         {/* Avatar */}
@@ -112,50 +114,50 @@ export default function InformationsPersonnellesScreen() {
 
         {/* Fields card */}
         <View style={styles.card}>
-          <Text style={styles.sectionLabel}>Profil</Text>
+          <Text style={styles.sectionLabel}>{t("secretary.personalInfo.sectionProfile")}</Text>
 
           <View style={styles.fieldGroup}>
-            <Text style={styles.fieldLabel}>Nom complet</Text>
+            <Text style={styles.fieldLabel}>{t("secretary.personalInfo.fieldName")}</Text>
             <TextInput
               style={styles.input}
               value={name}
               onChangeText={setName}
-              placeholder="Votre nom complet"
+              placeholder={t("secretary.personalInfo.placeholderName")}
               placeholderTextColor={colors.foregroundSecondary}
               autoCapitalize="words"
             />
           </View>
 
           <View style={[styles.fieldGroup, styles.fieldBorderTop]}>
-            <Text style={styles.fieldLabel}>Téléphone</Text>
+            <Text style={styles.fieldLabel}>{t("secretary.personalInfo.fieldPhone")}</Text>
             <TextInput
               style={styles.input}
               value={phone}
               onChangeText={setPhone}
-              placeholder="+216 XX XXX XXX"
+              placeholder={t("secretary.personalInfo.placeholderPhone")}
               placeholderTextColor={colors.foregroundSecondary}
               keyboardType="phone-pad"
             />
           </View>
 
           <View style={[styles.fieldGroup, styles.fieldBorderTop]}>
-            <Text style={styles.fieldLabel}>Email</Text>
+            <Text style={styles.fieldLabel}>{t("secretary.personalInfo.fieldEmail")}</Text>
             <TextInput
               style={[styles.input, styles.inputReadOnly]}
               value={email}
               editable={false}
               placeholderTextColor={colors.foregroundSecondary}
             />
-            <Text style={styles.readOnlyHint}>L'email ne peut pas être modifié.</Text>
+            <Text style={styles.readOnlyHint}>{t("secretary.personalInfo.emailReadOnly")}</Text>
           </View>
 
           <View style={[styles.fieldGroup, styles.fieldBorderTop]}>
-            <Text style={styles.fieldLabel}>Bio</Text>
+            <Text style={styles.fieldLabel}>{t("secretary.personalInfo.fieldBio")}</Text>
             <TextInput
               style={[styles.input, styles.inputMultiline]}
               value={bio}
               onChangeText={setBio}
-              placeholder="Quelques mots sur vous…"
+              placeholder={t("secretary.personalInfo.placeholderBio")}
               placeholderTextColor={colors.foregroundSecondary}
               multiline
               numberOfLines={4}
@@ -173,7 +175,7 @@ export default function InformationsPersonnellesScreen() {
           {saving ? (
             <ActivityIndicator color="#FFF" />
           ) : (
-            <Text style={styles.saveBtnText}>Enregistrer</Text>
+            <Text style={styles.saveBtnText}>{t("secretary.personalInfo.saveBtn")}</Text>
           )}
         </Pressable>
       </ScrollView>

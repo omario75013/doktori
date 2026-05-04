@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { LucideIcon } from "lucide-react";
+import { Lock } from "lucide-react";
+import { usePlan } from "@/lib/use-plan";
 
 const COLLAPSED_KEY = "doktori_sidebar_collapsed";
 
@@ -41,6 +43,7 @@ type NavItem = {
   icon: LucideIcon;
   dot?: boolean;
   badge?: number;
+  feature?: string; // plan feature gate key
 };
 
 type NavGroup = {
@@ -61,6 +64,7 @@ export function SidebarNav({
   const [unreadMsg, setUnreadMsg] = useState(0);
   const [unreadStaff, setUnreadStaff] = useState(0);
   const t = useTranslations("medecin.nav");
+  const { hasFeature } = usePlan();
 
   useEffect(() => {
     setCollapsed(localStorage.getItem(COLLAPSED_KEY) === "1");
@@ -101,12 +105,12 @@ export function SidebarNav({
 
   const groups: NavGroup[] = [
     {
-      label: "Principal",
+      label: t("groupMain"),
       items: [
         { href: "/dashboard", label: t("dashboard"), icon: LayoutDashboard },
         {
           href: "/verification",
-          label: "Vérification",
+          label: t("verification"),
           icon: BadgeCheck,
           dot: showVerificationDot,
         },
@@ -115,52 +119,52 @@ export function SidebarNav({
       ],
     },
     {
-      label: "Patients",
+      label: t("groupPatients"),
       items: [{ href: "/patients", label: t("patients"), icon: Users }],
     },
     {
-      label: "Réseau",
+      label: t("groupNetwork"),
       items: [
-        { href: "/reseau", label: "Réseau médecins", icon: Network },
-        { href: "/reseau/referencements", label: "Référencements", icon: FileText },
+        { href: "/reseau", label: t("networkDoctors"), icon: Network, feature: "reseau" },
+        { href: "/reseau/referencements", label: t("referrals"), icon: FileText, feature: "reseau" },
       ],
     },
     {
-      label: "Communication",
+      label: t("groupCommunication"),
       items: [
         { href: "/messagerie", label: t("messagerie"), icon: MessagesSquare, badge: unreadMsg },
-        { href: "/messagerie-equipe", label: "Équipe", icon: UserCog, badge: unreadStaff },
+        { href: "/messagerie-equipe", label: t("staff"), icon: UserCog, badge: unreadStaff },
       ],
     },
     {
-      label: "Cabinet",
+      label: t("groupOffice"),
       items: [
         { href: "/modeles", label: t("modeles"), icon: FileText },
         { href: "/motifs", label: t("motifs"), icon: ClipboardList },
         { href: "/cabinets", label: t("cabinets"), icon: Building2 },
         { href: "/domicile", label: t("domicile"), icon: Home },
         { href: "/conventions", label: t("conventions"), icon: FileSignature },
-        { href: "/cnam", label: t("cnam"), icon: FileText },
+        { href: "/cnam", label: t("cnam"), icon: FileText, feature: "cnam" },
         { href: "/sos-medecin", label: t("sos"), icon: Siren },
-        { href: "/teleconsultation", label: t("teleconsultation"), icon: Video },
+        { href: "/teleconsultation", label: t("teleconsultation"), icon: Video, feature: "teleconsult" },
         { href: "/secretaires", label: t("secretaires"), icon: UserCog },
       ],
     },
     {
-      label: "Finances",
+      label: t("groupFinances"),
       items: [
-        { href: "/wallet", label: t("wallet"), icon: Wallet },
+        { href: "/wallet", label: t("wallet"), icon: Wallet, feature: "wallet" },
         { href: "/factures", label: t("factures"), icon: Receipt },
         { href: "/abonnement", label: t("abonnement"), icon: CreditCard },
       ],
     },
     {
-      label: "Moi",
+      label: t("groupMe"),
       items: [
-        { href: "/stats", label: t("stats"), icon: BarChart3 },
-        { href: "/parrainage", label: t("parrainage"), icon: Gift },
+        { href: "/stats", label: t("stats"), icon: BarChart3, feature: "stats" },
+        { href: "/parrainage", label: t("parrainage"), icon: Gift, feature: "parrainage" },
         { href: "/profil", label: t("profil"), icon: UserCircle },
-        { href: "/profil/parametres", label: "Paramètres", icon: Settings },
+        { href: "/profil/parametres", label: t("settings"), icon: Settings },
       ],
     },
   ];
@@ -205,7 +209,7 @@ export function SidebarNav({
           <button
             type="button"
             onClick={toggleCollapsed}
-            aria-label={collapsed ? "Étendre la barre latérale" : "Réduire la barre latérale"}
+            aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")}
             className="hidden md:inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-800 hover:text-white transition-colors ml-auto"
           >
             {collapsed ? (
@@ -229,28 +233,32 @@ export function SidebarNav({
                   const Icon = item.icon;
                   const active =
                     pathname === item.href || pathname.startsWith(item.href + "/");
+                  const locked = item.feature ? !hasFeature(item.feature) : false;
                   return (
                     <li key={item.href}>
                       <Link
-                        href={item.href}
+                        href={locked ? "/abonnement" : item.href}
                         onClick={() => setOpen(false)}
-                        title={collapsed ? item.label : undefined}
+                        title={collapsed ? item.label : locked ? "Passer à Pro" : undefined}
                         className={`
                           group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors
-                          ${active ? "bg-teal-600 text-white" : "text-gray-300 hover:bg-gray-800 hover:text-white"}
+                          ${locked ? "opacity-50 cursor-not-allowed text-gray-500" : active ? "bg-teal-600 text-white" : "text-gray-300 hover:bg-gray-800 hover:text-white"}
                           ${collapsed ? "justify-center" : ""}
                         `}
                       >
                         <span className="relative inline-flex items-center justify-center">
                           <Icon className="h-4 w-4 shrink-0" strokeWidth={2} />
-                          {item.dot && (
+                          {item.dot && !locked && (
                             <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-red-500" />
                           )}
                         </span>
                         {!collapsed && (
                           <span className="flex-1 truncate">{item.label}</span>
                         )}
-                        {!collapsed && item.badge && item.badge > 0 ? (
+                        {!collapsed && locked && (
+                          <Lock className="h-3 w-3 shrink-0 text-gray-500" />
+                        )}
+                        {!collapsed && !locked && item.badge && item.badge > 0 ? (
                           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">
                             {item.badge > 99 ? "99+" : item.badge}
                           </span>

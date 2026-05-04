@@ -10,7 +10,7 @@ export default async function NouveauModelePage() {
   }
 
   if (!(await isEnabled("prescription_templates_enabled"))) {
-    redirect("/medecin");
+    redirect("/dashboard");
   }
 
   return <TemplateEditor mode="create" />;

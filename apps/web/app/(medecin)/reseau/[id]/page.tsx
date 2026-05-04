@@ -1,3 +1,4 @@
+import { getLocale, getTranslations } from "next-intl/server";
 import { auth } from "@/lib/auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
@@ -99,6 +100,10 @@ export default async function DoctorDetailPage({
     LIMIT 5
   `)) as unknown as Review[];
 
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: "medecin.reseau" });
+  const tCommon = await getTranslations({ locale, namespace: "medecin.common" });
+
   const rating = Number(doctor.averageRating ?? 0);
   const reviewCount = Number(doctor.reviewCount ?? 0);
   const initials = doctor.name
@@ -114,7 +119,7 @@ export default async function DoctorDetailPage({
         className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-primary"
       >
         <ArrowLeft className="h-4 w-4" />
-        Retour au réseau
+        {t("backToNetwork")}
       </Link>
 
       <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
@@ -152,7 +157,7 @@ export default async function DoctorDetailPage({
                 {doctor.yearsOfExperience != null && (
                   <span className="inline-flex items-center gap-1.5">
                     <Award className="h-4 w-4" />
-                    {doctor.yearsOfExperience} ans d&apos;expérience
+                    {t("yearsExperience", { count: doctor.yearsOfExperience! })}
                   </span>
                 )}
               </div>
@@ -162,7 +167,7 @@ export default async function DoctorDetailPage({
                   {rating.toFixed(1)}
                 </div>
                 <span className="text-sm text-gray-500">
-                  {reviewCount} avis de patients
+                  {t("patientReviews", { count: reviewCount })}
                 </span>
               </div>
             </div>
@@ -175,7 +180,7 @@ export default async function DoctorDetailPage({
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           {doctor.bio && (
-            <Section title="À propos">
+            <Section title={tCommon("about")}>
               <p className="text-sm text-gray-700 whitespace-pre-wrap leading-relaxed">
                 {doctor.bio}
               </p>
@@ -183,7 +188,7 @@ export default async function DoctorDetailPage({
           )}
 
           {Array.isArray(doctor.expertise) && doctor.expertise.length > 0 && (
-            <Section title="Domaines d'expertise">
+            <Section title={t("expertiseDomains")}>
               <div className="flex flex-wrap gap-2">
                 {doctor.expertise.map((e) => (
                   <span
@@ -198,7 +203,7 @@ export default async function DoctorDetailPage({
           )}
 
           {Array.isArray(doctor.educations) && doctor.educations.length > 0 && (
-            <Section title="Formation" icon={<GraduationCap className="h-4 w-4" />}>
+            <Section title={tCommon("education")} icon={<GraduationCap className="h-4 w-4" />}>
               <ul className="space-y-2">
                 {doctor.educations.map((e, i) => (
                   <li key={i} className="text-sm">
@@ -213,7 +218,7 @@ export default async function DoctorDetailPage({
           )}
 
           {Array.isArray(doctor.experiences) && doctor.experiences.length > 0 && (
-            <Section title="Expérience" icon={<Briefcase className="h-4 w-4" />}>
+            <Section title={tCommon("experience")} icon={<Briefcase className="h-4 w-4" />}>
               <ul className="space-y-2">
                 {doctor.experiences.map((e, i) => (
                   <li key={i} className="text-sm">
@@ -228,7 +233,7 @@ export default async function DoctorDetailPage({
           )}
 
           {reviews.length > 0 && (
-            <Section title="Avis récents" icon={<Star className="h-4 w-4" />}>
+            <Section title={t("recentReviews")} icon={<Star className="h-4 w-4" />}>
               <div className="space-y-3">
                 {reviews.map((r) => (
                   <div key={r.id} className="border-b border-border last:border-0 pb-3 last:pb-0">
@@ -260,35 +265,35 @@ export default async function DoctorDetailPage({
         </div>
 
         <div className="space-y-6">
-          <Section title="Contact">
+          <Section title={t("contact")}>
             <div className="space-y-2 text-sm">
-              <InfoRow icon={<Mail className="h-4 w-4" />} label="Email" value={doctor.email} />
+              <InfoRow icon={<Mail className="h-4 w-4" />} label={t("emailLabel")} value={doctor.email} />
               {doctor.phone && (
-                <InfoRow icon={<Phone className="h-4 w-4" />} label="Téléphone" value={doctor.phone} />
+                <InfoRow icon={<Phone className="h-4 w-4" />} label={t("phoneLabel")} value={doctor.phone} />
               )}
               {doctor.address && (
                 <InfoRow
                   icon={<MapPin className="h-4 w-4" />}
-                  label="Cabinet"
+                  label={t("addressLabel")}
                   value={doctor.address}
                 />
               )}
             </div>
           </Section>
 
-          <Section title="Tarifs">
+          <Section title={tCommon("pricing")}>
             <div className="space-y-2 text-sm">
               {doctor.consultationFee != null && (
                 <InfoRow
                   icon={<Clock className="h-4 w-4" />}
-                  label="Consultation"
+                  label={t("consultation")}
                   value={`${doctor.consultationFee} DT`}
                 />
               )}
               {doctor.teleconsultFee != null && (
                 <InfoRow
                   icon={<Clock className="h-4 w-4" />}
-                  label="Téléconsultation"
+                  label={t("teleconsultation")}
                   value={`${doctor.teleconsultFee} DT`}
                 />
               )}
@@ -296,7 +301,7 @@ export default async function DoctorDetailPage({
           </Section>
 
           {Array.isArray(doctor.languages) && doctor.languages.length > 0 && (
-            <Section title="Langues" icon={<Languages className="h-4 w-4" />}>
+            <Section title={t("languages")} icon={<Languages className="h-4 w-4" />}>
               <div className="flex flex-wrap gap-2">
                 {doctor.languages.map((l) => (
                   <span

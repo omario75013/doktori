@@ -2,17 +2,19 @@
 
 import Link from "next/link";
 import { CalendarDays, CalendarClock } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 type Tab = "calendrier" | "agenda";
 
 export function CalendrierTabs({ active }: { active: Tab }) {
+  const t = useTranslations("medecin.calendrier");
   return (
     <div className="inline-flex rounded-2xl border border-border bg-white p-1 shadow-sm">
       <TabLink href="/calendrier" active={active === "calendrier"} icon={<CalendarDays className="h-4 w-4" />}>
-        Calendrier
+        {t("tabCalendar")}
       </TabLink>
       <TabLink href="/calendrier?tab=agenda" active={active === "agenda"} icon={<CalendarClock className="h-4 w-4" />}>
-        Agenda
+        {t("tabAgenda")}
       </TabLink>
     </div>
   );

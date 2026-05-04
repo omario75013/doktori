@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { UserPlus, MessageSquare, Share2, Loader2, X, Check } from "lucide-react";
 import { toast } from "sonner";
 
@@ -21,6 +22,8 @@ export function DoctorActions({
   doctorName: string;
 }) {
   const router = useRouter();
+  const t = useTranslations("medecin.reseau");
+  const tCommon = useTranslations("medecin.common");
   const [connState, setConnState] = useState<ConnectionStatus>("none");
   const [connLoading, setConnLoading] = useState(true);
   const [connSubmitting, setConnSubmitting] = useState(false);
@@ -73,7 +76,7 @@ export function DoctorActions({
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error ?? "Erreur");
-      toast.success(data.already ? "Invitation déjà envoyée" : "Invitation envoyée");
+      toast.success(data.already ? t("alreadyInvited") : t("invitationSent"));
       setConnState("pending_out");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erreur");
@@ -88,18 +91,18 @@ export function DoctorActions({
 
   const connBtn = (() => {
     if (connLoading) return { label: "…", disabled: true, cls: "bg-gray-200 text-gray-500" };
-    if (connSubmitting) return { label: "Envoi…", disabled: true, cls: "bg-gray-200 text-gray-500" };
+    if (connSubmitting) return { label: tCommon("sending"), disabled: true, cls: "bg-gray-200 text-gray-500" };
     switch (connState) {
       case "accepted":
-        return { label: "Connecté", disabled: true, cls: "border border-border bg-white text-foreground" };
+        return { label: t("connected"), disabled: true, cls: "border border-border bg-white text-foreground" };
       case "pending_out":
-        return { label: "Invitation envoyée", disabled: true, cls: "bg-gray-100 text-gray-600" };
+        return { label: t("invitationSent"), disabled: true, cls: "bg-gray-100 text-gray-600" };
       case "pending_in":
-        return { label: "Accepter l'invitation", disabled: false, cls: "bg-primary text-white hover:opacity-90" };
+        return { label: t("acceptInvitation"), disabled: false, cls: "bg-primary text-white hover:opacity-90" };
       case "blocked":
-        return { label: "Bloqué", disabled: true, cls: "bg-red-50 text-red-600 border border-red-200" };
+        return { label: t("blocked"), disabled: true, cls: "bg-red-50 text-red-600 border border-red-200" };
       default:
-        return { label: "Se connecter", disabled: false, cls: "bg-primary text-white hover:opacity-90" };
+        return { label: t("connect"), disabled: false, cls: "bg-primary text-white hover:opacity-90" };
     }
   })();
 
@@ -121,7 +124,7 @@ export function DoctorActions({
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary"
         >
           <MessageSquare className="h-4 w-4" />
-          Message
+          {t("messageButton")}
         </button>
         <button
           type="button"
@@ -129,7 +132,7 @@ export function DoctorActions({
           className="inline-flex items-center justify-center gap-2 rounded-xl border border-border bg-white px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary"
         >
           <Share2 className="h-4 w-4" />
-          Référencer
+          {t("referButton")}
         </button>
       </div>
 
@@ -140,7 +143,7 @@ export function DoctorActions({
           onClose={() => setReferralOpen(false)}
           onSuccess={() => {
             setReferralOpen(false);
-            toast.success("Référencement créé");
+            toast.success(t("referralCreated"));
           }}
         />
       )}
@@ -159,6 +162,8 @@ function ReferralDialog({
   onClose: () => void;
   onSuccess: () => void;
 }) {
+  const t = useTranslations("medecin.reseau");
+  const tCommon = useTranslations("medecin.common");
   const [patients, setPatients] = useState<Patient[]>([]);
   const [patientSearch, setPatientSearch] = useState("");
   const [selectedPatientId, setSelectedPatientId] = useState("");
@@ -203,7 +208,7 @@ function ReferralDialog({
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!selectedPatientId) {
-      toast.error("Sélectionnez un patient");
+      toast.error(t("noPatients"));
       return;
     }
     if (reason.trim().length < 3) {
@@ -244,13 +249,13 @@ function ReferralDialog({
       >
         <div className="sticky top-0 bg-white px-5 py-4 border-b border-border flex items-center justify-between">
           <div>
-            <h2 className="text-base font-semibold text-foreground">Référencer un patient</h2>
-            <p className="text-xs text-gray-500 mt-0.5">vers Dr. {toDoctorName}</p>
+            <h2 className="text-base font-semibold text-foreground">{t("referPatientTitle")}</h2>
+            <p className="text-xs text-gray-500 mt-0.5">{t("toDoctorLabel", { name: toDoctorName })}</p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            aria-label="Fermer"
+            aria-label={tCommon("close")}
             className="h-8 w-8 rounded-lg flex items-center justify-center text-gray-400 hover:bg-secondary"
           >
             <X className="h-4 w-4" />
@@ -260,13 +265,13 @@ function ReferralDialog({
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">
-              Patient <span className="text-red-500">*</span>
+              {t("patientRequired")}
             </label>
             <input
               type="text"
               value={patientSearch}
               onChange={(e) => setPatientSearch(e.target.value)}
-              placeholder="Rechercher un patient…"
+              placeholder={t("searchPatient")}
               className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary mb-2"
             />
             {loading ? (
@@ -275,7 +280,7 @@ function ReferralDialog({
               </div>
             ) : filtered.length === 0 ? (
               <p className="text-xs text-gray-400 italic py-4 text-center">
-                Aucun patient trouvé
+                {t("noPatients")}
               </p>
             ) : (
               <div className="max-h-40 overflow-y-auto border border-border rounded-xl divide-y divide-border">
@@ -301,21 +306,21 @@ function ReferralDialog({
 
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">
-              Motif du référencement <span className="text-red-500">*</span>
+              {t("reasonRequired")}
             </label>
             <textarea
               rows={3}
               required
               value={reason}
               onChange={(e) => setReason(e.target.value)}
-              placeholder="Ex : second avis cardiologique, suite à un ECG anormal…"
+              placeholder={t("reasonPlaceholder")}
               className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
             />
           </div>
 
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">
-              Note pour le médecin receveur (optionnel)
+              {t("notesForDoctor")}
             </label>
             <textarea
               rows={2}
@@ -334,12 +339,10 @@ function ReferralDialog({
             />
             <div className="flex-1">
               <p className="text-sm font-medium text-foreground">
-                Partager le dossier médical complet
+                {t("shareMedicalRecord")}
               </p>
               <p className="text-xs text-gray-500 mt-0.5">
-                Si coché, le patient recevra un lien pour accepter le partage (allergies,
-                traitements, consultations passées). Sinon, seuls son nom et le motif seront
-                transmis.
+                {t("shareMedicalRecordDesc")}
               </p>
             </div>
           </label>
@@ -351,14 +354,14 @@ function ReferralDialog({
               disabled={submitting}
               className="rounded-xl border border-border bg-white px-4 py-2 text-sm font-medium hover:bg-secondary"
             >
-              Annuler
+              {tCommon("cancel")}
             </button>
             <button
               type="submit"
               disabled={submitting || !selectedPatientId}
               className="rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:opacity-90 disabled:opacity-60"
             >
-              {submitting ? "Envoi…" : "Référencer"}
+              {submitting ? tCommon("sending") : t("submitReferral")}
             </button>
           </div>
         </form>
