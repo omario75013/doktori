@@ -650,7 +650,7 @@ export default function RdvPage({
                 <button
                   key={p.id}
                   onClick={() => handlePracticeSelected(p)}
-                  className={`w-full flex items-start gap-3 rounded-2xl border-2 bg-white px-4 py-4 text-start transition-colors hover:bg-secondary/40 ${
+                  className={`w-full flex items-start gap-3 rounded-2xl border-2 bg-white dark:bg-gray-900 px-4 py-4 text-start transition-colors hover:bg-secondary/40 dark:hover:bg-gray-800 ${
                     p.clinicId
                       ? "border-primary/30 hover:border-primary"
                       : "border-border hover:border-primary"
@@ -840,7 +840,7 @@ export default function RdvPage({
                         required={q.required}
                         rows={3}
                         placeholder="Votre réponse..."
-                        className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
+                        className="w-full rounded-xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary resize-none"
                       />
                     )}
 
@@ -889,7 +889,7 @@ export default function RdvPage({
                           className={`flex flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed px-4 py-5 cursor-pointer transition-colors ${
                             value
                               ? "border-primary bg-secondary"
-                              : "border-border bg-white hover:border-primary hover:bg-secondary/40"
+                              : "border-border dark:border-gray-700 bg-white dark:bg-gray-900 hover:border-primary hover:bg-secondary/40 dark:hover:bg-gray-800"
                           }`}
                         >
                           {value ? (
@@ -1093,7 +1093,7 @@ export default function RdvPage({
                               e.target.value as "child" | "parent" | "spouse" | "other",
                             )
                           }
-                          className="w-full rounded-md border border-border bg-white px-3 py-2 text-sm text-foreground"
+                          className="w-full rounded-md border border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-foreground"
                         >
                           <option value="child">Enfant</option>
                           <option value="parent">Parent</option>
