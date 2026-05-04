@@ -1,0 +1,108 @@
+═══════════════════════════════════════════════════════════════════
+  MAIL OOREDOO — PRÊT À ENVOYER
+═══════════════════════════════════════════════════════════════════
+
+→ Destinataire principal :  entreprise@ooredoo.tn
+→ Destinataire secondaire (CC) :  business@ooredoo.tn
+→ De :  contact@doktori.tn (ou votre adresse @doktori.tn personnelle)
+
+═══════════════════════════════════════════════════════════════════
+
+OBJET :
+
+Demande de partenariat SMS transactionnel — Doktori.tn (plateforme de santé)
+
+═══════════════════════════════════════════════════════════════════
+
+CORPS DU MAIL :
+
+Madame, Monsieur,
+
+Nous sommes Doktori (https://doktori.tn), la première plateforme tunisienne de prise de rendez-vous médicaux en ligne, éditée par Random Walkers SUARL, société unipersonnelle au capital de 1 400 TND, immatriculée au Registre National des Entreprises sous le numéro 1625867B, ayant son siège social à Tunis.
+
+Notre plateforme met en relation patients et médecins en Tunisie pour faciliter l'accès aux soins. Nous comptons aujourd'hui :
+
+  • 69 médecins inscrits sur la plateforme
+  • Une couverture sur le Grand Tunis (Tunis, Ariana, La Marsa, Manouba), avec un déploiement progressif sur les autres gouvernorats
+  • Plus de 900 rendez-vous gérés et près de 900 avis patients vérifiés
+  • Une conformité RGPD et loi tunisienne 2004-63 sur la protection des données à caractère personnel
+
+Dans le cadre du développement de notre service, nous souhaitons établir un partenariat avec Ooredoo Tunisia pour l'envoi de SMS transactionnels à nos utilisateurs.
+
+USAGE PRÉVU
+-----------
+Nos SMS sont strictement transactionnels (non commerciaux) :
+
+  1. Confirmations de rendez-vous médicaux
+  2. Rappels SMS la veille du rendez-vous (réduction du taux d'absentéisme)
+  3. Codes de vérification OTP pour authentification patient
+  4. Notifications d'annulation ou de modification de rendez-vous
+  5. Alertes SOS Médecin (consultation urgente non-vitale à domicile)
+
+VOLUMES ESTIMÉS
+---------------
+  • Phase actuelle (2026 Q2) : 3 000 à 5 000 SMS / mois
+  • Projection 12 mois (2027 Q2) : 30 000 à 50 000 SMS / mois
+  • Projection 24 mois : 100 000+ SMS / mois (en fonction de notre expansion sur les autres gouvernorats)
+
+CARACTÉRISTIQUES SOUHAITÉES
+---------------------------
+  • API HTTP / REST pour intégration directe avec notre plateforme (Next.js + Node.js)
+  • Sender ID alphanumérique dédié : « DOKTORI » (à valider avec vos services et l'INT)
+  • Reporting en temps réel des statuts (livré / non livré / échec) via webhook ou polling API
+  • Support des SMS longs (concaténation transparente)
+  • Compatibilité Unicode (UTF-8) pour SMS en arabe
+  • Engagement de niveau de service (SLA) pour les SMS critiques (OTP)
+
+DEMANDE
+-------
+Nous souhaiterions :
+
+  1. Recevoir votre offre commerciale détaillée pour le SMS transactionnel (grille tarifaire en fonction du volume, frais d'activation, frais de sender ID dédié)
+  2. La documentation technique de votre API SMS Pro
+  3. Une démo ou un compte de test pour valider l'intégration avant contractualisation
+  4. Le délai indicatif pour activation du sender ID DOKTORI
+
+Nous sommes également ouverts à discuter d'un accompagnement plus large incluant éventuellement la fibre Pro pour notre infrastructure et la téléphonie d'entreprise.
+
+Nous serions disponibles pour un échange téléphonique ou une rencontre dans vos locaux à votre convenance, idéalement dans les deux prochaines semaines.
+
+Vous trouverez ci-joint une présentation succincte de Doktori.
+
+Restant à votre entière disposition pour tout complément, nous vous prions d'agréer, Madame, Monsieur, l'expression de nos salutations distinguées.
+
+
+Omar HARBI
+Gérant unique
+Random Walkers SUARL
+Doktori.tn — La prise de rendez-vous médicaux en Tunisie
+
+contact@doktori.tn
+https://doktori.tn
+
+—
+Random Walkers SUARL
+Société Unipersonnelle à Responsabilité Limitée au capital de 1 400 TND
+Identifiant Unique (RNE) : 1625867B
+Matricule fiscal : 1625867/B (assujetti à la TVA — code A)
+N° de gestion interne : B01130082019
+Siège social : Immeuble Babel, Bloc D, Montplaisir 1073, Bab Bhar, Tunis — Tunisie
+Activité principale : Services aux entreprises (code 74) — consultations en informatique
+Date de constitution : 07/06/2019 (publication 10/06/2019)
+Gérant unique : Omar HARBI
+
+═══════════════════════════════════════════════════════════════════
+  PIÈCE JOINTE À PRÉPARER (avant envoi)
+═══════════════════════════════════════════════════════════════════
+
+Une mini-présentation Doktori 1-2 pages PDF avec :
+  • Logo + tagline
+  • Chiffres clés (69 médecins, 900+ RDV)
+  • 2-3 captures d'écran (homepage, espace médecin, SOS)
+  • Roadmap 12-24 mois
+
+Si vous n'avez pas le temps : envoyez le mail sans pièce jointe,
+le contenu suffit. Vous pouvez l'envoyer en deuxième temps si Ooredoo
+demande plus de détails.
+
+═══════════════════════════════════════════════════════════════════
