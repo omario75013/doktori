@@ -21,8 +21,23 @@ interface Props {
     average_rating?: number | null; // from Meilisearch document
     review_count?: number | null; // from Meilisearch document
     clinicName?: string | null; // from Meilisearch document (added in migration 0053)
+    lastActiveAt?: string | Date | null; // D30 doctor presence
   };
   showSlots?: boolean; // pass true on /recherche to show 3-day slot pills
+}
+
+function formatPresence(lastActiveAt: string | Date | null | undefined): { online: boolean; label: string } | null {
+  if (!lastActiveAt) return null;
+  const ts = typeof lastActiveAt === "string" ? new Date(lastActiveAt) : lastActiveAt;
+  if (Number.isNaN(ts.getTime())) return null;
+  const diffMs = Date.now() - ts.getTime();
+  if (diffMs < 5 * 60_000) return { online: true, label: "En ligne" };
+  const minutes = Math.floor(diffMs / 60_000);
+  if (minutes < 60) return { online: false, label: `Vu il y a ${minutes} min` };
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return { online: false, label: `Vu il y a ${hours} h` };
+  const days = Math.floor(hours / 24);
+  return { online: false, label: `Vu il y a ${days} j` };
 }
 
 type SlotDay = {
@@ -125,6 +140,7 @@ export function DoctorCard({ doctor, showSlots }: Props) {
     .slice(0, 2)
     .join("")
     .toUpperCase();
+  const presence = formatPresence(doctor.lastActiveAt);
 
   return (
     <Link
@@ -210,6 +226,15 @@ export function DoctorCard({ doctor, showSlots }: Props) {
               </span>
               <span className="font-bold text-doktori-green-dark">{t("available")}</span>
             </span>
+            {presence && (
+              <span
+                className={`flex items-center gap-1 rounded-full px-2 py-0.5 ${presence.online ? "bg-green-100 text-green-800" : "bg-gray-100 text-muted-foreground"}`}
+                title={presence.label}
+              >
+                <span className={`inline-block h-1.5 w-1.5 rounded-full ${presence.online ? "bg-green-500" : "bg-gray-400"}`} />
+                <span className="font-bold">{presence.label}</span>
+              </span>
+            )}
           </div>
         </div>
 

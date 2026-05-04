@@ -7,6 +7,7 @@ import { PageTransition } from "@/components/page-transition";
 import { AppTopBar } from "@/components/app-topbar";
 import { DoctorBellWidget } from "@/components/doctor-bell-widget";
 import { IncomingCallListener } from "@/components/call-ui";
+import { DoctorPresencePing } from "@/components/doctor-presence-ping";
 
 export default async function MedecinLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -32,6 +33,7 @@ export default async function MedecinLayout({ children }: { children: React.Reac
       </div>
       <DoctorBellWidget />
       <IncomingCallListener />
+      <DoctorPresencePing />
     </div>
   );
 }

@@ -457,6 +457,25 @@ export default async function DoctorProfilePage({
                         <span className="h-1.5 w-1.5 rounded-full bg-accent"></span>
                         Disponible aujourd&apos;hui
                       </div>
+                      {(() => {
+                        const last = doctor.lastActiveAt as string | Date | null | undefined;
+                        if (!last) return null;
+                        const ts = typeof last === "string" ? new Date(last) : last;
+                        if (Number.isNaN(ts.getTime())) return null;
+                        const diffMs = Date.now() - ts.getTime();
+                        const online = diffMs < 5 * 60_000;
+                        let label: string;
+                        if (online) label = "En ligne";
+                        else if (diffMs < 60 * 60_000) label = `Vu il y a ${Math.floor(diffMs / 60_000)} min`;
+                        else if (diffMs < 24 * 3600_000) label = `Vu il y a ${Math.floor(diffMs / 3600_000)} h`;
+                        else label = `Vu il y a ${Math.floor(diffMs / (24 * 3600_000))} j`;
+                        return (
+                          <div className={`inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-bold ${online ? "bg-green-100 text-green-800" : "bg-gray-100 text-muted-foreground"}`}>
+                            <span className={`h-1.5 w-1.5 rounded-full ${online ? "bg-green-500" : "bg-gray-400"}`} />
+                            {label}
+                          </div>
+                        );
+                      })()}
                       {reviewCount > 0 ? (
                         <div className="inline-flex items-center gap-1 rounded-full bg-[#FEF3C7] px-3 py-1 text-xs font-bold text-[#92400E]">
                           <Star className="h-3 w-3 fill-doktori-amber text-doktori-amber" />
