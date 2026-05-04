@@ -6,15 +6,22 @@
 
 ## Destinataires suggérés
 
-À envoyer simultanément à :
+**Contacts officiels Ooredoo Tunisia Business** (vérifiés sur ooredoo.tn) :
 
-| Destinataire | Email | Notes |
+| Canal | Coordonnée | Notes |
 |---|---|---|
-| Direction Entreprises Ooredoo Tunisia | `entreprise@ooredoo.tn` | Contact principal B2B |
-| Service SMS Pro / Bulk SMS | `business@ooredoo.tn` | Si différent (à confirmer par téléphone) |
-| Account manager (si vous en avez un) | — | CC |
+| 📧 Email général | `contact@ooredoo.tn` | Seul email B2B officiel listé sur ooredoo.tn |
+| 📞 Téléphone Business | **+216 22 11 11 44** (raccourci `1144`) | 7j/7 · 8h-22h — **À appeler en premier** pour obtenir le contact direct d'un commercial SMS Pro |
+| 📞 Service client | +216 22 11 11 11 (`1111`) | Backup général |
+| 📝 Formulaire | https://www.ooredoo.tn/Business/fr/nous-contacter | Section "Demande d'information" — soumettre en parallèle pour tracer |
+| 🏢 Siège | Immeuble Zenith, Les Jardins du Lac, 1053 — Les Berges du Lac, Tunis | — |
 
-**À défaut**, appeler d'abord le service Entreprises au **+216 50 110 110** (centre relation Pro Ooredoo) pour identifier le bon interlocuteur, puis envoyer le mail nominativement.
+**Stratégie recommandée** :
+1. **Appeler le 1144 d'abord** pour obtenir le nom + email direct d'un commercial SMS Pro B2B
+2. **Envoyer le mail nominativement** à ce commercial
+3. **En parallèle**, soumettre le formulaire web pour traçabilité officielle
+
+⚠️ Les adresses `entreprise@ooredoo.tn` et `business@ooredoo.tn` que j'avais initialement suggérées **ne sont pas listées publiquement** par Ooredoo Tunisia — à éviter (peuvent ne pas exister ou être mal routées).
 
 ---
 
