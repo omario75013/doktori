@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireDoctor } from "@/lib/doctor-auth";
-import { uploadToR2 } from "@/lib/r2";
+import { uploadToR2, deleteFromR2 } from "@/lib/r2";
 import { db, doctorPractices } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 import { randomUUID } from "crypto";
@@ -126,7 +126,28 @@ export async function DELETE(req: NextRequest, { params }: RouteContext) {
     return NextResponse.json({ error: "Index hors limites" }, { status: 400 });
   }
 
-  // TODO: delete the R2 object (no deleteFromR2 helper yet — orphan left intentionally)
+  // Delete the object from R2 (graceful: log and continue if it fails)
+  const photoToDelete = currentPhotos[index];
+  if (photoToDelete?.url) {
+    try {
+      // URL format (prod):  <PUBLIC_URL>/doktori/<relative-key>
+      // URL format (dev):   /uploads/doktori/<relative-key>
+      const r2PublicUrl = process.env.R2_PUBLIC_URL ?? "";
+      let r2Key: string | null = null;
+      if (r2PublicUrl && photoToDelete.url.startsWith(r2PublicUrl)) {
+        // e.g. "https://pub.r2.dev/doktori/cabinet-photos/…/uuid.jpg" → "doktori/cabinet-photos/…/uuid.jpg"
+        r2Key = photoToDelete.url.slice(r2PublicUrl.length).replace(/^\//, "");
+      } else if (photoToDelete.url.startsWith("/uploads/doktori/")) {
+        // Local dev URL: "/uploads/doktori/cabinet-photos/…/uuid.jpg"
+        r2Key = "doktori/" + photoToDelete.url.slice("/uploads/doktori/".length);
+      }
+      if (r2Key) {
+        await deleteFromR2(r2Key);
+      }
+    } catch (e) {
+      console.error("[r2] cabinet photo delete failed (continuing with DB removal):", e);
+    }
+  }
 
   const updatedPhotos = currentPhotos.filter((_, i) => i !== index);
 

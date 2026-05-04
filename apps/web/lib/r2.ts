@@ -1,4 +1,4 @@
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
+import { S3Client, PutObjectCommand, DeleteObjectCommand } from "@aws-sdk/client-s3";
 import fs from "node:fs/promises";
 import path from "node:path";
 
@@ -55,4 +55,34 @@ export async function uploadToR2(
   await fs.mkdir(path.dirname(target), { recursive: true });
   await fs.writeFile(target, buffer);
   return `/uploads/doktori/${key}`;
+}
+
+/**
+ * Delete an object from R2 by its full storage key (including the "doktori/" prefix).
+ *
+ * Production: issues a DeleteObject command to Cloudflare R2.
+ * Dev (no R2 creds): attempts to remove the corresponding local file; errors are
+ * silently ignored (file may not exist).
+ *
+ * The caller should pass the key as stored (e.g. "doktori/cabinet-photos/…/uuid.jpg").
+ * If you only have the public URL, strip the PUBLIC_URL prefix first.
+ */
+export async function deleteFromR2(key: string): Promise<void> {
+  if (s3) {
+    await s3.send(
+      new DeleteObjectCommand({
+        Bucket: BUCKET,
+        Key: key,
+      }),
+    );
+    return;
+  }
+
+  // Local dev fallback — remove from public/uploads
+  // key is "doktori/<relative-path>"; strip the leading "doktori/" prefix
+  const relativePart = key.startsWith("doktori/") ? key.slice("doktori/".length) : key;
+  const localPath = path.join(process.cwd(), "public", "uploads", "doktori", relativePart);
+  await fs.unlink(localPath).catch(() => {
+    // Ignore — file may not exist in local dev
+  });
 }
