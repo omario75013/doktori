@@ -29,6 +29,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `${spec.label} à ${city.label} — Prendre RDV en ligne | Doktori`,
     description: `Trouvez votre ${spec.label.toLowerCase()} à ${city.label} et réservez votre rendez-vous en ligne. Consultez les disponibilités et prenez RDV en 2 clics sur Doktori.`,
+    alternates: {
+      canonical: `https://doktori.tn/${ville}/${specialite}`,
+    },
   };
 }
 
@@ -44,7 +47,7 @@ export default async function SEOListingPage({ params }: Props) {
     .where(and(eq(doctors.city, ville), eq(doctors.specialty, specialite), eq(doctors.isActive, true)));
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8">
+    <main className="max-w-3xl mx-auto px-4 py-8">
       <h1 className="text-2xl font-bold mb-2">{spec.label} à {city.label}</h1>
       <p className="text-gray-500 mb-6">
         {results.length} {spec.label.toLowerCase()}(s) disponible(s) — Réservez en ligne
@@ -83,6 +86,6 @@ export default async function SEOListingPage({ params }: Props) {
           ))}
         </div>
       )}
-    </div>
+    </main>
   );
 }

@@ -56,7 +56,7 @@ export default async function ComparerPage({
 
   if (idList.length < 1) {
     return (
-      <div className="min-h-screen bg-secondary px-4 py-12">
+      <main className="min-h-screen bg-secondary px-4 py-12">
         <div className="mx-auto max-w-2xl rounded-2xl border border-border bg-white p-10 text-center shadow-sm">
           <h1 className="font-heading text-2xl font-bold text-foreground">Comparateur de médecins</h1>
           <p className="mt-3 text-muted-foreground">
@@ -70,7 +70,7 @@ export default async function ComparerPage({
             <ArrowRight className="h-4 w-4" strokeWidth={2.5} />
           </Link>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -122,7 +122,7 @@ export default async function ComparerPage({
     .filter((d): d is DoctorComparison => Boolean(d));
 
   return (
-    <div className="min-h-screen bg-secondary px-4 py-8 sm:py-12">
+    <main className="min-h-screen bg-secondary px-4 py-8 sm:py-12">
       <div className="mx-auto max-w-6xl">
         <header className="mb-6">
           <h1 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
@@ -294,6 +294,6 @@ export default async function ComparerPage({
           </Link>
         </div>
       </div>
-    </div>
+    </main>
   );
 }

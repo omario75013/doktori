@@ -8,6 +8,21 @@ export const metadata: Metadata = {
   description:
     "Consultez les tarifs CNAM Tunisie : consultation, imagerie, biologie, dentaire. Tarifs officiels en TND et taux de remboursement par acte.",
   robots: { index: true, follow: true },
+  alternates: { canonical: "https://doktori.tn/tarifs" },
+  openGraph: {
+    title: "Tarifs CNAM Tunisie — Nomenclature & remboursements",
+    description:
+      "Tarifs officiels en TND et taux de remboursement par acte CNAM.",
+    url: "https://doktori.tn/tarifs",
+    siteName: "Doktori",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Tarifs CNAM Tunisie — Nomenclature & remboursements",
+    description:
+      "Tarifs officiels en TND et taux de remboursement par acte CNAM.",
+  },
 };
 
 export const revalidate = 3600; // 1 hour
