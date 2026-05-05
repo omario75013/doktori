@@ -14,11 +14,6 @@ process.env.REDIS_URL = "redis://localhost:6379";
 const cacheModule = await import("./cache");
 const { cached, invalidate, invalidateDoctor, redis } = cacheModule;
 
-// ioredis-mock honors lazyConnect+enableOfflineQueue, so we must connect
-// explicitly before issuing commands in the test environment. (Real ioredis
-// auto-connects on first command, but the mock does not.)
-await redis.connect();
-
 beforeEach(async () => {
   await redis.flushall();
 });

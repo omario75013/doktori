@@ -31,8 +31,12 @@ import superjson from "superjson";
 const globalForRedis = globalThis as unknown as { __doktoriRedis?: Redis };
 
 function makeClient(): Redis {
+  // No lazyConnect: with `enableOfflineQueue: false`, a command issued before
+  // the TCP handshake completes throws "Stream isn't writeable" — the read
+  // path then falls through to the DB on every request until the pool warms
+  // up. Auto-connect at construction time avoids this; the cost is one
+  // handshake at boot. (Discovered in prod 2026-05-05.)
   return new Redis(process.env.REDIS_URL!, {
-    lazyConnect: true,
     maxRetriesPerRequest: 2,
     enableOfflineQueue: false, // commands fail fast when offline → fall-through
     connectTimeout: 1000,
