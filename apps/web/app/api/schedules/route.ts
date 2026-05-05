@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
 import { getScheduleForDoctor, upsertSchedule } from "@doktori/db";
 import { scheduleUpdateSchema } from "@doktori/validation";
+import { invalidate } from "@/lib/cache";
 
 export async function GET(req: NextRequest) {
   const user = await requireAuth(req);
@@ -31,6 +32,7 @@ export async function PUT(req: NextRequest) {
       parsed.data.slots,
       parsed.data.practiceId,
     );
+    await invalidate(`doctor:schedule:${user.id}`);
     return NextResponse.json(result);
   } catch (e) {
     console.error("[PUT /api/schedules]", e);
