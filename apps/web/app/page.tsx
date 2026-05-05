@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { getTranslations, getLocale } from "next-intl/server";
+import { db, doctors } from "@doktori/db";
+import { and, desc, eq, isNotNull } from "drizzle-orm";
 import { SPECIALTIES } from "@doktori/shared";
 import {
   Search,
@@ -62,9 +64,47 @@ const SPECIALTY_ICONS: Record<string, LucideIcon> = {
   allergologue: Flower2,
 };
 
+export const revalidate = 600; // 10 min — featured doctors refresh
+
 export default async function HomePage() {
   const t = await getTranslations("landing");
   const locale = await getLocale();
+
+  // Featured doctors — only render the trust strip if we have at least 4 real
+  // verified doctors with profile photos. Avoids fake placeholder names on a
+  // pre-launch landing page.
+  let featuredDoctors: Array<{
+    slug: string;
+    name: string;
+    specialty: string;
+    city: string;
+    photoUrl: string;
+  }> = [];
+  try {
+    const rows = await db
+      .select({
+        slug: doctors.slug,
+        name: doctors.name,
+        specialty: doctors.specialty,
+        city: doctors.city,
+        photoUrl: doctors.photoUrl,
+      })
+      .from(doctors)
+      .where(
+        and(
+          eq(doctors.isActive, true),
+          eq(doctors.isVisible, true),
+          eq(doctors.verificationStatus, "approved"),
+          isNotNull(doctors.photoUrl)
+        )
+      )
+      .orderBy(desc(doctors.createdAt))
+      .limit(6);
+    featuredDoctors = rows
+      .filter((r): r is typeof r & { photoUrl: string } => r.photoUrl !== null);
+  } catch {
+    // DB unreachable at build / request time — render without the strip.
+  }
 
   return (
     <div className="flex flex-col bg-white dark:bg-gray-900 overflow-hidden">
@@ -137,35 +177,39 @@ export default async function HomePage() {
               </div>
             </div>
 
-            {/* Active doctors avatar strip — social proof under the search form */}
-            <div className="mt-7 flex items-center justify-center gap-3 lg:justify-start">
-              <div className="flex -space-x-2">
-                {["hero-doc-1", "hero-doc-2", "hero-doc-3", "hero-doc-4", "hero-doc-5"].map((seed) => (
-                  <div
-                    key={seed}
-                    className="relative h-9 w-9 overflow-hidden rounded-full ring-2 ring-white dark:ring-gray-900"
-                  >
-                    <Image
-                      src={`https://i.pravatar.cc/72?u=${seed}`}
-                      alt=""
-                      fill
-                      sizes="36px"
-                      className="object-cover"
-                    />
-                  </div>
-                ))}
+            {/* Active doctors avatar strip — only render if we have real verified doctors with photos */}
+            {featuredDoctors.length >= 4 && (
+              <div className="mt-7 flex items-center justify-center gap-3 lg:justify-start">
+                <div className="flex -space-x-2">
+                  {featuredDoctors.slice(0, 5).map((d) => (
+                    <div
+                      key={d.slug}
+                      className="relative h-9 w-9 overflow-hidden rounded-full ring-2 ring-white dark:ring-gray-900"
+                    >
+                      <Image
+                        src={d.photoUrl}
+                        alt={d.name}
+                        fill
+                        sizes="36px"
+                        className="object-cover"
+                      />
+                    </div>
+                  ))}
+                </div>
+                <div className="text-xs text-muted-foreground">
+                  <p className="font-bold text-foreground dark:text-white">
+                    {locale === "ar"
+                      ? `${featuredDoctors.length}+ طبيب`
+                      : `${featuredDoctors.length}+ médecins`}
+                  </p>
+                  <p>
+                    {locale === "ar"
+                      ? "بانتظار مرضاهم"
+                      : "prêts à vous recevoir"}
+                  </p>
+                </div>
               </div>
-              <div className="text-xs text-muted-foreground">
-                <p className="font-bold text-foreground dark:text-white">
-                  {locale === "ar" ? "+200 طبيب" : "+200 médecins"}
-                </p>
-                <p>
-                  {locale === "ar"
-                    ? "بانتظار مرضاهم"
-                    : "prêts à vous recevoir"}
-                </p>
-              </div>
-            </div>
+            )}
           </div>
 
           {/* Right: phone mockup */}
@@ -302,79 +346,83 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════ DOCTORS TRUST STRIP ═══════════════════════ */}
-      <section className="relative overflow-hidden bg-white dark:bg-gray-900 px-4 py-20 sm:px-6">
-        <div className="mx-auto max-w-6xl">
-          <div className="mx-auto max-w-2xl text-center">
-            <div className="inline-flex items-center gap-2 rounded-full bg-secondary dark:bg-gray-800 px-4 py-1 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
-              <Users className="h-3.5 w-3.5" />
-              {locale === "ar" ? "أطباؤنا" : "Notre réseau"}
-            </div>
-            <h2 className="mt-4 text-balance font-heading text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-              {locale === "ar"
-                ? "أطباء حقيقيون، رعاية حقيقية"
-                : "De vrais médecins, une vraie prise en charge"}
-            </h2>
-            <p className="mt-4 text-base text-muted-foreground">
-              {locale === "ar"
-                ? "أطباء مرخصون ومعتمدون عبر تونس، متاحون لاستقبالك"
-                : "Médecins agréés et vérifiés à travers la Tunisie, disponibles pour vous recevoir"}
-            </p>
-          </div>
-
-          <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-            {[
-              { name: "Dr. Sonia Trabelsi", spec: locale === "ar" ? "طب الجلد" : "Dermatologue", city: "Tunis", seed: "doc-sonia" },
-              { name: "Dr. Karim Ben Ali", spec: locale === "ar" ? "طب عام" : "Généraliste", city: "La Marsa", seed: "doc-karim" },
-              { name: "Dr. Leila Mahjoub", spec: locale === "ar" ? "طب الأطفال" : "Pédiatre", city: "Sousse", seed: "doc-leila" },
-              { name: "Dr. Mohamed Ghariani", spec: locale === "ar" ? "طب القلب" : "Cardiologue", city: "Sfax", seed: "doc-mohamed" },
-              { name: "Dr. Amina Bouaziz", spec: locale === "ar" ? "طب النساء" : "Gynécologue", city: "Ariana", seed: "doc-amina" },
-              { name: "Dr. Youssef Khelifi", spec: locale === "ar" ? "طب الأسنان" : "Dentiste", city: "Bizerte", seed: "doc-youssef" },
-            ].map((d, i) => (
-              <div
-                key={d.seed}
-                className="group flex flex-col items-center gap-3 rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-center transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-500"
-                style={{ animationDelay: `${i * 80}ms`, animationFillMode: "backwards" }}
-              >
-                <div className="relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-secondary group-hover:ring-primary/30 transition-all">
-                  <Image
-                    src={`https://i.pravatar.cc/160?u=${d.seed}`}
-                    alt={d.name}
-                    fill
-                    sizes="80px"
-                    className="object-cover"
-                  />
-                </div>
-                <div>
-                  <p className="font-heading text-sm font-bold text-foreground line-clamp-1">
-                    {d.name}
-                  </p>
-                  <p className="text-xs font-medium text-primary">{d.spec}</p>
-                  <p className="mt-0.5 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
-                    <MapPin className="h-2.5 w-2.5" strokeWidth={2.5} />
-                    {d.city}
-                  </p>
-                </div>
+      {/* ═══════════════════════ DOCTORS TRUST STRIP (real data only) ═══════════════════════ */}
+      {featuredDoctors.length >= 4 && (
+        <section className="relative overflow-hidden bg-white dark:bg-gray-900 px-4 py-20 sm:px-6">
+          <div className="mx-auto max-w-6xl">
+            <div className="mx-auto max-w-2xl text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-secondary dark:bg-gray-800 px-4 py-1 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
+                <Users className="h-3.5 w-3.5" />
+                {locale === "ar" ? "أطباؤنا" : "Notre réseau"}
               </div>
-            ))}
-          </div>
+              <h2 className="mt-4 text-balance font-heading text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+                {locale === "ar"
+                  ? "أطباء حقيقيون، رعاية حقيقية"
+                  : "De vrais médecins, une vraie prise en charge"}
+              </h2>
+              <p className="mt-4 text-base text-muted-foreground">
+                {locale === "ar"
+                  ? "أطباء مرخصون ومعتمدون عبر تونس، متاحون لاستقبالك"
+                  : "Médecins agréés et vérifiés à travers la Tunisie, disponibles pour vous recevoir"}
+              </p>
+            </div>
 
-          <div className="mt-10 flex items-center justify-center gap-6 text-xs text-muted-foreground">
-            <div className="flex items-center gap-1.5">
-              <BadgeCheck className="h-4 w-4 text-accent" strokeWidth={2.5} />
-              <span className="font-medium">
-                {locale === "ar" ? "أطباء معتمدون" : "Médecins agréés CNOM"}
-              </span>
+            <div className="mt-12 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+              {featuredDoctors.map((d, i) => {
+                const spec = SPECIALTIES.find((s) => s.id === d.specialty);
+                const specLabel = spec
+                  ? locale === "ar"
+                    ? spec.labelAr
+                    : spec.label
+                  : d.specialty;
+                return (
+                  <Link
+                    key={d.slug}
+                    href={`/medecin/${d.slug}`}
+                    className="group flex flex-col items-center gap-3 rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-center transition-all hover:-translate-y-1 hover:border-primary/40 hover:shadow-xl hover:shadow-primary/5 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-4 motion-safe:duration-500"
+                    style={{ animationDelay: `${i * 80}ms`, animationFillMode: "backwards" }}
+                  >
+                    <div className="relative h-20 w-20 overflow-hidden rounded-full ring-2 ring-secondary group-hover:ring-primary/30 transition-all">
+                      <Image
+                        src={d.photoUrl}
+                        alt={d.name}
+                        fill
+                        sizes="80px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <div>
+                      <p className="font-heading text-sm font-bold text-foreground line-clamp-1">
+                        {d.name}
+                      </p>
+                      <p className="text-xs font-medium text-primary">{specLabel}</p>
+                      <p className="mt-0.5 flex items-center justify-center gap-1 text-[10px] text-muted-foreground">
+                        <MapPin className="h-2.5 w-2.5" strokeWidth={2.5} />
+                        {d.city}
+                      </p>
+                    </div>
+                  </Link>
+                );
+              })}
             </div>
-            <div className="flex items-center gap-1.5">
-              <ShieldCheck className="h-4 w-4 text-primary" strokeWidth={2.5} />
-              <span className="font-medium">
-                {locale === "ar" ? "بيانات مؤمّنة" : "Données sécurisées"}
-              </span>
+
+            <div className="mt-10 flex items-center justify-center gap-6 text-xs text-muted-foreground">
+              <div className="flex items-center gap-1.5">
+                <BadgeCheck className="h-4 w-4 text-accent" strokeWidth={2.5} />
+                <span className="font-medium">
+                  {locale === "ar" ? "أطباء معتمدون" : "Médecins agréés CNOM"}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <ShieldCheck className="h-4 w-4 text-primary" strokeWidth={2.5} />
+                <span className="font-medium">
+                  {locale === "ar" ? "بيانات مؤمّنة" : "Données sécurisées"}
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* ═══════════════════════ SPECIALTIES ═══════════════════════ */}
       <section className="bg-secondary/50 dark:bg-gray-800 px-4 py-24 sm:px-6">
@@ -422,7 +470,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════ TESTIMONIALS ═══════════════════════ */}
+      {/* ═══════════════════════ WHY DOKTORI (platform promises, not user testimonials) ═══════════════════════ */}
       <section className="relative overflow-hidden bg-white dark:bg-gray-900 px-4 py-24 sm:px-6">
         <div
           aria-hidden
@@ -437,118 +485,92 @@ export default async function HomePage() {
           <div className="mx-auto max-w-2xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full bg-secondary dark:bg-gray-800 px-4 py-1 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
               <Heart className="h-3.5 w-3.5" />
-              {locale === "ar" ? "شهادات" : "Témoignages"}
+              {locale === "ar" ? "لماذا Doktori" : "Pourquoi Doktori"}
             </div>
             <h2 className="mt-4 text-balance font-heading text-3xl font-black tracking-tight text-foreground sm:text-4xl">
               {locale === "ar"
-                ? "ما يقوله المرضى"
-                : "Ce qu'en disent les patients"}
+                ? "ما نلتزم به تجاهك"
+                : "Nos engagements pour vous"}
             </h2>
             <p className="mt-4 text-base text-muted-foreground">
               {locale === "ar"
-                ? "تجارب حقيقية من مرضى استخدموا Doktori"
-                : "Des expériences réelles de patients qui utilisent Doktori"}
+                ? "ثلاث ضمانات تجعل Doktori تجربة موثوقة وسلسة"
+                : "Trois engagements qui font de Doktori une expérience fiable et fluide"}
             </p>
           </div>
 
           <div className="mt-14 grid gap-6 md:grid-cols-3">
             {[
               {
-                seed: "patient-amira",
-                name: "Amira K.",
-                location: "Tunis",
-                rating: 5,
-                quote:
+                key: "fast",
+                icon: Zap,
+                title:
                   locale === "ar"
-                    ? "حجزت موعدًا عند طبيب الجلد في دقيقتين. خدمة احترافية، وتذكير بالموعد عبر SMS. أنصح به بشدة."
-                    : "J'ai réservé chez la dermatologue en 2 minutes. Service pro, rappel SMS la veille. Je recommande à 100%.",
+                    ? "حجز في أقل من دقيقتين"
+                    : "Réservation en moins de 2 min",
+                desc:
+                  locale === "ar"
+                    ? "بحث ذكي، فلاتر دقيقة، وتقويم متاح في الوقت الحقيقي. لا اتصال هاتفي ولا انتظار."
+                    : "Recherche intelligente, filtres précis, agenda en temps réel. Plus d'appels, plus d'attente.",
               },
               {
-                seed: "patient-yassine",
-                name: "Yassine B.",
-                location: "Sfax",
-                rating: 5,
-                quote:
+                key: "verified",
+                icon: ShieldCheck,
+                title:
+                  locale === "ar" ? "أطباء معتمدون" : "Médecins agréés CNOM",
+                desc:
                   locale === "ar"
-                    ? "وجدت طبيبًا متخصصًا في الإستعجالي بسرعة عبر SOS Docteur. تواصل سريع وفعّال جدًا."
-                    : "Grâce à SOS Docteur, j'ai trouvé un médecin disponible en urgence. Rapide et rassurant.",
+                    ? "كل طبيب يتم التحقق من رخصته يدوياً قبل ظهوره على المنصة. صحتك تستحق الجدية."
+                    : "Chaque médecin est vérifié manuellement (numéro CNOM, diplômes) avant d'apparaître sur la plateforme.",
               },
               {
-                seed: "patient-nadia",
-                name: "Nadia M.",
-                location: "Sousse",
-                rating: 5,
-                quote:
+                key: "free",
+                icon: Heart,
+                title:
                   locale === "ar"
-                    ? "وفّر عليّ الكثير من الوقت. لا حاجة للاتصال أو الانتظار. مجاني تمامًا للمرضى."
-                    : "Énorme gain de temps. Plus besoin d'appeler, ni d'attendre. Et c'est entièrement gratuit côté patient.",
+                    ? "مجاني للمرضى دائماً"
+                    : "100% gratuit côté patient",
+                desc:
+                  locale === "ar"
+                    ? "لا رسوم تسجيل، لا عمولات، لا اشتراكات. الأطباء يدفعون اشتراكاً، ليس أنت."
+                    : "Pas de frais d'inscription, pas de commission, pas d'abonnement. Ce sont les médecins qui paient l'outil, jamais vous.",
               },
-            ].map((tt, i) => (
-              <article
-                key={tt.seed}
-                className="group relative flex h-full flex-col rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-7 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-6 motion-safe:duration-700"
-                style={{ animationDelay: `${i * 120}ms`, animationFillMode: "backwards" }}
-              >
-                <div className="flex items-center gap-3">
-                  <div className="relative h-12 w-12 overflow-hidden rounded-full ring-2 ring-secondary">
-                    <Image
-                      src={`https://i.pravatar.cc/96?u=${tt.seed}`}
-                      alt={tt.name}
-                      fill
-                      sizes="48px"
-                      className="object-cover"
-                    />
+            ].map((p, i) => {
+              const Icon = p.icon;
+              return (
+                <article
+                  key={p.key}
+                  className="group relative flex h-full flex-col rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-7 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-6 motion-safe:duration-700"
+                  style={{ animationDelay: `${i * 120}ms`, animationFillMode: "backwards" }}
+                >
+                  <div className="mb-5 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20">
+                    <Icon className="h-7 w-7" strokeWidth={2.5} />
                   </div>
-                  <div>
-                    <p className="font-heading text-sm font-bold text-foreground">{tt.name}</p>
-                    <p className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <MapPin className="h-3 w-3" strokeWidth={2.5} />
-                      {tt.location}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex items-center gap-0.5">
-                  {Array.from({ length: tt.rating }).map((_, idx) => (
-                    <Star
-                      key={idx}
-                      className="h-4 w-4 fill-[#FBBF24] text-[#FBBF24]"
-                      strokeWidth={1}
-                    />
-                  ))}
-                </div>
-
-                <p className="mt-4 text-sm leading-relaxed text-foreground dark:text-gray-200">
-                  &laquo;&nbsp;{tt.quote}&nbsp;&raquo;
-                </p>
-              </article>
-            ))}
+                  <h3 className="font-heading text-xl font-bold text-foreground">{p.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{p.desc}</p>
+                </article>
+              );
+            })}
           </div>
 
-          {/* Inline trust counters */}
-          <div className="mt-16 grid grid-cols-3 gap-4 rounded-3xl border border-border dark:border-gray-700 bg-secondary/50 dark:bg-gray-800 p-6 text-center sm:p-8">
-            <div>
-              <p className="font-heading text-3xl font-black text-primary sm:text-4xl">
-                4.8<span className="text-base text-muted-foreground">/5</span>
-              </p>
-              <p className="mt-1 text-xs font-medium text-muted-foreground">
-                {locale === "ar" ? "متوسط التقييمات" : "Note moyenne"}
-              </p>
+          {/* Pre-launch CTA — replaces fake metric counters */}
+          <div className="mt-16 flex flex-col items-center gap-4 rounded-3xl border border-primary/20 bg-secondary/50 dark:bg-gray-800 p-8 text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold text-primary">
+              <Sparkles className="h-3.5 w-3.5" strokeWidth={2.5} />
+              {locale === "ar" ? "إطلاق 2026" : "Lancement 2026"}
             </div>
-            <div className="border-x border-border dark:border-gray-700">
-              <p className="font-heading text-3xl font-black text-primary sm:text-4xl">98%</p>
-              <p className="mt-1 text-xs font-medium text-muted-foreground">
-                {locale === "ar" ? "حضور المواعيد" : "Taux de présence"}
-              </p>
-            </div>
-            <div>
-              <p className="font-heading text-3xl font-black text-primary sm:text-4xl">
-                &lt; 2min
-              </p>
-              <p className="mt-1 text-xs font-medium text-muted-foreground">
-                {locale === "ar" ? "وقت الحجز" : "Pour réserver"}
-              </p>
-            </div>
+            <p className="max-w-xl text-base text-foreground dark:text-gray-200">
+              {locale === "ar"
+                ? "نحن في طور بناء شبكتنا. كن من أوائل المرضى الذين سيكتشفون Doktori عند الإطلاق."
+                : "Nous construisons le réseau. Soyez parmi les premiers patients à découvrir Doktori dès l'ouverture."}
+            </p>
+            <Link
+              href="/inscription"
+              className="group inline-flex h-12 items-center gap-2 rounded-xl bg-primary px-6 text-sm font-bold text-white shadow-sm transition-all hover:bg-doktori-teal-dark active:scale-[0.98]"
+            >
+              {locale === "ar" ? "أنا طبيب — أنضم" : "Je suis médecin — m'inscrire"}
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" strokeWidth={3} />
+            </Link>
           </div>
         </div>
       </section>
