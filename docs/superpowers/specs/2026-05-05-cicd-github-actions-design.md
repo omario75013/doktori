@@ -46,8 +46,10 @@ Replace the broken Jenkinsfile (deleted in `8b8fdf0`) with two GitHub Actions wo
    - `pnpm install --frozen-lockfile`
    - `pnpm --filter web tsc --noEmit` (typecheck — already known to pass cleanly today)
    - `pnpm --filter web lint || true` (don't block on lint warnings; Doktori has tech debt here. Promote to hard-fail in a future iteration.)
+   - **`pnpm --filter @doktori/db db:push`** — pushes the Drizzle schema to the empty CI Postgres so integration tests can run. **Required**: vitest has no `setupFiles` or `globalSetup`, and the `__tests__/api/**/*.test.ts` suites assume a populated schema. Without this step, ~30 tests fail with `ECONNREFUSED`-then-schema-errors. Uses the same `DATABASE_URL=postgresql://doktori:doktori_dev_2026@localhost:5434/doktori` that vitest defaults to. (`db:push` is preferred over `db:generate` + apply for CI: it creates schema directly from `packages/db/src/schema.ts`, skipping the migration history — appropriate for ephemeral test DBs.)
    - `pnpm --filter web test` (vitest run — 134 tests, ~25s on local Mac, ~60-90s expected in CI)
    - `pnpm --filter web build` (Next.js build, ~10-13 min — this is the slow path; verifies the production bundle compiles end-to-end)
+     - **Build env vars**: Next.js bakes env at build time for server components. Provide placeholder values so the build doesn't fail on missing vars: `DATABASE_URL=postgresql://doktori:doktori_dev_2026@localhost:5434/doktori`, `NEXTAUTH_SECRET=ci-build-secret-not-for-prod`, `NEXTAUTH_URL=https://doktori.tn`, `MEILISEARCH_URL=http://localhost:7700`, `MEILISEARCH_KEY=ci-build`, `REDIS_URL=redis://localhost:6379`, `OPENROUTER_API_KEY=ci-build`. These are CI-only literals, not real secrets — they're fine to commit in the workflow file.
 
 **Status check**: Job result named `ci` becomes a status check on the commit and the PR.
 
@@ -61,7 +63,24 @@ Replace the broken Jenkinsfile (deleted in `8b8fdf0`) with two GitHub Actions wo
 
 **Jobs** (single job `deploy`, runs on `ubuntu-latest`):
 
-1. **Wait for CI green on the tagged commit** — Use `lewagon/wait-on-check-action` or `gh` CLI loop with timeout 30 min. If CI fails on the tag's commit, abort deploy. (This is our substitute for branch protection.)
+1. **Wait for CI green on the tagged commit** — Use the pre-installed `gh` CLI with a poll loop, timeout 30 min:
+   ```bash
+   COMMIT="${GITHUB_SHA}"
+   timeout 30m bash -c '
+     until gh run list --commit '"${COMMIT}"' --workflow ci.yml --json conclusion --jq ".[0].conclusion" | grep -qE "success"; do
+       STATUS=$(gh run list --commit '"${COMMIT}"' --workflow ci.yml --json conclusion,status --jq ".[0]")
+       echo "CI status: $STATUS"
+       if echo "$STATUS" | grep -qE "(failure|cancelled|timed_out)"; then
+         echo "CI did not pass — aborting deploy"
+         exit 1
+       fi
+       sleep 30
+     done
+   '
+   ```
+   `gh` is pre-installed on all `ubuntu-latest` runners and authenticates via the runner's `GITHUB_TOKEN` automatically. Avoid `lewagon/wait-on-check-action` — last meaningful maintenance was 2022, prefer the official CLI.
+
+   **Edge case — tag pushed on a commit that never ran CI** (detached HEAD or branch deleted before tag): the `gh run list` returns empty, and the loop times out after 30 min. Document in `contributing.md`: "always push a branch before tagging, so CI runs on the commit first."
 
 2. **Setup SSH**:
    - `webfactory/ssh-agent@v0.9.0` with `secrets.DEPLOY_SSH_PRIVATE_KEY`
