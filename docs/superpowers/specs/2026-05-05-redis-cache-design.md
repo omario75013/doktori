@@ -70,20 +70,33 @@ export async function invalidateDoctor(doctorId: string, slug: string): Promise<
 
 `invalidateDoctor` is a convenience helper that purges all three doctor-related keys at once, since most mutation handlers know both `id` and `slug`.
 
+### Serialization (Date round-trip)
+
+Drizzle returns rows containing `Date` instances (`createdAt`, `updatedAt`, etc.). Plain `JSON.stringify` → `JSON.parse` loses the `Date` type — it becomes an ISO string, and consumers calling `.getTime()` or comparing with `<` break silently.
+
+Two acceptable approaches:
+
+- **Recommended**: use [`superjson`](https://github.com/blitz-js/superjson) for serialization. Drop-in replacement for JSON, preserves `Date`, `Map`, `Set`, `BigInt`, `undefined`. Adds ~7 KB to the server bundle. Already a common dep in tRPC/Next.js stacks.
+- Alternative: hand-write a `revive` step that walks known fields and re-hydrates `new Date(value)`. Brittle — drops the moment we add a new Date column.
+
+**Decision**: superjson. The cache wrapper uses `superjson.stringify` / `superjson.parse` instead of plain JSON.
+
 ### Failure mode (hard guarantee)
 
 ```ts
+import superjson from "superjson";
+
 export async function cached<T>(key, ttl, fn) {
   try {
     const hit = await redis.get(key);
-    if (hit !== null) return JSON.parse(hit) as T;
+    if (hit !== null) return superjson.parse<T>(hit);
   } catch (e) {
     console.warn(`[cache] read fail for ${key}:`, e);
     return fn(); // fall-through, do not even attempt to write
   }
   const value = await fn();
   try {
-    await redis.setex(key, ttl, JSON.stringify(value));
+    await redis.setex(key, ttl, superjson.stringify(value));
   } catch (e) {
     console.warn(`[cache] write fail for ${key}:`, e);
   }
@@ -171,13 +184,16 @@ volumes:
 
 ### Secrets — REDIS_PASSWORD via 1Password
 
-1. Generate: `openssl rand -base64 32`
-2. Store: `op://Dartank-Infra/Doktori Prod - REDIS_PASSWORD/password`
-3. Add reference to `/opt/doktori/.env.tpl`:
+The existing `/opt/doktori/.env.tpl` follows the convention `KEY=op://Dartank-Infra/Doktori Prod/FIELD_NAME` (a single "Doktori Prod" item with multiple fields). Verified at session time against `/opt/doktori/.env.tpl` content.
+
+1. Generate **URL-safe** password: `openssl rand -hex 32` (64 hex chars).
+   - **Do not use `-base64`**: it produces `+` `/` `=` characters which break the connection URL `redis://:${REDIS_PASSWORD}@doktori-redis:6379`.
+2. Add a `REDIS_PASSWORD` field to the existing 1Password item `op://Dartank-Infra/Doktori Prod`.
+3. Add to `/opt/doktori/.env.tpl`:
    ```
-   REDIS_PASSWORD=op://Dartank-Infra/Doktori Prod - REDIS_PASSWORD/password
+   REDIS_PASSWORD=op://Dartank-Infra/Doktori Prod/REDIS_PASSWORD
    ```
-4. `op inject` will populate `/opt/doktori/.env` at deploy time, same flow as existing secrets.
+4. `op inject` populates `/opt/doktori/.env` at deploy time, same flow as `DATABASE_URL`, `NEXTAUTH_SECRET`, etc.
 5. `docker compose` reads `${REDIS_PASSWORD}` from `.env` at start.
 
 ## Tests
@@ -193,10 +209,12 @@ Using `ioredis-mock` (lighter than spinning a real container in unit tests):
 - `cached` returns same value on second call (verifies set worked)
 - `cached` falls through to `fn` if Redis read throws
 - `cached` returns `fn` value even if Redis write throws
-- `cached` respects TTL (advance time + miss)
+- `cached` round-trips a `Date` field correctly via superjson (regression guard against the JSON-only Date-loss bug)
 - `invalidate` removes a single key
 - `invalidate` removes multiple keys atomically
 - `invalidateDoctor` purges all three doctor keys
+
+**TTL note**: `ioredis-mock` does not integrate with Vitest fake timers, so the classic "advance time → key expired" pattern won't work in unit tests. Verify TTL behaviour in integration (manual `redis-cli TTL key` after a `cached` call) rather than in `cache.test.ts`. The unit test suite asserts that the wrapper *passes* the right TTL value to `setex`, not that `setex` actually expires.
 
 ### Integration verification (manual, post-deploy)
 
@@ -270,7 +288,7 @@ Spec is satisfied when:
 
 ## Implementation order (preview, full plan in writing-plans skill output)
 
-1. Add `ioredis` + `ioredis-mock` to `apps/web` dependencies
+1. Add `ioredis`, `ioredis-mock`, `superjson` to `apps/web` dependencies
 2. Write `cache.test.ts` (TDD red)
 3. Write `cache.ts` (TDD green)
 4. Add `redis` service to `docker-compose.prod.yml`
