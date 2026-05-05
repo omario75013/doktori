@@ -176,39 +176,49 @@ non-diagnostique, et meilleur RTL/arabe (utile pour patients tunisiens).
 
 ### Préreq à fournir avant session
 
-Tous les credentials sont (ou doivent être) dans le vault **Dartank-Infra** sur 1Password,
-exposés aux services via `op inject` / `op run` (voir `~/.claude/CLAUDE.md` section "Credentials — 1Password").
+**Audit credentials 2026-05-05** — résultats vérifiés contre `op://Dartank-Infra/...` :
 
-1. **#2 Paiement** : `KONNECT_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PUBLIC_KEY`, webhook secrets
-2. **#20 Cloudflare** : credentials CF + accès DNS registrar (déjà dans 1Password)
-3. **#21 Redis** : confirmation install sur prod 157.90.152.204 + `REDIS_PASSWORD` (à générer + stocker 1Password)
-4. **#9 Coach IA** : `MOONSHOT_API_KEY` (Kimi) à ajouter au vault
-5. **R2 storage** : credentials Cloudflare R2 (déjà dans 1Password — utilisés pour photo médecin et documents patient)
-6. **Décision app mobile** : React Native (Expo recommandé) ou différé ?
+| Item | Need | Status | Action |
+|---|---|---|---|
+| **#21 Redis** | `REDIS_PASSWORD` | ✅ DEPLOYED 2026-05-05, dans `/opt/doktori/.env`, à mettre en 1P (cf DOKTORI-1P-DEBT) | Cette tâche est SHIPPED |
+| **#20 Cloudflare CDN** | Compte Cloudflare | ✅ confirmé (R2_ACCOUNT_ID `07ca38ff…` est l'ID du compte CF) | Ajouter `doktori.tn` comme zone dans le compte existant |
+| **#20 Cloudflare CDN** | API Token (scope DNS:edit zone doktori.tn) | ❌ à créer | Toi, dans CF dashboard, stocker `Cloudflare - API Token (DNS edit)` |
+| **#20 Cloudflare CDN** | DNS registrar accès doktori.tn | ❌ inconnu | Toi, identifier où le domaine est hébergé pour changer NS |
+| **#2 Paiement** | `STRIPE_SECRET_KEY` | ✅ existe dans 1P (`Ecommerce Prod - STRIPE_SECRET_KEY`) — **décision : réutiliser ou créer compte Doktori dédié ?** | Toi (décision business) |
+| **#2 Paiement** | `STRIPE_PUBLISHABLE_KEY` | ✅ idem (`Ecommerce Prod - STRIPE_PUBLISHABLE_KEY`) | Idem |
+| **#2 Paiement** | `KONNECT_API_KEY` (paiement Tunisie) | ❌ à créer (compte Konnect) | Toi |
+| **#9 Coach IA** | API Kimi | ✅ via OpenRouter (`Monitor Prod - OPENROUTER_API_KEY` expose `moonshotai/kimi-k2-0905` à $0.40/M input / $2.00/M output, vérifié 2026-05-05) | **Pas besoin de `MOONSHOT_API_KEY` direct** — Doktori a déjà `OPENROUTER_API_KEY` dans son `.env` |
+| **R2 storage** | All 5 R2 fields | ✅ shared avec Ecommerce (`dartank-images` bucket, mêmes credentials) | Doktori `.env.tpl` doit référencer `op://Dartank-Infra/Ecommerce Prod - R2_*` directement |
+| **Mobile app (#1)** | Apple Developer ($99/an) | ❌ pas dans 1P | Toi |
+| **Mobile app (#1)** | Google Play Console ($25 one-time) | ❌ pas dans 1P | Toi |
 
-### Stratégie d'exécution
-- **Session 1 (4-5h)** : #2 paiement + #20 Cloudflare + #21 Redis + #25 CI/CD
-- **Session 2 (8h)** : #9 Coach IA + setup app mobile (juste scaffold Expo)
-- **Sessions 3-N (6-8 semaines)** : développement app mobile dédié
+**Décisions business pendantes** :
+- Décision app mobile : React Native (Expo recommandé) / Flutter / différé ?
+- Décision Stripe : compte partagé Ecommerce ou compte Doktori dédié ?
+
+### Stratégie d'exécution révisée (après audit du 2026-05-05)
+
+- **Session 1 (~5h)** ✅ #21 Redis SHIPPED 2026-05-05
+- **Session 2 (~3-4h)** : #25 CI/CD GitHub Actions (code-only, pas de bloqueur externe)
+- **Session 3 (~1-2h)** : DOKTORI-1P-DEBT (audit secrets, créer items 1P, refactor `.env.tpl` → `op inject`) — bootstrap requiert toi via desktop 1P (~5 min)
+- **Session 4 (~3h)** : #20 Cloudflare CDN — tu donnes accès registrar + crées API token, je fais zone setup + cache rules
+- **Session 5 (~5-7h)** : #9 Coach IA Kimi (via OpenRouter, déjà dispo) — implémentation chat + disclaimer + rate limit + spécialité matching
+- **Session 6 (3-4 jours)** : #2 Paiement Konnect + Stripe (décision compte + Konnect creds nécessaires d'abord)
+- **Sessions 7+ (6-8 semaines)** : App mobile (après décision stack)
 
 ---
 
 ## Checklist pré-Phase 2
 
-- [ ] Phase 1A entièrement déployé et stable en prod (>72h sans bug bloquant)
-  - 11 commits Lighthouse fixes shippés 2026-05-05 — compteur 72h démarre maintenant
-- [ ] Comptes Stripe/Konnect/Cloudflare/Moonshot (Kimi) créés et leurs API keys ajoutées au vault Dartank-Infra
+- [x] Phase 1A entièrement déployé et stable en prod (>72h sans bug bloquant)
+  - 13 commits Lighthouse fixes shippés 2026-05-05 — compteur 72h finit 2026-05-08 15:30
+- [ ] Comptes Stripe/Konnect/Cloudflare API token créés et keys ajoutées au vault
 - [ ] DPIA RGPD démarré (si on fait Coach IA — données de santé sensibles)
 - [ ] Décision finale app mobile prise (Expo / React Native / différé)
+- [ ] Décision Stripe : compte partagé Ecommerce ou Doktori dédié
 - [ ] Briefing collègue médecin sur scope Phase 2 (éviter conflits + revue juridique disclaimer Coach IA)
+- [ ] DOKTORI-1P-DEBT (cf `docs/phase-2-deferred-tickets.md`) — bootstrap items 1P par toi, puis refactor `.env.tpl` par moi
 
 ## Notes d'inventaire credentials
 
-Items **déjà disponibles** dans `op://Dartank-Infra/...` (à confirmer par Omar) :
-- R2 storage (photo médecins, documents patients)
-- Cloudflare account (probablement)
-
-Items **à créer / ajouter au vault** avant session Phase 2 :
-- `MOONSHOT_API_KEY` (Kimi — nouveau pour ce projet)
-- `KONNECT_API_KEY` (si pas encore là)
-- `REDIS_PASSWORD` (à générer + stocker)
+Voir `docs/phase-2-deferred-tickets.md` section "Verification of Phase 2 credential availability" pour le détail complet.
