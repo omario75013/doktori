@@ -1,0 +1,89 @@
+name: Deploy to prod
+
+on:
+  push:
+    tags:
+      - "v*"
+
+concurrency:
+  group: deploy-prod
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Wait for CI green on this commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          COMMIT="${GITHUB_SHA}"
+          echo "Waiting for CI on commit $COMMIT"
+          timeout 30m bash -c '
+            while true; do
+              RESULT=$(gh run list --commit '"$COMMIT"' --workflow ci.yml --json conclusion,status --jq ".[0]" 2>/dev/null || echo "{}")
+              CONCLUSION=$(echo "$RESULT" | jq -r ".conclusion // empty")
+              STATUS=$(echo "$RESULT" | jq -r ".status // empty")
+              echo "[$(date +%H:%M:%S)] CI status=$STATUS conclusion=$CONCLUSION"
+              if [ "$CONCLUSION" = "success" ]; then
+                echo "CI passed — proceeding"
+                exit 0
+              fi
+              if [ "$CONCLUSION" = "failure" ] || [ "$CONCLUSION" = "cancelled" ] || [ "$CONCLUSION" = "timed_out" ]; then
+                echo "CI failed — aborting deploy"
+                exit 1
+              fi
+              sleep 30
+            done
+          '
+
+      - name: Setup SSH
+        uses: webfactory/ssh-agent@v0.9.0
+        with:
+          ssh-private-key: ${{ secrets.DEPLOY_SSH_PRIVATE_KEY }}
+
+      - name: Add prod host to known_hosts
+        run: |
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${{ vars.DOKTORI_PROD_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Rsync source to prod
+        run: |
+          rsync -avz \
+            --exclude=node_modules --exclude=.next --exclude=.git \
+            --exclude='tmp-*' --exclude='bugreport-*.zip' \
+            --exclude=cookies.txt --exclude=.DS_Store \
+            --exclude=docs/lighthouse-reports \
+            --exclude=.github \
+            ./ ${{ vars.DOKTORI_PROD_USER }}@${{ vars.DOKTORI_PROD_HOST }}:/opt/doktori/
+
+      - name: Build and restart on prod
+        run: |
+          ssh ${{ vars.DOKTORI_PROD_USER }}@${{ vars.DOKTORI_PROD_HOST }} '
+            set -e
+            cd /opt/doktori
+            docker compose -f docker-compose.prod.yml build
+            docker compose -f docker-compose.prod.yml up -d
+          '
+
+      - name: Healthcheck
+        run: |
+          set -e
+          for i in $(seq 1 18); do
+            CODE=$(curl -s -o /dev/null -w "%{http_code}" https://doktori.tn/api/health || echo "000")
+            echo "[$(date +%H:%M:%S)] /api/health → $CODE (attempt $i/18)"
+            if [ "$CODE" = "200" ]; then
+              echo "Healthcheck passed"
+              exit 0
+            fi
+            sleep 5
+          done
+          echo "Healthcheck failed after 90s"
+          exit 1
+
+      - name: Tag deploy success
+        if: success()
+        run: echo "Deploy of ${{ github.ref_name }} succeeded at $(date -u)"

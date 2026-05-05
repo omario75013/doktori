@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: doktori
+          POSTGRES_PASSWORD: doktori_dev_2026
+          POSTGRES_DB: doktori
+        ports:
+          - 5434:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://doktori:doktori_dev_2026@localhost:5434/doktori
+      NEXTAUTH_SECRET: ci-build-secret-not-for-prod
+      NEXTAUTH_URL: https://doktori.tn
+      MEILISEARCH_URL: http://localhost:7700
+      MEILISEARCH_KEY: ci-build
+      REDIS_URL: redis://localhost:6379
+      OPENROUTER_API_KEY: ci-build
+      OPENROUTER_MODEL: moonshotai/kimi-k2-0905
+      AUTH_TRUST_HOST: "true"
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Typecheck (apps/web)
+        run: pnpm --filter web exec tsc --noEmit
+
+      - name: Lint (non-blocking)
+        run: pnpm --filter web lint || true
+
+      - name: Push schema to test DB
+        run: pnpm --filter @doktori/db db:push
+
+      - name: Test
+        run: pnpm --filter web test
+
+      - name: Build
+        run: pnpm --filter web build
