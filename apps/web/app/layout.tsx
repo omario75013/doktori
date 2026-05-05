@@ -10,7 +10,6 @@ import { AppBanner } from "@/components/app-banner";
 import { PatientShell } from "@/components/patient-shell";
 import { DesktopBackBar } from "@/components/desktop-back-bar";
 import { ThemeProvider } from "@/components/theme-provider";
-import { MotionProvider } from "@/components/motion-provider";
 import { Toaster } from "sonner";
 
 // Below-the-fold + non-critical: lazy-load to keep the homepage LCP path light.
@@ -119,7 +118,6 @@ export default async function RootLayout({
     >
       <body className="min-h-full flex flex-col overflow-x-hidden">
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
-          <MotionProvider>
           <NextIntlClientProvider locale={locale} messages={messages}>
             <DesktopBackBar />
             <PatientShell>
@@ -140,7 +138,6 @@ export default async function RootLayout({
             </PatientShell>
             <CookieBanner />
           </NextIntlClientProvider>
-          </MotionProvider>
         </ThemeProvider>
       </body>
     </html>
