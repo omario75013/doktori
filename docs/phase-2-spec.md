@@ -139,17 +139,22 @@
 
 ### Item #9 — Coach santé IA conversationnel
 
-**Bloqueur** : Compte Anthropic API + budget + cadrage juridique santé.
+**Bloqueur** : Compte Moonshot AI + cadrage juridique santé.
+
+**Décision modèle (2026-05-05)** : Kimi (dernière version, Moonshot AI) au lieu de Claude Haiku.
+Raison : coût/token significativement plus bas, qualité suffisante pour orientation
+non-diagnostique, et meilleur RTL/arabe (utile pour patients tunisiens).
 
 **Scope V1 (limité) — Évaluation symptômes basique** :
 - Page `/coach-ia` (gated par feature flag)
-- Chat interface avec Claude Haiku (rapide + bon marché)
+- Chat interface backed par l'API Kimi (Moonshot AI)
 - Prompt système strict :
   - "Tu es un assistant d'orientation médicale, NON un médecin"
   - "Toujours conseiller de consulter un professionnel pour diagnostic"
   - "Refuse les questions sur dosage médicament, urgences vitales (rediriger 190/198)"
 - Limite 10 messages/jour/patient
 - Disclaimer obligatoire avant chaque session
+- Sortie structurée : symptômes → spécialité suggérée + lien `/recherche?specialty=…`
 
 **Risques juridiques** :
 - Loi tunisienne pas encore claire sur AI médical
@@ -159,8 +164,8 @@
 **Effort** : 5-7h MVP.
 
 **Préreq** :
-- ANTHROPIC_API_KEY
-- Budget $50/mois minimum
+- MOONSHOT_API_KEY (Kimi)
+- Budget mensuel à cadrer (Kimi nettement moins cher que Claude Haiku)
 - Validation juridique du prompt + disclaimer
 
 ---
@@ -168,11 +173,16 @@
 ## Plan d'exécution Phase 2
 
 ### Préreq à fournir avant session
-1. KONNECT_API_KEY + STRIPE_SECRET_KEY (#2)
-2. Accès compte Cloudflare + DNS registrar (#20)
-3. Confirmation install Redis sur prod (#21)
-4. ANTHROPIC_API_KEY si on fait Coach IA (#9)
-5. Décision app mobile : React Native ou différé ?
+
+Tous les credentials sont (ou doivent être) dans le vault **Dartank-Infra** sur 1Password,
+exposés aux services via `op inject` / `op run` (voir `~/.claude/CLAUDE.md` section "Credentials — 1Password").
+
+1. **#2 Paiement** : `KONNECT_API_KEY`, `STRIPE_SECRET_KEY`, `STRIPE_PUBLIC_KEY`, webhook secrets
+2. **#20 Cloudflare** : credentials CF + accès DNS registrar (déjà dans 1Password)
+3. **#21 Redis** : confirmation install sur prod 157.90.152.204 + `REDIS_PASSWORD` (à générer + stocker 1Password)
+4. **#9 Coach IA** : `MOONSHOT_API_KEY` (Kimi) à ajouter au vault
+5. **R2 storage** : credentials Cloudflare R2 (déjà dans 1Password — utilisés pour photo médecin et documents patient)
+6. **Décision app mobile** : React Native (Expo recommandé) ou différé ?
 
 ### Stratégie d'exécution
 - **Session 1 (4-5h)** : #2 paiement + #20 Cloudflare + #21 Redis + #25 CI/CD
@@ -184,7 +194,19 @@
 ## Checklist pré-Phase 2
 
 - [ ] Phase 1A entièrement déployé et stable en prod (>72h sans bug bloquant)
-- [ ] Comptes Stripe/Konnect/CF/Anthropic créés
+  - 11 commits Lighthouse fixes shippés 2026-05-05 — compteur 72h démarre maintenant
+- [ ] Comptes Stripe/Konnect/Cloudflare/Moonshot (Kimi) créés et leurs API keys ajoutées au vault Dartank-Infra
 - [ ] DPIA RGPD démarré (si on fait Coach IA — données de santé sensibles)
-- [ ] Décision finale app mobile prise
-- [ ] Briefing collègue médecin sur scope Phase 2 (éviter conflits)
+- [ ] Décision finale app mobile prise (Expo / React Native / différé)
+- [ ] Briefing collègue médecin sur scope Phase 2 (éviter conflits + revue juridique disclaimer Coach IA)
+
+## Notes d'inventaire credentials
+
+Items **déjà disponibles** dans `op://Dartank-Infra/...` (à confirmer par Omar) :
+- R2 storage (photo médecins, documents patients)
+- Cloudflare account (probablement)
+
+Items **à créer / ajouter au vault** avant session Phase 2 :
+- `MOONSHOT_API_KEY` (Kimi — nouveau pour ce projet)
+- `KONNECT_API_KEY` (si pas encore là)
+- `REDIS_PASSWORD` (à générer + stocker)
