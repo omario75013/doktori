@@ -19,6 +19,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return {
     title: `Avis sur ${doctor.name} — ${spec?.label} | Doktori`,
     description: `Consultez les avis vérifiés de patients sur ${doctor.name}, ${spec?.label} à ${doctor.city}.`,
+    alternates: { canonical: `https://doktori.tn/medecin/${slug}/avis` },
   };
 }
 
@@ -31,7 +32,7 @@ export default async function DoctorReviewsPage({ params }: Props) {
   const city = CITIES.find((c) => c.id === doctor.city);
 
   return (
-    <div className="min-h-screen bg-secondary">
+    <main className="min-h-screen bg-secondary">
       <div className="max-w-2xl mx-auto px-4 py-8">
         {/* Back link */}
         <div className="mb-6">
@@ -100,6 +101,6 @@ export default async function DoctorReviewsPage({ params }: Props) {
           <ReviewsList doctorId={doctor.id} />
         </div>
       </div>
-    </div>
+    </main>
   );
 }
