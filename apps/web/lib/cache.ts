@@ -49,11 +49,29 @@ if (process.env.NODE_ENV !== "production") globalForRedis.__doktoriRedis = redis
 
 const debug = process.env.CACHE_DEBUG === "1";
 
+// Treat the client as usable only when fully connected. ioredis goes through
+// states: wait → connecting → connect → ready → (reconnecting) → end.
+// Only `ready` accepts commands; anything else with enableOfflineQueue:false
+// throws "Stream isn't writeable". This is especially relevant under Next.js
+// lazy module loading, where new Redis() is constructed at first request and
+// the TCP handshake races against that same request's get().
+//
+// `status === undefined` means we're under ioredis-mock in tests, which has
+// no status property — the mock is always ready synchronously, so accept it.
+function isReady(): boolean {
+  return redis.status === undefined || redis.status === "ready";
+}
+
 export async function cached<T>(
   key: string,
   ttlSeconds: number,
   fn: () => Promise<T>,
 ): Promise<T> {
+  if (!isReady()) {
+    if (debug) console.log(`[cache] SKIP key=${key} status=${redis.status}`);
+    return fn();
+  }
+
   try {
     const hit = await redis.get(key);
     if (hit !== null) {
@@ -77,6 +95,7 @@ export async function cached<T>(
 
 export async function invalidate(...keys: string[]): Promise<void> {
   if (keys.length === 0) return;
+  if (!isReady()) return; // nothing to purge if cache is empty / disconnected
   try {
     await redis.del(...keys);
   } catch (e) {
