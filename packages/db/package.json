@@ -8,6 +8,7 @@
     "db:generate": "drizzle-kit generate",
     "db:seed": "tsx src/seed.ts",
     "seed:demo": "tsx src/seed-demo-data.ts",
+    "seed:test-patients": "tsx src/seed-test-patients.ts",
     "db:geocode": "tsx src/geocode-doctors.ts",
     "db:studio": "drizzle-kit studio"
   },
