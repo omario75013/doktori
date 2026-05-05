@@ -164,9 +164,11 @@ non-diagnostique, et meilleur RTL/arabe (utile pour patients tunisiens).
 **Effort** : 5-7h MVP.
 
 **Préreq** :
-- MOONSHOT_API_KEY (Kimi)
-- Budget mensuel à cadrer (Kimi nettement moins cher que Claude Haiku)
+- MOONSHOT_API_KEY (Kimi via api.moonshot.cn ou OpenRouter)
+- Budget MVP estimé **$10-30/mois** pour ~1k patients actifs (Kimi K2 ≈ $0.15/M input + $2.5/M output, soit ~3x moins cher que Claude Haiku 4.5)
 - Validation juridique du prompt + disclaimer
+
+**Note infra** : weights Kimi K2 sont open-source (Apache) — option self-host envisageable si trafic explose et que API coûte > €500/mois (Hetzner GPU box). Pas en MVP.
 
 ---
 
