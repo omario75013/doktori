@@ -19,6 +19,7 @@ import {
 } from "@doktori/db";
 import { desc, eq, sql, and, asc } from "drizzle-orm";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
+import { cached } from "@/lib/cache";
 import {
   ArrowRight,
   BadgeCheck,
@@ -135,7 +136,7 @@ export async function generateMetadata({
   const { slug } = await params;
   const locale = await getLocale();
   const t = await getTranslations({ locale, namespace: "meta" });
-  const doctor = await getDoctorBySlug(slug);
+  const doctor = await cached(`doctor:slug:${slug}`, 300, () => getDoctorBySlug(slug));
   if (!doctor) return { title: t("doctorNotFound") };
   const specialtyLabel = getSpecialtyLabel(doctor.specialty);
   const cityLabel = getCityLabel(doctor.city);
@@ -170,11 +171,11 @@ export default async function DoctorProfilePage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = await params;
-  const doctor = await getDoctorBySlug(slug);
+  const doctor = await cached(`doctor:slug:${slug}`, 300, () => getDoctorBySlug(slug));
   if (!doctor) notFound();
 
-  const schedule = await getDoctorSchedule(doctor.id);
-  const appointmentTypesList = await getDoctorAppointmentTypes(doctor.id);
+  const schedule = await cached(`doctor:schedule:${doctor.id}`, 3600, () => getDoctorSchedule(doctor.id));
+  const appointmentTypesList = await cached(`doctor:apptTypes:${doctor.id}`, 3600, () => getDoctorAppointmentTypes(doctor.id));
   const specialtyLabel = getSpecialtyLabel(doctor.specialty);
   const cityLabel = getCityLabel(doctor.city);
 
