@@ -1,0 +1,600 @@
+openapi: 3.1.0
+info:
+  title: Doktori Public API
+  version: 1.0.0
+  summary: Read-only directory of verified Tunisian doctors
+  description: |
+    Public API for the Doktori medical-booking platform. Provides read-only access to
+    the doctor directory, specialty/city catalogs, and per-doctor slot availability.
+
+    All endpoints require authentication via an API key (prefix `dok_`) sent as a
+    Bearer token in the `Authorization` header. Each key has scopes (e.g.
+    `read:doctors`, `read:specialties`, `read:cities`, `read:availability`).
+
+    Default rate limit: **60 requests/minute** per key. Responses include
+    `X-RateLimit-Limit`, `X-RateLimit-Remaining`, and `X-RateLimit-Reset` headers.
+
+    Only public data is returned: no patient data, no doctor email/phone.
+  contact:
+    name: Doktori API support
+    email: contact@doktori.tn
+    url: https://doktori.tn/api-docs
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: https://doktori.tn/legal/terms
+
+servers:
+  - url: https://doktori.tn/api/v1/public
+    description: Production
+
+security:
+  - bearerAuth: []
+
+tags:
+  - name: Doctors
+    description: Verified, active, public doctor profiles
+  - name: Catalog
+    description: Reference data (specialties, cities)
+  - name: Availability
+    description: Open booking slots per doctor
+
+x-rate-limit:
+  default: 60
+  unit: per-minute
+  scope: per-api-key
+  headers:
+    - X-RateLimit-Limit
+    - X-RateLimit-Remaining
+    - X-RateLimit-Reset
+
+paths:
+  /doctors:
+    get:
+      tags: [Doctors]
+      summary: List doctors
+      description: |
+        Returns a paginated list of active, visible, approved doctors.
+        Supports filtering by city, specialty, and free-text search on name/bio.
+      operationId: listDoctors
+      security:
+        - bearerAuth: []
+      x-required-scope: read:doctors
+      x-rate-limit:
+        default: 60
+        unit: per-minute
+      parameters:
+        - in: query
+          name: city
+          description: Filter by city (case-insensitive exact match on city slug, e.g. `tunis`)
+          required: false
+          schema:
+            type: string
+          example: tunis
+        - in: query
+          name: specialty
+          description: Filter by specialty (case-insensitive exact match on specialty slug, e.g. `generaliste`)
+          required: false
+          schema:
+            type: string
+          example: generaliste
+        - in: query
+          name: q
+          description: Free-text search on doctor name and bio
+          required: false
+          schema:
+            type: string
+          example: "ben ali"
+        - in: query
+          name: limit
+          description: Number of items to return (1-100)
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+        - in: query
+          name: offset
+          description: Number of items to skip
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        "200":
+          description: List of doctors with pagination metadata
+          headers:
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [doctors, pagination]
+                properties:
+                  doctors:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/DoctorSummary"
+                  pagination:
+                    $ref: "#/components/schemas/Pagination"
+              example:
+                doctors:
+                  - slug: dr-ben-ali-generaliste-tunis
+                    name: Dr. Mohamed Ben Ali
+                    specialty: generaliste
+                    city: tunis
+                    address: "12 Avenue Habib Bourguiba, Tunis"
+                    bio: "Médecin généraliste depuis 15 ans..."
+                    photoUrl: "https://doktori.tn/uploads/doctors/ben-ali.jpg"
+                    languages: ["fr", "ar", "en"]
+                    yearsOfExperience: 15
+                    consultationFeeTnd: 50.0
+                    teleconsultFeeTnd: 40.0
+                    consultationMode: "both"
+                    averageRating: 4.7
+                    reviewCount: 128
+                pagination:
+                  total: 1
+                  limit: 20
+                  offset: 0
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /doctors/{slug}:
+    get:
+      tags: [Doctors]
+      summary: Get a single doctor
+      description: Public profile of a doctor by slug.
+      operationId: getDoctor
+      security:
+        - bearerAuth: []
+      x-required-scope: read:doctors
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          description: Doctor slug (URL-safe identifier)
+          schema:
+            type: string
+          example: dr-ben-ali-generaliste-tunis
+      responses:
+        "200":
+          description: Doctor profile (extended fields)
+          headers:
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [doctor]
+                properties:
+                  doctor:
+                    $ref: "#/components/schemas/DoctorDetail"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /specialties:
+    get:
+      tags: [Catalog]
+      summary: List specialties
+      description: Catalog of active medical specialties (FR + AR labels).
+      operationId: listSpecialties
+      security:
+        - bearerAuth: []
+      x-required-scope: read:specialties
+      responses:
+        "200":
+          description: List of specialties, ordered by displayOrder then label
+          headers:
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [specialties]
+                properties:
+                  specialties:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/Specialty"
+              example:
+                specialties:
+                  - id: generaliste
+                    label: "Médecin généraliste"
+                    labelAr: "طبيب عام"
+                    icon: "stethoscope"
+                  - id: cardiologue
+                    label: "Cardiologue"
+                    labelAr: "طبيب قلب"
+                    icon: "heart"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /cities:
+    get:
+      tags: [Catalog]
+      summary: List cities
+      description: Catalog of active Tunisian cities (FR + AR labels + GPS coordinates).
+      operationId: listCities
+      security:
+        - bearerAuth: []
+      x-required-scope: read:cities
+      responses:
+        "200":
+          description: List of cities, ordered by displayOrder then label
+          headers:
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [cities]
+                properties:
+                  cities:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/City"
+              example:
+                cities:
+                  - id: tunis
+                    label: "Tunis"
+                    labelAr: "تونس"
+                    latitude: 36.8065
+                    longitude: 10.1815
+                  - id: sfax
+                    label: "Sfax"
+                    labelAr: "صفاقس"
+                    latitude: 34.7406
+                    longitude: 10.7603
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /availability/{slug}:
+    get:
+      tags: [Availability]
+      summary: Get a doctor's available slots
+      description: |
+        Returns open booking slots for a verified doctor over a date range.
+        Maximum window is 14 days.
+      operationId: getAvailability
+      security:
+        - bearerAuth: []
+      x-required-scope: read:availability
+      parameters:
+        - in: path
+          name: slug
+          required: true
+          description: Doctor slug
+          schema:
+            type: string
+          example: dr-ben-ali-generaliste-tunis
+        - in: query
+          name: from
+          description: Starting date (YYYY-MM-DD). Defaults to today.
+          required: false
+          schema:
+            type: string
+            format: date
+          example: "2026-05-04"
+        - in: query
+          name: days
+          description: Number of days to return (1-14)
+          required: false
+          schema:
+            type: integer
+            default: 7
+            minimum: 1
+            maximum: 14
+      responses:
+        "200":
+          description: Day-by-day slot availability
+          headers:
+            X-RateLimit-Limit:
+              $ref: "#/components/headers/XRateLimitLimit"
+            X-RateLimit-Remaining:
+              $ref: "#/components/headers/XRateLimitRemaining"
+            X-RateLimit-Reset:
+              $ref: "#/components/headers/XRateLimitReset"
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [slug, days]
+                properties:
+                  slug:
+                    type: string
+                  days:
+                    type: array
+                    items:
+                      $ref: "#/components/schemas/AvailabilityDay"
+              example:
+                slug: dr-ben-ali-generaliste-tunis
+                days:
+                  - date: "2026-05-04"
+                    slots:
+                      - startTime: "09:00"
+                        endTime: "09:30"
+                        practiceId: "prc_01HXYZ..."
+                      - startTime: "09:30"
+                        endTime: "10:00"
+                        practiceId: "prc_01HXYZ..."
+                  - date: "2026-05-05"
+                    slots: []
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: dok_*
+      description: |
+        API key passed as `Authorization: Bearer dok_...`. Keys start with the
+        `dok_` prefix. Request a key by emailing contact@doktori.tn.
+
+  headers:
+    XRateLimitLimit:
+      description: Maximum number of requests allowed in the current window
+      schema:
+        type: integer
+        example: 60
+    XRateLimitRemaining:
+      description: Number of requests remaining in the current window
+      schema:
+        type: integer
+        example: 59
+    XRateLimitReset:
+      description: Unix timestamp (seconds) when the current window resets
+      schema:
+        type: integer
+        example: 1735689660
+
+  responses:
+    Unauthorized:
+      description: Missing, invalid, or expired API key
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "Missing or invalid API key"
+    Forbidden:
+      description: API key does not have the required scope
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "Missing required scope: read:doctors"
+    NotFound:
+      description: Resource not found (e.g. unknown slug)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "Doctor not found"
+    RateLimited:
+      description: Rate limit exceeded
+      headers:
+        X-RateLimit-Limit:
+          $ref: "#/components/headers/XRateLimitLimit"
+        X-RateLimit-Remaining:
+          $ref: "#/components/headers/XRateLimitRemaining"
+        X-RateLimit-Reset:
+          $ref: "#/components/headers/XRateLimitReset"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"
+          example:
+            error: "Rate limit exceeded"
+
+  schemas:
+    Error:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: string
+          description: Human-readable error message
+
+    Pagination:
+      type: object
+      required: [total, limit, offset]
+      properties:
+        total:
+          type: integer
+          description: Total number of records matching the filter
+        limit:
+          type: integer
+          description: Page size used for this response
+        offset:
+          type: integer
+          description: Offset used for this response
+
+    DoctorSummary:
+      type: object
+      description: Compact doctor record returned by list endpoints
+      required:
+        - slug
+        - name
+        - specialty
+        - city
+      properties:
+        slug:
+          type: string
+          example: dr-ben-ali-generaliste-tunis
+        name:
+          type: string
+          example: "Dr. Mohamed Ben Ali"
+        specialty:
+          type: string
+          example: generaliste
+        city:
+          type: string
+          example: tunis
+        address:
+          type: [string, "null"]
+          example: "12 Avenue Habib Bourguiba, Tunis"
+        bio:
+          type: [string, "null"]
+        photoUrl:
+          type: [string, "null"]
+          format: uri
+        languages:
+          type: [array, "null"]
+          items:
+            type: string
+          example: ["fr", "ar", "en"]
+        yearsOfExperience:
+          type: [integer, "null"]
+        consultationFeeTnd:
+          type: [number, "null"]
+          description: Consultation fee in Tunisian dinars (TND)
+        teleconsultFeeTnd:
+          type: [number, "null"]
+          description: Teleconsultation fee in Tunisian dinars (TND)
+        consultationMode:
+          type: [string, "null"]
+          enum: ["in_person", "teleconsult", "both", null]
+        averageRating:
+          type: [number, "null"]
+          minimum: 0
+          maximum: 5
+        reviewCount:
+          type: [integer, "null"]
+
+    DoctorDetail:
+      allOf:
+        - $ref: "#/components/schemas/DoctorSummary"
+        - type: object
+          properties:
+            educations:
+              type: [array, "null"]
+              items:
+                type: object
+                additionalProperties: true
+            experiences:
+              type: [array, "null"]
+              items:
+                type: object
+                additionalProperties: true
+            expertise:
+              type: [array, "null"]
+              items:
+                type: string
+
+    Specialty:
+      type: object
+      required: [id, label]
+      properties:
+        id:
+          type: string
+          example: cardiologue
+        label:
+          type: string
+          example: "Cardiologue"
+        labelAr:
+          type: [string, "null"]
+          example: "طبيب قلب"
+        icon:
+          type: [string, "null"]
+          example: "heart"
+
+    City:
+      type: object
+      required: [id, label]
+      properties:
+        id:
+          type: string
+          example: tunis
+        label:
+          type: string
+          example: "Tunis"
+        labelAr:
+          type: [string, "null"]
+          example: "تونس"
+        latitude:
+          type: [number, "null"]
+          example: 36.8065
+        longitude:
+          type: [number, "null"]
+          example: 10.1815
+
+    AvailabilitySlot:
+      type: object
+      required: [startTime, endTime, practiceId]
+      properties:
+        startTime:
+          type: string
+          description: Slot start time (HH:MM, doctor-local)
+          example: "09:00"
+        endTime:
+          type: string
+          description: Slot end time (HH:MM, doctor-local)
+          example: "09:30"
+        practiceId:
+          type: string
+          description: Identifier of the practice (cabinet) where the slot is offered
+          example: "prc_01HXYZ..."
+
+    AvailabilityDay:
+      type: object
+      required: [date, slots]
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2026-05-04"
+        slots:
+          type: array
+          items:
+            $ref: "#/components/schemas/AvailabilitySlot"

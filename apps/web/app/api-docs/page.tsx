@@ -66,6 +66,16 @@ export default function ApiDocsPage() {
           Intégrez l&apos;annuaire Doktori dans votre application : médecins, spécialités, villes,
           disponibilités. Authentification par clé API, rate-limit par défaut 60 req/min.
         </p>
+        <p className="mt-4 text-sm">
+          <a
+            href="/openapi.yaml"
+            download
+            className="inline-flex items-center gap-2 rounded-lg border border-teal-600 bg-teal-50 px-4 py-2 font-semibold text-teal-700 hover:bg-teal-100"
+          >
+            <span aria-hidden>↓</span>
+            Download OpenAPI 3.1 spec
+          </a>
+        </p>
       </div>
 
       <section className="mb-10">
