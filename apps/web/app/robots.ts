@@ -6,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: "/",
-        disallow: ["/dashboard", "/agenda", "/rendez-vous", "/profil", "/api", "/secretaires", "/patients", "/stats", "/motifs", "/parrainage", "/conventions", "/abonnement", "/domicile", "/sos"],
+        disallow: ["/dashboard", "/agenda", "/rendez-vous", "/profil", "/api/", "/secretaires", "/patients", "/stats", "/motifs", "/parrainage", "/conventions", "/abonnement", "/domicile", "/sos"],
       },
     ],
     sitemap: "https://doktori.tn/sitemap.xml",

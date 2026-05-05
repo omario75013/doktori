@@ -6,6 +6,20 @@ export const metadata: Metadata = {
   description:
     "Documentation de l'API publique Doktori en lecture seule : médecins, spécialités, villes, disponibilités.",
   robots: { index: true, follow: true },
+  alternates: { canonical: "https://doktori.tn/api-docs" },
+  openGraph: {
+    title: "API publique Doktori — Documentation",
+    description:
+      "Endpoints REST en lecture seule : médecins, spécialités, villes, disponibilités. Authentification par bearer token.",
+    url: "https://doktori.tn/api-docs",
+    type: "article",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "API publique Doktori — Documentation",
+    description:
+      "Endpoints REST en lecture seule : médecins, spécialités, villes, disponibilités.",
+  },
 };
 
 const ENDPOINTS: Array<{

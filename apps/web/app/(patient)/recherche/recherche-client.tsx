@@ -772,10 +772,10 @@ function RechercheInner() {
               </div>
             )}
 
-            {/* Loading skeletons — reserved height prevents CLS */}
+            {/* Loading skeletons — reserve height equal to typical 20-result page to prevent CLS */}
             {loading && results.length === 0 && (
               <div className="grid gap-3" aria-hidden>
-                {Array.from({ length: 4 }).map((_, i) => (
+                {Array.from({ length: 20 }).map((_, i) => (
                   <div
                     key={i}
                     className="flex items-start gap-4 rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-5"
@@ -791,35 +791,37 @@ function RechercheInner() {
               </div>
             )}
 
-            {/* Mobile map/list toggle */}
-            {results.length > 0 && (
-              <div className="mb-4 flex items-center gap-2 lg:hidden">
-                <button
-                  type="button"
-                  onClick={() => setShowMap(false)}
-                  className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-xs font-bold transition-all ${
-                    !showMap
-                      ? "border-primary bg-primary text-white"
-                      : "border-border bg-white text-foreground hover:border-primary/40"
-                  }`}
-                >
-                  <List className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  Liste
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setShowMap(true)}
-                  className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-xs font-bold transition-all ${
-                    showMap
-                      ? "border-primary bg-primary text-white"
-                      : "border-border bg-white text-foreground hover:border-primary/40"
-                  }`}
-                >
-                  <Map className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  Carte ({results.length})
-                </button>
-              </div>
-            )}
+            {/* Mobile map/list toggle — reserve fixed slot to avoid CLS when results arrive */}
+            <div className="mb-4 flex h-9 items-center gap-2 lg:hidden">
+              {results.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => setShowMap(false)}
+                    className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-xs font-bold transition-all ${
+                      !showMap
+                        ? "border-primary bg-primary text-white"
+                        : "border-border bg-white text-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    <List className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    Liste
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowMap(true)}
+                    className={`inline-flex items-center gap-1.5 h-9 px-3 rounded-xl border text-xs font-bold transition-all ${
+                      showMap
+                        ? "border-primary bg-primary text-white"
+                        : "border-border bg-white text-foreground hover:border-primary/40"
+                    }`}
+                  >
+                    <Map className="h-3.5 w-3.5" strokeWidth={2.5} />
+                    Carte ({results.length})
+                  </button>
+                </>
+              )}
+            </div>
 
             {/* Mobile map view */}
             {showMap && results.length > 0 && (
