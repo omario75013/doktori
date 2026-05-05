@@ -73,9 +73,12 @@
   --font-sans: "Noto Sans", system-ui, -apple-system, sans-serif;
   --font-heading: "Figtree", "Noto Sans", system-ui, sans-serif;
 
-  /* Core brand — medical teal #0891B2, health green #22C55E */
+  /* Core brand — medical teal #0891B2, health green #22C55E
+     --primary uses the AA-passing variant (#0E7490, 5.36:1 vs white) so
+     small white text on bg-primary buttons meets WCAG 2.2 AA. The brand
+     teal (#0891B2) is kept as --doktori-teal for decorative, non-text uses. */
   --doktori-teal: #0891B2;
-  --doktori-teal-dark: #0E7490;
+  --doktori-teal-dark: #155E75;
   --doktori-teal-light: #22D3EE;
   --doktori-green: #22C55E;
   --doktori-green-dark: #16A34A;
@@ -93,7 +96,7 @@
   --card-foreground: #134E4A;
   --popover: #FFFFFF;
   --popover-foreground: #134E4A;
-  --primary: #0891B2;
+  --primary: #0E7490;
   --primary-foreground: #FFFFFF;
   --secondary: #F0FDFA;
   --secondary-foreground: #134E4A;
@@ -104,7 +107,7 @@
   --destructive: #DC2626;
   --border: #E6F4F1;
   --input: #E6F4F1;
-  --ring: #0891B2;
+  --ring: #0E7490;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);

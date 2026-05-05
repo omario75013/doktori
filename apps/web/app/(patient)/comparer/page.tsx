@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { db, doctors, reviews } from "@doktori/db";
@@ -7,6 +8,26 @@ import { StarRating } from "@/components/star-rating";
 import { ArrowRight, MapPin, Stethoscope, GraduationCap, Languages, Coins } from "lucide-react";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "Comparateur de médecins | Doktori",
+  description:
+    "Comparez jusqu'à 3 médecins côte à côte : tarifs, expérience, langues, avis patients. Trouvez le bon spécialiste pour votre besoin.",
+  alternates: { canonical: "https://doktori.tn/comparer" },
+  openGraph: {
+    title: "Comparateur de médecins — Doktori",
+    description:
+      "Comparez jusqu'à 3 médecins côte à côte : tarifs, expérience, langues, avis patients.",
+    url: "https://doktori.tn/comparer",
+    siteName: "Doktori",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Comparateur de médecins — Doktori",
+    description: "Comparez jusqu'à 3 médecins côte à côte sur tous les critères.",
+  },
+};
 
 type DoctorComparison = {
   id: string;
