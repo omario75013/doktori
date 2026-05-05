@@ -1,10 +1,12 @@
 # Doktori Phase 2 #21 — Redis cache
 
 **Date** : 2026-05-05
-**Status** : Spec validated, awaiting review and implementation plan
+**Status** : Implemented and deployed (commit `ede2e01`, prod containers healthy, chaos-tested)
 **Author** : Omar (brainstorm with Claude)
 **Phase** : Phase 2 Session 1 (Pass A — code-only items)
 **Effort estimate** : 4–5h
+**Actual effort** : ~7h (including 2 prod hotfixes for ioredis lazyConnect / status-not-ready edge cases)
+**Post-deploy Lighthouse** (2026-05-05 with warm cache): perf 0.62, TTFB 100ms, FCP 2.4s, LCP 4.6s on `/medecin/dr-mohamed-gharbi-pediatre-ariana`
 
 ## Goal
 
