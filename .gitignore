@@ -13,5 +13,6 @@ dist/
 .swarm/
 .mcp.json
 claude-flow.config.json
+docs/lighthouse-reports/*/
 apps/mobile/.env
 apps/web/.env.test
