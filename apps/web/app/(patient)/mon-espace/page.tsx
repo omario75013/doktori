@@ -464,7 +464,7 @@ export default function PatientDashboardPage() {
             </p>
             <div className="flex items-center gap-2 shrink-0">
               <a
-                href="/mon-espace/notifications"
+                href="/parametres/notifications"
                 className="text-xs font-bold text-white bg-[#0891B2] hover:bg-[#0e7490] rounded-xl px-3 py-1.5 transition-colors"
               >
                 Activer
