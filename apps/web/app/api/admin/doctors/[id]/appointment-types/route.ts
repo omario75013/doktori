@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
 import { db, appointmentTypes } from "@doktori/db";
 import { eq, asc } from "drizzle-orm";
+import { invalidate } from "@/lib/cache";
 
 export async function GET(
   _req: Request,
@@ -87,6 +88,8 @@ export async function POST(
       ip: meta.ip,
       userAgent: meta.userAgent,
     });
+
+    await invalidate(`doctor:apptTypes:${id}`);
 
     return NextResponse.json({ ok: true, appointmentType: newType }, { status: 201 });
   } catch (e) {

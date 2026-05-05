@@ -3,6 +3,7 @@ import { db, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { uploadToR2 } from "@/lib/r2";
+import { invalidateDoctor } from "@/lib/cache";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES: Record<string, string> = {
@@ -59,7 +60,7 @@ export async function POST(req: Request) {
   }
 
   const [existing] = await db
-    .select({ id: doctors.id })
+    .select({ id: doctors.id, slug: doctors.slug })
     .from(doctors)
     .where(eq(doctors.id, doctorId))
     .limit(1);
@@ -77,6 +78,8 @@ export async function POST(req: Request) {
       .update(doctors)
       .set({ photoUrl, updatedAt: new Date() })
       .where(eq(doctors.id, doctorId));
+
+    await invalidateDoctor(doctorId, existing.slug);
 
     return NextResponse.json({ ok: true, photoUrl });
   } catch (e) {

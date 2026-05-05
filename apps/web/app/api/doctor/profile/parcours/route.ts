@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { auth } from "@/lib/auth";
 import { db, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
+import { invalidateDoctor } from "@/lib/cache";
 
 type Body = {
   educations?: Array<{ degree: string; institution: string; year: number }>;
@@ -67,7 +68,7 @@ export async function POST(req: Request) {
         ? Math.max(0, Math.min(70, Math.round(Number(body.yearsOfExperience))))
         : null;
 
-  await db
+  const [updated] = await db
     .update(doctors)
     .set({
       educations,
@@ -77,7 +78,12 @@ export async function POST(req: Request) {
       yearsOfExperience: years,
       updatedAt: new Date(),
     })
-    .where(eq(doctors.id, session.user.id));
+    .where(eq(doctors.id, session.user.id))
+    .returning({ slug: doctors.slug });
+
+  if (updated?.slug) {
+    await invalidateDoctor(session.user.id, updated.slug);
+  }
 
   return NextResponse.json({ ok: true });
 }

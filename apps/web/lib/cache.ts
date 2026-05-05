@@ -1,4 +1,27 @@
 import "server-only";
+/**
+ * Cached queries (read sites):
+ * - apps/web/app/(patient)/medecin/[slug]/page.tsx
+ *   - doctor:slug:{slug}      (TTL 5min)  via getDoctorBySlug
+ *   - doctor:schedule:{id}    (TTL 1h)    via getDoctorSchedule
+ *   - doctor:apptTypes:{id}   (TTL 1h)    via getDoctorAppointmentTypes
+ *
+ * Invalidation call sites (mutation sites):
+ * Schedule:
+ * - apps/web/app/api/schedules/route.ts (PUT)
+ * Doctor profile (slug + schedule + apptTypes):
+ * - apps/web/app/api/doctor/profile/route.ts (PATCH — name/bio/fees/mode/languages/expertise/yoe)
+ * - apps/web/app/api/doctor/profile/parcours/route.ts (POST — educations/experiences/languages/expertise/yoe)
+ * - apps/web/app/api/doctor/teleconsult-settings/route.ts (PUT — consultationMode/teleconsultFee)
+ * - apps/web/app/api/doctors/photo/route.ts (POST — photoUrl, doctor self)
+ * - apps/web/app/api/admin/doctors/[id]/route.ts (PATCH — admin profile edit incl. slug)
+ * - apps/web/app/api/admin/doctors/[id]/photo/route.ts (POST + DELETE — photoUrl, admin)
+ * Appointment types only:
+ * - apps/web/app/api/appointment-types/route.ts (POST — doctor creates motif)
+ * - apps/web/app/api/appointment-types/[id]/route.ts (PATCH + DELETE — doctor edits/soft-deletes motif)
+ * - apps/web/app/api/admin/doctors/[id]/appointment-types/route.ts (POST — admin creates motif)
+ * - apps/web/app/api/admin/doctors/[id]/appointment-types/[typeId]/route.ts (PATCH + DELETE — admin edits/soft-deletes motif)
+ */
 import Redis from "ioredis";
 import superjson from "superjson";
 

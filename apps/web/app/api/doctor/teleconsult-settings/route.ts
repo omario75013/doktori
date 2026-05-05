@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { requireDoctor } from "@/lib/doctor-auth";
 import { db, doctors, doctorSchedules } from "@doktori/db";
 import { eq, count } from "drizzle-orm";
+import { invalidateDoctor } from "@/lib/cache";
 
 const VALID_MODES = ["cabinet", "teleconsult", "both"] as const;
 type ConsultationMode = (typeof VALID_MODES)[number];
@@ -82,6 +83,7 @@ export async function PUT(req: Request) {
     })
     .where(eq(doctors.id, doctor.id))
     .returning({
+      slug: doctors.slug,
       consultationMode: doctors.consultationMode,
       teleconsultFee: doctors.teleconsultFee,
     });
@@ -90,5 +92,10 @@ export async function PUT(req: Request) {
     return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
   }
 
-  return NextResponse.json(updated);
+  await invalidateDoctor(doctor.id, updated.slug);
+
+  return NextResponse.json({
+    consultationMode: updated.consultationMode,
+    teleconsultFee: updated.teleconsultFee,
+  });
 }

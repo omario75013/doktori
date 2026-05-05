@@ -4,6 +4,7 @@ import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
 import { db, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { uploadToR2 } from "@/lib/r2";
+import { invalidateDoctor } from "@/lib/cache";
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 const ALLOWED_TYPES: Record<string, string> = {
@@ -22,7 +23,7 @@ export async function POST(
   const { id } = await params;
 
   const [existing] = await db
-    .select({ photoUrl: doctors.photoUrl })
+    .select({ photoUrl: doctors.photoUrl, slug: doctors.slug })
     .from(doctors)
     .where(eq(doctors.id, id))
     .limit(1);
@@ -75,6 +76,8 @@ export async function POST(
       userAgent: meta.userAgent,
     });
 
+    await invalidateDoctor(id, existing.slug);
+
     return NextResponse.json({ ok: true, photoUrl });
   } catch (e) {
     console.error("[r2] admin photo upload failed:", e);
@@ -92,7 +95,7 @@ export async function DELETE(
   const { id } = await params;
 
   const [existing] = await db
-    .select({ photoUrl: doctors.photoUrl })
+    .select({ photoUrl: doctors.photoUrl, slug: doctors.slug })
     .from(doctors)
     .where(eq(doctors.id, id))
     .limit(1);
@@ -117,6 +120,8 @@ export async function DELETE(
     ip: meta.ip,
     userAgent: meta.userAgent,
   });
+
+  await invalidateDoctor(id, existing.slug);
 
   return NextResponse.json({ ok: true });
 }

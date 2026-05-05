@@ -7,6 +7,7 @@ import {
   doctorPractices,
 } from "@doktori/db";
 import { eq, and, inArray } from "drizzle-orm";
+import { invalidate } from "@/lib/cache";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -90,6 +91,8 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       }
     });
 
+    await invalidate(`doctor:apptTypes:${user.id}`);
+
     return NextResponse.json({ ok: true });
   } catch (e) {
     console.error("[PATCH /api/appointment-types/[id]]", e);
@@ -113,6 +116,9 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
       .returning();
 
     if (!updated) return NextResponse.json({ error: "Type introuvable" }, { status: 404 });
+
+    await invalidate(`doctor:apptTypes:${user.id}`);
+
     return NextResponse.json({ success: true });
   } catch (e) {
     console.error("[DELETE /api/appointment-types/[id]]", e);

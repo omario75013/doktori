@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
 import { db, appointmentTypes } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
+import { invalidate } from "@/lib/cache";
 
 export async function PATCH(
   req: Request,
@@ -94,6 +95,8 @@ export async function PATCH(
       userAgent: meta.userAgent,
     });
 
+    await invalidate(`doctor:apptTypes:${id}`);
+
     return NextResponse.json({ ok: true, appointmentType: after });
   } catch (e) {
     console.error("[PATCH /api//admin/doctors/[id]/appointment-types/[typeId]]", e);
@@ -145,6 +148,8 @@ export async function DELETE(
       ip: meta.ip,
       userAgent: meta.userAgent,
     });
+
+    await invalidate(`doctor:apptTypes:${id}`);
 
     return NextResponse.json({ ok: true });
   } catch (e) {

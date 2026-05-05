@@ -3,6 +3,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/require-auth";
 import { db, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
+import { invalidateDoctor } from "@/lib/cache";
 
 const patchSchema = z.object({
   name: z.string().min(2).max(255).optional(),
@@ -54,6 +55,7 @@ export async function PATCH(req: NextRequest) {
     .returning({
       id: doctors.id,
       name: doctors.name,
+      slug: doctors.slug,
       bio: doctors.bio,
       consultationFee: doctors.consultationFee,
       teleconsultFee: doctors.teleconsultFee,
@@ -62,6 +64,10 @@ export async function PATCH(req: NextRequest) {
       expertise: doctors.expertise,
       yearsOfExperience: doctors.yearsOfExperience,
     });
+
+  if (updated?.slug) {
+    await invalidateDoctor(user.id, updated.slug);
+  }
 
   return NextResponse.json({ ok: true, doctor: updated });
 }

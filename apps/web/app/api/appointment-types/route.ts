@@ -8,6 +8,7 @@ import {
   doctorPractices,
 } from "@doktori/db";
 import { eq, and, inArray } from "drizzle-orm";
+import { invalidate } from "@/lib/cache";
 
 async function loadPracticesMap(typeIds: string[]) {
   if (typeIds.length === 0) return {};
@@ -113,6 +114,8 @@ export async function POST(req: NextRequest) {
       );
       return row;
     });
+
+    await invalidate(`doctor:apptTypes:${user.id}`);
 
     return NextResponse.json({ ...created, practiceIds }, { status: 201 });
   } catch (e) {

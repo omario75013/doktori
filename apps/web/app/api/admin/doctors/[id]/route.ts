@@ -3,6 +3,7 @@ import { requireAdmin } from "@/lib/admin-auth";
 import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
 import { db, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
+import { invalidateDoctor } from "@/lib/cache";
 
 const ALLOWED_FIELDS = [
   "name",
@@ -90,6 +91,14 @@ export async function PATCH(
       ip: meta.ip,
       userAgent: meta.userAgent,
     });
+
+    // If slug changed, invalidate the old slug key too so stale entries don't linger.
+    const slugsToInvalidate = new Set<string>();
+    if (before.slug) slugsToInvalidate.add(before.slug);
+    if (after?.slug) slugsToInvalidate.add(after.slug);
+    for (const slug of slugsToInvalidate) {
+      await invalidateDoctor(id, slug);
+    }
 
     return NextResponse.json({ ok: true, doctor: after });
   } catch (e) {
