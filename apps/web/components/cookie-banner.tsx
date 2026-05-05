@@ -69,7 +69,7 @@ export function CookieBanner() {
               <Cookie className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1">
-              <h3 className="font-semibold text-foreground mb-1">Gestion des cookies</h3>
+              <h2 className="font-semibold text-foreground mb-1">Gestion des cookies</h2>
               <p className="text-sm text-gray-500 dark:text-gray-400">
                 Nous utilisons des cookies pour améliorer votre expérience. Les cookies essentiels sont
                 nécessaires au fonctionnement du site.

@@ -126,7 +126,7 @@ export default async function RootLayout({
               <AppBanner />
               <Navbar />
             </PatientShell>
-            {children}
+            <main id="main">{children}</main>
             <PatientShell>
               <Footer />
             </PatientShell>
