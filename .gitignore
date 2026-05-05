@@ -9,5 +9,7 @@ dist/
 .turbo/
 .DS_Store
 .claude/
+.claude-flow/
+claude-flow.config.json
 apps/mobile/.env
 apps/web/.env.test
