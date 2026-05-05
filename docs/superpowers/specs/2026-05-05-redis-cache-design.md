@@ -210,18 +210,44 @@ docker logs doktori-web --since 5m 2>&1 | grep -c '\[cache\] HIT'
 docker logs doktori-web --since 5m 2>&1 | grep -c '\[cache\] MISS'
 ```
 
+## Implementation guidance for the planner
+
+### Confirmed read site (single file)
+
+All three cached queries are called from exactly **one file**:
+
+- `apps/web/app/(patient)/medecin/[slug]/page.tsx` — calls `getDoctorBySlug`, `getDoctorSchedule`, `getDoctorAppointmentTypes`
+
+This means cache wrapping reduces to wrapping three calls in one location. Verified via:
+```
+grep -rln "getDoctorBySlug\|getDoctorSchedule\|getDoctorAppointmentTypes" apps/web --include="*.ts" --include="*.tsx"
+```
+
+### Confirmed mutation sites (planner must verify and complete)
+
+- **Schedule mutation**: `apps/web/app/api/schedules/route.ts` — `PUT` handler calls `upsertSchedule(doctorId, slots, practiceId)`. Add `await invalidate('doctor:schedule:' + doctorId)` after the upsert.
+
+The planner must locate and wire invalidation in these additional sites:
+- Doctor portal "Mon profil" — likely under `apps/web/app/(medecin)/profil/`
+- Doctor portal "Mes consultations" (appointment types editing)
+- Admin doctor edit — likely under `apps/web/app/(admin)/admin/medecins/`
+- Admin doctor verify — likely under `apps/web/app/(admin)/admin/medecins/...verification...`
+
+For each, after the DB mutation, call `invalidateDoctor(doctorId, slug)` (the helper purges all three keys at once).
+
 ## Verification criteria
 
 Spec is satisfied when:
 
 1. `apps/web/lib/cache.ts` exposes `cached`, `invalidate`, `invalidateDoctor` with the signatures above and `import "server-only"`.
-2. The three pages/handlers using `getDoctorBySlug`, `getDoctorSchedule`, `getDoctorAppointmentTypes` wrap their calls with `cached(...)`.
-3. The five identified mutation handlers (admin doctor edit, doctor portal profile, doctor portal schedule, doctor portal apptTypes, admin verify doctor) call `invalidateDoctor` or `invalidate` with the correct keys.
+2. The three calls in `apps/web/app/(patient)/medecin/[slug]/page.tsx` are wrapped with `cached(...)`.
+3. Mutation handlers (schedule PUT route + the four doctor/admin profile mutation sites the planner identifies) call `invalidateDoctor` or `invalidate` with the correct keys.
 4. `docker-compose.prod.yml` declares the `redis` service per spec, with healthcheck and `depends_on` wiring.
 5. `REDIS_PASSWORD` is generated, stored in 1Password, and referenced in `.env.tpl`.
 6. `cache.test.ts` covers the nine scenarios above and passes.
-7. Lighthouse re-run on `/medecin/[slug]` after deploy shows perf gain (target: warm cache hit < 100ms server response, vs ~250ms uncached).
-8. Killing the Redis container with `docker stop doktori-redis` for 60s does not produce any 5xx — only logs and slower responses.
+7. **Snyk scan** (`snyk_code_scan`) passes on `cache.ts` and any modified call site, per global CLAUDE.md.
+8. Lighthouse re-run on `/medecin/[slug]` after deploy shows perf gain (target: warm cache hit < 100ms server response, vs ~250ms uncached).
+9. Killing the Redis container with `docker stop doktori-redis` for 60s does not produce any 5xx — only logs and slower responses.
 
 ## Out of scope (explicitly deferred)
 
