@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { io, Socket } from "socket.io-client";
+import type { Socket } from "socket.io-client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -220,48 +220,56 @@ export default function SOSPage() {
     return () => clearInterval(interval);
   }, [step, expiresAt]);
 
-  // Socket.IO + polling
+  // Socket.IO + polling — socket.io-client (~40KB) is dynamically imported only
+  // when the user enters the waiting step, keeping it out of the initial bundle.
   useEffect(() => {
     if (step !== "waiting" || !sessionId) return;
-    const SOCKETIO_URL =
-      process.env.NEXT_PUBLIC_SOCKETIO_URL || "http://localhost:3010";
-    const socket: Socket = io(SOCKETIO_URL, { path: "/sos-socket" });
+    let socket: Socket | null = null;
+    let cancelled = false;
 
-    socket.on("connect", () => {
-      socket.emit("join-session", sessionId);
-    });
+    (async () => {
+      const { io } = await import("socket.io-client");
+      if (cancelled) return;
+      const SOCKETIO_URL =
+        process.env.NEXT_PUBLIC_SOCKETIO_URL || "http://localhost:3010";
+      socket = io(SOCKETIO_URL, { path: "/sos-socket" });
 
-    socket.on(
-      "session-update",
-      (data: {
-        status: string;
-        doctorName: string;
-        doctorPhone: string;
-        doctorAddress: string;
-        doctorLatitude?: number;
-        doctorLongitude?: number;
-      }) => {
-        if (data.doctorLatitude != null) setDoctorLat(data.doctorLatitude);
-        if (data.doctorLongitude != null) setDoctorLng(data.doctorLongitude);
-        if (data.status === "accepted") {
-          setSessionData({
-            id: sessionId,
-            status: "accepted",
-            expires_at: "",
-            doctor_name: data.doctorName,
-            doctor_phone: data.doctorPhone,
-            doctor_address: data.doctorAddress,
-            doctor_lat: data.doctorLatitude ?? null,
-            doctor_lng: data.doctorLongitude ?? null,
-          });
-          setStep("accepted");
-        } else if (data.status === "cancelled") {
-          setStep("cancelled");
-        } else if (data.status === "expired") {
-          setStep("expired");
+      socket.on("connect", () => {
+        socket?.emit("join-session", sessionId);
+      });
+
+      socket.on(
+        "session-update",
+        (data: {
+          status: string;
+          doctorName: string;
+          doctorPhone: string;
+          doctorAddress: string;
+          doctorLatitude?: number;
+          doctorLongitude?: number;
+        }) => {
+          if (data.doctorLatitude != null) setDoctorLat(data.doctorLatitude);
+          if (data.doctorLongitude != null) setDoctorLng(data.doctorLongitude);
+          if (data.status === "accepted") {
+            setSessionData({
+              id: sessionId,
+              status: "accepted",
+              expires_at: "",
+              doctor_name: data.doctorName,
+              doctor_phone: data.doctorPhone,
+              doctor_address: data.doctorAddress,
+              doctor_lat: data.doctorLatitude ?? null,
+              doctor_lng: data.doctorLongitude ?? null,
+            });
+            setStep("accepted");
+          } else if (data.status === "cancelled") {
+            setStep("cancelled");
+          } else if (data.status === "expired") {
+            setStep("expired");
+          }
         }
-      }
-    );
+      );
+    })();
 
     const fallbackInterval = setInterval(async () => {
       const res = await fetch(`/api/sos/session/${sessionId}`);
@@ -277,7 +285,8 @@ export default function SOSPage() {
     }, 10000);
 
     return () => {
-      socket.disconnect();
+      cancelled = true;
+      socket?.disconnect();
       clearInterval(fallbackInterval);
     };
   }, [step, sessionId]);
