@@ -40,7 +40,10 @@ async function createTestDoctor(suffix: string): Promise<{ id: string }> {
 }
 
 async function createTestPatient(suffix: string): Promise<{ id: string }> {
-  const phone = `+2161${Date.now().toString().slice(-7)}`;
+  // Random 7-digit suffix avoids collisions when multiple tests run within
+  // the same millisecond; previously used Date.now().slice(-7) which collided
+  // in CI fast environments. (Fixed 2026-05-05.)
+  const phone = `+2161${Math.floor(Math.random() * 10_000_000).toString().padStart(7, "0")}`;
   const rows = await rawPg`
     INSERT INTO patients (name, phone)
     VALUES (${`Patient ${suffix}`}, ${phone})
@@ -141,9 +144,7 @@ describe("W1.13 GET template-context IDOR", () => {
     expect(res.status).toBe(403);
   });
 
-  // TODO: flaky in CI — hardcoded phone +21617686288 collides on patients_phone_idx
-  // when test order isolates differently. Tracked as DOKTORI-FLAKY-TESTS.
-  it.skip("400: missing appointmentId returns 400", async () => {
+  it("400: missing appointmentId returns 400", async () => {
     const req = makeRequest(patient1.id); // no appointmentId
     const res = await getTemplateContext(req, {
       params: Promise.resolve({ id: patient1.id }),
