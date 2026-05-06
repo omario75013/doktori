@@ -8,6 +8,9 @@
 import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest";
 import type { Mock } from "vitest";
 import { NextResponse } from "next/server";
+
+// `server-only` throws outside of an RSC build; stub it (admin-audit-wrapper imports it).
+vi.mock("server-only", () => ({}));
 import { db, prescriptionTemplates, adminAuditLogs, templateAuditLogs, adminUsers } from "@doktori/db";
 import { eq, and, isNull } from "drizzle-orm";
 

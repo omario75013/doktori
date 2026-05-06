@@ -1,5 +1,6 @@
 import "server-only";
 import { db, bankTransferIntents, doctorPaymentMethods, walletTransactions } from "@doktori/db";
+import type { DbTx } from "./admin-audit-wrapper";
 import { and, eq, sql } from "drizzle-orm";
 
 export interface BankTransferConfig {
@@ -87,9 +88,15 @@ export async function createBankTransferIntent(args: CreateBankTransferIntentArg
   };
 }
 
-/** Confirm a pending bank transfer. Idempotent: re-confirming a confirmed intent is a no-op. */
-export async function confirmBankTransfer(args: { intentId: string; adminId: string }): Promise<void> {
-  await db.transaction(async (tx) => {
+/** Confirm a pending bank transfer. Idempotent: re-confirming a confirmed intent is a no-op.
+ *  Pass `tx` to participate in an existing transaction (e.g. from withAdminAudit);
+ *  otherwise this opens its own. */
+export async function confirmBankTransfer(args: {
+  intentId: string;
+  adminId: string;
+  tx?: DbTx;
+}): Promise<void> {
+  const run = async (tx: DbTx | typeof db) => {
     const [intent] = await tx
       .select()
       .from(bankTransferIntents)
@@ -134,11 +141,23 @@ export async function confirmBankTransfer(args: { intentId: string; adminId: str
           description: `Virement bancaire confirmé — ref ${intent.reference}`,
         });
     }
-  });
+  };
+
+  if (args.tx) {
+    await run(args.tx);
+  } else {
+    await db.transaction(run);
+  }
 }
 
-export async function rejectBankTransfer(args: { intentId: string; adminId: string; reason: string }): Promise<void> {
-  const [intent] = await db
+export async function rejectBankTransfer(args: {
+  intentId: string;
+  adminId: string;
+  reason: string;
+  tx?: DbTx;
+}): Promise<void> {
+  const exec = args.tx ?? db;
+  const [intent] = await exec
     .select({ status: bankTransferIntents.status })
     .from(bankTransferIntents)
     .where(eq(bankTransferIntents.id, args.intentId))
@@ -146,7 +165,7 @@ export async function rejectBankTransfer(args: { intentId: string; adminId: stri
   if (!intent) throw new Error("Bank transfer intent not found");
   if (intent.status !== "pending") throw new Error(`Cannot reject intent in status: ${intent.status}`);
 
-  await db
+  await exec
     .update(bankTransferIntents)
     .set({
       status: "rejected",
