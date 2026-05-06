@@ -2326,3 +2326,47 @@ export const reviewReplies = pgTable(
 
 export type ReviewReply = typeof reviewReplies.$inferSelect;
 export type NewReviewReply = typeof reviewReplies.$inferInsert;
+
+// ── Wave 6 — Refunds table (replaces appointments.payment_status='refund_pending') ─
+export const refunds = pgTable(
+  "refunds",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** Source: 'appointment' | 'subscription' */
+    sourceType: varchar("source_type", { length: 20 }).notNull(),
+    sourceId: uuid("source_id").notNull(),
+    /** Original payment ref (Stripe charge id, Flouci payment_id, etc) */
+    originalPaymentRef: varchar("original_payment_ref", { length: 255 }),
+    /** Stripe / flouci / bank_transfer / cash etc. */
+    provider: varchar("provider", { length: 30 }).notNull(),
+    /** Refund amount in millimes (TND) */
+    amount: integer("amount").notNull(),
+    /** Currency, default TND */
+    currency: varchar("currency", { length: 5 }).notNull().default("TND"),
+    /** Provider refund id, if returned */
+    providerRefundId: varchar("provider_refund_id", { length: 255 }),
+    /** pending | processing | succeeded | failed */
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    reason: text("reason"),
+    /** Patient who received the refund */
+    patientId: uuid("patient_id").references(() => patients.id, { onDelete: "set null" }),
+    /** Doctor whose wallet was debited */
+    doctorId: uuid("doctor_id").references(() => doctors.id, { onDelete: "set null" }),
+    /** Admin who initiated the refund */
+    initiatedByAdminId: uuid("initiated_by_admin_id").references(() => adminUsers.id, { onDelete: "set null" }),
+    failureReason: text("failure_reason"),
+    succeededAt: timestamp("succeeded_at", { withTimezone: true }),
+    failedAt: timestamp("failed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("refunds_source_idx").on(t.sourceType, t.sourceId),
+    index("refunds_status_idx").on(t.status),
+    index("refunds_provider_idx").on(t.provider),
+    index("refunds_created_idx").on(t.createdAt),
+  ]
+);
+
+export type Refund = typeof refunds.$inferSelect;
+export type NewRefund = typeof refunds.$inferInsert;
