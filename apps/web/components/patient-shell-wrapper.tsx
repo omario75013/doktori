@@ -9,11 +9,19 @@ import { User, Settings, LogOut, ChevronDown } from "lucide-react";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { PatientBottomNav } from "@/components/patient-bottom-nav";
 
+/**
+ * Routes where the patient-shell header (top bar with avatar menu) is NOT
+ * shown — even if the patient is logged in. The global public Navbar from
+ * app/layout.tsx is shown instead (provided AUTHENTICATED_PREFIXES doesn't
+ * also match — see lib/route-groups.ts for that pairing rule).
+ *
+ * Removed 2026-05-06: `/connexion-patient` and `/inscription-patient` —
+ * those are auth-flow entry pages, the global Navbar is fine there.
+ * Conflict-free pairing with AUTHENTICATED_PREFIXES verified.
+ */
 const PUBLIC_PREFIXES = [
   "/recherche",
   "/rdv",
-  "/connexion-patient",
-  "/inscription-patient",
   "/avis",
   "/medecin",
   "/domicile",

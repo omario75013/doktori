@@ -1,3 +1,20 @@
+/**
+ * Routes that hide the global public Navbar (used via PatientShell wrapper
+ * in app/layout.tsx).
+ *
+ * Pre-2026-05-06 audit: this list contained 4 prefixes that ALSO appeared
+ * (literally or via startsWith) in PUBLIC_PREFIXES in
+ * apps/web/components/patient-shell-wrapper.tsx — `/domicile`,
+ * `/connexion-patient`, `/teleconsultation`, `/teleconsult-medecin`. Both
+ * lists matched the same paths, resulting in NO HEADER AT ALL on those
+ * pages (global Navbar hidden + patient header skipped).
+ *
+ * Fix: remove the 4 overlapping entries from this list. Those routes now
+ * show the global public Navbar. If a fully immersive layout is desired
+ * (e.g. video-call screens), express that via the route's own layout
+ * (e.g. app/(patient)/teleconsultation/[id]/layout.tsx) — not via prefix
+ * intersection side-effects.
+ */
 export const AUTHENTICATED_PREFIXES = [
   "/app-picker",
   "/dashboard",
@@ -9,14 +26,11 @@ export const AUTHENTICATED_PREFIXES = [
   "/cabinets",
   "/conventions",
   "/cnam",
-  "/domicile",
   "/sos-medecin",
   "/stats",
   "/secretaires",
   "/parrainage",
   "/abonnement",
-  "/teleconsultation",
-  "/teleconsult-medecin",
   "/messages",
   "/messagerie",
   "/mes-messages",
@@ -33,7 +47,6 @@ export const AUTHENTICATED_PREFIXES = [
   "/secretaire",
   "/secretaire-login",
   "/connexion",
-  "/connexion-patient",
   "/inscription",
   "/mon-espace",
   "/mes-rdv",
