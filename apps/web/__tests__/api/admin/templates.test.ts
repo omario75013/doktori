@@ -5,10 +5,10 @@
  *   DATABASE_URL=postgresql://doktori:doktori_dev_2026@localhost:5434/doktori pnpm --filter web test __tests__/api/admin/templates
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { describe, it, expect, beforeAll, beforeEach, afterEach, vi } from "vitest";
 import type { Mock } from "vitest";
 import { NextResponse } from "next/server";
-import { db, prescriptionTemplates, adminAuditLogs, templateAuditLogs } from "@doktori/db";
+import { db, prescriptionTemplates, adminAuditLogs, templateAuditLogs, adminUsers } from "@doktori/db";
 import { eq, and, isNull } from "drizzle-orm";
 
 // ── Route handlers ────────────────────────────────────────────────────────────
@@ -39,6 +39,22 @@ const SUPER_ADMIN = {
   name: "Test Admin",
   role: "super_admin" as const,
 };
+
+// Seed the admin user once before any test runs, so audit log inserts that
+// reference SUPER_ADMIN.id don't violate the admin_audit_logs_actor_id FK.
+// Idempotent: ON CONFLICT DO NOTHING so reruns don't fail.
+beforeAll(async () => {
+  await db
+    .insert(adminUsers)
+    .values({
+      id: SUPER_ADMIN.id,
+      email: SUPER_ADMIN.email,
+      name: SUPER_ADMIN.name,
+      role: SUPER_ADMIN.role,
+      passwordHash: "$2a$04$fake-hash-for-tests-only-not-real-password",
+    })
+    .onConflictDoNothing({ target: adminUsers.id });
+});
 
 const NON_ADMIN_RESPONSE = NextResponse.json(
   { error: "Permissions insuffisantes" },
@@ -143,9 +159,7 @@ describe("POST /api/admin/templates — create official template", () => {
 });
 
 describe("PATCH /api/admin/templates/[id] — audit logging", () => {
-  // TODO: flaky in CI — admin_user FK violation, test does not seed actor row.
-  // Tracked as DOKTORI-FLAKY-TESTS in docs/phase-2-deferred-tickets.md.
-  it.skip("logs to admin_audit_logs AND template_audit_logs on update (double audit B5)", async () => {
+  it("logs to admin_audit_logs AND template_audit_logs on update (double audit B5)", async () => {
     // First create a template
     mockRequireAdmin.mockResolvedValueOnce(SUPER_ADMIN);
     const slug = `test-audit-${rand()}`;
