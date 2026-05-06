@@ -96,8 +96,11 @@ export async function POST(req: NextRequest) {
       case "charge.refunded":
       case "payment_intent.canceled": {
         const obj = event.data.object as {
+          id?: string;
           metadata?: Record<string, string>;
           payment_intent?: string;
+          amount_refunded?: number;
+          refunds?: { data?: Array<{ id: string; amount?: number }> };
         };
         const appointmentId = obj.metadata?.appointmentId;
         if (!appointmentId) break;
@@ -106,6 +109,51 @@ export async function POST(req: NextRequest) {
           SET payment_status = 'refunded', updated_at = NOW()
           WHERE id = ${appointmentId}
         `);
+
+        // Wave 6 — Update or create the matching `refunds` row.
+        // Most refunds initiated via /api/admin/appointments/[id]/refund will
+        // already have a 'pending' row; we just flip it to 'succeeded' here.
+        // For refunds initiated directly in the Stripe Dashboard there's no
+        // pre-existing row, so we INSERT one for the audit trail.
+        const providerRefundId =
+          obj.refunds?.data?.[0]?.id ?? null;
+        const amount = obj.amount_refunded ?? obj.refunds?.data?.[0]?.amount ?? 0;
+
+        const updated = await db.execute<{ id: string }>(sql`
+          UPDATE refunds
+          SET status = 'succeeded',
+              provider_refund_id = COALESCE(${providerRefundId}, provider_refund_id),
+              succeeded_at = COALESCE(succeeded_at, NOW()),
+              updated_at = NOW()
+          WHERE source_type = 'appointment'
+            AND source_id = ${appointmentId}
+            AND status IN ('pending','processing')
+          RETURNING id
+        `);
+        const updatedArr = updated as unknown as Array<{ id: string }>;
+        if (updatedArr.length === 0 && amount > 0) {
+          // No prior row — Stripe-Dashboard-initiated refund. Create one for audit.
+          const apptResult = await db.execute<{ doctor_id: string; patient_id: string; payment_ref: string | null }>(sql`
+            SELECT doctor_id, patient_id, payment_ref
+            FROM appointments
+            WHERE id = ${appointmentId}
+            LIMIT 1
+          `);
+          const apptRow = (apptResult as unknown as Array<{ doctor_id: string; patient_id: string; payment_ref: string | null }>)[0];
+          if (apptRow) {
+            await db.execute(sql`
+              INSERT INTO refunds (
+                source_type, source_id, original_payment_ref, provider, amount, currency,
+                provider_refund_id, status, reason, patient_id, doctor_id, succeeded_at
+              ) VALUES (
+                'appointment', ${appointmentId}, ${apptRow.payment_ref}, 'stripe', ${amount}, 'TND',
+                ${providerRefundId}, 'succeeded',
+                ${'Remboursement Stripe (webhook ' + event.type + ')'},
+                ${apptRow.patient_id}, ${apptRow.doctor_id}, NOW()
+              )
+            `);
+          }
+        }
         break;
       }
 

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { withAdminAudit } from "@/lib/admin-audit-wrapper";
-import { appointments, walletTransactions } from "@doktori/db";
+import { appointments, refunds, walletTransactions } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { refundPayment } from "@/lib/stripe";
 
@@ -45,7 +45,7 @@ export const POST = withAdminAudit<
         }
       : null;
   },
-  handler: async ({ tx, resourceId, body }) => {
+  handler: async ({ tx, admin, resourceId, body }) => {
     const parsed = BodySchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json(
@@ -121,6 +121,26 @@ export const POST = withAdminAudit<
       amount: refundedAmount,
       appointmentId: resourceId,
       description: `Remboursement (${provider || "manuel"}) — ${reason.slice(0, 200)}`,
+    });
+
+    // Wave 6 — Authoritative refund row. Stripe path stays 'pending' until
+    // charge.refunded webhook flips it to 'succeeded'; manual paths are
+    // already 'succeeded' since admin is asserting the refund was done.
+    const refundStatus = nextPaymentStatus === "refunded" ? "succeeded" : "pending";
+    await tx.insert(refunds).values({
+      sourceType: "appointment",
+      sourceId: resourceId,
+      originalPaymentRef: appt.paymentRef ?? null,
+      provider: provider || "manual",
+      amount: refundedAmount,
+      currency: "TND",
+      providerRefundId: stripeRefundId,
+      status: refundStatus,
+      reason,
+      patientId: appt.patientId,
+      doctorId: appt.doctorId,
+      initiatedByAdminId: admin.id,
+      succeededAt: refundStatus === "succeeded" ? new Date() : null,
     });
 
     return {
