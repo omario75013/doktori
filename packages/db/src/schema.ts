@@ -2138,3 +2138,63 @@ export const coachIaUsage = pgTable(
 
 export type CoachIaUsage = typeof coachIaUsage.$inferSelect;
 export type NewCoachIaUsage = typeof coachIaUsage.$inferInsert;
+
+// ── Phase 2 #2 — Payments (2026-05-06) ──────────────────────────────────────
+
+// Per-doctor payment method configuration. One row per (doctor_id, method).
+export const doctorPaymentMethods = pgTable(
+  "doctor_payment_methods",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+    method: varchar("method", { length: 30 }).notNull(),  // stripe_card | bank_transfer | cash_on_premises | flouci | paymee
+    enabled: boolean("enabled").notNull().default(false),
+    config: jsonb("config").default({}),  // {iban, bic, bankName, accountHolder} for bank_transfer
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("doctor_payment_methods_doctor_method_uidx").on(t.doctorId, t.method),
+  ]
+);
+
+// Bank transfer payment intents. Patient creates → admin verifies → confirmed.
+export const bankTransferIntents = pgTable(
+  "bank_transfer_intents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    appointmentId: uuid("appointment_id").references(() => appointments.id, { onDelete: "cascade" }),
+    patientId: uuid("patient_id").references(() => patients.id, { onDelete: "set null" }),
+    doctorId: uuid("doctor_id").references(() => doctors.id, { onDelete: "set null" }),
+    amount: integer("amount").notNull(),  // in millimes (TND base unit)
+    reference: varchar("reference", { length: 40 }).notNull().unique(),
+    status: varchar("status", { length: 20 }).notNull().default("pending"),  // pending | confirmed | rejected | expired
+    proofFileUrl: text("proof_file_url"),
+    confirmedByAdminId: uuid("confirmed_by_admin_id").references(() => adminUsers.id, { onDelete: "set null" }),
+    confirmedAt: timestamp("confirmed_at", { withTimezone: true }),
+    rejectedReason: text("rejected_reason"),
+    expiresAt: timestamp("expires_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("bank_transfer_intents_status_idx").on(t.status),
+    index("bank_transfer_intents_appointment_idx").on(t.appointmentId),
+  ]
+);
+
+// Stripe events log — idempotency (prevents replay) + audit trail.
+export const stripeEventsLog = pgTable(
+  "stripe_events_log",
+  {
+    eventId: varchar("event_id", { length: 100 }).primaryKey(),
+    eventType: varchar("event_type", { length: 50 }).notNull(),
+    payload: jsonb("payload").notNull(),
+    processedAt: timestamp("processed_at", { withTimezone: true }).defaultNow().notNull(),
+  }
+);
+
+export type DoctorPaymentMethod = typeof doctorPaymentMethods.$inferSelect;
+export type NewDoctorPaymentMethod = typeof doctorPaymentMethods.$inferInsert;
+export type BankTransferIntent = typeof bankTransferIntents.$inferSelect;
+export type NewBankTransferIntent = typeof bankTransferIntents.$inferInsert;
+export type StripeEvent = typeof stripeEventsLog.$inferSelect;
