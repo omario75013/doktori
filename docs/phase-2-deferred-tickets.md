@@ -25,7 +25,19 @@ CI is green with 0 skipped tests.
 
 ---
 
-## DOKTORI-1P-DEBT — Doktori 1Password integration is non-functional
+## ~~DOKTORI-1P-DEBT~~ — RESOLVED 2026-05-06
+
+All 8 secrets bootstrapped to 1P (`Doktori Prod - <KEY>` items in vault `Dartank-Infra`). `.env.tpl` aligned with prod literal values. `scripts/deploy.sh` runs `op inject` + docker compose build/up + healthcheck. GH Actions deploy workflow switched to invoke this script.
+
+Verified end-to-end: `op inject .env.tpl > .env` produces byte-equivalent output to the previous hand-managed `.env`. New deploys are now fully reproducible from 1P, no manual SSH for secret rotation.
+
+5 R2 fields are referenced from the existing `Ecommerce Prod - R2_*` items (shared bucket `dartank-images`).
+
+Closed in commits: 96c5c1e (lib), 889e686 (env.tpl alignment), 1dd8dd2 (workflow switch), and the bootstrap session 2026-05-06 (1P items created).
+
+---
+
+## ~~DOKTORI-1P-DEBT~~ (original ticket below for history)
 
 **Discovered:** 2026-05-05 during Phase 2 #21 Tasks 10-11 (REDIS_PASSWORD provisioning).
 
