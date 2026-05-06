@@ -3,7 +3,7 @@ import { db, smsLogs } from "@doktori/db";
 import { count, eq, gte } from "drizzle-orm";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { MessageSquare } from "lucide-react";
+import { Bell, FileText, MessageCircle, MessageSquare } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -98,6 +98,71 @@ export default async function CommunicationsOverviewPage() {
                 </p>
               </div>
             </div>
+          </Link>
+
+          {/* WhatsApp */}
+          <Link
+            href="/admin/communications/whatsapp"
+            className="bg-white rounded-xl border border-slate-200 p-5 hover:border-slate-300 hover:shadow-sm transition-all group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center">
+                <MessageCircle className="w-5 h-5 text-emerald-600" />
+              </div>
+              <span className="text-xs font-semibold text-emerald-600 bg-emerald-50 rounded-full px-2 py-0.5">
+                Actif
+              </span>
+            </div>
+            <p className="text-sm font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors mb-1">
+              WhatsApp
+            </p>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Confirmations, rappels et notifications via WhatsApp Business.
+            </p>
+          </Link>
+
+          {/* Push notifications */}
+          <Link
+            href="/admin/communications/push"
+            className="bg-white rounded-xl border border-slate-200 p-5 hover:border-slate-300 hover:shadow-sm transition-all group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center">
+                <Bell className="w-5 h-5 text-indigo-600" />
+              </div>
+              <span className="text-xs font-semibold text-indigo-600 bg-indigo-50 rounded-full px-2 py-0.5">
+                Actif
+              </span>
+            </div>
+            <p className="text-sm font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors mb-1">
+              Notifications push
+            </p>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Notifications mobiles via Expo / FCM aux apps patient et pro.
+            </p>
+          </Link>
+        </div>
+      </div>
+
+      {/* Templates */}
+      <div>
+        <h2 className="text-lg font-semibold text-slate-900 mb-4">Outils</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <Link
+            href="/admin/communications/templates"
+            className="bg-white rounded-xl border border-slate-200 p-5 hover:border-slate-300 hover:shadow-sm transition-all group"
+          >
+            <div className="flex items-start justify-between mb-4">
+              <div className="w-10 h-10 rounded-lg bg-teal-50 flex items-center justify-center">
+                <FileText className="w-5 h-5 text-teal-600" />
+              </div>
+            </div>
+            <p className="text-sm font-semibold text-slate-900 group-hover:text-teal-700 transition-colors mb-1">
+              Modèles de message
+            </p>
+            <p className="text-xs text-slate-500 leading-relaxed">
+              Templates réutilisables avec placeholders pour tous les canaux.
+            </p>
           </Link>
         </div>
       </div>

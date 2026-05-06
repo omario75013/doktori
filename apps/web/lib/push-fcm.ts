@@ -1,4 +1,4 @@
-import { db, pushTokens } from "@doktori/db";
+import { db, pushNotificationsLog, pushTokens } from "@doktori/db";
 import { and, eq, inArray } from "drizzle-orm";
 
 const EXPO_PUSH_URL = "https://exp.host/--/api/v2/push/send";
@@ -12,6 +12,11 @@ export type PushPayload = {
   data?: Record<string, string>;
   sound?: "default" | null;
   badge?: number;
+  /**
+   * Optional admin id when this push is initiated from an admin action,
+   * stored on push_notifications_log for accountability.
+   */
+  triggeredByAdminId?: string;
 };
 
 type ExpoMessage = {
@@ -79,6 +84,20 @@ export async function sendPush(
 
   let accepted = 0;
   const invalidIds: string[] = [];
+  const logRows: Array<{
+    recipientType: Actor;
+    recipientId: string;
+    deviceToken: string | null;
+    title: string;
+    body: string;
+    data: Record<string, string> | null;
+    status: "sent" | "failed";
+    error: string | null;
+    triggeredByAdminId: string | null;
+    sentAt: Date | null;
+  }> = [];
+
+  const now = new Date();
 
   for (let i = 0; i < messages.length; i += BATCH_SIZE) {
     const batch = messages.slice(i, i + BATCH_SIZE);
@@ -97,13 +116,42 @@ export async function sendPush(
       const json = (await res.json()) as ExpoResponse;
       if (json.data) {
         json.data.forEach((tk, idx) => {
+          const tok = batchTokenIds[idx];
           if (tk.status === "ok") {
             accepted += 1;
-          } else if (
-            tk.details?.error === "DeviceNotRegistered" ||
-            tk.details?.error === "InvalidCredentials"
-          ) {
-            invalidIds.push(batchTokenIds[idx].id);
+            logRows.push({
+              recipientType: actorType,
+              recipientId: actorId,
+              deviceToken: tok.token,
+              title: payload.title,
+              body: payload.body,
+              data: payload.data ?? null,
+              status: "sent",
+              error: null,
+              triggeredByAdminId: payload.triggeredByAdminId ?? null,
+              sentAt: now,
+            });
+          } else {
+            const errMsg =
+              tk.message ?? tk.details?.error ?? "expo_push_failed";
+            logRows.push({
+              recipientType: actorType,
+              recipientId: actorId,
+              deviceToken: tok.token,
+              title: payload.title,
+              body: payload.body,
+              data: payload.data ?? null,
+              status: "failed",
+              error: errMsg,
+              triggeredByAdminId: payload.triggeredByAdminId ?? null,
+              sentAt: null,
+            });
+            if (
+              tk.details?.error === "DeviceNotRegistered" ||
+              tk.details?.error === "InvalidCredentials"
+            ) {
+              invalidIds.push(tok.id);
+            }
           }
         });
       }
@@ -111,6 +159,21 @@ export async function sendPush(
       // Network or Expo outage — log but don't throw; callers shouldn't fail
       // their business op because push is best-effort.
       console.error("[push-fcm] batch failed", e);
+      const errMsg = e instanceof Error ? e.message : "network_error";
+      for (const tok of batchTokenIds) {
+        logRows.push({
+          recipientType: actorType,
+          recipientId: actorId,
+          deviceToken: tok.token,
+          title: payload.title,
+          body: payload.body,
+          data: payload.data ?? null,
+          status: "failed",
+          error: errMsg,
+          triggeredByAdminId: payload.triggeredByAdminId ?? null,
+          sentAt: null,
+        });
+      }
     }
   }
 
@@ -119,6 +182,14 @@ export async function sendPush(
       .update(pushTokens)
       .set({ isActive: false, updatedAt: new Date() })
       .where(inArray(pushTokens.id, invalidIds));
+  }
+
+  if (logRows.length > 0) {
+    try {
+      await db.insert(pushNotificationsLog).values(logRows);
+    } catch (e) {
+      console.error("[push-fcm] log insert failed", e);
+    }
   }
 
   return accepted;
