@@ -18,27 +18,32 @@ jobs:
       - name: Wait for CI green on this commit
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT_SHA: ${{ github.sha }}
         run: |
           set -euo pipefail
-          COMMIT="${GITHUB_SHA}"
-          echo "Waiting for CI on commit $COMMIT"
-          timeout 30m bash -c '
-            while true; do
-              RESULT=$(gh run list --commit '"$COMMIT"' --workflow ci.yml --json conclusion,status --jq ".[0]" 2>/dev/null || echo "{}")
-              CONCLUSION=$(echo "$RESULT" | jq -r ".conclusion // empty")
-              STATUS=$(echo "$RESULT" | jq -r ".status // empty")
-              echo "[$(date +%H:%M:%S)] CI status=$STATUS conclusion=$CONCLUSION"
-              if [ "$CONCLUSION" = "success" ]; then
-                echo "CI passed — proceeding"
-                exit 0
-              fi
-              if [ "$CONCLUSION" = "failure" ] || [ "$CONCLUSION" = "cancelled" ] || [ "$CONCLUSION" = "timed_out" ]; then
-                echo "CI failed — aborting deploy"
-                exit 1
-              fi
-              sleep 30
-            done
-          '
+          echo "Waiting for CI on commit $COMMIT_SHA"
+          # Filter by workflowName via jq because --workflow flag is unreliable
+          # across gh versions. Filter OUT this Deploy workflow itself, otherwise
+          # the most-recent run is this one (in_progress) and the loop never ends.
+          end=$(( $(date +%s) + 1800 ))  # 30 min cap
+          while [ "$(date +%s)" -lt "$end" ]; do
+            RESULT=$(gh run list --commit "$COMMIT_SHA" --json conclusion,status,workflowName \
+              --jq '[.[] | select(.workflowName == "CI")] | .[0] // {}')
+            CONCLUSION=$(echo "$RESULT" | jq -r '.conclusion // empty')
+            STATUS=$(echo "$RESULT" | jq -r '.status // empty')
+            echo "[$(date +%H:%M:%S)] CI status=$STATUS conclusion=$CONCLUSION"
+            if [ "$CONCLUSION" = "success" ]; then
+              echo "CI passed — proceeding"
+              exit 0
+            fi
+            if [ "$CONCLUSION" = "failure" ] || [ "$CONCLUSION" = "cancelled" ] || [ "$CONCLUSION" = "timed_out" ]; then
+              echo "CI failed — aborting deploy"
+              exit 1
+            fi
+            sleep 30
+          done
+          echo "Timed out waiting for CI"
+          exit 1
 
       - name: Setup SSH
         uses: webfactory/ssh-agent@v0.9.0
