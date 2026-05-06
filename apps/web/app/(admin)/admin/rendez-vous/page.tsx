@@ -2,7 +2,7 @@ import { db, appointments, doctors, patients } from "@doktori/db";
 import { and, gte, lte, eq } from "drizzle-orm";
 import { AppointmentsTable } from "./appointments-table";
 import Link from "next/link";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
 
 export const dynamic = "force-dynamic";
 
@@ -43,13 +43,22 @@ export default async function AdminAppointmentsPage() {
             Aujourd&apos;hui et demain · {list.length} rendez-vous
           </p>
         </div>
-        <Link
-          href="/admin/rendez-vous/conflicts"
-          className="inline-flex items-center gap-2 px-3 py-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
-        >
-          <AlertTriangle className="w-4 h-4" />
-          Conflits
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/admin/rendez-vous/bulk"
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm text-rose-700 bg-rose-50 border border-rose-200 rounded-lg hover:bg-rose-100 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            Annulation en masse
+          </Link>
+          <Link
+            href="/admin/rendez-vous/conflicts"
+            className="inline-flex items-center gap-2 px-3 py-2 text-sm text-amber-700 bg-amber-50 border border-amber-200 rounded-lg hover:bg-amber-100 transition-colors"
+          >
+            <AlertTriangle className="w-4 h-4" />
+            Conflits
+          </Link>
+        </div>
       </div>
 
       <AppointmentsTable
