@@ -9,6 +9,7 @@
     "db:seed": "tsx src/seed.ts",
     "seed:demo": "tsx src/seed-demo-data.ts",
     "seed:test-patients": "tsx src/seed-test-patients.ts",
+    "seed:coach-ia-flag": "tsx src/seed-coach-ia-flag.ts",
     "db:geocode": "tsx src/geocode-doctors.ts",
     "db:studio": "drizzle-kit studio"
   },
