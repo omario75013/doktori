@@ -2206,3 +2206,98 @@ export type NewDoctorPaymentMethod = typeof doctorPaymentMethods.$inferInsert;
 export type BankTransferIntent = typeof bankTransferIntents.$inferSelect;
 export type NewBankTransferIntent = typeof bankTransferIntents.$inferInsert;
 export type StripeEvent = typeof stripeEventsLog.$inferSelect;
+
+// ── Phase 2 audit Gap 3 — Communications infra (Wave 8) ─────────────────────
+
+// WhatsApp send log (mirrors smsLogs pattern at line 459)
+export const whatsappLogs = pgTable(
+  "whatsapp_logs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    recipientPhone: varchar("recipient_phone", { length: 30 }).notNull(),
+    /** patient | doctor | secretary | admin */
+    recipientType: varchar("recipient_type", { length: 20 }),
+    recipientId: uuid("recipient_id"),
+    body: text("body").notNull(),
+    /** queued | sent | delivered | read | failed */
+    status: varchar("status", { length: 20 }).notNull().default("queued"),
+    /** Provider message id from WhatsApp Cloud API or whichever gateway */
+    providerMessageId: varchar("provider_message_id", { length: 255 }),
+    error: text("error"),
+    /** Sender admin id, if triggered from admin UI */
+    triggeredByAdminId: uuid("triggered_by_admin_id").references(() => adminUsers.id, { onDelete: "set null" }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    deliveredAt: timestamp("delivered_at", { withTimezone: true }),
+    readAt: timestamp("read_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("whatsapp_logs_recipient_idx").on(t.recipientId),
+    index("whatsapp_logs_status_idx").on(t.status),
+    index("whatsapp_logs_created_idx").on(t.createdAt),
+  ]
+);
+
+// Push notification log (parallel to smsLogs)
+export const pushNotificationsLog = pgTable(
+  "push_notifications_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** patient | doctor | secretary */
+    recipientType: varchar("recipient_type", { length: 20 }).notNull(),
+    recipientId: uuid("recipient_id").notNull(),
+    /** Token used at send time (snapshot) */
+    deviceToken: text("device_token"),
+    title: varchar("title", { length: 255 }).notNull(),
+    body: text("body").notNull(),
+    /** JSON payload of additional data sent with the notification */
+    data: jsonb("data"),
+    /** queued | sent | delivered | failed */
+    status: varchar("status", { length: 20 }).notNull().default("queued"),
+    error: text("error"),
+    triggeredByAdminId: uuid("triggered_by_admin_id").references(() => adminUsers.id, { onDelete: "set null" }),
+    sentAt: timestamp("sent_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("push_notifications_log_recipient_idx").on(t.recipientType, t.recipientId),
+    index("push_notifications_log_status_idx").on(t.status),
+    index("push_notifications_log_created_idx").on(t.createdAt),
+  ]
+);
+
+// Reusable message templates for SMS / WhatsApp / Push / Email broadcasts
+export const messageTemplates = pgTable(
+  "message_templates",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    /** human-readable identifier; unique */
+    key: varchar("key", { length: 100 }).notNull().unique(),
+    name: varchar("name", { length: 255 }).notNull(),
+    /** sms | whatsapp | push | email */
+    channel: varchar("channel", { length: 20 }).notNull(),
+    /** Optional, used for email subject or push title */
+    subject: varchar("subject", { length: 255 }),
+    /** Body with {{variable}} placeholders */
+    body: text("body").notNull(),
+    /** List of variables expected to be substituted, e.g. ["patientName", "appointmentDate"] */
+    variables: jsonb("variables").default([]),
+    /** fr | ar | en — defaults to fr */
+    language: varchar("language", { length: 5 }).notNull().default("fr"),
+    isActive: boolean("is_active").notNull().default(true),
+    createdByAdminId: uuid("created_by_admin_id").references(() => adminUsers.id, { onDelete: "set null" }),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("message_templates_channel_idx").on(t.channel),
+    index("message_templates_active_idx").on(t.isActive),
+  ]
+);
+
+export type WhatsappLog = typeof whatsappLogs.$inferSelect;
+export type NewWhatsappLog = typeof whatsappLogs.$inferInsert;
+export type PushNotificationLog = typeof pushNotificationsLog.$inferSelect;
+export type NewPushNotificationLog = typeof pushNotificationsLog.$inferInsert;
+export type MessageTemplate = typeof messageTemplates.$inferSelect;
+export type NewMessageTemplate = typeof messageTemplates.$inferInsert;
