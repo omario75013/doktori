@@ -419,6 +419,14 @@ export const appointments = pgTable(
     // ── Patient frontend v2 (0073) ──
     rescheduledFromId: uuid("rescheduled_from_id").references((): any => appointments.id, { onDelete: "set null" }),
     cancellationReason: text("cancellation_reason"),
+    // ── Payment columns (added by raw SQL migrations earlier in project history,
+    //    declared here for Drizzle type safety + db:push parity in CI) ──
+    paymentStatus: varchar("payment_status", { length: 20 }).notNull().default("unpaid"),
+    paymentAmount: integer("payment_amount"),
+    paymentRef: varchar("payment_ref", { length: 255 }),
+    paymentProvider: varchar("payment_provider", { length: 20 }),
+    paymentMethod: varchar("payment_method", { length: 30 }),
+    paidAt: timestamp("paid_at", { withTimezone: true }),
   },
   (table) => [
     index("appointments_doctor_date_idx").on(table.doctorId, table.startsAt),
