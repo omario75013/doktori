@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { isEnabled } from "@/lib/feature-flags";
+import { CoachIaClient } from "./coach-ia-client";
 
 // Feature is flag-gated and not yet legally cleared. Keep it out of search
 // engines until activation. (See spec docs/superpowers/specs/2026-05-06-coach-ia-design.md)
@@ -59,22 +60,14 @@ export default async function CoachIaPage() {
     );
   }
 
-  // TODO(Phase 2 #9 Tasks 4-5): replace this placeholder with
-  //   <DisclaimerModal /> + <CoachIaClient /> once the disclaimer wording
-  //   is signed off by counsel and the chat client is implemented.
-  // Until then, the flag should remain OFF in prod — the placeholder below
-  // is only ever rendered when an operator flips the flag on for staging
-  // testing of the wiring. It must NOT be presented as a usable product.
+  // Flag is on — render the chat client. The client component handles the
+  // disclaimer modal (mandatory on first visit, cached in localStorage) and
+  // streams responses from /api/coach-ia. Production activation still gated
+  // by `coach_ia_enabled` (currently OFF — awaiting physician + legal review
+  // of the system prompt and disclaimer wording).
   return (
-    <main className="mx-auto max-w-2xl px-4 py-16">
-      <div className="rounded-lg border border-amber-200 bg-amber-50 p-6 text-amber-900">
-        <h1 className="text-lg font-semibold">Coach IA</h1>
-        <p className="mt-2 text-sm">
-          UI coming after legal review. The chat client and disclaimer modal
-          (Tasks 4–5 of the Phase 2 #9 plan) are deferred pending
-          legally-validated disclaimer text.
-        </p>
-      </div>
+    <main className="mx-auto">
+      <CoachIaClient />
     </main>
   );
 }
