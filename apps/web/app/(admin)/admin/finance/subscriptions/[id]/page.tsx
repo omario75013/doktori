@@ -49,7 +49,35 @@ export default async function AdminSubscriptionDetailPage({
     );
   }
 
+  // Wave 6 — Webhook payload viewer.
+  // Doktori subs use Flouci/Paymee today (per phase-2-spec); a Stripe migration
+  // is on the roadmap. We try to find any stripe_events_log row whose payload
+  // metadata.subscriptionId matches OR whose subscription field matches the
+  // subscription's external_ref. If none is found, the UI shows an empty state.
+  const externalRef = (subscription.external_ref as string | null) ?? null;
+  const events = await db.execute(sql`
+    SELECT
+      event_id,
+      event_type,
+      processed_at,
+      payload
+    FROM stripe_events_log
+    WHERE
+      payload->'data'->'object'->'metadata'->>'subscriptionId' = ${id}
+      ${externalRef ? sql`OR payload->'data'->'object'->>'subscription' = ${externalRef}` : sql``}
+    ORDER BY processed_at DESC
+    LIMIT 50
+  `);
+
   return (
-    <SubscriptionDetail subscription={subscription} />
+    <SubscriptionDetail
+      subscription={subscription}
+      events={events as unknown as Array<{
+        event_id: string;
+        event_type: string;
+        processed_at: string;
+        payload: unknown;
+      }>}
+    />
   );
 }

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ArrowLeft, Calendar, CheckCircle2, XCircle, Clock, AlertCircle } from "lucide-react";
+import { ArrowLeft, Calendar, CheckCircle2, XCircle, Clock, AlertCircle, Webhook, ChevronDown, ChevronRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface SubscriptionData {
@@ -65,7 +65,20 @@ interface TimelineEvent {
   color: string;
 }
 
-export function SubscriptionDetail({ subscription: sub }: { subscription: Record<string, unknown> }) {
+interface WebhookEvent {
+  event_id: string;
+  event_type: string;
+  processed_at: string;
+  payload: unknown;
+}
+
+export function SubscriptionDetail({
+  subscription: sub,
+  events = [],
+}: {
+  subscription: Record<string, unknown>;
+  events?: WebhookEvent[];
+}) {
   const s = sub as unknown as SubscriptionData;
   const router = useRouter();
   const [extendMonths, setExtendMonths] = useState(1);
@@ -73,6 +86,7 @@ export function SubscriptionDetail({ subscription: sub }: { subscription: Record
   const [cancelling, setCancelling] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [expandedEvent, setExpandedEvent] = useState<string | null>(null);
 
   const timeline: TimelineEvent[] = [
     { label: "Créé", date: s.created_at, icon: Clock, color: "text-slate-500 bg-slate-100" },
@@ -233,6 +247,54 @@ export function SubscriptionDetail({ subscription: sub }: { subscription: Record
             })}
           </ol>
         </div>
+      </div>
+
+      {/* Webhook events viewer (Wave 6) */}
+      <div className="bg-white rounded-xl border border-slate-200 p-6 mb-6">
+        <div className="flex items-center gap-2 mb-4">
+          <Webhook className="w-5 h-5 text-slate-500" />
+          <h2 className="text-lg font-semibold text-slate-900">Webhooks reçus</h2>
+          <span className="ml-auto text-xs text-slate-400">{events.length} événement{events.length > 1 ? "s" : ""}</span>
+        </div>
+        {events.length === 0 ? (
+          <p className="text-sm text-slate-400">
+            Aucun webhook reçu pour cet abonnement.
+            {s.payment_provider && s.payment_provider !== "stripe" && (
+              <> Provider actuel: <span className="font-medium text-slate-600">{s.payment_provider}</span> (les webhooks sont gérés via leur propre canal).</>
+            )}
+          </p>
+        ) : (
+          <ul className="divide-y divide-slate-100">
+            {events.map((evt) => {
+              const isOpen = expandedEvent === evt.event_id;
+              return (
+                <li key={evt.event_id} className="py-2">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedEvent(isOpen ? null : evt.event_id)}
+                    className="w-full flex items-center gap-2 text-left hover:bg-slate-50 rounded-md px-2 py-1 -mx-2 transition-colors"
+                  >
+                    {isOpen ? (
+                      <ChevronDown className="w-4 h-4 text-slate-400" />
+                    ) : (
+                      <ChevronRight className="w-4 h-4 text-slate-400" />
+                    )}
+                    <span className="font-mono text-xs text-slate-500 truncate">{evt.event_id}</span>
+                    <span className="px-2 py-0.5 rounded-full text-xs font-medium bg-blue-50 text-blue-700">
+                      {evt.event_type}
+                    </span>
+                    <span className="ml-auto text-xs text-slate-400 whitespace-nowrap">{fmtDate(evt.processed_at)}</span>
+                  </button>
+                  {isOpen && (
+                    <pre className="mt-2 ml-6 p-3 bg-slate-50 border border-slate-100 rounded-md text-xs text-slate-700 overflow-auto max-h-80">
+                      {JSON.stringify(evt.payload, null, 2)}
+                    </pre>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        )}
       </div>
 
       {/* Actions */}

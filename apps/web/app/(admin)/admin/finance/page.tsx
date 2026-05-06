@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { TrendingUp, Users, UserPlus, UserMinus, CreditCard, ListOrdered, BarChart3, Receipt } from "lucide-react";
+import { TrendingUp, Users, UserPlus, UserMinus, CreditCard, ListOrdered, BarChart3, Receipt, Award, Banknote, FileSpreadsheet } from "lucide-react";
 
 interface OverviewStats {
   active_subscriptions: number;
@@ -184,6 +184,57 @@ export default function AdminFinancePage() {
           </div>
           <p className="text-sm text-slate-500">
             Gérer les abonnements médecins : prolonger, activer, suspendre ou réactiver.
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/finance/commissions"
+          className="bg-white rounded-xl border border-slate-200 p-6 hover:border-teal-300 hover:shadow-sm transition-all group"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+              <Award className="w-5 h-5" />
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900 group-hover:text-emerald-700 transition-colors">
+              Commissions SOS
+            </h2>
+          </div>
+          <p className="text-sm text-slate-500">
+            Suivi des commissions perçues par session SOS terminée.
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/finance/payments"
+          className="bg-white rounded-xl border border-slate-200 p-6 hover:border-teal-300 hover:shadow-sm transition-all group"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+              <Banknote className="w-5 h-5" />
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900 group-hover:text-blue-700 transition-colors">
+              Historique paiements
+            </h2>
+          </div>
+          <p className="text-sm text-slate-500">
+            Vue unifiée des paiements (consultations + abonnements) avec filtres.
+          </p>
+        </Link>
+
+        <Link
+          href="/admin/finance/export"
+          className="bg-white rounded-xl border border-slate-200 p-6 hover:border-teal-300 hover:shadow-sm transition-all group"
+        >
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-10 h-10 rounded-lg bg-orange-50 text-orange-600 flex items-center justify-center">
+              <FileSpreadsheet className="w-5 h-5" />
+            </div>
+            <h2 className="text-lg font-semibold text-slate-900 group-hover:text-orange-700 transition-colors">
+              Export financier
+            </h2>
+          </div>
+          <p className="text-sm text-slate-500">
+            Exporter en CSV : consultations, abonnements, remboursements.
           </p>
         </Link>
       </div>
