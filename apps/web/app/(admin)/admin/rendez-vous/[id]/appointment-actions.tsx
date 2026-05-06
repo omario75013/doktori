@@ -2,7 +2,14 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { ChevronDown, Send, Loader2 } from "lucide-react";
+import {
+  ChevronDown,
+  Send,
+  Loader2,
+  UserCog,
+  CalendarClock,
+  RotateCcw,
+} from "lucide-react";
 
 const VALID_STATUSES = [
   { value: "pending", label: "En attente" },
@@ -13,6 +20,8 @@ const VALID_STATUSES = [
 ] as const;
 
 type AppointmentStatus = (typeof VALID_STATUSES)[number]["value"];
+
+type ModalKind = "reassign" | "reschedule" | "refund" | null;
 
 export function AppointmentActions({
   appointmentId,
@@ -28,6 +37,7 @@ export function AppointmentActions({
   const [success, setSuccess] = useState<string | null>(null);
   const [busy, startTransition] = useTransition();
   const [reminderBusy, setReminderBusy] = useState(false);
+  const [openModal, setOpenModal] = useState<ModalKind>(null);
 
   async function changeStatus() {
     if (status === currentStatus) {
@@ -134,6 +144,48 @@ export function AppointmentActions({
         </button>
       </div>
 
+      <hr className="border-slate-200" />
+
+      {/* Operational actions */}
+      <div className="space-y-2">
+        <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide">
+          Opérations
+        </label>
+        <button
+          onClick={() => {
+            setError(null);
+            setSuccess(null);
+            setOpenModal("reassign");
+          }}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors"
+        >
+          <UserCog className="w-4 h-4" />
+          Réassigner
+        </button>
+        <button
+          onClick={() => {
+            setError(null);
+            setSuccess(null);
+            setOpenModal("reschedule");
+          }}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg transition-colors"
+        >
+          <CalendarClock className="w-4 h-4" />
+          Reprogrammer
+        </button>
+        <button
+          onClick={() => {
+            setError(null);
+            setSuccess(null);
+            setOpenModal("refund");
+          }}
+          className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 rounded-lg transition-colors"
+        >
+          <RotateCcw className="w-4 h-4" />
+          Rembourser
+        </button>
+      </div>
+
       {error && (
         <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
           {error}
@@ -144,6 +196,345 @@ export function AppointmentActions({
           {success}
         </p>
       )}
+
+      {openModal === "reassign" && (
+        <ReassignModal
+          appointmentId={appointmentId}
+          onClose={() => setOpenModal(null)}
+          onSuccess={(msg) => {
+            setSuccess(msg);
+            setOpenModal(null);
+            router.refresh();
+          }}
+          onError={setError}
+        />
+      )}
+      {openModal === "reschedule" && (
+        <RescheduleModal
+          appointmentId={appointmentId}
+          onClose={() => setOpenModal(null)}
+          onSuccess={(msg) => {
+            setSuccess(msg);
+            setOpenModal(null);
+            router.refresh();
+          }}
+          onError={setError}
+        />
+      )}
+      {openModal === "refund" && (
+        <RefundModal
+          appointmentId={appointmentId}
+          onClose={() => setOpenModal(null)}
+          onSuccess={(msg) => {
+            setSuccess(msg);
+            setOpenModal(null);
+            router.refresh();
+          }}
+          onError={setError}
+        />
+      )}
     </div>
+  );
+}
+
+// ─── Modals ─────────────────────────────────────────────────
+
+function ModalShell({
+  title,
+  onClose,
+  children,
+}: {
+  title: string;
+  onClose: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white rounded-xl border border-slate-200 shadow-xl w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-start justify-between mb-4">
+          <h3 className="text-base font-semibold text-slate-900">{title}</h3>
+          <button
+            onClick={onClose}
+            className="text-slate-400 hover:text-slate-600 text-xl leading-none"
+          >
+            ×
+          </button>
+        </div>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function ReassignModal({
+  appointmentId,
+  onClose,
+  onSuccess,
+  onError,
+}: {
+  appointmentId: string;
+  onClose: () => void;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [newDoctorId, setNewDoctorId] = useState("");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit() {
+    if (!newDoctorId) return;
+    setBusy(true);
+    const res = await fetch(`/api/admin/appointments/${appointmentId}/reassign`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ newDoctorId, reason: reason || undefined }),
+    });
+    setBusy(false);
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      onSuccess("Rendez-vous réassigné.");
+    } else {
+      onError(data.error ?? "Erreur lors de la réassignation");
+    }
+  }
+
+  return (
+    <ModalShell title="Réassigner à un autre médecin" onClose={onClose}>
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+            ID du nouveau médecin *
+          </label>
+          <input
+            type="text"
+            value={newDoctorId}
+            onChange={(e) => setNewDoctorId(e.target.value)}
+            placeholder="UUID du médecin destinataire"
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg font-mono focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+            Raison (optionnelle)
+          </label>
+          <input
+            type="text"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+        </div>
+        <div className="flex gap-2 justify-end pt-2">
+          <button
+            onClick={onClose}
+            className="px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={submit}
+            disabled={!newDoctorId || busy}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 rounded-lg"
+          >
+            {busy && <Loader2 className="w-4 h-4 animate-spin" />}
+            Réassigner
+          </button>
+        </div>
+      </div>
+    </ModalShell>
+  );
+}
+
+function RescheduleModal({
+  appointmentId,
+  onClose,
+  onSuccess,
+  onError,
+}: {
+  appointmentId: string;
+  onClose: () => void;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [startsAt, setStartsAt] = useState("");
+  const [endsAt, setEndsAt] = useState("");
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit() {
+    if (!startsAt || !endsAt) return;
+    setBusy(true);
+    const res = await fetch(`/api/admin/appointments/${appointmentId}/reschedule`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        newStartsAt: new Date(startsAt).toISOString(),
+        newEndsAt: new Date(endsAt).toISOString(),
+        reason: reason || undefined,
+      }),
+    });
+    setBusy(false);
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      onSuccess("Rendez-vous reprogrammé.");
+    } else {
+      onError(data.error ?? "Erreur lors de la reprogrammation");
+    }
+  }
+
+  return (
+    <ModalShell title="Reprogrammer le rendez-vous" onClose={onClose}>
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+            Nouveau début *
+          </label>
+          <input
+            type="datetime-local"
+            value={startsAt}
+            onChange={(e) => setStartsAt(e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+            Nouvelle fin *
+          </label>
+          <input
+            type="datetime-local"
+            value={endsAt}
+            onChange={(e) => setEndsAt(e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+            Raison (optionnelle)
+          </label>
+          <input
+            type="text"
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+        </div>
+        <div className="flex gap-2 justify-end pt-2">
+          <button
+            onClick={onClose}
+            className="px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={submit}
+            disabled={!startsAt || !endsAt || busy}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-teal-600 hover:bg-teal-700 disabled:opacity-50 rounded-lg"
+          >
+            {busy && <Loader2 className="w-4 h-4 animate-spin" />}
+            Reprogrammer
+          </button>
+        </div>
+      </div>
+    </ModalShell>
+  );
+}
+
+function RefundModal({
+  appointmentId,
+  onClose,
+  onSuccess,
+  onError,
+}: {
+  appointmentId: string;
+  onClose: () => void;
+  onSuccess: (msg: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [reason, setReason] = useState("");
+  const [amount, setAmount] = useState("");
+  const [busy, setBusy] = useState(false);
+
+  async function submit() {
+    if (reason.trim().length < 10) return;
+    setBusy(true);
+    const body: { reason: string; amount?: number } = { reason: reason.trim() };
+    if (amount.trim()) {
+      const n = Number.parseInt(amount, 10);
+      if (Number.isFinite(n) && n > 0) body.amount = n;
+    }
+    const res = await fetch(`/api/admin/appointments/${appointmentId}/refund`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+    setBusy(false);
+    const data = await res.json().catch(() => ({}));
+    if (res.ok) {
+      const status = data.paymentStatus === "refund_pending" ? "en attente (Stripe)" : "effectué";
+      onSuccess(`Remboursement ${status}.`);
+    } else {
+      onError(data.error ?? "Erreur lors du remboursement");
+    }
+  }
+
+  const reasonValid = reason.trim().length >= 10;
+
+  return (
+    <ModalShell title="Rembourser le rendez-vous" onClose={onClose}>
+      <div className="space-y-3">
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+            Raison * (min. 10 caractères)
+          </label>
+          <textarea
+            value={reason}
+            onChange={(e) => setReason(e.target.value)}
+            rows={3}
+            placeholder="Ex: Le patient a annulé, médecin indisponible…"
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-semibold text-slate-600 uppercase tracking-wide mb-1.5">
+            Montant en millimes (optionnel — vide = total)
+          </label>
+          <input
+            type="number"
+            min="1"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="Ex: 50000 = 50 DT"
+            className="w-full px-3 py-2 text-sm border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500"
+          />
+        </div>
+        <p className="text-xs text-slate-500">
+          Pour les paiements Stripe, le statut sera <em>refund_pending</em>{" "}
+          jusqu&apos;au webhook. Pour les autres modes (virement, flouci, cash),
+          le remboursement est marqué effectué (à exécuter manuellement).
+        </p>
+        <div className="flex gap-2 justify-end pt-2">
+          <button
+            onClick={onClose}
+            className="px-3 py-2 text-sm text-slate-600 hover:bg-slate-50 rounded-lg"
+          >
+            Annuler
+          </button>
+          <button
+            onClick={submit}
+            disabled={!reasonValid || busy}
+            className="inline-flex items-center gap-2 px-4 py-2 text-sm font-medium text-white bg-rose-600 hover:bg-rose-700 disabled:opacity-50 rounded-lg"
+          >
+            {busy && <Loader2 className="w-4 h-4 animate-spin" />}
+            Rembourser
+          </button>
+        </div>
+      </div>
+    </ModalShell>
   );
 }
