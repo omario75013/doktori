@@ -3,12 +3,15 @@
 import { useEffect, useState, useCallback } from "react";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
+import Link from "next/link";
 import {
   Star,
   Check,
   X,
   ChevronDown,
   AlertTriangle,
+  Sparkles,
+  MessageSquare,
 } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -334,6 +337,7 @@ export default function AdminReviewsPage() {
   const [updating, setUpdating] = useState<string | null>(null);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkLoading, setBulkLoading] = useState(false);
+  const [smartBulkLoading, setSmartBulkLoading] = useState(false);
   const [rejectTarget, setRejectTarget] = useState<string | null>(null);
 
   const load = useCallback(async () => {
@@ -381,6 +385,28 @@ export default function AdminReviewsPage() {
     }
   }
 
+  async function smartBulkApprove() {
+    const ok = window.confirm(
+      "Approuver tous les avis 5★ en attente des 7 derniers jours ?"
+    );
+    if (!ok) return;
+    setSmartBulkLoading(true);
+    const res = await fetch("/api/admin/reviews/bulk-approve", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ filter: { minRating: 5 } }),
+    });
+    setSmartBulkLoading(false);
+    if (res.ok) {
+      const data = (await res.json()) as { approved: number };
+      window.alert(`${data.approved} avis approuvés.`);
+      load();
+    } else {
+      const data = (await res.json().catch(() => ({}))) as { error?: string };
+      window.alert(data.error ?? "Erreur lors de l'approbation en masse");
+    }
+  }
+
   function toggleSelect(id: string) {
     setSelected((prev) => {
       const next = new Set(prev);
@@ -404,11 +430,31 @@ export default function AdminReviewsPage() {
   return (
     <div className="p-8 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold text-slate-900">Modération des avis</h1>
-        <p className="text-slate-500 mt-1">
-          Approuvez ou rejetez les avis patients avant publication.
-        </p>
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Modération des avis</h1>
+          <p className="text-slate-500 mt-1">
+            Approuvez ou rejetez les avis patients avant publication.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={smartBulkApprove}
+            disabled={smartBulkLoading}
+            className="inline-flex items-center gap-1.5 rounded-lg bg-amber-500 px-3 py-2 text-sm font-semibold text-white hover:bg-amber-600 disabled:opacity-50 transition-colors"
+            title="Approuver tous les 5★ en attente des 7 derniers jours"
+          >
+            <Sparkles className="w-4 h-4" />
+            {smartBulkLoading ? "Approbation…" : "Approuver 5★ (7j)"}
+          </button>
+          <Link
+            href="/admin/reviews/replies"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors"
+          >
+            <MessageSquare className="w-4 h-4" />
+            Réponses médecins
+          </Link>
+        </div>
       </div>
 
       {/* Stats */}

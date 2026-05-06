@@ -2301,3 +2301,28 @@ export type PushNotificationLog = typeof pushNotificationsLog.$inferSelect;
 export type NewPushNotificationLog = typeof pushNotificationsLog.$inferInsert;
 export type MessageTemplate = typeof messageTemplates.$inferSelect;
 export type NewMessageTemplate = typeof messageTemplates.$inferInsert;
+
+// ── Wave 5 — Doctor reply to patient review ─────────────────────────────────
+export const reviewReplies = pgTable(
+  "review_replies",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    reviewId: uuid("review_id").notNull().references(() => reviews.id, { onDelete: "cascade" }),
+    doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+    body: text("body").notNull(),
+    /** pending | approved | rejected */
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    moderatedBy: uuid("moderated_by").references(() => adminUsers.id, { onDelete: "set null" }),
+    moderatedAt: timestamp("moderated_at", { withTimezone: true }),
+    rejectionReason: text("rejection_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    uniqueIndex("review_replies_review_uidx").on(t.reviewId), // one reply per review
+    index("review_replies_doctor_idx").on(t.doctorId),
+    index("review_replies_status_idx").on(t.status),
+  ]
+);
+
+export type ReviewReply = typeof reviewReplies.$inferSelect;
+export type NewReviewReply = typeof reviewReplies.$inferInsert;
