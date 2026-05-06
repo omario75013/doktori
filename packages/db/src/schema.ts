@@ -2114,3 +2114,27 @@ export const doctorBenchmarkSnapshots = pgTable("doctor_benchmark_snapshots", {
 
 export type DoctorBenchmarkSnapshot = typeof doctorBenchmarkSnapshots.$inferSelect;
 export type NewDoctorBenchmarkSnapshot = typeof doctorBenchmarkSnapshots.$inferInsert;
+
+// ── Coach IA usage (Phase 2 #9) ─────────────────────────────────────────────
+// Privacy-by-design: NEVER log user message content here. Only metadata.
+export const coachIaUsage = pgTable(
+  "coach_ia_usage",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id").references(() => patients.id, { onDelete: "set null" }),
+    eventType: varchar("event_type", { length: 40 }).notNull(),  // 'message' | 'disclaimer_accepted'
+    tokensIn: integer("tokens_in").default(0),
+    tokensOut: integer("tokens_out").default(0),
+    costUsd: numeric("cost_usd", { precision: 10, scale: 6 }).default("0"),
+    latencyMs: integer("latency_ms").default(0),
+    error: text("error"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index("coach_ia_usage_patient_idx").on(table.patientId),
+    index("coach_ia_usage_created_idx").on(table.createdAt),
+  ]
+);
+
+export type CoachIaUsage = typeof coachIaUsage.$inferSelect;
+export type NewCoachIaUsage = typeof coachIaUsage.$inferInsert;
