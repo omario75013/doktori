@@ -69,16 +69,19 @@ jobs:
             --exclude=.github \
             ./ ${{ vars.DOKTORI_PROD_USER }}@${{ vars.DOKTORI_PROD_HOST }}:/opt/doktori/
 
-      - name: Build and restart on prod
+      - name: Deploy via scripts/deploy.sh (op inject + build + up + healthcheck)
         run: |
+          # scripts/deploy.sh on prod regenerates .env from .env.tpl via
+          # `op inject` (pulling secrets from 1P), then docker compose
+          # build && up. Includes its own internal healthcheck loop.
           ssh ${{ vars.DOKTORI_PROD_USER }}@${{ vars.DOKTORI_PROD_HOST }} '
             set -e
             cd /opt/doktori
-            docker compose -f docker-compose.prod.yml build
-            docker compose -f docker-compose.prod.yml up -d
+            chmod +x scripts/deploy.sh
+            ./scripts/deploy.sh
           '
 
-      - name: Healthcheck
+      - name: External healthcheck
         run: |
           set -e
           for i in $(seq 1 18); do
