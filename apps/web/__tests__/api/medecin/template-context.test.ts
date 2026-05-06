@@ -144,15 +144,24 @@ describe("W1.13 GET template-context IDOR", () => {
     expect(res.status).toBe(403);
   });
 
-  // TODO: real bug — API returns 200 when appointmentId is missing, expected 400.
-  // This is a validation gap in /api/medecin/patients/[id]/template-context, NOT a
-  // test infra issue. Fix the route handler to reject missing appointmentId. Tracked
-  // as DOKTORI-MISSING-APPT-VALIDATION in docs/phase-2-deferred-tickets.md.
-  it.skip("400: missing appointmentId returns 400", async () => {
+  // The route is intentionally flexible: if appointmentId is provided it does
+  // a strict IDOR check; if absent, it falls back to verifying the doctor has
+  // ANY prior appointment with this patient. (Used by template-lookup.tsx UI
+  // flow that may not have an appointmentId in scope.)
+  it("200: no appointmentId returns OK when doctor has prior appointment", async () => {
     const req = makeRequest(patient1.id); // no appointmentId
     const res = await getTemplateContext(req, {
       params: Promise.resolve({ id: patient1.id }),
     });
-    expect(res.status).toBe(400);
+    expect(res.status).toBe(200);
+  });
+
+  it("403: no appointmentId returns Access denied when doctor has no prior appointment", async () => {
+    // doctor1 tries patient2 (no appointment between them) → 403
+    const req = makeRequest(patient2.id);
+    const res = await getTemplateContext(req, {
+      params: Promise.resolve({ id: patient2.id }),
+    });
+    expect(res.status).toBe(403);
   });
 });

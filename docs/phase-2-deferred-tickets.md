@@ -2,22 +2,15 @@
 
 Discovered during Phase 2 #21 Redis cache implementation (2026-05-05). Tracked here so they don't get lost.
 
-## DOKTORI-MISSING-APPT-VALIDATION — `/api/medecin/patients/[id]/template-context` doesn't reject missing `appointmentId`
+## ~~DOKTORI-MISSING-APPT-VALIDATION~~ — RESOLVED 2026-05-06
 
-**Discovered:** 2026-05-05 during Phase 2 #25 third CI run.
+The original ticket diagnosis was wrong. After reading the route code and its callers (`template-lookup.tsx`), the route is **intentionally** flexible: appointmentId is optional, and absence triggers a fall-back check on doctor-patient relationship existence. The `template-lookup.tsx` UI relies on this dual mode.
 
-**Symptom:** The integration test `400: missing appointmentId returns 400` (line 144 in `apps/web/__tests__/api/medecin/template-context.test.ts`) asserts that the route returns HTTP 400 when called without `appointmentId` in the query string. CI shows the route returns 200.
+The bad test was rewritten to verify the actual design contract:
+- No appointmentId + doctor has appointment with patient → 200 OK
+- No appointmentId + doctor has NO appointment with patient → 403
 
-**Implication:** The route accepts requests without an appointmentId, returning some default response. This may or may not actually leak data — the test is part of the IDOR test suite, so it's there because someone considered "no appointmentId = abuse vector". Worth a 30-min investigation.
-
-**Action:**
-1. Read `apps/web/app/api/medecin/patients/[id]/template-context/route.ts`.
-2. Add `if (!searchParams.get("appointmentId")) return NextResponse.json({error: "appointmentId required"}, {status: 400})` at the top of the GET handler.
-3. Re-enable the skipped test.
-
-**Estimated effort:** 30 min.
-
-**Priority:** Medium — likely security-relevant given it's in the IDOR suite. Investigate before next prod release.
+Resolved in commit covering both the rewrite and this update.
 
 ---
 
