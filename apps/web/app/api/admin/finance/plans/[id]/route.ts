@@ -1,94 +1,121 @@
-import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, subscriptionPlans } from "@doktori/db";
+import { NextResponse } from "next/server";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
+import { subscriptionPlans } from "@doktori/db";
 import { eq } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin", "finance"]);
-    if (admin instanceof NextResponse) return admin;
+type RouteContext = { params: Promise<{ id: string }> };
 
-    const { id } = await params;
-
-    const [existing] = await db
+export const PATCH = withAdminAudit<
+  { plan: typeof subscriptionPlans.$inferSelect },
+  RouteContext
+>({
+  action: "subscription_plan.update",
+  resourceType: "subscription_plans",
+  allowedRoles: ["super_admin", "finance"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
       .select()
       .from(subscriptionPlans)
-      .where(eq(subscriptionPlans.id, id))
+      .where(eq(subscriptionPlans.id, resourceId))
+      .limit(1);
+    return row ?? null;
+  },
+  handler: async ({ tx, resourceId, body }) => {
+    const [existing] = await tx
+      .select()
+      .from(subscriptionPlans)
+      .where(eq(subscriptionPlans.id, resourceId))
       .limit(1);
 
     if (!existing) {
       return NextResponse.json({ error: "Plan introuvable" }, { status: 404 });
     }
 
-    const body = (await req.json()) as Record<string, unknown>;
+    const b = (body ?? {}) as Record<string, unknown>;
 
-    // Validate allowed fields
-    const allowedFields = ["label", "priceMillimes", "features", "isActive", "displayOrder",
-      "maxAppointmentsPerMonth", "maxSmsPerMonth", "maxPatientsTotal", "enabledFeatures"];
+    const allowedFields = [
+      "label",
+      "priceMillimes",
+      "features",
+      "isActive",
+      "displayOrder",
+      "maxAppointmentsPerMonth",
+      "maxSmsPerMonth",
+      "maxPatientsTotal",
+      "enabledFeatures",
+    ];
     const updates: Partial<typeof subscriptionPlans.$inferInsert> = {};
 
-    if ("label" in body) {
-      if (typeof body.label !== "string" || !body.label.trim()) {
+    if ("label" in b) {
+      if (typeof b.label !== "string" || !b.label.trim()) {
         return NextResponse.json({ error: "label invalide." }, { status: 422 });
       }
-      updates.label = body.label.trim();
+      updates.label = b.label.trim();
     }
 
-    if ("priceMillimes" in body) {
-      if (typeof body.priceMillimes !== "number" || body.priceMillimes < 0 || !Number.isInteger(body.priceMillimes)) {
-        return NextResponse.json({ error: "priceMillimes doit être un entier >= 0." }, { status: 422 });
+    if ("priceMillimes" in b) {
+      if (
+        typeof b.priceMillimes !== "number" ||
+        b.priceMillimes < 0 ||
+        !Number.isInteger(b.priceMillimes)
+      ) {
+        return NextResponse.json(
+          { error: "priceMillimes doit être un entier >= 0." },
+          { status: 422 }
+        );
       }
-      updates.priceMillimes = body.priceMillimes;
+      updates.priceMillimes = b.priceMillimes;
     }
 
-    if ("features" in body) {
-      if (!Array.isArray(body.features) || !body.features.every((f) => typeof f === "string")) {
-        return NextResponse.json({ error: "features doit être un tableau de chaînes." }, { status: 422 });
+    if ("features" in b) {
+      if (!Array.isArray(b.features) || !b.features.every((f) => typeof f === "string")) {
+        return NextResponse.json(
+          { error: "features doit être un tableau de chaînes." },
+          { status: 422 }
+        );
       }
-      updates.features = body.features as string[];
+      updates.features = b.features as string[];
     }
 
-    if ("isActive" in body) {
-      if (typeof body.isActive !== "boolean") {
+    if ("isActive" in b) {
+      if (typeof b.isActive !== "boolean") {
         return NextResponse.json({ error: "isActive doit être un booléen." }, { status: 422 });
       }
-      updates.isActive = body.isActive;
+      updates.isActive = b.isActive;
     }
 
-    if ("displayOrder" in body) {
-      if (typeof body.displayOrder !== "number" || !Number.isInteger(body.displayOrder)) {
+    if ("displayOrder" in b) {
+      if (typeof b.displayOrder !== "number" || !Number.isInteger(b.displayOrder)) {
         return NextResponse.json({ error: "displayOrder doit être un entier." }, { status: 422 });
       }
-      updates.displayOrder = body.displayOrder;
+      updates.displayOrder = b.displayOrder;
     }
 
-    if ("maxAppointmentsPerMonth" in body) {
+    if ("maxAppointmentsPerMonth" in b) {
       updates.maxAppointmentsPerMonth =
-        body.maxAppointmentsPerMonth === null ? null : Number(body.maxAppointmentsPerMonth);
+        b.maxAppointmentsPerMonth === null ? null : Number(b.maxAppointmentsPerMonth);
     }
-    if ("maxSmsPerMonth" in body) {
-      updates.maxSmsPerMonth =
-        body.maxSmsPerMonth === null ? null : Number(body.maxSmsPerMonth);
+    if ("maxSmsPerMonth" in b) {
+      updates.maxSmsPerMonth = b.maxSmsPerMonth === null ? null : Number(b.maxSmsPerMonth);
     }
-    if ("maxPatientsTotal" in body) {
+    if ("maxPatientsTotal" in b) {
       updates.maxPatientsTotal =
-        body.maxPatientsTotal === null ? null : Number(body.maxPatientsTotal);
+        b.maxPatientsTotal === null ? null : Number(b.maxPatientsTotal);
     }
-    if ("enabledFeatures" in body) {
-      if (!Array.isArray(body.enabledFeatures)) {
-        return NextResponse.json({ error: "enabledFeatures doit être un tableau." }, { status: 422 });
+    if ("enabledFeatures" in b) {
+      if (!Array.isArray(b.enabledFeatures)) {
+        return NextResponse.json(
+          { error: "enabledFeatures doit être un tableau." },
+          { status: 422 }
+        );
       }
-      updates.enabledFeatures = body.enabledFeatures as string[];
+      updates.enabledFeatures = b.enabledFeatures as string[];
     }
 
-    // Ignore unknown fields
-    const unknownKeys = Object.keys(body).filter((k) => !allowedFields.includes(k));
+    const unknownKeys = Object.keys(b).filter((k) => !allowedFields.includes(k));
     if (unknownKeys.length > 0 && Object.keys(updates).length === 0) {
       return NextResponse.json({ error: "Aucun champ modifiable fourni." }, { status: 422 });
     }
@@ -97,27 +124,12 @@ export async function PATCH(
       return NextResponse.json({ error: "Aucun champ modifiable fourni." }, { status: 422 });
     }
 
-    const [updated] = await db
+    const [updated] = await tx
       .update(subscriptionPlans)
       .set(updates)
-      .where(eq(subscriptionPlans.id, id))
+      .where(eq(subscriptionPlans.id, resourceId))
       .returning();
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "subscription_plan.update",
-      resourceType: "subscription_plans",
-      resourceId: id,
-      before: existing,
-      after: updated,
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({ plan: updated });
-  } catch (e) {
-    console.error("[PATCH /api//admin/finance/plans/[id]]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { plan: updated };
+  },
+});

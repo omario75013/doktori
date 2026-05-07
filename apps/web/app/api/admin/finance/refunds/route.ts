@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 
@@ -12,16 +12,6 @@ export const dynamic = "force-dynamic";
  * Wave 6 — reads from the `refunds` table joined with appointments + patients + doctors.
  * Backwards-compat: also includes appointments with payment_status IN ('refund_pending','refunded')
  * that don't have a matching `refunds` row yet (data migration is out of scope).
- *
- * The shape of each row mirrors the legacy contract so the existing UI keeps working:
- *   { id, payment_status, payment_amount, payment_provider, payment_ref,
- *     starts_at, updated_at, patient_id, patient_name, patient_phone,
- *     doctor_id, doctor_name, doctor_specialty }
- *
- * Where:
- *   - id is the appointment id (legacy) for back-compat with the existing PATCH handler
- *   - payment_status is derived from the refund.status when a row exists, else from
- *     appointments.payment_status
  */
 export async function GET(req: Request) {
   const admin = await requireAdmin(["super_admin", "finance"]);
@@ -30,9 +20,6 @@ export async function GET(req: Request) {
   const { searchParams } = new URL(req.url);
   const statusFilter = searchParams.get("status") ?? null;
 
-  // Map UI status → DB status for the new refunds table:
-  //   refund_pending → pending|processing
-  //   refunded       → succeeded
   const refundStatusInClause =
     statusFilter === "refund_pending"
       ? sql`AND r.status IN ('pending','processing')`
@@ -47,8 +34,6 @@ export async function GET(req: Request) {
         ? sql`AND a.payment_status = 'refunded'`
         : sql``;
 
-  // Source 1: rows in the new refunds table (authoritative).
-  // Source 2 (back-compat): legacy appointments with refund flag but NO refund row.
   const rows = await db.execute(sql`
     SELECT
       a.id                      AS id,
@@ -115,68 +100,61 @@ export async function GET(req: Request) {
 /**
  * PATCH /api/admin/finance/refunds
  * Mark an appointment as refunded (manual confirmation for non-Stripe flows).
- * Updates BOTH the legacy appointments.payment_status AND the refunds row.
- *
  * Body: { appointmentId: string }
  */
-export async function PATCH(req: Request) {
-  const admin = await requireAdmin(["super_admin", "finance"]);
-  if (admin instanceof NextResponse) return admin;
+export const PATCH = withAdminAudit<{ ok: true }, unknown>({
+  action: "finance.refund_confirmed",
+  resourceType: "appointments",
+  allowedRoles: ["super_admin", "finance"],
+  getResourceId: async (req, _ctx) => {
+    try {
+      const b = (await req.clone().json()) as { appointmentId?: string };
+      return typeof b.appointmentId === "string" ? b.appointmentId : "";
+    } catch {
+      return "";
+    }
+  },
+  handler: async ({ tx, body }) => {
+    const b = (body ?? {}) as { appointmentId?: string };
+    const { appointmentId } = b;
+    if (!appointmentId) {
+      return NextResponse.json({ error: "appointmentId requis" }, { status: 400 });
+    }
 
-  let body: { appointmentId?: string };
-  try {
-    body = (await req.json()) as { appointmentId?: string };
-  } catch {
-    return NextResponse.json({ error: "Corps de requête invalide" }, { status: 400 });
-  }
+    const beforeRows = (await tx.execute(sql`
+      SELECT id, payment_status, payment_amount FROM appointments WHERE id = ${appointmentId} LIMIT 1
+    `)) as unknown as Array<{ id: string; payment_status: string; payment_amount: number }>;
+    const before = beforeRows[0];
 
-  const { appointmentId } = body;
-  if (!appointmentId) {
-    return NextResponse.json({ error: "appointmentId requis" }, { status: 400 });
-  }
+    if (!before) {
+      return NextResponse.json({ error: "Rendez-vous introuvable" }, { status: 404 });
+    }
+    if (before.payment_status !== "refund_pending") {
+      return NextResponse.json(
+        {
+          error:
+            "Ce remboursement ne peut pas être marqué comme effectué depuis son état actuel",
+        },
+        { status: 409 }
+      );
+    }
 
-  const [before] = await db.execute(sql`
-    SELECT id, payment_status, payment_amount FROM appointments WHERE id = ${appointmentId} LIMIT 1
-  `) as unknown as [{ id: string; payment_status: string; payment_amount: number } | undefined];
+    await tx.execute(sql`
+      UPDATE appointments
+      SET payment_status = 'refunded', updated_at = NOW()
+      WHERE id = ${appointmentId}
+    `);
 
-  if (!before) {
-    return NextResponse.json({ error: "Rendez-vous introuvable" }, { status: 404 });
-  }
-  if (before.payment_status !== "refund_pending") {
-    return NextResponse.json(
-      { error: "Ce remboursement ne peut pas être marqué comme effectué depuis son état actuel" },
-      { status: 409 }
-    );
-  }
+    await tx.execute(sql`
+      UPDATE refunds
+      SET status = 'succeeded',
+          succeeded_at = COALESCE(succeeded_at, NOW()),
+          updated_at = NOW()
+      WHERE source_type = 'appointment'
+        AND source_id = ${appointmentId}
+        AND status IN ('pending','processing')
+    `);
 
-  await db.execute(sql`
-    UPDATE appointments
-    SET payment_status = 'refunded', updated_at = NOW()
-    WHERE id = ${appointmentId}
-  `);
-
-  // Wave 6 — flip the matching refunds row(s) to succeeded if any are still pending.
-  await db.execute(sql`
-    UPDATE refunds
-    SET status = 'succeeded',
-        succeeded_at = COALESCE(succeeded_at, NOW()),
-        updated_at = NOW()
-    WHERE source_type = 'appointment'
-      AND source_id = ${appointmentId}
-      AND status IN ('pending','processing')
-  `);
-
-  const meta = extractRequestMeta(req);
-  await logAudit({
-    actor: admin,
-    action: "finance.refund_confirmed",
-    resourceType: "appointments",
-    resourceId: appointmentId,
-    before: { payment_status: before.payment_status },
-    after: { payment_status: "refunded" },
-    ip: meta.ip,
-    userAgent: meta.userAgent,
-  });
-
-  return NextResponse.json({ ok: true });
-}
+    return { ok: true } as const;
+  },
+});
