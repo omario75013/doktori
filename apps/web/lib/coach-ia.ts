@@ -3,16 +3,76 @@ import "server-only";
 import { SPECIALTIES } from "@doktori/shared";
 import { db, coachIaUsage } from "@doktori/db";
 import { redis } from "./cache";
+import { getSettingOrDefault } from "./platform-settings";
 
 // ─── Pricing (Kimi K2 via OpenRouter) ─────────────────────────────────────────
 // $0.40 / M input tokens, $2.00 / M output tokens.
 const PRICE_PER_INPUT_TOKEN = 0.0000004;
 const PRICE_PER_OUTPUT_TOKEN = 0.000002;
 
-// ─── Limits ───────────────────────────────────────────────────────────────────
-const PER_PATIENT_LIMIT = 10;          // messages per 24h per patient
-const GLOBAL_LIMIT = 1000;             // messages per 24h across all patients
+// ─── Defaults (used when platform_settings rows are missing) ──────────────────
+// These mirror the legacy hardcoded values so behavior is unchanged on first
+// boot before the admin saves anything in /admin/parametres/coach-ia.
+const DEFAULT_PER_PATIENT_LIMIT = 10;
+const DEFAULT_GLOBAL_LIMIT = 1000;
+const DEFAULT_DAILY_COST_CAP_USD = 5;
 const RATE_WINDOW_SECONDS = 86400;     // 24h
+
+// ─── Settings keys (single source of truth for admin API + UI) ────────────────
+export const COACH_IA_SETTING_KEYS = {
+  ratePerPatient: "coach_ia.rate_limit_per_patient",
+  rateGlobal: "coach_ia.rate_limit_global",
+  dailyCostCapUsd: "coach_ia.daily_cost_cap_usd",
+  disclaimerHtml: "coach_ia.disclaimer_html",
+} as const;
+
+/**
+ * Default disclaimer HTML, mirroring the legacy hardcoded modal text in
+ * `app/(patient)/coach-ia/disclaimer-modal.tsx`. Used as fallback when
+ * `coach_ia.disclaimer_html` is absent. Keep in sync with the modal's
+ * default rendering so behavior is identical pre-/post-config.
+ *
+ * Allowed tags (sanitized at render time): <p>, <ul>, <li>, <strong>, <a>, <br>.
+ */
+export const DEFAULT_DISCLAIMER_HTML = `<p><strong>Avant de continuer, lisez attentivement :</strong></p>
+<ul>
+  <li>Cet assistant <strong>n'est pas un médecin</strong> et ne pose <strong>aucun diagnostic</strong>.</li>
+  <li>Il vous aide uniquement à identifier la spécialité médicale appropriée pour vos symptômes — et à prendre rendez-vous sur Doktori.</li>
+  <li>Il <strong>ne prescrit pas</strong> de médicaments. Consultez un pharmacien ou votre médecin pour toute question de traitement.</li>
+  <li><strong>En cas d'urgence</strong> (douleur thoracique, difficultés respiratoires, saignement, pensées suicidaires, perte de connaissance, traumatisme), appelez le SAMU au <a href="tel:190">190</a> ou les pompiers au <a href="tel:198">198</a> — n'utilisez pas ce chat.</li>
+  <li>Vos messages <strong>ne sont pas conservés</strong>. Chaque session est indépendante.</li>
+  <li>Limite : 10 messages par 24 heures.</li>
+</ul>`;
+
+// ─── Settings helpers ─────────────────────────────────────────────────────────
+
+async function getMaxPatientMessages(): Promise<number> {
+  const v = await getSettingOrDefault(
+    COACH_IA_SETTING_KEYS.ratePerPatient,
+    String(DEFAULT_PER_PATIENT_LIMIT)
+  );
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_PER_PATIENT_LIMIT;
+}
+
+async function getMaxGlobalMessages(): Promise<number> {
+  const v = await getSettingOrDefault(
+    COACH_IA_SETTING_KEYS.rateGlobal,
+    String(DEFAULT_GLOBAL_LIMIT)
+  );
+  const n = parseInt(v, 10);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_GLOBAL_LIMIT;
+}
+
+async function getDailyCostCapUsd(): Promise<number> {
+  // Admin-configured value takes precedence over the legacy env var.
+  const v = await getSettingOrDefault(
+    COACH_IA_SETTING_KEYS.dailyCostCapUsd,
+    process.env.OPENROUTER_MAX_DAILY_COST_USD ?? String(DEFAULT_DAILY_COST_CAP_USD)
+  );
+  const n = parseFloat(v);
+  return Number.isFinite(n) && n > 0 ? n : DEFAULT_DAILY_COST_CAP_USD;
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -106,12 +166,13 @@ export async function checkRateLimit(patientId: string): Promise<boolean> {
   if (!isReady()) return false;
   const key = `coach_ia:rate:patient:${patientId}`;
   try {
+    const limit = await getMaxPatientMessages();
     const count = await redis.incr(key);
     if (count === 1) {
       // First hit in the window — set TTL.
       await redis.expire(key, RATE_WINDOW_SECONDS);
     }
-    return count <= PER_PATIENT_LIMIT;
+    return count <= limit;
   } catch (e) {
     console.warn("[coach-ia] rate-limit redis fail:", e);
     return false;
@@ -126,11 +187,12 @@ export async function checkGlobalRateLimit(): Promise<boolean> {
   if (!isReady()) return false;
   const key = `coach_ia:rate:global:${todayKey()}`;
   try {
+    const limit = await getMaxGlobalMessages();
     const count = await redis.incr(key);
     if (count === 1) {
       await redis.expire(key, RATE_WINDOW_SECONDS);
     }
-    return count <= GLOBAL_LIMIT;
+    return count <= limit;
   } catch (e) {
     console.warn("[coach-ia] global rate-limit redis fail:", e);
     return false;
@@ -156,7 +218,7 @@ export function estimateCost(tokensIn: number, tokensOut: number): number {
  */
 export async function checkCostCap(): Promise<boolean> {
   if (!isReady()) return false;
-  const cap = parseFloat(process.env.OPENROUTER_MAX_DAILY_COST_USD ?? "5");
+  const cap = await getDailyCostCapUsd();
   const key = `coach_ia:cost:${todayKey()}`;
   try {
     const raw = await redis.get(key);

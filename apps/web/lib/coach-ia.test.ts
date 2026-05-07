@@ -8,6 +8,15 @@ vi.mock("server-only", () => ({}));
 // coach-ia.ts) uses the in-memory impl.
 vi.mock("ioredis", () => ({ default: RedisMock }));
 
+// Mock platform-settings so coach-ia rate-limit / cost-cap helpers do not
+// hit the DB during tests. Returning the default value preserves the
+// pre-refactor behavior (10/patient, 1000/global, $5/day).
+vi.mock("./platform-settings", () => ({
+  getSetting: vi.fn(async () => null),
+  getSettingOrDefault: vi.fn(async (_key: string, def: string) => def),
+  invalidateSettingsCache: vi.fn(),
+}));
+
 // Set env vars BEFORE importing the module under test (env is read eagerly
 // in some helpers).
 process.env.REDIS_URL = "redis://localhost:6379";

@@ -2,6 +2,11 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { isEnabled } from "@/lib/feature-flags";
+import { getSettingOrDefault } from "@/lib/platform-settings";
+import {
+  COACH_IA_SETTING_KEYS,
+  DEFAULT_DISCLAIMER_HTML,
+} from "@/lib/coach-ia";
 import { CoachIaClient } from "./coach-ia-client";
 
 // Feature is flag-gated and not yet legally cleared. Keep it out of search
@@ -65,9 +70,18 @@ export default async function CoachIaPage() {
   // streams responses from /api/coach-ia. Production activation still gated
   // by `coach_ia_enabled` (currently OFF — awaiting physician + legal review
   // of the system prompt and disclaimer wording).
+  //
+  // The disclaimer body is admin-configurable via /admin/parametres/coach-ia.
+  // We resolve it server-side here so the client modal renders the right
+  // text on first paint without an extra round-trip.
+  const disclaimerHtml = await getSettingOrDefault(
+    COACH_IA_SETTING_KEYS.disclaimerHtml,
+    DEFAULT_DISCLAIMER_HTML
+  );
+
   return (
     <main className="mx-auto">
-      <CoachIaClient />
+      <CoachIaClient disclaimerHtml={disclaimerHtml} />
     </main>
   );
 }

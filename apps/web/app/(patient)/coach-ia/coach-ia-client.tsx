@@ -77,7 +77,16 @@ function errorForStatus(status: number): string {
   }
 }
 
-export function CoachIaClient() {
+interface CoachIaClientProps {
+  /**
+   * Admin-curated disclaimer HTML, resolved server-side from
+   * `coach_ia.disclaimer_html` and passed through here so the modal
+   * renders the configured wording without an extra fetch.
+   */
+  disclaimerHtml: string;
+}
+
+export function CoachIaClient({ disclaimerHtml }: CoachIaClientProps) {
   const router = useRouter();
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -266,7 +275,11 @@ export function CoachIaClient() {
 
   if (disclaimerAccepted === false) {
     return (
-      <DisclaimerModal onAccept={handleAccept} onCancel={handleCancel} />
+      <DisclaimerModal
+        onAccept={handleAccept}
+        onCancel={handleCancel}
+        disclaimerHtml={disclaimerHtml}
+      />
     );
   }
 

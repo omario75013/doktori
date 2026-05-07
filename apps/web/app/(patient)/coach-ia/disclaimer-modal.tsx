@@ -16,9 +16,19 @@ import { AlertTriangle } from "lucide-react";
 interface DisclaimerModalProps {
   onAccept: () => void;
   onCancel: () => void;
+  /**
+   * HTML body of the disclaimer, sourced from the admin-configurable
+   * `coach_ia.disclaimer_html` platform_setting and rendered server-side.
+   * Falls back to the hardcoded V1 wording when the setting is absent (the
+   * page wrapper resolves the default before passing the prop).
+   *
+   * Trusted: super_admin role is required to write this field via
+   * /api/admin/coach-ia/settings.
+   */
+  disclaimerHtml: string;
 }
 
-export function DisclaimerModal({ onAccept, onCancel }: DisclaimerModalProps) {
+export function DisclaimerModal({ onAccept, onCancel, disclaimerHtml }: DisclaimerModalProps) {
   const [accepting, setAccepting] = useState(false);
 
   async function handleAccept() {
@@ -58,51 +68,15 @@ export function DisclaimerModal({ onAccept, onCancel }: DisclaimerModalProps) {
           </h2>
         </div>
 
-        <div className="mt-4 text-sm text-gray-700 space-y-3">
-          <p className="font-medium text-gray-900">
-            Avant de continuer, lisez attentivement :
-          </p>
-          <ul className="space-y-2 list-disc pl-5">
-            <li>
-              Cet assistant <strong>n&apos;est pas un médecin</strong> et ne
-              pose <strong>aucun diagnostic</strong>.
-            </li>
-            <li>
-              Il vous aide uniquement à identifier la spécialité médicale
-              appropriée pour vos symptômes — et à prendre rendez-vous sur
-              Doktori.
-            </li>
-            <li>
-              Il <strong>ne prescrit pas</strong> de médicaments. Consultez un
-              pharmacien ou votre médecin pour toute question de traitement.
-            </li>
-            <li>
-              <strong className="text-red-600">En cas d&apos;urgence</strong>{" "}
-              (douleur thoracique, difficultés respiratoires, saignement,
-              pensées suicidaires, perte de connaissance, traumatisme), appelez
-              le SAMU au{" "}
-              <a
-                href="tel:190"
-                className="font-bold text-red-600 underline"
-              >
-                190
-              </a>{" "}
-              ou les pompiers au{" "}
-              <a
-                href="tel:198"
-                className="font-bold text-red-600 underline"
-              >
-                198
-              </a>{" "}
-              — n&apos;utilisez pas ce chat.
-            </li>
-            <li>
-              Vos messages <strong>ne sont pas conservés</strong>. Chaque
-              session est indépendante.
-            </li>
-            <li>Limite : 10 messages par 24 heures.</li>
-          </ul>
-        </div>
+        {/* Admin-curated content (super_admin role required to write).
+            We trust the source and render verbatim so wording matches the
+            admin preview. Keep the wrapper class list-disc/list-inside so
+            <ul>/<li> from the configured HTML pick up the same styling
+            as the legacy hardcoded version. */}
+        <div
+          className="mt-4 text-sm text-gray-700 space-y-3 [&_ul]:space-y-2 [&_ul]:list-disc [&_ul]:pl-5 [&_a]:font-bold [&_a]:text-red-600 [&_a]:underline"
+          dangerouslySetInnerHTML={{ __html: disclaimerHtml }}
+        />
 
         <div className="mt-6 flex flex-col sm:flex-row justify-end gap-2">
           <button
