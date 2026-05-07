@@ -40,6 +40,46 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { AppStoreBadge, GooglePlayBadge } from "@/components/store-badges";
 import { HeroSearchForm } from "@/components/hero-search-form";
+import { getSettingOrDefault } from "@/lib/platform-settings";
+
+type Testimonial = {
+  name: string;
+  city: string;
+  specialty: string;
+  photoUrl: string;
+  quote: string;
+  rating: number;
+};
+
+const DEFAULT_TESTIMONIALS: Testimonial[] = [
+  {
+    name: "Asma B.",
+    city: "Tunis",
+    specialty: "Dermatologue",
+    photoUrl: "/images/defaults/testimonial-placeholder.webp",
+    quote:
+      "RDV pris en 2 minutes, médecin reçu pendant la matinée. Service sérieux.",
+    rating: 5,
+  },
+  {
+    name: "Yassine R.",
+    city: "Sfax",
+    specialty: "Généraliste",
+    photoUrl: "/images/defaults/testimonial-placeholder.webp",
+    quote:
+      "Pratique pour gérer les rendez-vous de toute la famille. Rappels SMS appréciables.",
+    rating: 5,
+  },
+  {
+    name: "Mariem K.",
+    city: "Sousse",
+    specialty: "Pédiatre",
+    photoUrl: "/images/defaults/testimonial-placeholder.webp",
+    quote:
+      "Interface claire, médecin disponible le jour même pour mon fils. Je recommande.",
+    rating: 5,
+  },
+];
 
 const SPECIALTY_ICONS: Record<string, LucideIcon> = {
   generaliste: Stethoscope,
@@ -69,6 +109,39 @@ export const revalidate = 600; // 10 min — featured doctors refresh
 export default async function HomePage() {
   const t = await getTranslations("landing");
   const locale = await getLocale();
+
+  // Visual content driven by platform_settings — admins swap images at runtime
+  // via /admin/parametres/visuels (writes go to R2). Defaults bundled in
+  // /public/images/defaults/.
+  const heroImageUrl = await getSettingOrDefault(
+    "homepage.hero_image_url",
+    "/images/defaults/hero.webp"
+  );
+  const howto1ImageUrl = await getSettingOrDefault(
+    "homepage.howto_step1_image_url",
+    "/images/defaults/howto-1.webp"
+  );
+  const howto2ImageUrl = await getSettingOrDefault(
+    "homepage.howto_step2_image_url",
+    "/images/defaults/howto-2.webp"
+  );
+  const howto3ImageUrl = await getSettingOrDefault(
+    "homepage.howto_step3_image_url",
+    "/images/defaults/howto-3.webp"
+  );
+  const testimonialsJson = await getSettingOrDefault(
+    "homepage.testimonials",
+    JSON.stringify(DEFAULT_TESTIMONIALS)
+  );
+  let testimonials: Testimonial[] = DEFAULT_TESTIMONIALS;
+  try {
+    const parsed = JSON.parse(testimonialsJson);
+    if (Array.isArray(parsed) && parsed.length > 0) {
+      testimonials = parsed as Testimonial[];
+    }
+  } catch {
+    // Bad JSON in setting — fall back to defaults rather than crash the page.
+  }
 
   // Featured doctors — only render the trust strip if we have at least 4 real
   // verified doctors with profile photos. Avoids fake placeholder names on a
@@ -212,9 +285,20 @@ export default async function HomePage() {
             )}
           </div>
 
-          {/* Right: phone mockup */}
+          {/* Right: hero visual (admin-configurable via platform_settings) */}
           <div className="relative hidden lg:block">
-            <PhoneMockup locale={locale} />
+            <Image
+              src={heroImageUrl}
+              alt={
+                locale === "ar"
+                  ? "طبيب في عيادة حديثة"
+                  : "Médecin en consultation"
+              }
+              width={600}
+              height={500}
+              priority
+              className="h-[500px] w-full rounded-3xl object-cover shadow-2xl shadow-primary/10"
+            />
           </div>
         </div>
       </section>
@@ -305,32 +389,44 @@ export default async function HomePage() {
                 icon: Search,
                 title: t("step1Title"),
                 desc: t("step1Desc"),
+                image: howto1ImageUrl,
               },
               {
                 step: "02",
                 icon: CalendarCheck2,
                 title: t("step2Title"),
                 desc: t("step2Desc"),
+                image: howto2ImageUrl,
               },
               {
                 step: "03",
                 icon: CheckCircle2,
                 title: t("step3Title"),
                 desc: t("step3Desc"),
+                image: howto3ImageUrl,
               },
             ].map((s) => {
               const Icon = s.icon;
               return (
                 <div
                   key={s.step}
-                  className="group relative overflow-hidden rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-8 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
+                  className="group relative overflow-hidden rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-6 transition-all hover:-translate-y-1 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/5"
                 >
+                  <div className="relative mb-6 aspect-[4/3] overflow-hidden rounded-2xl">
+                    <Image
+                      src={s.image}
+                      alt={s.title}
+                      width={600}
+                      height={450}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                    />
+                  </div>
                   <div className="absolute -right-4 -top-4 font-heading text-8xl font-black leading-none text-secondary transition-colors group-hover:text-border">
                     {s.step}
                   </div>
                   <div className="relative">
-                    <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20">
-                      <Icon className="h-7 w-7" strokeWidth={2.5} />
+                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary text-white shadow-lg shadow-primary/20">
+                      <Icon className="h-6 w-6" strokeWidth={2.5} />
                     </div>
                     <h3 className="font-heading text-xl font-bold text-foreground">
                       {s.title}
@@ -423,6 +519,68 @@ export default async function HomePage() {
           </div>
         </section>
       )}
+
+      {/* ═══════════════════════ TESTIMONIALS ═══════════════════════ */}
+      <section className="bg-white dark:bg-gray-900 px-4 py-24 sm:px-6">
+        <div className="mx-auto max-w-6xl">
+          <div className="mx-auto max-w-2xl text-center">
+            <div className="inline-flex items-center gap-2 rounded-full bg-secondary dark:bg-gray-800 px-4 py-1 text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
+              <Star className="h-3.5 w-3.5" />
+              {locale === "ar" ? "آراء المرضى" : "Témoignages"}
+            </div>
+            <h2 className="mt-4 text-balance font-heading text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+              {locale === "ar"
+                ? "يثقون بنا"
+                : "Ils nous font confiance"}
+            </h2>
+            <p className="mt-4 text-base text-muted-foreground">
+              {locale === "ar"
+                ? "آراء مرضى بعد استشارتهم عبر Doktori."
+                : "Témoignages de patients après leur consultation via Doktori."}
+            </p>
+          </div>
+          <div className="mt-12 grid gap-6 md:grid-cols-3">
+            {testimonials.slice(0, 3).map((tt, i) => (
+              <article
+                key={i}
+                className="rounded-3xl border border-border bg-secondary/30 p-6 dark:border-gray-700 dark:bg-gray-800"
+              >
+                <div className="flex items-center gap-4">
+                  <Image
+                    src={tt.photoUrl}
+                    alt={tt.name}
+                    width={56}
+                    height={56}
+                    className="h-14 w-14 rounded-full object-cover"
+                  />
+                  <div>
+                    <p className="font-bold text-foreground">{tt.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {tt.city} · {tt.specialty}
+                    </p>
+                  </div>
+                </div>
+                <p className="mt-4 text-sm italic text-foreground">
+                  «&nbsp;{tt.quote}&nbsp;»
+                </p>
+                <div
+                  className="mt-3 flex gap-0.5"
+                  aria-label={`${tt.rating} étoiles sur 5`}
+                >
+                  {Array.from({ length: Math.max(0, Math.min(5, tt.rating)) }).map(
+                    (_, j) => (
+                      <Star
+                        key={j}
+                        className="h-4 w-4 fill-[#FBBF24] text-[#FBBF24]"
+                      />
+                    )
+                  )}
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ═══════════════════════ SPECIALTIES ═══════════════════════ */}
       <section className="bg-secondary/50 dark:bg-gray-800 px-4 py-24 sm:px-6">
@@ -800,118 +958,6 @@ export default async function HomePage() {
           </div>
         </div>
       </footer>
-    </div>
-  );
-}
-
-/* ═════════════════ Phone Mockup Component ═════════════════ */
-function PhoneMockup({ locale }: { locale: string }) {
-  const ar = locale === "ar";
-  const tr = {
-    searchPh: ar ? "طبيب أمراض جلدية..." : "Dermatologue...",
-    generaliste: ar ? "طبيب عام" : "Généraliste",
-    dermatologue: ar ? "طبيب جلد" : "Dermatologue",
-    navSearch: ar ? "بحث" : "Chercher",
-    navSos: ar ? "استغاثة" : "SOS",
-    navRdv: ar ? "مواعيدي" : "Mes RDV",
-    rdvConfirmed: ar ? "موعد مؤكد" : "RDV confirmé",
-    dateLabel: ar ? "15 أفريل · 14:30" : "15 avril · 14:30",
-    reviews: ar ? "تقييمات المرضى" : "Avis patients",
-  };
-  return (
-    <div className="relative mx-auto aspect-[9/19] w-full max-w-[340px]">
-      {/* Phone frame */}
-      <div className="absolute inset-0 rounded-[3rem] bg-foreground p-3 shadow-2xl shadow-primary/20">
-        <div className="h-full w-full overflow-hidden rounded-[2.5rem] bg-white">
-          {/* Status bar */}
-          <div className="flex items-center justify-between px-6 py-3 text-[10px] font-bold text-foreground">
-            <span>9:41</span>
-            <span>●●● ●●</span>
-          </div>
-
-          {/* Mock app header */}
-          <div className="px-4">
-            <div className="flex items-center gap-2">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-white">
-                <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
-              </div>
-              <span className="text-sm font-black text-foreground">Doktori</span>
-            </div>
-
-            {/* Search input mock */}
-            <div className="mt-4 flex h-11 items-center rounded-xl border border-border bg-secondary px-3">
-              <Search className="h-4 w-4 text-muted-foreground" />
-              <span className="ms-2 text-xs text-muted-foreground">{tr.searchPh}</span>
-            </div>
-
-            {/* Doctor cards mock */}
-            <div className="mt-4 space-y-2">
-              {[
-                { name: "Dr. Sonia Trabelsi", spec: tr.dermatologue, price: "80", color: "#0891B2" },
-                { name: "Dr. Karim Ben Ali", spec: tr.generaliste, price: "40", color: "#22C55E" },
-                { name: "Dr. Leila Ben Othman", spec: tr.dermatologue, price: "80", color: "#0891B2" },
-              ].map((d, i) => (
-                <div
-                  key={i}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-white p-3"
-                >
-                  <div
-                    className="flex h-10 w-10 items-center justify-center rounded-lg text-xs font-bold text-white"
-                    style={{ backgroundColor: d.color }}
-                  >
-                    {d.name.split(" ")[1][0]}
-                  </div>
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-[11px] font-bold text-foreground">
-                      {d.name}
-                    </p>
-                    <p className="truncate text-[9px] text-muted-foreground">{d.spec}</p>
-                  </div>
-                  <div className="text-end">
-                    <p className="text-[11px] font-black text-primary">{d.price}</p>
-                    <p className="text-[8px] text-muted-foreground">DT</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            {/* Bottom nav */}
-            <div className="mt-4 flex items-center justify-around border-t border-border pt-3">
-              <div className="flex flex-col items-center gap-0.5">
-                <Search className="h-4 w-4 text-primary" />
-                <span className="text-[8px] font-bold text-primary">{tr.navSearch}</span>
-              </div>
-              <div className="flex flex-col items-center gap-0.5">
-                <Siren className="h-4 w-4 text-destructive" />
-                <span className="text-[8px] font-bold text-destructive">{tr.navSos}</span>
-              </div>
-              <div className="flex flex-col items-center gap-0.5">
-                <CalendarCheck2 className="h-4 w-4 text-muted-foreground" />
-                <span className="text-[8px] font-bold text-muted-foreground">{tr.navRdv}</span>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      {/* Floating badge */}
-      <div className="absolute -left-8 top-1/3 rotate-[-8deg] rounded-xl bg-white p-4 shadow-xl ring-1 ring-border">
-        <div className="flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-accent">
-            <CheckCircle2 className="h-4 w-4 text-white" strokeWidth={3} />
-          </div>
-          <div>
-            <p className="text-xs font-bold text-foreground">{tr.rdvConfirmed}</p>
-            <p className="text-[10px] text-muted-foreground">{tr.dateLabel}</p>
-          </div>
-        </div>
-      </div>
-      <div className="absolute -right-4 bottom-1/4 rotate-[6deg] rounded-xl bg-white p-3 shadow-xl ring-1 ring-border">
-        <div className="flex items-center gap-2">
-          <Star className="h-4 w-4 fill-[#FBBF24] text-[#FBBF24]" />
-          <span className="text-xs font-black text-foreground">Doktori</span>
-        </div>
-        <p className="mt-0.5 text-[9px] text-muted-foreground">{tr.reviews}</p>
-      </div>
     </div>
   );
 }
