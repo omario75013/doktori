@@ -15,7 +15,7 @@ function isRateLimited(ip: string, max: number, windowMs: number): boolean {
 
 export async function POST(req: Request) {
   const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
-  if (isRateLimited(ip, 5, 900000)) { // 5 per 15 min
+  if (isRateLimited(ip, 10, 900000)) { // 10 per 15 min — relaxed 2026-05-07 from 5
     return NextResponse.json({ error: "Trop de tentatives. Réessayez dans 15 minutes." }, { status: 429 });
   }
 
