@@ -571,6 +571,47 @@ export default async function DoctorProfilePage({
                 </p>
               </AnimatedSection>
 
+              {/* Doctor-level cabinet gallery (cabinetGalleryUrls jsonb).
+                  Independent of per-practice photos; horizontally scrollable. */}
+              {(doctor.cabinetGalleryUrls?.length ?? 0) > 0 && (
+                <AnimatedSection
+                  index={2}
+                  className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8"
+                >
+                  <div className="mb-4 flex items-center gap-2">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
+                      <Building2 className="h-4 w-4" strokeWidth={2.5} />
+                    </div>
+                    <h2 className="font-heading text-lg font-bold text-foreground">
+                      Le cabinet
+                    </h2>
+                  </div>
+                  <div className="-mx-1 flex snap-x snap-mandatory gap-3 overflow-x-auto px-1 pb-2">
+                    {(doctor.cabinetGalleryUrls ?? []).slice(0, 6).map((url, i) => (
+                      <a
+                        key={i}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block shrink-0 snap-start overflow-hidden rounded-2xl bg-secondary transition-opacity hover:opacity-90"
+                        style={{ width: 240, height: 135 }}
+                      >
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt={`Photo du cabinet ${i + 1} — Dr. ${doctor.name}`}
+                          width={240}
+                          height={135}
+                          className="h-full w-full object-cover"
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </a>
+                    ))}
+                  </div>
+                </AnimatedSection>
+              )}
+
               {/* Cabinet photo gallery — only shown when at least one photo exists */}
               {cabinetPhotos.length > 0 && (
                 <AnimatedSection index={2} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">

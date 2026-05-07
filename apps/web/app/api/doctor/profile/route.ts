@@ -14,6 +14,11 @@ const patchSchema = z.object({
   languages: z.array(z.string()).optional(),
   expertise: z.array(z.string()).optional(),
   yearsOfExperience: z.number().int().min(0).max(60).nullable().optional(),
+  // Doctor-level cabinet gallery — array of public R2 URLs, max 6.
+  cabinetGalleryUrls: z
+    .array(z.string().url().max(2048))
+    .max(6, "Max 6 photos")
+    .optional(),
 });
 
 export async function PATCH(req: NextRequest) {
@@ -43,6 +48,7 @@ export async function PATCH(req: NextRequest) {
   if (parsed.data.languages !== undefined) update.languages = parsed.data.languages;
   if (parsed.data.expertise !== undefined) update.expertise = parsed.data.expertise;
   if (parsed.data.yearsOfExperience !== undefined) update.yearsOfExperience = parsed.data.yearsOfExperience;
+  if (parsed.data.cabinetGalleryUrls !== undefined) update.cabinetGalleryUrls = parsed.data.cabinetGalleryUrls;
 
   if (Object.keys(update).length === 0) {
     return NextResponse.json({ ok: true, message: "Rien à mettre à jour" });
@@ -63,6 +69,7 @@ export async function PATCH(req: NextRequest) {
       languages: doctors.languages,
       expertise: doctors.expertise,
       yearsOfExperience: doctors.yearsOfExperience,
+      cabinetGalleryUrls: doctors.cabinetGalleryUrls,
     });
 
   if (updated?.slug) {
@@ -92,6 +99,7 @@ export async function GET(req: NextRequest) {
       yearsOfExperience: doctors.yearsOfExperience,
       specialty: doctors.specialty,
       city: doctors.city,
+      cabinetGalleryUrls: doctors.cabinetGalleryUrls,
     })
     .from(doctors)
     .where(eq(doctors.id, user.id))

@@ -92,6 +92,9 @@ export const doctors = pgTable(
     // Phase 1 (migration 0079) — Onboarding tour
     onboardingTourCompletedAt: timestamp("onboarding_tour_completed_at", { withTimezone: true }),
     onboardingTourSkipped: boolean("onboarding_tour_skipped").notNull().default(false),
+    // Doctor-level cabinet gallery (migration 0088). Array of public R2 URLs,
+    // independent of per-practice photos. Max 6 photos enforced application-side.
+    cabinetGalleryUrls: jsonb("cabinet_gallery_urls").$type<string[]>().notNull().default([]),
   },
   (table) => [
     uniqueIndex("doctors_email_idx").on(table.email),

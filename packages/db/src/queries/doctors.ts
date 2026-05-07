@@ -23,6 +23,7 @@ export async function getDoctorBySlug(slug: string) {
       expertise: doctors.expertise,
       yearsOfExperience: doctors.yearsOfExperience,
       lastActiveAt: doctors.lastActiveAt,
+      cabinetGalleryUrls: doctors.cabinetGalleryUrls,
     })
     .from(doctors)
     .where(eq(doctors.slug, slug))

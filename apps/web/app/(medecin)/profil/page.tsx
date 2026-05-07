@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { getLocale, getTranslations } from "next-intl/server";
 import { QRCode } from "@/components/qr-code";
+import { CabinetGalleryUploader } from "./cabinet-gallery-uploader";
 
 export default async function ProfilPage() {
   const session = await auth();
@@ -251,6 +252,9 @@ export default async function ProfilPage() {
           <p className="text-xs text-gray-500 mt-1">{t("schedulesSubtitle")}</p>
         </Link>
       </div>
+
+      {/* Cabinet gallery (doctor-level, public) */}
+      <CabinetGalleryUploader initialUrls={doctor.cabinetGalleryUrls ?? []} />
 
       {/* QR code section */}
       <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
