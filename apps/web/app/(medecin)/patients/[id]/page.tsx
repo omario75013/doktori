@@ -59,6 +59,8 @@ type Patient = {
   gender: string | null;
   bloodType: string | null;
   cnamNumber: string | null;
+  cnssNumber: string | null;
+  cnamRegime: string | null;
   cin: string | null;
   insuranceProvider: string | null;
   insuranceNumber: string | null;
@@ -1039,6 +1041,8 @@ function PatientEditDialog({
     gender: patient.gender ?? "",
     bloodType: patient.bloodType ?? "",
     cnamNumber: patient.cnamNumber ?? "",
+    cnssNumber: patient.cnssNumber ?? "",
+    cnamRegime: patient.cnamRegime ?? "none",
     cin: patient.cin ?? "",
     insuranceProvider: patient.insuranceProvider ?? "",
     insuranceNumber: patient.insuranceNumber ?? "",
@@ -1069,6 +1073,8 @@ function PatientEditDialog({
         gender: form.gender === "" ? null : form.gender,
         bloodType: form.bloodType === "" ? null : form.bloodType,
         cnamNumber: form.cnamNumber.trim() === "" ? null : form.cnamNumber.trim(),
+        cnssNumber: form.cnssNumber.trim() === "" ? null : form.cnssNumber.trim(),
+        cnamRegime: form.cnamRegime || "none",
         cin: form.cin.trim() === "" ? null : form.cin.trim(),
         insuranceProvider: form.insuranceProvider.trim() === "" ? null : form.insuranceProvider.trim(),
         insuranceNumber: form.insuranceNumber.trim() === "" ? null : form.insuranceNumber.trim(),
@@ -1200,8 +1206,31 @@ function PatientEditDialog({
                 type="text"
                 value={form.cnamNumber}
                 onChange={(e) => setForm({ ...form, cnamNumber: e.target.value })}
+                placeholder="ex. 12-345678-90"
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
+            </Field>
+            <Field label="N° CNSS">
+              <input
+                type="text"
+                value={form.cnssNumber}
+                onChange={(e) => setForm({ ...form, cnssNumber: e.target.value })}
+                placeholder="N° matricule CNSS"
+                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+            </Field>
+            <Field label="Régime CNAM">
+              <select
+                value={form.cnamRegime}
+                onChange={(e) => setForm({ ...form, cnamRegime: e.target.value })}
+                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="none">Non précisé</option>
+                <option value="cnss">CNSS (salariés privé)</option>
+                <option value="cnrps">CNRPS (fonction publique)</option>
+                <option value="convention_etudiant">Convention étudiant</option>
+                <option value="convention_alaaliyah">Convention Al Aaliyah</option>
+              </select>
             </Field>
             <Field label={t("fieldCIN")}>
               <input
@@ -1547,6 +1576,21 @@ function GeneralTab({
       <Card title={t("cardInsurance")}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
           <Info label={t("fieldCNAMDisplay")} value={patient.cnamNumber} mono />
+          <Info label="N° CNSS" value={patient.cnssNumber} mono />
+          <Info
+            label="Régime CNAM"
+            value={
+              patient.cnamRegime === "cnss"
+                ? "CNSS"
+                : patient.cnamRegime === "cnrps"
+                  ? "CNRPS"
+                  : patient.cnamRegime === "convention_etudiant"
+                    ? "Convention étudiant"
+                    : patient.cnamRegime === "convention_alaaliyah"
+                      ? "Convention Al Aaliyah"
+                      : null
+            }
+          />
           <Info label={t("fieldInsurer")} value={patient.insuranceProvider} />
           <Info label={t("fieldInsuranceNumDisplay")} value={patient.insuranceNumber} mono />
         </div>

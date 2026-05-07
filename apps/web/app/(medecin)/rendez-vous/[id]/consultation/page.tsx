@@ -5,7 +5,7 @@ import { useParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { searchIcd10, type Icd10Code } from "@/lib/icd10-tn";
-import { CheckCircle2, X, ClipboardList, ArrowLeft, Send, FileText, ExternalLink, Loader2 } from "lucide-react";
+import { CheckCircle2, X, ClipboardList, ArrowLeft, Send, FileText, ExternalLink, Loader2, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 
 type Vitals = {
@@ -228,6 +228,23 @@ export default function ConsultationPage() {
   const [sendCnamStatus, setSendCnamStatus] = useState<SendStatus>("idle");
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // ── BS1 (Bulletin de Soins) state ────────────────────────────────
+  type BsStatus =
+    | "not_generated"
+    | "generated"
+    | "sent_to_cnam"
+    | "reimbursed"
+    | "rejected";
+  const [bsStatus, setBsStatus] = useState<BsStatus>("not_generated");
+  const [bsUrl, setBsUrl] = useState<string | null>(null);
+  const [bsGenerating, setBsGenerating] = useState(false);
+  const [bsError, setBsError] = useState<string | null>(null);
+  const [bsRejectionReason, setBsRejectionReason] = useState<string>("");
+  const [patientCnamNumber, setPatientCnamNumber] = useState<string | null>(null);
+  const [editingCnam, setEditingCnam] = useState(false);
+  const [cnamInput, setCnamInput] = useState("");
+  const [cnamSaving, setCnamSaving] = useState(false);
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -247,10 +264,21 @@ export default function ConsultationPage() {
             if (ptRes.ok) {
               const ptData = await ptRes.json();
               setPatientEmail(ptData?.patient?.email ?? null);
+              setPatientCnamNumber(ptData?.patient?.cnamNumber ?? null);
+              setCnamInput(ptData?.patient?.cnamNumber ?? "");
             } else {
               setPatientEmail(null);
             }
           }
+        }
+
+        // Pull existing BS state (404 just means none generated yet).
+        const bsRes = await fetch(`/api/medecin/appointments/${appointmentId}/bs`);
+        if (bsRes.ok) {
+          const bsData = await bsRes.json();
+          setBsStatus((bsData.status as BsStatus) ?? "not_generated");
+          setBsUrl(bsData.url ?? null);
+          setBsRejectionReason(bsData.rejectionReason ?? "");
         }
 
         const res = await fetch(`/api/consultation-notes/${appointmentId}`);
@@ -350,6 +378,73 @@ export default function ConsultationPage() {
       setStatus("sent");
     } catch {
       setStatus("error");
+    }
+  };
+
+  // ── BS actions ───────────────────────────────────────────────────
+  const generateBs = async () => {
+    setBsError(null);
+    setBsGenerating(true);
+    try {
+      const res = await fetch(`/api/medecin/appointments/${appointmentId}/bs`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setBsError(data?.error ?? "Échec de la génération");
+        return;
+      }
+      const data = await res.json();
+      setBsUrl(data.url);
+      setBsStatus("generated");
+    } catch {
+      setBsError("Erreur réseau");
+    } finally {
+      setBsGenerating(false);
+    }
+  };
+
+  const updateBsStatus = async (next: BsStatus, reason?: string) => {
+    setBsError(null);
+    try {
+      const res = await fetch(`/api/medecin/appointments/${appointmentId}/bs`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(
+          next === "rejected"
+            ? { status: next, rejectionReason: reason ?? null }
+            : { status: next },
+        ),
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setBsError(data?.error ?? "Échec de mise à jour");
+        return;
+      }
+      setBsStatus(next);
+      if (next !== "rejected") setBsRejectionReason("");
+    } catch {
+      setBsError("Erreur réseau");
+    }
+  };
+
+  const saveCnamNumber = async () => {
+    if (!patientId) return;
+    setCnamSaving(true);
+    try {
+      const res = await fetch(`/api/patients/${patientId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cnamNumber: cnamInput.trim() === "" ? null : cnamInput.trim(),
+        }),
+      });
+      if (res.ok) {
+        setPatientCnamNumber(cnamInput.trim() === "" ? null : cnamInput.trim());
+        setEditingCnam(false);
+      }
+    } finally {
+      setCnamSaving(false);
     }
   };
 
@@ -538,6 +633,191 @@ export default function ConsultationPage() {
           )}
         </div>
       )}
+
+      {/* ── BS1 (Bulletin de Soins CNAM) panel ───────────────────────────── */}
+      <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
+        <div className="flex items-center gap-2">
+          <FileText className="h-4 w-4 text-primary" />
+          <h2 className="font-semibold text-foreground text-sm uppercase tracking-wide">
+            Bulletin de Soins CNAM
+          </h2>
+          <BsStatusBadge status={bsStatus} />
+        </div>
+
+        {/* Inline CNAM number form when patient has none on file. */}
+        {!patientCnamNumber && bsStatus === "not_generated" && (
+          <div className="rounded-xl border border-amber-200 bg-amber-50 p-3 text-xs space-y-2">
+            <p className="text-amber-800">
+              Aucun N° CNAM enregistré pour ce patient. Renseignez-le avant de générer le BS,
+              ou laissez vide pour le compléter à la main sur le PDF.
+            </p>
+            {!editingCnam ? (
+              <button
+                type="button"
+                onClick={() => setEditingCnam(true)}
+                className="inline-flex items-center gap-1 text-primary font-medium hover:underline"
+              >
+                <Pencil className="h-3 w-3" />
+                Ajouter le N° CNAM
+              </button>
+            ) : (
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  value={cnamInput}
+                  onChange={(e) => setCnamInput(e.target.value)}
+                  placeholder="ex. 12-345678-90"
+                  className="h-9 flex-1 min-w-[180px] rounded-lg border border-amber-300 bg-white px-2 text-xs"
+                />
+                <button
+                  type="button"
+                  onClick={saveCnamNumber}
+                  disabled={cnamSaving}
+                  className="h-9 px-3 rounded-lg bg-primary text-white text-xs font-medium hover:opacity-90 disabled:opacity-60"
+                >
+                  Enregistrer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setEditingCnam(false);
+                    setCnamInput(patientCnamNumber ?? "");
+                  }}
+                  className="h-9 px-3 rounded-lg border border-amber-300 text-xs"
+                >
+                  Annuler
+                </button>
+              </div>
+            )}
+          </div>
+        )}
+
+        {bsStatus === "not_generated" ? (
+          <div className="flex flex-wrap gap-3">
+            <button
+              type="button"
+              onClick={generateBs}
+              disabled={bsGenerating}
+              className="inline-flex items-center gap-2 h-10 px-4 rounded-xl bg-primary text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              {bsGenerating ? (
+                <span className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <FileText className="h-4 w-4" />
+              )}
+              Générer Bulletin de Soins
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex flex-wrap gap-3 items-center">
+              {bsUrl && (
+                <a
+                  href={bsUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-primary bg-secondary text-sm font-medium text-primary hover:bg-border transition-colors"
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  Voir BS PDF
+                </a>
+              )}
+              <button
+                type="button"
+                onClick={generateBs}
+                disabled={bsGenerating}
+                className="inline-flex items-center gap-2 h-10 px-4 rounded-xl border border-border bg-white hover:bg-secondary text-sm text-foreground transition-colors disabled:opacity-60"
+              >
+                {bsGenerating && (
+                  <span className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                )}
+                Régénérer
+              </button>
+            </div>
+
+            <div className="flex flex-wrap gap-2 items-center pt-1">
+              <span className="text-xs text-gray-500">Marquer comme :</span>
+              <button
+                type="button"
+                onClick={() => updateBsStatus("sent_to_cnam")}
+                disabled={bsStatus === "sent_to_cnam"}
+                className="text-xs h-8 px-3 rounded-lg border border-border hover:bg-secondary disabled:opacity-50"
+              >
+                Envoyé à la CNAM
+              </button>
+              <button
+                type="button"
+                onClick={() => updateBsStatus("reimbursed")}
+                disabled={bsStatus === "reimbursed"}
+                className="text-xs h-8 px-3 rounded-lg border border-border hover:bg-secondary disabled:opacity-50"
+              >
+                Remboursé
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  const reason = prompt(
+                    "Motif du rejet (optionnel) :",
+                    bsRejectionReason ?? "",
+                  );
+                  if (reason === null) return;
+                  setBsRejectionReason(reason);
+                  updateBsStatus("rejected", reason);
+                }}
+                disabled={bsStatus === "rejected"}
+                className="text-xs h-8 px-3 rounded-lg border border-border hover:bg-secondary disabled:opacity-50"
+              >
+                Rejeté
+              </button>
+            </div>
+
+            {bsStatus === "rejected" && bsRejectionReason && (
+              <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+                Motif du rejet : {bsRejectionReason}
+              </p>
+            )}
+          </div>
+        )}
+
+        {bsError && (
+          <p className="text-xs text-red-700 bg-red-50 border border-red-200 rounded-lg px-3 py-2">
+            {bsError}
+          </p>
+        )}
+
+        <p className="text-[11px] text-gray-400 leading-relaxed">
+          Le PDF est pré-rempli depuis la fiche patient et l&apos;agenda. Aucun envoi
+          automatique : vérifiez puis transmettez via la CNAM (e-CNAM ou impression).
+          Détails dans <code>docs/cnam-integration.md</code>.
+        </p>
+      </div>
     </div>
+  );
+}
+
+function BsStatusBadge({
+  status,
+}: {
+  status:
+    | "not_generated"
+    | "generated"
+    | "sent_to_cnam"
+    | "reimbursed"
+    | "rejected";
+}) {
+  const map = {
+    not_generated: { label: "Non généré", cls: "bg-gray-100 text-gray-600 border-gray-300" },
+    generated: { label: "Généré", cls: "bg-amber-100 text-amber-800 border-amber-300" },
+    sent_to_cnam: { label: "Envoyé", cls: "bg-blue-100 text-blue-800 border-blue-300" },
+    reimbursed: { label: "Remboursé", cls: "bg-green-100 text-green-800 border-green-300" },
+    rejected: { label: "Rejeté", cls: "bg-red-100 text-red-800 border-red-300" },
+  } as const;
+  const cfg = map[status];
+  return (
+    <span
+      className={`ml-auto inline-flex items-center px-2 py-0.5 rounded-full border text-[10px] font-medium uppercase tracking-wide ${cfg.cls}`}
+    >
+      {cfg.label}
+    </span>
   );
 }

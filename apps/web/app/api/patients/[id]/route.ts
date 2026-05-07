@@ -65,6 +65,8 @@ export async function GET(
       gender: patients.gender,
       bloodType: patients.bloodType,
       cnamNumber: patients.cnamNumber,
+      cnssNumber: patients.cnssNumber,
+      cnamRegime: patients.cnamRegime,
       cin: patients.cin,
       insuranceProvider: patients.insuranceProvider,
       insuranceNumber: patients.insuranceNumber,
@@ -155,7 +157,12 @@ const patchSchema = z
     dateOfBirth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
     gender: z.enum(["M", "F"]).optional().nullable(),
     bloodType: z.enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]).optional().nullable(),
-    cnamNumber: z.string().trim().max(20).optional().nullable(),
+    cnamNumber: z.string().trim().max(30).optional().nullable(),
+    cnssNumber: z.string().trim().max(30).optional().nullable(),
+    cnamRegime: z
+      .enum(["cnss", "cnrps", "convention_etudiant", "convention_alaaliyah", "none"])
+      .optional()
+      .nullable(),
     cin: z.string().trim().max(20).optional().nullable(),
     insuranceProvider: z.string().trim().max(50).optional().nullable(),
     insuranceNumber: z.string().trim().max(30).optional().nullable(),
