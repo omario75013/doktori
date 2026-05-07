@@ -4,7 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import { format, parseISO } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
-import { Download, Printer, FileText, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react";
+import { Download, Printer, FileText, CheckCircle2, Clock, XCircle, Loader2, ExternalLink } from "lucide-react";
+import Link from "next/link";
 import { useTranslations } from "next-intl";
 
 type Claim = {
@@ -114,6 +115,14 @@ export default function CnamPage() {
             onChange={(e) => setMonth(e.target.value)}
             className="h-10 rounded-xl border border-border bg-white px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
           />
+          <Link
+            href="/cnam/formulaires"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-border bg-white px-4 py-2 text-sm font-semibold hover:bg-secondary transition-colors h-10"
+            title="Formulaires officiels CNAM"
+          >
+            <ExternalLink className="w-4 h-4" />
+            Formulaires CNAM
+          </Link>
           <a
             href={`/api/cnam/claims/export?month=${month}`}
             className="inline-flex items-center gap-1.5 rounded-xl bg-primary text-white px-4 py-2 text-sm font-semibold hover:bg-doktori-teal-dark transition-colors h-10"
