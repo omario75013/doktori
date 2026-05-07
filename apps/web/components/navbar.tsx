@@ -3,6 +3,7 @@ import { getTranslations, getLocale } from "next-intl/server";
 import { Stethoscope, Search, UserRound, Siren, HelpCircle, BookOpen } from "lucide-react";
 import { LanguageSwitcher } from "./language-switcher";
 import { ThemeToggle } from "./theme-toggle";
+import { PatientNavMenu } from "./patient-nav-menu";
 
 export async function Navbar() {
   const t = await getTranslations("nav");
@@ -57,13 +58,7 @@ export async function Navbar() {
           </Link>
           <ThemeToggle />
           <LanguageSwitcher currentLocale={locale} />
-          <Link
-            href="/connexion-patient"
-            className="hidden items-center gap-1.5 rounded-lg px-3 py-2 text-sm font-semibold text-muted-foreground transition-colors hover:bg-secondary hover:text-primary sm:inline-flex"
-          >
-            <UserRound className="h-4 w-4" strokeWidth={2.5} />
-            {t("myAccount")}
-          </Link>
+          <PatientNavMenu myAccountLabel={t("myAccount")} />
           <Link
             href="/connexion"
             aria-label={t("doctorArea")}

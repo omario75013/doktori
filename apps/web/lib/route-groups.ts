@@ -1,19 +1,18 @@
 /**
- * Routes that hide the global public Navbar (used via PatientShell wrapper
- * in app/layout.tsx).
+ * Routes that hide the global public Navbar.
  *
- * Pre-2026-05-06 audit: this list contained 4 prefixes that ALSO appeared
- * (literally or via startsWith) in PUBLIC_PREFIXES in
- * apps/web/components/patient-shell-wrapper.tsx — `/domicile`,
- * `/connexion-patient`, `/teleconsultation`, `/teleconsult-medecin`. Both
- * lists matched the same paths, resulting in NO HEADER AT ALL on those
- * pages (global Navbar hidden + patient header skipped).
+ * Pre-2026-05-07: patient routes (/mon-espace, /mes-rdv, /dossier-medical,
+ * /mes-messages) were in this list, hiding the global Navbar in favour of
+ * a separate simpler header rendered inside PatientShellWrapper. Result:
+ * the patient-side header looked different from the homepage header.
  *
- * Fix: remove the 4 overlapping entries from this list. Those routes now
- * show the global public Navbar. If a fully immersive layout is desired
- * (e.g. video-call screens), express that via the route's own layout
- * (e.g. app/(patient)/teleconsultation/[id]/layout.tsx) — not via prefix
- * intersection side-effects.
+ * Fix: remove patient routes from this list. The global Navbar now serves
+ * all spaces, and includes a context-aware <PatientNavMenu /> dropdown
+ * that swaps the "Mon compte" link for an avatar+menu when logged in.
+ *
+ * This list keeps prefixes for doctor/admin/secretary/clinic routes —
+ * those have their own dedicated chrome (Sidebar etc) and do NOT want
+ * the public Navbar.
  */
 export const AUTHENTICATED_PREFIXES = [
   "/app-picker",
@@ -33,7 +32,6 @@ export const AUTHENTICATED_PREFIXES = [
   "/abonnement",
   "/messages",
   "/messagerie",
-  "/mes-messages",
   "/wallet",
   "/factures",
   "/profil",
@@ -48,9 +46,6 @@ export const AUTHENTICATED_PREFIXES = [
   "/secretaire-login",
   "/connexion",
   "/inscription",
-  "/mon-espace",
-  "/mes-rdv",
-  "/dossier-medical",
 ] as const;
 
 export function isAuthenticatedRoute(pathname: string): boolean {
