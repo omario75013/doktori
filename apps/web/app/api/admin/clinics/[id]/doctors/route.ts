@@ -1,23 +1,24 @@
 import { NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, clinics, clinicDoctors, doctors } from "@doktori/db";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
+import { clinics, clinicDoctors, doctors } from "@doktori/db";
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
+type RouteContext = { params: Promise<{ id: string }> };
 
-    const { id } = await params;
-    const [clinic] = await db.select().from(clinics).where(eq(clinics.id, id)).limit(1);
+export const POST = withAdminAudit<
+  { clinicDoctor: Omit<typeof clinicDoctors.$inferSelect, "createdAt"> & { createdAt: string } },
+  RouteContext
+>({
+  action: "clinics.add_doctor",
+  resourceType: "clinics",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  handler: async ({ tx, resourceId, body }) => {
+    const [clinic] = await tx.select().from(clinics).where(eq(clinics.id, resourceId)).limit(1);
     if (!clinic) return NextResponse.json({ error: "Clinique introuvable" }, { status: 404 });
 
-    const body = (await req.json()) as Record<string, unknown>;
-    const { doctorId, role } = body;
+    const b = (body ?? {}) as Record<string, unknown>;
+    const { doctorId, role } = b;
 
     if (!doctorId || typeof doctorId !== "string") {
       return NextResponse.json({ error: "doctorId requis" }, { status: 400 });
@@ -25,39 +26,24 @@ export async function POST(
 
     const validRole = role === "admin" || role === "member" ? role : "member";
 
-    const [doctor] = await db.select().from(doctors).where(eq(doctors.id, doctorId)).limit(1);
+    const [doctor] = await tx.select().from(doctors).where(eq(doctors.id, doctorId)).limit(1);
     if (!doctor) return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
 
-    // Check for existing association
-    const [existing] = await db
+    const [existing] = await tx
       .select()
       .from(clinicDoctors)
-      .where(and(eq(clinicDoctors.clinicId, id), eq(clinicDoctors.doctorId, doctorId)))
+      .where(and(eq(clinicDoctors.clinicId, resourceId), eq(clinicDoctors.doctorId, doctorId)))
       .limit(1);
 
     if (existing) {
       return NextResponse.json({ error: "Ce médecin est déjà dans la clinique" }, { status: 409 });
     }
 
-    const [inserted] = await db
+    const [inserted] = await tx
       .insert(clinicDoctors)
-      .values({ clinicId: id, doctorId, role: validRole })
+      .values({ clinicId: resourceId, doctorId, role: validRole })
       .returning();
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "clinics.add_doctor",
-      resourceType: "clinics",
-      resourceId: id,
-      after: { doctorId, doctorName: doctor.name, role: validRole },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({ clinicDoctor: { ...inserted, createdAt: inserted.createdAt.toISOString() } }, { status: 201 });
-  } catch (e) {
-    console.error("[POST /api//admin/clinics/[id]/doctors]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { clinicDoctor: { ...inserted, createdAt: inserted.createdAt.toISOString() } };
+  },
+});

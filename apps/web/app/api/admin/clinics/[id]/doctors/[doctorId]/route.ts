@@ -1,20 +1,34 @@
 import { NextResponse } from "next/server";
 import { eq, and } from "drizzle-orm";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, clinicDoctors, doctors } from "@doktori/db";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
+import { clinicDoctors, doctors } from "@doktori/db";
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string; doctorId: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
+type RouteContext = { params: Promise<{ id: string; doctorId: string }> };
 
-    const { id, doctorId } = await params;
+export const DELETE = withAdminAudit<{ ok: true }, RouteContext>({
+  action: "clinics.remove_doctor",
+  resourceType: "clinics",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, ctx }) => {
+    const { id, doctorId } = await ctx.params;
+    const [existing] = await tx
+      .select()
+      .from(clinicDoctors)
+      .where(and(eq(clinicDoctors.clinicId, id), eq(clinicDoctors.doctorId, doctorId)))
+      .limit(1);
+    if (!existing) return null;
+    const [doctor] = await tx
+      .select({ name: doctors.name })
+      .from(doctors)
+      .where(eq(doctors.id, doctorId))
+      .limit(1);
+    return { doctorId, doctorName: doctor?.name ?? doctorId, role: existing.role };
+  },
+  handler: async ({ tx, ctx }) => {
+    const { id, doctorId } = await ctx.params;
 
-    const [existing] = await db
+    const [existing] = await tx
       .select()
       .from(clinicDoctors)
       .where(and(eq(clinicDoctors.clinicId, id), eq(clinicDoctors.doctorId, doctorId)))
@@ -24,26 +38,10 @@ export async function DELETE(
       return NextResponse.json({ error: "Association introuvable" }, { status: 404 });
     }
 
-    const [doctor] = await db.select({ name: doctors.name }).from(doctors).where(eq(doctors.id, doctorId)).limit(1);
-
-    await db
+    await tx
       .delete(clinicDoctors)
       .where(and(eq(clinicDoctors.clinicId, id), eq(clinicDoctors.doctorId, doctorId)));
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "clinics.remove_doctor",
-      resourceType: "clinics",
-      resourceId: id,
-      before: { doctorId, doctorName: doctor?.name ?? doctorId, role: existing.role },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("[DELETE /api//admin/clinics/[id]/doctors/[doctorId]]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true } as const;
+  },
+});
