@@ -1,15 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(
-  _req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function GET(_req: NextRequest, { params }: RouteContext) {
   const admin = await requireAdmin(["super_admin", "support"]);
   if (admin instanceof NextResponse) return admin;
 
@@ -91,16 +90,13 @@ export async function GET(
   });
 }
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin", "support"]);
-    if (admin instanceof NextResponse) return admin;
-
-    const { id } = await params;
-    const body = await req.json() as {
+export const PATCH = withAdminAudit<{ ok: true }, RouteContext>({
+  action: "sos.admin_update",
+  resourceType: "sos_sessions",
+  allowedRoles: ["super_admin", "support"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  handler: async ({ tx, resourceId, body }) => {
+    const b = (body ?? {}) as {
       adminNotes?: string;
       status?: string;
       resolution?: string;
@@ -109,67 +105,49 @@ export async function PATCH(
     const ALLOWED_STATUSES = ["pending", "accepted", "completed", "expired", "cancelled"];
 
     if (
-      typeof body.adminNotes === "undefined" &&
-      typeof body.status === "undefined" &&
-      typeof body.resolution === "undefined"
+      typeof b.adminNotes === "undefined" &&
+      typeof b.status === "undefined" &&
+      typeof b.resolution === "undefined"
     ) {
-      return NextResponse.json({ error: "adminNotes, status ou resolution requis" }, { status: 400 });
+      return NextResponse.json(
+        { error: "adminNotes, status ou resolution requis" },
+        { status: 400 }
+      );
     }
 
-    if (body.status !== undefined && !ALLOWED_STATUSES.includes(body.status)) {
+    if (b.status !== undefined && !ALLOWED_STATUSES.includes(b.status)) {
       return NextResponse.json({ error: "Statut invalide" }, { status: 400 });
     }
 
     // Build update clauses dynamically
     const updates: ReturnType<typeof sql>[] = [];
-    const after: Record<string, unknown> = {};
 
-    if (typeof body.adminNotes !== "undefined") {
-      updates.push(sql`admin_notes = ${body.adminNotes}`);
-      after.adminNotes = body.adminNotes;
+    if (typeof b.adminNotes !== "undefined") {
+      updates.push(sql`admin_notes = ${b.adminNotes}`);
     }
-    if (typeof body.status !== "undefined") {
-      updates.push(sql`status = ${body.status}`);
-      after.status = body.status;
-      // Set completion timestamp if marking completed
-      if (body.status === "completed") {
+    if (typeof b.status !== "undefined") {
+      updates.push(sql`status = ${b.status}`);
+      if (b.status === "completed") {
         updates.push(sql`completed_at = COALESCE(completed_at, NOW())`);
       }
-      if (body.status === "cancelled") {
+      if (b.status === "cancelled") {
         updates.push(sql`cancelled_at = COALESCE(cancelled_at, NOW())`);
         updates.push(sql`cancelled_by = 'admin'`);
       }
     }
-    if (typeof body.resolution !== "undefined") {
-      updates.push(sql`resolution = ${body.resolution}`);
-      after.resolution = body.resolution;
+    if (typeof b.resolution !== "undefined") {
+      updates.push(sql`resolution = ${b.resolution}`);
     }
 
-    // Compose the SET clause by joining with commas
     const setClauses = updates.reduce(
       (acc, clause, idx) => (idx === 0 ? sql`${clause}` : sql`${acc}, ${clause}`),
       sql``
     );
 
-    await db.execute(sql`
-      UPDATE sos_sessions SET ${setClauses} WHERE id = ${id}
+    await tx.execute(sql`
+      UPDATE sos_sessions SET ${setClauses} WHERE id = ${resourceId}
     `);
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "sos.admin_update",
-      resourceType: "sos_sessions",
-      resourceId: id,
-      before: null,
-      after,
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("[PATCH /api//admin/sos/[id]]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true } as const;
+  },
+});

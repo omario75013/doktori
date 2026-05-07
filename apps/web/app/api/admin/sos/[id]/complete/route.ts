@@ -1,28 +1,24 @@
-import { NextRequest, NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db } from "@doktori/db";
+import { NextResponse } from "next/server";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
 import { sql } from "drizzle-orm";
 
 export const dynamic = "force-dynamic";
 
-export async function POST(
-  req: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin", "support"]);
-    if (admin instanceof NextResponse) return admin;
+type RouteContext = { params: Promise<{ id: string }> };
 
-    const { id } = await params;
-
-    const result = await db.execute(sql`
+export const POST = withAdminAudit<{ ok: true }, RouteContext>({
+  action: "sos.admin_complete",
+  resourceType: "sos_sessions",
+  allowedRoles: ["super_admin", "support"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  handler: async ({ tx, resourceId }) => {
+    const result = await tx.execute(sql`
       UPDATE sos_sessions
       SET
         status       = 'completed',
         completed_at = NOW(),
         resolution   = 'completed'
-      WHERE id = ${id} AND status = 'accepted'
+      WHERE id = ${resourceId} AND status = 'accepted'
       RETURNING id
     `);
 
@@ -34,21 +30,6 @@ export async function POST(
       );
     }
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "sos.admin_complete",
-      resourceType: "sos_sessions",
-      resourceId: id,
-      before: { status: "accepted" },
-      after: { status: "completed", resolution: "completed" },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("[POST /api//admin/sos/[id]/complete]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true } as const;
+  },
+});
