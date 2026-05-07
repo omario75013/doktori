@@ -1,105 +1,90 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, catalogSpecialties } from "@doktori/db";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
+import { catalogSpecialties } from "@doktori/db";
 import { eq } from "drizzle-orm";
 
+type RouteContext = { params: Promise<{ id: string }> };
+
 // PATCH /api/admin/catalog/specialties/[id] — update a specialty
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
-
-    const { id } = await params;
-
-    const [existing] = await db
+export const PATCH = withAdminAudit<
+  { specialty: typeof catalogSpecialties.$inferSelect },
+  RouteContext
+>({
+  action: "update",
+  resourceType: "catalog_specialty",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
       .select()
       .from(catalogSpecialties)
-      .where(eq(catalogSpecialties.id, id))
+      .where(eq(catalogSpecialties.id, resourceId))
+      .limit(1);
+    return row ?? null;
+  },
+  handler: async ({ tx, resourceId, body }) => {
+    const [existing] = await tx
+      .select()
+      .from(catalogSpecialties)
+      .where(eq(catalogSpecialties.id, resourceId))
       .limit(1);
 
     if (!existing) {
       return NextResponse.json({ error: "Spécialité introuvable" }, { status: 404 });
     }
 
-    const body = await req.json().catch(() => ({}));
+    const b = (body ?? {}) as Record<string, unknown>;
     const updates: Partial<typeof catalogSpecialties.$inferInsert> = {};
 
-    if (typeof body.label === "string" && body.label.trim()) updates.label = body.label.trim();
-    if (body.labelAr !== undefined) updates.labelAr = body.labelAr?.trim() ?? null;
-    if (body.icon !== undefined) updates.icon = body.icon?.trim() ?? null;
-    if (typeof body.isActive === "boolean") updates.isActive = body.isActive;
-    if (typeof body.displayOrder === "number") updates.displayOrder = body.displayOrder;
+    if (typeof b.label === "string" && b.label.trim()) updates.label = b.label.trim();
+    if (b.labelAr !== undefined)
+      updates.labelAr = (b.labelAr as string | null)?.trim() ?? null;
+    if (b.icon !== undefined)
+      updates.icon = (b.icon as string | null)?.trim() ?? null;
+    if (typeof b.isActive === "boolean") updates.isActive = b.isActive;
+    if (typeof b.displayOrder === "number") updates.displayOrder = b.displayOrder;
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: "Aucune mise à jour fournie" }, { status: 400 });
     }
 
-    const [updated] = await db
+    const [updated] = await tx
       .update(catalogSpecialties)
       .set(updates)
-      .where(eq(catalogSpecialties.id, id))
+      .where(eq(catalogSpecialties.id, resourceId))
       .returning();
 
-    const { ip, userAgent } = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "update",
-      resourceType: "catalog_specialty",
-      resourceId: id,
-      before: existing,
-      after: updated,
-      ip,
-      userAgent,
-    });
-
-    return NextResponse.json({ specialty: updated });
-  } catch (e) {
-    console.error("[PATCH /api//admin/catalog/specialties/[id]]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { specialty: updated };
+  },
+});
 
 // DELETE /api/admin/catalog/specialties/[id] — delete a specialty
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
-
-    const { id } = await params;
-
-    const [existing] = await db
+export const DELETE = withAdminAudit<{ deleted: true }, RouteContext>({
+  action: "delete",
+  resourceType: "catalog_specialty",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
       .select()
       .from(catalogSpecialties)
-      .where(eq(catalogSpecialties.id, id))
+      .where(eq(catalogSpecialties.id, resourceId))
+      .limit(1);
+    return row ?? null;
+  },
+  handler: async ({ tx, resourceId }) => {
+    const [existing] = await tx
+      .select()
+      .from(catalogSpecialties)
+      .where(eq(catalogSpecialties.id, resourceId))
       .limit(1);
 
     if (!existing) {
       return NextResponse.json({ error: "Spécialité introuvable" }, { status: 404 });
     }
 
-    await db.delete(catalogSpecialties).where(eq(catalogSpecialties.id, id));
+    await tx.delete(catalogSpecialties).where(eq(catalogSpecialties.id, resourceId));
 
-    const { ip, userAgent } = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "delete",
-      resourceType: "catalog_specialty",
-      resourceId: id,
-      before: existing,
-      ip,
-      userAgent,
-    });
-
-    return NextResponse.json({ deleted: true });
-  } catch (e) {
-    console.error("[DELETE /api//admin/catalog/specialties/[id]]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { deleted: true } as const;
+  },
+});
