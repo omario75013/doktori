@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { db, apiKeys } from "@doktori/db";
+import { apiKeys } from "@doktori/db";
 import { eq } from "drizzle-orm";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import type { AdminSession } from "@/lib/admin-auth";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
+
+type RouteContext = { params: Promise<{ id: string }> };
 
 /**
  * DELETE /api/admin/api-keys/[id]
@@ -11,43 +11,43 @@ import type { AdminSession } from "@/lib/admin-auth";
  * Revoke an API key (set active=false, revokedAt=now). Soft revoke — we keep
  * the row for audit/log lineage.
  */
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const admin = await requireAdmin(["super_admin"]);
-  if (admin instanceof NextResponse) return admin;
+export const DELETE = withAdminAudit<{ ok: true }, RouteContext>({
+  action: "api_keys.revoke",
+  resourceType: "api_key",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
+      .select()
+      .from(apiKeys)
+      .where(eq(apiKeys.id, resourceId))
+      .limit(1);
+    if (!row) return null;
+    return { active: row.active, name: row.name, prefix: row.prefix };
+  },
+  handler: async ({ tx, resourceId }) => {
+    if (!/^[0-9a-f-]{36}$/i.test(resourceId)) {
+      return NextResponse.json({ error: "ID invalide" }, { status: 400 });
+    }
 
-  const { id } = await params;
-  if (!/^[0-9a-f-]{36}$/i.test(id)) {
-    return NextResponse.json({ error: "ID invalide" }, { status: 400 });
-  }
+    const [existing] = await tx
+      .select()
+      .from(apiKeys)
+      .where(eq(apiKeys.id, resourceId))
+      .limit(1);
+    if (!existing) {
+      return NextResponse.json({ error: "Clé introuvable" }, { status: 404 });
+    }
 
-  const [existing] = await db.select().from(apiKeys).where(eq(apiKeys.id, id)).limit(1);
-  if (!existing) {
-    return NextResponse.json({ error: "Clé introuvable" }, { status: 404 });
-  }
+    if (!existing.active && existing.revokedAt) {
+      return NextResponse.json({ error: "Clé déjà révoquée" }, { status: 409 });
+    }
 
-  if (!existing.active && existing.revokedAt) {
-    return NextResponse.json({ error: "Clé déjà révoquée" }, { status: 409 });
-  }
+    await tx
+      .update(apiKeys)
+      .set({ active: false, revokedAt: new Date() })
+      .where(eq(apiKeys.id, resourceId));
 
-  await db
-    .update(apiKeys)
-    .set({ active: false, revokedAt: new Date() })
-    .where(eq(apiKeys.id, id));
-
-  const meta = extractRequestMeta(req);
-  await logAudit({
-    actor: admin as AdminSession,
-    action: "api_keys.revoke",
-    resourceType: "api_key",
-    resourceId: id,
-    before: { active: existing.active, name: existing.name, prefix: existing.prefix },
-    after: { active: false, revokedAt: new Date().toISOString() },
-    ip: meta.ip,
-    userAgent: meta.userAgent,
-  });
-
-  return NextResponse.json({ ok: true });
-}
+    return { ok: true } as const;
+  },
+});
