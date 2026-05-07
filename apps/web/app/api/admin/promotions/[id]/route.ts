@@ -1,25 +1,20 @@
 import { NextResponse } from "next/server";
 import { eq, desc } from "drizzle-orm";
 import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
 import { db, promoCodes, promoCodeUsages, doctors } from "@doktori/db";
 
 export const dynamic = "force-dynamic";
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function GET(_req: Request, { params }: RouteContext) {
   const admin = await requireAdmin(["super_admin", "finance", "marketing"]);
   if (admin instanceof NextResponse) return admin;
 
   const { id } = await params;
 
-  const [promo] = await db
-    .select()
-    .from(promoCodes)
-    .where(eq(promoCodes.id, id))
-    .limit(1);
+  const [promo] = await db.select().from(promoCodes).where(eq(promoCodes.id, id)).limit(1);
 
   if (!promo) {
     return NextResponse.json({ error: "Code promo introuvable" }, { status: 404 });
@@ -53,44 +48,61 @@ export async function GET(
   });
 }
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin", "finance", "marketing"]);
-    if (admin instanceof NextResponse) return admin;
-
-    const { id } = await params;
-
-    const [existing] = await db
+export const PATCH = withAdminAudit<
+  {
+    promoCode: Omit<
+      typeof promoCodes.$inferSelect,
+      "validFrom" | "validUntil" | "createdAt"
+    > & {
+      validFrom: string;
+      validUntil: string | null;
+      createdAt: string;
+    };
+  },
+  RouteContext
+>({
+  action: "promo_code.update",
+  resourceType: "promo_codes",
+  allowedRoles: ["super_admin", "finance", "marketing"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
       .select()
       .from(promoCodes)
-      .where(eq(promoCodes.id, id))
+      .where(eq(promoCodes.id, resourceId))
+      .limit(1);
+    if (!row) return null;
+    return { isActive: row.isActive, validUntil: row.validUntil?.toISOString() ?? null };
+  },
+  handler: async ({ tx, resourceId, body }) => {
+    const [existing] = await tx
+      .select()
+      .from(promoCodes)
+      .where(eq(promoCodes.id, resourceId))
       .limit(1);
 
     if (!existing) {
       return NextResponse.json({ error: "Code promo introuvable" }, { status: 404 });
     }
 
-    const body = (await req.json()) as Record<string, unknown>;
+    const b = (body ?? {}) as Record<string, unknown>;
     const updates: Partial<typeof promoCodes.$inferInsert> = {};
 
-    if (typeof body.isActive === "boolean") {
-      updates.isActive = body.isActive;
+    if (typeof b.isActive === "boolean") {
+      updates.isActive = b.isActive;
     }
 
-    if (body.validFrom !== undefined) {
-      const d = new Date(body.validFrom as string);
+    if (b.validFrom !== undefined) {
+      const d = new Date(b.validFrom as string);
       if (!isNaN(d.getTime())) updates.validFrom = d;
       else return NextResponse.json({ error: "Date de début invalide." }, { status: 422 });
     }
 
-    if (body.validUntil !== undefined) {
-      if (body.validUntil === null) {
+    if (b.validUntil !== undefined) {
+      if (b.validUntil === null) {
         updates.validUntil = null;
       } else {
-        const d = new Date(body.validUntil as string);
+        const d = new Date(b.validUntil as string);
         if (!isNaN(d.getTime())) updates.validUntil = d;
         else return NextResponse.json({ error: "Date de fin invalide." }, { status: 422 });
       }
@@ -100,52 +112,41 @@ export async function PATCH(
       return NextResponse.json({ error: "Aucune modification fournie." }, { status: 422 });
     }
 
-    const [updated] = await db
+    const [updated] = await tx
       .update(promoCodes)
       .set(updates)
-      .where(eq(promoCodes.id, id))
+      .where(eq(promoCodes.id, resourceId))
       .returning();
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "promo_code.update",
-      resourceType: "promo_codes",
-      resourceId: id,
-      before: { isActive: existing.isActive, validUntil: existing.validUntil?.toISOString() ?? null },
-      after: { isActive: updated.isActive, validUntil: updated.validUntil?.toISOString() ?? null },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({
+    return {
       promoCode: {
         ...updated,
         validFrom: updated.validFrom.toISOString(),
         validUntil: updated.validUntil ? updated.validUntil.toISOString() : null,
         createdAt: updated.createdAt.toISOString(),
       },
-    });
-  } catch (e) {
-    console.error("[PATCH /api//admin/promotions/[id]]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    };
+  },
+});
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
-
-    const { id } = await params;
-
-    const [existing] = await db
+export const DELETE = withAdminAudit<{ ok: true }, RouteContext>({
+  action: "promo_code.deactivate",
+  resourceType: "promo_codes",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
+      .select({ code: promoCodes.code, isActive: promoCodes.isActive })
+      .from(promoCodes)
+      .where(eq(promoCodes.id, resourceId))
+      .limit(1);
+    return row ?? null;
+  },
+  handler: async ({ tx, resourceId }) => {
+    const [existing] = await tx
       .select({ id: promoCodes.id, code: promoCodes.code })
       .from(promoCodes)
-      .where(eq(promoCodes.id, id))
+      .where(eq(promoCodes.id, resourceId))
       .limit(1);
 
     if (!existing) {
@@ -153,26 +154,11 @@ export async function DELETE(
     }
 
     // Soft-delete: deactivate
-    await db
+    await tx
       .update(promoCodes)
       .set({ isActive: false })
-      .where(eq(promoCodes.id, id));
+      .where(eq(promoCodes.id, resourceId));
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "promo_code.deactivate",
-      resourceType: "promo_codes",
-      resourceId: id,
-      before: { code: existing.code, isActive: true },
-      after: { isActive: false },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("[DELETE /api//admin/promotions/[id]]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true } as const;
+  },
+});

@@ -1,50 +1,54 @@
 import { NextResponse } from "next/server";
 import { eq } from "drizzle-orm";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, secretaries } from "@doktori/db";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
+import { secretaries } from "@doktori/db";
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
+type RouteContext = { params: Promise<{ id: string }> };
 
-    const { id } = await params;
-    const [existing] = await db.select().from(secretaries).where(eq(secretaries.id, id)).limit(1);
-    if (!existing) return NextResponse.json({ error: "Secrétaire introuvable" }, { status: 404 });
+export const PATCH = withAdminAudit<
+  {
+    secretary: Omit<typeof secretaries.$inferSelect, "createdAt"> & { createdAt: string };
+  },
+  RouteContext
+>({
+  action: ({ body }) => {
+    const b = body as { isActive?: unknown } | null;
+    return b?.isActive ? "secretaries.activate" : "secretaries.suspend";
+  },
+  resourceType: "secretaries",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
+      .select({ isActive: secretaries.isActive })
+      .from(secretaries)
+      .where(eq(secretaries.id, resourceId))
+      .limit(1);
+    return row ?? null;
+  },
+  handler: async ({ tx, resourceId, body }) => {
+    const [existing] = await tx
+      .select()
+      .from(secretaries)
+      .where(eq(secretaries.id, resourceId))
+      .limit(1);
+    if (!existing)
+      return NextResponse.json({ error: "Secrétaire introuvable" }, { status: 404 });
 
-    const body = (await req.json()) as Record<string, unknown>;
+    const b = (body ?? {}) as Record<string, unknown>;
 
-    if (typeof body.isActive !== "boolean") {
+    if (typeof b.isActive !== "boolean") {
       return NextResponse.json({ error: "isActive (boolean) requis" }, { status: 400 });
     }
 
-    const [updated] = await db
+    const [updated] = await tx
       .update(secretaries)
-      .set({ isActive: body.isActive })
-      .where(eq(secretaries.id, id))
+      .set({ isActive: b.isActive })
+      .where(eq(secretaries.id, resourceId))
       .returning();
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: body.isActive ? "secretaries.activate" : "secretaries.suspend",
-      resourceType: "secretaries",
-      resourceId: id,
-      before: { isActive: existing.isActive },
-      after: { isActive: updated.isActive },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({
+    return {
       secretary: { ...updated, createdAt: updated.createdAt.toISOString() },
-    });
-  } catch (e) {
-    console.error("[PATCH /api//admin/secretaries/[id]]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    };
+  },
+});

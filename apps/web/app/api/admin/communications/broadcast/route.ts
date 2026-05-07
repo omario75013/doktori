@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
 import { sendEmail } from "@/lib/email";
 import { sendSMS } from "@/lib/sms";
 import { db } from "@doktori/db";
@@ -70,83 +70,70 @@ async function buildAudience(
 /**
  * POST /api/admin/communications/broadcast
  * Send a bulk SMS or email to a filtered audience.
- *
- * Body: { channel, audience: { type, filters }, subject?, message }
  */
-export async function POST(req: Request) {
-  const admin = await requireAdmin(["super_admin", "marketing"]);
-  if (admin instanceof NextResponse) return admin;
+export const POST = withAdminAudit<
+  { sent: number; failed: number; total: number },
+  unknown
+>({
+  action: "communications.broadcast",
+  resourceType: "communications",
+  allowedRoles: ["super_admin", "marketing"],
+  // Bulk broadcast — no single resource id. Use a stable placeholder so
+  // audits can be filtered by resourceType=communications.
+  getResourceId: () => "broadcast",
+  handler: async ({ body }) => {
+    const b = (body ?? {}) as BroadcastBody;
+    const { channel, audience, subject, message } = b;
 
-  let body: BroadcastBody;
-  try {
-    body = (await req.json()) as BroadcastBody;
-  } catch {
-    return NextResponse.json({ error: "Corps de requête invalide" }, { status: 400 });
-  }
-
-  const { channel, audience, subject, message } = body;
-
-  if (!channel || !audience?.type || !message?.trim()) {
-    return NextResponse.json(
-      { error: "Paramètres manquants : channel, audience.type et message sont requis" },
-      { status: 400 }
-    );
-  }
-  if (channel === "email" && !subject?.trim()) {
-    return NextResponse.json(
-      { error: "Le sujet est requis pour les emails" },
-      { status: 400 }
-    );
-  }
-
-  const recipients = await buildAudience(audience.type, audience.filters ?? {});
-
-  let sent = 0;
-  let failed = 0;
-
-  for (const recipient of recipients) {
-    try {
-      if (channel === "sms") {
-        if (!recipient.phone) { failed++; continue; }
-        const result = await sendSMS(recipient.phone, message);
-        result.success ? sent++ : failed++;
-      } else {
-        if (!recipient.email) { failed++; continue; }
-        const result = await sendEmail({
-          to: recipient.email,
-          subject: subject ?? "Message Doktori",
-          html: `<p>${message.replace(/\n/g, "<br>")}</p>`,
-          text: message,
-        });
-        result.success ? sent++ : failed++;
-      }
-      // Throttle to avoid rate limiting
-      await sleep(100);
-    } catch {
-      failed++;
+    if (!channel || !audience?.type || !message?.trim()) {
+      return NextResponse.json(
+        { error: "Paramètres manquants : channel, audience.type et message sont requis" },
+        { status: 400 }
+      );
     }
-  }
+    if (channel === "email" && !subject?.trim()) {
+      return NextResponse.json(
+        { error: "Le sujet est requis pour les emails" },
+        { status: 400 }
+      );
+    }
 
-  const meta = extractRequestMeta(req);
-  await logAudit({
-    actor: admin,
-    action: "communications.broadcast",
-    resourceType: "communications",
-    after: {
-      channel,
-      audienceType: audience.type,
-      filters: audience.filters,
-      recipientCount: recipients.length,
-      sent,
-      failed,
-      message: message.substring(0, 200),
-    },
-    ip: meta.ip,
-    userAgent: meta.userAgent,
-  });
+    const recipients = await buildAudience(audience.type, audience.filters ?? {});
 
-  return NextResponse.json({ sent, failed, total: recipients.length });
-}
+    let sent = 0;
+    let failed = 0;
+
+    for (const recipient of recipients) {
+      try {
+        if (channel === "sms") {
+          if (!recipient.phone) {
+            failed++;
+            continue;
+          }
+          const result = await sendSMS(recipient.phone, message);
+          result.success ? sent++ : failed++;
+        } else {
+          if (!recipient.email) {
+            failed++;
+            continue;
+          }
+          const result = await sendEmail({
+            to: recipient.email,
+            subject: subject ?? "Message Doktori",
+            html: `<p>${message.replace(/\n/g, "<br>")}</p>`,
+            text: message,
+          });
+          result.success ? sent++ : failed++;
+        }
+        await sleep(100);
+      } catch {
+        failed++;
+      }
+    }
+
+    return { sent, failed, total: recipients.length };
+  },
+});
 
 /**
  * GET /api/admin/communications/broadcast
@@ -157,7 +144,9 @@ export async function GET(req: Request) {
   if (admin instanceof NextResponse) return admin;
 
   const { searchParams } = new URL(req.url);
-  const audienceType = (searchParams.get("audienceType") ?? "doctors") as "doctors" | "patients";
+  const audienceType = (searchParams.get("audienceType") ?? "doctors") as
+    | "doctors"
+    | "patients";
   const specialty = searchParams.get("specialty") ?? undefined;
   const city = searchParams.get("city") ?? undefined;
   const plan = searchParams.get("plan") ?? undefined;
