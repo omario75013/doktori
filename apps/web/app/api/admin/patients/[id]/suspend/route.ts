@@ -1,26 +1,32 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, patients } from "@doktori/db";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
+import { patients } from "@doktori/db";
 import { eq } from "drizzle-orm";
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin", "support"]);
-    if (admin instanceof NextResponse) return admin;
+type RouteContext = { params: Promise<{ id: string }> };
 
-    const { id } = await params;
-    const body = (await req.json()) as { reason?: string };
-
-    const reason = typeof body.reason === "string" ? body.reason.trim() : "";
+export const POST = withAdminAudit<{ ok: true }, RouteContext>({
+  action: "patients.suspend",
+  resourceType: "patients",
+  allowedRoles: ["super_admin", "support"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getReason: ({ body }) => {
+    const b = body as { reason?: unknown } | null;
+    return typeof b?.reason === "string" ? b.reason : null;
+  },
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx.select().from(patients).where(eq(patients.id, resourceId)).limit(1);
+    if (!row) return null;
+    return { isSuspended: row.isSuspended, suspensionReason: row.suspensionReason };
+  },
+  handler: async ({ tx, resourceId, body }) => {
+    const b = body as { reason?: unknown } | null;
+    const reason = typeof b?.reason === "string" ? b.reason.trim() : "";
     if (!reason) {
       return NextResponse.json({ error: "La raison de suspension est requise" }, { status: 422 });
     }
 
-    const [patient] = await db.select().from(patients).where(eq(patients.id, id)).limit(1);
+    const [patient] = await tx.select().from(patients).where(eq(patients.id, resourceId)).limit(1);
     if (!patient) {
       return NextResponse.json({ error: "Patient introuvable" }, { status: 404 });
     }
@@ -29,27 +35,11 @@ export async function POST(
     }
 
     const now = new Date();
-    await db
+    await tx
       .update(patients)
       .set({ isSuspended: true, suspensionReason: reason, suspendedAt: now })
-      .where(eq(patients.id, id));
+      .where(eq(patients.id, resourceId));
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "patients.suspend",
-      resourceType: "patients",
-      resourceId: id,
-      before: { isSuspended: false },
-      after: { isSuspended: true, suspensionReason: reason, suspendedAt: now.toISOString() },
-      reason,
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("[POST /api//admin/patients/[id]/suspend]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true } as const;
+  },
+});

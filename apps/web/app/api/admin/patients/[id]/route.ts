@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
 import { db, patients, patientMedicalProfile, patientDependents } from "@doktori/db";
 import { eq } from "drizzle-orm";
 
@@ -16,10 +16,9 @@ const ALLOWED_FIELDS = [
 
 type AllowedField = (typeof ALLOWED_FIELDS)[number];
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function GET(_req: Request, { params }: RouteContext) {
   const admin = await requireAdmin(["super_admin", "support"]);
   if (admin instanceof NextResponse) return admin;
 
@@ -43,27 +42,30 @@ export async function GET(
   return NextResponse.json({ patient, medicalProfile: medProfile ?? null, dependents });
 }
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin", "support"]);
-    if (admin instanceof NextResponse) return admin;
-
-    const { id } = await params;
-    const body = (await req.json()) as Record<string, unknown>;
+export const PATCH = withAdminAudit<
+  { ok: true; patient: typeof patients.$inferSelect },
+  RouteContext
+>({
+  action: "patients.update",
+  resourceType: "patients",
+  allowedRoles: ["super_admin", "support"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx.select().from(patients).where(eq(patients.id, resourceId)).limit(1);
+    return row ?? null;
+  },
+  handler: async ({ tx, resourceId, body }) => {
+    const b = (body ?? {}) as Record<string, unknown>;
 
     const updates: Record<string, unknown> = {};
     for (const field of ALLOWED_FIELDS) {
-      if (field in body) updates[field as AllowedField] = body[field];
+      if (field in b) updates[field as AllowedField] = b[field];
     }
 
     if (Object.keys(updates).length === 0) {
       return NextResponse.json({ error: "Aucune modification" }, { status: 400 });
     }
 
-    // Validate name and phone if present
     if ("name" in updates && (!updates.name || typeof updates.name !== "string" || !(updates.name as string).trim())) {
       return NextResponse.json({ error: "Le nom ne peut pas être vide" }, { status: 422 });
     }
@@ -71,35 +73,17 @@ export async function PATCH(
       return NextResponse.json({ error: "Le téléphone ne peut pas être vide" }, { status: 422 });
     }
 
-    const [before] = await db.select().from(patients).where(eq(patients.id, id)).limit(1);
+    const [before] = await tx.select().from(patients).where(eq(patients.id, resourceId)).limit(1);
     if (!before) {
       return NextResponse.json({ error: "Patient introuvable" }, { status: 404 });
     }
 
-    const [after] = await db.update(patients).set(updates).where(eq(patients.id, id)).returning();
+    const [after] = await tx
+      .update(patients)
+      .set(updates)
+      .where(eq(patients.id, resourceId))
+      .returning();
 
-    const beforeSnapshot: Record<string, unknown> = {};
-    const afterSnapshot: Record<string, unknown> = {};
-    for (const k of Object.keys(updates)) {
-      beforeSnapshot[k] = (before as Record<string, unknown>)[k];
-      afterSnapshot[k] = (after as Record<string, unknown>)[k];
-    }
-
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "patients.update",
-      resourceType: "patients",
-      resourceId: id,
-      before: beforeSnapshot,
-      after: afterSnapshot,
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({ ok: true, patient: after });
-  } catch (e) {
-    console.error("[PATCH /api//admin/patients/[id]]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true, patient: after } as const;
+  },
+});
