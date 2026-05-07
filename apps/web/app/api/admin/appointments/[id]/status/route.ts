@@ -1,24 +1,45 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, appointments } from "@doktori/db";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
+import { appointments } from "@doktori/db";
 import { eq } from "drizzle-orm";
 
 const VALID_STATUSES = ["pending", "confirmed", "completed", "no_show", "cancelled"] as const;
 type AppointmentStatus = (typeof VALID_STATUSES)[number];
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin", "support"]);
-    if (admin instanceof NextResponse) return admin;
+type RouteContext = { params: Promise<{ id: string }> };
 
-    const { id } = await params;
-    const body = (await req.json()) as { status?: unknown; reason?: unknown };
-
-    const newStatus = body.status as string;
+export const PATCH = withAdminAudit<
+  {
+    appointment: {
+      id: string;
+      status: string;
+      confirmedAt: string | null;
+      cancelledAt: string | null;
+      updatedAt: string;
+    };
+  },
+  RouteContext
+>({
+  action: ({ body }) => {
+    const b = body as { status?: unknown } | null;
+    const status = typeof b?.status === "string" ? b.status : "unknown";
+    return `appointments.status.${status}`;
+  },
+  resourceType: "appointments",
+  allowedRoles: ["super_admin", "support"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getReason: ({ body }) => {
+    const b = body as { reason?: unknown } | null;
+    return typeof b?.reason === "string" ? b.reason : null;
+  },
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx.select().from(appointments).where(eq(appointments.id, resourceId)).limit(1);
+    if (!row) return null;
+    return { status: row.status, confirmedAt: row.confirmedAt, cancelledAt: row.cancelledAt };
+  },
+  handler: async ({ tx, resourceId, body }) => {
+    const b = body as { status?: unknown } | null;
+    const newStatus = b?.status as string;
     if (!VALID_STATUSES.includes(newStatus as AppointmentStatus)) {
       return NextResponse.json(
         { error: `Statut invalide. Valeurs acceptées: ${VALID_STATUSES.join(", ")}` },
@@ -26,10 +47,10 @@ export async function PATCH(
       );
     }
 
-    const [before] = await db
+    const [before] = await tx
       .select()
       .from(appointments)
-      .where(eq(appointments.id, id))
+      .where(eq(appointments.id, resourceId))
       .limit(1);
 
     if (!before) {
@@ -48,26 +69,13 @@ export async function PATCH(
       updates.cancelledAt = now;
     }
 
-    const [after] = await db
+    const [after] = await tx
       .update(appointments)
       .set(updates)
-      .where(eq(appointments.id, id))
+      .where(eq(appointments.id, resourceId))
       .returning();
 
-    const { ip, userAgent } = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: `appointments.status.${newStatus}`,
-      resourceType: "appointments",
-      resourceId: id,
-      before: { status: before.status, confirmedAt: before.confirmedAt, cancelledAt: before.cancelledAt },
-      after: { status: after.status, confirmedAt: after.confirmedAt, cancelledAt: after.cancelledAt },
-      reason: typeof body.reason === "string" ? body.reason : null,
-      ip,
-      userAgent,
-    });
-
-    return NextResponse.json({
+    return {
       appointment: {
         id: after.id,
         status: after.status,
@@ -75,9 +83,6 @@ export async function PATCH(
         cancelledAt: after.cancelledAt?.toISOString() ?? null,
         updatedAt: after.updatedAt.toISOString(),
       },
-    });
-  } catch (e) {
-    console.error("[PATCH /api//admin/appointments/[id]/status]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    };
+  },
+});
