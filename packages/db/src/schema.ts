@@ -2370,3 +2370,52 @@ export const refunds = pgTable(
 
 export type Refund = typeof refunds.$inferSelect;
 export type NewRefund = typeof refunds.$inferInsert;
+
+// ── Wave 10 — Insurance providers catalog ─────────────────────────────────
+export const insuranceProviders = pgTable("insurance_providers", {
+  id: varchar("id", { length: 50 }).primaryKey(),
+  label: varchar("label", { length: 100 }).notNull(),
+  labelAr: varchar("label_ar", { length: 100 }),
+  type: varchar("type", { length: 20 }).notNull(), // public | private
+  isActive: boolean("is_active").notNull().default(true),
+  sortOrder: integer("sort_order").notNull().default(0),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+export type InsuranceProvider = typeof insuranceProviders.$inferSelect;
+export type NewInsuranceProvider = typeof insuranceProviders.$inferInsert;
+
+// ── Wave 10 — Global motif templates ──────────────────────────────────────
+export const catalogMotifs = pgTable(
+  "catalog_motifs",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    name: varchar("name", { length: 255 }).notNull(),
+    nameAr: varchar("name_ar", { length: 255 }),
+    specialtyId: varchar("specialty_id", { length: 50 }).references(() => catalogSpecialties.id),
+    durationMinutes: integer("duration_minutes").notNull().default(30),
+    suggestedFee: integer("suggested_fee"),
+    category: varchar("category", { length: 30 }).notNull().default("consultation"),
+    isActive: boolean("is_active").notNull().default(true),
+    sortOrder: integer("sort_order").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("catalog_motifs_specialty_idx").on(t.specialtyId),
+    index("catalog_motifs_active_idx").on(t.isActive),
+  ]
+);
+export type CatalogMotif = typeof catalogMotifs.$inferSelect;
+export type NewCatalogMotif = typeof catalogMotifs.$inferInsert;
+
+// ── Wave 10 — Meilisearch synonyms editor ─────────────────────────────────
+export const meilisearchSynonyms = pgTable("meilisearch_synonyms", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  term: varchar("term", { length: 100 }).notNull().unique(),
+  synonyms: jsonb("synonyms").notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+export type MeilisearchSynonym = typeof meilisearchSynonyms.$inferSelect;
+export type NewMeilisearchSynonym = typeof meilisearchSynonyms.$inferInsert;
