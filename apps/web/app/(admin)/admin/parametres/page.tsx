@@ -4,7 +4,7 @@ import { db, platformSettings } from "@doktori/db";
 import { asc } from "drizzle-orm";
 import { NextResponse } from "next/server";
 import Link from "next/link";
-import { ChevronRight, CreditCard, Sparkles } from "lucide-react";
+import { ChevronRight, CreditCard, ImageIcon, Sparkles } from "lucide-react";
 import { SettingsPanel } from "./settings-panel";
 
 export const dynamic = "force-dynamic";
@@ -23,6 +23,13 @@ const SUB_PAGES = [
     title: "Coach IA",
     description:
       "Activation, limites par patient/global, plafond coût, texte du disclaimer.",
+  },
+  {
+    href: "/admin/parametres/visuels",
+    icon: ImageIcon,
+    title: "Visuels homepage",
+    description:
+      "Image hero, illustrations « Comment ça marche », témoignages patients.",
   },
 ];
 
