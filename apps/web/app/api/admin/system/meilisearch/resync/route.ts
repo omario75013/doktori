@@ -23,6 +23,7 @@ export const POST = withAdminAudit<
 
     let result: unknown;
     let ok = true;
+    let upstreamStatus = 200;
     try {
       const r = await fetch(target, {
         method: "POST",
@@ -32,12 +33,20 @@ export const POST = withAdminAudit<
         },
       });
       ok = r.ok;
+      upstreamStatus = r.status;
       result = await r.json().catch(() => ({}));
     } catch (e) {
       ok = false;
+      upstreamStatus = 502;
       result = { error: e instanceof Error ? e.message : String(e) };
     }
 
-    return { ok, result };
+    // Surface upstream failure as non-2xx so the admin UI shows an error
+    // banner. Without this the wrapper would return 200 with ok:false body,
+    // which is easy to miss.
+    if (!ok) {
+      return NextResponse.json({ ok: false, result }, { status: upstreamStatus >= 500 ? 502 : upstreamStatus });
+    }
+    return { ok: true, result };
   },
 });

@@ -58,6 +58,11 @@ export const POST = withAdminAudit<
       result = { success: false, status: 0, body: { error: message } };
     }
 
+    // Surface upstream cron failures as non-2xx so the admin UI shows the
+    // error rather than swallowing it in a 200 response with success:false.
+    if (!result.success) {
+      return NextResponse.json(result, { status: result.status >= 500 || result.status === 0 ? 502 : result.status });
+    }
     return result;
   },
 });
