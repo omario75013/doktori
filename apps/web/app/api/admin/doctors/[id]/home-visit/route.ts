@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
 import { db, doctorHomeVisitSettings, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function GET(_req: Request, { params }: RouteContext) {
   const admin = await requireAdmin();
   if (admin instanceof NextResponse) return admin;
 
@@ -21,104 +20,89 @@ export async function GET(
   return NextResponse.json({ homeVisit: row ?? null });
 }
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
-
-    const { id } = await params;
-
-    const [doctor] = await db
+export const PATCH = withAdminAudit<
+  { ok: true; homeVisit: typeof doctorHomeVisitSettings.$inferSelect },
+  RouteContext
+>({
+  action: "doctors.home_visit_update",
+  resourceType: "doctors",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
+      .select()
+      .from(doctorHomeVisitSettings)
+      .where(eq(doctorHomeVisitSettings.doctorId, resourceId))
+      .limit(1);
+    if (!row) return null;
+    return { isAvailable: row.isAvailable, radiusKm: row.radiusKm, fee: row.fee };
+  },
+  handler: async ({ tx, resourceId, body }) => {
+    const [doctor] = await tx
       .select()
       .from(doctors)
-      .where(eq(doctors.id, id))
+      .where(eq(doctors.id, resourceId))
       .limit(1);
     if (!doctor) {
       return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
     }
 
-    const body = (await req.json()) as {
+    const b = (body ?? {}) as {
       isAvailable?: unknown;
       radiusKm?: unknown;
       fee?: unknown;
     };
 
-    if (body.isAvailable === undefined) {
+    if (b.isAvailable === undefined) {
       return NextResponse.json({ error: "isAvailable requis" }, { status: 400 });
     }
-    if (typeof body.isAvailable !== "boolean") {
+    if (typeof b.isAvailable !== "boolean") {
       return NextResponse.json({ error: "isAvailable doit être un booléen" }, { status: 400 });
     }
-    if (body.radiusKm !== undefined && typeof body.radiusKm !== "number") {
+    if (b.radiusKm !== undefined && typeof b.radiusKm !== "number") {
       return NextResponse.json({ error: "radiusKm doit être un entier" }, { status: 400 });
     }
-    if (body.fee !== undefined && typeof body.fee !== "number") {
+    if (b.fee !== undefined && typeof b.fee !== "number") {
       return NextResponse.json({ error: "fee doit être un entier (en millimes)" }, { status: 400 });
     }
 
-    const [before] = await db
+    const [before] = await tx
       .select()
       .from(doctorHomeVisitSettings)
-      .where(eq(doctorHomeVisitSettings.doctorId, id))
+      .where(eq(doctorHomeVisitSettings.doctorId, resourceId))
       .limit(1);
 
     const now = new Date();
 
-    let after: typeof before;
+    let after: typeof doctorHomeVisitSettings.$inferSelect;
     if (before) {
       const updates: Record<string, unknown> = {
-        isAvailable: body.isAvailable,
+        isAvailable: b.isAvailable,
         updatedAt: now,
       };
-      if (body.radiusKm !== undefined) updates.radiusKm = body.radiusKm;
-      if (body.fee !== undefined) updates.fee = body.fee;
+      if (b.radiusKm !== undefined) updates.radiusKm = b.radiusKm;
+      if (b.fee !== undefined) updates.fee = b.fee;
 
-      [after] = await db
+      [after] = await tx
         .update(doctorHomeVisitSettings)
         .set(updates)
-        .where(eq(doctorHomeVisitSettings.doctorId, id))
+        .where(eq(doctorHomeVisitSettings.doctorId, resourceId))
         .returning();
     } else {
-      const insertValues: {
-        doctorId: string;
-        isAvailable: boolean;
-        radiusKm: number;
-        fee: number;
-        updatedAt: Date;
-      } = {
-        doctorId: id,
-        isAvailable: body.isAvailable,
-        radiusKm: typeof body.radiusKm === "number" ? body.radiusKm : 5,
-        fee: typeof body.fee === "number" ? body.fee : 0,
+      const insertValues = {
+        doctorId: resourceId,
+        isAvailable: b.isAvailable,
+        radiusKm: typeof b.radiusKm === "number" ? b.radiusKm : 5,
+        fee: typeof b.fee === "number" ? b.fee : 0,
         updatedAt: now,
       };
 
-      [after] = await db
+      [after] = await tx
         .insert(doctorHomeVisitSettings)
         .values(insertValues)
         .returning();
     }
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "doctors.home_visit_update",
-      resourceType: "doctors",
-      resourceId: id,
-      before: before
-        ? { isAvailable: before.isAvailable, radiusKm: before.radiusKm, fee: before.fee }
-        : null,
-      after: { isAvailable: after.isAvailable, radiusKm: after.radiusKm, fee: after.fee },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({ ok: true, homeVisit: after });
-  } catch (e) {
-    console.error("[PATCH /api//admin/doctors/[id]/home-visit]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true, homeVisit: after } as const;
+  },
+});

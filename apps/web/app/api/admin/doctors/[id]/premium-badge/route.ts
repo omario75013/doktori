@@ -1,77 +1,67 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, doctorPremium, doctors } from "@doktori/db";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
+import { doctorPremium, doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
+type RouteContext = { params: Promise<{ id: string }> };
 
-    const { id } = await params;
-
-    const [doctor] = await db
+export const POST = withAdminAudit<
+  { ok: true; premium: typeof doctorPremium.$inferSelect },
+  RouteContext
+>({
+  action: ({ body }) => {
+    const b = body as { isActive?: unknown } | null;
+    return b?.isActive ? "doctors.premium_activate" : "doctors.premium_deactivate";
+  },
+  resourceType: "doctors",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
+      .select()
+      .from(doctorPremium)
+      .where(eq(doctorPremium.doctorId, resourceId))
+      .limit(1);
+    if (!row) return null;
+    return { isActive: row.isActive, until: row.until };
+  },
+  handler: async ({ tx, resourceId, body }) => {
+    const [doctor] = await tx
       .select({ id: doctors.id })
       .from(doctors)
-      .where(eq(doctors.id, id))
+      .where(eq(doctors.id, resourceId))
       .limit(1);
     if (!doctor) {
       return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
     }
 
-    const body = (await req.json()) as { isActive?: unknown; until?: unknown };
+    const b = (body ?? {}) as { isActive?: unknown; until?: unknown };
 
-    if (typeof body.isActive !== "boolean") {
+    if (typeof b.isActive !== "boolean") {
       return NextResponse.json(
         { error: "isActive (boolean) est requis" },
         { status: 422 }
       );
     }
 
-    const [before] = await db
-      .select()
-      .from(doctorPremium)
-      .where(eq(doctorPremium.doctorId, id))
-      .limit(1);
+    const untilDate = typeof b.until === "string" ? new Date(b.until) : null;
 
-    const untilDate =
-      typeof body.until === "string" ? new Date(body.until) : null;
-
-    const [after] = await db
+    const [after] = await tx
       .insert(doctorPremium)
       .values({
-        doctorId: id,
-        isActive: body.isActive,
+        doctorId: resourceId,
+        isActive: b.isActive,
         until: untilDate,
       })
       .onConflictDoUpdate({
         target: doctorPremium.doctorId,
         set: {
-          isActive: body.isActive,
+          isActive: b.isActive,
           until: untilDate,
         },
       })
       .returning();
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: body.isActive ? "doctors.premium_activate" : "doctors.premium_deactivate",
-      resourceType: "doctors",
-      resourceId: id,
-      before: before ? { isActive: before.isActive, until: before.until } : null,
-      after: { isActive: after.isActive, until: after.until },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({ ok: true, premium: after });
-  } catch (e) {
-    console.error("[POST /api//admin/doctors/[id]/premium-badge]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true, premium: after } as const;
+  },
+});

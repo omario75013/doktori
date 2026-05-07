@@ -1,14 +1,13 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
 import { db, appointmentTypes } from "@doktori/db";
 import { eq, asc } from "drizzle-orm";
 import { invalidate } from "@/lib/cache";
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function GET(_req: Request, { params }: RouteContext) {
   const admin = await requireAdmin();
   if (admin instanceof NextResponse) return admin;
 
@@ -22,19 +21,21 @@ export async function GET(
   return NextResponse.json({ appointmentTypes: rows });
 }
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
+export const POST = withAdminAudit<
+  { ok: true; appointmentType: typeof appointmentTypes.$inferSelect },
+  RouteContext
+>({
+  action: "appointment_types.create",
+  resourceType: "appointment_types",
+  allowedRoles: ["super_admin"],
+  // The resource being audited is the doctor's appointment-types collection;
+  // we use the doctorId as the audit resource for traceability.
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  handler: async ({ tx, resourceId, body }) => {
+    const b = (body ?? {}) as Record<string, unknown>;
 
-    const { id } = await params;
-    const body = (await req.json()) as Record<string, unknown>;
-
-    const name = body.name as string | undefined;
-    const durationMinutes = body.durationMinutes as number | undefined;
+    const name = b.name as string | undefined;
+    const durationMinutes = b.durationMinutes as number | undefined;
 
     if (!name || typeof name !== "string" || name.trim().length === 0) {
       return NextResponse.json({ error: "name est requis" }, { status: 400 });
@@ -58,42 +59,22 @@ export async function POST(
       color?: string;
       isDefault?: boolean;
     } = {
-      doctorId: id,
+      doctorId: resourceId,
       name: name.trim(),
       durationMinutes,
     };
 
-    if (typeof body.fee === "number") insert.fee = body.fee;
-    if (typeof body.color === "string") insert.color = body.color;
-    if (typeof body.isDefault === "boolean") insert.isDefault = body.isDefault;
+    if (typeof b.fee === "number") insert.fee = b.fee;
+    if (typeof b.color === "string") insert.color = b.color;
+    if (typeof b.isDefault === "boolean") insert.isDefault = b.isDefault;
 
-    const [newType] = await db
+    const [newType] = await tx
       .insert(appointmentTypes)
       .values(insert)
       .returning();
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "appointment_types.create",
-      resourceType: "appointment_types",
-      resourceId: newType.id,
-      before: null,
-      after: {
-        name: newType.name,
-        durationMinutes: newType.durationMinutes,
-        fee: newType.fee,
-        doctorId: id,
-      },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
+    await invalidate(`doctor:apptTypes:${resourceId}`);
 
-    await invalidate(`doctor:apptTypes:${id}`);
-
-    return NextResponse.json({ ok: true, appointmentType: newType }, { status: 201 });
-  } catch (e) {
-    console.error("[POST /api//admin/doctors/[id]/appointment-types]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true, appointmentType: newType } as const;
+  },
+});

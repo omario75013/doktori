@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
 import { db, doctorSchedules, doctors, doctorPractices } from "@doktori/db";
 import { eq, asc } from "drizzle-orm";
 
@@ -13,10 +13,9 @@ type SlotInput = {
   practiceId?: string;
 };
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function GET(_req: Request, { params }: RouteContext) {
   const admin = await requireAdmin();
   if (admin instanceof NextResponse) return admin;
 
@@ -30,21 +29,27 @@ export async function GET(
   return NextResponse.json({ schedule: rows });
 }
 
-export async function PUT(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin();
-    if (admin instanceof NextResponse) return admin;
-
-    const { id } = await params;
-    const body = (await req.json()) as { slots: SlotInput[] };
-    if (!Array.isArray(body.slots)) {
+export const PUT = withAdminAudit<
+  { ok: true; schedule: (typeof doctorSchedules.$inferSelect)[] },
+  RouteContext
+>({
+  action: "doctors.schedule.update",
+  resourceType: "doctors",
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const rows = await tx
+      .select()
+      .from(doctorSchedules)
+      .where(eq(doctorSchedules.doctorId, resourceId));
+    return { slots: rows.length };
+  },
+  handler: async ({ tx, resourceId, body }) => {
+    const b = (body ?? {}) as { slots?: SlotInput[] };
+    if (!Array.isArray(b.slots)) {
       return NextResponse.json({ error: "slots requis" }, { status: 400 });
     }
 
-    for (const s of body.slots) {
+    for (const s of b.slots) {
       if (
         typeof s.dayOfWeek !== "number" ||
         s.dayOfWeek < 0 ||
@@ -57,29 +62,26 @@ export async function PUT(
       }
     }
 
-    const [doctor] = await db.select().from(doctors).where(eq(doctors.id, id)).limit(1);
+    const [doctor] = await tx.select().from(doctors).where(eq(doctors.id, resourceId)).limit(1);
     if (!doctor) {
       return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
     }
 
-    // Resolve default practiceId for slots that don't specify one
-    const [defaultPractice] = await db
+    const [defaultPractice] = await tx
       .select({ id: doctorPractices.id })
       .from(doctorPractices)
-      .where(eq(doctorPractices.doctorId, id))
+      .where(eq(doctorPractices.doctorId, resourceId))
       .limit(1);
     if (!defaultPractice) {
-      return NextResponse.json({ error: "Aucun cabinet trouvé pour ce médecin" }, { status: 422 });
+      return NextResponse.json(
+        { error: "Aucun cabinet trouvé pour ce médecin" },
+        { status: 422 }
+      );
     }
 
-    const before = await db
-      .select()
-      .from(doctorSchedules)
-      .where(eq(doctorSchedules.doctorId, id));
-
-    await db.delete(doctorSchedules).where(eq(doctorSchedules.doctorId, id));
-    const rows = body.slots.map((s) => ({
-      doctorId: id,
+    await tx.delete(doctorSchedules).where(eq(doctorSchedules.doctorId, resourceId));
+    const rows = b.slots.map((s) => ({
+      doctorId: resourceId,
       practiceId: s.practiceId ?? defaultPractice.id,
       dayOfWeek: s.dayOfWeek,
       startTime: s.startTime,
@@ -88,24 +90,9 @@ export async function PUT(
       isActive: s.isActive ?? true,
     }));
     const after = rows.length
-      ? await db.insert(doctorSchedules).values(rows).returning()
+      ? await tx.insert(doctorSchedules).values(rows).returning()
       : [];
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "doctors.schedule.update",
-      resourceType: "doctors",
-      resourceId: id,
-      before: { slots: before.length },
-      after: { slots: after.length },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({ ok: true, schedule: after });
-  } catch (e) {
-    console.error("[PUT /api//admin/doctors/[id]/schedule]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true, schedule: after } as const;
+  },
+});

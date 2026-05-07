@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
 import { db, subscriptions } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 
@@ -12,10 +12,9 @@ type PremiumBody = {
   months?: number;
 };
 
-export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
+type RouteContext = { params: Promise<{ id: string }> };
+
+export async function GET(_req: Request, { params }: RouteContext) {
   const admin = await requireAdmin();
   if (admin instanceof NextResponse) return admin;
 
@@ -30,32 +29,45 @@ export async function GET(
   return NextResponse.json({ subscription: row ?? null });
 }
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
-
-    const { id } = await params;
-    const body = (await req.json()) as PremiumBody;
-    const { plan = "premium", action, months } = body;
+export const POST = withAdminAudit<
+  { ok: true; subscription: typeof subscriptions.$inferSelect | undefined },
+  RouteContext
+>({
+  action: ({ body }) => {
+    const b = body as PremiumBody | null;
+    return `doctors.premium_${b?.action ?? "unknown"}`;
+  },
+  resourceType: "subscriptions",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
+      .select()
+      .from(subscriptions)
+      .where(
+        and(eq(subscriptions.doctorId, resourceId), eq(subscriptions.status, "active"))
+      )
+      .limit(1);
+    return row ?? null;
+  },
+  handler: async ({ tx, resourceId, body }) => {
+    const b = (body ?? {}) as PremiumBody;
+    const { plan = "premium", action, months } = b;
 
     if (!["activate", "cancel", "extend"].includes(action)) {
       return NextResponse.json({ error: "Action invalide" }, { status: 400 });
     }
 
-    // Fetch current active subscription (before snapshot)
-    const [before] = await db
+    const [before] = await tx
       .select()
       .from(subscriptions)
-      .where(and(eq(subscriptions.doctorId, id), eq(subscriptions.status, "active")))
+      .where(
+        and(eq(subscriptions.doctorId, resourceId), eq(subscriptions.status, "active"))
+      )
       .limit(1);
 
     const now = new Date();
     let after: typeof before | undefined;
-    const meta = extractRequestMeta(req);
 
     if (action === "activate") {
       const durationMonths = months ?? 12;
@@ -63,8 +75,7 @@ export async function POST(
       endsAt.setMonth(endsAt.getMonth() + durationMonths);
 
       if (before) {
-        // Update existing active subscription
-        const [updated] = await db
+        const [updated] = await tx
           .update(subscriptions)
           .set({
             plan,
@@ -78,11 +89,10 @@ export async function POST(
           .returning();
         after = updated;
       } else {
-        // Create new subscription — priceMillimes defaults to 0 (manual/admin-granted)
-        const [created] = await db
+        const [created] = await tx
           .insert(subscriptions)
           .values({
-            doctorId: id,
+            doctorId: resourceId,
             plan,
             status: "active",
             priceMillimes: 0,
@@ -101,7 +111,7 @@ export async function POST(
           { status: 404 }
         );
       }
-      const [updated] = await db
+      const [updated] = await tx
         .update(subscriptions)
         .set({
           status: "cancelled",
@@ -125,7 +135,7 @@ export async function POST(
       const newEndsAt = new Date(baseDate);
       newEndsAt.setMonth(newEndsAt.getMonth() + extensionMonths);
 
-      const [updated] = await db
+      const [updated] = await tx
         .update(subscriptions)
         .set({
           endsAt: newEndsAt,
@@ -136,20 +146,6 @@ export async function POST(
       after = updated;
     }
 
-    await logAudit({
-      actor: admin,
-      action: `doctors.premium_${action}`,
-      resourceType: "subscriptions",
-      resourceId: id,
-      before: before ?? null,
-      after: after ?? null,
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({ ok: true, subscription: after });
-  } catch (e) {
-    console.error("[POST /api//admin/doctors/[id]/premium]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true, subscription: after } as const;
+  },
+});

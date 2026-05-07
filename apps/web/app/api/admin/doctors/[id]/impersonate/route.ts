@@ -1,23 +1,28 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, doctors } from "@doktori/db";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
+import { doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { SignJWT } from "jose";
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
+type RouteContext = { params: Promise<{ id: string }> };
 
-    const { id } = await params;
-    const [doctor] = await db
+export const POST = withAdminAudit<
+  {
+    token: string;
+    doctor: { id: string; name: string; slug: string; email: string };
+    expiresAt: string;
+  },
+  RouteContext
+>({
+  action: "doctors.impersonation_start",
+  resourceType: "doctors",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  handler: async ({ tx, admin, resourceId }) => {
+    const [doctor] = await tx
       .select()
       .from(doctors)
-      .where(eq(doctors.id, id))
+      .where(eq(doctors.id, resourceId))
       .limit(1);
 
     if (!doctor) {
@@ -39,23 +44,7 @@ export async function POST(
       .setIssuedAt()
       .sign(secret);
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "doctors.impersonation_start",
-      resourceType: "doctors",
-      resourceId: id,
-      before: null,
-      after: {
-        impersonatedBy: admin.email,
-        doctorId: doctor.id,
-        expiresAt: expiresAt.toISOString(),
-      },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
-    return NextResponse.json({
+    return {
       token,
       doctor: {
         id: doctor.id,
@@ -64,9 +53,6 @@ export async function POST(
         email: doctor.email,
       },
       expiresAt: expiresAt.toISOString(),
-    });
-  } catch (e) {
-    console.error("[POST /api//admin/doctors/[id]/impersonate]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    };
+  },
+});

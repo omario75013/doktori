@@ -1,7 +1,6 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, doctors } from "@doktori/db";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
+import { doctors } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { uploadToR2 } from "@/lib/r2";
 import { invalidateDoctor } from "@/lib/cache";
@@ -13,115 +12,105 @@ const ALLOWED_TYPES: Record<string, string> = {
   "image/webp": "webp",
 };
 
-export async function POST(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const admin = await requireAdmin(["super_admin"]);
-  if (admin instanceof NextResponse) return admin;
+type RouteContext = { params: Promise<{ id: string }> };
 
-  const { id } = await params;
+export const POST = withAdminAudit<
+  { ok: true; photoUrl: string },
+  RouteContext
+>({
+  action: "doctors.photo_upload",
+  resourceType: "doctors",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
+      .select({ photoUrl: doctors.photoUrl })
+      .from(doctors)
+      .where(eq(doctors.id, resourceId))
+      .limit(1);
+    if (!row) return null;
+    return { photoUrl: row.photoUrl };
+  },
+  handler: async ({ tx, resourceId, req }) => {
+    const [existing] = await tx
+      .select({ photoUrl: doctors.photoUrl, slug: doctors.slug })
+      .from(doctors)
+      .where(eq(doctors.id, resourceId))
+      .limit(1);
 
-  const [existing] = await db
-    .select({ photoUrl: doctors.photoUrl, slug: doctors.slug })
-    .from(doctors)
-    .where(eq(doctors.id, id))
-    .limit(1);
+    if (!existing) {
+      return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
+    }
 
-  if (!existing) {
-    return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
-  }
+    const formData = await req.formData();
+    const file = formData.get("file") as File;
 
-  const formData = await req.formData();
-  const file = formData.get("file") as File;
+    if (!file) {
+      return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
+    }
 
-  if (!file) {
-    return NextResponse.json({ error: "Fichier manquant" }, { status: 400 });
-  }
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: "Fichier trop volumineux (max 5 Mo)" },
+        { status: 400 }
+      );
+    }
 
-  if (file.size > MAX_FILE_SIZE) {
-    return NextResponse.json(
-      { error: "Fichier trop volumineux (max 5 Mo)" },
-      { status: 400 }
-    );
-  }
+    const ext = ALLOWED_TYPES[file.type];
+    if (!ext) {
+      return NextResponse.json(
+        { error: "Type de fichier non autorisé (jpeg, png, webp uniquement)" },
+        { status: 400 }
+      );
+    }
 
-  const ext = ALLOWED_TYPES[file.type];
-  if (!ext) {
-    return NextResponse.json(
-      { error: "Type de fichier non autorisé (jpeg, png, webp uniquement)" },
-      { status: 400 }
-    );
-  }
-
-  try {
-    const key = `doctors/photos/${id}-${Date.now()}.${ext}`;
+    const key = `doctors/photos/${resourceId}-${Date.now()}.${ext}`;
     const buffer = Buffer.from(await file.arrayBuffer());
     const photoUrl = await uploadToR2(buffer, key, file.type);
 
-    await db
+    await tx
       .update(doctors)
       .set({ photoUrl, updatedAt: new Date() })
-      .where(eq(doctors.id, id));
+      .where(eq(doctors.id, resourceId));
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "doctors.photo_upload",
-      resourceType: "doctors",
-      resourceId: id,
-      before: { photoUrl: existing.photoUrl },
-      after: { photoUrl },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
+    await invalidateDoctor(resourceId, existing.slug);
 
-    await invalidateDoctor(id, existing.slug);
+    return { ok: true, photoUrl } as const;
+  },
+});
 
-    return NextResponse.json({ ok: true, photoUrl });
-  } catch (e) {
-    console.error("[r2] admin photo upload failed:", e);
-    return NextResponse.json({ error: "Erreur lors du téléversement" }, { status: 500 });
-  }
-}
+export const DELETE = withAdminAudit<{ ok: true }, RouteContext>({
+  action: "doctors.photo_remove",
+  resourceType: "doctors",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
+      .select({ photoUrl: doctors.photoUrl })
+      .from(doctors)
+      .where(eq(doctors.id, resourceId))
+      .limit(1);
+    if (!row) return null;
+    return { photoUrl: row.photoUrl };
+  },
+  handler: async ({ tx, resourceId }) => {
+    const [existing] = await tx
+      .select({ photoUrl: doctors.photoUrl, slug: doctors.slug })
+      .from(doctors)
+      .where(eq(doctors.id, resourceId))
+      .limit(1);
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const admin = await requireAdmin(["super_admin"]);
-  if (admin instanceof NextResponse) return admin;
+    if (!existing) {
+      return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
+    }
 
-  const { id } = await params;
+    await tx
+      .update(doctors)
+      .set({ photoUrl: null, updatedAt: new Date() })
+      .where(eq(doctors.id, resourceId));
 
-  const [existing] = await db
-    .select({ photoUrl: doctors.photoUrl, slug: doctors.slug })
-    .from(doctors)
-    .where(eq(doctors.id, id))
-    .limit(1);
+    await invalidateDoctor(resourceId, existing.slug);
 
-  if (!existing) {
-    return NextResponse.json({ error: "Médecin introuvable" }, { status: 404 });
-  }
-
-  await db
-    .update(doctors)
-    .set({ photoUrl: null, updatedAt: new Date() })
-    .where(eq(doctors.id, id));
-
-  const meta = extractRequestMeta(req);
-  await logAudit({
-    actor: admin,
-    action: "doctors.photo_remove",
-    resourceType: "doctors",
-    resourceId: id,
-    before: { photoUrl: existing.photoUrl },
-    after: { photoUrl: null },
-    ip: meta.ip,
-    userAgent: meta.userAgent,
-  });
-
-  await invalidateDoctor(id, existing.slug);
-
-  return NextResponse.json({ ok: true });
-}
+    return { ok: true } as const;
+  },
+});

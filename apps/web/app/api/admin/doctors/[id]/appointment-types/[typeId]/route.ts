@@ -1,22 +1,33 @@
 import { NextResponse } from "next/server";
-import { requireAdmin } from "@/lib/admin-auth";
-import { logAudit, extractRequestMeta } from "@/lib/admin-audit";
-import { db, appointmentTypes } from "@doktori/db";
+import { withAdminAudit } from "@/lib/admin-audit-wrapper";
+import { appointmentTypes } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 import { invalidate } from "@/lib/cache";
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: Promise<{ id: string; typeId: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
+type RouteContext = { params: Promise<{ id: string; typeId: string }> };
 
-    const { id, typeId } = await params;
-    const body = (await req.json()) as Record<string, unknown>;
+export const PATCH = withAdminAudit<
+  { ok: true; appointmentType: typeof appointmentTypes.$inferSelect },
+  RouteContext
+>({
+  action: "appointment_types.update",
+  resourceType: "appointment_types",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).typeId,
+  getBefore: async ({ tx, ctx }) => {
+    const { id, typeId } = await ctx.params;
+    const [row] = await tx
+      .select()
+      .from(appointmentTypes)
+      .where(and(eq(appointmentTypes.id, typeId), eq(appointmentTypes.doctorId, id)))
+      .limit(1);
+    return row ?? null;
+  },
+  handler: async ({ tx, ctx, body }) => {
+    const { id, typeId } = await ctx.params;
+    const b = (body ?? {}) as Record<string, unknown>;
 
-    const [before] = await db
+    const [before] = await tx
       .select()
       .from(appointmentTypes)
       .where(and(eq(appointmentTypes.id, typeId), eq(appointmentTypes.doctorId, id)))
@@ -41,7 +52,7 @@ export async function PATCH(
 
     const updates: Record<string, unknown> = {};
     for (const field of ALLOWED_FIELDS) {
-      if (field in body) updates[field] = body[field as AllowedField];
+      if (field in b) updates[field] = b[field as AllowedField];
     }
 
     if (Object.keys(updates).length === 0) {
@@ -70,50 +81,41 @@ export async function PATCH(
       updates.name = (updates.name as string).trim();
     }
 
-    const [after] = await db
+    const [after] = await tx
       .update(appointmentTypes)
       .set(updates)
       .where(and(eq(appointmentTypes.id, typeId), eq(appointmentTypes.doctorId, id)))
       .returning();
 
-    const beforeSnapshot: Record<string, unknown> = {};
-    const afterSnapshot: Record<string, unknown> = {};
-    for (const k of Object.keys(updates)) {
-      beforeSnapshot[k] = (before as Record<string, unknown>)[k];
-      afterSnapshot[k] = (after as Record<string, unknown>)[k];
-    }
-
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "appointment_types.update",
-      resourceType: "appointment_types",
-      resourceId: typeId,
-      before: beforeSnapshot,
-      after: afterSnapshot,
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
     await invalidate(`doctor:apptTypes:${id}`);
 
-    return NextResponse.json({ ok: true, appointmentType: after });
-  } catch (e) {
-    console.error("[PATCH /api//admin/doctors/[id]/appointment-types/[typeId]]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true, appointmentType: after } as const;
+  },
+});
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: Promise<{ id: string; typeId: string }> }
-) {
-  try {
-    const admin = await requireAdmin(["super_admin"]);
-    if (admin instanceof NextResponse) return admin;
-
-    const { id, typeId } = await params;
-    const [before] = await db
+export const DELETE = withAdminAudit<{ ok: true }, RouteContext>({
+  action: "appointment_types.deactivate",
+  resourceType: "appointment_types",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).typeId,
+  getBefore: async ({ tx, ctx }) => {
+    const { id, typeId } = await ctx.params;
+    const [row] = await tx
+      .select()
+      .from(appointmentTypes)
+      .where(and(eq(appointmentTypes.id, typeId), eq(appointmentTypes.doctorId, id)))
+      .limit(1);
+    if (!row) return null;
+    return {
+      name: row.name,
+      durationMinutes: row.durationMinutes,
+      fee: row.fee,
+      isActive: row.isActive,
+    };
+  },
+  handler: async ({ tx, ctx }) => {
+    const { id, typeId } = await ctx.params;
+    const [before] = await tx
       .select()
       .from(appointmentTypes)
       .where(and(eq(appointmentTypes.id, typeId), eq(appointmentTypes.doctorId, id)))
@@ -127,33 +129,13 @@ export async function DELETE(
     }
 
     // Soft-delete: set isActive=false to avoid FK issues with existing appointments
-    await db
+    await tx
       .update(appointmentTypes)
       .set({ isActive: false })
       .where(and(eq(appointmentTypes.id, typeId), eq(appointmentTypes.doctorId, id)));
 
-    const meta = extractRequestMeta(req);
-    await logAudit({
-      actor: admin,
-      action: "appointment_types.deactivate",
-      resourceType: "appointment_types",
-      resourceId: typeId,
-      before: {
-        name: before.name,
-        durationMinutes: before.durationMinutes,
-        fee: before.fee,
-        isActive: before.isActive,
-      },
-      after: { isActive: false },
-      ip: meta.ip,
-      userAgent: meta.userAgent,
-    });
-
     await invalidate(`doctor:apptTypes:${id}`);
 
-    return NextResponse.json({ ok: true });
-  } catch (e) {
-    console.error("[DELETE /api//admin/doctors/[id]/appointment-types/[typeId]]", e);
-    return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });
-  }
-}
+    return { ok: true } as const;
+  },
+});
