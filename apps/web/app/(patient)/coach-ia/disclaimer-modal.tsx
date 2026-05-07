@@ -10,8 +10,9 @@
  */
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AlertTriangle } from "lucide-react";
+import DOMPurify from "isomorphic-dompurify";
 
 interface DisclaimerModalProps {
   onAccept: () => void;
@@ -28,8 +29,29 @@ interface DisclaimerModalProps {
   disclaimerHtml: string;
 }
 
+/**
+ * HTML allowlist — defensive sanitization on top of the super_admin-only
+ * write path. Permits the formatting we use in the default disclaimer
+ * (paragraphs, lists, emphasis, links) and forbids everything else
+ * (scripts, iframes, event handlers, data: URIs, etc.).
+ */
+const SANITIZE_CONFIG = {
+  ALLOWED_TAGS: ["p", "ul", "ol", "li", "strong", "em", "b", "i", "a", "br", "span"],
+  ALLOWED_ATTR: ["href", "target", "rel", "class"],
+  ALLOWED_URI_REGEXP: /^(?:(?:tel|mailto|https?):)/i,
+  ADD_ATTR: ["target"],
+  RETURN_TRUSTED_TYPE: false,
+};
+
 export function DisclaimerModal({ onAccept, onCancel, disclaimerHtml }: DisclaimerModalProps) {
   const [accepting, setAccepting] = useState(false);
+
+  // Sanitize once per render of the disclaimer content. Memoized to avoid
+  // re-running DOMPurify on every state change (loading button, etc).
+  const sanitizedHtml = useMemo(
+    () => DOMPurify.sanitize(disclaimerHtml, SANITIZE_CONFIG) as unknown as string,
+    [disclaimerHtml],
+  );
 
   async function handleAccept() {
     setAccepting(true);
@@ -69,13 +91,12 @@ export function DisclaimerModal({ onAccept, onCancel, disclaimerHtml }: Disclaim
         </div>
 
         {/* Admin-curated content (super_admin role required to write).
-            We trust the source and render verbatim so wording matches the
-            admin preview. Keep the wrapper class list-disc/list-inside so
-            <ul>/<li> from the configured HTML pick up the same styling
-            as the legacy hardcoded version. */}
+            Defensive sanitization via isomorphic-dompurify against
+            stored-XSS in the rare case a super_admin account is compromised
+            or a tag injection slips through the API zod check. */}
         <div
           className="mt-4 text-sm text-gray-700 space-y-3 [&_ul]:space-y-2 [&_ul]:list-disc [&_ul]:pl-5 [&_a]:font-bold [&_a]:text-red-600 [&_a]:underline"
-          dangerouslySetInnerHTML={{ __html: disclaimerHtml }}
+          dangerouslySetInnerHTML={{ __html: sanitizedHtml }}
         />
 
         <div className="mt-6 flex flex-col sm:flex-row justify-end gap-2">
