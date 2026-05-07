@@ -235,7 +235,10 @@ export const patients = pgTable(
     dateOfBirth: date("date_of_birth"),
     gender: varchar("gender", { length: 10 }),
     bloodType: varchar("blood_type", { length: 5 }),
-    cnamNumber: varchar("cnam_number", { length: 20 }),
+    cnamNumber: varchar("cnam_number", { length: 30 }),
+    // ─── V1 CNAM/CNSS Tunisia (migration 0089) ──
+    cnssNumber: varchar("cnss_number", { length: 30 }),
+    cnamRegime: varchar("cnam_regime", { length: 30 }).notNull().default("none"),
     // ─── Phase 3: enrichment ──
     cin: varchar("cin", { length: 20 }),
     insuranceProvider: varchar("insurance_provider", { length: 50 }),
@@ -427,6 +430,13 @@ export const appointments = pgTable(
     paymentProvider: varchar("payment_provider", { length: 20 }),
     paymentMethod: varchar("payment_method", { length: 30 }),
     paidAt: timestamp("paid_at", { withTimezone: true }),
+    // ── BS1 (Bulletin de Soins) lifecycle — migration 0090 ──
+    bsPdfUrl: text("bs_pdf_url"),
+    bsStatus: varchar("bs_status", { length: 30 }).notNull().default("not_generated"),
+    bsGeneratedAt: timestamp("bs_generated_at", { withTimezone: true }),
+    bsSentAt: timestamp("bs_sent_at", { withTimezone: true }),
+    bsReimbursedAt: timestamp("bs_reimbursed_at", { withTimezone: true }),
+    bsRejectionReason: text("bs_rejection_reason"),
   },
   (table) => [
     index("appointments_doctor_date_idx").on(table.doctorId, table.startsAt),
