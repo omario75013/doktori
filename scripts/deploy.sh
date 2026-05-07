@@ -11,10 +11,14 @@
 #
 # What it does:
 #   1. op inject .env.tpl → .env (chmod 600)
-#   2. docker compose build doktori-web
-#   3. docker compose up -d
+#   2. apply pending DB migrations via apply-migrations-prod.sh (tracked,
+#      idempotent — only runs new ones since last deploy)
+#   3. docker compose build doktori-web
+#   4. docker compose up -d
+#   5. healthcheck loop (60s max)
 #
-# Idempotent: safe to re-run.
+# Idempotent: safe to re-run. Migrations use a tracking table
+# (__doktori_migrations) so already-applied ones are skipped.
 
 set -euo pipefail
 
@@ -45,6 +49,20 @@ if grep -q "^[A-Z_]*=op://" .env; then
   echo "ERROR: some op:// refs failed to resolve. Check that all referenced 1P items exist." >&2
   grep "^[A-Z_]*=op://" .env >&2
   exit 1
+fi
+
+# Apply pending DB migrations BEFORE building/restarting the app, so the
+# new container code matches the new DB shape on first request.
+# Tracking table __doktori_migrations + IF NOT EXISTS in each SQL = idempotent.
+if [ -x ./apply-migrations-prod.sh ]; then
+  echo "[deploy] applying pending DB migrations"
+  if ! ./apply-migrations-prod.sh; then
+    echo "ERROR: migration step failed — aborting deploy to avoid runtime SQL errors." >&2
+    exit 1
+  fi
+else
+  echo "WARN: apply-migrations-prod.sh not found or not executable — skipping migrations."
+  echo "      If new migrations exist in packages/db/migrations/, the app will hit SQL errors."
 fi
 
 echo "[deploy] docker compose build"
