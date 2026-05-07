@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import SOSPage from "./sos-client";
+import { getSettingOrDefault } from "@/lib/platform-settings";
 
 export const metadata: Metadata = {
   title: "SOS Médecin — Urgence médicale à domicile en Tunisie",
@@ -29,6 +30,10 @@ export const metadata: Metadata = {
   },
 };
 
-export default function Page() {
-  return <SOSPage />;
+export default async function Page() {
+  const heroImageUrl = await getSettingOrDefault(
+    "sos.hero_image_url",
+    "/images/defaults/sos-hero.webp"
+  );
+  return <SOSPage heroImageUrl={heroImageUrl} />;
 }

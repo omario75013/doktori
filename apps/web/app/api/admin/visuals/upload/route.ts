@@ -36,6 +36,7 @@ const IMAGE_KEYS = new Set([
   "homepage.howto_step1_image_url",
   "homepage.howto_step2_image_url",
   "homepage.howto_step3_image_url",
+  "sos.hero_image_url",
 ]);
 
 function slugifyKey(key: string): string {

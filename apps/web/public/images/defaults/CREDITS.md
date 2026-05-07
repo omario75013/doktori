@@ -12,6 +12,7 @@ authors here as a courtesy.
 | `howto-2.webp` | https://unsplash.com/photos/photo-1573497019940-1c28c88b4f3e | Unsplash contributor |
 | `howto-3.webp` | https://unsplash.com/photos/photo-1559757175-5700dde675bc | Unsplash contributor |
 | `testimonial-placeholder.webp` | https://unsplash.com/photos/photo-1494790108377-be9c29b29330 | Unsplash contributor |
+| `sos-hero.webp` | https://unsplash.com/photos/photo-1631815589968-fdb09a223b1e | Unsplash contributor |
 
 These files act as **bundled fallbacks** for the 5 `homepage.*` keys in
 `platform_settings`. Admins can swap them at runtime via

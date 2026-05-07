@@ -180,7 +180,7 @@ function SymptomOption({
   );
 }
 
-export default function SOSPage() {
+export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
   const [step, setStep] = useState<Step>("intro");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -514,6 +514,25 @@ export default function SOSPage() {
                     en quelques minutes
                   </span>
                 </motion.h1>
+
+                {/* Hero image — admin-configurable via platform_settings.sos.hero_image_url */}
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.15 }}
+                  className="mb-8 w-full max-w-3xl"
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={heroImageUrl}
+                    alt="Médecin tunisien rassurant lors d'une consultation d'urgence"
+                    width={1200}
+                    height={600}
+                    loading="eager"
+                    decoding="async"
+                    className="aspect-[2/1] w-full rounded-3xl object-cover shadow-xl ring-1 ring-black/5"
+                  />
+                </motion.div>
 
                 {/* Subtitle */}
                 <motion.p

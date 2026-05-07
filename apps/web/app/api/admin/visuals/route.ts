@@ -60,6 +60,13 @@ export const VISUAL_REGISTRY: Registered[] = [
     description: "Image au-dessus de la carte « Consultez ». 600×450, 4:3.",
   },
   {
+    key: "sos.hero_image_url",
+    default: "/images/defaults/sos-hero.webp",
+    label: "Image hero — page SOS",
+    description:
+      "Photo affichée sous le H1 et au-dessus du formulaire SOS. Ambiance « urgence rassurante ». 1200×600 recommandé.",
+  },
+  {
     key: "homepage.testimonials",
     default: JSON.stringify(
       [
