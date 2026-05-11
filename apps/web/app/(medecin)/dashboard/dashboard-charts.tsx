@@ -214,7 +214,7 @@ export function DashboardCharts({
                   border: "1px solid #DDE5EF",
                   fontSize: 12,
                 }}
-                formatter={(v: number) => `${v}%`}
+                formatter={(v) => `${v}%`}
               />
               <Line
                 type="monotone"
