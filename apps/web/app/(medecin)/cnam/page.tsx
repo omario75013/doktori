@@ -157,7 +157,7 @@ export default function CnamPage() {
           <Loader2 className="w-6 h-6 animate-spin text-primary" />
         </div>
       ) : rows.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-white p-12 text-center shadow-sm">
+        <div className="ds-card p-12 text-center shadow-sm">
           <div className="h-14 w-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
             <FileText className="w-7 h-7 text-primary" />
           </div>
@@ -165,7 +165,7 @@ export default function CnamPage() {
           <p className="text-gray-400 text-sm">{t("createFromCompleted")}</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-white dark:bg-gray-800 shadow-sm overflow-x-auto">
+        <div className="ds-card dark:bg-gray-800 shadow-sm overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border dark:border-gray-700 bg-secondary dark:bg-gray-700/50 text-left">
@@ -247,7 +247,7 @@ export default function CnamPage() {
 
 function StatCard({ label, value, valueColor }: { label: string; value: string; valueColor: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+    <div className="ds-card p-4 shadow-sm">
       <div className="text-xs text-gray-500 uppercase tracking-wider">{label}</div>
       <div className={`mt-1 text-2xl font-bold ${valueColor}`}>{value}</div>
     </div>

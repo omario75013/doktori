@@ -24,6 +24,7 @@ export const AUTHENTICATED_PREFIXES = [
   "/motifs",
   "/cabinets",
   "/conventions",
+  "/domicile",
   "/cnam",
   "/sos-medecin",
   "/stats",
@@ -46,6 +47,22 @@ export const AUTHENTICATED_PREFIXES = [
   "/secretaire-login",
   "/connexion",
   "/inscription",
+  /* Patient surface — uses its own sidebar shell, hide global navbar/footer/chatbot */
+  "/mon-espace",
+  "/mes-rdv",
+  "/dossier-medical",
+  "/mes-documents",
+  "/mes-notifications",
+  "/favoris",
+  "/grossesse",
+  "/ma-famille",
+  "/mon-parrainage",
+  "/parametres",
+  "/coach-ia",
+  "/recherche",
+  "/medecin",
+  "/rdv",
+  "/avis",
 ] as const;
 
 export function isAuthenticatedRoute(pathname: string): boolean {
@@ -63,7 +80,7 @@ export function roleFromPath(pathname: string): AuthenticatedRole | null {
   if (pathname.startsWith("/admin")) return "admin";
   if (pathname.startsWith("/clinique")) return "clinic";
   if (pathname.startsWith("/secretaire")) return "secretary";
-  if (pathname.startsWith("/mon-espace") || pathname.startsWith("/mes-rdv") || pathname.startsWith("/dossier-medical") || pathname.startsWith("/mes-messages")) return "patient";
+  if (pathname.startsWith("/mon-espace") || pathname.startsWith("/mes-rdv") || pathname.startsWith("/dossier-medical")) return "patient";
   if (
     pathname.startsWith("/dashboard") ||
     pathname.startsWith("/agenda") ||

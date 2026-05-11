@@ -281,7 +281,7 @@ export function AgendaEditor() {
   // ─── Empty: no cabinet yet ─────
   if (practices.length === 0) {
     return (
-      <div className="max-w-3xl mx-auto">
+      <div className="w-full">
         <div className="rounded-2xl border border-dashed border-border bg-secondary/40 p-10 text-center">
           <div className="mx-auto h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center">
             <Building2 className="h-7 w-7 text-primary" />
@@ -307,7 +307,7 @@ export function AgendaEditor() {
   const openDaysCount = days.filter((d) => d.open).length;
 
   return (
-    <div className="max-w-3xl mx-auto space-y-6">
+    <div className="space-y-6">
       <div>
         <div className="flex items-center gap-2 mb-1">
           <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
@@ -384,7 +384,7 @@ export function AgendaEditor() {
           <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       ) : (
-        <div className="bg-white dark:bg-gray-900 rounded-2xl border border-border shadow-sm divide-y divide-border">
+        <div className="ds-card divide-y divide-[color:var(--line-cool)] overflow-hidden">
           {days.map((day) => (
             <div
               key={day.dayOfWeek}

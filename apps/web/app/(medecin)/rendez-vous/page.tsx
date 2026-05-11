@@ -626,7 +626,7 @@ export default function RendezVousPage() {
       )}
 
       {appointments.length === 0 ? (
-        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-12 text-center shadow-sm">
+        <div className="ds-card p-12 text-center">
           <div className="h-14 w-14 rounded-2xl bg-secondary flex items-center justify-center mx-auto mb-3">
             <Calendar className="h-7 w-7 text-primary" />
           </div>
@@ -634,7 +634,7 @@ export default function RendezVousPage() {
           <p className="text-sm text-gray-400 dark:text-gray-500">{t("noAppointmentsDesc")}</p>
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm overflow-x-auto">
+        <div className="ds-card overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-secondary text-left">

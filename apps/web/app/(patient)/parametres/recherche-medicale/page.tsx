@@ -31,7 +31,7 @@ export default function RechercheMedicalePage() {
   const [showDetails, setShowDetails] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("doktori_patient_token");
+    const stored = sessionStorage.getItem("doktori_patient_session");
     if (!stored) {
       router.push("/connexion-patient");
       return;

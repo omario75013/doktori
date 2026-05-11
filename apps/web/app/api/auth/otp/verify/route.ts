@@ -4,6 +4,7 @@ import { phoneOtpVerifySchema } from "@doktori/validation";
 import { formatPhone } from "@doktori/shared";
 import { eq, and, gt } from "drizzle-orm";
 import { sign } from "jsonwebtoken";
+import { setPatientCookie } from "@/lib/patient-auth";
 
 export async function POST(req: Request) {
   try {
@@ -50,7 +51,8 @@ export async function POST(req: Request) {
       { expiresIn: "7d" }
     );
 
-    return NextResponse.json({ token, patient: { id: patient.id, phone: patient.phone, name: patient.name } });
+    const res = NextResponse.json({ token, patient: { id: patient.id, phone: patient.phone, name: patient.name } });
+    return setPatientCookie(res, token);
   } catch (e) {
     console.error("[POST /api//auth/otp/verify]", e);
     return NextResponse.json({ error: "Erreur serveur" }, { status: 500 });

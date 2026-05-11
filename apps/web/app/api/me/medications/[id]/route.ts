@@ -11,6 +11,8 @@ const patchSchema = z.object({
   startedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   endedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   notes: z.string().trim().max(2000).optional().nullable(),
+  reminderEnabled: z.boolean().optional(),
+  reminderTimes: z.array(z.string().regex(/^\d{2}:\d{2}$/)).max(8).optional(),
 }).strict();
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {

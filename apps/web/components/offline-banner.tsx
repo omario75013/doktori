@@ -13,11 +13,20 @@ export function OfflineBanner() {
     window.addEventListener("online", update);
     window.addEventListener("offline", update);
 
-    // Register service worker (best-effort)
+    // Register service worker only in production. In dev, actively
+    // unregister any leftover SW so it can't serve stale /_next/static/
+    // chunks across hot-reload cycles.
     if ("serviceWorker" in navigator) {
-      navigator.serviceWorker
-        .register("/sw.js", { scope: "/" })
-        .catch(() => { /* ignore */ });
+      if (process.env.NODE_ENV === "production") {
+        navigator.serviceWorker
+          .register("/sw.js", { scope: "/" })
+          .catch(() => { /* ignore */ });
+      } else {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => regs.forEach((r) => r.unregister()))
+          .catch(() => { /* ignore */ });
+      }
     }
 
     return () => {

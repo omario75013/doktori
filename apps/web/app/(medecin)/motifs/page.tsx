@@ -207,7 +207,7 @@ export default function MotifsPage() {
       </div>
 
       {practices.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border bg-secondary/40 p-10 text-center max-w-xl">
+        <div className="rounded-2xl border border-dashed border-border bg-secondary/40 p-10 text-center">
           <Building2 className="h-10 w-10 text-primary mx-auto" />
           <p className="mt-3 text-foreground font-semibold">{t("noCabinets")}</p>
           <p className="mt-1 text-sm text-gray-500 max-w-md mx-auto">
@@ -222,7 +222,7 @@ export default function MotifsPage() {
           </Link>
         </div>
       ) : (
-        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm max-w-xl">
+        <div className="ds-card p-6 shadow-sm">
           <h2 className="font-semibold text-foreground mb-4">{t("addMotif")}</h2>
           <form onSubmit={handleCreate} className="space-y-4" noValidate>
             <div>
@@ -365,7 +365,7 @@ export default function MotifsPage() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm max-w-xl">
+      <div className="ds-card">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="font-semibold text-foreground">{t("activeMotifs")}</h2>
           <span className="text-xs text-primary font-semibold bg-secondary px-2.5 py-1 rounded-full">

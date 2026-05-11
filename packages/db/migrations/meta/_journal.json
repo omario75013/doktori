@@ -15,6 +15,13 @@
       "when": 1777543161387,
       "tag": "0001_young_xorn",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1778519519030,
+      "tag": "0002_crazy_jubilee",
+      "breakpoints": true
     }
   ]
 }

@@ -50,6 +50,17 @@ interface PatientInfo {
   id: string;
   phone: string;
   name?: string;
+  email?: string | null;
+  dateOfBirth?: string | null;
+  gender?: string | null;
+  bloodType?: string | null;
+  cnamNumber?: string | null;
+  insuranceNumber?: string | null;
+  addressStreet?: string | null;
+  heightCm?: number | null;
+  weightKg?: number | null;
+  emergencyContactPhone?: string | null;
+  photoUrl?: string | null;
 }
 
 interface TimelineItem {
@@ -202,14 +213,45 @@ export default function PatientDashboardPage() {
   const [researchBannerVisible, setResearchBannerVisible] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("doktori_patient_token");
-    if (!stored) {
-      router.replace("/mes-rdv");
-      return;
-    }
-    setToken(stored);
-    const info = parsePatientFromToken(stored);
-    setPatient(info);
+    // Auth lives in the httpOnly cookie. Try cookie first; if it's not set
+    // yet (legacy localStorage JWT case) retry with Bearer to trigger the
+    // /api/patients/me auto-migration that promotes the JWT into a cookie.
+    let legacy: string | null = null;
+    try { legacy = localStorage.getItem("doktori_patient_token"); } catch { /* ignore */ }
+
+    (async () => {
+      let res = await fetch("/api/patients/me", { credentials: "include" });
+      if (!res.ok && legacy) {
+        res = await fetch("/api/patients/me", {
+          credentials: "include",
+          headers: { Authorization: `Bearer ${legacy}` },
+        });
+      }
+      if (!res.ok) {
+        router.replace("/mes-rdv");
+        return;
+      }
+      const data = await res.json();
+      try { sessionStorage.setItem("doktori_patient_session", "1"); } catch { /* ignore */ }
+      try { localStorage.removeItem("doktori_patient_token"); } catch { /* ignore */ }
+      setToken("1");
+      setPatient({
+        id: data.id,
+        phone: data.phone ?? null,
+        name: data.name ?? null,
+        email: data.email ?? null,
+        dateOfBirth: data.dateOfBirth ?? null,
+        gender: data.gender ?? null,
+        bloodType: data.bloodType ?? null,
+        cnamNumber: data.cnamNumber ?? null,
+        insuranceNumber: data.insuranceNumber ?? null,
+        addressStreet: data.addressStreet ?? null,
+        heightCm: data.heightCm ?? null,
+        weightKg: data.weightKg ?? null,
+        emergencyContactPhone: data.emergencyContactPhone ?? null,
+        photoUrl: data.photoUrl ?? null,
+      });
+    })().catch(() => router.replace("/mes-rdv"));
     // Read banner dismissal flags from localStorage
     setReviewBannerDismissed(
       localStorage.getItem("doktori_review_banner_dismissed") === "true",
@@ -224,7 +266,7 @@ export default function PatientDashboardPage() {
     if (!dismissed) {
       // Check current consent state — if null (never asked), show banner
       fetch("/api/me/anonymization-consent", {
-        headers: { Authorization: `Bearer ${stored}` },
+        credentials: "include",
       })
         .then((r) => (r.ok ? r.json() : { consent: undefined }))
         .then((d) => {
@@ -247,7 +289,7 @@ export default function PatientDashboardPage() {
     })
       .then((r) => {
         if (r.status === 401) {
-          localStorage.removeItem("doktori_patient_token");
+          sessionStorage.removeItem("doktori_patient_session");
           router.replace("/mes-rdv");
           return [];
         }
@@ -275,7 +317,7 @@ export default function PatientDashboardPage() {
   }
 
   function logout() {
-    localStorage.removeItem("doktori_patient_token");
+    sessionStorage.removeItem("doktori_patient_session");
     router.replace("/mes-rdv");
   }
 
@@ -289,16 +331,13 @@ export default function PatientDashboardPage() {
     setPushBannerDismissed(true);
   }
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-secondary">
-        <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-foreground/60 text-sm">Chargement...</p>
-        </div>
-      </div>
-    );
-  }
+  // Note: we used to gate the entire page on `if (loading) return <spinner>`
+  // but that hid the whole layout whenever the appointments fetch hadn't
+  // resolved yet — including after a Next.js back-nav where the router cache
+  // sometimes returns the cached pre-effect render and the client useEffect
+  // doesn't re-fire reliably. The page now renders immediately with whatever
+  // data we have (empty arrays at first); the data fills in when fetches
+  // resolve.
 
   const upcoming = appointments
     .filter((a) => a.status !== "cancelled" && !isPast(new Date(a.startsAt)))
@@ -322,6 +361,34 @@ export default function PatientDashboardPage() {
   const patientName = patient?.name ?? patient?.phone ?? "Patient";
   const timeline = buildTimeline(appointments);
 
+  // Profile completion — derived from real patient fields.
+  // Each step is 25% of the bar.
+  const steps = [
+    {
+      label: "Informations personnelles",
+      done: !!(patient?.name && patient?.dateOfBirth && patient?.gender),
+      cta: "Compléter",
+    },
+    {
+      label: "Numéro de téléphone",
+      done: !!patient?.phone,
+      cta: "Compléter",
+    },
+    {
+      label: "Carte CNAM",
+      done: !!patient?.cnamNumber,
+      cta: "Ajouter",
+    },
+    {
+      label: "Antécédents médicaux",
+      done: !!(patient?.bloodType || patient?.heightCm || patient?.weightKg),
+      cta: "Compléter",
+    },
+  ];
+  const completionPct = Math.round(
+    (steps.filter((s) => s.done).length / steps.length) * 100,
+  );
+
   // Unreviewed completed appointments in the last 30 days (for banners)
   const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
   const unreviewedCompleted = appointments.filter(
@@ -334,10 +401,17 @@ export default function PatientDashboardPage() {
 
   // Greeting based on hour
   const hour = new Date().getHours();
-  const greeting = hour < 12 ? "Bonjour" : hour < 18 ? "Bon après-midi" : "Bonsoir";
+  const greeting =
+    hour >= 5 && hour < 12
+      ? "Bonjour"
+      : hour >= 12 && hour < 18
+      ? "Bon après-midi"
+      : hour >= 18 && hour < 22
+      ? "Bonsoir"
+      : "Bonne nuit";
 
   return (
-    <div className="min-h-screen bg-secondary dark:bg-gray-900">
+    <div>
       <GuidedTour
         storageKey="doktori_patient_tour"
         steps={[
@@ -361,27 +435,41 @@ export default function PatientDashboardPage() {
           },
         ]}
       />
-      <div className="max-w-2xl mx-auto px-4 py-8">
-        {/* Top bar */}
+      <div className="w-full">
+        {/* Page header — eyebrow + warm greeting (cyan redesign) */}
         <motion.div
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          className="flex items-center justify-between mb-6"
+          className="flex items-end justify-between gap-4 mb-6"
         >
-          <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-              <User className="w-4 h-4 text-primary" />
-            </div>
-            <span className="text-sm font-medium text-foreground">Mon espace</span>
+          <div className="min-w-0">
+            <div className="ds-eyebrow">Mon espace</div>
+            <h1 className="ds-page-title">
+              {greeting} {patientName.split(" ")[0] ?? patientName},{" "}
+              <span style={{ color: "var(--primary-500)" }}>
+                comment vous sentez-vous&nbsp;?
+              </span>
+            </h1>
+            <p className="ds-page-sub">
+              {format(new Date(), "EEEE d MMMM", { locale: fr })} ·{" "}
+              {upcoming.length === 0
+                ? "Aucun rendez-vous prévu cette semaine"
+                : upcoming.length === 1
+                ? "1 rendez-vous à venir"
+                : `${upcoming.length} rendez-vous à venir`}
+            </p>
           </div>
-          <button
-            onClick={logout}
-            className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-red-500 transition-colors"
-          >
-            <LogOut className="w-4 h-4" />
-            Se déconnecter
-          </button>
+          <div className="flex items-center gap-2 shrink-0">
+            <a href="/faq" className="ds-btn ds-btn-ghost ds-btn-sm">
+              <ClipboardList className="w-4 h-4" />
+              Aide
+            </a>
+            <a href="/recherche" className="ds-btn ds-btn-primary ds-btn-sm">
+              <Calendar className="w-4 h-4" />
+              Nouveau RDV
+            </a>
+          </div>
         </motion.div>
 
         {/* Review reminder banner */}
@@ -480,267 +568,393 @@ export default function PatientDashboardPage() {
           </motion.div>
         )}
 
-        {/* Welcome banner */}
-        <motion.div
-          variants={fadeUp}
-          initial="hidden"
-          animate="visible"
-          className="rounded-2xl p-6 mb-6 text-white relative overflow-hidden shadow-lg"
-          style={{ background: "linear-gradient(135deg, #0891B2 0%, #134E4A 100%)" }}
-        >
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/10"
-          />
-          <div
-            aria-hidden
-            className="pointer-events-none absolute -bottom-6 -left-4 w-24 h-24 rounded-full bg-white/5"
-          />
-
-          {/* Greeting + appointment count summary */}
-          <p className="text-cyan-100 text-sm mb-0.5">{greeting},</p>
-          <h2 className="text-xl font-bold mb-1">{patientName}</h2>
-          {upcoming.length > 0 && (
-            <p className="text-cyan-200 text-xs mb-4">
-              {upcoming.length === 1
-                ? "1 rendez-vous à venir"
-                : `${upcoming.length} rendez-vous à venir`}
-            </p>
-          )}
-
-          {nextAppointment ? (
-            <div className="bg-white/10 rounded-xl p-4 backdrop-blur-sm">
-              <p className="text-cyan-200 text-xs mb-1">Prochain rendez-vous</p>
-              <p className="font-semibold">{nextAppointment.doctorName}</p>
-              <p className="text-cyan-100 text-sm">
-                {format(new Date(nextAppointment.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
-              </p>
-            </div>
-          ) : (
-            <p className="text-cyan-100 text-sm">Aucun rendez-vous à venir</p>
-          )}
-        </motion.div>
-
-        {/* Quick actions */}
+        {/* ═══════ NEW DESIGN — Quick actions strip (4 cards) ═══════ */}
         <motion.section
           variants={fadeUp}
           initial="hidden"
           animate="visible"
           data-tour="quick-actions"
-          className="mb-8"
+          className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6"
         >
-          <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-            Actions rapides
-          </h3>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {QUICK_ACTIONS.map((action) => (
-              <a
-                key={action.href}
-                href={action.href}
-                className={`flex flex-col items-center gap-2 rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-4 text-center ${action.hoverBorder} dark:hover:bg-gray-700 hover:shadow-md transition-all duration-200`}
-              >
-                <div className={`w-10 h-10 ${action.iconBg} rounded-full flex items-center justify-center`}>
-                  {action.icon}
-                </div>
-                <span className="text-xs font-semibold text-foreground leading-snug">{action.title}</span>
-                <span className="text-[10px] text-gray-400 dark:text-gray-500 leading-snug">{action.desc}</span>
-              </a>
-            ))}
-          </div>
+          <a href="/recherche" className="ds-qa ds-qa-primary">
+            <div className="ds-qa-iconwrap" style={{ background: "rgba(255,255,255,.18)" }}>
+              <Search className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="font-bold text-[14.5px] mb-0.5">Trouver un médecin</div>
+              <div className="text-[12.5px]" style={{ color: "rgba(255,255,255,.85)" }}>
+                Spécialité, nom, ville
+              </div>
+            </div>
+          </a>
+          <a href="/sos" className="ds-qa ds-qa-coral">
+            <div className="ds-qa-iconwrap" style={{ background: "rgba(255,255,255,.18)" }}>
+              <Siren className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <div className="font-bold text-[14.5px] mb-0.5">Urgence SOS</div>
+              <div className="text-[12.5px]" style={{ color: "rgba(255,255,255,.9)" }}>
+                Médecin disponible 24/7
+              </div>
+            </div>
+          </a>
+          <a href="/recherche?mode=teleconsult" className="ds-qa ds-qa-light">
+            <div className="ds-qa-iconwrap" style={{ background: "var(--tone-sky-bg)", color: "#2C5F82" }}>
+              <Video className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-[14.5px] mb-0.5" style={{ color: "var(--ink-900)" }}>
+                Téléconsultation
+              </div>
+              <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
+                Consulter en vidéo
+              </div>
+            </div>
+          </a>
+          <a href="/mes-rdv" className="ds-qa ds-qa-light">
+            <div className="ds-qa-iconwrap" style={{ background: "var(--tone-amber-bg)", color: "#8B6224" }}>
+              <Calendar className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="font-bold text-[14.5px] mb-0.5" style={{ color: "var(--ink-900)" }}>
+                Mes rendez-vous
+              </div>
+              <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
+                Voir l&apos;historique complet
+              </div>
+            </div>
+          </a>
         </motion.section>
 
-        {/* Upcoming appointments */}
+        {/* ═══════ NEW DESIGN — 2-column dashboard cards ═══════ */}
         <motion.section
           variants={fadeUp}
           initial="hidden"
           animate="visible"
-          data-tour="upcoming-rdv"
-          className="mb-8"
+          className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-5 mb-8"
         >
-          <div className="flex items-center justify-between mb-3">
-            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-              Rendez-vous à venir
-            </h3>
-            <a href="/mes-rdv" className="text-xs font-semibold text-primary hover:underline">
-              Voir tout
-            </a>
-          </div>
-
-          {upcoming.length === 0 ? (
-            /* Enhanced empty state */
-            <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-8 text-center shadow-sm">
-              <div className="w-16 h-16 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
-                <Calendar className="w-8 h-8 text-primary/40" />
+          {/* LEFT — Prochain rendez-vous (friendly empty/upcoming card) */}
+          <div className="ds-card-patient ds-card-pad-lg" data-tour="upcoming-rdv">
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <div className="font-bold text-[16px]" style={{ color: "var(--ink-900)" }}>
+                  Prochain rendez-vous
+                </div>
+                <div className="text-[13px] mt-0.5" style={{ color: "var(--ink-500)" }}>
+                  Votre agenda apparaîtra ici
+                </div>
               </div>
-              <p className="text-foreground font-semibold mb-1">Pas de rendez-vous à venir</p>
-              <p className="text-sm text-gray-400 dark:text-gray-500 mb-5">
-                Votre agenda est vide. Trouvez un médecin et prenez rendez-vous en quelques clics.
-              </p>
               <a
-                href="/recherche"
-                className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-doktori-teal-dark transition-colors shadow-sm"
+                href="/mes-rdv"
+                className="inline-flex items-center gap-1 text-[13px] font-bold"
+                style={{ color: "var(--primary-600)" }}
               >
-                <Search className="w-4 h-4" />
-                Trouver un médecin
+                Tout voir <ChevronRight className="w-3.5 h-3.5" />
               </a>
             </div>
-          ) : (
-            <div className="space-y-3">
-              {upcoming.map((a) => {
-                const spec = SPECIALTIES.find((s) => s.id === a.doctorSpecialty);
-                const typeLabel = TYPE_LABELS[a.type] ?? a.type;
-                const typeColor = TYPE_COLORS[a.type] ?? "bg-gray-100 text-gray-600";
-                const borderColor = STATUS_BORDER[a.status] ?? "border-l-primary";
-                const isTeleconsult = a.type === "teleconsultation";
-                const joinable = isTeleconsult && isTeleconsultJoinable(a);
-                const statusLabel = a.status === "pending" ? "En attente" : "Confirmé";
-                const statusColor =
-                  a.status === "pending"
-                    ? "bg-orange-50 text-orange-600"
-                    : "bg-teal-50 text-teal-700";
-
-                return (
-                  <div
-                    key={a.id}
-                    className={`rounded-2xl border-l-4 ${borderColor} border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 flex-wrap mb-0.5">
-                          <p className="font-semibold text-foreground truncate">{a.doctorName}</p>
-                          <span className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${statusColor}`}>
-                            {statusLabel}
-                          </span>
-                        </div>
-                        <p className="text-sm text-primary mb-1">{spec?.label ?? a.doctorSpecialty}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400 capitalize">
-                          {format(new Date(a.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
-                        </p>
-                        <div className="flex items-center gap-2 mt-2 flex-wrap">
-                          <span className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${typeColor}`}>
-                            {typeLabel}
-                          </span>
-                          {a.beneficiaryName && (
-                            <span className="rounded-full px-2.5 py-0.5 text-xs font-medium bg-gray-100 text-gray-600">
-                              Pour {a.beneficiaryName}
-                            </span>
-                          )}
-                        </div>
-                        {joinable && (
-                          <a
-                            href={`/teleconsultation/${a.id}`}
-                            className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-purple-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-purple-700 transition-colors"
-                          >
-                            <Video className="w-3.5 h-3.5" />
-                            Rejoindre la téléconsultation
-                          </a>
-                        )}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCancelConfirm(a.id)}
-                        className="rounded-xl border-border hover:border-red-200 hover:text-red-500 text-gray-500 shrink-0"
-                      >
-                        Annuler
-                      </Button>
+            <div
+              className="flex gap-5 items-center p-5 rounded-2xl"
+              style={{
+                background: "linear-gradient(135deg, var(--primary-50), var(--tone-mint-bg))",
+                border: "1px solid var(--primary-100)",
+              }}
+            >
+              {/* Friendly calendar art */}
+              <svg width="92" height="92" viewBox="0 0 92 92" className="shrink-0" aria-hidden>
+                <rect x="10" y="14" width="72" height="68" rx="14" fill="#fff" stroke="var(--primary-200)" strokeWidth="1.5" />
+                <rect x="10" y="14" width="72" height="18" rx="14" fill="var(--primary-500)" />
+                <rect x="10" y="22" width="72" height="10" fill="var(--primary-500)" />
+                <rect x="22" y="8" width="6" height="14" rx="3" fill="var(--primary-700)" />
+                <rect x="64" y="8" width="6" height="14" rx="3" fill="var(--primary-700)" />
+                <circle cx="46" cy="58" r="14" fill="var(--tone-mint-bg)" />
+                <path d="M40 58 l5 5 l9-10" stroke="var(--primary-600)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                <circle cx="74" cy="46" r="6" fill="var(--tone-coral)" />
+                <circle cx="20" cy="74" r="4" fill="var(--tone-amber)" />
+              </svg>
+              <div className="flex-1 min-w-0">
+                {nextAppointment ? (
+                  <>
+                    <div className="font-bold text-[17px] mb-1" style={{ color: "var(--ink-900)" }}>
+                      {nextAppointment.doctorName}
                     </div>
-                  </div>
-                );
-              })}
+                    <div className="text-[13.5px] mb-3" style={{ color: "var(--ink-500)" }}>
+                      {format(new Date(nextAppointment.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
+                    </div>
+                    <a href="/mes-rdv" className="ds-btn ds-btn-primary ds-btn-sm">
+                      Voir les détails
+                    </a>
+                  </>
+                ) : (
+                  <>
+                    <div className="font-bold text-[17px] mb-1" style={{ color: "var(--ink-900)" }}>
+                      Prenez soin de vous
+                    </div>
+                    <div className="text-[13.5px] mb-3 leading-relaxed" style={{ color: "var(--ink-500)" }}>
+                      Aucun rendez-vous à venir. Trouvez un médecin près de chez vous en quelques clics.
+                    </div>
+                    <div className="flex gap-2 flex-wrap">
+                      <a href="/recherche" className="ds-btn ds-btn-primary ds-btn-sm">
+                        <Search className="w-4 h-4" /> Trouver un médecin
+                      </a>
+                      <a href="/mes-rdv" className="ds-btn ds-btn-ghost ds-btn-sm">
+                        Voir mes médecins
+                      </a>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          )}
+          </div>
+
+          {/* RIGHT — Profile completion */}
+          <div
+            className="ds-card-patient"
+            style={{ background: "var(--primary-50)", borderColor: "var(--primary-100)" }}
+          >
+            <div className="flex items-center gap-3 mb-2.5">
+              <div
+                className="w-12 h-12 rounded-2xl grid place-items-center bg-white"
+                style={{ color: "var(--primary-600)" }}
+              >
+                <CheckCircle className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <div className="font-bold text-[14px]" style={{ color: "var(--ink-900)" }}>
+                  Complétez votre profil
+                </div>
+                <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
+                  {completionPct} % terminé
+                </div>
+              </div>
+              <div
+                className="font-extrabold text-[22px]"
+                style={{ color: "var(--primary-600)", fontFamily: "Manrope, sans-serif" }}
+              >
+                {completionPct}%
+              </div>
+            </div>
+            <div
+              className="h-2 rounded-full overflow-hidden mb-3.5"
+              style={{ background: "#fff" }}
+            >
+              <div
+                className="h-full rounded-full"
+                style={{
+                  width: `${completionPct}%`,
+                  background: "linear-gradient(90deg, var(--primary-400), var(--primary-600))",
+                  transition: "width .3s ease",
+                }}
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              {steps.map((s, i) => (
+                <div key={i} className="flex items-center gap-2.5">
+                  <div
+                    className="w-5 h-5 rounded-full grid place-items-center"
+                    style={
+                      s.done
+                        ? { background: "var(--primary-500)", color: "#fff" }
+                        : { background: "#fff", border: "1.5px dashed var(--line-strong)" }
+                    }
+                  >
+                    {s.done && <CheckCircle className="w-3 h-3" strokeWidth={3} />}
+                  </div>
+                  <div
+                    className={`flex-1 text-[13.5px] ${s.done ? "line-through" : ""}`}
+                    style={{
+                      color: s.done ? "var(--ink-500)" : "var(--ink-900)",
+                      fontWeight: s.done ? 500 : 700,
+                    }}
+                  >
+                    {s.label}
+                  </div>
+                  {!s.done && s.cta && (
+                    <a
+                      href="/parametres/compte"
+                      className="text-[13px] font-bold"
+                      style={{ color: "var(--primary-600)" }}
+                    >
+                      {s.cta}
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </motion.section>
 
-        {/* Recent doctors */}
-        {recentDoctors.length > 0 && (
-          <motion.section
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            data-tour="recent-activity"
-            className="mb-8"
-          >
-            <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">
-              Médecins récents
-            </h3>
-            <div className="space-y-3">
-              {recentDoctors.map((a) => {
-                const spec = SPECIALTIES.find((s) => s.id === a.doctorSpecialty);
-                return (
-                  <div
-                    key={a.doctorSlug}
-                    className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm flex items-center justify-between hover:shadow-md transition-shadow"
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
-                        <User className="w-5 h-5 text-primary" />
-                      </div>
-                      <div>
-                        <p className="font-semibold text-foreground">{a.doctorName}</p>
-                        <p className="text-sm text-gray-500 dark:text-gray-400">{spec?.label}</p>
-                      </div>
-                    </div>
-                    <a href={`/medecin/${a.doctorSlug}`}>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-xl border-primary/30 text-primary hover:bg-primary hover:text-white transition-colors gap-1"
-                      >
-                        Reprendre RDV
-                        <ChevronRight className="w-3 h-3" />
-                      </Button>
-                    </a>
-                  </div>
-                );
-              })}
+        {/* ═══════ NEW DESIGN — Specialties (left) + Vital snapshot (right) ═══════ */}
+        <motion.section
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-5 mb-5"
+        >
+          {/* LEFT — Spécialités populaires (compact 2x4 grid) */}
+          <div className="ds-card-patient">
+            <div className="flex items-center justify-between mb-4">
+              <div className="font-bold text-[16px]" style={{ color: "var(--ink-900)" }}>
+                Spécialités populaires
+              </div>
+              <a
+                href="/recherche"
+                className="inline-flex items-center gap-1 text-[13px] font-bold"
+                style={{ color: "var(--primary-600)" }}
+              >
+                Toutes <ChevronRight className="w-3.5 h-3.5" />
+              </a>
             </div>
-          </motion.section>
-        )}
-
-        {/* Profile media + insurance cards */}
-        {token && (
-          <motion.section variants={fadeUp} initial="hidden" animate="visible" className="mb-8">
-            <PatientMediaSection token={token} />
-          </motion.section>
-        )}
-
-        {/* Activity timeline */}
-        {timeline.length > 0 && (
-          <motion.section
-            variants={fadeUp}
-            initial="hidden"
-            animate="visible"
-            className="mb-8"
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <Clock className="w-4 h-4 text-foreground/40" />
-              <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">
-                Activité récente
-              </h3>
-            </div>
-            <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border dark:border-gray-700 shadow-sm overflow-hidden">
-              {timeline.map((item, index) => (
-                <div
-                  key={item.id}
-                  className={`flex items-start gap-3 px-4 py-3 ${
-                    index < timeline.length - 1 ? "border-b border-border" : ""
-                  }`}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              {[
+                { l: "Généraliste", c: "primary" },
+                { l: "Dentiste", c: "sky" },
+                { l: "Dermatologue", c: "coral" },
+                { l: "Pédiatre", c: "amber" },
+                { l: "Gynécologue", c: "rose" },
+                { l: "Ophtalmologue", c: "sky" },
+                { l: "ORL", c: "primary" },
+                { l: "Cardiologue", c: "coral" },
+              ].map((s) => (
+                <a
+                  key={s.l}
+                  href={`/recherche?specialty=${encodeURIComponent(s.l.toLowerCase())}`}
+                  className="flex flex-col gap-1.5 p-3 rounded-xl border transition-colors hover:border-primary"
+                  style={{
+                    background: "var(--surface-2)",
+                    borderColor: "var(--line-cool)",
+                  }}
                 >
-                  <div className={`w-7 h-7 rounded-full ${TIMELINE_BG[item.kind]} flex items-center justify-center flex-shrink-0 mt-0.5`}>
-                    {TIMELINE_ICONS[item.kind]}
+                  <span className={`ds-chip ds-chip-${s.c}`} style={{ width: 28, height: 28, padding: 0, justifyContent: "center" }}>
+                    <Search className="w-3.5 h-3.5" />
+                  </span>
+                  <div className="text-[12.5px] font-bold" style={{ color: "var(--ink-900)" }}>
+                    {s.l}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-foreground leading-snug">{item.label}</p>
-                    <p className="text-xs text-foreground/40 mt-0.5 capitalize">
-                      {format(item.date, "EEEE d MMMM 'à' HH:mm", { locale: fr })}
-                    </p>
+                </a>
+              ))}
+            </div>
+          </div>
+
+          {/* RIGHT — Vital snapshot */}
+          <div className="ds-card-patient">
+            <div className="font-bold text-[16px] mb-4" style={{ color: "var(--ink-900)" }}>
+              Vital snapshot
+            </div>
+            <div className="grid grid-cols-2 gap-2.5">
+              {[
+                { label: "Groupe sanguin", value: "—", tone: "rose" },
+                { label: "Allergies", value: "—", tone: "amber" },
+                { label: "Taille", value: "—", tone: "primary" },
+                { label: "Poids", value: "—", tone: "sky" },
+              ].map((s) => (
+                <div
+                  key={s.label}
+                  className="p-3 rounded-xl border"
+                  style={{ background: "var(--surface-2)", borderColor: "var(--line-cool)" }}
+                >
+                  <span className={`ds-chip ds-chip-${s.tone} mb-2`} style={{ fontSize: 11 }}>
+                    {s.label}
+                  </span>
+                  <div
+                    className="text-[16px] font-extrabold"
+                    style={{ color: "var(--ink-900)", fontFamily: "Manrope, sans-serif" }}
+                  >
+                    {s.value}
                   </div>
                 </div>
               ))}
             </div>
-          </motion.section>
-        )}
+            <a href="/dossier-medical" className="ds-btn ds-btn-soft ds-btn-sm w-full mt-3">
+              Voir mon dossier complet <ChevronRight className="w-3.5 h-3.5" />
+            </a>
+          </div>
+        </motion.section>
+
+        {/* ═══════ NEW DESIGN — Activité récente (left) + Rappel vaccinal (right) ═══════ */}
+        <motion.section
+          variants={fadeUp}
+          initial="hidden"
+          animate="visible"
+          className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-5 mb-8"
+        >
+          {/* LEFT — Activité récente */}
+          <div className="ds-card-patient">
+            <div className="font-bold text-[16px] mb-4" style={{ color: "var(--ink-900)" }}>
+              Activité récente
+            </div>
+            <div className="flex flex-col gap-0">
+              {timeline.length > 0 ? (
+                timeline.slice(0, 3).map((it) => {
+                  const chip =
+                    it.kind === "completed" ? "primary"
+                    : it.kind === "cancelled" ? "rose"
+                    : it.kind === "prescription" ? "sky"
+                    : it.kind === "review" ? "amber"
+                    : "primary";
+                  const Icon =
+                    it.kind === "prescription" ? FileText
+                    : it.kind === "review" ? Star
+                    : it.kind === "cancelled" ? XCircle
+                    : it.kind === "completed" ? CheckCircle
+                    : Calendar;
+                  return (
+                    <div
+                      key={it.id}
+                      className="flex items-center gap-3.5 py-3"
+                      style={{ borderBottom: "1px solid var(--line-cool)" }}
+                    >
+                      <span
+                        className={`ds-chip ds-chip-${chip}`}
+                        style={{ width: 38, height: 38, padding: 0, justifyContent: "center", borderRadius: 12 }}
+                      >
+                        <Icon className="w-4 h-4" />
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <div className="font-bold text-[13.5px] truncate" style={{ color: "var(--ink-900)" }}>
+                          {it.label}
+                        </div>
+                      </div>
+                      <div className="text-[12px] font-semibold shrink-0" style={{ color: "var(--ink-400)" }}>
+                        {format(it.date, "d MMM", { locale: fr })}
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="py-3 text-[13px]" style={{ color: "var(--ink-500)" }}>
+                  Aucune activité récente. Vos rendez-vous, ordonnances et avis apparaîtront ici.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* RIGHT — Rappel vaccinal (coral card) */}
+          <div
+            className="ds-card-patient"
+            style={{ background: "var(--tone-coral-bg)", borderColor: "#F1CFBE" }}
+          >
+            <div className="flex gap-3">
+              <div
+                className="w-10 h-10 rounded-xl bg-white grid place-items-center shrink-0"
+                style={{ color: "#B05F3D" }}
+              >
+                <Bell className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="font-bold text-[14px] mb-1" style={{ color: "#7A4126" }}>
+                  Rappel vaccinal
+                </div>
+                <div className="text-[13px] leading-relaxed" style={{ color: "#8B5639" }}>
+                  Pensez à vérifier vos vaccins recommandés. Notre Coach IA peut vous guider.
+                </div>
+                <a href="/coach-ia" className="ds-btn ds-btn-ghost ds-btn-sm mt-2.5">
+                  Demander au Coach IA
+                </a>
+              </div>
+            </div>
+          </div>
+        </motion.section>
+
 
         {/* Cancel confirmation modal */}
         {cancelConfirm && (

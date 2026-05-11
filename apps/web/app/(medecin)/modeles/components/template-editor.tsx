@@ -226,7 +226,7 @@ export function TemplateEditor({ mode, initialData }: Props) {
       <div className="grid grid-cols-3 gap-6">
         {/* Left col — 2/3 width */}
         <div className="col-span-2 space-y-4">
-          <div className="rounded-xl border border-border bg-white shadow-sm p-5 space-y-4">
+          <div className="ds-card p-5 space-y-4">
             {/* Titre */}
             <div className="space-y-1.5">
               <Label htmlFor="title" className="text-sm font-medium">

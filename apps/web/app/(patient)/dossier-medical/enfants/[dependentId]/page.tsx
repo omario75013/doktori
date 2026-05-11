@@ -52,7 +52,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("doktori_patient_token");
+    const stored = sessionStorage.getItem("doktori_patient_session");
     if (!stored) {
       router.push("/connexion-patient");
       return;
@@ -152,13 +152,13 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
   const childMonths = dependent.dateOfBirth ? ageInMonths(dependent.dateOfBirth) : null;
 
   return (
-    <main className="min-h-screen bg-secondary p-4">
-      <div className="max-w-2xl mx-auto">
-        <Link href="/dossier-medical/enfants" className="inline-flex items-center gap-1 text-sm text-primary mb-3">
-          <ChevronLeft className="w-4 h-4" /> Retour
+    <>
+      <div>
+        <Link href="/dossier-medical/enfants" className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--primary-600)] mb-2">
+          <ChevronLeft className="w-3.5 h-3.5" /> Retour
         </Link>
 
-        <div className="bg-white rounded-2xl border border-border shadow-sm p-5 mb-5 flex items-center gap-4">
+        <div className="ds-card-patient p-5 mb-5 flex items-center gap-4">
           <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center text-3xl">
             {dependent.gender === "M" ? "👦" : dependent.gender === "F" ? "👧" : "🧒"}
           </div>
@@ -316,6 +316,6 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
           </div>
         )}
       </div>
-    </main>
+    </>
   );
 }

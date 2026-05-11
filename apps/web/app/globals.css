@@ -1,6 +1,6 @@
-/* ── Doktori fonts: Figtree (headings) + Noto Sans (body) ────────── */
+/* ── Doktori fonts: Manrope (display + body, patient redesign 2026-05-08) ── */
 /* Must precede Tailwind @imports — CSS @import rules must come first. */
-@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&family=Noto+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700;800;900&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans:wght@400;500;600;700&display=swap');
 
 @import "tailwindcss";
 @import "tw-animate-css";
@@ -73,41 +73,78 @@
   --font-sans: "Noto Sans", system-ui, -apple-system, sans-serif;
   --font-heading: "Figtree", "Noto Sans", system-ui, sans-serif;
 
-  /* Core brand — medical teal #0891B2, health green #22C55E
-     --primary uses the AA-passing variant (#0E7490, 5.36:1 vs white) so
-     small white text on bg-primary buttons meets WCAG 2.2 AA. The brand
-     teal (#0891B2) is kept as --doktori-teal for decorative, non-text uses. */
-  --doktori-teal: #0891B2;
-  --doktori-teal-dark: #155E75;
-  --doktori-teal-light: #22D3EE;
+  /* ── Patient redesign 2026-05-08 — Cyan palette (Doktori cyan) ──
+     Source: claude.ai/design "Doktori — Espace patient" handoff,
+     [data-theme="sage"] Cyan token block. */
+  --primary-50:  #E6F4F6;
+  --primary-100: #C2E5EA;
+  --primary-200: #8FCBD4;
+  --primary-300: #5BAEBB;
+  --primary-400: #2C92A2;
+  --primary-500: #0F7B8A;
+  --primary-600: #0B606C;
+  --primary-700: #08484F;
+  --primary-800: #053238;
+
+  /* Cool white-blue neutrals for patient surfaces */
+  --bg-cool:       #F2F6FB;
+  --bg-cool-soft:  #E7EEF7;
+  --surface-2:     #F7FAFD;
+  --line-cool:     #DDE5EF;
+  --line-strong:   #C5D0DE;
+
+  /* Ink scale */
+  --ink-900: #1A2A2E;
+  --ink-700: #354247;
+  --ink-500: #5C6B70;
+  --ink-400: #8A9499;
+  --ink-300: #B5BCC0;
+
+  /* Accent palette (warm tones for chips, alerts, decorations) */
+  --tone-coral:    #E89B7A;
+  --tone-coral-bg: #FBE6DA;
+  --tone-amber:    #DDA45B;
+  --tone-amber-bg: #F8ECD3;
+  --tone-mint:     #8FCFB6;
+  --tone-mint-bg:  #DBEFE3;
+  --tone-sky:      #6FA9CB;
+  --tone-sky-bg:   #DCEAF3;
+  --tone-rose:     #D27A8B;
+  --tone-rose-bg:  #F4DCE2;
+
+  /* Legacy doktori-* tokens — remapped to cyan so existing classes still work */
+  --doktori-teal: #0F7B8A;
+  --doktori-teal-dark: #0B606C;
+  --doktori-teal-light: #2C92A2;
   --doktori-green: #22C55E;
   --doktori-green-dark: #16A34A;
-  --doktori-ink: #134E4A;
-  --doktori-mist: #F0FDFA;
-  --doktori-cream: #FAFDFC;
-  --doktori-amber: #F59E0B;
-  --doktori-amber-dark: #B45309;
+  --doktori-ink: #1A2A2E;
+  --doktori-mist: #E6F4F6;
+  --doktori-cream: #F7FAFD;
+  --doktori-amber: #DDA45B;
+  --doktori-amber-dark: #8B6224;
   --doktori-purple: #7C3AED;
-  --doktori-border: #E6F4F1;
+  --doktori-border: #DDE5EF;
 
   --background: #FFFFFF;
-  --foreground: #134E4A;
+  --foreground: #1A2A2E;
   --card: #FFFFFF;
-  --card-foreground: #134E4A;
+  --card-foreground: #1A2A2E;
   --popover: #FFFFFF;
-  --popover-foreground: #134E4A;
-  --primary: #0E7490;
+  --popover-foreground: #1A2A2E;
+  /* Cyan #0F7B8A — keeps WCAG AA on white text (5.83:1) */
+  --primary: #0F7B8A;
   --primary-foreground: #FFFFFF;
-  --secondary: #F0FDFA;
-  --secondary-foreground: #134E4A;
-  --muted: #F0FDFA;
-  --muted-foreground: #5E7574;
+  --secondary: #E6F4F6;
+  --secondary-foreground: #08484F;
+  --muted: #E6F4F6;
+  --muted-foreground: #5C6B70;
   --accent: #22C55E;
   --accent-foreground: #FFFFFF;
   --destructive: #DC2626;
-  --border: #E6F4F1;
-  --input: #E6F4F1;
-  --ring: #0E7490;
+  --border: #DDE5EF;
+  --input: #DDE5EF;
+  --ring: #0F7B8A;
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
@@ -175,7 +212,7 @@
   }
   /* WCAG AAA: focus rings for keyboard nav */
   *:focus-visible {
-    outline: 3px solid #0891B2;
+    outline: 3px solid #0F7B8A;
     outline-offset: 2px;
     border-radius: 6px;
   }
@@ -186,4 +223,575 @@
       transition-duration: 0.01ms !important;
     }
   }
+}
+/* ──────────────────────────────────────────────────────────────────
+   Patient redesign 2026-05-08 — design tokens + reusable classes.
+   Activated by adding `class="patient-space"` to a wrapping element
+   (we apply it on the (patient) layout). Source: Claude Design
+   "Doktori — Espace patient" handoff.
+   ────────────────────────────────────────────────────────────────── */
+
+.patient-space {
+  font-family: "Manrope", "Noto Sans", system-ui, -apple-system, sans-serif;
+  background: var(--bg-cool);
+  color: var(--ink-900);
+  overflow: visible;
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 18px;
+  --radius-xl: 24px;
+  --shadow-1: 0 1px 2px rgba(20, 30, 30, 0.04), 0 1px 1px rgba(20, 30, 30, 0.03);
+  --shadow-2: 0 4px 14px rgba(20, 30, 30, 0.06), 0 2px 4px rgba(20, 30, 30, 0.04);
+  --shadow-3: 0 12px 40px rgba(20, 30, 30, 0.10), 0 4px 12px rgba(20, 30, 30, 0.05);
+}
+
+.patient-space h1,
+.patient-space h2,
+.patient-space h3,
+.patient-space h4,
+.patient-space h5,
+.patient-space h6 {
+  font-family: "Manrope", system-ui, sans-serif;
+  letter-spacing: -0.02em;
+}
+
+/* Cards / surfaces */
+.patient-space .ds-card {
+  background: #FFFFFF;
+  border: 1px solid var(--line-cool);
+  border-radius: var(--radius-lg);
+}
+/* Patient-only variant: same cool surface + 20 px inner padding.
+   Doctor pages keep using plain `.ds-card` so they manage their own padding
+   via Tailwind utilities. */
+.patient-space .ds-card-patient {
+  background: #FFFFFF;
+  border: 1px solid var(--line-cool);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+}
+.patient-space .ds-card-pad-lg { padding: 24px; }
+.patient-space .ds-card-soft   { background: var(--surface-2); }
+
+/* Page header pattern (eyebrow + title + sub) */
+.patient-space .ds-eyebrow {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-400);
+  margin-bottom: 6px;
+}
+.patient-space .ds-page-title {
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--ink-900);
+}
+.patient-space .ds-page-sub {
+  margin-top: 6px;
+  color: var(--ink-500);
+  font-size: 14px;
+}
+
+/* Chips */
+.patient-space .ds-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--bg-cool-soft);
+  color: var(--ink-700);
+}
+.patient-space .ds-chip-mint    { background: var(--tone-mint-bg);  color: #2F7A57; }
+.patient-space .ds-chip-coral   { background: var(--tone-coral-bg); color: #B05F3D; }
+.patient-space .ds-chip-amber   { background: var(--tone-amber-bg); color: #8B6224; }
+.patient-space .ds-chip-sky     { background: var(--tone-sky-bg);   color: #2C5F82; }
+.patient-space .ds-chip-rose    { background: var(--tone-rose-bg);  color: #92364C; }
+.patient-space .ds-chip-primary { background: var(--primary-50);    color: var(--primary-700); }
+
+/* Pill tabs */
+.patient-space .ds-tabs {
+  display: inline-flex;
+  background: var(--bg-cool-soft);
+  border-radius: 999px;
+}
+.patient-space .ds-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+  border: 0;
+  background: transparent;
+  padding: 8px 18px;
+  border-radius: 999px;
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--ink-500);
+  cursor: pointer;
+}
+.patient-space .ds-tab.on {
+  background: #FFFFFF;
+  color: var(--ink-900);
+  box-shadow: var(--shadow-1);
+}
+
+/* Pill buttons */
+.patient-space .ds-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 999px;
+  border: 0;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.12s, transform 0.04s, box-shadow 0.12s;
+  text-decoration: none;
+}
+.patient-space .ds-btn:active { transform: translateY(1px); }
+.patient-space .ds-btn-sm { height: 36px; padding: 0 14px; font-size: 13px; }
+.patient-space .ds-btn-primary {
+  background: var(--primary-500);
+  color: #FFFFFF;
+  box-shadow: 0 4px 12px rgba(15, 123, 138, 0.25);
+}
+.patient-space .ds-btn-primary:hover { background: var(--primary-600); }
+.patient-space .ds-btn-ghost {
+  background: #FFFFFF;
+  color: var(--ink-900);
+  border: 1px solid var(--line-cool);
+}
+.patient-space .ds-btn-ghost:hover { background: var(--surface-2); }
+.patient-space .ds-btn-soft {
+  background: var(--primary-50);
+  color: var(--primary-700);
+}
+.patient-space .ds-btn-soft:hover { background: var(--primary-100); }
+
+/* Quick action card variants used on the dashboard hero */
+.patient-space .ds-qa {
+  text-align: left;
+  padding: 18px;
+  border-radius: 16px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  font: inherit;
+  border: 0;
+  text-decoration: none;
+}
+.patient-space .ds-qa-primary {
+  background: var(--primary-500);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-2);
+}
+.patient-space .ds-qa-primary:hover { background: var(--primary-600); }
+.patient-space .ds-qa-coral {
+  background: linear-gradient(135deg, #E89B7A, #D67455);
+  color: #FFFFFF;
+  box-shadow: var(--shadow-2);
+}
+.patient-space .ds-qa-light {
+  background: #FFFFFF;
+  color: var(--ink-900);
+  border: 1px solid var(--line-cool);
+}
+.patient-space .ds-qa-light:hover { background: var(--surface-2); }
+.patient-space .ds-qa-iconwrap {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  display: grid;
+  place-items: center;
+}
+
+
+/* ─────────── Patient sidebar shell (desktop) ─────────── */
+.patient-space .ps-shell {
+  width: 100%;
+  min-height: 100vh;
+  display: flex;
+  background: var(--bg-cool);
+  color: var(--ink-900);
+}
+
+/* Sidebar — fixed so it stays in place while content scrolls */
+.patient-space .sb {
+  width: 248px;
+  background: #FFFFFF;
+  border-right: 1px solid var(--line-cool);
+  display: flex;
+  flex-direction: column;
+  padding: 22px 14px 18px;
+  position: fixed;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  /* lower than the topbar (z=30) so the topbar can overlap the sidebar's
+     top edge if needed and accept clicks first */
+  z-index: 20;
+  overflow-y: auto;
+}
+/* Reserve space for the fixed sidebar so the main column starts after it */
+.patient-space .ps-main {
+  margin-left: 248px;
+}
+.patient-space [dir="rtl"] .sb,
+[dir="rtl"] .patient-space .sb {
+  left: auto; right: 0;
+  border-right: 0;
+  border-left: 1px solid var(--line-cool);
+}
+[dir="rtl"] .patient-space .ps-main {
+  margin-left: 0;
+  margin-right: 248px;
+}
+.patient-space .sb-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 10px 22px;
+  text-decoration: none;
+  color: inherit;
+}
+.patient-space .sb-logo {
+  width: 36px; height: 36px; border-radius: 11px;
+  background: var(--primary-500);
+  display: grid; place-items: center;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(15, 123, 138, .25);
+  position: relative;
+  flex: 0 0 36px;
+}
+.patient-space .sb-logo::after {
+  content: ''; position: absolute; top: -2px; right: -2px;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--tone-mint); border: 2px solid #FFFFFF;
+}
+.patient-space .sb-brand-name {
+  font-family: "Manrope", system-ui, sans-serif;
+  font-weight: 800; font-size: 19px; letter-spacing: -.01em;
+  color: var(--ink-900);
+}
+.patient-space .sb-brand-name .tld {
+  color: var(--primary-500); font-weight: 700;
+}
+.patient-space .sb-section-label {
+  text-transform: uppercase;
+  font-size: 10px; letter-spacing: .12em;
+  color: var(--ink-400); font-weight: 700;
+  padding: 14px 12px 6px;
+}
+.patient-space .sb-nav {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.patient-space .sb-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  color: var(--ink-700);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  text-decoration: none;
+  position: relative;
+}
+.patient-space .sb-item:hover {
+  background: var(--bg-cool-soft);
+  color: var(--ink-900);
+}
+.patient-space .sb-item.active {
+  background: var(--primary-50);
+  color: var(--primary-700);
+}
+.patient-space .sb-item.active .sb-icon {
+  color: var(--primary-600);
+}
+.patient-space .sb-icon {
+  width: 20px; height: 20px; flex: 0 0 20px;
+  color: var(--ink-500);
+  display: grid; place-items: center;
+}
+.patient-space .sb-badge {
+  margin-left: auto;
+  font-size: 11px; font-weight: 700;
+  padding: 2px 7px; border-radius: 999px;
+  background: var(--tone-coral-bg); color: #B05F3D;
+}
+.patient-space .sb-spacer { flex: 1; }
+.patient-space .sb-sos {
+  display: flex; align-items: center; gap: 10px;
+  padding: 11px 12px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #E89B7A, #D67455);
+  color: #fff;
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  border: 0;
+  width: 100%;
+  box-shadow: 0 6px 16px rgba(214, 116, 85, .25);
+  margin-bottom: 12px;
+  text-decoration: none;
+}
+.patient-space .sb-sos .sos-pulse {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, .7);
+  animation: psSosPulse 1.6s infinite;
+}
+@keyframes psSosPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(255,255,255,.7); }
+  70%  { box-shadow: 0 0 0 8px rgba(255,255,255,0); }
+  100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+}
+.patient-space .sb-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid var(--line-cool);
+  cursor: pointer;
+  background: var(--surface-2);
+  text-decoration: none;
+  color: inherit;
+}
+.patient-space .sb-user:hover { background: var(--bg-cool-soft); }
+.patient-space .sb-avatar {
+  width: 36px; height: 36px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary-300), var(--primary-500));
+  color: #fff; font-weight: 700; font-size: 14px;
+  display: grid; place-items: center;
+  flex: 0 0 36px;
+  overflow: hidden;
+}
+.patient-space .sb-avatar img {
+  width: 100%; height: 100%; object-fit: cover;
+}
+.patient-space .sb-user-meta { flex: 1; min-width: 0; }
+.patient-space .sb-user-name { font-weight: 700; font-size: 13.5px; line-height: 1.2; }
+.patient-space .sb-user-sub  { font-size: 11.5px; color: var(--ink-500); }
+
+/* Main + topbar */
+.patient-space .ps-main {
+  flex: 1; display: flex; flex-direction: column; min-width: 0;
+}
+/* Topbar — fixed across the top so it stays in place during scroll.
+   At scroll=0 it looks flush; once scrolled it gains a soft shadow. */
+.patient-space .tb {
+  display: flex; align-items: center; gap: 16px;
+  padding: 16px 28px;
+  background: rgba(242, 246, 251, 0.92);
+  border-bottom: 1px solid var(--line-cool);
+  position: fixed;
+  top: 0;
+  left: 248px;
+  right: 0;
+  z-index: 30;
+  height: 74px;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition: box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.patient-space .tb.is-scrolled {
+  box-shadow: 0 4px 14px rgba(20, 30, 30, 0.06), 0 2px 4px rgba(20, 30, 30, 0.04);
+  border-bottom-color: var(--line-strong);
+}
+[dir="rtl"] .patient-space .tb {
+  left: 0;
+  right: 248px;
+}
+/* (room for the fixed topbar is reserved in the .ps-content rule below
+    via padding: 98px 28px 36px) */
+.patient-space .tb-search {
+  flex: 1; max-width: 460px;
+  display: flex; align-items: center; gap: 10px;
+  height: 42px;
+  background: #FFFFFF;
+  border: 1px solid var(--line-cool);
+  border-radius: 999px;
+  color: var(--ink-500);
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+}
+.patient-space .tb-search:hover { border-color: var(--line-strong); }
+.patient-space .tb-spacer { flex: 1; }
+.patient-space .tb-icon-btn {
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  background: #FFFFFF;
+  border: 1px solid var(--line-cool);
+  display: grid; place-items: center;
+  color: var(--ink-700);
+  cursor: pointer;
+  position: relative;
+  text-decoration: none;
+}
+.patient-space .tb-icon-btn:hover { background: var(--surface-2); }
+.patient-space .tb-icon-btn .tb-dot {
+  position: absolute; top: 9px; right: 9px;
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--tone-coral); border: 2px solid #FFFFFF;
+}
+.patient-space .tb-lang {
+  display: flex; align-items: center;
+  background: #FFFFFF;
+  border: 1px solid var(--line-cool);
+  border-radius: 999px;
+  padding: 3px;
+  font-size: 12px; font-weight: 700;
+  color: var(--ink-500);
+}
+.patient-space .tb-lang button {
+  border: 0; background: transparent;
+  padding: 6px 12px; border-radius: 999px;
+  cursor: pointer; color: inherit; font: inherit;
+}
+.patient-space .tb-lang button.on {
+  background: var(--primary-500); color: #fff;
+}
+
+.patient-space .ps-content {
+  flex: 1;
+  padding: 98px 28px 36px;
+  background: var(--bg-cool);
+}
+.patient-space .ps-content-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* Hide sidebar on small screens — we'll add a mobile drawer later */
+@media (max-width: 900px) {
+  .patient-space .sb { display: none; }
+  .patient-space .ps-main { margin-left: 0; }
+  .patient-space .tb { padding: 12px 16px; left: 0; right: 0; }
+  .patient-space .ps-content { padding: 86px 16px 32px; }
+}
+/* recompile 1778260115 */
+
+/* Sidebar user popup menu — opens upward from the user card at the bottom */
+.patient-space .sb-user-wrap {
+  position: relative;
+}
+.patient-space .sb-user {
+  width: 100%;
+  font: inherit;
+  text-align: left;
+}
+.patient-space .sb-user-menu {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #FFFFFF;
+  border: 1px solid var(--line-cool);
+  border-radius: 14px;
+  box-shadow: 0 12px 40px rgba(20, 30, 30, 0.18), 0 4px 12px rgba(20, 30, 30, 0.08);
+  padding: 6px;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  animation: sbMenuIn 0.14s ease-out;
+}
+@keyframes sbMenuIn {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.patient-space .sb-menu-section {
+  padding: 8px 10px 4px;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink-400);
+}
+.patient-space .sb-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink-700);
+  cursor: pointer;
+  text-decoration: none;
+  background: transparent;
+  border: 0;
+  width: 100%;
+  text-align: left;
+  font-family: inherit;
+}
+.patient-space .sb-menu-item:hover {
+  background: var(--bg-cool-soft);
+  color: var(--ink-900);
+}
+.patient-space .sb-menu-item svg {
+  color: var(--ink-500);
+  flex: 0 0 16px;
+}
+.patient-space .sb-menu-item:hover svg {
+  color: var(--primary-600);
+}
+.patient-space .sb-menu-sep {
+  height: 1px;
+  background: var(--line-cool);
+  margin: 6px 6px;
+}
+.patient-space .sb-menu-danger {
+  color: #B91C1C;
+}
+.patient-space .sb-menu-danger:hover {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+.patient-space .sb-menu-danger svg {
+  color: #B91C1C;
+}
+.patient-space .sb-menu-danger:hover svg {
+  color: #991B1B;
+}
+
+/* Constrain Leaflet's internal z-indexes inside the patient surface so its
+   panes (default 200–700) never overlap the fixed topbar (z=30). The
+   wrapper creates its own stacking context via `isolation: isolate`. */
+.patient-space .ps-map-shell,
+.patient-space .ps-map-mini {
+  position: relative;
+  isolation: isolate;
+  z-index: 0;
+}
+.patient-space .ps-map-shell .leaflet-pane,
+.patient-space .ps-map-shell .leaflet-control,
+.patient-space .ps-map-shell .leaflet-top,
+.patient-space .ps-map-shell .leaflet-bottom,
+.patient-space .ps-map-mini .leaflet-pane,
+.patient-space .ps-map-mini .leaflet-control,
+.patient-space .ps-map-mini .leaflet-top,
+.patient-space .ps-map-mini .leaflet-bottom {
+  z-index: 1;
+}
+.patient-space .ps-map-shell .leaflet-tile-pane,
+.patient-space .ps-map-mini .leaflet-tile-pane {
+  z-index: 0;
+}
+.patient-space .ps-map-shell .leaflet-marker-pane,
+.patient-space .ps-map-shell .leaflet-shadow-pane,
+.patient-space .ps-map-shell .leaflet-popup-pane,
+.patient-space .ps-map-mini .leaflet-marker-pane,
+.patient-space .ps-map-mini .leaflet-shadow-pane,
+.patient-space .ps-map-mini .leaflet-popup-pane {
+  z-index: 2;
 }

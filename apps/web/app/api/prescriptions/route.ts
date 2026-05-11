@@ -4,6 +4,7 @@ import { db, prescriptions, appointments, prescriptionTemplates } from "@doktori
 import { eq, and, desc, sql } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import { logTemplateAudit } from "@/lib/templates/audit";
+import { renderPrescriptionContent } from "@/lib/prescription-render";
 
 export async function GET(req: NextRequest) {
   try {
@@ -76,11 +77,21 @@ export async function POST(req: NextRequest) {
 
     const verificationToken = randomBytes(32).toString("hex");
 
+    // Resolve any {{...}} placeholders before insert so the row is stored
+    // with real values (defends against clients that POST raw template
+    // markup). Display layers also re-render defensively.
+    const resolvedContent = await renderPrescriptionContent(
+      content,
+      user.id,
+      resolvedPatientId,
+      appointmentId ?? null,
+    );
+
     const [created] = await db.insert(prescriptions).values({
       appointmentId: appointmentId ?? null,
       doctorId: user.id,
       patientId: resolvedPatientId,
-      content,
+      content: resolvedContent,
       verificationToken,
       // B4: store templateId if provided
       templateId: templateId ?? null,

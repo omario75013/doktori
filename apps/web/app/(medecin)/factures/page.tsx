@@ -98,7 +98,7 @@ export default function FacturesPage() {
   }
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6">
       <div className="flex items-center gap-3 mb-2">
         <div className="h-10 w-10 rounded-xl bg-teal-50 flex items-center justify-center text-teal-600">
           <Receipt className="h-5 w-5" />

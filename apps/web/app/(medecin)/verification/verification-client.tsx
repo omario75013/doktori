@@ -324,7 +324,7 @@ export function VerificationClient({
   const allRequiredUploaded = requiredSlots.every((s) => !!getDocForType(s.type));
 
   return (
-    <div className="max-w-2xl mx-auto p-4 sm:p-8 space-y-6">
+    <div className="p-4 sm:p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <div className="w-10 h-10 rounded-xl bg-teal-100 flex items-center justify-center">

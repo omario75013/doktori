@@ -148,7 +148,7 @@ export function TemplateList({ templates, doctorId }: Props) {
             {search || lang !== "all" ? t("noOfficialFiltered") : t("noOfficial")}
           </p>
         ) : (
-          <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
+          <div className="ds-card overflow-hidden">
             {official.map((tpl, i) => (
               <div
                 key={tpl.id}
@@ -222,7 +222,7 @@ export function TemplateList({ templates, doctorId }: Props) {
             </Link>
           </div>
         ) : (
-          <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
+          <div className="ds-card overflow-hidden">
             {mine.map((tpl, i) => (
               <div
                 key={tpl.id}

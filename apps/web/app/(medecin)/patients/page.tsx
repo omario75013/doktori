@@ -40,7 +40,7 @@ function PatientsSkeleton() {
       <div className="h-10 w-full rounded-2xl bg-gray-100 animate-pulse" />
 
       {/* Table skeleton */}
-      <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+      <div className="ds-card overflow-hidden">
         {/* Table header */}
         <div className="border-b border-border bg-secondary px-4 py-3 grid grid-cols-4 gap-4">
           {["Patient", "Téléphone", "Visites", "Dernière visite"].map((col) => (

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { getTranslations, getLocale } from "next-intl/server";
-import { Stethoscope, Search, UserRound, Siren, HelpCircle, BookOpen } from "lucide-react";
+import { Stethoscope, Search, Siren, HelpCircle, BookOpen } from "lucide-react";
 import { LanguageSwitcher } from "./language-switcher";
 import { ThemeToggle } from "./theme-toggle";
-import { PatientNavMenu } from "./patient-nav-menu";
+import { NavAuthSlot } from "./nav-auth-slot";
 
 export async function Navbar() {
   const t = await getTranslations("nav");
@@ -58,15 +58,7 @@ export async function Navbar() {
           </Link>
           <ThemeToggle />
           <LanguageSwitcher currentLocale={locale} />
-          <PatientNavMenu myAccountLabel={t("myAccount")} />
-          <Link
-            href="/connexion"
-            aria-label={t("doctorArea")}
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg border-2 border-primary bg-white px-2 sm:px-4 text-sm font-bold text-primary transition-all hover:bg-primary hover:text-white"
-          >
-            <UserRound className="h-4 w-4" strokeWidth={2.5} />
-            <span className="hidden sm:inline">{t("doctorArea")}</span>
-          </Link>
+          <NavAuthSlot myAccountLabel={t("myAccount")} doctorAreaLabel={t("doctorArea")} />
         </nav>
       </div>
     </header>

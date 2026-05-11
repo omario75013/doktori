@@ -579,7 +579,7 @@ export default function SettingsPage() {
       )}
 
       {activeTab === "about" && (
-        <div className="rounded-2xl border border-border bg-white shadow-sm p-6 space-y-6">
+        <div className="ds-card p-6 space-y-6">
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 rounded-2xl bg-teal-50 flex items-center justify-center">
               <ShieldCheck className="h-8 w-8 text-teal-600" />
@@ -629,7 +629,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <div className="rounded-2xl border border-border bg-white shadow-sm">
+    <div className="ds-card">
       <div className="p-4 border-b border-border flex items-center gap-2">
         <div className="h-8 w-8 rounded-xl bg-secondary flex items-center justify-center text-primary">
           <Icon className="h-4 w-4" />

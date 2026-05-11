@@ -122,7 +122,7 @@ export default async function DoctorDetailPage({
         {t("backToNetwork")}
       </Link>
 
-      <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+      <div className="ds-card overflow-hidden">
         <div className="bg-gradient-to-br from-teal-600 to-teal-700 h-32" />
         <div className="p-6 relative">
           <div className="-mt-20 flex flex-col md:flex-row md:items-end gap-5 md:gap-6">
@@ -330,7 +330,7 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="rounded-2xl border border-border bg-white shadow-sm p-5">
+    <section className="ds-card p-5">
       <h2 className="flex items-center gap-2 font-semibold text-foreground mb-3">
         {icon}
         {title}

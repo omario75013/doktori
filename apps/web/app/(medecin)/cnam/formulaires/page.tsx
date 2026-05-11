@@ -203,7 +203,7 @@ export default function CnamFormsPage() {
                     href={f.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="group rounded-2xl border border-border bg-white p-4 transition hover:border-primary hover:shadow-sm dark:bg-gray-900"
+                    className="group ds-card p-4 transition hover:border-primary hover:shadow-sm dark:bg-gray-900"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <div>
@@ -234,7 +234,7 @@ export default function CnamFormsPage() {
                 href={s.url}
                 target={s.url.startsWith("tel:") ? undefined : "_blank"}
                 rel={s.url.startsWith("tel:") ? undefined : "noopener noreferrer"}
-                className="group flex items-start gap-3 rounded-2xl border border-border bg-white p-4 transition hover:border-primary hover:shadow-sm dark:bg-gray-900"
+                className="group flex items-start gap-3 ds-card p-4 transition hover:border-primary hover:shadow-sm dark:bg-gray-900"
               >
                 <div className="h-10 w-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center flex-shrink-0">
                   <Icon className="h-5 w-5" />

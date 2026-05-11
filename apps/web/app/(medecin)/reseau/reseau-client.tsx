@@ -71,7 +71,7 @@ export function ReseauClient({
         </p>
       </div>
 
-      <div className="inline-flex rounded-2xl border border-border bg-white p-1 shadow-sm">
+      <div className="inline-flex ds-card p-1 shadow-sm">
         <TabButton
           active={tab === "mon-reseau"}
           onClick={() => setTab("mon-reseau")}
@@ -169,7 +169,7 @@ function EmptyState({ tab, hasQuery }: { tab: Tab; hasQuery: boolean }) {
   const t = useTranslations("medecin.reseau");
   if (hasQuery) {
     return (
-      <div className="rounded-2xl border border-border bg-white p-8 text-center text-sm text-gray-500">
+      <div className="ds-card p-8 text-center text-sm text-gray-500">
         {t("noResults")}
       </div>
     );
@@ -186,7 +186,7 @@ function EmptyState({ tab, hasQuery }: { tab: Tab; hasQuery: boolean }) {
     );
   }
   return (
-    <div className="rounded-2xl border border-border bg-white p-8 text-center text-sm text-gray-500">
+    <div className="ds-card p-8 text-center text-sm text-gray-500">
       {t("noDoctors")}
     </div>
   );
@@ -209,7 +209,7 @@ function DoctorCardView({
     .join("");
 
   return (
-    <div className="flex flex-col rounded-2xl border border-border bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+    <div className="flex flex-col ds-card hover:shadow-md transition-shadow overflow-hidden">
       <Link
         href={`/reseau/${doctor.id}`}
         className="flex-1 flex flex-col p-5 space-y-4 hover:bg-secondary/30 transition-colors"

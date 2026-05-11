@@ -12,6 +12,11 @@
     "doctorDescription": "Prenez rendez-vous en ligne avec {name}, {specialty} à {city}. Consultez les disponibilités et réservez en 2 clics sur Doktori.",
     "doctorNotFound": "Médecin introuvable | Doktori"
   },
+  "topbar": {
+    "searchDoctor": "Rechercher patient, RDV…",
+    "searchAdmin": "Rechercher patient, médecin…",
+    "searchDefault": "Rechercher…"
+  },
   "nav": {
     "search": "Rechercher un médecin",
     "doctorArea": "Espace médecin",
@@ -448,7 +453,30 @@
       "waitingRoom": "Salle d'attente",
       "noWaitingPatients": "Aucun patient en attente pour le moment.",
       "arrivedAt": "Arrivé à {time}",
-      "recentActivity": "Activité récente"
+      "recentActivity": "Activité récente",
+      "rangeEyebrow30": "30 DERNIERS JOURS",
+      "rangeEyebrow3M": "3 DERNIERS MOIS",
+      "rangeEyebrow12M": "12 DERNIERS MOIS",
+      "range30Days": "30j",
+      "range3Months": "3 mois",
+      "range12Months": "12 mois",
+      "export": "Export",
+      "smsThisMonth": "SMS ce mois",
+      "smsRemaining": "{percent}% restant",
+      "kpiWaitingPatients": "Patients en salle d'attente",
+      "kpiWaitingPatientsSub": "à recevoir",
+      "kpiNoPatients": "personne",
+      "kpiNextAppt": "Prochain RDV",
+      "kpiNoneUpcoming": "Aucun à venir",
+      "kpiCompletionRate": "Taux de présence",
+      "kpiLast30Days": "30 derniers jours",
+      "kpiDonePending": "{done} faits · {pending} à venir",
+      "chartAppointments": "Rendez-vous",
+      "chartAppointmentsSub": "confirmés",
+      "chartRevenue": "Recettes",
+      "chartRevenueSub": "encaissées",
+      "chartCancellation": "Taux d'annulation",
+      "chartCancellationSub": "moyenne période"
     },
     "agenda": {
       "title": "Configuration de l'agenda",

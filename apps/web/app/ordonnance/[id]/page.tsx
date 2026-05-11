@@ -6,9 +6,17 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { PrintButton } from "@/components/print-button";
 import { QRCode } from "@/components/qr-code";
+import { renderPrescriptionContent } from "@/lib/prescription-render";
 
-export default async function PrescriptionPage({ params }: { params: Promise<{ id: string }> }) {
+export default async function PrescriptionPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>;
+  searchParams: Promise<{ print?: string }>;
+}) {
   const { id } = await params;
+  const { print } = await searchParams;
 
   const [result] = await db
     .select({
@@ -16,6 +24,9 @@ export default async function PrescriptionPage({ params }: { params: Promise<{ i
       content: prescriptions.content,
       createdAt: prescriptions.createdAt,
       verificationToken: prescriptions.verificationToken,
+      doctorId: prescriptions.doctorId,
+      patientId: prescriptions.patientId,
+      appointmentId: prescriptions.appointmentId,
       doctorName: doctors.name,
       doctorSpecialty: doctors.specialty,
       doctorPhone: doctors.phone,
@@ -30,6 +41,15 @@ export default async function PrescriptionPage({ params }: { params: Promise<{ i
     .limit(1);
 
   if (!result) notFound();
+
+  // Defensive re-render in case the row was written before POST started
+  // resolving placeholders, or with stale template markup.
+  const renderedContent = await renderPrescriptionContent(
+    result.content,
+    result.doctorId,
+    result.patientId,
+    result.appointmentId,
+  );
 
   const specialty = SPECIALTIES.find((s) => s.id === result.doctorSpecialty);
 
@@ -48,6 +68,15 @@ export default async function PrescriptionPage({ params }: { params: Promise<{ i
           body { background: white !important; }
         }
       `}</style>
+      {print === "1" && (
+        // Auto-fire the print dialog so /api/prescriptions/[id]/pdf opens
+        // directly into "Save as PDF" without an extra click.
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `window.addEventListener('load',()=>setTimeout(()=>window.print(),250));`,
+          }}
+        />
+      )}
 
       <div id="prescription-root" className="max-w-2xl mx-auto p-8 print:p-0 bg-white min-h-screen">
 
@@ -96,14 +125,14 @@ export default async function PrescriptionPage({ params }: { params: Promise<{ i
 
         {/* Prescription content */}
         <div className="mb-16 min-h-[200px]">
-          {/^\s*<\w+/.test(result.content) ? (
+          {/^\s*<\w+/.test(renderedContent) ? (
             <div
               className="prose prose-sm max-w-none text-gray-800 print:text-base"
-              dangerouslySetInnerHTML={{ __html: result.content }}
+              dangerouslySetInnerHTML={{ __html: renderedContent }}
             />
           ) : (
             <div className="whitespace-pre-wrap text-sm leading-loose text-gray-800 print:text-base">
-              {result.content}
+              {renderedContent}
             </div>
           )}
         </div>

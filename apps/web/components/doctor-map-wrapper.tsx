@@ -15,8 +15,16 @@ const DoctorMapInner = dynamic(() => import("./doctor-map"), {
 
 interface DoctorMapProps {
   doctors: MapDoctor[];
+  userLocation?: { lat: number; lng: number } | null;
+  onUserLocationChange?: (loc: { lat: number; lng: number }) => void;
 }
 
-export function DoctorMap({ doctors }: DoctorMapProps) {
-  return <DoctorMapInner doctors={doctors} />;
+export function DoctorMap({ doctors, userLocation, onUserLocationChange }: DoctorMapProps) {
+  return (
+    <DoctorMapInner
+      doctors={doctors}
+      userLocation={userLocation}
+      onUserLocationChange={onUserLocationChange}
+    />
+  );
 }

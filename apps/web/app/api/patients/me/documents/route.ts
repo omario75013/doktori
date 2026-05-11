@@ -20,7 +20,10 @@ export async function GET(req: NextRequest) {
         type: appointments.type,
       })
       .from(prescriptions)
-      .innerJoin(appointments, eq(appointments.id, prescriptions.appointmentId))
+      // appointmentId is nullable since 0075_prescription_optional_appointment
+      // — doctor can create a prescription outside of any appointment.
+      // Use leftJoin so those standalone prescriptions still surface here.
+      .leftJoin(appointments, eq(appointments.id, prescriptions.appointmentId))
       .innerJoin(doctors, eq(doctors.id, prescriptions.doctorId))
       .where(eq(prescriptions.patientId, patientId))
       .orderBy(desc(prescriptions.createdAt))

@@ -36,7 +36,7 @@ export default function VaccinationsPage() {
   const [notes, setNotes] = useState("");
 
   useEffect(() => {
-    const stored = localStorage.getItem("doktori_patient_token");
+    const stored = sessionStorage.getItem("doktori_patient_session");
     if (!stored) {
       router.push("/connexion-patient");
       return;
@@ -134,35 +134,37 @@ export default function VaccinationsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-secondary/40 flex items-center justify-center">
+      <div className="flex items-center justify-center py-24">
         <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-secondary/40">
-      <div className="bg-gradient-to-br from-primary to-foreground px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <a href="/dossier-medical" className="inline-flex items-center gap-1 text-white/80 hover:text-white text-sm mb-3">
-            <ChevronLeft className="h-4 w-4" /> Retour au dossier
-          </a>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20">
-              <Syringe className="h-5 w-5 text-white" strokeWidth={2} />
-            </div>
-            <div>
-              <h1 className="text-xl font-black text-white">Carnet de vaccination</h1>
-              <p className="text-white/70 text-xs mt-0.5">{items.length} vaccin{items.length !== 1 ? "s" : ""} enregistré{items.length !== 1 ? "s" : ""}</p>
-            </div>
+    <>
+      <div className="mb-6">
+        <a
+          href="/dossier-medical"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--primary-600)] mb-2"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" /> Retour au dossier
+        </a>
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <div>
+            <div className="ds-eyebrow">DOSSIER MÉDICAL</div>
+            <h1 className="ds-page-title">Carnet de vaccination</h1>
+            <p className="ds-page-sub">
+              {items.length} vaccin{items.length !== 1 ? "s" : ""} enregistré
+              {items.length !== 1 ? "s" : ""}
+            </p>
           </div>
+          <button onClick={openAdd} className="ds-btn ds-btn-primary">
+            <Plus className="h-4 w-4" /> Ajouter un vaccin
+          </button>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-        <Button onClick={openAdd} className="w-full h-12 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold">
-          <Plus className="h-4 w-4 mr-2" /> Ajouter un vaccin
-        </Button>
+      <div className="space-y-4">
 
         {items.length === 0 ? (
           <div className="rounded-2xl border border-border bg-white p-8 text-center">
@@ -240,7 +242,7 @@ export default function VaccinationsPage() {
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="v-by" className="text-sm font-semibold">Administré par</Label>
-                <Input id="v-by" value={givenBy} onChange={(e) => setGivenBy(e.target.value)} maxLength={120} placeholder="Dr. ..., centre..." />
+                <ProviderLookup id="v-by" value={givenBy} onChange={setGivenBy} />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="v-notes" className="text-sm font-semibold">Notes</Label>
@@ -254,6 +256,151 @@ export default function VaccinationsPage() {
               </div>
             </form>
           </div>
+        </div>
+      )}
+    </>
+  );
+}
+
+/* ───────── Healthcare provider lookup ─────────
+   Debounced doctor search via /api/search. Lets the patient pick a registered
+   doctor by name, or type any free text (clinic, vaccination center, etc.). */
+function ProviderLookup({
+  id,
+  value,
+  onChange,
+}: {
+  id: string;
+  value: string;
+  onChange: (v: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [results, setResults] = useState<
+    Array<{
+      name: string;
+      specialty?: string | null;
+      city?: string | null;
+      photoUrl?: string | null;
+    }>
+  >([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const q = value.trim();
+    if (q.length < 2) {
+      setResults([]);
+      return;
+    }
+    const ctrl = new AbortController();
+    setLoading(true);
+    const t = setTimeout(() => {
+      fetch(`/api/search?q=${encodeURIComponent(q)}`, {
+        signal: ctrl.signal,
+      })
+        .then((r) => (r.ok ? r.json() : { hits: [] }))
+        .then((d) => {
+          setResults(Array.isArray(d.hits) ? d.hits.slice(0, 8) : []);
+        })
+        .catch(() => {})
+        .finally(() => setLoading(false));
+    }, 200);
+    return () => {
+      ctrl.abort();
+      clearTimeout(t);
+    };
+  }, [value]);
+
+  return (
+    <div className="relative">
+      <Input
+        id={id}
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value);
+          setOpen(true);
+        }}
+        onFocus={() => setOpen(true)}
+        onBlur={() => {
+          // delay so a click on a suggestion can still fire
+          setTimeout(() => setOpen(false), 150);
+        }}
+        maxLength={120}
+        placeholder="Dr. ..., centre..."
+        autoComplete="off"
+      />
+      {open && value.trim().length >= 2 && (loading || results.length > 0) && (
+        <div
+          className="absolute z-30 left-0 right-0 mt-1 rounded-xl overflow-hidden"
+          style={{
+            background: "#fff",
+            border: "1px solid var(--line-cool)",
+            boxShadow: "0 8px 24px rgba(15,23,42,0.10)",
+          }}
+        >
+          {loading && results.length === 0 ? (
+            <div className="px-3 py-2 text-xs" style={{ color: "var(--ink-500)" }}>
+              Recherche…
+            </div>
+          ) : (
+            <ul className="max-h-64 overflow-y-auto">
+              {results.map((r, i) => {
+                const initials = r.name
+                  .replace(/^Dr\.?\s*/i, "")
+                  .split(/\s+/)
+                  .map((p) => p[0])
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .join("")
+                  .toUpperCase();
+                return (
+                  <li key={`${r.name}-${i}`}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => {
+                        // mousedown fires before blur → keeps the click reliable
+                        e.preventDefault();
+                        onChange(r.name);
+                        setOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 text-sm hover:bg-[color:var(--surface-2)] flex items-center gap-3"
+                    >
+                      <div
+                        className="w-9 h-9 rounded-full overflow-hidden shrink-0 grid place-items-center text-[11px] font-extrabold text-white"
+                        style={{
+                          background:
+                            "linear-gradient(135deg, var(--primary-400), var(--primary-600))",
+                        }}
+                      >
+                        {r.photoUrl ? (
+                          // eslint-disable-next-line @next/next/no-img-element
+                          <img
+                            src={r.photoUrl}
+                            alt={r.name}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          initials || "?"
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div
+                          className="font-semibold truncate"
+                          style={{ color: "var(--ink-900)" }}
+                        >
+                          {r.name}
+                        </div>
+                        {(r.specialty || r.city) && (
+                          <div className="text-[11px]" style={{ color: "var(--ink-500)" }}>
+                            {[r.specialty, r.city].filter(Boolean).join(" · ")}
+                          </div>
+                        )}
+                      </div>
+                    </button>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
         </div>
       )}
     </div>

@@ -498,7 +498,7 @@ export default function ConsultationPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
+      <div className="ds-card p-5 shadow-sm space-y-4">
         <h2 className="font-semibold text-foreground text-sm uppercase tracking-wide">
           {t("vitals")}
         </h2>
@@ -508,7 +508,7 @@ export default function ConsultationPage() {
         />
       </div>
 
-      <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-6">
+      <div className="ds-card p-5 shadow-sm space-y-6">
         <SoapSection
           letter="S"
           label={t("subjective")}
@@ -559,7 +559,7 @@ export default function ConsultationPage() {
       </div>
 
       {appointmentStatus === "completed" && (
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
+        <div className="ds-card p-5 shadow-sm space-y-4">
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-primary" />
             <h2 className="font-semibold text-foreground text-sm uppercase tracking-wide">
@@ -635,7 +635,7 @@ export default function ConsultationPage() {
       )}
 
       {/* ── BS1 (Bulletin de Soins CNAM) panel ───────────────────────────── */}
-      <div className="rounded-2xl border border-border bg-white p-5 shadow-sm space-y-4">
+      <div className="ds-card p-5 shadow-sm space-y-4">
         <div className="flex items-center gap-2">
           <FileText className="h-4 w-4 text-primary" />
           <h2 className="font-semibold text-foreground text-sm uppercase tracking-wide">

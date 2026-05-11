@@ -4,6 +4,7 @@ import { use, useState, useEffect, useRef } from "react";
 import { AvailabilityCalendar } from "@/components/availability-calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Calendar, Clock, ArrowLeft, MapPin, Video, Building, Building2, CheckCircle2, Download, ArrowRight, Home, Check } from "lucide-react";
@@ -202,9 +203,19 @@ export default function RdvPage({
   const [patientPhone, setPatientPhone] = useState("");
   const [reason, setReason] = useState("");
   const [forSelf, setForSelf] = useState(true);
+  // Dependents (proches) — loaded once when the user picks "for a relative"
+  const [dependents, setDependents] = useState<
+    Array<{
+      id: string;
+      name: string;
+      dateOfBirth: string | null;
+      relation: string | null;
+    }>
+  >([]);
+  const [selectedDependentId, setSelectedDependentId] = useState<string>("new");
   const [beneficiaryName, setBeneficiaryName] = useState("");
   const [beneficiaryDob, setBeneficiaryDob] = useState("");
-  const [beneficiaryRelation, setBeneficiaryRelation] = useState<"child" | "parent" | "spouse" | "other">("child");
+  const [beneficiaryRelation, setBeneficiaryRelation] = useState<"child" | "parent" | "spouse" | "sibling" | "other">("child");
   const [fileUploads, setFileUploads] = useState<Map<string, File>>(new Map());
   const [submitting, setSubmitting] = useState(false);
   const [uploadingFiles, setUploadingFiles] = useState(false);
@@ -213,17 +224,35 @@ export default function RdvPage({
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
   const [payingNow, setPayingNow] = useState(false);
 
-  // Pre-fill patient info from stored JWT if the patient is already logged in
+  // Load dependents the first time the user picks "for a relative".
   useEffect(() => {
-    const token = localStorage.getItem("doktori_patient_token");
-    if (!token) return;
-    try {
-      const payload = JSON.parse(atob(token.split(".")[1]!));
-      if (payload.name) setPatientName(payload.name);
-      if (payload.phone) setPatientPhone(payload.phone);
-    } catch {
-      // malformed token — ignore
-    }
+    if (forSelf || dependents.length > 0) return;
+    fetch("/api/me/dependents", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : { items: [] }))
+      .then((d) => setDependents(Array.isArray(d.items) ? d.items : []))
+      .catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [forSelf]);
+
+  // Pre-fill patient info from /api/patients/me (httpOnly cookie session).
+  // The user can still edit the name / phone fields manually before booking.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/patients/me", { credentials: "include" });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (cancelled) return;
+        if (data?.name) setPatientName((prev) => prev || data.name);
+        if (data?.phone) setPatientPhone((prev) => prev || data.phone);
+      } catch {
+        // not logged in or network error — leave fields blank
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   useEffect(() => {
@@ -425,10 +454,10 @@ export default function RdvPage({
   const slotDurationMin = selectedType?.durationMinutes ?? 20;
 
   return (
-    <div className="min-h-screen bg-secondary/40 px-4 py-8">
+    <div className="space-y-5">
       <div className="mx-auto max-w-2xl space-y-6">
         {/* Doctor summary card */}
-        <div className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 flex items-center gap-4">
+        <div className="ds-card-patient p-5 flex items-center gap-4">
           {doctor.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
@@ -497,7 +526,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 space-y-4"
+            className="ds-card-patient p-5 space-y-4"
           >
             <div>
               <h2 className="font-heading font-black text-foreground">
@@ -573,7 +602,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 space-y-4"
+            className="ds-card-patient p-5 space-y-4"
           >
             <div>
               <h2 className="font-heading font-black text-foreground">
@@ -634,7 +663,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 space-y-4"
+            className="ds-card-patient p-5 space-y-4"
           >
             <div>
               <h2 className="font-heading font-black text-foreground">
@@ -711,7 +740,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 sm:p-6 space-y-5"
+            className="ds-card-patient p-5 sm:p-6 space-y-5"
           >
             {(selectedType || selectedPractice) && (
               <div className="flex flex-col gap-1.5 pb-3 border-b border-border">
@@ -798,7 +827,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 sm:p-6 space-y-5"
+            className="ds-card-patient p-5 sm:p-6 space-y-5"
           >
             <button
               type="button"
@@ -985,7 +1014,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-5 sm:p-6 space-y-5"
+            className="ds-card-patient p-5 sm:p-6 space-y-5"
           >
             <button
               type="button"
@@ -1023,12 +1052,10 @@ export default function RdvPage({
 
               <div className="space-y-1.5">
                 <Label htmlFor="phone">Numéro de téléphone</Label>
-                <Input
+                <PhoneInput
                   id="phone"
-                  type="tel"
-                  placeholder="+216 XX XXX XXX"
                   value={patientPhone}
-                  onChange={(e) => setPatientPhone(e.target.value)}
+                  onChange={setPatientPhone}
                   required
                 />
               </div>
@@ -1062,13 +1089,91 @@ export default function RdvPage({
 
                 {!forSelf && (
                   <div className="space-y-3 pt-1">
+                    {/* Existing proches picker */}
+                    {dependents.length > 0 && (
+                      <div className="space-y-1.5">
+                        <Label>Sélectionner un proche</Label>
+                        <div className="flex flex-wrap gap-2">
+                          {dependents.map((d) => {
+                            const active = selectedDependentId === d.id;
+                            return (
+                              <button
+                                key={d.id}
+                                type="button"
+                                onClick={() => {
+                                  setSelectedDependentId(d.id);
+                                  setBeneficiaryName(d.name);
+                                  setBeneficiaryDob(d.dateOfBirth?.slice(0, 10) ?? "");
+                                  const rel = (d.relation as "child" | "parent" | "spouse" | "sibling" | "other" | null) ?? "other";
+                                  setBeneficiaryRelation(
+                                    ["child", "parent", "spouse", "sibling"].includes(rel) ? rel : "other",
+                                  );
+                                }}
+                                className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                                  active
+                                    ? "border-primary bg-[color:var(--primary-50)] text-[color:var(--primary-700)]"
+                                    : "border-[color:var(--line-cool)] bg-white text-[color:var(--ink-700)] hover:border-[color:var(--primary-300)]"
+                                }`}
+                              >
+                                <span
+                                  className="w-5 h-5 rounded-full grid place-items-center text-[10px] font-bold"
+                                  style={{ background: "var(--primary-100)", color: "var(--primary-700)" }}
+                                >
+                                  {d.name
+                                    .split(/\s+/)
+                                    .map((p) => p[0])
+                                    .filter(Boolean)
+                                    .slice(0, 2)
+                                    .join("")
+                                    .toUpperCase()}
+                                </span>
+                                {d.name}
+                              </button>
+                            );
+                          })}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedDependentId("new");
+                              setBeneficiaryName("");
+                              setBeneficiaryDob("");
+                              setBeneficiaryRelation("child");
+                            }}
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition ${
+                              selectedDependentId === "new"
+                                ? "border-primary bg-[color:var(--primary-50)] text-[color:var(--primary-700)]"
+                                : "border-dashed border-[color:var(--line-strong)] bg-white text-[color:var(--ink-700)] hover:border-[color:var(--primary-300)]"
+                            }`}
+                          >
+                            + Nouveau
+                          </button>
+                        </div>
+                        <p className="text-xs text-[color:var(--ink-500)]">
+                          Vous pouvez gérer vos proches dans{" "}
+                          <a
+                            href="/ma-famille"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="font-semibold text-[color:var(--primary-600)] underline"
+                          >
+                            Ma famille
+                          </a>
+                          .
+                        </p>
+                      </div>
+                    )}
+
                     <div className="space-y-1.5">
                       <Label htmlFor="b-name">Nom du bénéficiaire</Label>
                       <Input
                         id="b-name"
                         placeholder="Nom complet"
                         value={beneficiaryName}
-                        onChange={(e) => setBeneficiaryName(e.target.value)}
+                        onChange={(e) => {
+                          setBeneficiaryName(e.target.value);
+                          // Typing freely de-selects any picked dependent
+                          if (selectedDependentId !== "new") setSelectedDependentId("new");
+                        }}
                         required={!forSelf}
                         minLength={2}
                       />
@@ -1090,7 +1195,7 @@ export default function RdvPage({
                           value={beneficiaryRelation}
                           onChange={(e) =>
                             setBeneficiaryRelation(
-                              e.target.value as "child" | "parent" | "spouse" | "other",
+                              e.target.value as "child" | "parent" | "spouse" | "sibling" | "other",
                             )
                           }
                           className="w-full rounded-md border border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-foreground"
@@ -1098,6 +1203,7 @@ export default function RdvPage({
                           <option value="child">Enfant</option>
                           <option value="parent">Parent</option>
                           <option value="spouse">Conjoint(e)</option>
+                          <option value="sibling">Frère / sœur</option>
                           <option value="other">Autre</option>
                         </select>
                       </div>
@@ -1170,7 +1276,7 @@ export default function RdvPage({
             animate="center"
             exit="exit"
             transition={slideTransition}
-            className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm p-8 text-center space-y-4"
+            className="ds-card-patient p-8 text-center space-y-4"
           >
             <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto">
               <svg
@@ -1316,7 +1422,7 @@ function SuccessView({
               initial={{ opacity: 0, y: 24 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.45, delay: 0.25 }}
-              className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm overflow-hidden"
+              className="ds-card-patient overflow-hidden"
             >
               {/* Header */}
               <div className="bg-gradient-to-r from-green-50 to-secondary px-7 pt-7 pb-5 text-center border-b border-border">

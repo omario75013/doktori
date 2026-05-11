@@ -14,6 +14,10 @@ const DEFAULT_PREFS = {
   pushAppointments: true,
   pushMessages: true,
   reminderOffsetHours: 24,
+  appointmentReminderOffsets: [168, 24, 2],
+  vaccineRemindersEnabled: true,
+  vaccineReminderDaysBefore: 30,
+  medicationRemindersEnabled: true,
 };
 
 export async function GET(req: NextRequest) {
@@ -42,6 +46,10 @@ const patchSchema = z.object({
   pushAppointments: z.boolean().optional(),
   pushMessages: z.boolean().optional(),
   reminderOffsetHours: z.number().int().min(1).max(168).optional(),
+  appointmentReminderOffsets: z.array(z.number().int().min(0).max(720)).max(6).optional(),
+  vaccineRemindersEnabled: z.boolean().optional(),
+  vaccineReminderDaysBefore: z.number().int().min(1).max(365).optional(),
+  medicationRemindersEnabled: z.boolean().optional(),
 });
 
 export async function PUT(req: NextRequest) {

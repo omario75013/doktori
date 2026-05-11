@@ -146,7 +146,7 @@ export function StaffMessagerie({
   const active = threads.find((t) => t.id === activeId);
 
   return (
-    <div className="space-y-4 max-w-6xl mx-auto">
+    <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <MessagesSquare className="h-5 w-5" />

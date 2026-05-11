@@ -61,7 +61,7 @@ export default function ChronicRemindersPage() {
   const [channel, setChannel] = useState<"sms" | "email" | "push">("sms");
 
   useEffect(() => {
-    const stored = localStorage.getItem("doktori_patient_token");
+    const stored = sessionStorage.getItem("doktori_patient_session");
     if (!stored) {
       router.push("/connexion-patient");
       return;
@@ -188,7 +188,7 @@ export default function ChronicRemindersPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-secondary/40 flex items-center justify-center">
+      <div className="flex items-center justify-center py-24">
         <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -198,36 +198,29 @@ export default function ChronicRemindersPage() {
   const inactive = reminders.filter((r) => !r.active);
 
   return (
-    <div className="min-h-screen bg-secondary/40">
-      <div className="bg-gradient-to-br from-primary to-foreground px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <a
-            href="/dossier-medical"
-            className="inline-flex items-center gap-1 text-white/80 hover:text-white text-sm mb-3"
-          >
-            <ChevronLeft className="h-4 w-4" /> Retour au dossier
-          </a>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20">
-              <Bell className="h-5 w-5 text-white" strokeWidth={2} />
-            </div>
-            <div>
-              <h1 className="text-xl font-black text-white">Rappels traitements</h1>
-              <p className="text-white/70 text-xs mt-0.5">
-                {active.length} actif{active.length !== 1 ? "s" : ""}
-              </p>
-            </div>
+    <>
+      <div className="mb-6">
+        <a
+          href="/dossier-medical"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--primary-600)] mb-2"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" /> Retour au dossier
+        </a>
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <div>
+            <div className="ds-eyebrow">DOSSIER MÉDICAL</div>
+            <h1 className="ds-page-title">Rappels traitements</h1>
+            <p className="ds-page-sub">
+              {active.length} actif{active.length !== 1 ? "s" : ""}
+            </p>
           </div>
+          <button onClick={openAdd} className="ds-btn ds-btn-primary">
+            <Plus className="h-4 w-4" /> Ajouter un rappel
+          </button>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-        <Button
-          onClick={openAdd}
-          className="w-full h-12 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold"
-        >
-          <Plus className="h-4 w-4 mr-2" /> Ajouter un rappel
-        </Button>
+      <div className="space-y-4">
 
         <section>
           <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider mb-2">
@@ -412,7 +405,7 @@ export default function ChronicRemindersPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
 

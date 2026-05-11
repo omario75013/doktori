@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   ShieldCheck,
   ShieldOff,
@@ -37,7 +38,7 @@ export default function SecuriteParametresPage() {
   const [showDisableForm, setShowDisableForm] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("doktori_patient_token");
+    const stored = sessionStorage.getItem("doktori_patient_session");
     if (!stored) {
       router.replace("/connexion-patient");
       return;
@@ -136,17 +137,20 @@ export default function SecuriteParametresPage() {
   }
 
   return (
-    <div className="min-h-screen bg-secondary dark:bg-gray-900">
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-        <div className="flex items-center gap-3">
-          <button onClick={() => router.back()} className="text-sm text-gray-500 hover:text-foreground transition-colors">
-            ← Retour
-          </button>
-          <h1 className="text-xl font-bold text-foreground">Sécurité</h1>
+    <div>
+      <div className="space-y-5">
+        <div>
+          <div className="ds-eyebrow">PARAMÈTRES</div>
+          <h1 className="ds-page-title">Sécurité</h1>
+          <p className="ds-page-sub">Gérez votre mot de passe, votre téléphone et la double authentification.</p>
         </div>
 
+        <EmailCard />
+        <PasswordChangeCard token={token} />
+        <PhoneChangeCard token={token} />
+
         {/* 2FA section */}
-        <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
+        <div className="ds-card-patient p-6">
           <div className="flex items-center gap-2 mb-1">
             <ShieldCheck className="w-5 h-5 text-primary" />
             <h2 className="font-semibold text-foreground">Double authentification (2FA)</h2>
@@ -310,6 +314,375 @@ export default function SecuriteParametresPage() {
           )}
         </div>
       </div>
+    </div>
+  );
+}
+
+/* ───────── Email display card (read-only) ───────── */
+function EmailCard() {
+  const [email, setEmail] = useState<string>("");
+  const [verified, setVerified] = useState<boolean>(false);
+
+  useEffect(() => {
+    fetch("/api/patients/me", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.email) {
+          setEmail(d.email);
+          setVerified(true); // accounts created via OTP have email pre-confirmed
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  return (
+    <div className="ds-card-patient p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Lock className="w-5 h-5 text-primary" />
+          <h2 className="font-semibold text-foreground">Adresse email</h2>
+        </div>
+        {verified && email && (
+          <span
+            className="ds-chip ds-chip-mint"
+            title="Adresse email vérifiée"
+          >
+            <CheckCircle className="w-3 h-3" /> Vérifié
+          </span>
+        )}
+      </div>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        {email || "Aucune adresse email enregistrée."}
+      </p>
+      <p
+        className="text-[12px] mt-2"
+        style={{ color: "var(--ink-500)" }}
+      >
+        L'adresse email sert d'identifiant de connexion et ne peut pas être modifiée depuis votre
+        compte. Contactez le support si vous devez la changer.
+      </p>
+    </div>
+  );
+}
+
+/* ───────── Phone change card ───────── */
+function PhoneChangeCard({ token }: { token: string | null }) {
+  const [currentPhone, setCurrentPhone] = useState<string>("");
+  const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<"input" | "verify">("input");
+  const [phone, setPhone] = useState("");
+  const [code, setCode] = useState("");
+  const [warning, setWarning] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/patients/me", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d?.phone) setCurrentPhone(d.phone);
+      })
+      .catch(() => {});
+  }, [token]);
+
+  async function sendCode(e: React.FormEvent) {
+    e.preventDefault();
+    setWarning(null);
+    setSending(true);
+    try {
+      const res = await fetch("/api/me/phone/request-code", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ phone }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Code envoyé par SMS");
+        setStep("verify");
+      } else if (res.status === 409 && data.error === "PHONE_ALREADY_USED") {
+        setWarning(data.message);
+      } else {
+        toast.error(data.error || "Erreur");
+      }
+    } finally {
+      setSending(false);
+    }
+  }
+
+  async function submitVerify(e: React.FormEvent) {
+    e.preventDefault();
+    setVerifying(true);
+    try {
+      const res = await fetch("/api/me/phone/verify", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ phone, code }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Numéro de téléphone mis à jour");
+        setCurrentPhone(data.phone);
+        setPhone("");
+        setCode("");
+        setStep("input");
+        setOpen(false);
+      } else if (res.status === 409) {
+        setStep("input");
+        setWarning(data.message || "Ce numéro vient d'être pris par un autre compte.");
+      } else {
+        toast.error(data.error || "Code incorrect");
+      }
+    } finally {
+      setVerifying(false);
+    }
+  }
+
+  return (
+    <div className="ds-card-patient p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-5 h-5 text-primary" />
+          <h2 className="font-semibold text-foreground">Numéro de téléphone</h2>
+        </div>
+        {!open && (
+          <button
+            type="button"
+            onClick={() => {
+              setOpen(true);
+              setWarning(null);
+              setStep("input");
+            }}
+            className="ds-btn ds-btn-soft ds-btn-sm"
+          >
+            Modifier
+          </button>
+        )}
+      </div>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Numéro actuel : <span className="font-semibold text-foreground">{currentPhone || "—"}</span>
+      </p>
+
+      {open && (
+        <div className="mt-4">
+          {warning && (
+            <div
+              className="mb-3 flex items-start gap-2 rounded-xl border px-3 py-2.5 text-sm"
+              style={{
+                background: "#FEF3C7",
+                borderColor: "#FBBF24",
+                color: "#92400E",
+              }}
+            >
+              <AlertTriangle className="w-4 h-4 mt-0.5 shrink-0" />
+              <span>{warning}</span>
+            </div>
+          )}
+
+          {step === "input" ? (
+            <form onSubmit={sendCode} className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+              <PhoneInput
+                value={phone}
+                onChange={(v) => {
+                  setPhone(v);
+                  setWarning(null);
+                }}
+                required
+              />
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setOpen(false);
+                    setPhone("");
+                    setWarning(null);
+                  }}
+                >
+                  Annuler
+                </Button>
+                <Button type="submit" disabled={sending || !phone} className="rounded-xl">
+                  {sending ? "Envoi…" : "Envoyer le code"}
+                </Button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={submitVerify} className="space-y-3">
+              <p className="text-sm" style={{ color: "var(--ink-700)" }}>
+                Un code à 6 chiffres a été envoyé au{" "}
+                <span className="font-semibold">{phone}</span>.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
+                <Input
+                  inputMode="numeric"
+                  pattern="\d{6}"
+                  maxLength={6}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                  placeholder="123456"
+                  required
+                />
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setStep("input");
+                      setCode("");
+                    }}
+                  >
+                    Retour
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={verifying || code.length !== 6}
+                    className="rounded-xl"
+                  >
+                    {verifying ? "Vérification…" : "Vérifier"}
+                  </Button>
+                </div>
+              </div>
+            </form>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ───────── Password change card ───────── */
+function PasswordChangeCard({ token }: { token: string | null }) {
+  const [current, setCurrent] = useState("");
+  const [next, setNext] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  async function submit(e: React.FormEvent) {
+    e.preventDefault();
+    if (next.length < 8) {
+      toast.error("Le nouveau mot de passe doit faire au moins 8 caractères");
+      return;
+    }
+    if (next !== confirmPw) {
+      toast.error("Les mots de passe ne correspondent pas");
+      return;
+    }
+    setSaving(true);
+    try {
+      const res = await fetch("/api/me/password", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({ currentPassword: current || undefined, newPassword: next }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        toast.success("Mot de passe mis à jour");
+        setCurrent("");
+        setNext("");
+        setConfirmPw("");
+        setOpen(false);
+      } else {
+        toast.error(data.error || "Erreur");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  return (
+    <div className="ds-card-patient p-6">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Lock className="w-5 h-5 text-primary" />
+          <h2 className="font-semibold text-foreground">Mot de passe</h2>
+        </div>
+        {!open && (
+          <button
+            type="button"
+            onClick={() => setOpen(true)}
+            className="ds-btn ds-btn-soft ds-btn-sm"
+          >
+            Changer
+          </button>
+        )}
+      </div>
+      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
+        Définissez un mot de passe d'au moins 8 caractères pour sécuriser votre compte.
+      </p>
+
+      {open && (
+        <form onSubmit={submit} className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="sm:col-span-2">
+            <label className="block text-[11px] font-bold uppercase tracking-wider mb-1 text-[color:var(--ink-400)]">
+              Mot de passe actuel (laisser vide si jamais défini)
+            </label>
+            <Input
+              type="password"
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+              placeholder="••••••••"
+              autoComplete="current-password"
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-wider mb-1 text-[color:var(--ink-400)]">
+              Nouveau mot de passe
+            </label>
+            <Input
+              type="password"
+              value={next}
+              onChange={(e) => setNext(e.target.value)}
+              placeholder="Min. 8 caractères"
+              minLength={8}
+              autoComplete="new-password"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-[11px] font-bold uppercase tracking-wider mb-1 text-[color:var(--ink-400)]">
+              Confirmer
+            </label>
+            <Input
+              type="password"
+              value={confirmPw}
+              onChange={(e) => setConfirmPw(e.target.value)}
+              placeholder="Répétez le nouveau mot de passe"
+              minLength={8}
+              autoComplete="new-password"
+              required
+            />
+          </div>
+          <div className="sm:col-span-2 flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setOpen(false);
+                setCurrent("");
+                setNext("");
+                setConfirmPw("");
+              }}
+            >
+              Annuler
+            </Button>
+            <Button type="submit" disabled={saving} className="rounded-xl">
+              {saving ? "Enregistrement…" : "Enregistrer"}
+            </Button>
+          </div>
+        </form>
+      )}
     </div>
   );
 }

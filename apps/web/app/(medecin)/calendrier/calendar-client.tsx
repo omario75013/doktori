@@ -804,9 +804,11 @@ function DayView({
 function DeclareDaysOffModal({
   onClose,
   onSaved,
+  appointments,
 }: {
   onClose: () => void;
   onSaved: (row: DayOff) => void;
+  appointments: Appointment[];
 }) {
   const t = useTranslations("medecin.calendrier");
   const [startDate, setStartDate] = useState(format(new Date(), "yyyy-MM-dd"));
@@ -814,9 +816,23 @@ function DeclareDaysOffModal({
   const [reason, setReason] = useState("");
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [forceConfirm, setForceConfirm] = useState(false);
+
+  // Conflicting appointments inside the declared range (only those not
+  // already cancelled). We re-derive on every keystroke.
+  const conflicts = appointments.filter((a) => {
+    if (a.status === "cancelled" || a.status === "completed") return false;
+    const day = format(new Date(a.startsAt), "yyyy-MM-dd");
+    return day >= startDate && day <= endDate;
+  });
 
   async function save() {
     if (endDate < startDate) { setErr(t("daysOffEndBeforeStart")); return; }
+    if (conflicts.length > 0 && !forceConfirm) {
+      setErr(null);
+      // Force the doctor to acknowledge the conflicts first.
+      return;
+    }
     setSaving(true);
     setErr(null);
     const res = await fetch("/api/doctor/days-off", {
@@ -854,13 +870,81 @@ function DeclareDaysOffModal({
         <input value={reason} onChange={(e) => setReason(e.target.value)}
           placeholder={t("daysOffReasonPlaceholder")}
           className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm mb-4 focus:outline-none focus:ring-2 focus:ring-teal-500" />
+
+        {/* Conflict alert — appointments that fall inside the declared range */}
+        {conflicts.length > 0 && (
+          <div
+            className="rounded-xl p-3 mb-4"
+            style={{ background: "#FEF3C7", border: "1px solid #FCD34D" }}
+          >
+            <div className="flex items-start gap-2 mb-2">
+              <span
+                aria-hidden
+                className="inline-flex items-center justify-center w-5 h-5 rounded-full shrink-0 mt-0.5"
+                style={{ background: "#F59E0B", color: "#fff", fontWeight: 700 }}
+              >
+                !
+              </span>
+              <div className="flex-1">
+                <div className="text-[13px] font-bold" style={{ color: "#92400E" }}>
+                  {conflicts.length} rendez-vous dans cette période
+                </div>
+                <p className="text-[12px] mt-0.5" style={{ color: "#92400E" }}>
+                  Vous devez les décaler ou les annuler avant — ou cocher
+                  l&apos;option pour valider quand même.
+                </p>
+              </div>
+            </div>
+            <ul
+              className="space-y-1 max-h-32 overflow-y-auto rounded-lg p-2"
+              style={{ background: "#FFFBEB", border: "1px solid #FDE68A" }}
+            >
+              {conflicts.slice(0, 6).map((a) => (
+                <li key={a.id} className="flex items-center justify-between gap-2 text-[12px]">
+                  <span style={{ color: "#92400E" }}>
+                    {format(new Date(a.startsAt), "EEE d MMM · HH:mm", { locale: fr })}
+                    {" — "}
+                    {a.patientName ?? "Patient"}
+                  </span>
+                  <a
+                    href={`/rendez-vous/${a.id}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-bold underline"
+                    style={{ color: "#B45309" }}
+                  >
+                    Décaler
+                  </a>
+                </li>
+              ))}
+              {conflicts.length > 6 && (
+                <li className="text-[11px]" style={{ color: "#92400E" }}>
+                  + {conflicts.length - 6} autres…
+                </li>
+              )}
+            </ul>
+            <label className="flex items-center gap-2 mt-2 text-[12px]" style={{ color: "#92400E" }}>
+              <input
+                type="checkbox"
+                checked={forceConfirm}
+                onChange={(e) => setForceConfirm(e.target.checked)}
+                className="rounded"
+              />
+              Je confirme : déclarer le congé quand même (les patients devront être prévenus).
+            </label>
+          </div>
+        )}
+
         <div className="flex gap-2">
           <button onClick={onClose}
             className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800">
             Annuler
           </button>
-          <button onClick={save} disabled={saving}
-            className="flex-1 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 disabled:opacity-50">
+          <button
+            onClick={save}
+            disabled={saving || (conflicts.length > 0 && !forceConfirm)}
+            className="flex-1 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 disabled:opacity-50"
+          >
             {saving ? "…" : t("daysOffSave")}
           </button>
         </div>
@@ -883,6 +967,8 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
   const [showSync, setShowSync] = useState(false);
   const [daysOff, setDaysOff] = useState<DayOff[]>([]);
   const [showDaysOffModal, setShowDaysOffModal] = useState(false);
+  const [daysOffToDelete, setDaysOffToDelete] = useState<DayOff | null>(null);
+  const [deletingDaysOff, setDeletingDaysOff] = useState(false);
 
   // On mobile default to day view
   useEffect(() => {
@@ -1040,6 +1126,66 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
         </AnimatePresence>
       </div>
 
+      {/* ── Active days-off (congés) ── */}
+      {daysOff.length > 0 && (
+        <div className="ds-card p-4 mt-3 flex-shrink-0">
+          <div className="flex items-center gap-2 mb-2.5">
+            <span
+              className="text-[11px] font-bold uppercase tracking-wider"
+              style={{ color: "var(--ink-500)" }}
+            >
+              {t("daysOff")}
+            </span>
+            <span
+              className="text-[11px] px-2 rounded-full"
+              style={{ background: "#FEE2E2", color: "#991B1B" }}
+            >
+              {daysOff.length}
+            </span>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {daysOff.map((o) => (
+              <div
+                key={o.id}
+                className="inline-flex items-center gap-2 rounded-full px-3 py-1.5 text-xs"
+                style={{
+                  background: "#FEF2F2",
+                  border: "1px solid #FECACA",
+                  color: "#991B1B",
+                }}
+              >
+                <span className="font-semibold">
+                  {new Date(o.startDate).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "short",
+                  })}
+                  {o.endDate !== o.startDate && (
+                    <>
+                      {" → "}
+                      {new Date(o.endDate).toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "short",
+                      })}
+                    </>
+                  )}
+                </span>
+                {o.reason && (
+                  <span className="opacity-80 truncate max-w-[160px]">· {o.reason}</span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setDaysOffToDelete(o)}
+                  aria-label="Supprimer"
+                  className="ml-1 rounded-full p-0.5 hover:bg-red-100"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* ── Status legend ── */}
       <div className="flex flex-wrap gap-3 mt-3 flex-shrink-0">
         {Object.entries(STATUS_CONFIG)
@@ -1088,7 +1234,90 @@ export function CalendarClient({ appointments }: { appointments: Appointment[] }
             setDaysOff((prev) => [...prev, row]);
             setShowDaysOffModal(false);
           }}
+          appointments={appointments}
         />
+      )}
+
+      {/* ── Delete days-off confirmation modal ── */}
+      {daysOffToDelete && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(15,23,42,0.45)" }}
+          onClick={() => !deletingDaysOff && setDaysOffToDelete(null)}
+        >
+          <div
+            className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-sm p-5"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start gap-3 mb-3">
+              <span
+                aria-hidden
+                className="inline-flex items-center justify-center w-9 h-9 rounded-full shrink-0"
+                style={{ background: "#FEE2E2", color: "#DC2626", fontWeight: 700 }}
+              >
+                <X className="w-5 h-5" />
+              </span>
+              <div className="flex-1">
+                <h3 className="text-[15px] font-bold text-gray-900 dark:text-gray-100">
+                  Supprimer ce congé ?
+                </h3>
+                <p className="text-[12.5px] text-gray-500 dark:text-gray-400 mt-1">
+                  Du{" "}
+                  {new Date(daysOffToDelete.startDate).toLocaleDateString("fr-FR", {
+                    day: "numeric",
+                    month: "short",
+                    year: "numeric",
+                  })}
+                  {daysOffToDelete.endDate !== daysOffToDelete.startDate && (
+                    <>
+                      {" au "}
+                      {new Date(daysOffToDelete.endDate).toLocaleDateString("fr-FR", {
+                        day: "numeric",
+                        month: "short",
+                        year: "numeric",
+                      })}
+                    </>
+                  )}
+                  {daysOffToDelete.reason ? ` — ${daysOffToDelete.reason}` : ""}.
+                  Les créneaux redeviendront réservables.
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-2 mt-4">
+              <button
+                onClick={() => setDaysOffToDelete(null)}
+                disabled={deletingDaysOff}
+                className="flex-1 py-2 rounded-lg border border-gray-200 dark:border-gray-700 text-sm text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={async () => {
+                  if (!daysOffToDelete) return;
+                  setDeletingDaysOff(true);
+                  try {
+                    const res = await fetch(
+                      `/api/doctor/days-off/${daysOffToDelete.id}`,
+                      { method: "DELETE" },
+                    );
+                    if (res.ok) {
+                      setDaysOff((prev) =>
+                        prev.filter((x) => x.id !== daysOffToDelete.id),
+                      );
+                      setDaysOffToDelete(null);
+                    }
+                  } finally {
+                    setDeletingDaysOff(false);
+                  }
+                }}
+                disabled={deletingDaysOff}
+                className="flex-1 py-2 rounded-lg bg-red-600 text-white text-sm font-medium hover:bg-red-700 disabled:opacity-50"
+              >
+                {deletingDaysOff ? "…" : "Supprimer"}
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

@@ -151,22 +151,22 @@ export default function ParrainagePage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-5 shadow-sm text-center hover:shadow-md transition-shadow">
+        <div className="ds-card p-5 shadow-sm text-center hover:shadow-md transition-shadow">
           <div className="text-3xl font-bold text-foreground">{referrals.length}</div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("statsSentLabel")}</div>
         </div>
-        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-5 shadow-sm text-center hover:shadow-md transition-shadow">
+        <div className="ds-card p-5 shadow-sm text-center hover:shadow-md transition-shadow">
           <div className="text-3xl font-bold text-primary">{validatedCount}</div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("statsValidatedLabel")}</div>
         </div>
-        <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-5 shadow-sm text-center hover:shadow-md transition-shadow">
+        <div className="ds-card p-5 shadow-sm text-center hover:shadow-md transition-shadow">
           <div className="text-3xl font-bold text-green-600">{rewardedCount}</div>
           <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">{t("statsRewardedLabel")}</div>
         </div>
       </div>
 
       {/* Referral Code Card */}
-      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm space-y-4">
+      <div className="ds-card p-6 shadow-sm space-y-4">
         <h2 className="font-semibold text-foreground">{t("codeSectionTitle")}</h2>
         {loading ? (
           <div className="h-12 bg-secondary rounded-xl animate-pulse" />
@@ -205,7 +205,7 @@ export default function ParrainagePage() {
       </div>
 
       {/* Référer un patient à un confrère */}
-      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm space-y-4">
+      <div className="ds-card p-6 shadow-sm space-y-4">
         <h2 className="font-semibold text-foreground">{t("referPatientTitle")}</h2>
         <p className="text-sm text-gray-500 dark:text-gray-400">
           {t("referPatientDesc")}
@@ -267,7 +267,7 @@ export default function ParrainagePage() {
       </div>
 
       {/* Referrals List */}
-      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 shadow-sm">
+      <div className="ds-card">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="font-semibold text-foreground">{t("myReferralsTitle")}</h2>
           {referrals.length > 0 && (

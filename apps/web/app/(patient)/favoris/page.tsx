@@ -1,9 +1,15 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { Heart, Stethoscope, MapPin, X } from "lucide-react";
+import {
+  Heart,
+  Stethoscope,
+  MapPin,
+  X,
+  Calendar,
+  Search as SearchIcon,
+} from "lucide-react";
 import { SPECIALTIES } from "@doktori/shared";
 import { toast } from "sonner";
 
@@ -19,104 +25,155 @@ interface Favorite {
 }
 
 export default function FavorisPage() {
-  const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
   const [items, setItems] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
 
-  useEffect(() => {
-    const stored = localStorage.getItem("doktori_patient_token");
-    if (!stored) {
-      router.replace("/mes-rdv");
-      return;
-    }
-    setToken(stored);
-  }, [router]);
-
-  const load = useCallback(
-    async (t: string) => {
-      setLoading(true);
-      try {
-        const res = await fetch("/api/me/favorites", {
-          headers: { Authorization: `Bearer ${t}` },
-          cache: "no-store",
-        });
-        if (res.status === 401) {
-          localStorage.removeItem("doktori_patient_token");
-          router.replace("/mes-rdv");
-          return;
-        }
+  const load = useCallback(async () => {
+    try {
+      const res = await fetch("/api/me/favorites", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      if (res.ok) {
         const data = await res.json();
         setItems(Array.isArray(data.items) ? data.items : []);
-      } finally {
-        setLoading(false);
       }
-    },
-    [router],
-  );
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    if (token) void load(token);
-  }, [token, load]);
+    void load();
+  }, [load]);
 
   async function remove(doctorId: string) {
-    if (!token) return;
     setItems((prev) => prev.filter((i) => i.doctorId !== doctorId));
     const res = await fetch(`/api/me/favorites/${doctorId}`, {
       method: "DELETE",
-      headers: { Authorization: `Bearer ${token}` },
+      credentials: "include",
     });
     if (res.ok) toast.success("Retiré de vos favoris");
   }
 
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? items.filter((f) => {
+        const spec = SPECIALTIES.find((s) => s.id === f.doctorSpecialty);
+        return (
+          f.doctorName.toLowerCase().includes(q) ||
+          (spec?.label ?? "").toLowerCase().includes(q) ||
+          (f.doctorAddress ?? "").toLowerCase().includes(q)
+        );
+      })
+    : items;
+
   return (
-    <div className="min-h-screen bg-secondary/40 dark:bg-gray-900">
-      <div className="bg-gradient-to-br from-primary to-foreground px-4 py-8">
-        <div className="max-w-2xl mx-auto flex items-center gap-3">
-          <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20">
-            <Heart className="h-5 w-5 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-black text-white">Médecins favoris</h1>
-            <p className="text-white/70 text-xs mt-0.5">
-              {items.length} médecin{items.length > 1 ? "s" : ""} sauvegardé
-              {items.length > 1 ? "s" : ""}
-            </p>
-          </div>
+    <>
+      {/* Header */}
+      <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
+        <div>
+          <div className="ds-eyebrow">FAVORIS</div>
+          <h1 className="ds-page-title">Médecins favoris</h1>
+          <p className="ds-page-sub">
+            {items.length} médecin{items.length > 1 ? "s" : ""} sauvegardé
+            {items.length > 1 ? "s" : ""}
+          </p>
         </div>
+        <Link href="/recherche" className="ds-btn ds-btn-primary">
+          <SearchIcon className="w-4 h-4" /> Trouver un médecin
+        </Link>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6">
-        {loading ? (
-          <div className="flex items-center justify-center py-16">
-            <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+      {/* Search bar (only when there are favorites) */}
+      {items.length > 0 && (
+        <div className="ds-card-patient mb-4" style={{ padding: 10 }}>
+          <div className="flex items-center gap-2">
+            <SearchIcon className="w-4 h-4 ml-1" style={{ color: "var(--ink-500)" }} />
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Rechercher dans vos favoris…"
+              className="flex-1 bg-transparent outline-none text-[14px]"
+              style={{ color: "var(--ink-900)" }}
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                aria-label="Effacer"
+                className="p-1 rounded hover:bg-[color:var(--surface-2)]"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
-        ) : items.length === 0 ? (
-          <div className="bg-white dark:bg-gray-800 rounded-2xl border border-border shadow-sm p-10 text-center">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-rose-50 mb-4">
-              <Heart className="h-7 w-7 text-rose-300" />
-            </div>
-            <p className="font-semibold text-foreground mb-1">Aucun favori pour l&apos;instant</p>
-            <p className="text-sm text-foreground/50 mb-4">
-              Cliquez sur le cœur depuis le profil d&apos;un médecin pour le sauvegarder.
-            </p>
-            <Link
-              href="/"
-              className="inline-flex items-center gap-2 bg-primary hover:bg-doktori-teal-dark text-white text-sm font-bold px-5 py-2.5 rounded-xl transition-colors"
-            >
-              Trouver un médecin
-            </Link>
+        </div>
+      )}
+
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : items.length === 0 ? (
+        <div className="ds-card-patient p-10 text-center">
+          <div
+            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
+            style={{
+              background: "linear-gradient(135deg, var(--primary-50), var(--surface-2))",
+              color: "var(--primary-600)",
+            }}
+          >
+            <Heart className="h-8 w-8" />
           </div>
-        ) : (
-          <div className="space-y-3">
-            {items.map((f) => {
-              const spec = SPECIALTIES.find((s) => s.id === f.doctorSpecialty);
-              return (
-                <div
-                  key={f.id}
-                  className="bg-white dark:bg-gray-800 rounded-2xl border border-border shadow-sm p-4 flex items-center gap-3 hover:shadow-md hover:border-primary/30 transition-all"
+          <p className="font-bold text-[16px] mb-1" style={{ color: "var(--ink-900)" }}>
+            Aucun favori pour l&apos;instant
+          </p>
+          <p className="text-sm mb-4" style={{ color: "var(--ink-500)" }}>
+            Touchez le cœur sur la fiche d&apos;un médecin pour le retrouver ici.
+          </p>
+          <Link href="/recherche" className="ds-btn ds-btn-primary">
+            <SearchIcon className="w-4 h-4" /> Trouver un médecin
+          </Link>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="ds-card-patient p-8 text-center">
+          <p className="text-sm" style={{ color: "var(--ink-500)" }}>
+            Aucun favori ne correspond à « {query} ».
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
+          {filtered.map((f) => {
+            const spec = SPECIALTIES.find((s) => s.id === f.doctorSpecialty);
+            const initials = f.doctorName
+              .replace(/^Dr\.?\s*/i, "")
+              .split(/\s+/)
+              .map((p) => p[0])
+              .filter(Boolean)
+              .slice(0, 2)
+              .join("")
+              .toUpperCase();
+            return (
+              <div key={f.id} className="ds-card-patient p-4 relative">
+                <button
+                  onClick={() => remove(f.doctorId)}
+                  aria-label="Retirer des favoris"
+                  className="absolute top-3 right-3 inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-rose-50 transition-colors"
+                  style={{ color: "#E11D48" }}
                 >
-                  <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                  <X className="h-4 w-4" />
+                </button>
+
+                <Link href={`/medecin/${f.doctorSlug}`} className="flex items-center gap-3 pr-6">
+                  <div
+                    className="w-14 h-14 rounded-2xl overflow-hidden grid place-items-center shrink-0 font-extrabold text-white text-[15px]"
+                    style={{
+                      background: "linear-gradient(135deg, var(--primary-400), var(--primary-600))",
+                    }}
+                  >
                     {f.doctorPhotoUrl ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
@@ -125,35 +182,53 @@ export default function FavorisPage() {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <Stethoscope className="h-5 w-5 text-primary" />
+                      initials || <Stethoscope className="h-5 w-5" />
                     )}
                   </div>
+                  <div className="min-w-0 flex-1">
+                    <p
+                      className="font-extrabold text-[14.5px] truncate"
+                      style={{ color: "var(--ink-900)" }}
+                    >
+                      {f.doctorName}
+                    </p>
+                    {spec?.label && (
+                      <span className="ds-chip ds-chip-primary mt-1" style={{ fontSize: 11 }}>
+                        {spec.label}
+                      </span>
+                    )}
+                  </div>
+                </Link>
+
+                {f.doctorAddress && (
+                  <p
+                    className="text-[12px] flex items-center gap-1 mt-2 truncate"
+                    style={{ color: "var(--ink-500)" }}
+                  >
+                    <MapPin className="h-3 w-3 shrink-0" />
+                    {f.doctorAddress}
+                  </p>
+                )}
+
+                <div className="flex gap-2 mt-3">
                   <Link
                     href={`/medecin/${f.doctorSlug}`}
-                    className="flex-1 min-w-0"
+                    className="ds-btn ds-btn-ghost ds-btn-sm flex-1 justify-center"
                   >
-                    <p className="font-bold text-primary truncate">{f.doctorName}</p>
-                    <p className="text-sm text-foreground/70 truncate">{spec?.label}</p>
-                    {f.doctorAddress && (
-                      <p className="text-xs text-foreground/50 flex items-center gap-1 truncate mt-0.5">
-                        <MapPin className="h-3 w-3 shrink-0" />
-                        {f.doctorAddress}
-                      </p>
-                    )}
+                    Voir profil
                   </Link>
-                  <button
-                    onClick={() => remove(f.doctorId)}
-                    aria-label="Retirer des favoris"
-                    className="shrink-0 inline-flex items-center justify-center w-9 h-9 rounded-full bg-rose-50 text-rose-500 hover:bg-rose-100 transition-colors"
+                  <Link
+                    href={`/rdv/${f.doctorSlug}`}
+                    className="ds-btn ds-btn-primary ds-btn-sm flex-1 justify-center"
                   >
-                    <X className="h-4 w-4" />
-                  </button>
+                    <Calendar className="w-3.5 h-3.5" /> RDV
+                  </Link>
                 </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
   );
 }

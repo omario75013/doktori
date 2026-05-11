@@ -23,17 +23,19 @@ export default async function MedecinLayout({ children }: { children: React.Reac
   const verificationStatus = doctorRow?.verification_status ?? "pending";
 
   return (
-    <div className="min-h-screen flex">
-      <SidebarNav userName={session.user?.name} verificationStatus={verificationStatus} />
-      <div className="flex-1 flex flex-col min-w-0">
-        <AppTopBar role="doctor" />
-        <main className="flex-1 bg-gray-50 dark:bg-gray-950 p-6">
-          <PageTransition>{children}</PageTransition>
-        </main>
+    <div className="patient-space doctor-space">
+      <div className="min-h-screen flex">
+        <SidebarNav userName={session.user?.name} verificationStatus={verificationStatus} />
+        <div className="flex-1 flex flex-col min-w-0">
+          <AppTopBar role="doctor" />
+          <main className="flex-1 p-6" style={{ background: "var(--bg-cool)" }}>
+            <PageTransition>{children}</PageTransition>
+          </main>
+        </div>
+        <DoctorBellWidget />
+        <IncomingCallListener />
+        <DoctorPresencePing />
       </div>
-      <DoctorBellWidget />
-      <IncomingCallListener />
-      <DoctorPresencePing />
     </div>
   );
 }

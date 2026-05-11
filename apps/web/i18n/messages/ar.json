@@ -264,6 +264,11 @@
     "doctorDescription": "احجز موعدًا عبر الإنترنت مع {name}، {specialty} في {city}. تحقق من التوفر واحجز بنقرتين على دكتوري.",
     "doctorNotFound": "لم يتم العثور على الطبيب | دوكتوري"
   },
+  "topbar": {
+    "searchDoctor": "ابحث عن مريض، موعد…",
+    "searchAdmin": "ابحث عن مريض، طبيب…",
+    "searchDefault": "ابحث…"
+  },
   "search": {
     "inputPlaceholder": "على سبيل المثال: ديرماتو أريانا، كارديو لا مرسى، تبيب تونس ...",
     "filtersAriaLabel": "الفلاتر",
@@ -448,7 +453,30 @@
       "waitingRoom": "غرفة الانتظار",
       "noWaitingPatients": "لا يوجد مرضى في الانتظار حالياً.",
       "arrivedAt": "وصل في {time}",
-      "recentActivity": "النشاط الأخير"
+      "recentActivity": "النشاط الأخير",
+      "rangeEyebrow30": "آخر 30 يوم",
+      "rangeEyebrow3M": "آخر 3 أشهر",
+      "rangeEyebrow12M": "آخر 12 شهر",
+      "range30Days": "30ي",
+      "range3Months": "3 أشهر",
+      "range12Months": "12 شهر",
+      "export": "تصدير",
+      "smsThisMonth": "رسائل SMS هذا الشهر",
+      "smsRemaining": "{percent}٪ متبقي",
+      "kpiWaitingPatients": "مرضى في الانتظار",
+      "kpiWaitingPatientsSub": "للاستقبال",
+      "kpiNoPatients": "لا أحد",
+      "kpiNextAppt": "الموعد القادم",
+      "kpiNoneUpcoming": "لا مواعيد قادمة",
+      "kpiCompletionRate": "نسبة الحضور",
+      "kpiLast30Days": "آخر 30 يوم",
+      "kpiDonePending": "{done} منتهية · {pending} قادمة",
+      "chartAppointments": "المواعيد",
+      "chartAppointmentsSub": "مؤكدة",
+      "chartRevenue": "المداخيل",
+      "chartRevenueSub": "محصلة",
+      "chartCancellation": "نسبة الإلغاء",
+      "chartCancellationSub": "متوسط الفترة"
     },
     "agenda": {
       "title": "إعداد جدول المواعيد",

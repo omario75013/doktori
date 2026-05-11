@@ -3,6 +3,7 @@ import { db, patients } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { compare } from "bcryptjs";
 import { sign } from "jsonwebtoken";
+import { setPatientCookie } from "@/lib/patient-auth";
 
 const ipCounts = new Map<string, { count: number; resetAt: number }>();
 function isRateLimited(ip: string, max: number, windowMs: number): boolean {
@@ -63,8 +64,9 @@ export async function POST(req: Request) {
     { expiresIn: "7d" }
   );
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     token,
     patient: { id: patient.id, name: patient.name, email: patient.email },
   });
+  return setPatientCookie(res, token);
 }

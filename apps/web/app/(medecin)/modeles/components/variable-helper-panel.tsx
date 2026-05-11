@@ -63,7 +63,7 @@ function copyVar(name: string) {
 
 export function VariableHelperPanel() {
   return (
-    <div className="rounded-xl border border-border bg-white shadow-sm overflow-hidden">
+    <div className="ds-card overflow-hidden">
       <div className="px-4 py-3 border-b border-border bg-gray-50">
         <h3 className="text-sm font-semibold text-gray-700">Variables disponibles</h3>
         <p className="text-xs text-gray-400 mt-0.5">Cliquez pour copier</p>

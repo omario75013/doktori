@@ -153,15 +153,15 @@ export default function ParrainageMedecinPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm text-center">
+        <div className="ds-card p-5 shadow-sm text-center">
           <div className="text-3xl font-bold text-foreground">{stats.sentCount}</div>
           <div className="text-xs text-gray-500 mt-1">Invitations envoyées</div>
         </div>
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm text-center">
+        <div className="ds-card p-5 shadow-sm text-center">
           <div className="text-3xl font-bold text-primary">{stats.validatedCount}</div>
           <div className="text-xs text-gray-500 mt-1">Validées</div>
         </div>
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-sm text-center">
+        <div className="ds-card p-5 shadow-sm text-center">
           <div className="text-3xl font-bold text-emerald-600">
             {stats.totalRewardsTnd.toFixed(2)}
           </div>
@@ -170,7 +170,7 @@ export default function ParrainageMedecinPage() {
       </div>
 
       {/* Code + link card */}
-      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-4">
+      <div className="ds-card p-6 shadow-sm space-y-4">
         <h2 className="font-semibold text-foreground flex items-center gap-2">
           <Award className="h-4 w-4 text-primary" />
           Votre code parrain
@@ -217,7 +217,7 @@ export default function ParrainageMedecinPage() {
       {/* Invite form */}
       <form
         onSubmit={handleInvite}
-        className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-4"
+        className="ds-card p-6 shadow-sm space-y-4"
       >
         <h2 className="font-semibold text-foreground flex items-center gap-2">
           <Mail className="h-4 w-4 text-primary" />
@@ -248,7 +248,7 @@ export default function ParrainageMedecinPage() {
       </form>
 
       {/* Sent list */}
-      <div className="rounded-2xl border border-border bg-white shadow-sm">
+      <div className="ds-card">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <h2 className="font-semibold text-foreground">
             Mes invitations ({sent.length})

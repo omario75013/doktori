@@ -18,7 +18,7 @@ export function FavoriteButton({ doctorId, initialFavorited = false, className =
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const stored = typeof window !== "undefined" ? localStorage.getItem("doktori_patient_token") : null;
+    const stored = typeof window !== "undefined" ? sessionStorage.getItem("doktori_patient_session") : null;
     setToken(stored);
     setMounted(true);
   }, []);

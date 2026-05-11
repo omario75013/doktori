@@ -335,7 +335,7 @@ export default async function DoctorProfilePage({
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 
-      <div className="min-h-screen bg-secondary/30 dark:bg-gray-900">
+      <div>
         {/* Back link */}
         <div className="mx-auto max-w-5xl px-4 pt-6 sm:px-6">
           <Link
@@ -379,7 +379,7 @@ export default async function DoctorProfilePage({
             {/* ═════ LEFT COLUMN ═════ */}
             <div className="space-y-6">
               {/* Header card */}
-              <AnimatedSection index={0} className="overflow-hidden rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm">
+              <AnimatedSection index={0} className="overflow-hidden ds-card-patient overflow-hidden">
                 {/* Cover banner — Doktori teal gradient */}
                 <div className="relative h-32 overflow-hidden bg-gradient-to-br from-foreground via-primary to-doktori-teal-light">
                   {/* Grid overlay */}
@@ -556,7 +556,7 @@ export default async function DoctorProfilePage({
               />
 
               {/* About section */}
-              <AnimatedSection index={1} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+              <AnimatedSection index={1} className="ds-card-patient p-6 sm:p-8">
                 <div className="flex items-center gap-2">
                   <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                     <Sparkles className="h-4 w-4" strokeWidth={2.5} />
@@ -576,7 +576,7 @@ export default async function DoctorProfilePage({
               {(doctor.cabinetGalleryUrls?.length ?? 0) > 0 && (
                 <AnimatedSection
                   index={2}
-                  className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8"
+                  className="ds-card-patient p-6 sm:p-8"
                 >
                   <div className="mb-4 flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
@@ -614,7 +614,7 @@ export default async function DoctorProfilePage({
 
               {/* Cabinet photo gallery — only shown when at least one photo exists */}
               {cabinetPhotos.length > 0 && (
-                <AnimatedSection index={2} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={2} className="ds-card-patient p-6 sm:p-8">
                   <div className="flex items-center gap-2 mb-4">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Building2 className="h-4 w-4" strokeWidth={2.5} />
@@ -653,7 +653,7 @@ export default async function DoctorProfilePage({
 
               {/* Lieux de consultation */}
               {practiceRows.length > 0 && doctor.consultationMode !== "teleconsult" && (
-                <AnimatedSection index={2} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={2} className="ds-card-patient p-6 sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <MapPin className="h-4 w-4" strokeWidth={2.5} />
@@ -709,7 +709,7 @@ export default async function DoctorProfilePage({
 
               {/* Expertises */}
               {expertise.length > 0 && (
-                <AnimatedSection index={3} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={3} className="ds-card-patient p-6 sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Sparkles className="h-4 w-4" strokeWidth={2.5} />
@@ -734,7 +734,7 @@ export default async function DoctorProfilePage({
 
               {/* Formation */}
               {educations.length > 0 && (
-                <AnimatedSection index={3} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={3} className="ds-card-patient p-6 sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <GraduationCap className="h-4 w-4" strokeWidth={2.5} />
@@ -777,7 +777,7 @@ export default async function DoctorProfilePage({
 
               {/* Expérience */}
               {experiences.length > 0 && (
-                <AnimatedSection index={4} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={4} className="ds-card-patient p-6 sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Briefcase className="h-4 w-4" strokeWidth={2.5} />
@@ -828,7 +828,7 @@ export default async function DoctorProfilePage({
 
               {/* Langues parlées */}
               {languages.length > 0 && (
-                <AnimatedSection index={5} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={5} className="ds-card-patient p-6 sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Languages className="h-4 w-4" strokeWidth={2.5} />
@@ -853,7 +853,7 @@ export default async function DoctorProfilePage({
 
               {/* Appointment types (motifs) */}
               {appointmentTypesList.length > 0 && (
-                <AnimatedSection index={6} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={6} className="ds-card-patient p-6 sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
@@ -888,55 +888,9 @@ export default async function DoctorProfilePage({
                 </AnimatedSection>
               )}
 
-              {/* Weekly schedule */}
-              <AnimatedSection index={7} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
-                      <Calendar className="h-4 w-4" strokeWidth={2.5} />
-                    </div>
-                    <h2 className="font-heading text-lg font-bold text-foreground">
-                      Horaires
-                    </h2>
-                  </div>
-                </div>
-
-                <div className="mt-4 grid gap-2">
-                  {fullSchedule.map((day) => (
-                    <div
-                      key={day.dayIdx}
-                      className={`flex items-center gap-4 rounded-xl border px-4 py-3 ${
-                        day.slots.length > 0
-                          ? "border-border bg-white"
-                          : "border-gray-100 bg-gray-50/50"
-                      }`}
-                    >
-                      <span className="w-24 shrink-0 text-sm font-bold text-foreground">
-                        {day.dayName}
-                      </span>
-                      {day.slots.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {day.slots.map((s, i) => (
-                            <span
-                              key={i}
-                              className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2.5 py-1 text-xs font-bold text-doktori-teal-dark"
-                            >
-                              <Clock className="h-3 w-3" strokeWidth={2.5} />
-                              {formatTime(s.startTime)} — {formatTime(s.endTime)}
-                            </span>
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-xs font-medium text-gray-400">Fermé</span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </AnimatedSection>
-
               {/* Avis patients — on mobile, pushed below practical info via order */}
               {reviewCount > 0 && (
-                <AnimatedSection index={8} className="order-last lg:order-none rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={8} className="order-last lg:order-none ds-card-patient p-6 sm:p-8">
                   <div className="flex flex-wrap items-center justify-between gap-4">
                     <div className="flex items-center gap-2">
                       <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
@@ -1071,7 +1025,7 @@ export default async function DoctorProfilePage({
 
               {/* Similar doctors */}
               {similarDoctors.length > 0 && (
-                <AnimatedSection index={9} className="rounded-3xl border border-border dark:border-gray-700 bg-white dark:bg-gray-900 p-6 shadow-sm sm:p-8">
+                <AnimatedSection index={9} className="ds-card-patient p-6 sm:p-8">
                   <div className="flex items-center gap-2">
                     <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary">
                       <Stethoscope className="h-4 w-4" strokeWidth={2.5} />
@@ -1146,7 +1100,7 @@ export default async function DoctorProfilePage({
             </div>
 
             {/* ═════ RIGHT COLUMN — sticky CTA (hidden on mobile, shown on desktop) ═════ */}
-            <div className="hidden lg:block lg:sticky lg:top-24 lg:self-start">
+            <div className="hidden lg:block lg:sticky lg:top-24 lg:self-start space-y-4">
               <div className="overflow-hidden rounded-3xl border-2 border-primary bg-white shadow-xl shadow-primary/10">
                 <div className="bg-primary px-6 py-4 text-white">
                   <div className="flex items-center gap-2">
@@ -1226,6 +1180,45 @@ export default async function DoctorProfilePage({
                       <ArrowRight className="h-3.5 w-3.5" strokeWidth={3} />
                     </Link>
                   </div>
+                </div>
+              </div>
+
+              {/* Weekly schedule — under Prise de rendez-vous */}
+              <div className="ds-card-patient p-5">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-secondary text-primary">
+                    <Calendar className="h-3.5 w-3.5" strokeWidth={2.5} />
+                  </div>
+                  <h2 className="font-heading text-sm font-bold text-foreground">Horaires</h2>
+                </div>
+                <div className="grid gap-1.5">
+                  {fullSchedule.map((day) => (
+                    <div
+                      key={day.dayIdx}
+                      className={`flex items-start gap-3 rounded-lg px-2.5 py-1.5 ${
+                        day.slots.length > 0 ? "bg-[color:var(--surface-2)]" : ""
+                      }`}
+                    >
+                      <span className="w-16 shrink-0 text-xs font-bold text-foreground capitalize">
+                        {day.dayName}
+                      </span>
+                      {day.slots.length > 0 ? (
+                        <div className="flex flex-col gap-0.5">
+                          {day.slots.map((s, i) => (
+                            <span
+                              key={i}
+                              className="inline-flex items-center gap-1 text-[11px] font-semibold text-[color:var(--primary-700)]"
+                            >
+                              <Clock className="h-3 w-3" strokeWidth={2.5} />
+                              {formatTime(s.startTime)} — {formatTime(s.endTime)}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        <span className="text-[11px] font-medium text-gray-400">Fermé</span>
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>

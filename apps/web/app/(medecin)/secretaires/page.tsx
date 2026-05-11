@@ -127,7 +127,7 @@ export default function SecretairesPage() {
   const active = secretaries.filter((s) => s.isActive);
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary">
@@ -155,7 +155,7 @@ export default function SecretairesPage() {
 
       {/* Overview strip */}
       {overview.length > 0 && (
-        <section className="rounded-2xl border border-border bg-white shadow-sm p-4">
+        <section className="ds-card p-4">
           <h2 className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
             {t("todaySection")}
           </h2>
@@ -168,7 +168,7 @@ export default function SecretairesPage() {
       )}
 
       {/* List */}
-      <section className="rounded-2xl border border-border bg-white shadow-sm p-4">
+      <section className="ds-card p-4">
         <h2 className="text-base font-semibold mb-3">{t("activeSecretaries")}</h2>
         {loading ? (
           <p className="py-6 text-center text-sm text-gray-400">

@@ -4,6 +4,7 @@ import { sign } from "jsonwebtoken";
 import { compare } from "bcryptjs";
 import { db, patients, patientSessions } from "@doktori/db";
 import { eq, or } from "drizzle-orm";
+import { setPatientCookie } from "@/lib/patient-auth";
 
 function parseDeviceLabel(ua: string | null): string {
   if (!ua) return "Navigateur inconnu";
@@ -81,7 +82,7 @@ export async function POST(req: NextRequest) {
     })
     .catch((e) => console.error("[patient-login] session record failed:", e));
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     token,
     user: {
       id: patient.id,
@@ -91,4 +92,5 @@ export async function POST(req: NextRequest) {
       role: "patient",
     },
   });
+  return setPatientCookie(res, token);
 }

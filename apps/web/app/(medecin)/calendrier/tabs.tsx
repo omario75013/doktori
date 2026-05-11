@@ -9,7 +9,7 @@ type Tab = "calendrier" | "agenda";
 export function CalendrierTabs({ active }: { active: Tab }) {
   const t = useTranslations("medecin.calendrier");
   return (
-    <div className="inline-flex rounded-2xl border border-border bg-white p-1 shadow-sm">
+    <div className="inline-flex ds-card p-1 shadow-sm">
       <TabLink href="/calendrier" active={active === "calendrier"} icon={<CalendarDays className="h-4 w-4" />}>
         {t("tabCalendar")}
       </TabLink>

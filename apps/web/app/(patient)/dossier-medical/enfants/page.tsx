@@ -33,7 +33,7 @@ export default function CarnetEnfantsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const stored = localStorage.getItem("doktori_patient_token");
+    const stored = sessionStorage.getItem("doktori_patient_session");
     if (!stored) {
       router.push("/connexion-patient");
       return;
@@ -74,14 +74,24 @@ export default function CarnetEnfantsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-secondary p-4">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-2xl font-bold text-foreground mb-2 flex items-center gap-2">
-          <Baby className="w-6 h-6 text-primary" /> Carnet de santé enfant
+    <>
+      <div className="mb-6">
+        <a
+          href="/dossier-medical"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--primary-600)] mb-2"
+        >
+          ← Retour au dossier
+        </a>
+        <div className="ds-eyebrow">DOSSIER MÉDICAL</div>
+        <h1 className="ds-page-title flex items-center gap-2">
+          <Baby className="w-6 h-6 text-[color:var(--primary-600)]" /> Carnet de santé enfant
         </h1>
-        <p className="text-muted-foreground mb-6 text-sm">
+        <p className="ds-page-sub">
           Suivez le calendrier vaccinal officiel tunisien (0-2 ans) pour chacun de vos enfants.
         </p>
+      </div>
+
+      <div>
 
         {dependents.length === 0 ? (
           <div className="bg-white rounded-2xl border border-border shadow-sm p-8 text-center">
@@ -124,6 +134,6 @@ export default function CarnetEnfantsPage() {
           </div>
         )}
       </div>
-    </main>
+    </>
   );
 }

@@ -2,12 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, CalendarDays, MessagesSquare, FileText } from "lucide-react";
+import { Home, CalendarDays, FolderHeart, FileText } from "lucide-react";
 
 const LINKS = [
   { href: "/mon-espace", label: "Espace", icon: Home },
   { href: "/mes-rdv", label: "Rendez-vous", icon: CalendarDays },
-  { href: "/mes-messages", label: "Messages", icon: MessagesSquare },
+  { href: "/dossier-medical", label: "Dossier", icon: FolderHeart },
   { href: "/mes-documents", label: "Documents", icon: FileText },
 ];
 

@@ -4,6 +4,7 @@ import { formatPhone } from "@doktori/shared";
 import { eq } from "drizzle-orm";
 import { hash } from "bcryptjs";
 import { sign } from "jsonwebtoken";
+import { setPatientCookie } from "@/lib/patient-auth";
 
 function isValidPhone(phone: string): boolean {
   return /^(\+216|216|0)?[2-9]\d{7}$/.test(phone.replace(/[\s\-()]/g, ""));
@@ -103,9 +104,10 @@ export async function POST(req: Request) {
     { expiresIn: "7d" }
   );
 
-  return NextResponse.json({
+  const res = NextResponse.json({
     token,
     // Always return the submitted name to avoid exposing existing account data (enumeration fix)
     patient: { id: patient.id, name: body.name as string, email: body.email as string },
   });
+  return setPatientCookie(res, token);
 }

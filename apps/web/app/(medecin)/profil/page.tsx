@@ -58,7 +58,7 @@ export default async function ProfilPage() {
   const completeness = Math.round((completedCount / checks.length) * 100);
 
   return (
-    <div className="space-y-6 max-w-4xl">
+    <div className="space-y-6">
       {/* Page header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -82,7 +82,7 @@ export default async function ProfilPage() {
       </div>
 
       {/* Profile card */}
-      <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+      <div className="ds-card overflow-hidden">
         {/* Header with gradient */}
         <div className="relative h-32 bg-gradient-to-br from-foreground via-[#0e3d38] to-primary">
           <div className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-white/5" />
@@ -229,7 +229,7 @@ export default async function ProfilPage() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <Link
           href="/profil/parcours"
-          className="rounded-2xl border border-border bg-white p-5 hover:shadow-md transition-shadow group"
+          className="ds-card p-5 hover:shadow-md transition-shadow group"
         >
           <GraduationCap className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
           <h3 className="text-sm font-bold text-foreground">{t("journeyLabel")}</h3>
@@ -237,7 +237,7 @@ export default async function ProfilPage() {
         </Link>
         <Link
           href="/cabinets"
-          className="rounded-2xl border border-border bg-white p-5 hover:shadow-md transition-shadow group"
+          className="ds-card p-5 hover:shadow-md transition-shadow group"
         >
           <Building2 className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
           <h3 className="text-sm font-bold text-foreground">{t("cabinetsLabel")}</h3>
@@ -245,7 +245,7 @@ export default async function ProfilPage() {
         </Link>
         <Link
           href="/agenda"
-          className="rounded-2xl border border-border bg-white p-5 hover:shadow-md transition-shadow group"
+          className="ds-card p-5 hover:shadow-md transition-shadow group"
         >
           <Calendar className="h-8 w-8 text-primary mb-3 group-hover:scale-110 transition-transform" />
           <h3 className="text-sm font-bold text-foreground">{t("schedulesLabel")}</h3>
@@ -253,11 +253,13 @@ export default async function ProfilPage() {
         </Link>
       </div>
 
-      {/* Cabinet gallery (doctor-level, public) */}
-      <CabinetGalleryUploader initialUrls={doctor.cabinetGalleryUrls ?? []} />
+      {/* Cabinet gallery + QR code — side-by-side on lg, stacked below */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Cabinet gallery (doctor-level, public) */}
+        <CabinetGalleryUploader initialUrls={doctor.cabinetGalleryUrls ?? []} />
 
-      {/* QR code section */}
-      <div className="rounded-2xl border border-border bg-white p-6 shadow-sm">
+        {/* QR code section */}
+        <div className="ds-card p-6 shadow-sm">
         <h2 className="text-base font-bold text-foreground mb-1 flex items-center gap-2">
           <QrCode className="h-5 w-5 text-primary" />
           {t("myQrCode")}
@@ -284,6 +286,7 @@ export default async function ProfilPage() {
               {t("downloadPng")}
             </a>
           </div>
+        </div>
         </div>
       </div>
     </div>

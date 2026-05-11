@@ -23,7 +23,7 @@ export default function ParrainagePage() {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("doktori_patient_token");
+    const stored = sessionStorage.getItem("doktori_patient_session");
     if (!stored) {
       router.replace("/mes-rdv");
       return;
@@ -39,7 +39,7 @@ export default function ParrainagePage() {
     })
       .then((r) => {
         if (r.status === 401) {
-          localStorage.removeItem("doktori_patient_token");
+          sessionStorage.removeItem("doktori_patient_session");
           router.replace("/mes-rdv");
           return null;
         }

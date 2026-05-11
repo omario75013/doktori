@@ -103,7 +103,7 @@ export default function PaymentMethodsPage() {
           const bankConfig = (row.config ?? {}) as BankConfig;
 
           return (
-            <div key={m.id} className="rounded-2xl border border-border bg-white p-4">
+            <div key={m.id} className="ds-card p-4">
               <div className="flex items-start gap-3">
                 <div className="h-10 w-10 rounded-full bg-gray-100 flex items-center justify-center flex-shrink-0">
                   <Icon className="h-5 w-5 text-gray-700" />

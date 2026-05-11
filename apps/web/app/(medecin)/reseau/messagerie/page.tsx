@@ -153,7 +153,7 @@ export default function PeerMessagingPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-4 h-[calc(100vh-280px)] min-h-[500px]">
-        <aside className="rounded-2xl border border-border bg-white shadow-sm overflow-y-auto">
+        <aside className="ds-card overflow-y-auto">
           {loading ? (
             <div className="p-6 text-center">
               <Loader2 className="h-5 w-5 animate-spin text-gray-400 mx-auto" />
@@ -213,7 +213,7 @@ export default function PeerMessagingPage() {
           )}
         </aside>
 
-        <section className="rounded-2xl border border-border bg-white shadow-sm flex flex-col">
+        <section className="ds-card flex flex-col">
           {!activeThread ? (
             <div className="flex-1 flex items-center justify-center text-sm text-gray-400">
               {t("selectConversation")}

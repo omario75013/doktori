@@ -1,14 +1,11 @@
-import { PageTransition } from "@/components/page-transition";
-import { PatientShellWrapper } from "@/components/patient-shell-wrapper";
 import { OnboardingModal } from "@/components/patient/onboarding-modal";
-import { OfflineBanner } from "@/components/offline-banner";
+import { PatientShell } from "@/components/patient/patient-shell";
 
 export default function PatientLayout({ children }: { children: React.ReactNode }) {
   return (
-    <PatientShellWrapper>
-      <OfflineBanner />
-      <PageTransition>{children}</PageTransition>
+    <>
+      <PatientShell>{children}</PatientShell>
       <OnboardingModal />
-    </PatientShellWrapper>
+    </>
   );
 }

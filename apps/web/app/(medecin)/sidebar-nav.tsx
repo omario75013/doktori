@@ -197,21 +197,24 @@ export function SidebarNav({
         className={`
           ${width}
           fixed md:static inset-y-0 left-0 z-30
-          bg-gray-900 text-gray-200
+          bg-white text-[color:var(--ink-700)] border-r border-[color:var(--line-cool)]
           transform transition-[transform,width] duration-200 ease-out
           ${open ? "translate-x-0" : "-translate-x-full"} md:translate-x-0
           flex flex-col
         `}
       >
-        <div className="flex items-center justify-between px-3 py-4 border-b border-gray-800">
+        <div
+          className="flex items-center justify-between px-3 border-b border-[color:var(--line-cool)]"
+          style={{ height: 56 }}
+        >
           {!collapsed && (
-            <span className="text-lg font-bold text-white">Doktori</span>
+            <span className="text-lg font-extrabold text-[color:var(--ink-900)]">Doktori</span>
           )}
           <button
             type="button"
             onClick={toggleCollapsed}
             aria-label={collapsed ? t("expandSidebar") : t("collapseSidebar")}
-            className="hidden md:inline-flex h-7 w-7 items-center justify-center rounded-md text-gray-400 hover:bg-gray-800 hover:text-white transition-colors ml-auto"
+            className="hidden md:inline-flex h-7 w-7 items-center justify-center rounded-md text-[color:var(--ink-500)] hover:bg-[color:var(--surface-2)] hover:text-[color:var(--ink-900)] transition-colors ml-auto"
           >
             {collapsed ? (
               <ChevronRight className="h-4 w-4" />
@@ -225,7 +228,7 @@ export function SidebarNav({
           {groups.map((group) => (
             <div key={group.label}>
               {!collapsed && (
-                <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-gray-500">
+                <p className="px-2 pb-1 text-[10px] font-bold uppercase tracking-wider text-[color:var(--ink-400)]">
                   {group.label}
                 </p>
               )}
@@ -244,7 +247,7 @@ export function SidebarNav({
                         title={collapsed ? item.label : locked ? "Passer à Pro" : undefined}
                         className={`
                           group flex items-center gap-3 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors
-                          ${locked ? "opacity-50 cursor-not-allowed text-gray-500" : active ? "bg-teal-600 text-white" : "text-gray-300 hover:bg-gray-800 hover:text-white"}
+                          ${locked ? "opacity-50 cursor-not-allowed text-[color:var(--ink-400)]" : active ? "bg-[color:var(--primary-600)] text-white" : "text-[color:var(--ink-700)] hover:bg-[color:var(--surface-2)] hover:text-[color:var(--ink-900)]"}
                           ${collapsed ? "justify-center" : ""}
                         `}
                       >
@@ -258,7 +261,7 @@ export function SidebarNav({
                           <span className="flex-1 truncate">{item.label}</span>
                         )}
                         {!collapsed && locked && (
-                          <Lock className="h-3 w-3 shrink-0 text-gray-500" />
+                          <Lock className="h-3 w-3 shrink-0 text-[color:var(--ink-400)]" />
                         )}
                         {!collapsed && !locked && item.badge && item.badge > 0 ? (
                           <span className="inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-red-500 px-1.5 text-[10px] font-bold text-white">

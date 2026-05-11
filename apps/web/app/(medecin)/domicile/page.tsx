@@ -67,7 +67,7 @@ export default function DomicilePage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm max-w-xl space-y-6">
+      <div className="ds-card p-6 shadow-sm space-y-6">
         <div
           className="flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-secondary transition-colors cursor-pointer"
           onClick={() => setIsAvailable((v) => !v)}

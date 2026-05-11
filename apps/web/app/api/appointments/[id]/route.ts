@@ -4,6 +4,7 @@ import { requireAuth } from "@/lib/require-auth";
 import { db, appointments, secretaries } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 import { parsePermissions, type Section } from "@/lib/secretary-permissions";
+import { notifyPatientAppointmentChange } from "@/lib/notify-patient-rdv";
 
 async function secretaryCan(secretaryId: string, section: Section): Promise<boolean> {
   const [row] = await db
@@ -153,6 +154,16 @@ export async function PATCH(
     );
   }
 
+  // Snapshot prior state so we can decide which notification (if any) to send.
+  const [prior] = await db
+    .select({
+      status: appointments.status,
+      startsAt: appointments.startsAt,
+    })
+    .from(appointments)
+    .where(eq(appointments.id, id))
+    .limit(1);
+
   await db.update(appointments).set(update).where(eq(appointments.id, id));
 
   const [updated] = await db
@@ -168,6 +179,33 @@ export async function PATCH(
     .from(appointments)
     .where(eq(appointments.id, id))
     .limit(1);
+
+  // Patient notification, fire-and-forget. We notify on:
+  //  - confirmation (pending → confirmed)
+  //  - doctor/secretary cancellation (→ cancelled)
+  //  - reschedule (startsAt changed and appointment is still active)
+  if (prior && updated) {
+    const becameConfirmed =
+      prior.status !== "confirmed" && updated.status === "confirmed";
+    const becameCancelled =
+      prior.status !== "cancelled" && updated.status === "cancelled";
+    const rescheduled =
+      update.startsAt instanceof Date &&
+      prior.startsAt.getTime() !== updated.startsAt.getTime() &&
+      updated.status !== "cancelled";
+
+    if (becameCancelled) {
+      void notifyPatientAppointmentChange(id, "cancelled", {
+        reason: parsed.data.reason ?? null,
+      });
+    } else if (rescheduled) {
+      void notifyPatientAppointmentChange(id, "rescheduled", {
+        previousStartsAt: prior.startsAt,
+      });
+    } else if (becameConfirmed) {
+      void notifyPatientAppointmentChange(id, "confirmed");
+    }
+  }
 
   return NextResponse.json(updated);
 }

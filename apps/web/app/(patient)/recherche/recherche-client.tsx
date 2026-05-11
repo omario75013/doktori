@@ -192,6 +192,8 @@ function RechercheInner() {
   const [searched, setSearched] = useState(false);
   const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
   const [showMap, setShowMap] = useState(false);
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 10;
 
   const fetchResults = useCallback(
     async (
@@ -226,7 +228,18 @@ function RechercheInner() {
         const res = await fetch(`/api/search?${params.toString()}`);
         if (!res.ok) throw new Error("Erreur");
         const data: SearchResponse = await res.json();
-        setResults(data.hits);
+        // Normalize latitude/longitude (string from DB) → _geo {lat,lng} for map markers
+        const hits = (data.hits || []).map((d) => {
+          if (d._geo) return d;
+          const lat = typeof (d as any).latitude === "string" ? parseFloat((d as any).latitude) : (d as any).latitude;
+          const lng = typeof (d as any).longitude === "string" ? parseFloat((d as any).longitude) : (d as any).longitude;
+          if (typeof lat === "number" && typeof lng === "number" && !isNaN(lat) && !isNaN(lng)) {
+            return { ...d, _geo: { lat, lng } };
+          }
+          return d;
+        });
+        setResults(hits);
+        setPage(1);
         setClinicResults(data.clinics || []);
         setTotalCount(data.totalCount);
         setParsed(data.parsed);
@@ -271,6 +284,14 @@ function RechercheInner() {
     router.replace(url, { scroll: false });
   }, [query, specialty, city, date, priceMin, priceMax, availability, sort, modeFilter, router]);
 
+  // Auto-request geolocation when user opens the Carte view
+  useEffect(() => {
+    if (showMap && !userLocation && !geoLoading && navigator.geolocation) {
+      requestGeolocation();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [showMap]);
+
   // Geolocation
   function requestGeolocation() {
     if (!navigator.geolocation) {
@@ -279,18 +300,45 @@ function RechercheInner() {
     }
     setGeoLoading(true);
     setGeoError(null);
-    navigator.geolocation.getCurrentPosition(
+    // Use watchPosition to capture the most accurate reading over a short window.
+    // Browsers often return a coarse cached fix first, then refine to GPS/Wi-Fi
+    // accuracy a few seconds later. We keep the reading with the smallest
+    // `coords.accuracy` (in meters) and stop the watch after 10s or once we
+    // hit ≤50m accuracy.
+    let best: GeolocationPosition | null = null;
+    let settled = false;
+    const watchId = navigator.geolocation.watchPosition(
       (pos) => {
-        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setSort("proximity");
-        setGeoLoading(false);
+        if (settled) return;
+        if (!best || pos.coords.accuracy < best.coords.accuracy) {
+          best = pos;
+          setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+          setSort("proximity");
+          setGeoLoading(false);
+        }
+        if (pos.coords.accuracy <= 50) {
+          settled = true;
+          navigator.geolocation.clearWatch(watchId);
+        }
       },
       (err) => {
+        if (settled) return;
+        settled = true;
+        navigator.geolocation.clearWatch(watchId);
         setGeoLoading(false);
-        setGeoError(err.code === err.PERMISSION_DENIED ? t("geoDenied") : t("geoUnavailable"));
+        if (!best) {
+          setGeoError(err.code === err.PERMISSION_DENIED ? t("geoDenied") : t("geoUnavailable"));
+        }
       },
-      { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 }
+      { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
     );
+    // Safety stop after 10s — keep best reading we have
+    setTimeout(() => {
+      if (settled) return;
+      settled = true;
+      navigator.geolocation.clearWatch(watchId);
+      setGeoLoading(false);
+    }, 10000);
   }
 
   function resetAll() {
@@ -383,71 +431,158 @@ function RechercheInner() {
   const filterCount = activeChips.length;
 
   return (
-    <div className="min-h-screen bg-secondary/30 dark:bg-gray-900 overflow-x-hidden">
-      {/* ═══════════════ SEARCH HEADER ═══════════════ */}
-      <div className="sticky top-16 z-20 border-b border-border dark:border-gray-700 bg-white/95 dark:bg-gray-900/95 backdrop-blur-md">
-        <div className="mx-auto max-w-6xl px-4 py-4 sm:px-6">
-          {/* Search input */}
-          <div className="flex items-center gap-3">
-            <div className="group flex h-12 flex-1 items-center rounded-xl border-2 border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-3 shadow-sm transition-all focus-within:border-primary">
-              <Search className="h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2.5} />
-              <input
-                type="text"
-                placeholder={t("inputPlaceholder")}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                className="h-full flex-1 border-0 bg-transparent px-2 text-sm text-foreground placeholder:text-muted-foreground/60 outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:rounded-lg"
-              />
-              {loading && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-            </div>
-
-            {/* Mobile filter toggle */}
-            <button
-              onClick={() => setMobileFiltersOpen(true)}
-              className="relative flex h-12 w-12 items-center justify-center rounded-xl border-2 border-border bg-white text-primary lg:hidden"
-              aria-label={t("filtersAriaLabel")}
-            >
-              <SlidersHorizontal className="h-5 w-5" strokeWidth={2.5} />
-              {filterCount > 0 && (
-                <span className="absolute -end-1 -top-1 flex h-5 w-5 items-center justify-center rounded-full bg-accent text-[10px] font-bold text-white ring-2 ring-white">
-                  {filterCount}
-                </span>
-              )}
-            </button>
-          </div>
-
-          {/* Active filter chips */}
-          {activeChips.length > 0 && (
-            <div className="mt-3 flex flex-wrap items-center gap-2">
-              <span className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                {t("activeFiltersLabel")}
-              </span>
-              {activeChips.map((chip) => (
-                <button
-                  key={chip.key}
-                  onClick={chip.onRemove}
-                  className="group inline-flex items-center gap-1.5 rounded-full bg-primary px-3 py-1 text-xs font-bold text-white shadow-sm transition-all hover:bg-doktori-teal-dark"
-                >
-                  <span>{chip.label}</span>
-                  <X className="h-3 w-3 transition-transform group-hover:scale-110" strokeWidth={3} />
-                </button>
-              ))}
-              <button
-                onClick={resetAll}
-                className="text-xs font-bold text-muted-foreground hover:text-foreground hover:underline"
-              >
-                {t("clearAll")}
-              </button>
-            </div>
+    <div>
+      {/* ═══════════════ PAGE HEADER (cyan redesign) ═══════════════ */}
+      <div className="flex items-end justify-between gap-4 mb-4">
+        <div>
+          <div className="ds-eyebrow">Trouver un médecin</div>
+          <h1 className="ds-page-title">Recherche médecins</h1>
+          {totalCount > 0 ? (
+            <p className="ds-page-sub">
+              <strong style={{ color: "var(--ink-900)" }}>{totalCount} médecins</strong>
+              {" · "}
+              triés par pertinence
+            </p>
+          ) : (
+            <p className="ds-page-sub">Spécialité, ville, mode de consultation</p>
           )}
         </div>
       </div>
 
+      {/* ═══════════════ SEARCH BAR (cyan redesign — segmented spec | city) ═══════════════ */}
+      <div className="ds-card-patient mb-5" style={{ padding: 10 }}>
+        <div className="flex items-center gap-2">
+          {/* Specialty / query segment */}
+          <label
+            className="flex flex-1 items-center gap-2.5 px-3.5 h-[46px] rounded-xl border"
+            style={{ background: "var(--surface-2)", borderColor: "var(--line-cool)" }}
+          >
+            <Search className="w-4 h-4 shrink-0" style={{ color: "var(--ink-500)" }} strokeWidth={2} />
+            <input
+              type="text"
+              placeholder={t("inputPlaceholder")}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="h-full flex-1 min-w-0 border-0 bg-transparent text-[14px] font-semibold outline-none"
+              style={{ color: "var(--ink-900)" }}
+            />
+            {parsed.specialty && (
+              <span
+                className="px-2.5 py-1 rounded-full text-[11px] font-bold whitespace-nowrap"
+                style={{ background: "var(--primary-50)", color: "var(--primary-700)" }}
+              >
+                Spécialité
+              </span>
+            )}
+            {loading && <Loader2 className="h-4 w-4 animate-spin" style={{ color: "var(--primary-500)" }} />}
+          </label>
+
+          {/* Divider */}
+          <div className="hidden md:block" style={{ width: 1, height: 32, background: "var(--line-cool)" }} />
+
+          {/* City segment */}
+          <label
+            className="hidden md:flex flex-1 items-center gap-2.5 px-3.5 h-[46px] rounded-xl border"
+            style={{ background: "var(--surface-2)", borderColor: "var(--line-cool)" }}
+          >
+            <MapPin className="w-4 h-4 shrink-0" style={{ color: "var(--ink-500)" }} strokeWidth={2} />
+            <input
+              type="text"
+              placeholder="Ville, quartier"
+              value={city}
+              onChange={(e) => setCity(e.target.value)}
+              className="h-full flex-1 min-w-0 border-0 bg-transparent text-[14px] font-semibold outline-none"
+              style={{ color: "var(--ink-900)" }}
+            />
+            <span className="text-[12px] whitespace-nowrap" style={{ color: "var(--ink-400)" }}>
+              · rayon 10 km
+            </span>
+          </label>
+
+          {/* Submit */}
+          <button
+            type="button"
+            className="ds-btn ds-btn-primary shrink-0"
+            onClick={() =>
+              fetchResults(
+                query,
+                specialty,
+                city,
+                date,
+                priceMin,
+                priceMax,
+                availability,
+                sort,
+                userLocation,
+                modeFilter,
+              )
+            }
+          >
+            <Search className="w-4 h-4" /> Rechercher
+          </button>
+
+          {/* Mobile filter toggle (kept for narrow viewports) */}
+          <button
+            type="button"
+            onClick={() => setMobileFiltersOpen(true)}
+            className="ds-btn ds-btn-ghost lg:hidden"
+            aria-label={t("filtersAriaLabel")}
+            style={{ width: 46, height: 46, padding: 0, borderRadius: 12 }}
+          >
+            <SlidersHorizontal className="h-5 w-5" strokeWidth={2.2} />
+            {filterCount > 0 && (
+              <span
+                className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                style={{ background: "var(--primary-500)", color: "#fff" }}
+              >
+                {filterCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {/* Active filter chips */}
+        {activeChips.length > 0 && (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <span
+              className="text-[11px] font-bold uppercase tracking-wider"
+              style={{ color: "var(--ink-400)" }}
+            >
+              {t("activeFiltersLabel")}
+            </span>
+            {activeChips.map((chip) => (
+              <button
+                key={chip.key}
+                onClick={chip.onRemove}
+                className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[12px] font-bold"
+                style={{ background: "var(--primary-500)", color: "#fff" }}
+              >
+                <span>{chip.label}</span>
+                <X className="h-3 w-3" strokeWidth={3} />
+              </button>
+            ))}
+            <button
+              onClick={resetAll}
+              className="text-[11.5px] font-bold hover:underline"
+              style={{ color: "var(--ink-500)" }}
+            >
+              {t("clearAll")}
+            </button>
+          </div>
+        )}
+      </div>
+
       {/* ═══════════════ MAIN LAYOUT ═══════════════ */}
-      <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
-        <div className="grid gap-6 lg:grid-cols-[280px_1fr_400px]">
+      <div className="w-full">
+        <div className="grid gap-5 lg:grid-cols-[240px_1fr]">
           {/* ═══════════════ SIDEBAR FILTERS ═══════════════ */}
-          <aside className={`${mobileFiltersOpen ? "fixed inset-0 z-50 overflow-y-auto bg-white dark:bg-gray-900 p-4 lg:static lg:p-0" : "hidden lg:block"}`}>
+          <aside
+            className={
+              mobileFiltersOpen
+                ? "fixed inset-0 z-50 overflow-y-auto bg-white dark:bg-gray-900 p-4 lg:static lg:z-auto lg:bg-transparent dark:lg:bg-transparent lg:p-0 lg:overflow-visible"
+                : "hidden lg:block"
+            }
+          >
             {mobileFiltersOpen && (
               <div className="mb-4 flex items-center justify-between border-b dark:border-gray-700 pb-3 lg:hidden">
                 <h2 className="font-heading text-lg font-bold text-foreground">{t("mobileFiltersTitle")}</h2>
@@ -588,27 +723,12 @@ function RechercheInner() {
           <div className="pt-4">
             {/* Date picker + sort bar */}
             <div className="mb-4 space-y-3">
-              {/* Teleconsult toggle pill */}
-              <div className="flex items-center gap-2 scroll-mt-40">
-                <button
-                  onClick={() => setModeFilter(modeFilter === "teleconsult" ? "" : "teleconsult")}
-                  className={`inline-flex min-h-11 items-center gap-1.5 rounded-full border-2 px-4 py-2 text-xs font-bold transition-all ${
-                    modeFilter === "teleconsult"
-                      ? "border-purple-600 bg-purple-600 text-white shadow-sm"
-                      : "border-purple-200 bg-white text-purple-700 hover:border-purple-400 hover:bg-purple-50"
-                  }`}
-                >
-                  <Video className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  {t("videoMode")}
-                </button>
-              </div>
-
-              {/* Date picker */}
-              <div>
-                <div className="mb-2 flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-                  <Calendar className="h-3.5 w-3.5" strokeWidth={2.5} />
-                  {t("dateLabel")}
-                </div>
+              {/* Teleconsult + date sections removed in cyan redesign — those
+                  filters now live in the sidebar's "Mode de consultation"
+                  group + the upper search bar. */}
+              {false && (
+                <>
+                <div>
                 <div className="flex gap-2 overflow-x-auto pb-1">
                   <button
                     onClick={() => setDate("")}
@@ -631,36 +751,123 @@ function RechercheInner() {
                   ))}
                 </div>
               </div>
+                </>
+              )}
 
-              {/* Sort dropdown */}
-              <div className="flex items-center justify-between">
-                <div className="text-sm text-muted-foreground">
+              {/* Results count + Liste / Carte toggle + Trier value */}
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="text-[13.5px]" style={{ color: "var(--ink-500)" }}>
                   {loading ? (
                     t("searching")
                   ) : (
                     <>
-                      <span className="font-bold text-foreground">{results.length}</span>{" "}
-                      {results.length === 1 ? t("resultSingular") : t("resultPlural")}
+                      <strong style={{ color: "var(--ink-900)" }}>
+                        {results.length} {results.length === 1 ? t("resultSingular") : t("resultPlural")}
+                      </strong>
                       {totalCount > results.length ? ` ${t("totalSuffix", { total: totalCount })}` : ""}
                     </>
                   )}
                 </div>
                 <div className="flex items-center gap-2">
-                  <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" strokeWidth={2.5} />
-                  <select
-                    value={sort}
-                    onChange={(e) => setSort(e.target.value as SortKey)}
-                    aria-label={t("sortLabel")}
-                    className="h-11 rounded-lg border border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-3 pe-8 text-xs font-bold text-foreground outline-none focus-visible:ring-2 focus-visible:ring-primary/30 focus-visible:border-primary sm:h-9"
-                  >
-                    <option value="relevance">{t("sortRelevance")}</option>
-                    {(userLocation || parsedCity) && <option value="proximity">{t("sortProximity")}</option>}
-                    <option value="price_asc">{t("sortPriceAsc")}</option>
-                    <option value="price_desc">{t("sortPriceDesc")}</option>
-                    <option value="name">{t("sortName")}</option>
-                  </select>
+                  <div className="ds-tabs" style={{ padding: 3 }}>
+                    <button
+                      type="button"
+                      className={`ds-tab ${!showMap ? "on" : ""}`}
+                      style={{ padding: "6px 12px", fontSize: 12.5 }}
+                      onClick={() => setShowMap(false)}
+                    >
+                      <Calendar className="w-3.5 h-3.5" /> Liste
+                    </button>
+                    <button
+                      type="button"
+                      className={`ds-tab ${showMap ? "on" : ""}`}
+                      style={{ padding: "6px 12px", fontSize: 12.5 }}
+                      onClick={() => setShowMap(true)}
+                    >
+                      <MapPin className="w-3.5 h-3.5" /> Carte
+                    </button>
+                  </div>
+                  <label className="ds-btn ds-btn-ghost ds-btn-sm cursor-pointer relative">
+                    <ArrowUpDown className="w-3.5 h-3.5" />
+                    <span style={{ color: "var(--ink-700)" }}>
+                      {sort === "relevance"
+                        ? t("sortRelevance")
+                        : sort === "proximity"
+                        ? t("sortProximity")
+                        : sort === "price_asc"
+                        ? t("sortPriceAsc")
+                        : sort === "price_desc"
+                        ? t("sortPriceDesc")
+                        : sort === "name"
+                        ? t("sortName")
+                        : sort}
+                    </span>
+                    <select
+                      value={sort}
+                      onChange={(e) => setSort(e.target.value as SortKey)}
+                      aria-label={t("sortLabel")}
+                      className="absolute inset-0 opacity-0 cursor-pointer"
+                    >
+                      <option value="relevance">{t("sortRelevance")}</option>
+                      {(userLocation || parsedCity) && (
+                        <option value="proximity">{t("sortProximity")}</option>
+                      )}
+                      <option value="price_asc">{t("sortPriceAsc")}</option>
+                      <option value="price_desc">{t("sortPriceDesc")}</option>
+                      <option value="name">{t("sortName")}</option>
+                    </select>
+                  </label>
                 </div>
               </div>
+
+              {/* Mini map preview — real OSM tiles via Leaflet (hidden in Carte view) */}
+              {!showMap && (
+              <div
+                className="ps-map-mini relative rounded-2xl overflow-hidden border mb-3"
+                style={{
+                  height: 160,
+                  borderColor: "var(--line-cool)",
+                }}
+              >
+                <div className="absolute inset-0">
+                  {results.length > 0 ? (
+                    <DoctorMap doctors={results} userLocation={userLocation} onUserLocationChange={setUserLocation} />
+                  ) : (
+                    /* Static OSM tile fallback so the area still has a real
+                       cartographic background even before any results land. */
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src="https://tile.openstreetmap.org/9/271/195.png"
+                      srcSet="https://tile.openstreetmap.org/9/271/195.png 1x, https://tile.openstreetmap.org/10/542/391.png 2x"
+                      alt=""
+                      aria-hidden
+                      className="w-full h-full object-cover"
+                      style={{ filter: "saturate(0.85)" }}
+                    />
+                  )}
+                </div>
+                <div
+                  className="absolute top-3.5 left-3.5 px-3 py-1.5 rounded-full font-bold inline-flex items-center gap-2 text-[12px] z-10"
+                  style={{
+                    background: "#FFFFFF",
+                    border: "1px solid var(--line-cool)",
+                    color: "var(--ink-900)",
+                    boxShadow: "var(--shadow-1)",
+                  }}
+                >
+                  <MapPin className="w-3.5 h-3.5" />
+                  {totalCount || results.length} résultats sur la carte
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowMap(true)}
+                  className="absolute top-3.5 right-3.5 px-3.5 py-1.5 rounded-full text-[12px] font-bold cursor-pointer z-10"
+                  style={{ background: "var(--ink-900)", color: "#fff", border: 0 }}
+                >
+                  Agrandir la carte
+                </button>
+              </div>
+              )}
             </div>
 
             {/* Recent searches — shown when search is empty and no results yet */}
@@ -823,69 +1030,148 @@ function RechercheInner() {
               )}
             </div>
 
-            {/* Mobile map view */}
-            {showMap && results.length > 0 && (
-              <div className="h-[500px] lg:hidden">
-                <DoctorMap doctors={results} />
+            {/* Carte view — full Leaflet map showing all results */}
+            {showMap && (
+              <div className="ps-map-shell rounded-2xl overflow-hidden border" style={{ borderColor: "var(--line-cool)", height: 600 }}>
+                {results.length > 0 ? (
+                  <DoctorMap doctors={results} userLocation={userLocation} onUserLocationChange={setUserLocation} />
+                ) : (
+                  <div className="h-full flex flex-col items-center justify-center gap-2 text-center p-6" style={{ background: "var(--surface-2)" }}>
+                    <MapPin className="w-8 h-8" style={{ color: "var(--ink-300)" }} strokeWidth={1.5} />
+                    <p className="text-[13.5px] font-semibold" style={{ color: "var(--ink-500)" }}>
+                      Lancez une recherche pour afficher les médecins sur la carte
+                    </p>
+                  </div>
+                )}
               </div>
             )}
 
-            {/* Results — hidden on mobile when map is shown */}
-            {results.length > 0 && (
-              <div className={`grid gap-3 ${showMap ? "hidden lg:grid" : ""}`}>
-                {results.map((doctor) => {
-                  const checked = compareIds.includes(doctor.id);
-                  const disabled = !checked && compareIds.length >= 3;
-                  return (
-                    <div key={doctor.id} className="relative">
-                      <label
-                        className={`absolute end-3 top-3 z-10 flex cursor-pointer items-center gap-1.5 rounded-full border bg-white/95 px-2.5 py-1 text-xs font-bold shadow-sm transition ${
-                          checked
-                            ? "border-primary text-primary"
-                            : disabled
-                            ? "border-border text-muted-foreground/50 cursor-not-allowed"
-                            : "border-border text-muted-foreground hover:border-primary"
-                        }`}
-                        title={disabled ? "Maximum 3 médecins" : "Comparer ce médecin"}
+            {/* Results list — hidden when Carte view is active */}
+            {!showMap && results.length > 0 && (() => {
+              const totalPages = Math.max(1, Math.ceil(results.length / PAGE_SIZE));
+              const currentPage = Math.min(page, totalPages);
+              const startIdx = (currentPage - 1) * PAGE_SIZE;
+              const pageDoctors = results.slice(startIdx, startIdx + PAGE_SIZE);
+              return (
+                <div>
+                  <div className="grid gap-3">
+                    {pageDoctors.map((doctor) => {
+                      const checked = compareIds.includes(doctor.id);
+                      const disabled = !checked && compareIds.length >= 3;
+                      return (
+                        <div key={doctor.id} className="relative">
+                          <label
+                            className={`absolute end-3 top-3 z-10 flex cursor-pointer items-center gap-1.5 rounded-full border bg-white/95 px-2.5 py-1 text-xs font-bold shadow-sm transition ${
+                              checked
+                                ? "border-primary text-primary"
+                                : disabled
+                                ? "border-border text-muted-foreground/50 cursor-not-allowed"
+                                : "border-border text-muted-foreground hover:border-primary"
+                            }`}
+                            title={disabled ? "Maximum 3 médecins" : "Comparer ce médecin"}
+                          >
+                            <input
+                              type="checkbox"
+                              className="h-3 w-3 cursor-pointer accent-primary disabled:cursor-not-allowed"
+                              checked={checked}
+                              disabled={disabled}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setCompareIds((prev) => [...prev, doctor.id].slice(0, 3));
+                                } else {
+                                  setCompareIds((prev) => prev.filter((id) => id !== doctor.id));
+                                }
+                              }}
+                            />
+                            <span>Comparer</span>
+                          </label>
+                          <DoctorCard doctor={doctor} showSlots />
+                        </div>
+                      );
+                    })}
+                  </div>
+                  {totalPages > 1 && (
+                    <nav
+                      className="mt-6 flex items-center justify-center gap-1.5"
+                      aria-label="Pagination"
+                    >
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPage((p) => Math.max(1, p - 1));
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        disabled={currentPage === 1}
+                        aria-label="Page précédente"
+                        className="ds-btn ds-btn-ghost"
+                        style={{ width: 40, height: 40, padding: 0, borderRadius: 12 }}
                       >
-                        <input
-                          type="checkbox"
-                          className="h-3 w-3 cursor-pointer accent-primary disabled:cursor-not-allowed"
-                          checked={checked}
-                          disabled={disabled}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setCompareIds((prev) => [...prev, doctor.id].slice(0, 3));
-                            } else {
-                              setCompareIds((prev) => prev.filter((id) => id !== doctor.id));
-                            }
-                          }}
-                        />
-                        <span>Comparer</span>
-                      </label>
-                      <DoctorCard doctor={doctor} showSlots />
-                    </div>
-                  );
-                })}
-              </div>
-            )}
+                        ‹
+                      </button>
+                      {Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .filter(
+                          (p) =>
+                            p === 1 ||
+                            p === totalPages ||
+                            Math.abs(p - currentPage) <= 1,
+                        )
+                        .reduce<(number | "…")[]>((acc, p) => {
+                          if (acc.length && p - (acc[acc.length - 1] as number) > 1)
+                            acc.push("…");
+                          acc.push(p);
+                          return acc;
+                        }, [])
+                        .map((p, i) =>
+                          p === "…" ? (
+                            <span
+                              key={`gap-${i}`}
+                              className="px-1 text-sm"
+                              style={{ color: "var(--ink-400)" }}
+                            >
+                              …
+                            </span>
+                          ) : (
+                            <button
+                              key={p}
+                              type="button"
+                              onClick={() => {
+                                setPage(p);
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                              }}
+                              aria-current={p === currentPage ? "page" : undefined}
+                              className={
+                                p === currentPage
+                                  ? "ds-btn ds-btn-primary"
+                                  : "ds-btn ds-btn-ghost"
+                              }
+                              style={{ width: 40, height: 40, padding: 0, borderRadius: 12 }}
+                            >
+                              {p}
+                            </button>
+                          ),
+                        )}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPage((p) => Math.min(totalPages, p + 1));
+                          window.scrollTo({ top: 0, behavior: "smooth" });
+                        }}
+                        disabled={currentPage === totalPages}
+                        aria-label="Page suivante"
+                        className="ds-btn ds-btn-ghost"
+                        style={{ width: 40, height: 40, padding: 0, borderRadius: 12 }}
+                      >
+                        ›
+                      </button>
+                    </nav>
+                  )}
+                </div>
+              );
+            })()}
           </div>
 
-          {/* ═══════════════ STICKY MAP COLUMN (desktop only) ═══════════════ */}
-          <aside className="hidden lg:block">
-            <div className="sticky top-24 h-[600px]">
-              {results.length > 0 ? (
-                <DoctorMap doctors={results} />
-              ) : (
-                <div className="h-full rounded-2xl border border-dashed border-border bg-white dark:bg-gray-800 flex flex-col items-center justify-center gap-3 text-center p-6">
-                  <MapPin className="h-8 w-8 text-muted-foreground/40" strokeWidth={1.5} />
-                  <p className="text-sm font-medium text-muted-foreground">
-                    Lancez une recherche pour afficher les médecins sur la carte
-                  </p>
-                </div>
-              )}
-            </div>
-          </aside>
+          {/* Sticky map column removed in cyan redesign — use the inline
+              "Vue carte" toggle on the results header instead. */}
         </div>
       </div>
 

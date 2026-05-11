@@ -5,7 +5,7 @@ import { X, Cookie, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const STORAGE_KEY = "doktori_cookie_consent";
-const TOKEN_KEY = "doktori_patient_token";
+const TOKEN_KEY = "doktori_patient_session";
 
 interface ConsentPrefs {
   analytics: boolean;
@@ -31,7 +31,7 @@ export function CookieBanner() {
     setVisible(false);
 
     // If patient is logged in, persist to DB
-    const token = localStorage.getItem(TOKEN_KEY);
+    const token = sessionStorage.getItem(TOKEN_KEY);
     if (token) {
       fetch("/api/me/consents", {
         method: "PUT",

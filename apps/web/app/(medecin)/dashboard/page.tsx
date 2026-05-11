@@ -6,7 +6,13 @@ import { DashboardClient } from "./dashboard-client";
 import { OnboardingTour } from "@/components/medecin/onboarding-tour";
 import { getSMSUsage } from "@/lib/sms-quota";
 
-export default async function DashboardPage() {
+export default async function DashboardPage({
+  searchParams,
+}: {
+  searchParams?: Promise<{ range?: string }>;
+}) {
+  const params = (await searchParams) ?? {};
+  const rangeDays = params.range === "365" ? 365 : params.range === "90" ? 90 : 30;
   const session = await auth();
   if (!session?.user?.id) redirect("/connexion");
 
@@ -176,6 +182,7 @@ export default async function DashboardPage() {
     <>
       <OnboardingTour enabled={tourEnabled} />
       <DashboardClient
+      rangeDays={rangeDays}
       doctorName={session.user.name ?? "Médecin"}
       todayCount={todayAppts.length}
       toConfirm={toConfirm}

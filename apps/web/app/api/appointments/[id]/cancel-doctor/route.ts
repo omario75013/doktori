@@ -8,6 +8,7 @@ import { cancellationConfirmation, cancellationDoctor } from "@/emails/templates
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { notifyWaitlistPatients } from "@/lib/waitlist-notify";
+import { notifyPatientAppointmentChange } from "@/lib/notify-patient-rdv";
 
 export async function POST(
   req: NextRequest,
@@ -76,6 +77,9 @@ export async function POST(
 
     // Notify waitlist patients that a slot freed up (fire-and-forget)
     void notifyWaitlistPatients(appt.doctorId, appt.startsAt);
+
+    // In-app notification to the patient (separate from the SMS/email below).
+    void notifyPatientAppointmentChange(id, "cancelled", { reason: reason || null });
 
     // Fetch patient and doctor info for notifications
     const [patient] = await db

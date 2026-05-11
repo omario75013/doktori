@@ -346,6 +346,23 @@ function PatientDetail({ listPath }: { listPath: string }) {
   const [viewerPerms, setViewerPerms] = useState<Record<string, boolean> | null>(null);
   const [tab, setTab] = useState<"general" | "dossier" | "rdv" | "ordonnances" | "documents" | "timeline">("general");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  // Documents shared via the new patient_documents table (patient uploads
+  // they explicitly shared with this doctor + doctor-created shared docs).
+  const [sharedDocs, setSharedDocs] = useState<
+    Array<{
+      id: string;
+      uploadedBy: "patient" | "doctor";
+      uploadedByDoctorId: string | null;
+      fileUrl: string;
+      fileName: string;
+      mimeType: string | null;
+      sizeBytes: number | null;
+      category: string | null;
+      title: string | null;
+      note: string | null;
+      createdAt: string;
+    }>
+  >([]);
   const [timeline, setTimeline] = useState<TimelineEvent[]>([]);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
@@ -408,6 +425,20 @@ function PatientDetail({ listPath }: { listPath: string }) {
     }
   }, [params.id]);
 
+  const loadSharedDocs = useCallback(async () => {
+    try {
+      const res = await fetch(
+        `/api/doctor/patient-documents?patientId=${params.id}`,
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setSharedDocs(data.items ?? []);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [params.id]);
+
   const loadTimeline = useCallback(async () => {
     try {
       const res = await fetch(`/api/patients/${params.id}/timeline`);
@@ -446,12 +477,13 @@ function PatientDetail({ listPath }: { listPath: string }) {
     }
     if (tab === "documents") {
       void loadAttachments();
+      void loadSharedDocs();
     }
     if (tab === "timeline") {
       void loadTimeline();
       void loadAttachments();
     }
-  }, [tab, params.id, loadAttachments, loadTimeline, loadPrescriptions]);
+  }, [tab, params.id, loadAttachments, loadTimeline, loadPrescriptions, loadSharedDocs]);
 
   const toggleNote = (id: string) => {
     setExpandedNotes((prev) => {
@@ -510,7 +542,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
       </button>
 
       {/* Patient hero card */}
-      <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
+      <div className="ds-card overflow-hidden">
         <div className="p-5 lg:p-6 flex flex-col lg:flex-row lg:items-center gap-5">
           {/* Avatar + identity */}
           <div className="flex items-center gap-4 flex-1 min-w-0">
@@ -675,11 +707,19 @@ function PatientDetail({ listPath }: { listPath: string }) {
           viewerPerms={viewerPerms}
           prescriptions={prescriptions}
           onNewPrescription={() => setPrescModalOpen(true)}
+          onPrescriptionUpdated={(updated) =>
+            setPrescriptions((prev) =>
+              prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)),
+            )
+          }
+          onPrescriptionDeleted={(pid) =>
+            setPrescriptions((prev) => prev.filter((p) => p.id !== pid))
+          }
         />
       )}
 
       {tab === "rdv" && (
-        <div className="rounded-2xl border border-border bg-white shadow-sm">
+        <div className="ds-card">
           <div className="p-4 border-b border-border">
             <h2 className="font-semibold text-foreground">{t("rdvHistoryTitle")}</h2>
             <p className="text-xs text-gray-400 mt-0.5">{t("rdvHistorySubtitle")}</p>
@@ -731,16 +771,33 @@ function PatientDetail({ listPath }: { listPath: string }) {
         <OrdonnancesSection
           prescriptions={prescriptions}
           onNewPrescription={() => setPrescModalOpen(true)}
+          onPrescriptionUpdated={(updated) =>
+            setPrescriptions((prev) =>
+              prev.map((p) => (p.id === updated.id ? { ...p, ...updated } : p)),
+            )
+          }
+          onPrescriptionDeleted={(pid) =>
+            setPrescriptions((prev) => prev.filter((p) => p.id !== pid))
+          }
         />
       )}
       {tab === "ordonnances" && viewerRole !== "doctor" && (
-        <div className="rounded-2xl border border-border bg-white shadow-sm p-10 text-center text-sm text-gray-400">
+        <div className="ds-card p-10 text-center text-sm text-gray-400">
           Accès aux ordonnances réservé au médecin.
         </div>
       )}
 
       {tab === "documents" && (
-        <div className="rounded-2xl border border-border bg-white shadow-sm">
+        <>
+          {/* Shared documents (patient uploads + doctor-created shared) */}
+          <SharedDocsSection
+            patientId={params.id}
+            items={sharedDocs}
+            onUploaded={(row) => setSharedDocs((prev) => [row, ...prev])}
+            onDeleted={(id) => setSharedDocs((prev) => prev.filter((d) => d.id !== id))}
+          />
+
+        <div className="ds-card">
           <div className="p-4 border-b border-border flex items-center justify-between">
             <div>
               <h2 className="font-semibold text-foreground">{t("docsTitle")}</h2>
@@ -814,6 +871,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
             </ul>
           )}
         </div>
+        </>
       )}
 
       {tab === "timeline" && (
@@ -1631,7 +1689,7 @@ function GeneralTab({
 
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+    <div className="ds-card p-4 shadow-sm">
       <div className="text-[11px] text-gray-500 uppercase tracking-wide">{label}</div>
       <div className="text-lg font-semibold mt-0.5 text-foreground">{value}</div>
     </div>
@@ -1640,7 +1698,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
 
 function Card({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="rounded-2xl border border-border bg-white shadow-sm">
+    <div className="ds-card">
       <div className="p-4 border-b border-border">
         <h2 className="font-semibold text-foreground">{title}</h2>
       </div>
@@ -1689,6 +1747,8 @@ function DossierTab({
   viewerPerms,
   prescriptions,
   onNewPrescription,
+  onPrescriptionUpdated,
+  onPrescriptionDeleted,
 }: {
   patient: Patient;
   medical: MedicalProfile;
@@ -1703,6 +1763,8 @@ function DossierTab({
   viewerPerms: Record<string, boolean> | null;
   prescriptions: Prescription[];
   onNewPrescription: () => void;
+  onPrescriptionUpdated: (updated: Prescription) => void;
+  onPrescriptionDeleted: (id: string) => void;
 }) {
   const t = useTranslations("medecin.patientDetail");
   const tCommon = useTranslations("medecin.common");
@@ -1937,7 +1999,7 @@ function DossierTab({
       )}
 
       {/* Attachments */}
-      <div className="rounded-2xl border border-border bg-white shadow-sm">
+      <div className="ds-card">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <div>
             <h2 className="font-semibold text-foreground">{t("cardDocuments")}</h2>
@@ -2008,7 +2070,7 @@ function DossierTab({
 
       {/* SOAP consultations */}
       {consultNotes.length > 0 && (
-        <div className="rounded-2xl border border-border bg-white shadow-sm">
+        <div className="ds-card">
           <div className="p-4 border-b border-border">
             <h2 className="font-semibold text-foreground">{t("cardSOAP")}</h2>
             <p className="text-xs text-gray-400 mt-0.5">
@@ -2105,11 +2167,13 @@ function DossierTab({
         <OrdonnancesSection
           prescriptions={prescriptions}
           onNewPrescription={onNewPrescription}
+          onPrescriptionUpdated={onPrescriptionUpdated}
+          onPrescriptionDeleted={onPrescriptionDeleted}
         />
       )}
 
       {/* Appointments table */}
-      <div className="rounded-2xl border border-border bg-white shadow-sm">
+      <div className="ds-card">
         <div className="p-4 border-b border-border">
           <h2 className="font-semibold text-foreground">{t("cardApptHistory")}</h2>
           <p className="text-xs text-gray-400 mt-0.5">
@@ -2192,15 +2256,38 @@ function EmptyInline() {
 function OrdonnancesSection({
   prescriptions,
   onNewPrescription,
+  onPrescriptionUpdated,
+  onPrescriptionDeleted,
 }: {
   prescriptions: Prescription[];
   onNewPrescription: () => void;
+  onPrescriptionUpdated: (updated: Prescription) => void;
+  onPrescriptionDeleted: (id: string) => void;
 }) {
   const t = useTranslations("medecin.patientDetail");
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
+  const [savingEdit, setSavingEdit] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  // Strip HTML tags + decode &nbsp;/&#39; etc for the collapsed-card excerpt
+  // so doctors don't see "<p><strong>Dr." in the list view.
+  function plainExcerpt(html: string, max = 120): string {
+    const text = html
+      .replace(/<\/?[^>]+>/g, " ")
+      .replace(/&nbsp;/g, " ")
+      .replace(/&amp;/g, "&")
+      .replace(/&lt;/g, "<")
+      .replace(/&gt;/g, ">")
+      .replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'")
+      .replace(/\s+/g, " ")
+      .trim();
+    return text.length > max ? text.slice(0, max) + "…" : text;
+  }
 
   return (
-    <div className="rounded-2xl border border-border bg-white shadow-sm">
+    <div className="ds-card">
       <div className="p-4 border-b border-border flex items-center justify-between">
         <div>
           <h2 className="font-semibold text-foreground flex items-center gap-2">
@@ -2228,7 +2315,8 @@ function OrdonnancesSection({
         <ul className="divide-y divide-border">
           {prescriptions.map((p) => {
             const isExpanded = expandedId === p.id;
-            const excerpt = p.content.length > 120 ? p.content.slice(0, 120) + "…" : p.content;
+            const isHtml = /^\s*<\w+/.test(p.content);
+            const isEditing = editingId === p.id;
             return (
               <li key={p.id} className="p-4">
                 <button
@@ -2244,8 +2332,8 @@ function OrdonnancesSection({
                         {format(new Date(p.createdAt), "d MMM yyyy", { locale: fr })}
                       </div>
                       {!isExpanded && (
-                        <div className="text-xs text-gray-500 mt-0.5 line-clamp-2 whitespace-pre-wrap">
-                          {excerpt}
+                        <div className="text-xs text-gray-500 mt-0.5 line-clamp-2">
+                          {plainExcerpt(p.content)}
                         </div>
                       )}
                     </div>
@@ -2258,19 +2346,127 @@ function OrdonnancesSection({
                 </button>
                 {isExpanded && (
                   <>
-                    <div className="mt-3 ml-11 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap">
-                      {p.content}
-                    </div>
-                    <div className="mt-2 ml-11 flex items-center gap-2">
-                      <a
-                        href={`/ordonnance/${p.id}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium transition-colors"
-                      >
-                        <Printer className="h-3.5 w-3.5" />
-                        Imprimer
-                      </a>
+                    {isEditing ? (
+                      <div className="mt-3 ml-11">
+                        <textarea
+                          value={editDraft}
+                          onChange={(e) => setEditDraft(e.target.value)}
+                          rows={8}
+                          className="w-full rounded-xl border border-border bg-white px-3 py-2 text-sm font-mono text-gray-800 focus:outline-none focus:ring-2 focus:ring-primary"
+                        />
+                        <p className="text-[11px] text-gray-400 mt-1">
+                          Le contenu accepte du HTML. Les variables{" "}
+                          <code>{"{{patient_first_name}}"}</code> seront résolues
+                          automatiquement à l&apos;enregistrement.
+                        </p>
+                      </div>
+                    ) : isHtml ? (
+                      <div
+                        className="mt-3 ml-11 rounded-xl border border-border bg-secondary/40 px-4 py-3 prose prose-sm max-w-none text-gray-700"
+                        dangerouslySetInnerHTML={{ __html: p.content }}
+                      />
+                    ) : (
+                      <div className="mt-3 ml-11 rounded-xl border border-border bg-secondary/40 px-4 py-3 text-sm text-gray-700 whitespace-pre-wrap">
+                        {p.content}
+                      </div>
+                    )}
+                    <div className="mt-2 ml-11 flex items-center gap-2 flex-wrap">
+                      {isEditing ? (
+                        <>
+                          <button
+                            type="button"
+                            disabled={savingEdit}
+                            onClick={async () => {
+                              setSavingEdit(true);
+                              try {
+                                const res = await fetch(`/api/prescriptions/${p.id}`, {
+                                  method: "PATCH",
+                                  headers: { "Content-Type": "application/json" },
+                                  body: JSON.stringify({ content: editDraft }),
+                                });
+                                if (res.ok) {
+                                  const data = await res.json();
+                                  onPrescriptionUpdated(data);
+                                  setEditingId(null);
+                                  toast.success("Ordonnance mise à jour");
+                                } else {
+                                  const data = await res.json().catch(() => ({}));
+                                  toast.error(data.error || "Échec de la mise à jour");
+                                }
+                              } finally {
+                                setSavingEdit(false);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-primary text-white px-3 py-1.5 text-xs font-medium hover:opacity-90 disabled:opacity-50"
+                          >
+                            {savingEdit ? "…" : "Enregistrer"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingId(null)}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white text-gray-600 hover:bg-secondary px-3 py-1.5 text-xs font-medium"
+                          >
+                            Annuler
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <a
+                            href={`/ordonnance/${p.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium transition-colors"
+                          >
+                            <FileText className="h-3.5 w-3.5" />
+                            Aperçu
+                          </a>
+                          <a
+                            href={`/api/prescriptions/${p.id}/pdf`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-primary/30 bg-primary/5 hover:bg-primary/10 text-primary px-3 py-1.5 text-xs font-medium transition-colors"
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                            PDF
+                          </a>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setEditingId(p.id);
+                              setEditDraft(p.content);
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white hover:bg-secondary text-gray-700 px-3 py-1.5 text-xs font-medium"
+                          >
+                            <Pencil className="h-3.5 w-3.5" />
+                            Modifier
+                          </button>
+                          <button
+                            type="button"
+                            disabled={deletingId === p.id}
+                            onClick={async () => {
+                              if (!confirm("Supprimer cette ordonnance ?")) return;
+                              setDeletingId(p.id);
+                              try {
+                                const res = await fetch(`/api/prescriptions/${p.id}`, {
+                                  method: "DELETE",
+                                });
+                                if (res.ok) {
+                                  onPrescriptionDeleted(p.id);
+                                  toast.success("Ordonnance supprimée");
+                                } else {
+                                  toast.error("Échec de la suppression");
+                                }
+                              } finally {
+                                setDeletingId(null);
+                              }
+                            }}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-red-200 bg-white hover:bg-red-50 text-red-600 px-3 py-1.5 text-xs font-medium disabled:opacity-50"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                            Supprimer
+                          </button>
+                        </>
+                      )}
                     </div>
                   </>
                 )}
@@ -2555,7 +2751,7 @@ function TimelineTab({
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl border border-border bg-white shadow-sm">
+      <div className="ds-card">
         <div className="p-4 border-b border-border flex items-center justify-between">
           <div>
             <h2 className="font-semibold text-foreground">{t("cardTimeline")}</h2>
@@ -2810,6 +3006,170 @@ function UploadDialog({
           </button>
         </div>
       </div>
+    </div>
+  );
+}
+
+// ── Shared documents (patient_documents table) ─────────────────────────────
+// Renders both patient uploads shared with this doctor and doctor-created
+// docs visible to the patient. Doctor can upload new shared docs here; the
+// patient sees them read-only in /mes-documents with a "Créé par Dr X" badge.
+type SharedDoc = {
+  id: string;
+  uploadedBy: "patient" | "doctor";
+  uploadedByDoctorId: string | null;
+  fileUrl: string;
+  fileName: string;
+  mimeType: string | null;
+  sizeBytes: number | null;
+  category: string | null;
+  title: string | null;
+  note: string | null;
+  createdAt: string;
+};
+
+function SharedDocsSection({
+  patientId,
+  items,
+  onUploaded,
+  onDeleted,
+}: {
+  patientId: string;
+  items: SharedDoc[];
+  onUploaded: (row: SharedDoc) => void;
+  onDeleted: (id: string) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setUploading(true);
+    try {
+      const fd = new FormData();
+      fd.append("patientId", patientId);
+      fd.append("file", file);
+      fd.append("title", file.name.replace(/\.[^.]+$/, ""));
+      const res = await fetch("/api/doctor/patient-documents", { method: "POST", body: fd });
+      const data = await res.json();
+      if (res.ok && data.item) {
+        onUploaded(data.item);
+        toast.success("Document partagé avec le patient");
+      } else {
+        toast.error(data.error || "Échec de l'envoi");
+      }
+    } catch {
+      toast.error("Échec de l'envoi");
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="ds-card mb-4">
+      <div className="p-4 border-b border-border flex items-center justify-between">
+        <div>
+          <h2 className="font-semibold text-foreground">Documents partagés</h2>
+          <p className="text-xs text-gray-400 mt-0.5">
+            Fichiers partagés par le patient et documents que vous créez ici (visibles au patient en lecture seule).
+          </p>
+        </div>
+        <div>
+          <input
+            type="file"
+            ref={fileRef}
+            onChange={handleFile}
+            accept="application/pdf,image/*"
+            className="hidden"
+          />
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
+          >
+            <Upload className="h-4 w-4" />
+            {uploading ? "Envoi…" : "Créer un document"}
+          </button>
+        </div>
+      </div>
+      {items.length === 0 ? (
+        <div className="p-8 text-center text-sm text-gray-400">
+          Aucun document partagé pour l&apos;instant.
+        </div>
+      ) : (
+        <ul className="divide-y divide-border">
+          {items.map((d) => {
+            const byPatient = d.uploadedBy === "patient";
+            return (
+              <li key={d.id} className="p-4 flex items-center gap-3">
+                <div className="h-10 w-10 rounded-xl bg-secondary flex items-center justify-center text-primary shrink-0">
+                  <FileText className="h-5 w-5" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="font-medium text-foreground truncate">
+                      {d.title || d.fileName}
+                    </span>
+                    <span
+                      className={`text-[11px] rounded-full px-2 py-0.5 font-semibold ${
+                        byPatient
+                          ? "bg-blue-50 text-blue-700"
+                          : "bg-emerald-50 text-emerald-700"
+                      }`}
+                    >
+                      {byPatient ? "Partagé par le patient" : "Créé par vous"}
+                    </span>
+                    {d.category && (
+                      <span className="text-xs rounded-full bg-border px-2 py-0.5 text-gray-600">
+                        {d.category}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-gray-500 truncate">
+                    {d.fileName}
+                    {d.sizeBytes ? ` · ${(d.sizeBytes / 1024).toFixed(0)} Ko` : ""} ·{" "}
+                    {format(new Date(d.createdAt), "d MMM yyyy HH:mm", { locale: fr })}
+                  </div>
+                  {d.note && (
+                    <div className="text-xs text-gray-500 mt-0.5 line-clamp-2">{d.note}</div>
+                  )}
+                </div>
+                <a
+                  href={d.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="h-9 w-9 rounded-xl border border-border hover:bg-secondary flex items-center justify-center text-gray-500 hover:text-primary transition-colors"
+                  title="Ouvrir"
+                >
+                  <Download className="h-4 w-4" />
+                </a>
+                {!byPatient && (
+                  <button
+                    onClick={async () => {
+                      if (!confirm("Supprimer ce document ?")) return;
+                      const res = await fetch(`/api/doctor/patient-documents/${d.id}`, {
+                        method: "DELETE",
+                      });
+                      if (res.ok) {
+                        onDeleted(d.id);
+                        toast.success("Document supprimé");
+                      } else {
+                        toast.error("Suppression échouée");
+                      }
+                    }}
+                    className="h-9 w-9 rounded-xl border border-red-200 hover:bg-red-50 flex items-center justify-center text-red-500 transition-colors"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
     </div>
   );
 }

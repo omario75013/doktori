@@ -24,6 +24,8 @@ const createSchema = z.object({
   startedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   endedAt: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   notes: z.string().trim().max(2000).optional().nullable(),
+  reminderEnabled: z.boolean().optional(),
+  reminderTimes: z.array(z.string().regex(/^\d{2}:\d{2}$/)).max(8).optional(),
 }).strict();
 
 export async function POST(req: NextRequest) {
@@ -49,6 +51,8 @@ export async function POST(req: NextRequest) {
       startedAt: parsed.data.startedAt ?? null,
       endedAt: parsed.data.endedAt ?? null,
       notes: parsed.data.notes ?? null,
+      reminderEnabled: parsed.data.reminderEnabled ?? false,
+      reminderTimes: parsed.data.reminderTimes ?? [],
     })
     .returning();
 

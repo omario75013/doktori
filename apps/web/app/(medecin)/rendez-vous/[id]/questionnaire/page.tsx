@@ -84,7 +84,7 @@ export default function AppointmentQuestionnairePage({
       )}
 
       {!loading && !error && answers.length === 0 && (
-        <div className="rounded-2xl border border-border bg-white shadow-sm p-8 text-center">
+        <div className="ds-card p-8 text-center">
           <p className="text-sm text-foreground/50">
             {t("noResponses")}
           </p>
@@ -96,7 +96,7 @@ export default function AppointmentQuestionnairePage({
           {answers.map((answer) => (
             <div
               key={answer.id}
-              className="rounded-2xl border border-border bg-white shadow-sm p-4"
+              className="ds-card p-4"
             >
               <div className="text-xs font-semibold uppercase tracking-wide text-primary/70 mb-1">
                 {answer.label}

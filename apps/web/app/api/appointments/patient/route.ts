@@ -22,6 +22,7 @@ export async function GET(req: NextRequest) {
       doctorSpecialty: doctors.specialty,
       doctorAddress: doctors.address,
       doctorSlug: doctors.slug,
+      doctorPhotoUrl: doctors.photoUrl,
       beneficiaryName: patientDependents.name,
       beneficiaryRelation: patientDependents.relation,
       reviewId: reviews.id,

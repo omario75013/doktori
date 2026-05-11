@@ -33,49 +33,112 @@ type Me = { id: string; name?: string; phone?: string; photoUrl?: string | null 
 interface PatientNavMenuProps {
   /** Translated label for the unauthenticated case. Pass from the server. */
   myAccountLabel: string;
+  /** Server-side cookie check — used to render the initial markup without
+   * flashing the unauthenticated link on every page load. */
+  initialAuthed?: boolean;
 }
 
-export function PatientNavMenu({ myAccountLabel }: PatientNavMenuProps) {
+export function PatientNavMenu({ myAccountLabel, initialAuthed = false }: PatientNavMenuProps) {
   const router = useRouter();
   const pathname = usePathname();
-  const [me, setMe] = useState<Me>(null);
+  // When the server already saw a valid patient cookie, prime `me` with a
+  // placeholder so the avatar markup renders on the first paint. The /api
+  // call below replaces it with the real profile.
+  const [me, setMe] = useState<Me>(initialAuthed ? { id: "ssr", name: undefined, phone: undefined, photoUrl: null } : null);
   const [open, setOpen] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
 
   useEffect(() => {
-    setHydrated(true);
+    // One-time migration: a previous build wrote the patient JWT into
+    // localStorage under "doktori_patient_token". Move it to the cookie via
+    // /api/patients/me, then strip it from localStorage so the JWT never
+    // sits in XSS-readable storage again.
+    let legacyJwt: string | null = null;
     try {
-      const token = localStorage.getItem("doktori_patient_token");
-      if (!token) {
-        setMe(null);
-        return;
-      }
-      fetch("/api/patients/me", { headers: { Authorization: `Bearer ${token}` } })
-        .then((r) => (r.ok ? r.json() : null))
-        .then((data) => {
-          if (data) setMe({ id: data.id, name: data.name, phone: data.phone, photoUrl: data.photoUrl });
-          else setMe(null);
-        })
-        .catch(() => setMe(null));
+      legacyJwt = localStorage.getItem("doktori_patient_token");
     } catch {
       // localStorage unavailable
     }
+    let bearerToken: string | null = null;
+    try {
+      bearerToken = sessionStorage.getItem("doktori_patient_session");
+    } catch {
+      /* ignore */
+    }
+    // Try the cookie first (no Authorization header). If that fails and we
+    // still have a legacy JWT in localStorage, retry with Bearer so the API
+    // can promote it into a cookie (auto-migration in /api/patients/me).
+    fetch("/api/patients/me", { credentials: "include" })
+      .then(async (r) => {
+        if (r.ok) return r.json();
+        const fallback = legacyJwt ?? bearerToken;
+        if (!fallback) return null;
+        const r2 = await fetch("/api/patients/me", {
+          credentials: "include",
+          headers: { Authorization: `Bearer ${fallback}` },
+        });
+        return r2.ok ? r2.json() : null;
+      })
+      .then((data) => {
+        if (data) {
+          setMe({ id: data.id, name: data.name, phone: data.phone, photoUrl: data.photoUrl });
+          // Cookie auth confirmed — wipe any legacy JWT from localStorage
+          // and keep a non-secret presence marker in sessionStorage so other
+          // patient pages can synchronously detect the logged-in state.
+          try {
+            localStorage.removeItem("doktori_patient_token");
+          } catch {
+            /* ignore */
+          }
+          try {
+            sessionStorage.setItem("doktori_patient_session", "1");
+          } catch {
+            /* ignore */
+          }
+        } else {
+          setMe(null);
+          try {
+            localStorage.removeItem("doktori_patient_token");
+          } catch {
+            /* ignore */
+          }
+          try {
+            sessionStorage.removeItem("doktori_patient_session");
+          } catch {
+            /* ignore */
+          }
+        }
+      })
+      .catch(() => setMe(null));
   }, [pathname]);
 
   function logout() {
     try {
-      localStorage.removeItem("doktori_patient_token");
+      sessionStorage.removeItem("doktori_patient_session");
     } catch {
       /* ignore */
     }
-    setMe(null);
-    setOpen(false);
-    router.push("/connexion-patient");
+    fetch("/api/auth/patient-logout", { method: "POST" })
+      .catch(() => {})
+      .finally(() => {
+        setMe(null);
+        setOpen(false);
+        router.push("/connexion-patient");
+        router.refresh();
+      });
   }
 
-  // Before hydration, render the unauthenticated link to keep SSR/CSR markup
-  // consistent (avoids a hydration mismatch flash).
-  if (!hydrated || !me) {
+  // Server-side cookie check primes `me` with `{id: "ssr"}` when the
+  // patient is authed; render an avatar skeleton during that window so the
+  // "Mon compte" link never flashes before the real profile arrives.
+  if (me?.id === "ssr") {
+    return (
+      <span aria-hidden className="inline-flex items-center gap-1 p-1">
+        <span className="h-8 w-8 rounded-full bg-gray-200 animate-pulse dark:bg-gray-700" />
+      </span>
+    );
+  }
+
+  if (!me) {
     return (
       <Link
         href="/connexion-patient"
@@ -157,8 +220,8 @@ export function PatientNavMenu({ myAccountLabel }: PatientNavMenuProps) {
               <MenuLink href="/dossier-medical" icon={FileText} onClick={() => setOpen(false)}>
                 Mon dossier médical
               </MenuLink>
-              <MenuLink href="/mes-messages" icon={MessageCircle} onClick={() => setOpen(false)}>
-                Mes messages
+              <MenuLink href="/mes-documents" icon={MessageCircle} onClick={() => setOpen(false)}>
+                Mes documents
               </MenuLink>
               <MenuLink href="/coach-ia" icon={Sparkles} onClick={() => setOpen(false)}>
                 Coach IA

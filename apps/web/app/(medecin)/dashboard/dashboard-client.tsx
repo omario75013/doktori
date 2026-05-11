@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
@@ -23,9 +24,11 @@ import {
   BarChart2,
   UserCheck,
   MessageSquare,
+  MessageCircle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
+import { DashboardCharts } from "./dashboard-charts";
 import { DoctorOnboarding } from "@/components/doctor-onboarding";
 import { GuidedTour } from "@/components/guided-tour";
 
@@ -61,6 +64,7 @@ type ActivityItem = {
 
 type DashboardClientProps = {
   doctorName: string;
+  rangeDays?: number;
   todayCount: number;
   toConfirm: number;
   noShowCount: number;
@@ -116,6 +120,227 @@ const STATUS_BADGE_BORDER: Record<string, { badge: string; border: string }> = {
 
 // ─── SMS Counter Card ─────────────────────────────────────────────────────────
 
+/* ─── KpiPanel — groups the small KPIs into a single horizontal card ── */
+function KpiPanel({
+  kpis,
+}: {
+  kpis: Array<{
+    label: string;
+    value: string | number;
+    sublabel?: string;
+    icon: React.ElementType;
+    iconBg: string;
+    accentColor: string;
+  }>;
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="ds-card overflow-hidden p-0"
+    >
+      <div
+        className="grid grid-cols-2 md:grid-cols-4"
+        style={{ gap: 1, background: "var(--line-cool)" }}
+      >
+        {kpis.map((k) => {
+          const Icon = k.icon;
+          return (
+            <div
+              key={k.label}
+              className="p-4"
+              style={{ background: "#FFFFFF" }}
+            >
+              <div className="flex items-center justify-between gap-2 mb-2.5">
+                <span
+                  className="text-[12px] font-bold uppercase tracking-wider truncate"
+                  style={{ color: "var(--ink-500)" }}
+                >
+                  {k.label}
+                </span>
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-xl shrink-0 ${k.iconBg}`}
+                >
+                  <Icon className="h-4 w-4" strokeWidth={2.5} />
+                </div>
+              </div>
+              <div
+                className="text-[26px] font-extrabold leading-none tabular-nums"
+                style={{ color: "var(--ink-900)", fontFamily: "Manrope, sans-serif" }}
+              >
+                {k.value}
+              </div>
+              {k.sublabel && (
+                <div
+                  className="text-[11.5px] mt-1"
+                  style={{ color: "var(--ink-500)" }}
+                >
+                  {k.sublabel}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </motion.div>
+  );
+}
+
+/* ─── DayOverviewCard — at-a-glance summary of TODAY's work ────────────── */
+function DayOverviewCard({
+  todayAppts,
+  waitingCount,
+  completionRate,
+}: {
+  todayAppts: TodayAppt[];
+  waitingCount: number;
+  completionRate: number | null;
+}) {
+  const t = useTranslations("medecin.dashboard");
+  // Live polling: re-fetch the waiting-room count + today's appointments every
+  // 15s so the doctor sees check-ins from the secretary in near real-time.
+  const [liveWaiting, setLiveWaiting] = useState(waitingCount);
+  const [liveAppts, setLiveAppts] = useState(todayAppts);
+  useEffect(() => {
+    let cancelled = false;
+    async function refresh() {
+      try {
+        const res = await fetch("/api/doctor/today-summary", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (!res.ok || cancelled) return;
+        const data = await res.json();
+        if (typeof data.waitingCount === "number") setLiveWaiting(data.waitingCount);
+        if (Array.isArray(data.todayAppts)) {
+          setLiveAppts(
+            data.todayAppts.map((a: { id: string; startsAt: string; patientName: string }) => ({
+              ...a,
+              startsAt: new Date(a.startsAt),
+            })) as TodayAppt[],
+          );
+        }
+      } catch {
+        /* network blip — keep current values */
+      }
+    }
+    const id = setInterval(refresh, 15_000);
+    // Also refresh when the tab regains focus so the doctor doesn't see stale
+    // data after switching apps.
+    const onFocus = () => void refresh();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
+
+  const effectiveAppts = liveAppts.length > 0 ? liveAppts : todayAppts;
+  const effectiveWaiting = liveWaiting;
+  const now = new Date();
+  // Sort by startsAt to find the next upcoming today (live data)
+  const sorted = [...effectiveAppts].sort(
+    (a, b) => new Date(a.startsAt).getTime() - new Date(b.startsAt).getTime(),
+  );
+  const next = sorted.find((a) => new Date(a.startsAt).getTime() >= now.getTime()) ?? null;
+  const remaining = sorted.filter((a) => new Date(a.startsAt).getTime() >= now.getTime()).length;
+  const done = effectiveAppts.length - remaining;
+
+  const cells: Array<{
+    label: string;
+    value: string;
+    sub?: string;
+    tone: "primary" | "rose" | "amber" | "mint";
+    href: string;
+  }> = [
+    {
+      label: t("kpiWaitingPatients"),
+      value: String(effectiveWaiting),
+      sub: effectiveWaiting > 0 ? t("kpiWaitingPatientsSub") : t("kpiNoPatients"),
+      tone: effectiveWaiting > 0 ? "rose" : "primary",
+      href: "/agenda",
+    },
+    {
+      label: t("kpiNextAppt"),
+      value: next
+        ? new Date(next.startsAt).toLocaleTimeString("fr-FR", {
+            hour: "2-digit",
+            minute: "2-digit",
+          })
+        : "—",
+      sub: next ? next.patientName : t("kpiNoneUpcoming"),
+      tone: "primary",
+      href: "/calendrier",
+    },
+    {
+      label: t("today"),
+      value: String(effectiveAppts.length),
+      sub: t("kpiDonePending", { done, pending: remaining }),
+      tone: "mint",
+      href: "/calendrier",
+    },
+    {
+      label: t("kpiCompletionRate"),
+      value: completionRate !== null ? `${completionRate}%` : "—",
+      sub: t("kpiLast30Days"),
+      tone: "amber",
+      href: "/stats",
+    },
+  ];
+
+  const toneStyle = (t: typeof cells[number]["tone"]) =>
+    t === "rose"
+      ? { background: "#FEE2E2", color: "#9F1239" }
+      : t === "amber"
+      ? { background: "#FEF3C7", color: "#92400E" }
+      : t === "mint"
+      ? { background: "#D1FAE5", color: "#065F46" }
+      : { background: "var(--primary-50)", color: "var(--primary-700)" };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      className="ds-card overflow-hidden p-0"
+    >
+      <div
+        className="grid grid-cols-2 md:grid-cols-4"
+        style={{ gap: 1, background: "var(--line-cool)" }}
+      >
+        {cells.map((c) => (
+          <Link
+            key={c.label}
+            href={c.href}
+            className="block p-4 hover:bg-[color:var(--surface-2)] transition-colors"
+            style={{ background: "#FFFFFF" }}
+          >
+            <div
+              className="inline-flex items-center px-2 py-0.5 rounded-full text-[10.5px] font-bold uppercase tracking-wider mb-2"
+              style={toneStyle(c.tone)}
+            >
+              {c.label}
+            </div>
+            <div
+              className="text-[26px] font-extrabold leading-none"
+              style={{ color: "var(--ink-900)", fontFamily: "Manrope, sans-serif" }}
+            >
+              {c.value}
+            </div>
+            {c.sub && (
+              <div className="text-[12.5px] mt-1" style={{ color: "var(--ink-500)" }}>
+                {c.sub}
+              </div>
+            )}
+          </Link>
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
 function SMSCounterCard({
   used,
   limit,
@@ -138,7 +363,7 @@ function SMSCounterCard({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.08, ease: "easeOut" }}
-      className="relative bg-white dark:bg-gray-900 rounded-2xl p-5 border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden"
+      className="relative ds-card p-5 overflow-hidden"
     >
       <div
         className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${
@@ -147,10 +372,10 @@ function SMSCounterCard({
       />
       <div className="flex items-start justify-between gap-3 pl-3">
         <div className="min-w-0 flex-1">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">
+          <div className="text-xs font-bold uppercase tracking-wider text-[color:var(--ink-500)]">
             {tDash("smsThisMonth")}
           </div>
-          <div className="text-xl font-black mt-1 text-slate-900 dark:text-white tabular-nums">
+          <div className="text-xl font-black mt-1 text-[color:var(--ink-900)] tabular-nums">
             {isUnlimited ? tDash("unlimited") : `${used} / ${limit}`}
           </div>
           {!isUnlimited && (
@@ -174,7 +399,7 @@ function SMSCounterCard({
             </div>
           )}
           {!isExhausted && !isUnlimited && (
-            <div className="text-xs text-slate-400 mt-1">
+            <div className="text-xs text-[color:var(--ink-400)] mt-1">
               {isNearLimit
                 ? tDash("smsNearLimit", { remaining: limit - used })
                 : tDash("smsRemaining", { remaining: limit - used })}
@@ -221,26 +446,62 @@ function KpiCard({
   href?: string;
   index?: number;
 }) {
+  // Try to extract a +18% / +12% trend hint from the sublabel so it can render
+  // as a green pill in the top-right corner — matches the "Statistiques"
+  // dashboard reference design.
+  const trendMatch =
+    typeof sublabel === "string" ? sublabel.match(/^([+-]\d+(?:\.\d+)?%?)/) : null;
+  const trend = trendMatch?.[1];
+  const trendIsUp = !!trend && trend.startsWith("+");
+
   const inner = (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, delay: index * 0.08, ease: "easeOut" }}
       whileHover={{ y: -2, boxShadow: "0 8px 25px -5px rgba(0,0,0,0.08)" }}
-      className="relative bg-white dark:bg-gray-900 rounded-2xl p-5 border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden cursor-pointer"
+      className="ds-card p-5 overflow-hidden cursor-pointer"
     >
-      {/* Left accent bar */}
-      <div className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl ${accentColor}`} />
-      <div className="flex items-start justify-between gap-3 pl-3">
-        <div className="min-w-0">
-          <div className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-gray-400">{label}</div>
-          <div className="text-3xl font-black mt-1.5 text-slate-900 dark:text-white tabular-nums">{value}</div>
-          <div className="text-xs text-slate-400 mt-1">{sublabel}</div>
-        </div>
-        <div className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
+      <div className="flex items-start justify-between gap-3 mb-3.5">
+        <div
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg}`}
+        >
           <Icon className="h-5 w-5" strokeWidth={2.5} />
         </div>
+        {trend ? (
+          <span
+            className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold"
+            style={{
+              background: trendIsUp ? "#D1FAE5" : "#FEE2E2",
+              color: trendIsUp ? "#065F46" : "#991B1B",
+            }}
+          >
+            {trend}
+          </span>
+        ) : (
+          <span
+            className={`block h-2 w-2 rounded-full ${accentColor}`}
+            aria-hidden
+          />
+        )}
       </div>
+      <div
+        className="text-[28px] font-extrabold leading-none tabular-nums"
+        style={{ color: "var(--ink-900)", fontFamily: "Manrope, sans-serif" }}
+      >
+        {value}
+      </div>
+      <div
+        className="text-[13px] font-semibold mt-1.5"
+        style={{ color: "var(--ink-700)" }}
+      >
+        {label}
+      </div>
+      {trend && (
+        <div className="text-[11.5px] mt-0.5" style={{ color: "var(--ink-400)" }}>
+          {sublabel?.replace(/^[+-]\d+(?:\.\d+)?%?\s*/, "")}
+        </div>
+      )}
     </motion.div>
   );
 
@@ -272,14 +533,14 @@ function MiniStatCard({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.35, delay: 0.5 + index * 0.07, ease: "easeOut" }}
-      className="bg-white dark:bg-gray-900 rounded-xl p-4 border border-slate-100 dark:border-gray-700 shadow-sm flex items-center gap-3"
+      className="ds-card p-4 flex items-center gap-3"
     >
       <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
         <Icon className="h-4 w-4" style={{ color: iconColor }} strokeWidth={2.5} />
       </div>
       <div className="min-w-0">
-        <div className="text-xl font-black text-slate-900 dark:text-white tabular-nums leading-tight">{value}</div>
-        <div className="text-xs text-slate-500 dark:text-gray-400 truncate">{label}</div>
+        <div className="text-xl font-black text-[color:var(--ink-900)] tabular-nums leading-tight">{value}</div>
+        <div className="text-xs text-[color:var(--ink-500)] truncate">{label}</div>
       </div>
     </motion.div>
   );
@@ -327,7 +588,7 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex items-center gap-2.5">
       <span className="h-5 w-1 rounded-full bg-primary" />
-      <h2 className="font-bold text-slate-800 dark:text-white text-base">{children}</h2>
+      <h2 className="font-extrabold text-base">{children}</h2>
     </div>
   );
 }
@@ -360,6 +621,7 @@ function activityLabel(
 
 export function DashboardClient({
   doctorName,
+  rangeDays = 30,
   todayCount,
   toConfirm,
   noShowCount,
@@ -411,6 +673,19 @@ export function DashboardClient({
       iconBg: "bg-red-50 text-red-500",
     },
   ];
+
+  // SMS quota replaces the Téléconsultations card in the KPI grid.
+  const smsKpi = {
+    label: t("smsThisMonth"),
+    value: `${smsUsed} / ${smsLimit}`,
+    sublabel: smsLimit > 0
+      ? t("smsRemaining", { percent: Math.max(0, Math.round(((smsLimit - smsUsed) / smsLimit) * 100)) })
+      : "—",
+    accentColor: "bg-violet-500",
+    icon: MessageCircle,
+    iconBg: "bg-violet-50 text-violet-600",
+    href: "/abonnement",
+  };
 
   const teleconsultKpi = hasTeleconsult
     ? {
@@ -535,108 +810,91 @@ export function DashboardClient({
         className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
       >
         <div>
-          <h1 className="text-2xl font-black text-slate-900 dark:text-white">
+          <div className="ds-eyebrow">
+            {rangeDays === 365
+              ? t("rangeEyebrow12M")
+              : rangeDays === 90
+              ? t("rangeEyebrow3M")
+              : t("rangeEyebrow30")}
+          </div>
+          <h1 className="ds-page-title">
             {t("greeting")}, Dr.{" "}
-            <span className="text-primary">{doctorName}</span>
+            <span style={{ color: "var(--primary-600)" }}>{doctorName}</span>
           </h1>
-          <p className="text-slate-500 dark:text-gray-400 text-sm mt-1">
-            {t("greetingSubtitle")}
-          </p>
+          <p className="ds-page-sub">{t("greetingSubtitle")}</p>
         </div>
-        <div className="flex items-center gap-2">
-          <Link
-            href="/calendrier"
-            className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-doktori-teal-dark transition-colors"
-          >
+        <div className="flex items-center gap-2 flex-wrap">
+          {/* Time-range pills — change `rangeDays` server-side via ?range */}
+          <div className="ds-tabs">
+            <Link
+              href="/dashboard?range=30"
+              scroll={false}
+              className={`ds-tab ${rangeDays === 30 ? "on" : ""}`}
+            >
+              {t("range30Days")}
+            </Link>
+            <Link
+              href="/dashboard?range=90"
+              scroll={false}
+              className={`ds-tab ${rangeDays === 90 ? "on" : ""}`}
+            >
+              {t("range3Months")}
+            </Link>
+            <Link
+              href="/dashboard?range=365"
+              scroll={false}
+              className={`ds-tab ${rangeDays === 365 ? "on" : ""}`}
+            >
+              {t("range12Months")}
+            </Link>
+          </div>
+          <Link href="/stats" className="ds-btn ds-btn-ghost">
+            <TrendingUp className="h-4 w-4" />
+            {t("export")}
+          </Link>
+          <Link href="/calendrier" className="ds-btn ds-btn-primary">
             <CalendarDays className="h-4 w-4" />
             {t("quickActionMyCalendar")}
           </Link>
-          <Link
-            href="/rendez-vous"
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 dark:border-gray-700 bg-white dark:bg-gray-900 px-4 py-2.5 text-sm font-semibold text-slate-700 dark:text-gray-300 shadow-sm hover:bg-slate-50 dark:hover:bg-gray-800 transition-colors"
-          >
+          <Link href="/rendez-vous" className="ds-btn ds-btn-ghost">
             {t("quickActionNewAppt")}
             <ArrowRight className="h-3.5 w-3.5" />
           </Link>
         </div>
       </motion.div>
 
-      {/* KPI grid */}
-      <div data-tour="kpi-grid" className={`grid gap-4 ${hasTeleconsult ? "grid-cols-2 lg:grid-cols-4" : "grid-cols-3"}`}>
-        {kpis.map((kpi, i) => (
-          <KpiCard key={kpi.label} {...kpi} index={i} />
-        ))}
-        {teleconsultKpi && <KpiCard {...teleconsultKpi} index={kpis.length} />}
+      {/* ── Day Overview: focused on TODAY's work, top-of-page priority ── */}
+      <DayOverviewCard
+        todayAppts={todayAppts}
+        waitingCount={waitingRoomCount}
+        completionRate={completionRate}
+      />
+
+      {/* KPI panel — Aujourd'hui / À confirmer / No-shows grouped horizontally
+          (same DayOverviewCard pattern). The SMS quota sits as its own card
+          beside the panel since it has different semantics (a quota, not a count). */}
+      <div data-tour="kpi-grid">
+        <KpiPanel kpis={[...kpis, smsKpi]} />
       </div>
 
       {/* Wallet card */}
-      {hasTeleconsult && (
-        <KpiCard
-          label={t("walletBalance")}
-          value={`${(walletBalance / 1000).toFixed(3)} DT`}
-          sublabel={t("walletSubLabel")}
-          accentColor="bg-green-500"
-          icon={Wallet}
-          iconBg="bg-green-50 text-green-600"
-          href="/wallet"
-          index={kpis.length + 1}
-        />
-      )}
+      {/* Wallet card removed from dashboard — balance still accessible at /wallet */}
 
-      {/* SMS Counter */}
-      <SMSCounterCard
-        used={smsUsed}
-        limit={smsLimit}
-        plan={smsPlan}
-        index={kpis.length + 2}
-      />
+      {/* SMS counter moved into the KPI grid (smsKpi); the duplicate
+          SMSCounterCard panel has been removed. */}
 
-      {/* ── Quick Stats Row ─────────────────────────────────────────────────── */}
-      <div>
-        <div className="flex items-center gap-2 mb-3">
-          <TrendingUp className="h-4 w-4 text-primary" strokeWidth={2.5} />
-          <span className="text-sm font-bold text-slate-700 dark:text-gray-300 uppercase tracking-wide">
-            {t("quickStats")}
-          </span>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-          <MiniStatCard
-            label={t("totalPatients")}
-            value={totalPatients}
-            icon={Users}
-            iconColor="#0891B2"
-            iconBg="bg-cyan-50"
-            index={0}
-          />
-          <MiniStatCard
-            label={t("appointmentsThisMonth")}
-            value={monthTotal}
-            icon={CalendarDays}
-            iconColor="#7C3AED"
-            iconBg="bg-purple-50"
-            index={1}
-          />
-          <MiniStatCard
-            label={t("completionRate")}
-            value={completionRate !== null ? `${completionRate}%` : "—"}
-            icon={Activity}
-            iconColor="#059669"
-            iconBg="bg-emerald-50"
-            index={2}
-          />
-          <MiniStatCard
-            label={t("averageRating")}
-            value={averageRating > 0 ? averageRating.toFixed(1) : "—"}
-            icon={Star}
-            iconColor="#D97706"
-            iconBg="bg-amber-50"
-            index={3}
-          />
-        </div>
-      </div>
+      {/* Quick Stats Row removed — replaced by DashboardCharts and the
+          Today/Upcoming grid below. */}
 
-      {/* ── Quick Actions Bar ───────────────────────────────────────────────── */}
+      {/* Row 1: Rendez-vous chart + Today + Upcoming side-by-side.
+          The Today/Upcoming JSX is rendered just below — we open the grid
+          here and close it after the Upcoming card. */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <DashboardCharts rangeDays={rangeDays} which="appointments" />
+
+      {/* ── Quick Actions Bar removed (replaced by DashboardCharts above) ── */}
       <motion.div
+        style={{ display: "none" }}
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.25 }}
@@ -680,7 +938,7 @@ export function DashboardClient({
               href={href}
               className={`flex flex-col items-center justify-center gap-2 rounded-2xl p-4 text-center text-xs font-semibold transition-all shadow-sm ${hoverClass} ${
                 bordered
-                  ? "bg-white dark:bg-gray-900 border border-slate-200 dark:border-gray-700 text-slate-700 dark:text-gray-300"
+                  ? "bg-white border border-[color:var(--line-cool)] text-[color:var(--ink-700)]"
                   : "text-white"
               }`}
               style={style}
@@ -692,8 +950,9 @@ export function DashboardClient({
         ))}
       </motion.div>
 
-      {/* Waiting room card */}
+      {/* Waiting room card removed — count surfaced in DayOverviewCard. */}
       <motion.div
+        style={{ display: "none" }}
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.28 }}
@@ -774,21 +1033,23 @@ export function DashboardClient({
         </div>
       )}
 
+      {/* Today + Upcoming continue inside the Row-1 grid above */}
+
       {/* Today's appointments */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
         data-tour="today-appts"
-        className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden"
+        className="ds-card overflow-hidden"
       >
         <div className="px-5 py-4 border-b border-slate-100 dark:border-gray-700">
           <SectionHeader>{t("todayAppointments")}</SectionHeader>
         </div>
         <div className="divide-y divide-slate-50 dark:divide-gray-800">
           {todayAppts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-              <CheckCircle className="h-8 w-8 mb-2 text-slate-300" strokeWidth={1.5} />
+            <div className="flex flex-col items-center justify-center py-12 text-[color:var(--ink-400)]">
+              <CheckCircle className="h-8 w-8 mb-2 text-[color:var(--line-strong)]" strokeWidth={1.5} />
               <p className="text-sm">{t("noAppointments")}</p>
             </div>
           ) : (
@@ -800,11 +1061,11 @@ export function DashboardClient({
                   className={`flex items-center justify-between px-5 py-4 border-l-4 ${cfg.border} hover:bg-secondary transition-colors`}
                 >
                   <div className="min-w-0">
-                    <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap text-sm">
+                    <div className="font-semibold text-[color:var(--ink-900)] flex items-center gap-2 flex-wrap text-sm">
                       <span className="text-primary font-bold tabular-nums">
                         {format(a.startsAt, "HH:mm")}
                       </span>
-                      <span className="text-slate-400">—</span>
+                      <span className="text-[color:var(--ink-400)]">—</span>
                       {a.patientName}
                       <TypeBadge
                         type={a.type}
@@ -814,7 +1075,7 @@ export function DashboardClient({
                         cabinetLabel={t("cabinet")}
                       />
                     </div>
-                    <div className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">
+                    <div className="text-xs text-[color:var(--ink-500)] mt-0.5">
                       {a.patientPhone}
                       {a.reason ? ` · ${a.reason}` : ""}
                     </div>
@@ -835,7 +1096,7 @@ export function DashboardClient({
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.4 }}
         data-tour="upcoming-appts"
-        className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden"
+        className="ds-card overflow-hidden"
       >
         <div className="px-5 py-4 border-b border-slate-100 dark:border-gray-700 flex items-center justify-between">
           <SectionHeader>{t("upcoming")}</SectionHeader>
@@ -845,8 +1106,8 @@ export function DashboardClient({
         </div>
         <div className="divide-y divide-slate-50 dark:divide-gray-800">
           {upcomingAppts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-              <Calendar className="h-8 w-8 mb-2 text-slate-300" strokeWidth={1.5} />
+            <div className="flex flex-col items-center justify-center py-12 text-[color:var(--ink-400)]">
+              <Calendar className="h-8 w-8 mb-2 text-[color:var(--line-strong)]" strokeWidth={1.5} />
               <p className="text-sm">{t("noUpcoming")}</p>
             </div>
           ) : (
@@ -861,11 +1122,11 @@ export function DashboardClient({
                     {/* Timeline dot */}
                     <div className="mt-1.5 flex h-2 w-2 shrink-0 rounded-full bg-primary/50" />
                     <div className="min-w-0">
-                      <div className="font-semibold text-slate-900 dark:text-white flex items-center gap-2 flex-wrap text-sm">
-                        <span className="text-slate-500 dark:text-gray-400 font-medium tabular-nums">
+                      <div className="font-semibold text-[color:var(--ink-900)] flex items-center gap-2 flex-wrap text-sm">
+                        <span className="text-[color:var(--ink-500)] font-medium tabular-nums">
                           {format(a.startsAt, "EEE d MMM HH:mm", { locale: fr })}
                         </span>
-                        <span className="text-slate-400">—</span>
+                        <span className="text-[color:var(--ink-400)]">—</span>
                         {a.patientName}
                         <TypeBadge
                           type={a.type}
@@ -876,7 +1137,7 @@ export function DashboardClient({
                         />
                       </div>
                       {a.reason && (
-                        <div className="text-xs text-slate-500 dark:text-gray-400 mt-0.5">{a.reason}</div>
+                        <div className="text-xs text-[color:var(--ink-500)] mt-0.5">{a.reason}</div>
                       )}
                     </div>
                   </div>
@@ -890,13 +1151,18 @@ export function DashboardClient({
         </div>
       </motion.div>
 
+      </div> {/* /Row 1: RDV chart + Today + Upcoming */}
+
+      {/* Row 2: Recettes + Taux d'annulation */}
+      <DashboardCharts rangeDays={rangeDays} which="revenue" />
+
       {/* ── Recent Activity Feed ────────────────────────────────────────────── */}
       {recentActivity.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.5 }}
-          className="bg-white dark:bg-gray-900 rounded-2xl border border-slate-100 dark:border-gray-700 shadow-sm overflow-hidden"
+          className="ds-card overflow-hidden"
         >
           <div className="px-5 py-4 border-b border-slate-100 dark:border-gray-700">
             <SectionHeader>{t("recentActivity")}</SectionHeader>
@@ -915,8 +1181,8 @@ export function DashboardClient({
                 >
                   <div className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${dot}`} />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm text-slate-700 dark:text-gray-300 leading-snug">{text}</p>
-                    <p className="text-xs text-slate-400 mt-0.5">
+                    <p className="text-sm text-[color:var(--ink-700)] leading-snug">{text}</p>
+                    <p className="text-xs text-[color:var(--ink-400)] mt-0.5">
                       {format(updatedDate, "d MMM à HH:mm", { locale: fr })}
                     </p>
                   </div>

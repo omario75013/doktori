@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Pill, Plus, Pencil, Trash2, X, ChevronLeft, ChevronDown, History } from "lucide-react";
+import { Pill, Plus, Pencil, Trash2, X, ChevronLeft, ChevronDown, History, Bell } from "lucide-react";
 
 interface Medication {
   id: string;
@@ -17,8 +17,16 @@ interface Medication {
   startedAt: string | null;
   endedAt: string | null;
   notes: string | null;
+  reminderEnabled?: boolean;
+  reminderTimes?: string[];
   createdAt: string;
 }
+
+const PRESET_TIMES: Array<{ key: string; label: string; time: string }> = [
+  { key: "morning", label: "Matin", time: "08:00" },
+  { key: "midday", label: "Midi", time: "13:00" },
+  { key: "evening", label: "Soir", time: "20:00" },
+];
 
 export default function TraitementsPage() {
   const router = useRouter();
@@ -37,9 +45,12 @@ export default function TraitementsPage() {
   const [startedAt, setStartedAt] = useState("");
   const [endedAt, setEndedAt] = useState("");
   const [notes, setNotes] = useState("");
+  const [reminderEnabled, setReminderEnabled] = useState(false);
+  const [reminderTimes, setReminderTimes] = useState<string[]>([]);
+  const [modalTab, setModalTab] = useState<"info" | "reminder">("info");
 
   useEffect(() => {
-    const stored = localStorage.getItem("doktori_patient_token");
+    const stored = sessionStorage.getItem("doktori_patient_session");
     if (!stored) {
       router.push("/connexion-patient");
       return;
@@ -73,6 +84,9 @@ export default function TraitementsPage() {
     setStartedAt("");
     setEndedAt("");
     setNotes("");
+    setReminderEnabled(false);
+    setReminderTimes([]);
+    setModalTab("info");
     setModalOpen(true);
   }
 
@@ -84,6 +98,9 @@ export default function TraitementsPage() {
     setStartedAt(m.startedAt ?? "");
     setEndedAt(m.endedAt ?? "");
     setNotes(m.notes ?? "");
+    setReminderEnabled(!!m.reminderEnabled);
+    setReminderTimes(Array.isArray(m.reminderTimes) ? m.reminderTimes : []);
+    setModalTab("info");
     setModalOpen(true);
   }
 
@@ -92,6 +109,10 @@ export default function TraitementsPage() {
     if (!token) return;
     if (!medicationName.trim()) {
       toast.error("Nom du médicament requis");
+      return;
+    }
+    if (startedAt && endedAt && endedAt < startedAt) {
+      toast.error("La date de fin doit être supérieure ou égale à la date de début");
       return;
     }
     setSaving(true);
@@ -103,6 +124,8 @@ export default function TraitementsPage() {
         startedAt: startedAt || null,
         endedAt: endedAt || null,
         notes: notes.trim() || null,
+        reminderEnabled,
+        reminderTimes: reminderEnabled ? reminderTimes : [],
       };
       const url = editing ? `/api/me/medications/${editing.id}` : "/api/me/medications";
       const method = editing ? "PATCH" : "POST";
@@ -140,44 +163,63 @@ export default function TraitementsPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-secondary/40 flex items-center justify-center">
+      <div className="flex items-center justify-center py-24">
         <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
-  const current = items.filter((m) => !m.endedAt);
-  const history = items.filter((m) => m.endedAt);
+  // "En cours" = no end date set, OR end date is today/in the future
+  // "Historique" = end date is set AND is strictly in the past
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  function isPastEnd(end: string | null) {
+    if (!end) return false;
+    const d = new Date(end);
+    d.setHours(0, 0, 0, 0);
+    return d.getTime() < today.getTime();
+  }
+  const current = items.filter((m) => !isPastEnd(m.endedAt));
+  const history = items.filter((m) => isPastEnd(m.endedAt));
 
   return (
-    <div className="min-h-screen bg-secondary/40">
-      <div className="bg-gradient-to-br from-primary to-foreground px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <a href="/dossier-medical" className="inline-flex items-center gap-1 text-white/80 hover:text-white text-sm mb-3">
-            <ChevronLeft className="h-4 w-4" /> Retour au dossier
-          </a>
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20">
-              <Pill className="h-5 w-5 text-white" strokeWidth={2} />
-            </div>
-            <div>
-              <h1 className="text-xl font-black text-white">Traitements</h1>
-              <p className="text-white/70 text-xs mt-0.5">{current.length} en cours · {history.length} archivé{history.length !== 1 ? "s" : ""}</p>
-            </div>
+    <>
+      {/* Page header */}
+      <div className="mb-6">
+        <a
+          href="/dossier-medical"
+          className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--primary-600)] mb-2"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" /> Retour au dossier
+        </a>
+        <div className="flex items-end justify-between gap-4 flex-wrap">
+          <div>
+            <div className="ds-eyebrow">DOSSIER MÉDICAL</div>
+            <h1 className="ds-page-title">Traitements</h1>
+            <p className="ds-page-sub">
+              {current.length} en cours · {history.length} archivé{history.length !== 1 ? "s" : ""}
+            </p>
           </div>
+          <button onClick={openAdd} className="ds-btn ds-btn-primary">
+            <Plus className="h-4 w-4" /> Ajouter un traitement
+          </button>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-6 space-y-4">
-        <Button onClick={openAdd} className="w-full h-12 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold">
-          <Plus className="h-4 w-4 mr-2" /> Ajouter un traitement
-        </Button>
-
-        <section>
-          <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider mb-2">En cours</h2>
+      <div className="grid gap-4">
+        <section className="ds-card-patient p-5">
+          <div className="ds-eyebrow mb-3 flex items-center gap-2">
+            <Pill className="h-3.5 w-3.5" /> EN COURS
+          </div>
           {current.length === 0 ? (
-            <div className="rounded-2xl border border-border bg-white p-6 text-center text-sm text-muted-foreground">
-              Aucun traitement en cours
+            <div className="rounded-xl border border-dashed border-[color:var(--line-cool)] bg-[color:var(--surface-2)] p-8 text-center">
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[color:var(--primary-50)] mb-3">
+                <Pill className="h-5 w-5 text-[color:var(--primary-600)]" />
+              </div>
+              <p className="text-sm font-semibold text-[color:var(--ink-700)]">Aucun traitement en cours</p>
+              <p className="text-xs text-[color:var(--ink-500)] mt-1">
+                Ajoutez vos médicaments pour en garder une trace.
+              </p>
             </div>
           ) : (
             <ul className="space-y-2">
@@ -187,20 +229,22 @@ export default function TraitementsPage() {
         </section>
 
         {history.length > 0 && (
-          <section>
+          <section className="ds-card-patient p-5">
             <button
               type="button"
               onClick={() => setHistoryOpen((v) => !v)}
-              className="w-full flex items-center justify-between text-sm font-bold text-foreground/80 uppercase tracking-wider mb-2 hover:text-primary"
+              className="w-full flex items-center justify-between hover:opacity-80 transition-opacity"
             >
-              <span className="flex items-center gap-2">
-                <History className="h-4 w-4" />
-                Historique ({history.length})
+              <span className="ds-eyebrow flex items-center gap-2">
+                <History className="h-3.5 w-3.5" />
+                HISTORIQUE ({history.length})
               </span>
-              <ChevronDown className={`h-4 w-4 transition-transform ${historyOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`h-4 w-4 text-[color:var(--ink-500)] transition-transform ${historyOpen ? "rotate-180" : ""}`}
+              />
             </button>
             {historyOpen && (
-              <ul className="space-y-2">
+              <ul className="space-y-2 mt-3">
                 {history.map((m) => <MedItem key={m.id} m={m} onEdit={openEdit} onDelete={handleDelete} archived />)}
               </ul>
             )}
@@ -218,6 +262,48 @@ export default function TraitementsPage() {
                   <X className="h-5 w-5" />
                 </button>
               </div>
+
+              {/* Tabs: Infos / Rappels */}
+              <div className="flex gap-1 rounded-xl p-1" style={{ background: "var(--surface-2)" }}>
+                <button
+                  type="button"
+                  onClick={() => setModalTab("info")}
+                  className={`flex-1 px-3 py-2 rounded-lg text-[13px] font-semibold ${
+                    modalTab === "info"
+                      ? "bg-white shadow-sm"
+                      : ""
+                  }`}
+                  style={{ color: modalTab === "info" ? "var(--ink-900)" : "var(--ink-500)" }}
+                >
+                  Informations
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setModalTab("reminder")}
+                  className={`flex-1 px-3 py-2 rounded-lg text-[13px] font-semibold flex items-center justify-center gap-1.5 ${
+                    modalTab === "reminder"
+                      ? "bg-white shadow-sm"
+                      : ""
+                  }`}
+                  style={{ color: modalTab === "reminder" ? "var(--ink-900)" : "var(--ink-500)" }}
+                >
+                  <Bell className="w-3.5 h-3.5" />
+                  Rappels
+                  {reminderEnabled && reminderTimes.length > 0 && (
+                    <span
+                      className="px-1.5 rounded-full text-[10px] font-bold"
+                      style={{
+                        background: "var(--primary-100)",
+                        color: "var(--primary-700)",
+                      }}
+                    >
+                      {reminderTimes.length}
+                    </span>
+                  )}
+                </button>
+              </div>
+              {modalTab === "info" && (
+              <>
               <div className="space-y-1.5">
                 <Label htmlFor="m-name" className="text-sm font-semibold">Médicament *</Label>
                 <Input id="m-name" value={medicationName} onChange={(e) => setMedicationName(e.target.value)} maxLength={160} required />
@@ -239,13 +325,31 @@ export default function TraitementsPage() {
                 </div>
                 <div className="space-y-1.5">
                   <Label htmlFor="m-end" className="text-sm font-semibold">Fin (si arrêté)</Label>
-                  <Input id="m-end" type="date" value={endedAt} onChange={(e) => setEndedAt(e.target.value)} />
+                  <Input
+                    id="m-end"
+                    type="date"
+                    value={endedAt}
+                    min={startedAt || undefined}
+                    onChange={(e) => setEndedAt(e.target.value)}
+                  />
                 </div>
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="m-notes" className="text-sm font-semibold">Notes</Label>
                 <Textarea id="m-notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} rows={2} />
               </div>
+              </>
+              )}
+
+              {modalTab === "reminder" && (
+                <ReminderTab
+                  enabled={reminderEnabled}
+                  onEnabledChange={setReminderEnabled}
+                  times={reminderTimes}
+                  onTimesChange={setReminderTimes}
+                />
+              )}
+
               <div className="flex gap-2 pt-2">
                 <Button type="button" variant="outline" onClick={() => setModalOpen(false)} className="flex-1">Annuler</Button>
                 <Button type="submit" disabled={saving} className="flex-1 bg-primary hover:bg-doktori-teal-dark text-white font-bold">
@@ -255,6 +359,144 @@ export default function TraitementsPage() {
             </form>
           </div>
         </div>
+      )}
+    </>
+  );
+}
+
+/* ───────── Reminder tab (modal) ───────── */
+function ReminderTab({
+  enabled,
+  onEnabledChange,
+  times,
+  onTimesChange,
+}: {
+  enabled: boolean;
+  onEnabledChange: (v: boolean) => void;
+  times: string[];
+  onTimesChange: (v: string[]) => void;
+}) {
+  function togglePreset(time: string) {
+    if (times.includes(time)) onTimesChange(times.filter((t) => t !== time));
+    else onTimesChange([...times, time].sort());
+  }
+  function addCustom() {
+    onTimesChange([...times, "12:00"].sort());
+  }
+  function removeAt(idx: number) {
+    onTimesChange(times.filter((_, i) => i !== idx));
+  }
+  function updateAt(idx: number, value: string) {
+    const next = [...times];
+    next[idx] = value;
+    onTimesChange(next);
+  }
+
+  return (
+    <div className="space-y-4">
+      <div
+        className="flex items-center justify-between gap-3 rounded-xl p-3"
+        style={{ background: "var(--surface-2)" }}
+      >
+        <div>
+          <div className="text-[13.5px] font-semibold">
+            Activer un rappel pour ce traitement
+          </div>
+          <div className="text-[12px]" style={{ color: "var(--ink-500)" }}>
+            Vous recevrez une notification aux horaires choisis.
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => onEnabledChange(!enabled)}
+          aria-pressed={enabled}
+          className="relative shrink-0"
+          style={{
+            width: 42,
+            height: 24,
+            borderRadius: 999,
+            background: enabled ? "var(--primary-500)" : "var(--line-strong)",
+            transition: "background .15s",
+          }}
+        >
+          <span
+            className="absolute top-0.5 w-5 h-5 rounded-full bg-white shadow"
+            style={{ left: enabled ? 19 : 3, transition: "left .15s" }}
+          />
+        </button>
+      </div>
+
+      {enabled && (
+        <>
+          <div>
+            <Label className="text-sm font-semibold">Moments de la journée</Label>
+            <div className="flex gap-2 mt-2 flex-wrap">
+              {PRESET_TIMES.map((p) => {
+                const on = times.includes(p.time);
+                return (
+                  <button
+                    key={p.key}
+                    type="button"
+                    onClick={() => togglePreset(p.time)}
+                    className={`px-3 py-1.5 rounded-full text-[12.5px] font-semibold transition ${
+                      on
+                        ? "bg-[color:var(--primary-600)] text-white"
+                        : "border border-[color:var(--line-cool)] bg-white text-[color:var(--ink-700)] hover:border-[color:var(--primary-300)]"
+                    }`}
+                  >
+                    {p.label} ({p.time})
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <Label className="text-sm font-semibold">Horaires programmés</Label>
+              <button
+                type="button"
+                onClick={addCustom}
+                className="ds-btn ds-btn-soft ds-btn-sm"
+              >
+                <Plus className="w-3.5 h-3.5" /> Ajouter une heure
+              </button>
+            </div>
+            {times.length === 0 ? (
+              <p
+                className="text-[12px] rounded-lg p-3"
+                style={{ background: "var(--surface-2)", color: "var(--ink-500)" }}
+              >
+                Aucun horaire programmé. Choisissez un moment ou ajoutez une heure libre.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {times.map((t, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <Input
+                      type="time"
+                      value={t}
+                      onChange={(e) => updateAt(i, e.target.value)}
+                      className="flex-1"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeAt(i)}
+                      aria-label="Supprimer"
+                      className="p-2 rounded-lg hover:bg-red-50"
+                      style={{ color: "#E11D48" }}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+            <p className="text-[11.5px] mt-2" style={{ color: "var(--ink-500)" }}>
+              Les rappels suivent les canaux configurés dans Paramètres &gt; Notifications.
+            </p>
+          </div>
+        </>
       )}
     </div>
   );

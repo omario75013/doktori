@@ -1,382 +1,560 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
-  Heart,
-  ShieldCheck,
-  ClipboardList,
-  Pill,
+  Shield,
+  Plus,
+  Download,
   Activity,
-  Droplets,
-  User,
-  AlertCircle,
-  Lock,
+  ChevronRight,
 } from "lucide-react";
 
-interface Profile {
-  patient: {
-    name: string;
-    phone: string;
-    dateOfBirth: string | null;
-    gender: string | null;
-    bloodType: string | null;
-  };
-  profile: {
-    allergies: string | null;
-    chronicConditions: string | null;
-    currentMeds: string | null;
-    notes: string | null;
-  };
+const RELATION_LABEL: Record<string, string> = {
+  child: "Enfant",
+  parent: "Parent",
+  spouse: "Conjoint(e)",
+  sibling: "Frère / sœur",
+  other: "Autre",
+};
+
+interface PatientProfile {
+  id: string;
+  name?: string | null;
+  dateOfBirth?: string | null;
+  gender?: string | null;
+  bloodType?: string | null;
+  heightCm?: number | null;
+  weightKg?: number | null;
+  photoUrl?: string | null;
 }
 
-const BLOOD_TYPES = ["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"];
+function ageFromDob(dob?: string | null): number | null {
+  if (!dob) return null;
+  const d = new Date(dob);
+  if (Number.isNaN(d.getTime())) return null;
+  const now = new Date();
+  let age = now.getFullYear() - d.getFullYear();
+  if (now.getMonth() < d.getMonth() || (now.getMonth() === d.getMonth() && now.getDate() < d.getDate())) age--;
+  return age;
+}
 
-const selectClass =
-  "w-full h-12 rounded-xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-shadow";
-
-const labelClass = "text-foreground font-semibold text-sm";
+function bmi(h?: number | null, w?: number | null): string {
+  if (!h || !w) return "—";
+  const m = h / 100;
+  return (w / (m * m)).toFixed(1);
+}
 
 export default function DossierMedicalPage() {
   const router = useRouter();
-  const [token, setToken] = useState<string | null>(null);
+  const [profile, setProfile] = useState<PatientProfile | null>(null);
+  const [dependents, setDependents] = useState<Array<{ id: string; name: string; relation: string | null; dateOfBirth: string | null; gender: string | null }>>([]);
+  const [allergies, setAllergies] = useState<Array<{ id: string; allergen: string; severity: "mild" | "moderate" | "severe" }>>([]);
+  const [vaccinations, setVaccinations] = useState<Array<{ id: string; vaccineName: string; dateReceived: string }>>([]);
+  const [medications, setMedications] = useState<Array<{ id: string; medicationName: string; dosage: string | null; frequency: string | null; endedAt: string | null }>>([]);
+  const [consultations, setConsultations] = useState<Array<{ id: string; doctorName: string; createdAt: string; assessment: string | null }>>([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [savedAt, setSavedAt] = useState<number | null>(null);
-  const [dob, setDob] = useState("");
-  const [gender, setGender] = useState<"" | "M" | "F">("");
-  const [bloodType, setBloodType] = useState("");
-  const [allergies, setAllergies] = useState("");
-  const [chronic, setChronic] = useState("");
-  const [meds, setMeds] = useState("");
-  const [notes, setNotes] = useState("");
-  const [patientName, setPatientName] = useState("");
-  const [dobError, setDobError] = useState<string | null>(null);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem("doktori_patient_token");
-    if (!stored) {
-      router.push("/mes-rdv");
-      return;
-    }
-    setToken(stored);
-  }, []);
-
-  useEffect(() => {
-    if (!token) return;
-    fetch("/api/patients/me/profile", { headers: { Authorization: `Bearer ${token}` } })
-      .then(async (r) => {
-        if (r.status === 401) {
-          localStorage.removeItem("doktori_patient_token");
-          router.push("/mes-rdv");
-          return null;
-        }
-        return r.ok ? ((await r.json()) as Profile) : null;
-      })
-      .then((data) => {
-        if (!data) return;
-        setPatientName(data.patient.name);
-        setDob(data.patient.dateOfBirth ?? "");
-        setGender((data.patient.gender as "M" | "F" | null) ?? "");
-        setBloodType(data.patient.bloodType ?? "");
-        setAllergies(data.profile.allergies ?? "");
-        setChronic(data.profile.chronicConditions ?? "");
-        setMeds(data.profile.currentMeds ?? "");
-        setNotes(data.profile.notes ?? "");
-        setLoading(false);
-      });
-  }, [token]);
-
-  function validateDob(value: string): string | null {
-    if (!value) return null;
-    const date = new Date(value);
-    const now = new Date();
-    if (date > now) return "La date de naissance ne peut pas être dans le futur.";
-    const age = now.getFullYear() - date.getFullYear();
-    if (age > 150) return "Veuillez saisir une date valide.";
-    return null;
-  }
-
-  function handleDobChange(value: string) {
-    setDob(value);
-    setDobError(validateDob(value));
-  }
-
-  async function handleSave(e: React.FormEvent) {
-    e.preventDefault();
-    if (!token) return;
-    const dobValidation = validateDob(dob);
-    if (dobValidation) {
-      setDobError(dobValidation);
-      return;
-    }
-    setSaving(true);
-    setSavedAt(null);
-    setSaveError(null);
-    try {
-      const res = await fetch("/api/patients/me/profile", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-        body: JSON.stringify({
-          dateOfBirth: dob || undefined,
-          gender: gender || undefined,
-          bloodType: bloodType || undefined,
-          allergies,
-          chronicConditions: chronic,
-          currentMeds: meds,
-          notes,
-        }),
-      });
-      if (res.ok) {
-        setSavedAt(Date.now());
-        toast.success("Dossier médical enregistré avec succès");
-      } else {
-        const data = await res.json().catch(() => ({}));
-        const msg = typeof data.error === "string" ? data.error : "Erreur lors de l'enregistrement.";
-        setSaveError(msg);
-        toast.error(msg);
+    let legacy: string | null = null;
+    try { legacy = localStorage.getItem("doktori_patient_token"); } catch {}
+    (async () => {
+      let r = await fetch("/api/patients/me", { credentials: "include" });
+      if (!r.ok && legacy) {
+        r = await fetch("/api/patients/me", {
+          credentials: "include",
+          headers: { Authorization: `Bearer ${legacy}` },
+        });
       }
-    } catch {
-      const msg = "Une erreur est survenue. Veuillez réessayer.";
-      setSaveError(msg);
-      toast.error(msg);
-    } finally {
-      setSaving(false);
-    }
-  }
+      if (!r.ok) {
+        router.replace("/connexion-patient");
+        return;
+      }
+      try { sessionStorage.setItem("doktori_patient_session", "1"); } catch {}
+      const data = await r.json();
+      setProfile(data);
+
+      // Load dossier data in parallel — non-fatal if anything fails.
+      void Promise.all([
+        fetch("/api/me/dependents", { credentials: "include" })
+          .then((res) => (res.ok ? res.json() : { items: [] }))
+          .then((d) => setDependents(Array.isArray(d.items) ? d.items : []))
+          .catch(() => {}),
+        fetch("/api/me/allergies", { credentials: "include" })
+          .then((res) => (res.ok ? res.json() : { allergies: [] }))
+          .then((d) => setAllergies(Array.isArray(d.allergies) ? d.allergies : []))
+          .catch(() => {}),
+        fetch("/api/me/vaccinations", { credentials: "include" })
+          .then((res) => (res.ok ? res.json() : { vaccinations: [] }))
+          .then((d) => setVaccinations(Array.isArray(d.vaccinations) ? d.vaccinations : []))
+          .catch(() => {}),
+        fetch("/api/me/medications", { credentials: "include" })
+          .then((res) => (res.ok ? res.json() : { medications: [] }))
+          .then((d) => setMedications(Array.isArray(d.medications) ? d.medications : []))
+          .catch(() => {}),
+        fetch("/api/patients/me/documents", { credentials: "include" })
+          .then((res) => (res.ok ? res.json() : { consultationNotes: [] }))
+          .then((d) => setConsultations(Array.isArray(d.consultationNotes) ? d.consultationNotes : []))
+          .catch(() => {}),
+      ]);
+
+      setLoading(false);
+    })().catch(() => setLoading(false));
+  }, [router]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-secondary/40 dark:bg-gray-900 flex items-center justify-center">
-        <div className="text-center space-y-3">
-          <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
-          <p className="text-foreground/60 text-sm">Chargement...</p>
-        </div>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-10 h-10 border-2 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
+  const initials = (profile?.name ?? "?")
+    .split(/\s+/)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .slice(0, 2)
+    .join("");
+  const age = ageFromDob(profile?.dateOfBirth);
+
   return (
-    <div className="min-h-screen bg-secondary/40 dark:bg-gray-900">
-      {/* Teal gradient banner */}
-      <div className="bg-gradient-to-br from-primary to-foreground px-4 py-8">
-        <div className="max-w-2xl mx-auto">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20">
-              <ClipboardList className="h-5 w-5 text-white" strokeWidth={2} />
+    <div>
+      {/* Page header */}
+      <div className="flex items-end justify-between gap-4 mb-5">
+        <div>
+          <div className="ds-eyebrow">Confidentiel · chiffré</div>
+          <h1 className="ds-page-title">Dossier médical</h1>
+          <p className="ds-page-sub">
+            Partagez sélectivement ces données avec un médecin lors d&apos;une consultation.
+          </p>
+        </div>
+        <button type="button" className="ds-btn ds-btn-soft">
+          <Shield className="w-4 h-4" /> Gérer le partage
+        </button>
+      </div>
+
+      {/* Health summary banner */}
+      <div
+        className="ds-card-patient mb-5"
+        style={{
+          background: "linear-gradient(135deg, var(--primary-700), var(--primary-500))",
+          border: "none",
+          color: "#fff",
+        }}
+      >
+        <div className="grid grid-cols-[auto_1fr_auto] gap-6 items-center">
+          <div
+            className="w-16 h-16 rounded-full grid place-items-center font-extrabold text-[18px] overflow-hidden"
+            style={{ background: "linear-gradient(135deg,#fff,#A9DAD2)", color: "var(--primary-700)" }}
+          >
+            {profile?.photoUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={profile.photoUrl}
+                alt={profile.name ?? "Patient"}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              initials
+            )}
+          </div>
+          <div>
+            <div className="text-[22px] font-extrabold mb-0.5" style={{ fontFamily: "Manrope, sans-serif" }}>
+              {profile?.name ?? "Patient"}
             </div>
-            <div>
-              <h1 className="text-xl font-black text-white">Mon dossier médical</h1>
-              <p className="text-white/70 text-xs mt-0.5">{patientName}</p>
+            <div className="text-[13px] opacity-85">
+              {profile?.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString("fr-FR") : "Date de naissance non renseignée"}
+              {age !== null ? ` · ${age} ans` : ""}
+              {profile?.gender ? ` · ${profile.gender}` : ""}
             </div>
+            <div className="flex gap-5 mt-3.5 flex-wrap">
+              <Fact label="Sang" value={profile?.bloodType ?? "—"} />
+              <Fact label="Taille" value={profile?.heightCm ? `${profile.heightCm} cm` : "—"} />
+              <Fact label="Poids" value={profile?.weightKg ? `${profile.weightKg} kg` : "—"} />
+              <Fact label="IMC" value={bmi(profile?.heightCm, profile?.weightKg)} />
+            </div>
+          </div>
+          <div className="flex flex-col gap-2 items-end">
+            <div className="text-[11px] opacity-70 font-bold tracking-wider uppercase">ID Patient</div>
+            <div className="font-mono text-[13px] font-semibold">
+              DKT-{(profile?.id ?? "").slice(0, 4).toUpperCase()}-{(profile?.id ?? "").slice(4, 8).toUpperCase()}
+            </div>
+            <button
+              type="button"
+              className="ds-btn ds-btn-sm"
+              style={{ background: "rgba(255,255,255,.18)", color: "#fff" }}
+            >
+              <Download className="w-3.5 h-3.5" /> Exporter PDF
+            </button>
           </div>
         </div>
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
-        {/* Data privacy notice */}
-        <div className="rounded-2xl border border-[#0891B2]/30 dark:border-gray-700 bg-[#F0FDFA] dark:bg-gray-800 p-4 flex items-start gap-3">
-          <Lock className="h-5 w-5 text-[#0891B2] flex-shrink-0 mt-0.5" strokeWidth={2} />
-          <div>
-            <p className="text-sm font-semibold text-[#134E4A] dark:text-white">Vos données médicales sont confidentielles et protégées</p>
-            <p className="text-xs text-[#134E4A]/70 dark:text-gray-400 mt-0.5">
-              Ces informations sont partagées uniquement avec le médecin que vous consultez sur Doktori.
+      {/* 2-col layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-5">
+        {/* LEFT col */}
+        <div className="flex flex-col gap-5">
+          <Section title="Allergies" actionHref="/dossier-medical/allergies">
+            {allergies.length === 0 ? (
+              <p className="text-[13px]" style={{ color: "var(--ink-500)" }}>
+                Aucune allergie déclarée.
+              </p>
+            ) : (
+              <div className="flex gap-2 flex-wrap">
+                {allergies.slice(0, 8).map((a) => (
+                  <AllergyChip
+                    key={a.id}
+                    label={a.allergen}
+                    severity={a.severity === "severe" ? "high" : "med"}
+                  />
+                ))}
+              </div>
+            )}
+          </Section>
+
+          <Section title="Antécédents" actionHref="/dossier-medical/analyses">
+            <p className="text-[13px]" style={{ color: "var(--ink-500)" }}>
+              Aucun antécédent enregistré. Ajoutez vos analyses biologiques ou demandez à votre
+              médecin de compléter votre dossier.
             </p>
-          </div>
+          </Section>
+
+          <Section title="Vaccinations" actionLabel="Carnet complet" actionHref="/dossier-medical/vaccinations">
+            {vaccinations.length === 0 ? (
+              <p className="text-[13px]" style={{ color: "var(--ink-500)" }}>
+                Aucun vaccin enregistré.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                {vaccinations.slice(0, 6).map((v) => (
+                  <VaccineRow
+                    key={v.id}
+                    label={v.vaccineName}
+                    date={new Date(v.dateReceived).toLocaleDateString("fr-FR", {
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
+                    due="—"
+                    status="ok"
+                  />
+                ))}
+              </div>
+            )}
+          </Section>
         </div>
 
-        {/* Context note */}
-        <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-4 flex items-start gap-3">
-          <ShieldCheck className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" strokeWidth={2} />
-          <p className="text-sm text-foreground/70">
-            Ces informations sont partagées avec le médecin que vous consultez sur Doktori.
-            Elles sont strictement confidentielles.
-          </p>
-        </div>
-
-        <form onSubmit={handleSave} className="space-y-6">
-          {/* Section: Informations générales */}
-          <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-6 space-y-5">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-                <User className="h-4 w-4 text-primary" strokeWidth={2} />
-              </div>
-              <h2 className="font-bold text-foreground">Informations générales</h2>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="dob" className={labelClass}>Date de naissance</Label>
-                <Input
-                  id="dob"
-                  type="date"
-                  value={dob}
-                  onChange={(e) => handleDobChange(e.target.value)}
-                  className={`h-12 rounded-xl border-border focus-visible:ring-primary ${dobError ? "border-red-400 focus-visible:ring-red-400" : ""}`}
-                />
-                {dobError && (
-                  <p className="text-xs text-red-600 flex items-center gap-1 mt-0.5">
-                    <AlertCircle className="h-3 w-3 flex-shrink-0" />
-                    {dobError}
-                  </p>
-                )}
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="gender" className={labelClass}>Sexe</Label>
-                <select
-                  id="gender"
-                  value={gender}
-                  onChange={(e) => setGender(e.target.value as "M" | "F" | "")}
-                  className={selectClass}
-                >
-                  <option value="">—</option>
-                  <option value="M">Homme</option>
-                  <option value="F">Femme</option>
-                </select>
-              </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="blood" className={labelClass}>
-                  <span className="flex items-center gap-1">
-                    <Droplets className="h-3.5 w-3.5 text-red-500" />
-                    Groupe sanguin
-                  </span>
-                </Label>
-                <select
-                  id="blood"
-                  value={bloodType}
-                  onChange={(e) => setBloodType(e.target.value)}
-                  className={selectClass}
-                >
-                  <option value="">—</option>
-                  {BLOOD_TYPES.map((b) => (
-                    <option key={b} value={b}>
-                      {b}
-                    </option>
+        {/* RIGHT col */}
+        <div className="flex flex-col gap-5">
+          <Section title="Traitements en cours" actionHref="/dossier-medical/traitements">
+            {medications.filter((m) => !m.endedAt).length === 0 ? (
+              <p className="text-[13px]" style={{ color: "var(--ink-500)" }}>
+                Aucun traitement en cours.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-2.5">
+                {medications
+                  .filter((m) => !m.endedAt)
+                  .slice(0, 6)
+                  .map((m, i) => (
+                    <TreatmentRow
+                      key={m.id}
+                      name={m.medicationName}
+                      dose={
+                        [m.dosage, m.frequency].filter(Boolean).join(" · ") || "—"
+                      }
+                      until="Long terme"
+                      tone={i % 2 === 0 ? "sky" : "amber"}
+                    />
                   ))}
-                </select>
-              </div>
-            </div>
-          </div>
-
-          {/* Section: Allergies */}
-          <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-red-50">
-                <Heart className="h-4 w-4 text-red-500" strokeWidth={2} />
-              </div>
-              <h2 className="font-bold text-foreground">Allergies</h2>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="allergies" className={labelClass}>Allergies connues</Label>
-              <Textarea
-                id="allergies"
-                placeholder="Ex: pénicilline, arachides, pollen..."
-                value={allergies}
-                onChange={(e) => setAllergies(e.target.value)}
-                maxLength={2000}
-                rows={2}
-                className="rounded-xl border-border focus-visible:ring-primary resize-none"
-              />
-            </div>
-          </div>
-
-          {/* Section: Traitements */}
-          <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-50">
-                <Pill className="h-4 w-4 text-blue-500" strokeWidth={2} />
-              </div>
-              <h2 className="font-bold text-foreground">Traitements en cours</h2>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="meds" className={labelClass}>Médicaments et posologie</Label>
-              <Textarea
-                id="meds"
-                placeholder="Ex: metformine 500mg x2/jour, losartan 50mg..."
-                value={meds}
-                onChange={(e) => setMeds(e.target.value)}
-                maxLength={2000}
-                rows={2}
-                className="rounded-xl border-border focus-visible:ring-primary resize-none"
-              />
-            </div>
-          </div>
-
-          {/* Section: Maladies chroniques + notes */}
-          <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm p-6 space-y-4">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-orange-50">
-                <Activity className="h-4 w-4 text-orange-500" strokeWidth={2} />
-              </div>
-              <h2 className="font-bold text-foreground">Antécédents médicaux</h2>
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="chronic" className={labelClass}>Maladies chroniques</Label>
-              <Textarea
-                id="chronic"
-                placeholder="Ex: diabète type 2, hypertension, asthme..."
-                value={chronic}
-                onChange={(e) => setChronic(e.target.value)}
-                maxLength={2000}
-                rows={2}
-                className="rounded-xl border-border focus-visible:ring-primary resize-none"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="notes" className={labelClass}>Autres remarques</Label>
-              <Textarea
-                id="notes"
-                placeholder="Grossesse, interventions chirurgicales, antécédents familiaux..."
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                maxLength={2000}
-                rows={3}
-                className="rounded-xl border-border focus-visible:ring-primary resize-none"
-              />
-            </div>
-          </div>
-
-          {/* Save button */}
-          <div className="space-y-3">
-            {saveError && (
-              <div className="flex items-center gap-2 text-sm text-red-700 bg-red-50 border border-red-200 rounded-xl px-4 py-3">
-                <AlertCircle className="h-4 w-4 flex-shrink-0" strokeWidth={2} />
-                {saveError}
               </div>
             )}
-            <Button
-              type="submit"
-              disabled={saving || !!dobError}
-              className="w-full h-12 rounded-xl bg-primary hover:bg-doktori-teal-dark font-bold text-white text-base transition-colors"
-            >
-              {saving ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                  Enregistrement...
-                </span>
-              ) : (
-                "Enregistrer le dossier"
-              )}
-            </Button>
-            {savedAt && (
-              <div className="flex items-center justify-center gap-2 text-sm font-semibold text-green-700 bg-green-50 border border-green-200 rounded-xl py-2.5">
-                <ShieldCheck className="h-4 w-4" strokeWidth={2.5} />
-                Dossier enregistré avec succès
+          </Section>
+
+          <Section title="Consultations récentes">
+            {consultations.length === 0 ? (
+              <p className="text-[13px]" style={{ color: "var(--ink-500)" }}>
+                Aucune consultation enregistrée.
+              </p>
+            ) : (
+              <div className="relative pl-5">
+                <div className="absolute left-1.5 top-1.5 bottom-1.5 w-0.5" style={{ background: "var(--line-cool)" }} />
+                {consultations.slice(0, 5).map((c) => (
+                  <ConsultDot
+                    key={c.id}
+                    when={new Date(c.createdAt).toLocaleDateString("fr-FR", {
+                      day: "numeric",
+                      month: "long",
+                    })}
+                    who={c.doctorName}
+                    what={c.assessment?.slice(0, 60) || "Consultation"}
+                  />
+                ))}
               </div>
             )}
-          </div>
-        </form>
+          </Section>
 
-        <div className="text-center pb-4">
-          <a href="/mes-rdv" className="text-sm font-semibold text-primary hover:underline">
-            ← Retour à mes rendez-vous
+          <Section title="Mes proches" actionHref="/ma-famille">
+            {dependents.length === 0 ? (
+              <div className="flex flex-col gap-2">
+                <FamilyRow
+                  name="Aucun proche enregistré"
+                  rel="Ajoutez vos proches pour gérer leurs rendez-vous"
+                  hue={["#5BAEBB", "#0F7B8A"]}
+                />
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {dependents.map((d) => {
+                  const relLabel = RELATION_LABEL[d.relation ?? ""] ?? "Proche";
+                  const age = ageFromDob(d.dateOfBirth);
+                  return (
+                    <FamilyRow
+                      key={d.id}
+                      name={d.name}
+                      rel={age !== null ? `${relLabel} · ${age} ans` : relLabel}
+                      hue={["#5BAEBB", "#0F7B8A"]}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </Section>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ───────── helpers ───────── */
+
+function Fact({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <div className="text-[11px] opacity-70 font-bold uppercase tracking-wider mb-0.5">{label}</div>
+      <div className="text-[18px] font-extrabold" style={{ fontFamily: "Manrope, sans-serif" }}>
+        {value}
+      </div>
+    </div>
+  );
+}
+
+function Section({
+  title,
+  children,
+  actionHref,
+  actionLabel = "Ajouter",
+}: {
+  title: string;
+  children: React.ReactNode;
+  actionHref?: string;
+  actionLabel?: string;
+}) {
+  return (
+    <div className="ds-card-patient">
+      <div className="flex items-center justify-between mb-4">
+        <div className="font-bold text-[16px]" style={{ color: "var(--ink-900)" }}>
+          {title}
+        </div>
+        {actionHref && (
+          <a
+            href={actionHref}
+            className="inline-flex items-center gap-1 text-[13px] font-bold"
+            style={{ color: "var(--primary-600)" }}
+          >
+            {actionLabel === "Ajouter" ? (
+              <>
+                <Plus className="w-3.5 h-3.5" /> Ajouter
+              </>
+            ) : (
+              <>
+                {actionLabel} <ChevronRight className="w-3.5 h-3.5" />
+              </>
+            )}
           </a>
+        )}
+      </div>
+      {children}
+    </div>
+  );
+}
+
+function AllergyChip({ label, severity }: { label: string; severity: "high" | "med" }) {
+  const map = {
+    high: { bg: "var(--tone-coral-bg)", col: "#B05F3D", dot: "#D67455" },
+    med: { bg: "var(--tone-amber-bg)", col: "#8B6224", dot: "#DDA45B" },
+  } as const;
+  const s = map[severity];
+  return (
+    <span
+      className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-[12.5px] font-semibold"
+      style={{ background: s.bg, color: s.col }}
+    >
+      <span className="w-2 h-2 rounded-full" style={{ background: s.dot }} />
+      {label}
+    </span>
+  );
+}
+
+function HistoryRow({
+  year,
+  label,
+  sub,
+  chip,
+  chipL,
+}: {
+  year: string;
+  label: string;
+  sub: string;
+  chip: "rose" | "amber" | "sky";
+  chipL: string;
+}) {
+  return (
+    <div className="flex items-center gap-3.5 py-3" style={{ borderBottom: "1px solid var(--line-cool)" }}>
+      <div
+        className="font-extrabold text-[14px] shrink-0"
+        style={{ color: "var(--ink-700)", width: 48, fontFamily: "Manrope, sans-serif" }}
+      >
+        {year}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="font-bold text-[13.5px]" style={{ color: "var(--ink-900)" }}>
+          {label}
+        </div>
+        <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
+          {sub}
+        </div>
+      </div>
+      <span className={`ds-chip ds-chip-${chip}`}>{chipL}</span>
+    </div>
+  );
+}
+
+function VaccineRow({
+  label,
+  date,
+  due,
+  status,
+}: {
+  label: string;
+  date: string;
+  due: string;
+  status: "ok" | "due";
+}) {
+  const ok = status === "ok";
+  return (
+    <div
+      className="flex items-center gap-3 p-3 rounded-xl border"
+      style={{ background: "var(--surface-2)", borderColor: "var(--line-cool)" }}
+    >
+      <div
+        className="w-9 h-9 rounded-xl grid place-items-center shrink-0"
+        style={{
+          background: ok ? "var(--tone-mint-bg)" : "var(--tone-amber-bg)",
+          color: ok ? "#2F7A57" : "#8B6224",
+        }}
+      >
+        <Activity className="w-4 h-4" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="text-[13px] font-bold truncate" style={{ color: "var(--ink-900)" }}>
+          {label}
+        </div>
+        <div className="text-[11.5px]" style={{ color: "var(--ink-500)" }}>
+          {date} · {due}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TreatmentRow({
+  name,
+  dose,
+  until,
+  tone,
+}: {
+  name: string;
+  dose: string;
+  until: string;
+  tone: "sky" | "amber";
+}) {
+  const map = {
+    sky: { bg: "var(--tone-sky-bg)", col: "#2C5F82" },
+    amber: { bg: "var(--tone-amber-bg)", col: "#8B6224" },
+  } as const;
+  const s = map[tone];
+  return (
+    <div
+      className="flex items-center gap-3 p-3 rounded-xl border"
+      style={{ background: "var(--surface-2)", borderColor: "var(--line-cool)" }}
+    >
+      <div
+        className="w-10 h-10 rounded-xl grid place-items-center shrink-0 font-extrabold text-[12px]"
+        style={{ background: s.bg, color: s.col }}
+      >
+        Rx
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="font-bold text-[14px]" style={{ color: "var(--ink-900)" }}>
+          {name}
+        </div>
+        <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
+          {dose}
+        </div>
+      </div>
+      <div
+        className="text-[11.5px] font-semibold shrink-0 whitespace-nowrap"
+        style={{ color: "var(--ink-400)" }}
+      >
+        {until}
+      </div>
+    </div>
+  );
+}
+
+function ConsultDot({ when, who, what }: { when: string; who: string; what: string }) {
+  return (
+    <div className="relative pb-3.5">
+      <div
+        className="absolute left-[-13px] top-1 w-2.5 h-2.5 rounded-full"
+        style={{ background: "var(--primary-500)", boxShadow: "0 0 0 3px #fff" }}
+      />
+      <div className="text-[11.5px] font-bold uppercase tracking-wider" style={{ color: "var(--ink-400)" }}>
+        {when}
+      </div>
+      <div className="font-bold text-[13.5px]" style={{ color: "var(--ink-900)" }}>
+        {who}
+      </div>
+      <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
+        {what}
+      </div>
+    </div>
+  );
+}
+
+function FamilyRow({ name, rel, hue }: { name: string; rel: string; hue: [string, string] }) {
+  const initials = name
+    .split(/\s+/)
+    .map((p) => p[0]?.toUpperCase() ?? "")
+    .slice(0, 2)
+    .join("");
+  return (
+    <div
+      className="flex items-center gap-3 p-3 rounded-xl border"
+      style={{ background: "var(--surface-2)", borderColor: "var(--line-cool)" }}
+    >
+      <div
+        className="w-10 h-10 rounded-full grid place-items-center text-white font-bold text-[12px] shrink-0"
+        style={{ background: `linear-gradient(135deg, ${hue[0]}, ${hue[1]})` }}
+      >
+        {initials || "?"}
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="font-bold text-[13.5px]" style={{ color: "var(--ink-900)" }}>
+          {name}
+        </div>
+        <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
+          {rel}
         </div>
       </div>
     </div>

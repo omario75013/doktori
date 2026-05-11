@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
 import { db, appointments } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
+import { notifyPatientAppointmentChange } from "@/lib/notify-patient-rdv";
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const user = await requireAuth(req);
@@ -72,6 +73,13 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       .set({ status: newStatus, ...extraFields, updatedAt: now })
       .where(eq(appointments.id, id))
       .returning({ status: appointments.status });
+
+    // In-app notification for the patient on the final transition.
+    if (newStatus === "cancelled") {
+      void notifyPatientAppointmentChange(id, "cancelled");
+    } else if (newStatus === "confirmed") {
+      void notifyPatientAppointmentChange(id, "confirmed");
+    }
 
     return NextResponse.json({ ok: true, status: updated.status });
   } catch (e) {

@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { db, patients } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { z } from "zod";
-import { getPatientFromRequest } from "@/lib/patient-auth";
+import { getPatientFromRequest, setPatientCookie, PATIENT_COOKIE_NAME } from "@/lib/patient-auth";
 
 export async function GET(req: NextRequest) {
   const payload = getPatientFromRequest(req);
@@ -43,7 +43,15 @@ export async function GET(req: NextRequest) {
 
   if (!row) return NextResponse.json({ error: "Introuvable" }, { status: 404 });
 
-  return NextResponse.json(row);
+  const res = NextResponse.json(row);
+  // Auto-migrate legacy clients: if the request authenticated via Bearer header
+  // (no cookie yet), promote their JWT into a httpOnly cookie so future
+  // requests carry it automatically and server-side redirects work.
+  if (!req.cookies.get(PATIENT_COOKIE_NAME)) {
+    const auth = req.headers.get("authorization");
+    if (auth?.startsWith("Bearer ")) setPatientCookie(res, auth.slice(7));
+  }
+  return res;
 }
 
 const patchSchema = z.object({

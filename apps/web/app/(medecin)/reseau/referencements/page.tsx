@@ -61,7 +61,7 @@ export default async function ReferencementsPage() {
   const outgoing = rows.filter((r) => r.direction === "out");
 
   return (
-    <div className="space-y-6 max-w-5xl mx-auto">
+    <div className="space-y-6">
       <Link
         href="/reseau"
         className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-primary"
@@ -80,14 +80,14 @@ export default async function ReferencementsPage() {
         </p>
       </div>
 
-      <section className="rounded-2xl border border-border bg-white shadow-sm p-5">
+      <section className="ds-card p-5">
         <h2 className="font-semibold text-foreground mb-3">
           {t("incomingTitle", { count: incoming.length })}
         </h2>
         <ReferralList rows={incoming} direction="in" t={t} />
       </section>
 
-      <section className="rounded-2xl border border-border bg-white shadow-sm p-5">
+      <section className="ds-card p-5">
         <h2 className="font-semibold text-foreground mb-3">
           {t("outgoingTitle", { count: outgoing.length })}
         </h2>

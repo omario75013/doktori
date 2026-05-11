@@ -77,7 +77,7 @@ export default function ConventionsPage() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 p-6 shadow-sm max-w-xl space-y-4">
+      <div className="ds-card p-6 shadow-sm space-y-4">
         {INSURANCES.map((ins) => (
           <div
             key={ins.id}

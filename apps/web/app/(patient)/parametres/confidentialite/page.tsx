@@ -54,7 +54,7 @@ export default function ConfidentialiteParametresPage() {
   const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    const stored = localStorage.getItem("doktori_patient_token");
+    const stored = sessionStorage.getItem("doktori_patient_session");
     if (!stored) {
       router.replace("/connexion-patient");
       return;

@@ -150,7 +150,7 @@ function KpiCard({
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      className="rounded-2xl border border-border bg-white p-5 shadow-sm hover:shadow-md transition-shadow"
+      className="ds-card p-5 shadow-sm hover:shadow-md transition-shadow"
     >
       <div className="flex items-start justify-between">
         <div>
@@ -183,7 +183,7 @@ function MonthlyChart({ monthly }: { monthly: MonthlyRow[] }) {
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      className="rounded-2xl border border-border bg-white p-5 shadow-sm"
+      className="ds-card p-5 shadow-sm"
     >
       <SectionHeader title={t("monthlyTitle")} subtitle={t("monthlySubtitle")} />
       {monthly.length === 0 ? (
@@ -239,7 +239,7 @@ function PeakHoursChart({ peaks }: { peaks: PeakRow[] }) {
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      className="rounded-2xl border border-border bg-white p-5 shadow-sm"
+      className="ds-card p-5 shadow-sm"
     >
       <SectionHeader title={t("peakHoursTitle")} subtitle={t("peakHoursSubtitle")} />
       {peaks.length === 0 ? (
@@ -326,7 +326,7 @@ function StatusDonut({ monthly }: { monthly: MonthlyRow[] }) {
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      className="rounded-2xl border border-border bg-white p-5 shadow-sm"
+      className="ds-card p-5 shadow-sm"
     >
       <SectionHeader title={t("statusDistributionTitle")} subtitle={t("statusDistributionSubtitle")} />
       {total === 0 ? (
@@ -390,7 +390,7 @@ function PatientTypeSection({
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      className="rounded-2xl border border-border bg-white p-5 shadow-sm"
+      className="ds-card p-5 shadow-sm"
     >
       <SectionHeader title={t("patientsTitle")} subtitle={t("patientsSubtitle")} />
       {total === 0 ? (
@@ -474,7 +474,7 @@ function TopReasons({ reasons }: { reasons: ReasonRow[] }) {
       variants={fadeUp}
       initial="hidden"
       animate="visible"
-      className="rounded-2xl border border-border bg-white p-5 shadow-sm"
+      className="ds-card p-5 shadow-sm"
     >
       <SectionHeader title={t("topReasonsTitle")} subtitle={t("topReasonsSubtitle")} />
       {reasons.length === 0 ? (
@@ -614,7 +614,7 @@ export function StatsClient({
       </div>
 
       {/* Peer benchmarks (anonymized rank within specialty + city) */}
-      <div className="rounded-2xl border border-border bg-white dark:bg-gray-900 dark:border-gray-700 p-5 shadow-sm">
+      <div className="ds-card dark:border-gray-700 p-5 shadow-sm">
         <SectionHeader
           title="Comparaison avec mes pairs"
           subtitle="Votre position relative parmi les médecins de la même spécialité, dans votre ville"

@@ -135,7 +135,7 @@ export default function QuestionsPage({
   }
 
   return (
-    <div className="max-w-2xl">
+    <div className="w-full">
       <div className="mb-6 flex items-center gap-3">
         <Link
           href="/motifs"
@@ -157,7 +157,7 @@ export default function QuestionsPage({
         </div>
       )}
 
-      <div className="rounded-2xl border border-border bg-white shadow-sm p-5 mb-6">
+      <div className="ds-card p-5 mb-6">
         <h2 className="font-semibold text-foreground mb-4 flex items-center gap-2">
           <Plus className="h-4 w-4 text-primary" />
           {t("addQuestion")}
@@ -234,7 +234,7 @@ export default function QuestionsPage({
         </form>
       </div>
 
-      <div className="rounded-2xl border border-border bg-white shadow-sm">
+      <div className="ds-card">
         <div className="p-4 border-b border-border">
           <h2 className="font-semibold text-foreground">
             {t("countLabel", { count: loading ? "…" : questions.length })}

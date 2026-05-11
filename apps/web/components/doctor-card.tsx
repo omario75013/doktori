@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { useTranslations, useLocale } from "next-intl";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
@@ -50,6 +51,7 @@ function toISODate(d: Date): string {
 }
 
 function DoctorSlots({ slug }: { slug: string }) {
+  const router = useRouter();
   const [days, setDays] = useState<SlotDay[]>([]);
 
   useEffect(() => {
@@ -88,24 +90,32 @@ function DoctorSlots({ slug }: { slug: string }) {
                   <span className="text-[10px] text-gray-300 italic">—</span>
                 ) : (
                   <>
-                    {shownSlots.map((slot) => (
-                      <Link
-                        key={slot.startTime}
-                        href={`/rdv/${slug}?date=${day.date}&time=${slot.startTime}`}
-                        onClick={(e) => e.stopPropagation()}
+                    {shownSlots.map((slot, idx) => (
+                      <button
+                        type="button"
+                        key={`${day.date}-${slot.startTime}-${idx}`}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          router.push(`/rdv/${slug}?date=${day.date}&time=${slot.startTime}`);
+                        }}
                         className="inline-flex items-center rounded-lg bg-secondary border border-border px-2 py-0.5 text-[10px] font-bold text-primary hover:bg-primary hover:text-white hover:border-primary transition-colors"
                       >
                         {slot.startTime.slice(0, 5)}
-                      </Link>
+                      </button>
                     ))}
                     {extra > 0 && (
-                      <Link
-                        href={`/medecin/${slug}`}
-                        onClick={(e) => e.stopPropagation()}
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          router.push(`/medecin/${slug}`);
+                        }}
                         className="inline-flex items-center rounded-lg bg-secondary border border-border px-2 py-0.5 text-[10px] font-medium text-muted-foreground hover:text-primary transition-colors"
                       >
                         +{extra}
-                      </Link>
+                      </button>
                     )}
                   </>
                 )}

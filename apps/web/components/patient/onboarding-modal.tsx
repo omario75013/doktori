@@ -5,7 +5,7 @@ import { useRouter, usePathname } from "next/navigation";
 import { Sparkles, Bell, User, Search, ChevronRight, X, Check } from "lucide-react";
 
 const STORAGE_KEY = "doktori_onboarded";
-const TOKEN_KEY = "doktori_patient_token";
+const TOKEN_KEY = "doktori_patient_session";
 
 const STEPS = [
   {
@@ -44,7 +44,7 @@ export function OnboardingModal() {
     if (typeof window === "undefined") return;
     try {
       const onboarded = localStorage.getItem(STORAGE_KEY);
-      const token = localStorage.getItem(TOKEN_KEY);
+      const token = sessionStorage.getItem(TOKEN_KEY);
       if (!onboarded && token) {
         // Defer to next tick to avoid SSR hydration warning
         const t = setTimeout(() => setOpen(true), 400);

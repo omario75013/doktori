@@ -101,7 +101,7 @@ export function CabinetGalleryUploader({
   }
 
   return (
-    <section className="rounded-2xl border border-border bg-white p-5 shadow-sm">
+    <section className="ds-card p-5 shadow-sm">
       <div className="mb-3 flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-secondary text-primary">

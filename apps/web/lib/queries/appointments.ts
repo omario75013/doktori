@@ -189,7 +189,11 @@ export async function createAppointment(data: {
         dependentId: data.dependentId,
         practiceId: data.practiceId,
         type: data.type || "cabinet",
-        status: "confirmed",
+        // Patient-initiated bookings start in "pending" until the doctor or
+        // secretary explicitly confirms them. Server-side confirmations
+        // (e.g. waitlist auto-promotion) update the row to "confirmed" via
+        // a separate code path.
+        status: "pending",
       })
       .returning();
 

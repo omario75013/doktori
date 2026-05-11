@@ -15,7 +15,7 @@ import {
   uniqueIndex,
   primaryKey,
 } from "drizzle-orm/pg-core";
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 
 export type DoctorEducation = {
   degree: string;
@@ -327,6 +327,9 @@ export const patientAttachments = pgTable(
     issuedAt: date("issued_at"),
     uploadedAt: timestamp("uploaded_at", { withTimezone: true }).notNull().defaultNow(),
     deletedAt: timestamp("deleted_at", { withTimezone: true }),
+    // Doctors the patient has explicitly shared this attachment with.
+    // Empty = private. Lets us avoid duplicating the file row when sharing.
+    sharedWithDoctorIds: uuid("shared_with_doctor_ids").array().notNull().default(sql`'{}'::uuid[]`),
   },
   (table) => [
     index("patient_attachments_patient_idx").on(table.patientId, table.uploadedAt),
@@ -1279,6 +1282,44 @@ export const doctorDocuments = pgTable(
 );
 
 
+// ── Patient ↔ Doctor shared documents ───────────────────────────────────────
+// One row per uploaded file. `uploadedBy` records who created it.
+// - patient upload: uploadedBy='patient', uploadedByDoctorId=null,
+//   sharedWithDoctorIds is the list of doctors the patient picked at upload.
+// - doctor upload inside fiche patient: uploadedBy='doctor',
+//   uploadedByDoctorId=that doctor, sharedWithDoctorIds defaults to [doctor].
+//   Patient sees it read-only with a "Créé par Dr X" badge.
+export const patientDocuments = pgTable(
+  "patient_documents",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id")
+      .notNull()
+      .references(() => patients.id, { onDelete: "cascade" }),
+    /** 'patient' | 'doctor' */
+    uploadedBy: varchar("uploaded_by", { length: 10 }).notNull(),
+    uploadedByDoctorId: uuid("uploaded_by_doctor_id").references(
+      () => doctors.id,
+      { onDelete: "set null" }
+    ),
+    sharedWithDoctorIds: uuid("shared_with_doctor_ids").array().notNull().default(sql`'{}'::uuid[]`),
+    fileUrl: text("file_url").notNull(),
+    fileName: varchar("file_name", { length: 255 }).notNull(),
+    mimeType: varchar("mime_type", { length: 100 }),
+    sizeBytes: integer("size_bytes"),
+    /** free-form category label e.g. 'ordonnance' | 'analyse' | 'imagerie' | 'autre' */
+    category: varchar("category", { length: 50 }),
+    title: varchar("title", { length: 255 }),
+    note: text("note"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("patient_documents_patient_idx").on(table.patientId),
+    index("patient_documents_doctor_idx").on(table.uploadedByDoctorId),
+  ]
+);
+
+
 // ── Phase 5: Doctor Network ─────────────────────────────────────────────────
 
 export const doctorConnections = pgTable(
@@ -1730,6 +1771,14 @@ export const patientNotificationPrefs = pgTable("patient_notification_prefs", {
   pushAppointments: boolean("push_appointments").notNull().default(true),
   pushMessages: boolean("push_messages").notNull().default(true),
   reminderOffsetHours: integer("reminder_offset_hours").notNull().default(24),
+  // Hours before the appointment to send reminders (e.g. [168, 24, 2] = week + day + 2h)
+  appointmentReminderOffsets: integer("appointment_reminder_offsets")
+    .array()
+    .notNull()
+    .default([168, 24, 2]),
+  vaccineRemindersEnabled: boolean("vaccine_reminders_enabled").notNull().default(true),
+  vaccineReminderDaysBefore: integer("vaccine_reminder_days_before").notNull().default(30),
+  medicationRemindersEnabled: boolean("medication_reminders_enabled").notNull().default(true),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
 });
 
@@ -1817,6 +1866,10 @@ export const patientMedications = pgTable(
     startedAt: date("started_at"),
     endedAt: date("ended_at"),
     notes: text("notes"),
+    // Reminder settings — when enabled, the scheduler sends app/email pings at
+    // each `reminderTimes` HH:MM during the active window (startedAt → endedAt).
+    reminderEnabled: boolean("reminder_enabled").notNull().default(false),
+    reminderTimes: text("reminder_times").array().notNull().default([]),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index("patient_medications_patient_idx").on(table.patientId)]
