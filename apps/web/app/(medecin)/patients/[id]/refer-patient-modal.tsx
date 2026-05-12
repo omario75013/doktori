@@ -92,7 +92,7 @@ export function ReferPatientModal({
         }
         if (alive) setPeers(Array.from(peerSet.values()));
       } catch {
-        if (alive) toast.error("Impossible de charger les confrères");
+        if (alive) toast.error(t("referLoadError"));
       } finally {
         if (alive) setLoading(false);
       }
@@ -106,7 +106,7 @@ export function ReferPatientModal({
   async function submit() {
     if (!selectedPeerId) return;
     if (reason.trim().length < 3) {
-      toast.error("Indiquez le motif du référencement");
+      toast.error(t("reasonRequired"));
       return;
     }
     setSubmitting(true);
@@ -123,11 +123,11 @@ export function ReferPatientModal({
         }),
       });
       const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error ?? "Erreur");
-      toast.success("Patient référé");
+      if (!res.ok) throw new Error(data.error ?? t("errorGeneric"));
+      toast.success(t("referSuccess"));
       onClose();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur");
+      toast.error(e instanceof Error ? e.message : t("errorGeneric"));
     } finally {
       setSubmitting(false);
     }
@@ -145,7 +145,7 @@ export function ReferPatientModal({
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-border">
           <h3 className="text-[15px] font-bold text-gray-900 dark:text-white">
-            Référer {patientName}
+            {t("referModalTitle", { name: patientName })}
           </h3>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700">
             <X className="w-4 h-4" />
@@ -160,10 +160,9 @@ export function ReferPatientModal({
               <Loader2 className="h-5 w-5 animate-spin text-gray-400 mx-auto" />
             ) : peers.length === 0 ? (
               <div className="rounded-xl border border-dashed border-border bg-secondary/40 px-3 py-4 text-center text-xs text-gray-500">
-                Aucun confrère connecté. Ajoutez d&apos;abord un médecin à votre réseau
-                via{" "}
+                {t("referEmptyPeers")}{" "}
                 <a href="/reseau" className="text-primary underline">
-                  Réseau
+                  {t("referEmptyPeersLink")}
                 </a>
                 .
               </div>
@@ -228,7 +227,7 @@ export function ReferPatientModal({
               value={reason}
               onChange={(e) => setReason(e.target.value)}
               rows={2}
-              placeholder="Ex : Avis cardio sur palpitations…"
+              placeholder={t("reasonPlaceholder")}
               className="w-full rounded-xl border border-border bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
             />
           </section>
@@ -241,7 +240,7 @@ export function ReferPatientModal({
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
               rows={2}
-              placeholder="Optionnel — notes additionnelles"
+              placeholder={t("notesPlaceholder")}
               className="w-full rounded-xl border border-border bg-white dark:bg-gray-800 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary resize-none"
             />
           </section>
@@ -254,9 +253,9 @@ export function ReferPatientModal({
               className="mt-0.5"
             />
             <span className="text-[13px] text-foreground">
-              Partager le dossier médical
+              {t("shareDossier")}
               <span className="block text-[11px] text-gray-500">
-                Le patient devra accepter via un lien de consentement.
+                {t("shareDossierHint")}
               </span>
             </span>
           </label>
@@ -268,7 +267,7 @@ export function ReferPatientModal({
             disabled={submitting}
             className="flex-1 py-2 rounded-xl border border-border bg-white text-sm text-gray-600 hover:bg-secondary disabled:opacity-50"
           >
-            Annuler
+            {t("cancel")}
           </button>
           <button
             type="button"
@@ -281,7 +280,7 @@ export function ReferPatientModal({
             ) : (
               <Send className="w-4 h-4" />
             )}
-            Envoyer
+            {t("send")}
           </button>
         </div>
       </div>
