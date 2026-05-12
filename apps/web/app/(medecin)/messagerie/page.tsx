@@ -19,6 +19,7 @@ import {
   PhoneMissed,
   PhoneOff,
   RotateCw,
+  MoreVertical,
 } from "lucide-react";
 import { CallButton } from "@/components/call-ui";
 import { format } from "date-fns";
@@ -194,6 +195,7 @@ export default function MessageriePage() {
   const [showStatusModal, setShowStatusModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editDraft, setEditDraft] = useState("");
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const socketRef = useRef<unknown>(null);
@@ -338,6 +340,24 @@ export default function MessageriePage() {
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
+
+  // Close the bubble action menu on any outside click / Escape.
+  useEffect(() => {
+    if (!openMenuId) return;
+    function onDoc(e: MouseEvent) {
+      const target = e.target as HTMLElement;
+      if (!target.closest("[data-msg-menu]")) setOpenMenuId(null);
+    }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === "Escape") setOpenMenuId(null);
+    }
+    document.addEventListener("mousedown", onDoc);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDoc);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [openMenuId]);
 
   function pickImage() {
     fileRef.current?.click();
@@ -823,23 +843,56 @@ export default function MessageriePage() {
                             )}
                           </div>
                           {isMe && !isDeleted && !isEditingThis && (
-                            <div className="flex gap-1.5 mt-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
-                              {!m.imageUrl && (
-                                <button
-                                  type="button"
-                                  onClick={() => { setEditingId(m.id); setEditDraft(m.body); }}
-                                  className="text-[10px] text-gray-400 hover:text-primary"
-                                >
-                                  Modifier
-                                </button>
-                              )}
+                            <div
+                              data-msg-menu
+                              className={`relative mt-0.5 flex justify-end transition-opacity ${
+                                openMenuId === m.id
+                                  ? "opacity-100"
+                                  : "opacity-0 group-hover:opacity-100"
+                              }`}
+                            >
                               <button
                                 type="button"
-                                onClick={() => deleteMessage(m.id)}
-                                className="text-[10px] text-gray-400 hover:text-red-500"
+                                aria-label="Actions du message"
+                                onClick={() =>
+                                  setOpenMenuId((cur) => (cur === m.id ? null : m.id))
+                                }
+                                className="h-5 w-5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-secondary/60"
                               >
-                                <Trash2 className="w-3 h-3 inline" /> Supprimer
+                                <MoreVertical className="w-3.5 h-3.5" />
                               </button>
+                              {openMenuId === m.id && (
+                                <div
+                                  data-msg-menu
+                                  className="absolute right-0 top-6 z-20 min-w-[140px] rounded-xl border border-border bg-white dark:bg-gray-900 shadow-lg py-1"
+                                >
+                                  {!m.imageUrl && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingId(m.id);
+                                        setEditDraft(m.body);
+                                        setOpenMenuId(null);
+                                      }}
+                                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-secondary/60"
+                                    >
+                                      <Pencil className="w-3.5 h-3.5" />
+                                      Modifier
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOpenMenuId(null);
+                                      deleteMessage(m.id);
+                                    }}
+                                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    Supprimer
+                                  </button>
+                                </div>
+                              )}
                             </div>
                           )}
                         </div>
