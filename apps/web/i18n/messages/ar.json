@@ -193,7 +193,10 @@
     "errorSendCode": "خطأ في إرسال الرمز",
     "errorInvalidCode": "رمز غير صالح",
     "errorInvalidCredentials": "بيانات الدخول غير صحيحة",
-    "errorGeneric": "حدث خطأ. يرجى المحاولة مجدداً."
+    "errorGeneric": "حدث خطأ. يرجى المحاولة مجدداً.",
+    "otpPlaceholder": "123456",
+    "emailPlaceholder": "email@example.com",
+    "passwordPlaceholder": "••••••••"
   },
   "secretaryLogin": {
     "badge": "فضاء السكرتيرة",
@@ -2611,6 +2614,28 @@
       "invalidTitle": "الوصفة غير موجودة",
       "invalidSubtitle": "لا يتطابق رمز الاستجابة السريعة هذا مع أي وصفة طبية صالحة في نظامنا.",
       "invalidExplanation": "قد يعني ذلك أن الوصفة الطبية قد تم تزويرها أو أن رمز الاستجابة السريعة تالف. إذا كنت تعتقد أن هذا خطأ، يرجى الاتصال بالطبيب مباشرة."
+    }
+  },
+  "patient": {
+    "mesRdv": {
+      "searchPlaceholder": "الطبيب، السبب، أحد الأقارب…",
+      "notePlaceholder": "مثل: ظرف طارئ، استشفاء، موعد بديل…",
+      "fieldDate": "التاريخ",
+      "fieldTime": "الموعد",
+      "fieldType": "النوع",
+      "fieldStatus": "الحالة",
+      "fieldAddress": "العنوان",
+      "fieldFor": "لـ",
+      "fieldReason": "السبب",
+      "typeTeleconsult": "استشارة عن بُعد",
+      "typeCabinet": "في العيادة",
+      "statusCancelled": "ملغى",
+      "statusRescheduleRequested": "طلب إعادة جدولة",
+      "statusCancelRequested": "طلب إلغاء",
+      "statusConfirmed": "مؤكد",
+      "statusPending": "قيد الانتظار",
+      "prevMonth": "الشهر السابق",
+      "nextMonth": "الشهر التالي"
     }
   }
 }

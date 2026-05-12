@@ -274,7 +274,7 @@ export function ConnexionPatientClient() {
                       id="code"
                       value={code}
                       onChange={(e) => setCode(e.target.value)}
-                      placeholder="123456"
+                      placeholder={t("otpPlaceholder")}
                       maxLength={6}
                       required
                       className="h-12 rounded-xl border-border focus-visible:ring-primary text-center text-xl tracking-widest font-bold"
@@ -313,7 +313,7 @@ export function ConnexionPatientClient() {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="votre@email.com"
+                      placeholder={t("emailPlaceholder")}
                       autoComplete="email"
                       required
                       className="h-12 rounded-xl border-border focus-visible:ring-primary"
@@ -328,7 +328,7 @@ export function ConnexionPatientClient() {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
+                      placeholder={t("passwordPlaceholder")}
                       autoComplete="current-password"
                       required
                       className="h-12 rounded-xl border-border focus-visible:ring-primary"

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { io, Socket } from "socket.io-client";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -42,13 +43,6 @@ interface Earnings {
   session_count: number;
 }
 
-const DECLINE_REASONS = [
-  { value: "too_far", label: "Trop loin" },
-  { value: "unavailable", label: "Pas disponible" },
-  { value: "out_of_scope", label: "Hors compétence" },
-  { value: "other", label: "Autre" },
-];
-
 import {
   SOS_STATUS_LABELS,
   SOS_STATUS_COLORS,
@@ -81,6 +75,8 @@ import { StarRating } from "@/components/star-rating";
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function SOSPage() {
+  const t = useTranslations("sos.medecin");
+
   // Settings
   const [sosAvailable, setSosAvailable] = useState(false);
   const [radiusKm, setRadiusKm] = useState(10);
@@ -245,7 +241,7 @@ export default function SOSPage() {
     }
 
     if (!navigator.geolocation) {
-      setError("Géolocalisation non supportée par votre navigateur");
+      setError(t("settings.geoUnsupported"));
       return;
     }
 
@@ -268,10 +264,10 @@ export default function SOSPage() {
           setSosAvailable(true);
         } else {
           const err = await res.json();
-          setError(err.error || "Erreur");
+          setError(err.error || t("settings.genericError"));
         }
       },
-      () => setError("Impossible d'obtenir votre position. Autorisez la géolocalisation."),
+      () => setError(t("settings.geoDenied")),
     );
   }
 
@@ -293,7 +289,7 @@ export default function SOSPage() {
       setCompleteFee(String(fee));
     } else {
       const err = await res.json();
-      setActionError(err.error || "Erreur lors de l'acceptation");
+      setActionError(err.error || t("active.acceptError"));
     }
   }
 
@@ -310,7 +306,7 @@ export default function SOSPage() {
     if (!activeSession) return;
     const feeNum = parseFloat(completeFee);
     if (isNaN(feeNum) || feeNum <= 0) {
-      setActionError("Veuillez saisir un tarif valide");
+      setActionError(t("active.invalidFee"));
       return;
     }
     setCompleting(true);
@@ -326,7 +322,7 @@ export default function SOSPage() {
       refreshFeed();
     } else {
       const err = await res.json();
-      setActionError(err.error || "Erreur lors de la clôture");
+      setActionError(err.error || t("active.closeError"));
     }
   }
 
@@ -350,13 +346,13 @@ export default function SOSPage() {
       refreshFeed();
     } else {
       const err = await res.json();
-      setActionError(err.error || "Erreur lors de l'annulation");
+      setActionError(err.error || t("active.cancelError"));
     }
   }
 
   // ── Render ──────────────────────────────────────────────────────────────────
 
-  if (loading) return <p className="text-gray-400 p-6">Chargement...</p>;
+  if (loading) return <p className="text-gray-400 p-6">{t("loading")}</p>;
 
   const visibleFeed = feed.filter((r) => !declinedIds.has(r.id));
 
@@ -369,7 +365,7 @@ export default function SOSPage() {
           <button
             onClick={() => setActionError(null)}
             className="shrink-0 text-red-400 hover:text-red-600 font-medium leading-none"
-            aria-label="Fermer"
+            aria-label={t("actionErrorClose")}
           >
             ✕
           </button>
@@ -380,22 +376,22 @@ export default function SOSPage() {
       {showCancelConfirm && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-sm w-full mx-4 space-y-4">
-            <h3 className="font-semibold text-foreground">Annuler la consultation ?</h3>
+            <h3 className="font-semibold text-foreground">{t("cancelModal.title")}</h3>
             <p className="text-sm text-gray-600">
-              Cette action annulera la consultation en cours. Le patient sera notifié.
+              {t("cancelModal.body")}
             </p>
             <div className="flex gap-3 justify-end">
               <button
                 onClick={() => setShowCancelConfirm(false)}
                 className="px-4 py-2 text-sm rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50"
               >
-                Non
+                {t("cancelModal.no")}
               </button>
               <button
                 onClick={confirmCancelSession}
                 className="px-4 py-2 text-sm rounded-lg bg-red-600 text-white hover:bg-red-700"
               >
-                Oui, annuler
+                {t("cancelModal.yesCancel")}
               </button>
             </div>
           </div>
@@ -404,12 +400,12 @@ export default function SOSPage() {
 
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-foreground">SOS Docteur</h1>
+        <h1 className="text-2xl font-bold text-foreground">{t("header.title")}</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Activez le mode urgence pour recevoir des demandes de consultation rapide dans votre zone.
+          {t("header.subtitle")}
         </p>
         <strong className="block mt-1 text-sm text-orange-600">
-          Ce n&apos;est PAS un service d&apos;urgence vitale — composez le 190 pour le SAMU.
+          {t("header.notVital")}
         </strong>
       </div>
 
@@ -424,15 +420,15 @@ export default function SOSPage() {
           }`}
         >
           {sosAvailable
-            ? "Vous êtes disponible — les patients peuvent vous solliciter"
-            : "Mode SOS désactivé"}
+            ? t("settings.statusAvailable")
+            : t("settings.statusDisabled")}
         </div>
 
         {/* Settings fields (shown when disabled) */}
         {!sosAvailable && (
           <div className="space-y-4">
             <div>
-              <Label htmlFor="radius">Rayon (km)</Label>
+              <Label htmlFor="radius">{t("settings.radiusLabel")}</Label>
               <Input
                 id="radius"
                 type="number"
@@ -443,7 +439,7 @@ export default function SOSPage() {
               />
             </div>
             <div>
-              <Label htmlFor="fee">Tarif consultation urgence (DT)</Label>
+              <Label htmlFor="fee">{t("settings.feeLabel")}</Label>
               <Input
                 id="fee"
                 type="number"
@@ -465,14 +461,14 @@ export default function SOSPage() {
                   className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                 />
                 <Label htmlFor="allday" className="cursor-pointer">
-                  24h/24 (toujours disponible)
+                  {t("settings.allDayLabel")}
                 </Label>
               </div>
 
               {!allDay && (
                 <div className="flex items-center gap-3">
                   <div className="flex-1">
-                    <Label htmlFor="from">Disponible de</Label>
+                    <Label htmlFor="from">{t("settings.fromLabel")}</Label>
                     <input
                       id="from"
                       type="time"
@@ -482,7 +478,7 @@ export default function SOSPage() {
                     />
                   </div>
                   <div className="flex-1">
-                    <Label htmlFor="to">à</Label>
+                    <Label htmlFor="to">{t("settings.toLabel")}</Label>
                     <input
                       id="to"
                       type="time"
@@ -503,7 +499,7 @@ export default function SOSPage() {
           onClick={toggleSOS}
           className={sosAvailable ? "bg-red-600 hover:bg-red-700" : "bg-primary hover:bg-primary/90"}
         >
-          {sosAvailable ? "Désactiver le mode SOS" : "Activer le mode SOS"}
+          {sosAvailable ? t("settings.deactivate") : t("settings.activate")}
         </Button>
       </div>
 
@@ -512,24 +508,24 @@ export default function SOSPage() {
         <div className="bg-white rounded-xl border border-primary p-6 space-y-4">
           <div className="flex items-center gap-2">
             <span className="inline-block w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-            <h2 className="font-semibold text-foreground">Consultation en cours</h2>
+            <h2 className="font-semibold text-foreground">{t("active.title")}</h2>
           </div>
 
           <div className="space-y-1 text-sm">
             <p>
-              <span className="text-gray-500">Patient :</span>{" "}
+              <span className="text-gray-500">{t("active.patient")}</span>{" "}
               <span className="font-medium">{activeSession.patient_name}</span>
             </p>
             <p>
-              <span className="text-gray-500">Symptôme :</span>{" "}
-              {activeSession.symptom_category || "Non spécifié"}
+              <span className="text-gray-500">{t("active.symptom")}</span>{" "}
+              {activeSession.symptom_category || t("active.symptomUnspecified")}
             </p>
             <p>
-              <span className="text-gray-500">Distance :</span>{" "}
+              <span className="text-gray-500">{t("active.distance")}</span>{" "}
               {(activeSession.distance_m / 1000).toFixed(1)} km
             </p>
             <p>
-              <span className="text-gray-500">Temps écoulé :</span>{" "}
+              <span className="text-gray-500">{t("active.elapsed")}</span>{" "}
               <LiveTimer since={activeSession.accepted_at} />
             </p>
           </div>
@@ -540,7 +536,7 @@ export default function SOSPage() {
                 onClick={() => setShowCompleteForm(true)}
                 className="bg-primary hover:bg-primary/90"
               >
-                Consultation terminée
+                {t("active.complete")}
               </Button>
               <Button
                 variant="outline"
@@ -548,13 +544,13 @@ export default function SOSPage() {
                 disabled={cancelling}
                 className="border-red-300 text-red-600 hover:bg-red-50"
               >
-                {cancelling ? "Annulation..." : "Annuler"}
+                {cancelling ? t("active.cancelling") : t("active.cancel")}
               </Button>
             </div>
           ) : (
             <div className="space-y-3 border-t pt-4">
               <div>
-                <Label htmlFor="completeFee">Tarif de la consultation (DT)</Label>
+                <Label htmlFor="completeFee">{t("active.feeLabel")}</Label>
                 <Input
                   id="completeFee"
                   type="number"
@@ -571,10 +567,10 @@ export default function SOSPage() {
                   disabled={completing}
                   className="bg-primary hover:bg-primary/90"
                 >
-                  {completing ? "Enregistrement..." : "Confirmer et clôturer"}
+                  {completing ? t("active.saving") : t("active.confirmComplete")}
                 </Button>
                 <Button variant="outline" onClick={() => setShowCompleteForm(false)}>
-                  Retour
+                  {t("active.back")}
                 </Button>
               </div>
             </div>
@@ -587,14 +583,14 @@ export default function SOSPage() {
         <div className="bg-white rounded-xl border">
           <div className="p-4 border-b flex items-center justify-between">
             <h2 className="font-semibold text-foreground">
-              Demandes en cours ({visibleFeed.length})
+              {t("feed.title", { count: visibleFeed.length })}
             </h2>
-            <span className="text-xs text-gray-400">Mise à jour en temps réel</span>
+            <span className="text-xs text-gray-400">{t("feed.liveUpdate")}</span>
           </div>
 
           {visibleFeed.length === 0 ? (
             <p className="p-6 text-center text-sm text-gray-400">
-              Aucune demande pour le moment
+              {t("feed.empty")}
             </p>
           ) : (
             <div className="divide-y">
@@ -613,25 +609,25 @@ export default function SOSPage() {
 
       {/* History */}
       <div className="space-y-4">
-        <h2 className="text-lg font-semibold text-foreground">Historique SOS</h2>
+        <h2 className="text-lg font-semibold text-foreground">{t("history.title")}</h2>
 
         {/* Earnings KPI strip */}
         {earnings && (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             <KpiCard
-              label="Ce mois (recettes)"
+              label={t("history.kpiRevenues")}
               value={formatDT(Number(earnings.total_fee))}
             />
             <KpiCard
-              label="Commission"
+              label={t("history.kpiCommission")}
               value={formatDT(Number(earnings.total_commission))}
             />
             <KpiCard
-              label="Net"
+              label={t("history.kpiNet")}
               value={formatDT(Number(earnings.total_fee) - Number(earnings.total_commission))}
             />
             <KpiCard
-              label="Sessions"
+              label={t("history.kpiSessions")}
               value={String(earnings.session_count)}
             />
           </div>
@@ -639,18 +635,18 @@ export default function SOSPage() {
 
         {/* History table */}
         {history.length === 0 ? (
-          <p className="text-sm text-gray-400">Aucune session dans l&apos;historique.</p>
+          <p className="text-sm text-gray-400">{t("history.empty")}</p>
         ) : (
           <div className="bg-white rounded-xl border overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="border-b bg-gray-50 text-left text-xs text-gray-500 uppercase tracking-wide">
-                  <th className="px-4 py-3">Date</th>
-                  <th className="px-4 py-3">Patient</th>
-                  <th className="px-4 py-3">Symptôme</th>
-                  <th className="px-4 py-3">Statut</th>
-                  <th className="px-4 py-3 text-right">Tarif</th>
-                  <th className="px-4 py-3 text-right">Note</th>
+                <tr className="border-b bg-gray-50 text-start text-xs text-gray-500 uppercase tracking-wide">
+                  <th className="px-4 py-3">{t("history.colDate")}</th>
+                  <th className="px-4 py-3">{t("history.colPatient")}</th>
+                  <th className="px-4 py-3">{t("history.colSymptom")}</th>
+                  <th className="px-4 py-3">{t("history.colStatus")}</th>
+                  <th className="px-4 py-3 text-end">{t("history.colFee")}</th>
+                  <th className="px-4 py-3 text-end">{t("history.colRating")}</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
@@ -670,7 +666,7 @@ export default function SOSPage() {
                       </td>
                       <td className="px-4 py-3 font-medium">{row.patient_name}</td>
                       <td className="px-4 py-3 text-gray-600">
-                        {row.symptom_category || "—"}
+                        {row.symptom_category || t("history.symptomDash")}
                       </td>
                       <td className="px-4 py-3">
                         <span
@@ -679,8 +675,8 @@ export default function SOSPage() {
                           {badge.label}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-right">{formatDT(row.fee)}</td>
-                      <td className="px-4 py-3 text-right">
+                      <td className="px-4 py-3 text-end">{formatDT(row.fee)}</td>
+                      <td className="px-4 py-3 text-end">
                         <StarRating value={row.rating ?? 0} readOnly size="sm" />
                       </td>
                     </tr>
@@ -706,7 +702,15 @@ function FeedCard({
   onAccept: () => void;
   onDecline: (reason: string) => void;
 }) {
+  const t = useTranslations("sos.medecin.feed");
   const [selectedReason, setSelectedReason] = useState("");
+
+  const DECLINE_REASONS = [
+    { value: "too_far", label: t("reasonTooFar") },
+    { value: "unavailable", label: t("reasonUnavailable") },
+    { value: "out_of_scope", label: t("reasonOutOfScope") },
+    { value: "other", label: t("reasonOther") },
+  ];
 
   function handleDecline() {
     if (!selectedReason) return;
@@ -720,7 +724,7 @@ function FeedCard({
           <div className="font-medium text-foreground">{request.patient_name}</div>
           <div className="text-xs text-gray-500 mt-0.5">
             {(request.distance_m / 1000).toFixed(1)} km &middot;{" "}
-            {request.symptom_category || "Non spécifié"}
+            {request.symptom_category || t("symptomUnspecified")}
           </div>
           {request.description && (
             <div className="text-sm text-gray-700 mt-2 line-clamp-2">
@@ -733,7 +737,7 @@ function FeedCard({
           onClick={onAccept}
           className="shrink-0 bg-primary hover:bg-primary/90"
         >
-          Accepter
+          {t("accept")}
         </Button>
       </div>
 
@@ -744,7 +748,7 @@ function FeedCard({
           onChange={(e) => setSelectedReason(e.target.value)}
           className="flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm text-gray-600 focus:outline-none focus:ring-2 focus:ring-primary"
         >
-          <option value="">Décliner — choisir une raison</option>
+          <option value="">{t("declineChoose")}</option>
           {DECLINE_REASONS.map((r) => (
             <option key={r.value} value={r.value}>
               {r.label}
@@ -758,7 +762,7 @@ function FeedCard({
           disabled={!selectedReason}
           className="border-gray-300 text-gray-600 hover:bg-gray-50"
         >
-          Décliner
+          {t("decline")}
         </Button>
       </div>
     </div>

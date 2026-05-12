@@ -211,7 +211,10 @@
     "errorSendCode": "Erreur lors de l'envoi du code",
     "errorInvalidCode": "Code invalide",
     "errorInvalidCredentials": "Identifiants invalides",
-    "errorGeneric": "Une erreur est survenue. Veuillez réessayer."
+    "errorGeneric": "Une erreur est survenue. Veuillez réessayer.",
+    "otpPlaceholder": "123456",
+    "emailPlaceholder": "votre@email.com",
+    "passwordPlaceholder": "••••••••"
   },
   "secretaryLogin": {
     "badge": "ESPACE SECRÉTAIRE",
@@ -2611,6 +2614,28 @@
       "invalidTitle": "Ordonnance non trouvée",
       "invalidSubtitle": "Ce QR code ne correspond à aucune ordonnance valide dans notre système.",
       "invalidExplanation": "Cela peut signifier que l'ordonnance a été falsifiée ou que le QR code est endommagé. Si vous pensez qu'il s'agit d'une erreur, veuillez contacter le médecin directement."
+    }
+  },
+  "patient": {
+    "mesRdv": {
+      "searchPlaceholder": "Médecin, motif, proche…",
+      "notePlaceholder": "Ex. empêchement, hospitalisation, autre disponibilité…",
+      "fieldDate": "Date",
+      "fieldTime": "Horaire",
+      "fieldType": "Type",
+      "fieldStatus": "Statut",
+      "fieldAddress": "Adresse",
+      "fieldFor": "Pour",
+      "fieldReason": "Motif",
+      "typeTeleconsult": "Téléconsultation",
+      "typeCabinet": "Cabinet",
+      "statusCancelled": "Annulé",
+      "statusRescheduleRequested": "Report demandé",
+      "statusCancelRequested": "Annulation demandée",
+      "statusConfirmed": "Confirmé",
+      "statusPending": "En attente",
+      "prevMonth": "Mois précédent",
+      "nextMonth": "Mois suivant"
     }
   }
 }

@@ -3,7 +3,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { format, isPast, isSameDay, isSameMonth, addMonths, subMonths } from "date-fns";
-import { fr } from "date-fns/locale";
+import { ar, fr } from "date-fns/locale";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Plus,
   Calendar,
@@ -52,6 +53,9 @@ const DAY_FR_SHORT = ["DIM", "LUN", "MAR", "MER", "JEU", "VEN", "SAM"];
 
 export default function MesRdvPage() {
   const router = useRouter();
+  const t = useTranslations("patient.mesRdv");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<Tab>("upcoming");
@@ -262,7 +266,7 @@ export default function MesRdvPage() {
               <input
                 value={searchQ}
                 onChange={(e) => setSearchQ(e.target.value)}
-                placeholder="Médecin, motif, proche…"
+                placeholder={t("searchPlaceholder")}
                 className="w-full rounded-xl px-3 py-2 text-[13.5px] outline-none"
                 style={{ background: "#fff", border: "1px solid var(--line-cool)" }}
               />
@@ -564,6 +568,9 @@ function DetailsModal({
   onSubmit: () => void;
   onClose: () => void;
 }) {
+  const t = useTranslations("patient.mesRdv");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
   const date = new Date(a.startsAt);
   const end = new Date(a.endsAt);
   const isVideo = a.type === "teleconsult" || a.type === "teleconsultation";
@@ -602,32 +609,32 @@ function DetailsModal({
           </div>
 
           <div className="grid grid-cols-2 gap-3">
-            <Info label="Date" value={format(date, "EEEE d MMMM yyyy", { locale: fr })} />
+            <Info label={t("fieldDate")} value={format(date, "EEEE d MMMM yyyy", { locale: dateLocale })} />
             <Info
-              label="Horaire"
-              value={`${format(date, "HH:mm", { locale: fr })} – ${format(end, "HH:mm", { locale: fr })}`}
+              label={t("fieldTime")}
+              value={`${format(date, "HH:mm", { locale: dateLocale })} – ${format(end, "HH:mm", { locale: dateLocale })}`}
             />
-            <Info label="Type" value={isVideo ? "Téléconsultation" : "Cabinet"} />
+            <Info label={t("fieldType")} value={isVideo ? t("typeTeleconsult") : t("typeCabinet")} />
             <Info
-              label="Statut"
+              label={t("fieldStatus")}
               value={
                 isCancelled
-                  ? "Annulé"
+                  ? t("statusCancelled")
                   : isRescheduleReq
-                  ? "Report demandé"
+                  ? t("statusRescheduleRequested")
                   : isCancelReq
-                  ? "Annulation demandée"
+                  ? t("statusCancelRequested")
                   : a.status === "confirmed"
-                  ? "Confirmé"
-                  : "En attente"
+                  ? t("statusConfirmed")
+                  : t("statusPending")
               }
             />
             {!isVideo && a.doctorAddress && (
-              <Info label="Adresse" value={a.doctorAddress} wide />
+              <Info label={t("fieldAddress")} value={a.doctorAddress} wide />
             )}
             {a.beneficiaryName && (
               <Info
-                label="Pour"
+                label={t("fieldFor")}
                 wide
                 value={`${a.beneficiaryName}${
                   a.beneficiaryRelation && RELATION_LABEL[a.beneficiaryRelation]
@@ -636,7 +643,7 @@ function DetailsModal({
                 }`}
               />
             )}
-            {a.reason && <Info label="Motif" value={a.reason} wide />}
+            {a.reason && <Info label={t("fieldReason")} value={a.reason} wide />}
           </div>
 
           {/* Action area */}
@@ -677,7 +684,7 @@ function DetailsModal({
               <textarea
                 value={note}
                 onChange={(e) => onSetNote(e.target.value)}
-                placeholder="Ex. empêchement, hospitalisation, autre disponibilité…"
+                placeholder={t("notePlaceholder")}
                 rows={3}
                 maxLength={400}
                 className="w-full rounded-lg px-3 py-2 text-[13px] outline-none"
@@ -772,6 +779,9 @@ function CalendarView({
   onNext: () => void;
   onSelect: (a: Appointment) => void;
 }) {
+  const tCal = useTranslations("patient.mesRdv");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
   // Build a 6×7 grid starting on Monday
   const start = new Date(month.getFullYear(), month.getMonth(), 1);
   const startWeekday = (start.getDay() + 6) % 7; // Monday = 0
@@ -796,13 +806,13 @@ function CalendarView({
   return (
     <div className="ds-card-patient" style={{ padding: 16 }}>
       <div className="flex items-center justify-between mb-3">
-        <button type="button" onClick={onPrev} className="ds-btn ds-btn-ghost ds-btn-sm" aria-label="Mois précédent">
+        <button type="button" onClick={onPrev} className="ds-btn ds-btn-ghost ds-btn-sm" aria-label={tCal("prevMonth")}>
           <ChevronLeft className="w-4 h-4" />
         </button>
         <div className="font-bold text-[15px]" style={{ color: "var(--ink-900)" }}>
           {format(month, "MMMM yyyy", { locale: fr })}
         </div>
-        <button type="button" onClick={onNext} className="ds-btn ds-btn-ghost ds-btn-sm" aria-label="Mois suivant">
+        <button type="button" onClick={onNext} className="ds-btn ds-btn-ghost ds-btn-sm" aria-label={tCal("nextMonth")}>
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>

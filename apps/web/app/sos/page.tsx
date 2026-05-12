@@ -1,34 +1,42 @@
 import type { Metadata } from "next";
+import { getLocale, getTranslations } from "next-intl/server";
 import SOSPage from "./sos-client";
 import { getSettingOrDefault } from "@/lib/platform-settings";
 
-export const metadata: Metadata = {
-  title: "SOS Médecin — Urgence médicale à domicile en Tunisie",
-  description:
-    "Trouvez un médecin disponible près de chez vous en quelques minutes. Fièvre, douleur aiguë, enfant malade — urgences non-vitales uniquement, réponse rapide.",
-  alternates: {
-    canonical: "https://doktori.tn/sos",
-    languages: {
-      fr: "https://doktori.tn/sos",
-      ar: "https://doktori.tn/sos",
-      "x-default": "https://doktori.tn/sos",
+export async function generateMetadata(): Promise<Metadata> {
+  const locale = await getLocale();
+  const t = await getTranslations({ locale, namespace: "sos.meta" });
+  const title = t("title");
+  const description = t("description");
+  const ogDescription = t("ogDescription");
+
+  return {
+    title,
+    description,
+    alternates: {
+      canonical: "https://doktori.tn/sos",
+      languages: {
+        fr: "https://doktori.tn/sos",
+        ar: "https://doktori.tn/sos",
+        "x-default": "https://doktori.tn/sos",
+      },
     },
-  },
-  openGraph: {
-    title: "SOS Médecin — Urgence médicale à domicile en Tunisie",
-    description:
-      "Trouvez un médecin disponible près de chez vous en quelques minutes pour une urgence non-vitale.",
-    url: "https://doktori.tn/sos",
-    siteName: "Doktori",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "SOS Médecin — Urgence médicale à domicile en Tunisie",
-    description:
-      "Trouvez un médecin disponible près de chez vous en quelques minutes pour une urgence non-vitale.",
-  },
-};
+    openGraph: {
+      title,
+      description: ogDescription,
+      url: "https://doktori.tn/sos",
+      siteName: "Doktori",
+      locale: locale === "ar" ? "ar_TN" : "fr_TN",
+      alternateLocale: locale === "ar" ? "fr_TN" : "ar_TN",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: ogDescription,
+    },
+  };
+}
 
 export default async function Page() {
   const heroImageUrl = await getSettingOrDefault(

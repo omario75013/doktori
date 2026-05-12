@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import type { Socket } from "socket.io-client";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,7 +23,6 @@ import {
   Loader2,
   AlertTriangle,
   ChevronDown,
-  Heart,
   UserCheck,
   PhoneCall,
 } from "lucide-react";
@@ -88,7 +88,7 @@ function ProcessStep({
         <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br from-red-500 to-red-600 text-white shadow-lg shadow-red-500/25 transition-transform duration-300 group-hover:scale-110">
           <Icon className="h-7 w-7" strokeWidth={2} />
         </div>
-        <div className="absolute -top-2 -right-2 flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white ring-2 ring-white">
+        <div className="absolute -top-2 -end-2 flex h-7 w-7 items-center justify-center rounded-full bg-foreground text-xs font-bold text-white ring-2 ring-white">
           {number}
         </div>
       </div>
@@ -124,7 +124,7 @@ function TrustBadge({
 }
 
 // ── Pulsing SOS Button ──
-function PulsingSosButton({ onClick }: { onClick: () => void }) {
+function PulsingSosButton({ onClick, label }: { onClick: () => void; label: string }) {
   return (
     <div className="relative inline-flex">
       {/* Pulse rings */}
@@ -140,8 +140,8 @@ function PulsingSosButton({ onClick }: { onClick: () => void }) {
         className="relative z-10 flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-red-600 to-red-500 px-10 py-5 text-lg font-bold text-white shadow-xl shadow-red-500/30 transition-all hover:shadow-2xl hover:shadow-red-500/40"
       >
         <Siren className="h-6 w-6" strokeWidth={2.5} />
-        Demander un médecin maintenant
-        <ArrowRight className="h-5 w-5" />
+        {label}
+        <ArrowRight className="h-5 w-5 rtl:rotate-180" />
       </motion.button>
     </div>
   );
@@ -167,7 +167,7 @@ function SymptomOption({
       whileHover={{ scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
       onClick={() => onSelect(value)}
-      className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-left text-sm font-medium transition-all ${
+      className={`flex items-center gap-3 rounded-xl border-2 px-4 py-3 text-start text-sm font-medium transition-all ${
         selected
           ? "border-red-500 bg-red-50 text-red-700 shadow-sm"
           : "border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700"
@@ -175,12 +175,13 @@ function SymptomOption({
     >
       <span className="text-xl">{emoji}</span>
       <span>{label}</span>
-      {selected && <CheckCircle2 className="ml-auto h-4 w-4 text-red-500" />}
+      {selected && <CheckCircle2 className="ms-auto h-4 w-4 text-red-500" />}
     </motion.button>
   );
 }
 
 export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
+  const t = useTranslations("sos.client");
   const [step, setStep] = useState<Step>("intro");
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -192,10 +193,10 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
   const [cancelToken, setCancelToken] = useState<string>("");
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
   const [countdown, setCountdown] = useState<number>(TOTAL_SECONDS);
-  const [patientLat, setPatientLat] = useState<number | null>(null);
-  const [patientLng, setPatientLng] = useState<number | null>(null);
-  const [doctorLat, setDoctorLat] = useState<number | null>(null);
-  const [doctorLng, setDoctorLng] = useState<number | null>(null);
+  const [, setPatientLat] = useState<number | null>(null);
+  const [, setPatientLng] = useState<number | null>(null);
+  const [, setDoctorLat] = useState<number | null>(null);
+  const [, setDoctorLng] = useState<number | null>(null);
   const [cancelling, setCancelling] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [pendingCancelByDoctor, setPendingCancelByDoctor] = useState(false);
@@ -294,22 +295,22 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
   function getGeolocation(): Promise<GeolocationPosition> {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error("Géolocalisation non supportée par votre navigateur"));
+        reject(new Error(t("errors.geoUnsupported")));
         return;
       }
       navigator.geolocation.getCurrentPosition(resolve, (err) => {
         switch (err.code) {
           case err.PERMISSION_DENIED:
-            reject(new Error("Veuillez autoriser l'accès à votre position dans les paramètres de votre navigateur"));
+            reject(new Error(t("errors.geoDenied")));
             break;
           case err.POSITION_UNAVAILABLE:
-            reject(new Error("Position indisponible. Vérifiez que le GPS est activé sur votre appareil"));
+            reject(new Error(t("errors.geoUnavailable")));
             break;
           case err.TIMEOUT:
-            reject(new Error("La localisation a pris trop de temps. Réessayez"));
+            reject(new Error(t("errors.geoTimeout")));
             break;
           default:
-            reject(new Error("Impossible d'obtenir votre position"));
+            reject(new Error(t("errors.geoGeneric")));
         }
       }, { enableHighAccuracy: true, timeout: 15000, maximumAge: 60000 });
     });
@@ -322,7 +323,7 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
     try {
       pos = await getGeolocation();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Impossible d'obtenir votre position");
+      setError(e instanceof Error ? e.message : t("errors.geoGeneric"));
       setStep("form");
       return;
     }
@@ -353,7 +354,7 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
       setCountdown(TOTAL_SECONDS);
       setStep("waiting");
     } else {
-      setError("Erreur lors de l'envoi de la demande");
+      setError(t("errors.sendFailed"));
       setStep("form");
     }
   }
@@ -447,12 +448,14 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-red-100">
                   <AlertTriangle className="h-5 w-5 text-red-600" />
                 </div>
-                <h3 className="font-bold text-gray-800 dark:text-white">Confirmer l&apos;annulation</h3>
+                <h3 className="font-bold text-gray-800 dark:text-white">{t("cancelConfirm.title")}</h3>
               </div>
               <p className="text-sm text-gray-600 dark:text-gray-400">
                 {pendingCancelByDoctor
-                  ? `${sessionData?.doctor_name ?? "Le médecin"} a déjà accepté votre demande. Êtes-vous sûr de vouloir annuler ?`
-                  : "Voulez-vous vraiment annuler votre demande SOS ?"}
+                  ? t("cancelConfirm.messageDoctorAccepted", {
+                      doctorName: sessionData?.doctor_name ?? t("cancelConfirm.defaultDoctor"),
+                    })
+                  : t("cancelConfirm.messageGeneric")}
               </p>
               <div className="flex gap-3 justify-end pt-2">
                 <Button
@@ -460,13 +463,13 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                   onClick={() => setShowCancelConfirm(false)}
                   className="rounded-xl"
                 >
-                  Non, garder
+                  {t("cancelConfirm.keep")}
                 </Button>
                 <Button
                   onClick={confirmCancelRequest}
                   className="rounded-xl bg-red-600 hover:bg-red-700 text-white"
                 >
-                  Oui, annuler
+                  {t("cancelConfirm.confirm")}
                 </Button>
               </div>
             </motion.div>
@@ -482,8 +485,8 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
           {/* ── Hero ── */}
           <section className="relative overflow-hidden">
             {/* Background decorations */}
-            <div className="pointer-events-none absolute -top-40 -right-40 h-[500px] w-[500px] rounded-full bg-red-100/50 blur-3xl" />
-            <div className="pointer-events-none absolute -bottom-20 -left-20 h-[300px] w-[300px] rounded-full bg-primary/5 blur-3xl" />
+            <div className="pointer-events-none absolute -top-40 -end-40 h-[500px] w-[500px] rounded-full bg-red-100/50 blur-3xl" />
+            <div className="pointer-events-none absolute -bottom-20 -start-20 h-[300px] w-[300px] rounded-full bg-primary/5 blur-3xl" />
 
             <div className="relative mx-auto max-w-5xl px-4 pb-12 pt-12 sm:pt-20 sm:pb-20">
               <div className="flex flex-col items-center text-center">
@@ -498,7 +501,7 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-500 opacity-75" />
                     <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-red-500" />
                   </span>
-                  Service d&apos;urgence non-vitale
+                  {t("intro.badge")}
                 </motion.div>
 
                 {/* Title */}
@@ -508,10 +511,10 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                   transition={{ duration: 0.5, delay: 0.1 }}
                   className="mb-4 text-4xl font-black tracking-tight text-foreground sm:text-5xl lg:text-6xl"
                 >
-                  Un médecin chez vous
+                  {t("intro.titleLine1")}
                   <br />
                   <span className="bg-gradient-to-r from-red-600 to-red-500 bg-clip-text text-transparent">
-                    en quelques minutes
+                    {t("intro.titleLine2")}
                   </span>
                 </motion.h1>
 
@@ -525,7 +528,7 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={heroImageUrl}
-                    alt="Médecin tunisien rassurant lors d'une consultation d'urgence"
+                    alt={t("intro.heroAlt")}
                     width={1200}
                     height={600}
                     loading="eager"
@@ -541,7 +544,7 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                   transition={{ duration: 0.5, delay: 0.2 }}
                   className="mb-8 max-w-xl text-lg text-gray-600 dark:text-gray-400"
                 >
-                  Fièvre, douleur aiguë, enfant malade... Doktori localise et contacte automatiquement le médecin le plus proche disponible pour une visite à domicile.
+                  {t("intro.subtitle")}
                 </motion.p>
 
                 {/* CTA */}
@@ -550,7 +553,7 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.5, delay: 0.3 }}
                 >
-                  <PulsingSosButton onClick={scrollToForm} />
+                  <PulsingSosButton onClick={scrollToForm} label={t("intro.ctaButton")} />
                 </motion.div>
 
                 {/* SAMU disclaimer */}
@@ -562,7 +565,11 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                 >
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" strokeWidth={2.5} />
                   <div>
-                    <strong>Urgence vitale ?</strong> Composez le <strong>190 (SAMU)</strong> ou le <strong>198 (Protection civile)</strong>. Doktori SOS est destiné aux consultations urgentes non-vitales uniquement.
+                    <strong>{t("intro.samuTitle")}</strong>{" "}
+                    {t.rich("intro.samuBody", {
+                      samu: () => <strong>{t("intro.samuLabel")}</strong>,
+                      protection: () => <strong>{t("intro.protectionLabel")}</strong>,
+                    })}
                   </div>
                 </motion.div>
 
@@ -588,43 +595,43 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
               className="text-center mb-12"
             >
               <span className="mb-2 inline-block text-sm font-semibold uppercase tracking-widest text-red-500">
-                Comment ça marche
+                {t("intro.howItWorks")}
               </span>
               <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
-                4 étapes simples
+                {t("intro.fourSteps")}
               </h2>
             </motion.div>
 
             {/* Connecting line (desktop) */}
             <div className="relative">
-              <div className="absolute top-8 left-[12.5%] right-[12.5%] hidden h-0.5 bg-gradient-to-r from-red-200 via-red-300 to-primary/30 sm:block" />
+              <div className="absolute top-8 start-[12.5%] end-[12.5%] hidden h-0.5 bg-gradient-to-r from-red-200 via-red-300 to-primary/30 sm:block" />
               <div className="grid grid-cols-2 gap-8 sm:grid-cols-4">
                 <ProcessStep
                   number={1}
                   icon={MessageSquare}
-                  title="Décrivez"
-                  description="Indiquez vos symptômes et vos coordonnées"
+                  title={t("intro.step1Title")}
+                  description={t("intro.step1Desc")}
                   delay={0}
                 />
                 <ProcessStep
                   number={2}
                   icon={Navigation}
-                  title="Localisation"
-                  description="Nous détectons automatiquement votre position GPS"
+                  title={t("intro.step2Title")}
+                  description={t("intro.step2Desc")}
                   delay={0.1}
                 />
                 <ProcessStep
                   number={3}
                   icon={UserCheck}
-                  title="Matching"
-                  description="Nous contactons les médecins SOS dans votre zone"
+                  title={t("intro.step3Title")}
+                  description={t("intro.step3Desc")}
                   delay={0.2}
                 />
                 <ProcessStep
                   number={4}
                   icon={PhoneCall}
-                  title="Prise en charge"
-                  description="Un médecin accepte et vous contacte directement"
+                  title={t("intro.step4Title")}
+                  description={t("intro.step4Desc")}
                   delay={0.3}
                 />
               </div>
@@ -639,9 +646,9 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
               viewport={{ once: true }}
               className="grid grid-cols-1 gap-4 sm:grid-cols-3"
             >
-              <TrustBadge icon={Clock} label="Temps de réponse moyen" value="< 15 minutes" />
-              <TrustBadge icon={MapPin} label="Zone de couverture" value="Grand Tunis" />
-              <TrustBadge icon={Shield} label="Médecins vérifiés" value="100% inscrits" />
+              <TrustBadge icon={Clock} label={t("intro.trustResponseLabel")} value={t("intro.trustResponseValue")} />
+              <TrustBadge icon={MapPin} label={t("intro.trustCoverageLabel")} value={t("intro.trustCoverageValue")} />
+              <TrustBadge icon={Shield} label={t("intro.trustVerifiedLabel")} value={t("intro.trustVerifiedValue")} />
             </motion.div>
 
             {/* FAQ mini */}
@@ -651,19 +658,19 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
               viewport={{ once: true }}
               className="mt-12 rounded-2xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 p-6 shadow-sm"
             >
-              <h3 className="text-lg font-bold text-foreground mb-4">Questions fréquentes</h3>
+              <h3 className="text-lg font-bold text-foreground mb-4">{t("intro.faqTitle")}</h3>
               <div className="space-y-4 text-sm">
                 <div>
-                  <p className="font-semibold text-gray-800 dark:text-white">Combien coûte une consultation SOS ?</p>
-                  <p className="text-gray-500 dark:text-gray-400 mt-1">Le tarif est fixé par le médecin (généralement entre 50 et 100 DT). Vous serez informé du montant avant de confirmer.</p>
+                  <p className="font-semibold text-gray-800 dark:text-white">{t("intro.faq1Q")}</p>
+                  <p className="text-gray-500 dark:text-gray-400 mt-1">{t("intro.faq1A")}</p>
                 </div>
                 <div className="border-t dark:border-gray-700 pt-4">
-                  <p className="font-semibold text-gray-800 dark:text-white">Et si aucun médecin n&apos;est disponible ?</p>
-                  <p className="text-gray-500 dark:text-gray-400 mt-1">Vous pouvez relancer une recherche ou contacter le SAMU (190) pour les urgences vitales. Notre réseau de médecins s&apos;agrandit chaque jour.</p>
+                  <p className="font-semibold text-gray-800 dark:text-white">{t("intro.faq2Q")}</p>
+                  <p className="text-gray-500 dark:text-gray-400 mt-1">{t("intro.faq2A")}</p>
                 </div>
                 <div className="border-t dark:border-gray-700 pt-4">
-                  <p className="font-semibold text-gray-800 dark:text-white">Le médecin vient à domicile ?</p>
-                  <p className="text-gray-500 dark:text-gray-400 mt-1">Selon la disponibilité, le médecin peut vous recevoir à son cabinet, se déplacer chez vous, ou proposer une téléconsultation.</p>
+                  <p className="font-semibold text-gray-800 dark:text-white">{t("intro.faq3Q")}</p>
+                  <p className="text-gray-500 dark:text-gray-400 mt-1">{t("intro.faq3A")}</p>
                 </div>
               </div>
             </motion.div>
@@ -687,8 +694,8 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                 <Siren className="h-6 w-6 text-red-600" strokeWidth={2.5} />
               </div>
               <div>
-                <h2 className="text-xl font-bold text-foreground">Demande SOS</h2>
-                <p className="text-xs text-gray-500 dark:text-gray-400">Consultation urgente non-vitale</p>
+                <h2 className="text-xl font-bold text-foreground">{t("form.headerTitle")}</h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400">{t("form.headerSubtitle")}</p>
               </div>
             </div>
 
@@ -697,26 +704,26 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
                   <Label htmlFor="name" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Votre nom
+                    {t("form.nameLabel")}
                   </Label>
                   <Input
                     id="name"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
-                    placeholder="Prénom et nom"
+                    placeholder={t("form.namePlaceholder")}
                     required
                     className="mt-1.5 rounded-xl"
                   />
                 </div>
                 <div>
                   <Label htmlFor="phone" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                    Téléphone
+                    {t("form.phoneLabel")}
                   </Label>
                   <Input
                     id="phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="+216 XX XXX XXX"
+                    placeholder={t("form.phonePlaceholder")}
                     required
                     className="mt-1.5 rounded-xl"
                   />
@@ -726,33 +733,33 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
               {/* Symptom cards */}
               <div>
                 <Label className="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-2 block">
-                  Type de symptôme
+                  {t("form.symptomLabel")}
                 </Label>
                 <div className="grid grid-cols-2 gap-3">
                   <SymptomOption
                     value="fievre"
-                    label="Fièvre"
+                    label={t("form.symptomFever")}
                     emoji="🌡️"
                     selected={symptom === "fievre"}
                     onSelect={setSymptom}
                   />
                   <SymptomOption
                     value="douleur"
-                    label="Douleur aiguë"
+                    label={t("form.symptomPain")}
                     emoji="⚡"
                     selected={symptom === "douleur"}
                     onSelect={setSymptom}
                   />
                   <SymptomOption
                     value="enfant"
-                    label="Enfant malade"
+                    label={t("form.symptomChild")}
                     emoji="👶"
                     selected={symptom === "enfant"}
                     onSelect={setSymptom}
                   />
                   <SymptomOption
                     value="autre"
-                    label="Autre"
+                    label={t("form.symptomOther")}
                     emoji="🩺"
                     selected={symptom === "autre"}
                     onSelect={setSymptom}
@@ -763,13 +770,13 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
               {/* Description */}
               <div>
                 <Label htmlFor="desc" className="text-sm font-semibold text-gray-700 dark:text-gray-300">
-                  Description <span className="font-normal text-gray-400">(optionnel)</span>
+                  {t("form.descriptionLabel")} <span className="font-normal text-gray-400">{t("form.descriptionOptional")}</span>
                 </Label>
                 <Textarea
                   id="desc"
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Décrivez vos symptômes pour aider le médecin..."
+                  placeholder={t("form.descriptionPlaceholder")}
                   className="mt-1.5 rounded-xl"
                   rows={3}
                 />
@@ -796,8 +803,8 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                   type="submit"
                   className="w-full rounded-xl bg-gradient-to-r from-red-600 to-red-500 py-6 text-base font-bold shadow-lg shadow-red-500/20 hover:shadow-xl hover:shadow-red-500/30"
                 >
-                  <Siren className="mr-2 h-5 w-5" />
-                  Localiser et envoyer la demande
+                  <Siren className="me-2 h-5 w-5" />
+                  {t("form.submit")}
                 </Button>
               </motion.div>
 
@@ -807,7 +814,7 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                 onClick={() => setStep("intro")}
                 className="w-full text-center text-sm text-gray-400 hover:text-gray-600 transition-colors"
               >
-                Retour
+                {t("form.back")}
               </button>
             </form>
           </motion.div>
@@ -829,9 +836,9 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
               <span className="absolute inset-2 rounded-full bg-primary/20 animate-pulse" />
               <MapPin className="relative h-10 w-10 text-primary" strokeWidth={2} />
             </div>
-            <p className="text-lg font-semibold text-foreground">Obtention de votre position...</p>
+            <p className="text-lg font-semibold text-foreground">{t("locating.title")}</p>
             <p className="mt-2 text-sm text-gray-500">
-              Veuillez autoriser l&apos;accès à votre localisation
+              {t("locating.subtitle")}
             </p>
           </motion.div>
         </div>
@@ -884,7 +891,7 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                     fill="#9CA3AF"
                     fontSize="9"
                   >
-                    restantes
+                    {t("waiting.remaining")}
                   </text>
                 </svg>
                 {/* Rotating dot */}
@@ -894,7 +901,7 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                   className="absolute inset-0"
                 >
                   <div
-                    className="absolute left-1/2 -top-1 h-3 w-3 -translate-x-1/2 rounded-full shadow-sm"
+                    className="absolute start-1/2 -top-1 h-3 w-3 -translate-x-1/2 rounded-full shadow-sm"
                     style={{ backgroundColor: color }}
                   />
                 </motion.div>
@@ -905,11 +912,11 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
             <div className="mb-2 flex items-center justify-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-primary" />
               <p className="text-base font-semibold text-foreground">
-                Recherche en cours...
+                {t("waiting.searching")}
               </p>
             </div>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-              Nous contactons les médecins disponibles dans votre quartier. Vous serez notifié dès qu&apos;un médecin accepte.
+              {t("waiting.body")}
             </p>
 
             {/* Progress indicators */}
@@ -932,11 +939,11 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
             >
               {cancelling ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Annulation...
+                  <Loader2 className="me-2 h-4 w-4 animate-spin" />
+                  {t("waiting.cancelling")}
                 </>
               ) : (
-                "Annuler ma demande"
+                t("waiting.cancel")
               )}
             </Button>
           </motion.div>
@@ -963,10 +970,10 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
               <CheckCircle2 className="h-8 w-8 text-green-600" />
             </motion.div>
             <h2 className="text-center text-xl font-bold text-foreground mb-1">
-              Médecin trouvé !
+              {t("accepted.title")}
             </h2>
             <p className="text-center text-sm text-gray-500 dark:text-gray-400 mb-6">
-              Un médecin a accepté votre demande
+              {t("accepted.subtitle")}
             </p>
 
             {/* Doctor info card */}
@@ -977,7 +984,7 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                 </div>
                 <div>
                   <p className="font-bold text-foreground text-lg">{sessionData.doctor_name}</p>
-                  <p className="text-sm text-gray-500">Médecin généraliste</p>
+                  <p className="text-sm text-gray-500">{t("accepted.doctorRole")}</p>
                 </div>
               </div>
               <div className="space-y-2 text-sm">
@@ -1001,12 +1008,14 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                 className="flex items-center justify-center gap-2 w-full rounded-xl bg-gradient-to-r from-primary to-doktori-teal-dark text-white font-bold py-4 text-base shadow-lg shadow-primary/20 transition-shadow hover:shadow-xl hover:shadow-primary/30"
               >
                 <Phone className="w-5 h-5" />
-                Appeler Dr. {sessionData.doctor_name?.split(" ").slice(-1)[0]}
+                {t("accepted.callButton", {
+                  lastName: sessionData.doctor_name?.split(" ").slice(-1)[0] ?? "",
+                })}
               </motion.a>
             )}
 
             <p className="text-xs text-gray-400 dark:text-gray-500 text-center mt-4 mb-4">
-              Vous recevrez un SMS de confirmation. Convenez de la modalité (cabinet, domicile ou téléconsultation) directement avec le médecin.
+              {t("accepted.footer")}
             </p>
 
             <Button
@@ -1015,7 +1024,7 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
               onClick={() => cancelRequest(true)}
               disabled={cancelling}
             >
-              Annuler
+              {t("accepted.cancel")}
             </Button>
           </motion.div>
         </div>
@@ -1035,10 +1044,10 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
               <Timer className="h-8 w-8 text-amber-600" />
             </div>
             <h2 className="text-xl font-bold text-foreground mb-2">
-              Aucun médecin disponible
+              {t("expired.title")}
             </h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-              Aucun médecin n&apos;a pu répondre à votre demande dans le délai imparti. Vous pouvez réessayer ou contacter le SAMU (190).
+              {t("expired.body")}
             </p>
             {error && (
               <p className="text-red-600 text-sm mb-4">{error}</p>
@@ -1048,14 +1057,14 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
                 onClick={retryRequest}
                 className="w-full rounded-xl bg-primary hover:bg-doktori-teal-dark py-5 text-base font-bold"
               >
-                Réessayer
+                {t("expired.retry")}
               </Button>
               <a
                 href="tel:190"
                 className="flex items-center justify-center gap-2 w-full rounded-xl border-2 border-red-200 bg-red-50 py-3 text-sm font-semibold text-red-700 hover:bg-red-100 transition-colors"
               >
                 <Phone className="h-4 w-4" />
-                Appeler le SAMU (190)
+                {t("expired.callSamu")}
               </a>
             </div>
           </motion.div>
@@ -1075,15 +1084,15 @@ export default function SOSPage({ heroImageUrl }: { heroImageUrl: string }) {
             <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-gray-100 dark:bg-gray-700">
               <XCircle className="h-8 w-8 text-gray-400" />
             </div>
-            <h2 className="text-xl font-bold text-foreground mb-2">Demande annulée</h2>
+            <h2 className="text-xl font-bold text-foreground mb-2">{t("cancelled.title")}</h2>
             <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
-              Votre demande SOS a été annulée. Vous pouvez en créer une nouvelle à tout moment.
+              {t("cancelled.body")}
             </p>
             <Button
               onClick={resetAll}
               className="w-full rounded-xl bg-primary hover:bg-doktori-teal-dark py-5 text-base font-bold"
             >
-              Nouvelle demande
+              {t("cancelled.newRequest")}
             </Button>
           </motion.div>
         </div>
