@@ -41,7 +41,10 @@ export async function GET(req: NextRequest) {
       COUNT(*)::text AS total,
       COUNT(*) FILTER (WHERE status IN ('completed', 'confirmed'))::text AS completed,
       COUNT(*) FILTER (WHERE status = 'cancelled')::text AS cancelled,
-      COALESCE(SUM(price) FILTER (WHERE status IN ('completed', 'confirmed') AND paid = true), 0)::text AS income
+      -- payment_amount is the actual paid amount in millimes (DT × 1000).
+      -- Filter to confirmed/completed paid rows; the route divides by 1000
+      -- below to surface DT. price/paid columns don't exist on appointments.
+      COALESCE(SUM(payment_amount) FILTER (WHERE status IN ('completed', 'confirmed') AND payment_status = 'paid'), 0)::text AS income
     FROM appointments
     WHERE doctor_id = ${doctorId}
       AND starts_at >= NOW() - (${rangeDays} || ' days')::interval
