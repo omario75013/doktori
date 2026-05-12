@@ -312,6 +312,22 @@ export default function PatientDashboardPage() {
       setAppointments((prev) =>
         prev.map((a) => (a.id === id ? { ...a, status: "cancelled" } : a)),
       );
+    } else {
+      // 422 with CANCEL_WINDOW_TOO_CLOSE comes back when the doctor's
+      // patient_cancel_window_hours threshold is breached. Surface a clear
+      // message instead of failing silently.
+      try {
+        const data = await res.json();
+        if (data?.error === "CANCEL_WINDOW_TOO_CLOSE" && typeof data.windowHours === "number") {
+          alert(
+            `Annulation impossible : ce médecin n'accepte plus d'annulation moins de ${data.windowHours}h avant le rendez-vous.`,
+          );
+        } else if (typeof data?.error === "string") {
+          alert(data.error);
+        }
+      } catch {
+        /* ignore */
+      }
     }
     setCancelConfirm(null);
   }

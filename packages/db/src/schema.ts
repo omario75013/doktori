@@ -89,6 +89,10 @@ export const doctors = pgTable(
     statusMessage: text("status_message"),
     awayMessage: text("away_message"),
     statusActiveUntil: timestamp("status_active_until", { withTimezone: true }),
+    // Patient cancellation cutoff. A patient cannot cancel their own RDV
+    // less than this many hours before its start. Doctor can change this
+    // from /parametres. Default 2h.
+    patientCancelWindowHours: integer("patient_cancel_window_hours").notNull().default(2),
     // Phase 1 (migration 0079) — Onboarding tour
     onboardingTourCompletedAt: timestamp("onboarding_tour_completed_at", { withTimezone: true }),
     onboardingTourSkipped: boolean("onboarding_tour_skipped").notNull().default(false),

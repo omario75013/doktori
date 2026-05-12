@@ -84,6 +84,35 @@ export default function SettingsPage() {
   const [prefs, setPrefs] = useState<NotificationPrefs | null>(null);
   const [loading, setLoading] = useState(true);
   const [savingPrefs, setSavingPrefs] = useState(false);
+  // Patient cancellation window — separate row in `doctors`, loaded
+  // independently from notification prefs so the saving state doesn't tangle.
+  const [cancelWindowHours, setCancelWindowHours] = useState<number>(2);
+  const [savingCancelWindow, setSavingCancelWindow] = useState(false);
+  useEffect(() => {
+    fetch("/api/doctor/cancel-window", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d && typeof d.hours === "number") setCancelWindowHours(d.hours);
+      })
+      .catch(() => {});
+  }, []);
+  async function saveCancelWindow(hours: number) {
+    setSavingCancelWindow(true);
+    try {
+      const res = await fetch("/api/doctor/cancel-window", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ hours }),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        setCancelWindowHours(d.hours);
+      }
+    } finally {
+      setSavingCancelWindow(false);
+    }
+  }
 
   // Password
   const [pwCurrent, setPwCurrent] = useState("");
@@ -423,6 +452,58 @@ export default function SettingsPage() {
               <code>{"{lienReporter}"}</code>
             </p>
           </Section>
+
+          <Section icon={Clock} title="Délai minimum d'annulation par le patient">
+            <p className="text-sm text-gray-500 mb-3">
+              Au-delà de cette limite, le patient ne peut plus annuler lui-même
+              son rendez-vous depuis son espace. Il doit alors vous contacter.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {[0, 1, 2, 4, 12, 24, 48].map((h) => (
+                <button
+                  key={h}
+                  type="button"
+                  disabled={savingCancelWindow}
+                  onClick={() => saveCancelWindow(h)}
+                  className={`rounded-xl px-3 py-1.5 text-sm font-medium ${
+                    cancelWindowHours === h
+                      ? "bg-primary text-white"
+                      : "border border-border bg-white text-foreground hover:bg-secondary"
+                  } disabled:opacity-50`}
+                >
+                  {h === 0 ? "Aucun délai" : h < 24 ? `${h}h` : `${h / 24}j`}
+                </button>
+              ))}
+              <input
+                type="number"
+                min={0}
+                max={168}
+                placeholder="Autre"
+                disabled={savingCancelWindow}
+                className="w-20 rounded-xl border border-border bg-white px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                onBlur={(e) => {
+                  const v = Number(e.target.value);
+                  if (Number.isInteger(v) && v >= 0 && v <= 168 && v !== cancelWindowHours) {
+                    void saveCancelWindow(v);
+                  }
+                  e.target.value = "";
+                }}
+              />
+              {savingCancelWindow && (
+                <span className="text-xs text-gray-400 self-center">Enregistrement…</span>
+              )}
+            </div>
+            <p className="text-xs text-gray-400 mt-2">
+              Valeur actuelle :{" "}
+              <span className="font-semibold text-foreground">
+                {cancelWindowHours === 0
+                  ? "Aucun délai (annulation possible jusqu'au début du RDV)"
+                  : `${cancelWindowHours} heure${cancelWindowHours > 1 ? "s" : ""}`}
+              </span>
+              .
+            </p>
+          </Section>
+
           <SaveBar onSave={savePrefs} saving={savingPrefs} />
         </>
       )}

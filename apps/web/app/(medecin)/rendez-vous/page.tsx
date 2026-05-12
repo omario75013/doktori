@@ -334,6 +334,20 @@ export default function RendezVousPage() {
 
   useEffect(() => {
     fetchAppointments();
+    // Poll every 20s + on tab focus so new bookings and patient cancellations
+    // surface without the doctor having to refresh. Aligned with the other
+    // doctor surfaces (dashboard today-summary 15s, calendrier 30s).
+    const iv = setInterval(() => {
+      if (typeof document === "undefined" || document.visibilityState === "visible") {
+        fetchAppointments();
+      }
+    }, 20_000);
+    const onFocus = () => fetchAppointments();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      clearInterval(iv);
+      window.removeEventListener("focus", onFocus);
+    };
   }, [fetchAppointments]);
 
   // Load cabinets once for tabs
