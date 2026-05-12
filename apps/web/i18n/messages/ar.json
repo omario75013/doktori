@@ -1148,7 +1148,15 @@
       "aboutRightsLabel": "الحقوق",
       "aboutRightsValue": "© 2025 Doktori. جميع الحقوق محفوظة.",
       "aboutLicenceLabel": "الترخيص",
-      "aboutLicenceValue": "ملكية خاصة"
+      "aboutLicenceValue": "ملكية خاصة",
+      "tabSignature": "التوقيع",
+      "sectionSignature": "توقيع الطبيب",
+      "signatureDesc": "أضف توقيعك اليدوي (صورة). سيُدرج على الوصفات وغيرها من الوثائق.",
+      "signatureUpload": "رفع التوقيع",
+      "signatureHint": "PNG أو JPG أو WebP — يُفضّل خلفية شفافة. الحد الأقصى 2 ميغابايت.",
+      "signatureReplace": "استبدال",
+      "signatureRemove": "حذف",
+      "signaturePreviewAlt": "معاينة التوقيع"
     },
     "verification": {
       "pageTitle": "التحقق من الحساب",

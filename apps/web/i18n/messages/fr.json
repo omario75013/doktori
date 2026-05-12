@@ -1148,7 +1148,15 @@
       "aboutRightsLabel": "Droits",
       "aboutRightsValue": "© 2025 Doktori. Tous droits réservés.",
       "aboutLicenceLabel": "Licence",
-      "aboutLicenceValue": "Propriétaire"
+      "aboutLicenceValue": "Propriétaire",
+      "tabSignature": "Signature",
+      "sectionSignature": "Signature du médecin",
+      "signatureDesc": "Ajoutez votre signature manuscrite (image). Elle sera apposée sur les ordonnances et autres documents générés.",
+      "signatureUpload": "Téléverser ma signature",
+      "signatureHint": "PNG, JPG ou WebP — fond transparent recommandé. Max 2 Mo.",
+      "signatureReplace": "Remplacer",
+      "signatureRemove": "Supprimer",
+      "signaturePreviewAlt": "Aperçu de la signature"
     },
     "verification": {
       "pageTitle": "Vérification du compte",

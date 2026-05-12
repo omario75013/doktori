@@ -93,6 +93,10 @@ export const doctors = pgTable(
     // less than this many hours before its start. Doctor can change this
     // from /parametres. Default 2h.
     patientCancelWindowHours: integer("patient_cancel_window_hours").notNull().default(2),
+    // Doctor signature image (PNG/JPG up to 2 MB). Optional. When set,
+    // it replaces the "Signature et cachet" placeholder in generated
+    // documents — primarily /ordonnance/[id] but reusable elsewhere.
+    signatureUrl: text("signature_url"),
     // Phase 1 (migration 0079) — Onboarding tour
     onboardingTourCompletedAt: timestamp("onboarding_tour_completed_at", { withTimezone: true }),
     onboardingTourSkipped: boolean("onboarding_tour_skipped").notNull().default(false),

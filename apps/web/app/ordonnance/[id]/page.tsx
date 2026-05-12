@@ -31,6 +31,7 @@ export default async function PrescriptionPage({
       doctorSpecialty: doctors.specialty,
       doctorPhone: doctors.phone,
       doctorAddress: doctors.address,
+      doctorSignatureUrl: doctors.signatureUrl,
       patientName: patients.name,
       patientPhone: patients.phone,
     })
@@ -137,10 +138,27 @@ export default async function PrescriptionPage({
           )}
         </div>
 
-        {/* Signature block */}
+        {/* Signature block — uses doctor.signatureUrl when set, else
+            falls back to the empty underline placeholder. The image is
+            rendered at a fixed height so print sizing stays consistent. */}
         <div className="mt-12 flex justify-end">
           <div className="text-center min-w-[200px]">
-            <div className="h-16 border-b border-gray-300 mb-2" />
+            {result.doctorSignatureUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={result.doctorSignatureUrl}
+                alt="Signature du médecin"
+                style={{
+                  height: 64,
+                  maxWidth: 200,
+                  objectFit: "contain",
+                  margin: "0 auto 4px",
+                  display: "block",
+                }}
+              />
+            ) : (
+              <div className="h-16 border-b border-gray-300 mb-2" />
+            )}
             <p className="text-xs text-gray-500">Signature et cachet du médecin</p>
             <p className="text-sm font-medium text-gray-700 mt-1">{result.doctorName}</p>
           </div>

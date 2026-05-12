@@ -13,6 +13,9 @@ import {
   KeyRound,
   QrCode,
   AlertTriangle,
+  PenLine,
+  Upload,
+  Trash2,
   Copy,
   Clock,
   CheckCircle2,
@@ -35,7 +38,7 @@ type NotificationPrefs = {
   cancelAlertOffsetsHours: number[];
 };
 
-type TabId = "notifications" | "reminders" | "cancel-alerts" | "security" | "about";
+type TabId = "notifications" | "reminders" | "cancel-alerts" | "signature" | "security" | "about";
 
 const CHANNELS = [
   { value: "email", label: "Email" },
@@ -70,6 +73,7 @@ function getTabs(t: ReturnType<typeof useTranslations<"medecin.settings">>) {
     { id: "notifications" as TabId, label: t("tabNotifications"), icon: Bell },
     { id: "reminders" as TabId, label: t("tabReminders"), icon: Clock },
     { id: "cancel-alerts" as TabId, label: t("tabCancelAlerts"), icon: AlertTriangle },
+    { id: "signature" as TabId, label: t("tabSignature"), icon: PenLine },
     { id: "security" as TabId, label: t("tabSecurity"), icon: Lock },
     { id: "about" as TabId, label: t("tabAbout"), icon: Info },
   ];
@@ -87,6 +91,50 @@ export default function SettingsPage() {
   // Patient cancellation window — separate row in `doctors`, loaded
   // independently from notification prefs so the saving state doesn't tangle.
   const [cancelWindowHours, setCancelWindowHours] = useState<number>(2);
+  // Doctor signature image — uploaded once, embedded on prescriptions.
+  const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
+  const [signatureBusy, setSignatureBusy] = useState(false);
+  useEffect(() => {
+    fetch("/api/doctor/signature", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (d && typeof d.signatureUrl === "string") setSignatureUrl(d.signatureUrl);
+      })
+      .catch(() => {});
+  }, []);
+  async function uploadSignature(file: File) {
+    setSignatureBusy(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const r = await fetch("/api/doctor/signature", {
+        method: "POST",
+        credentials: "include",
+        body: fd,
+      });
+      const data = await r.json().catch(() => ({}));
+      if (r.ok && data.signatureUrl) {
+        setSignatureUrl(data.signatureUrl);
+      } else {
+        alert(data.error ?? "Erreur d'envoi");
+      }
+    } finally {
+      setSignatureBusy(false);
+    }
+  }
+  async function removeSignature() {
+    if (!confirm("Supprimer la signature ?")) return;
+    setSignatureBusy(true);
+    try {
+      const r = await fetch("/api/doctor/signature", {
+        method: "DELETE",
+        credentials: "include",
+      });
+      if (r.ok) setSignatureUrl(null);
+    } finally {
+      setSignatureBusy(false);
+    }
+  }
   const [savingCancelWindow, setSavingCancelWindow] = useState(false);
   useEffect(() => {
     fetch("/api/doctor/cancel-window", { credentials: "include" })
@@ -506,6 +554,77 @@ export default function SettingsPage() {
 
           <SaveBar onSave={savePrefs} saving={savingPrefs} />
         </>
+      )}
+
+      {activeTab === "signature" && (
+        <Section icon={PenLine} title={t("sectionSignature")}>
+          <p className="text-sm text-gray-500 mb-4">{t("signatureDesc")}</p>
+          {signatureUrl ? (
+            <div className="flex items-start gap-4">
+              <div className="rounded-xl border border-border bg-white p-3">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={signatureUrl}
+                  alt={t("signaturePreviewAlt")}
+                  style={{ maxHeight: 120, maxWidth: 280, objectFit: "contain" }}
+                />
+              </div>
+              <div className="flex flex-col gap-2">
+                <label
+                  className={`inline-flex items-center gap-2 rounded-xl border border-border bg-white hover:bg-secondary text-foreground px-3 py-2 text-sm font-medium cursor-pointer ${
+                    signatureBusy ? "opacity-50 pointer-events-none" : ""
+                  }`}
+                >
+                  <Upload className="h-4 w-4" />
+                  {t("signatureReplace")}
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    disabled={signatureBusy}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void uploadSignature(f);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+                <button
+                  type="button"
+                  onClick={removeSignature}
+                  disabled={signatureBusy}
+                  className="inline-flex items-center gap-2 rounded-xl border border-red-200 bg-white hover:bg-red-50 text-red-600 px-3 py-2 text-sm font-medium disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {t("signatureRemove")}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <label
+              className={`block rounded-2xl border border-dashed border-border bg-secondary/30 px-6 py-10 text-center cursor-pointer hover:bg-secondary/60 ${
+                signatureBusy ? "opacity-50 pointer-events-none" : ""
+              }`}
+            >
+              <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm font-semibold text-foreground">
+                {t("signatureUpload")}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">{t("signatureHint")}</p>
+              <input
+                type="file"
+                accept="image/png,image/jpeg,image/webp"
+                className="hidden"
+                disabled={signatureBusy}
+                onChange={(e) => {
+                  const f = e.target.files?.[0];
+                  if (f) void uploadSignature(f);
+                  e.target.value = "";
+                }}
+              />
+            </label>
+          )}
+        </Section>
       )}
 
       {activeTab === "security" && (
