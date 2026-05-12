@@ -3,7 +3,7 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/require-auth";
 import { db, doctorMessages, doctorConversations } from "@doktori/db";
 import { and, eq, isNull, or } from "drizzle-orm";
-import { broadcastPeerMessage } from "@/lib/peer-message-broadcast";
+import { broadcastPeerMessage } from "../../../../../../../lib/peer-message-broadcast";
 
 async function loadOwnedMessage(
   conversationId: string,

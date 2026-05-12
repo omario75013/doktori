@@ -5,7 +5,7 @@ import { requireAuth } from "@/lib/require-auth";
 import { db, doctorConversations, doctorMessages, doctorNotifications } from "@doktori/db";
 import { and, eq, or, asc, isNull, ne } from "drizzle-orm";
 import { uploadToR2 } from "@/lib/r2";
-import { broadcastPeerMessage } from "@/lib/peer-message-broadcast";
+import { broadcastPeerMessage } from "../../../../../../lib/peer-message-broadcast";
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME = new Set([
