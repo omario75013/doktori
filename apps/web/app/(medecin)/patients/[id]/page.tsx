@@ -11,6 +11,7 @@ import {
   User,
   ArrowLeft,
   Pencil,
+  Share2,
   Trash2,
   X as XIcon,
   IdCard,
@@ -35,6 +36,7 @@ import {
   Send,
   X as XClose,
 } from "lucide-react";
+import { ReferPatientModal } from "./refer-patient-modal";
 import { toast } from "sonner";
 import { QuillEditor } from "../../modeles/components/quill-editor";
 import { TemplateLookup } from "../../modeles/components/template-lookup";
@@ -339,6 +341,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
   const [consultNotes, setConsultNotes] = useState<ConsultationNote[]>([]);
   const [expandedNotes, setExpandedNotes] = useState<Set<string>>(new Set());
   const [editOpen, setEditOpen] = useState(false);
+  const [referOpen, setReferOpen] = useState(false);
   const [smsOpen, setSmsOpen] = useState(false);
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -602,6 +605,16 @@ function PatientDetail({ listPath }: { listPath: string }) {
               >
                 <MessageSquare className="h-4 w-4" />
                 {t("quickSendSms")}
+              </button>
+            )}
+            {viewerRole === "doctor" && patient && (
+              <button
+                onClick={() => setReferOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-white px-3 py-2 text-sm font-medium text-foreground hover:bg-secondary transition-colors"
+                title="Référer ce patient à un confrère"
+              >
+                <Share2 className="h-4 w-4" />
+                Référer
               </button>
             )}
             {(viewerRole === "doctor" || viewerPerms?.patientsEdit) && (
@@ -879,6 +892,14 @@ function PatientDetail({ listPath }: { listPath: string }) {
           patientId={params.id!}
           events={timeline}
           onRefresh={loadTimeline}
+        />
+      )}
+
+      {referOpen && patient && (
+        <ReferPatientModal
+          patientId={patient.id}
+          patientName={patient.name}
+          onClose={() => setReferOpen(false)}
         />
       )}
 

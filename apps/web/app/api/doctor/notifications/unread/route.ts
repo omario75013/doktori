@@ -83,7 +83,7 @@ export async function GET() {
     // Resolve any peer-doctor UUID embedded in the payload — requesterId
     // (connection_request), byDoctorId (connection_accepted), senderId
     // (peer_message). Any value matching a doctor row will be displayed.
-    const peerIdFields = ["requesterId", "byDoctorId", "senderId"] as const;
+    const peerIdFields = ["requesterId", "byDoctorId", "senderId", "fromDoctorId"] as const;
     const peerIds = events
       .flatMap((e) => {
         const p = (e.payload ?? {}) as Record<string, unknown>;
@@ -105,7 +105,8 @@ export async function GET() {
       const requesterId = typeof p.requesterId === "string" ? p.requesterId : null;
       const byDoctorId = typeof p.byDoctorId === "string" ? p.byDoctorId : null;
       const senderId = typeof p.senderId === "string" ? p.senderId : null;
-      const peerId = requesterId ?? byDoctorId ?? senderId;
+      const fromDoctorId = typeof p.fromDoctorId === "string" ? p.fromDoctorId : null;
+      const peerId = requesterId ?? byDoctorId ?? senderId ?? fromDoctorId;
       const patientName = typeof p.patientName === "string" ? p.patientName : null;
       const conversationId =
         typeof p.conversationId === "string" ? p.conversationId : null;

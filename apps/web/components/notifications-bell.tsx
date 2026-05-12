@@ -5,7 +5,8 @@ import Link from "next/link";
 import { Bell } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, arSA } from "date-fns/locale";
+import { useTranslations, useLocale } from "next-intl";
 
 type Notification = {
   id: string;
@@ -19,6 +20,9 @@ type Notification = {
 type Role = "doctor" | "secretary" | "admin" | "clinic" | "patient";
 
 export function NotificationsBell({ role }: { role?: Role }) {
+  const t = useTranslations("medecin.notifications");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? arSA : fr;
   const [count, setCount] = useState(0);
   const [items, setItems] = useState<Notification[]>([]);
   const [open, setOpen] = useState(false);
@@ -92,31 +96,62 @@ export function NotificationsBell({ role }: { role?: Role }) {
         const all: FeedEntry[] = data.latest ?? [];
         const lastSeen = localStorage.getItem("doktori_notif_last_seen");
         const mapped: Notification[] = all.map((n) => {
+          const name = n.requesterName?.replace(/^Dr\.?\s*/i, "") ?? "";
           let title = "";
           if (n.kind === "doctor_event") {
             switch (n.type) {
               case "connection_request":
-                title = `Demande de connexion${n.requesterName ? ` : Dr ${n.requesterName.replace(/^Dr\.?\s*/i, "")}` : ""}`;
+                title = name
+                  ? t("connectionRequest", { name })
+                  : t("connectionRequestAnon");
                 break;
               case "connection_accepted":
-                title = `${n.requesterName ? `Dr ${n.requesterName.replace(/^Dr\.?\s*/i, "")} ` : "Un confrère "}a accepté votre invitation`;
+                title = name
+                  ? t("connectionAccepted", { name })
+                  : t("connectionAcceptedAnon");
                 break;
               case "peer_message":
-                title = n.requesterName
-                  ? `Nouveau message — Dr ${n.requesterName.replace(/^Dr\.?\s*/i, "")}`
-                  : "Nouveau message d'un confrère";
+                title = name
+                  ? t("peerMessage", { name })
+                  : t("peerMessageAnon");
                 break;
               case "appointment_cancelled_by_patient":
-                title = `RDV annulé${n.patientName ? ` par ${n.patientName}` : ""}`;
+                title = n.patientName
+                  ? t("appointmentCancelled", { patient: n.patientName })
+                  : t("appointmentCancelledAnon");
                 break;
               case "appointment_rescheduled_by_patient":
-                title = `RDV décalé${n.patientName ? ` par ${n.patientName}` : ""}`;
+                title = n.patientName
+                  ? t("appointmentRescheduled", { patient: n.patientName })
+                  : t("appointmentRescheduledAnon");
+                break;
+              case "referral_received":
+                title = name
+                  ? t("referralReceived", { name })
+                  : t("referralReceivedAnon");
+                break;
+              case "referral_accepted":
+                title = name
+                  ? t("referralAccepted", { name })
+                  : t("referralAcceptedAnon");
+                break;
+              case "referral_declined":
+                title = name
+                  ? t("referralDeclined", { name })
+                  : t("referralDeclinedAnon");
+                break;
+              case "referral_completed":
+                title = name
+                  ? t("referralCompleted", { name })
+                  : t("referralCompletedAnon");
                 break;
               default:
-                title = n.type ?? "Notification";
+                title = t("fallback");
             }
           } else {
-            title = `RDV : ${n.patientName ?? ""}`.trim();
+            title = n.patientName
+              ? t("appointmentBooking", { patient: n.patientName })
+              : t("fallback");
           }
           return {
             id: n.id,
@@ -198,7 +233,7 @@ export function NotificationsBell({ role }: { role?: Role }) {
           >
             <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
               <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
-                Notifications
+                {t("title")}
               </p>
               {count > 0 && (
                 <button
@@ -206,13 +241,13 @@ export function NotificationsBell({ role }: { role?: Role }) {
                   onClick={markSeen}
                   className="text-[10px] font-semibold text-primary hover:underline"
                 >
-                  Tout marquer lu
+                  {t("markAllRead")}
                 </button>
               )}
             </div>
             {items.length === 0 ? (
               <div className="px-4 py-6 text-center text-sm text-gray-400">
-                Rien de nouveau
+                {t("nothingYet")}
               </div>
             ) : (
               <div className="divide-y divide-gray-50 dark:divide-gray-800 max-h-80 overflow-y-auto">
@@ -232,7 +267,7 @@ export function NotificationsBell({ role }: { role?: Role }) {
                       <span className="text-xs text-gray-500 truncate">{n.body}</span>
                     )}
                     <span className="text-[10px] text-gray-400">
-                      {format(new Date(n.createdAt), "d MMM HH:mm", { locale: fr })}
+                      {format(new Date(n.createdAt), "d MMM HH:mm", { locale: dateLocale })}
                     </span>
                   </Link>
                 ))}
@@ -244,7 +279,7 @@ export function NotificationsBell({ role }: { role?: Role }) {
                 onClick={() => setOpen(false)}
                 className="block text-center text-xs font-semibold text-teal-600 hover:text-teal-700 py-1"
               >
-                Tout voir
+                {t("viewAll")}
               </Link>
             </div>
           </motion.div>
