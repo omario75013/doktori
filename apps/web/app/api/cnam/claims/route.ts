@@ -8,6 +8,13 @@ function normalizeCnam(raw: string): string {
   return raw.replace(/\s/g, "").trim();
 }
 
+// Tunisian CNAM IDs are 6–12 digits in practice. Reject anything with
+// non-digit characters after normalization so a typo doesn't overwrite a
+// good number on patients.cnam_number.
+function isValidCnam(normalized: string): boolean {
+  return /^\d{6,15}$/.test(normalized);
+}
+
 export async function GET(req: Request) {
   const session = await auth();
   if (!session?.user?.id) return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
@@ -86,8 +93,20 @@ export async function POST(req: Request) {
       .limit(1);
 
     if (!appt) return NextResponse.json({ error: "RDV introuvable" }, { status: 404 });
+    if (!appt.patientId) {
+      return NextResponse.json(
+        { error: "Ce RDV n'a pas de patient lié." },
+        { status: 400 },
+      );
+    }
 
     const normalized = normalizeCnam(cnamNumber);
+    if (!isValidCnam(normalized)) {
+      return NextResponse.json(
+        { error: "Numéro CNAM invalide (6 à 15 chiffres)." },
+        { status: 400 },
+      );
+    }
 
     // Persist the CNAM number on the patient so future bookings auto-fill
     await db

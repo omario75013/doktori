@@ -27,6 +27,16 @@ export async function POST(req: Request) {
     if (!appt) {
       return NextResponse.json({ error: "RDV introuvable" }, { status: 404 });
     }
+    // appointments.patient_id is technically nullable (anonymous walk-in
+    // bookings); consultation_notes.patient_id is NOT NULL. Without this
+    // guard the INSERT throws a constraint violation and the SOAP note
+    // POST 500s instead of returning a clean 400.
+    if (!appt.patientId) {
+      return NextResponse.json(
+        { error: "Ce RDV n'a pas de patient lié — créez d'abord la fiche patient." },
+        { status: 400 },
+      );
+    }
 
     const [row] = await db
       .insert(consultationNotes)
