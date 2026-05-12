@@ -113,7 +113,7 @@ export async function GET() {
         e.type === "connection_request" || e.type === "connection_accepted"
           ? "/reseau"
           : e.type === "peer_message"
-            ? `/reseau/messagerie${conversationId ? `?conv=${conversationId}` : ""}`
+            ? `/messagerie${conversationId ? `?conv=${conversationId}` : ""}`
             : e.type === "appointment_cancelled_by_patient" ||
                 e.type === "appointment_rescheduled_by_patient" ||
                 e.type === "appointment_booked"
