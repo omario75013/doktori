@@ -68,6 +68,12 @@ export default async function DashboardPage({
     .orderBy(appointments.startsAt)
     .limit(20);
 
+  // No-shows over a rolling 30-day window (matches the live counter in
+  // /api/doctor/today-summary). Using monthStart would hide a no-show
+  // from late last month right after the calendar rolls over.
+  const thirtyDaysAgo = new Date();
+  thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+  thirtyDaysAgo.setHours(0, 0, 0, 0);
   const monthNoShows = await db
     .select({ id: appointments.id })
     .from(appointments)
@@ -75,7 +81,7 @@ export default async function DashboardPage({
       and(
         eq(appointments.doctorId, doctorId),
         eq(appointments.status, "no_show"),
-        gte(appointments.startsAt, monthStart),
+        gte(appointments.startsAt, thirtyDaysAgo),
       ),
     );
 
