@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireDoctorOrSecretary } from "@/lib/secretary-auth";
-import { db, appointments, patients, doctorSchedules } from "@doktori/db";
-import { eq } from "drizzle-orm";
+import { db, appointments, patients, doctorSchedules, doctorPractices } from "@doktori/db";
+import { and, desc, eq } from "drizzle-orm";
 
 // ─── POST /api/doctor/appointments ───────────────────────────────────────────
 // Doctor (or secretary acting for a doctor) books an appointment directly for
@@ -80,11 +80,35 @@ export async function POST(req: Request) {
       ? (type as "cabinet" | "teleconsult" | "domicile")
       : "cabinet";
 
+  // appointments.practice_id is NOT NULL since migration 0063. Resolve the
+  // doctor's primary active practice; fall back to any active one. If the
+  // doctor has none, refuse with a clear error instead of letting the DB
+  // throw a constraint violation that surfaces as "Unexpected end of JSON".
+  const [practice] = await db
+    .select({ id: doctorPractices.id })
+    .from(doctorPractices)
+    .where(
+      and(
+        eq(doctorPractices.doctorId, actor.doctorId),
+        eq(doctorPractices.isActive, true),
+      ),
+    )
+    // Primary first (true sorts before false with DESC).
+    .orderBy(desc(doctorPractices.isPrimary))
+    .limit(1);
+  if (!practice) {
+    return NextResponse.json(
+      { error: "Aucun cabinet actif — créez-en un d'abord dans Cabinets" },
+      { status: 400 },
+    );
+  }
+
   const [created] = await db
     .insert(appointments)
     .values({
       doctorId: actor.doctorId,
       patientId,
+      practiceId: practice.id,
       startsAt,
       endsAt,
       status: "confirmed",

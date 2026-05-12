@@ -134,7 +134,15 @@ function NewAppointmentModal({
           reason: reason.trim() || undefined,
         }),
       });
-      const data = await res.json();
+      // Server may return a non-JSON error page on a 500. Read as text
+      // first so the error UI never crashes on Response.json() parse.
+      const raw = await res.text();
+      let data: { error?: string } = {};
+      try {
+        data = raw ? JSON.parse(raw) : {};
+      } catch {
+        data = { error: raw.slice(0, 200) || `HTTP ${res.status}` };
+      }
       if (!res.ok) throw new Error(data.error ?? "Erreur lors de la création");
       toast.success(t("createdSuccess"));
       onCreated();
