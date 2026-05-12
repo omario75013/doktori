@@ -216,7 +216,7 @@ export function NotificationsBell({ role }: { role?: Role }) {
       >
         <Bell className="h-5 w-5 text-gray-700 dark:text-gray-200" strokeWidth={2} />
         {count > 0 && (
-          <span className="absolute -top-0.5 -right-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white leading-none">
+          <span className="absolute -top-0.5 -end-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white leading-none">
             {count > 9 ? "9+" : count}
           </span>
         )}
@@ -229,7 +229,7 @@ export function NotificationsBell({ role }: { role?: Role }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.97 }}
             transition={{ duration: 0.15 }}
-            className="absolute right-0 top-12 z-50 w-80 rounded-2xl bg-white dark:bg-gray-900 shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden"
+            className="absolute end-0 top-12 z-50 w-80 rounded-2xl bg-white dark:bg-gray-900 shadow-xl border border-gray-100 dark:border-gray-800 overflow-hidden"
           >
             <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-800 flex items-center justify-between">
               <p className="text-xs font-bold uppercase tracking-wider text-gray-400">
