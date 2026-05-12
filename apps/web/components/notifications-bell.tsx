@@ -79,21 +79,57 @@ export function NotificationsBell({ role }: { role?: Role }) {
         const res = await fetch("/api/doctor/notifications/unread", { cache: "no-store" });
         if (!res.ok) return;
         const data = await res.json();
-        const all: Array<{ id: string; patientName: string; startsAt: string }> = data.latest ?? [];
+        type FeedEntry = {
+          id: string;
+          kind?: "booking" | "doctor_event";
+          type?: string;
+          patientName?: string | null;
+          requesterName?: string | null;
+          startsAt?: string | null;
+          createdAt?: string;
+          href?: string;
+        };
+        const all: FeedEntry[] = data.latest ?? [];
         const lastSeen = localStorage.getItem("doktori_notif_last_seen");
-        const mapped: Notification[] = all.map((n) => ({
-          id: n.id,
-          title: `RDV : ${n.patientName}`,
-          body: null,
-          createdAt: n.startsAt,
-          readAt: null,
-          href: "/rendez-vous",
-        }));
+        const mapped: Notification[] = all.map((n) => {
+          let title = "";
+          if (n.kind === "doctor_event") {
+            switch (n.type) {
+              case "connection_request":
+                title = `Demande de connexion${n.requesterName ? ` : Dr ${n.requesterName.replace(/^Dr\.?\s*/i, "")}` : ""}`;
+                break;
+              case "connection_accepted":
+                title = `${n.requesterName ? `Dr ${n.requesterName.replace(/^Dr\.?\s*/i, "")} ` : ""}a accepté votre invitation`;
+                break;
+              case "appointment_cancelled_by_patient":
+                title = `RDV annulé${n.patientName ? ` par ${n.patientName}` : ""}`;
+                break;
+              case "appointment_rescheduled_by_patient":
+                title = `RDV décalé${n.patientName ? ` par ${n.patientName}` : ""}`;
+                break;
+              default:
+                title = n.type ?? "Notification";
+            }
+          } else {
+            title = `RDV : ${n.patientName ?? ""}`.trim();
+          }
+          return {
+            id: n.id,
+            title,
+            body: null,
+            createdAt: n.createdAt ?? n.startsAt ?? new Date().toISOString(),
+            readAt: null,
+            href: n.href ?? "/rendez-vous",
+          };
+        });
         setItems(mapped);
         const unread = lastSeen
-          ? all.filter((n) => new Date(n.startsAt).getTime() > new Date(lastSeen).getTime())
+          ? all.filter((n) => {
+              const ts = new Date(n.createdAt ?? n.startsAt ?? 0).getTime();
+              return ts > new Date(lastSeen).getTime();
+            })
           : all;
-        setCount(unread.length);
+        setCount(Number(data.count ?? unread.length));
       }
     } catch {
       /* silent */

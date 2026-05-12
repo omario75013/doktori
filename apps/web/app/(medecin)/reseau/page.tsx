@@ -62,5 +62,54 @@ export default async function ReseauPage() {
     // doctor_connections table not yet created — empty list is the correct default
   }
 
-  return <ReseauClient doctors={rows} connections={connections} />;
+  // Incoming connection requests waiting for this doctor's accept/refuse.
+  let pendingRequests: (DoctorCard & { connectionId: string; createdAt: string })[] = [];
+  // Outgoing connection requests this doctor sent that are still pending.
+  let sentRequests: (DoctorCard & { connectionId: string; createdAt: string })[] = [];
+  try {
+    pendingRequests = (await db.execute(sql`
+      SELECT
+        c.id AS "connectionId",
+        c.created_at AS "createdAt",
+        d.id, d.name, d.slug, d.specialty, d.city,
+        d.photo_url      AS "photoUrl",
+        d.average_rating AS "averageRating",
+        d.review_count   AS "reviewCount",
+        d.bio
+      FROM doctor_connections c
+      INNER JOIN doctors d ON d.id = c.requester_id
+      WHERE c.status = 'pending'
+        AND c.addressee_id = ${session.user.id}
+        AND d.is_active = true
+      ORDER BY c.created_at DESC
+    `)) as unknown as (DoctorCard & { connectionId: string; createdAt: string })[];
+
+    sentRequests = (await db.execute(sql`
+      SELECT
+        c.id AS "connectionId",
+        c.created_at AS "createdAt",
+        d.id, d.name, d.slug, d.specialty, d.city,
+        d.photo_url      AS "photoUrl",
+        d.average_rating AS "averageRating",
+        d.review_count   AS "reviewCount",
+        d.bio
+      FROM doctor_connections c
+      INNER JOIN doctors d ON d.id = c.addressee_id
+      WHERE c.status = 'pending'
+        AND c.requester_id = ${session.user.id}
+        AND d.is_active = true
+      ORDER BY c.created_at DESC
+    `)) as unknown as (DoctorCard & { connectionId: string; createdAt: string })[];
+  } catch {
+    /* table missing — empty list */
+  }
+
+  return (
+    <ReseauClient
+      doctors={rows}
+      connections={connections}
+      pendingRequests={pendingRequests}
+      sentRequests={sentRequests}
+    />
+  );
 }

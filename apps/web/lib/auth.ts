@@ -15,7 +15,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const email = (credentials.email as string).toLowerCase();
+        const email = (credentials.email as string).trim().toLowerCase();
         const [doctor] = await db
           .select()
           .from(doctors)
@@ -42,7 +42,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const email = (credentials.email as string).toLowerCase();
+        const email = (credentials.email as string).trim().toLowerCase();
         const [admin] = await db
           .select()
           .from(adminUsers)
@@ -79,7 +79,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const email = (credentials.email as string).toLowerCase();
+        const email = (credentials.email as string).trim().toLowerCase();
         const [clinic] = await db
           .select()
           .from(clinics)
@@ -105,7 +105,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-        const email = (credentials.email as string).toLowerCase();
+        const email = (credentials.email as string).trim().toLowerCase();
         const [secretary] = await db
           .select()
           .from(secretaries)
