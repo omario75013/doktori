@@ -154,7 +154,7 @@ export function ReferPatientModal({
         <div className="px-5 py-4 space-y-4">
           <section>
             <p className="text-[10px] font-bold uppercase tracking-wider text-gray-400 mb-2">
-              {t("referralToLabel") || "Référer vers"}
+              {t("referralToLabel")}
             </p>
             {loading ? (
               <Loader2 className="h-5 w-5 animate-spin text-gray-400 mx-auto" />

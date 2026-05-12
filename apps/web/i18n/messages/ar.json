@@ -1471,7 +1471,8 @@
       "emailLabel": "البريد الإلكتروني",
       "phoneLabel": "الهاتف",
       "addressLabel": "العيادة",
-      "teleconsultation": "التطبيب عن بُعد"
+      "teleconsultation": "التطبيب عن بُعد",
+      "referralToLabel": "إحالة إلى"
     },
     "calendrier": {
       "pageTitle": "التقويم",

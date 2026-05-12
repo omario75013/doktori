@@ -1471,7 +1471,8 @@
       "emailLabel": "Email",
       "phoneLabel": "Téléphone",
       "addressLabel": "Cabinet",
-      "teleconsultation": "Téléconsultation"
+      "teleconsultation": "Téléconsultation",
+      "referralToLabel": "Référer vers"
     },
     "calendrier": {
       "pageTitle": "Calendrier",
