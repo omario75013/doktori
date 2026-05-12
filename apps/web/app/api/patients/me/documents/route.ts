@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, prescriptions, cnamClaims, consultationNotes, appointments, doctors } from "@doktori/db";
+import { db, prescriptions, cnamClaims, consultationNotes, appointments, doctors, medicalCertificates } from "@doktori/db";
 import { eq, desc } from "drizzle-orm";
 import { getPatientFromRequest } from "@/lib/patient-auth";
 
@@ -9,7 +9,7 @@ export async function GET(req: NextRequest) {
 
   const patientId = patient.id;
 
-  const [prescriptionRows, cnamRows, noteRows] = await Promise.all([
+  const [prescriptionRows, cnamRows, noteRows, certificateRows] = await Promise.all([
     db
       .select({
         prescriptionId: prescriptions.id,
@@ -61,11 +61,26 @@ export async function GET(req: NextRequest) {
       .where(eq(consultationNotes.patientId, patientId))
       .orderBy(desc(consultationNotes.createdAt))
       .limit(50),
+
+    db
+      .select({
+        certificateId: medicalCertificates.id,
+        title: medicalCertificates.title,
+        createdAt: medicalCertificates.createdAt,
+        doctorName: doctors.name,
+        specialty: doctors.specialty,
+      })
+      .from(medicalCertificates)
+      .innerJoin(doctors, eq(doctors.id, medicalCertificates.doctorId))
+      .where(eq(medicalCertificates.patientId, patientId))
+      .orderBy(desc(medicalCertificates.createdAt))
+      .limit(50),
   ]);
 
   return NextResponse.json({
     prescriptions: prescriptionRows,
     cnamClaims: cnamRows,
     consultationNotes: noteRows,
+    certificates: certificateRows,
   });
 }

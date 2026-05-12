@@ -850,6 +850,30 @@ export const prescriptions = pgTable("prescriptions", {
   index("prescriptions_verification_token_idx").on(table.verificationToken),
 ]);
 
+// ── Medical Certificates ─────────────────────────────────
+// Parallel to `prescriptions` but stores a free-form `title` so the
+// patient can see "Certificat d'arrêt de travail" vs "Aptitude au
+// sport" in their /mes-documents list without having to open the PDF.
+export const medicalCertificates = pgTable("medical_certificates", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  appointmentId: uuid("appointment_id").references(() => appointments.id, { onDelete: "cascade" }),
+  doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+  patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+  title: text("title").notNull(),
+  content: text("content").notNull(),
+  verificationToken: varchar("verification_token", { length: 64 }),
+  templateId: uuid("template_id").references((): any => prescriptionTemplates.id, { onDelete: "set null" }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (table) => [
+  index("medical_certificates_appointment_idx").on(table.appointmentId),
+  index("medical_certificates_patient_idx").on(table.patientId),
+  index("medical_certificates_doctor_idx").on(table.doctorId),
+  index("medical_certificates_verification_token_idx").on(table.verificationToken),
+]);
+
+export type MedicalCertificate = typeof medicalCertificates.$inferSelect;
+export type NewMedicalCertificate = typeof medicalCertificates.$inferInsert;
+
 // ── SOS Sessions ─────────────────────────────────────────
 export const sosSessions = pgTable("sos_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),

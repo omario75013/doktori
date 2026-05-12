@@ -136,6 +136,19 @@ export default function MesDocumentsPage() {
             previewUrl: `/ordonnance/${p.prescriptionId}`,
           });
         }
+        for (const c of data.certificates ?? []) {
+          merged.push({
+            id: `cert-${c.certificateId}`,
+            category: "rep",
+            tone: "primary",
+            tag: "Certificat",
+            title: c.title || "Certificat médical",
+            source: c.doctorName ?? "Médecin",
+            date: c.createdAt,
+            previewUrl: `/certificat-medical/${c.certificateId}`,
+            fileUrl: `/certificat-medical/${c.certificateId}?print=1`,
+          });
+        }
         for (const c of data.cnamClaims ?? []) {
           merged.push({
             id: `cnam-${c.id}`,

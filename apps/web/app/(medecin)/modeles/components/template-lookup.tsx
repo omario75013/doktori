@@ -19,6 +19,8 @@ interface Props {
   patientId: string;
   /** Optional — if absent, variables are not resolved (raw {{tokens}} kept). */
   appointmentId?: string;
+  /** Filter templates to a specific target_type (prescription, certificat_medical, …). */
+  targetType?: string;
   /** Called with rendered plain-text content + the picked template id. */
   onPick: (rendered: string, templateId: string) => void;
 }
@@ -83,7 +85,7 @@ function htmlToPlainText(html: string): string {
     .trim();
 }
 
-export function TemplateLookup({ patientId, appointmentId, onPick }: Props) {
+export function TemplateLookup({ patientId, appointmentId, targetType, onPick }: Props) {
   const t = useTranslations("medecin.modeles");
   const [templates, setTemplates] = useState<Template[]>([]);
   const [ctxData, setCtxData] = useState<Record<string, unknown> | null>(null);
@@ -95,12 +97,13 @@ export function TemplateLookup({ patientId, appointmentId, onPick }: Props) {
 
   // Fetch templates always; context only when appointmentId is available
   useEffect(() => {
-    fetch("/api/medecin/templates")
+    const qs = targetType ? `?targetType=${encodeURIComponent(targetType)}` : "";
+    fetch("/api/medecin/templates" + qs)
       .then((r) => (r.ok ? r.json() : null))
       .then((tpl) => {
         if (Array.isArray(tpl)) setTemplates(tpl as Template[]);
       });
-  }, []);
+  }, [targetType]);
 
   useEffect(() => {
     const url = appointmentId

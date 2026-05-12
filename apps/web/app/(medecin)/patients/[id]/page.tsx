@@ -24,6 +24,7 @@ import {
   Calendar,
   StickyNote,
   Pill,
+  Award,
   FileUp,
   Activity,
   Printer,
@@ -37,6 +38,7 @@ import {
   X as XClose,
 } from "lucide-react";
 import { ReferPatientModal } from "./refer-patient-modal";
+import { CertificatesSection } from "./certificates-tab";
 import { toast } from "sonner";
 import { QuillEditor } from "../../modeles/components/quill-editor";
 import { TemplateLookup } from "../../modeles/components/template-lookup";
@@ -347,7 +349,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
   const [deleting, setDeleting] = useState(false);
   const [viewerRole, setViewerRole] = useState<"doctor" | "secretary">("doctor");
   const [viewerPerms, setViewerPerms] = useState<Record<string, boolean> | null>(null);
-  const [tab, setTab] = useState<"general" | "dossier" | "rdv" | "ordonnances" | "documents" | "timeline">("general");
+  const [tab, setTab] = useState<"general" | "dossier" | "rdv" | "ordonnances" | "certificats" | "documents" | "timeline">("general");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   // Documents shared via the new patient_documents table (patient uploads
   // they explicitly shared with this doctor + doctor-created shared docs).
@@ -668,6 +670,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
             { id: "dossier", label: t("tabDossier"), icon: ClipboardList },
             { id: "rdv", label: t("tabAppointments"), icon: Calendar },
             { id: "ordonnances", label: t("tabPrescriptions"), icon: Pill },
+            { id: "certificats", label: t("tabCertificates"), icon: Award },
             { id: "documents", label: t("tabDocuments"), icon: FileUp },
           ] as const).map((tabItem) => {
             const Icon = tabItem.icon;
@@ -798,6 +801,16 @@ function PatientDetail({ listPath }: { listPath: string }) {
         <div className="ds-card p-10 text-center text-sm text-gray-400">
           Accès aux ordonnances réservé au médecin.
         </div>
+      )}
+
+      {tab === "certificats" && viewerRole === "doctor" && (
+        <CertificatesSection
+          patientId={params.id!}
+          patientName={patient?.name ?? "—"}
+          completedAppointments={appointments
+            .filter((a) => a.status === "completed")
+            .map((a) => ({ id: a.id, startsAt: a.startsAt, reason: a.reason }))}
+        />
       )}
 
       {tab === "documents" && (

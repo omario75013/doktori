@@ -16,20 +16,21 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const language = searchParams.get("language");
+    const targetType = searchParams.get("targetType");
 
     const baseWhere = or(
       eq(prescriptionTemplates.doctorId, user.id),
       eq(prescriptionTemplates.isOfficial, true)
     );
 
+    const conditions = [baseWhere, isNull(prescriptionTemplates.deletedAt)];
+    if (language) conditions.push(eq(prescriptionTemplates.language, language));
+    if (targetType) conditions.push(eq(prescriptionTemplates.targetType, targetType));
+
     const rows = await db
       .select()
       .from(prescriptionTemplates)
-      .where(
-        language
-          ? and(baseWhere, isNull(prescriptionTemplates.deletedAt), eq(prescriptionTemplates.language, language))
-          : and(baseWhere, isNull(prescriptionTemplates.deletedAt))
-      )
+      .where(and(...conditions))
       .orderBy(prescriptionTemplates.isOfficial, prescriptionTemplates.title);
 
     return NextResponse.json(rows);
