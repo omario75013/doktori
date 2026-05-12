@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import {
   Bell,
   Mail,
@@ -27,18 +28,18 @@ interface Prefs {
   medicationRemindersEnabled: boolean;
 }
 
-const OFFSET_CHOICES: Array<{ value: number; label: string }> = [
-  { value: 720, label: "1 mois avant" },
-  { value: 168, label: "1 semaine avant" },
-  { value: 48, label: "2 jours avant" },
-  { value: 24, label: "1 jour avant" },
-  { value: 2, label: "2 h avant" },
-  { value: 0, label: "Le jour même" },
-];
-
 const VACCINE_DAYS_CHOICES = [7, 14, 30, 60, 90, 180];
 
 export default function NotificationsPage() {
+  const t = useTranslations("patient.parametres.notifications");
+  const OFFSET_CHOICES: Array<{ value: number; label: string }> = [
+    { value: 720, label: t("offsets.month") },
+    { value: 168, label: t("offsets.week") },
+    { value: 48, label: t("offsets.days2") },
+    { value: 24, label: t("offsets.day1") },
+    { value: 2, label: t("offsets.hours2") },
+    { value: 0, label: t("offsets.sameDay") },
+  ];
   const [prefs, setPrefs] = useState<Prefs | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -81,7 +82,7 @@ export default function NotificationsPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(patch),
       });
-      if (!res.ok) toast.error("Échec de l'enregistrement");
+      if (!res.ok) toast.error(t("toast.saveError"));
     } finally {
       setSaving(false);
     }
@@ -108,10 +109,10 @@ export default function NotificationsPage() {
     <>
       <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <div className="ds-eyebrow">PARAMÈTRES</div>
-          <h1 className="ds-page-title">Notifications &amp; rappels</h1>
+          <div className="ds-eyebrow">{t("eyebrow")}</div>
+          <h1 className="ds-page-title">{t("title")}</h1>
           <p className="ds-page-sub">
-            Choisissez les canaux et la fréquence des rappels pour ne rien manquer.
+            {t("subtitle")}
           </p>
         </div>
         {saving && (
@@ -119,31 +120,31 @@ export default function NotificationsPage() {
             className="inline-flex items-center gap-2 text-[12.5px] font-semibold"
             style={{ color: "var(--ink-500)" }}
           >
-            <Loader2 className="w-3.5 h-3.5 animate-spin" /> Enregistrement…
+            <Loader2 className="w-3.5 h-3.5 animate-spin" /> {t("saving")}
           </div>
         )}
       </div>
 
-      <Section title="Canaux" subtitle="Comment souhaitez-vous être notifié(e) ?">
+      <Section title={t("channels.title")} subtitle={t("channels.subtitle")}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
           <ChannelCard
             icon={<Mail className="w-4 h-4" />}
-            title="Email"
-            sub="Important uniquement"
+            title={t("channels.email.title")}
+            sub={t("channels.email.sub")}
             on={prefs.emailAppointments}
             onChange={(v) => save({ emailAppointments: v })}
           />
           <ChannelCard
             icon={<MessageSquare className="w-4 h-4" />}
-            title="SMS"
-            sub="Rappels & confirmations"
+            title={t("channels.sms.title")}
+            sub={t("channels.sms.sub")}
             on={prefs.smsAppointments}
             onChange={(v) => save({ smsAppointments: v })}
           />
           <ChannelCard
             icon={<Smartphone className="w-4 h-4" />}
-            title="Notifications app"
-            sub="Pour Doktori web & mobile"
+            title={t("channels.push.title")}
+            sub={t("channels.push.sub")}
             on={prefs.pushAppointments}
             onChange={(v) => save({ pushAppointments: v })}
           />
@@ -152,8 +153,8 @@ export default function NotificationsPage() {
 
       <Section
         icon={<Calendar className="w-4 h-4" />}
-        title="Rappels de rendez-vous"
-        subtitle="Choisissez quand recevoir les rappels avant un rendez-vous."
+        title={t("rdvReminders.title")}
+        subtitle={t("rdvReminders.subtitle")}
       >
         <div className="flex flex-wrap gap-2">
           {OFFSET_CHOICES.map((c) => {
@@ -175,18 +176,18 @@ export default function NotificationsPage() {
           })}
         </div>
         <p className="text-[11.5px] mt-2" style={{ color: "var(--ink-500)" }}>
-          Les rappels suivent les canaux activés ci-dessus.
+          {t("rdvReminders.note")}
         </p>
       </Section>
 
       <Section
         icon={<Syringe className="w-4 h-4" />}
-        title="Rappels de vaccins"
-        subtitle="Soyez prévenu(e) avant qu'un vaccin n'arrive à échéance."
+        title={t("vaccines.title")}
+        subtitle={t("vaccines.subtitle")}
       >
         <div className="flex items-center justify-between gap-3 mb-3">
           <span className="text-[13.5px] font-semibold" style={{ color: "var(--ink-900)" }}>
-            Activer les rappels vaccinaux
+            {t("vaccines.enable")}
           </span>
           <Toggle
             on={prefs.vaccineRemindersEnabled}
@@ -208,7 +209,7 @@ export default function NotificationsPage() {
                       : "border border-[color:var(--line-cool)] bg-white text-[color:var(--ink-700)] hover:border-[color:var(--primary-300)]"
                   }`}
                 >
-                  {d} jours avant
+                  {t("vaccines.daysBefore", { n: d })}
                 </button>
               );
             })}
@@ -218,16 +219,16 @@ export default function NotificationsPage() {
 
       <Section
         icon={<Pill className="w-4 h-4" />}
-        title="Rappels de traitements"
-        subtitle="Active la fonctionnalité globalement. Choisissez les horaires individuellement dans chaque traitement."
+        title={t("meds.title")}
+        subtitle={t("meds.subtitle")}
       >
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-[13.5px] font-semibold" style={{ color: "var(--ink-900)" }}>
-              Rappels de prise de médicaments
+              {t("meds.rowTitle")}
             </div>
             <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
-              Active la fonctionnalité globalement.
+              {t("meds.rowSub")}
             </div>
           </div>
           <Toggle
@@ -240,21 +241,21 @@ export default function NotificationsPage() {
             href="/dossier-medical/traitements"
             className="ds-btn ds-btn-soft ds-btn-sm mt-3 inline-flex"
           >
-            <Pill className="w-3.5 h-3.5" /> Configurer mes traitements
+            <Pill className="w-3.5 h-3.5" /> {t("meds.configure")}
           </a>
         )}
       </Section>
 
-      <Section icon={<Bell className="w-4 h-4" />} title="Autres notifications par email">
+      <Section icon={<Bell className="w-4 h-4" />} title={t("otherEmail.title")}>
         <RowToggle
-          label="Conseils santé"
-          sub="Newsletter mensuelle, actualités Doktori"
+          label={t("otherEmail.healthTips.label")}
+          sub={t("otherEmail.healthTips.sub")}
           on={prefs.emailNews}
           onChange={(v) => save({ emailNews: v })}
         />
         <RowToggle
-          label="Offres & promotions"
-          sub="Recommandations personnalisées, partenaires"
+          label={t("otherEmail.offers.label")}
+          sub={t("otherEmail.offers.sub")}
           on={prefs.emailMarketing}
           onChange={(v) => save({ emailMarketing: v })}
         />

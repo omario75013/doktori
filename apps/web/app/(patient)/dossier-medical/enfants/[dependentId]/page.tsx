@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback, use } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { ar, fr } from "date-fns/locale";
 import Link from "next/link";
 import { Baby, Check, ChevronLeft, Clock, Loader2, Plus, Trash2, X } from "lucide-react";
 
@@ -39,6 +41,12 @@ function ageInMonths(dob: string, ref: Date = new Date()): number {
 export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ dependentId: string }> }) {
   const { dependentId } = use(params);
   const router = useRouter();
+  const t = useTranslations("patient.dossier.enfants");
+  const tc = useTranslations("patient.dossier.common");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
+  void dateLocale;
+  const dateFnsLocaleTag = locale === "ar" ? "ar-TN" : "fr-FR";
   const [token, setToken] = useState<string | null>(null);
   const [dependent, setDependent] = useState<Dependent | null>(null);
   const [schedule, setSchedule] = useState<VaccineInfo[]>([]);
@@ -116,7 +124,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
         setModalOpen(false);
         await load(token);
       } else {
-        alert("Erreur lors de l'enregistrement");
+        alert(t("alert.saveError"));
       }
     } finally {
       setSaving(false);
@@ -125,7 +133,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
 
   async function handleDelete(recordId: string) {
     if (!token) return;
-    if (!confirm("Supprimer cet enregistrement ?")) return;
+    if (!confirm(t("confirm.deleteRecord"))) return;
     const res = await fetch(`/api/me/dependents/${dependentId}/vaccinations/${recordId}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
@@ -144,7 +152,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
   if (!dependent) {
     return (
       <div className="min-h-screen p-6">
-        <p className="text-center text-muted-foreground">Enfant introuvable.</p>
+        <p className="text-center text-muted-foreground">{t("notFound")}</p>
       </div>
     );
   }
@@ -155,7 +163,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
     <>
       <div>
         <Link href="/dossier-medical/enfants" className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--primary-600)] mb-2">
-          <ChevronLeft className="w-3.5 h-3.5" /> Retour
+          <ChevronLeft className="w-3.5 h-3.5" /> {tc("back")}
         </Link>
 
         <div className="ds-card-patient p-5 mb-5 flex items-center gap-4">
@@ -166,14 +174,14 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
             <h1 className="text-xl font-bold text-foreground">{dependent.name}</h1>
             {childMonths !== null && (
               <p className="text-sm text-muted-foreground">
-                {childMonths < 24 ? `${childMonths} mois` : `${Math.floor(childMonths / 12)} an(s)`}
+                {childMonths < 24 ? t("ageMonths", { months: childMonths }) : t("ageYears", { years: Math.floor(childMonths / 12) })}
               </p>
             )}
           </div>
         </div>
 
         <h2 className="text-lg font-bold text-foreground mb-3 flex items-center gap-2">
-          <Baby className="w-5 h-5" /> Calendrier vaccinal officiel TN
+          <Baby className="w-5 h-5" /> {t("scheduleTitle")}
         </h2>
 
         <div className="space-y-2">
@@ -200,18 +208,18 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
                     <p className="font-bold text-foreground text-sm">{vacc.nameFr}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {vacc.ageMinMonths === vacc.ageMaxMonths
-                        ? `À ${vacc.ageMinMonths} mois`
-                        : `${vacc.ageMinMonths}-${vacc.ageMaxMonths ?? "?"} mois`}
+                        ? t("atMonths", { months: vacc.ageMinMonths })
+                        : t("rangeMonths", { min: vacc.ageMinMonths, max: vacc.ageMaxMonths ?? 0 })}
                     </p>
                     {matching.map((r) => (
                       <div key={r.id} className="mt-2 inline-flex items-center gap-2 text-xs bg-emerald-100 text-emerald-800 rounded-full px-2.5 py-1">
                         <Check className="w-3 h-3" />
-                        Reçu le {new Date(r.dateReceived).toLocaleDateString("fr-FR")}
-                        {vacc.dosesCount > 1 && <span>· dose {r.doseNumber}</span>}
+                        {t("receivedOn", { date: new Date(r.dateReceived).toLocaleDateString(dateFnsLocaleTag) })}
+                        {vacc.dosesCount > 1 && <span>· {t("dose", { n: r.doseNumber })}</span>}
                         <button
                           onClick={() => handleDelete(r.id)}
                           className="ms-1 hover:text-red-600"
-                          aria-label="Supprimer"
+                          aria-label={tc("delete")}
                         >
                           <Trash2 className="w-3 h-3" />
                         </button>
@@ -221,25 +229,25 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
                   <div className="shrink-0">
                     {received && matching.length >= vacc.dosesCount ? (
                       <span className="inline-flex items-center gap-1 text-xs font-semibold text-emerald-700">
-                        <Check className="w-3.5 h-3.5" /> Complet
+                        <Check className="w-3.5 h-3.5" /> {t("complete")}
                       </span>
                     ) : isCurrent ? (
                       <button
                         onClick={() => openMark(vacc)}
                         className="bg-amber-500 text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:bg-amber-600 inline-flex items-center gap-1"
                       >
-                        <Plus className="w-3 h-3" /> À jour
+                        <Plus className="w-3 h-3" /> {t("upToDate")}
                       </button>
                     ) : isUpcoming ? (
                       <span className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500">
-                        <Clock className="w-3.5 h-3.5" /> À venir
+                        <Clock className="w-3.5 h-3.5" /> {t("upcoming")}
                       </span>
                     ) : (
                       <button
                         onClick={() => openMark(vacc)}
                         className="bg-primary text-white text-xs font-bold px-3 py-1.5 rounded-lg hover:opacity-90 inline-flex items-center gap-1"
                       >
-                        <Plus className="w-3 h-3" /> Marquer
+                        <Plus className="w-3 h-3" /> {t("markBtn")}
                       </button>
                     )}
                   </div>
@@ -249,7 +257,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
           })}
           {schedule.length === 0 && (
             <p className="text-center text-muted-foreground p-8">
-              Aucun vaccin dans le calendrier. (Le seed n&apos;est peut-être pas encore appliqué.)
+              {t("scheduleEmpty")}
             </p>
           )}
         </div>
@@ -264,7 +272,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
                 </button>
               </div>
               <div>
-                <label className="block text-sm font-medium mb-1">Date d&apos;administration</label>
+                <label className="block text-sm font-medium mb-1">{t("form.dateAdministration")}</label>
                 <input
                   type="date"
                   required
@@ -275,7 +283,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
               </div>
               {activeVaccine.dosesCount > 1 && (
                 <div>
-                  <label className="block text-sm font-medium mb-1">Numéro de dose</label>
+                  <label className="block text-sm font-medium mb-1">{t("form.doseNumber")}</label>
                   <input
                     type="number"
                     min={1}
@@ -287,7 +295,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium mb-1">Notes (optionnel)</label>
+                <label className="block text-sm font-medium mb-1">{t("form.notesOptional")}</label>
                 <textarea
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
@@ -301,7 +309,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
                   onClick={() => setModalOpen(false)}
                   className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-700 hover:bg-slate-100"
                 >
-                  Annuler
+                  {tc("cancel")}
                 </button>
                 <button
                   type="submit"
@@ -309,7 +317,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
                   className="bg-primary text-white px-5 py-2 rounded-lg text-sm font-bold disabled:opacity-50 inline-flex items-center gap-2"
                 >
                   {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                  Enregistrer
+                  {tc("save")}
                 </button>
               </div>
             </form>

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations, useLocale } from "next-intl";
 import {
   Upload,
   CheckCircle,
@@ -51,13 +52,6 @@ interface Dependent {
   relation: string | null;
 }
 
-const MARITAL_LABEL: Record<NonNullable<PatientProfile["maritalStatus"]>, string> = {
-  single: "Célibataire",
-  married: "Marié(e)",
-  divorced: "Divorcé(e)",
-  widowed: "Veuf(ve)",
-};
-
 const TN_INSURANCE_PROVIDERS = [
   "GAT Assurances",
   "COMAR",
@@ -70,27 +64,22 @@ const TN_INSURANCE_PROVIDERS = [
   "Carte Assurances",
   "Hayett",
   "BIAT Assurance",
-  "Autre",
 ];
 
-// Tunisian CNAM regimes
-const CNAM_REGIMES = [
-  "Salarié secteur public",
-  "Salarié secteur privé",
-  "Travailleur indépendant",
-  "Étudiant",
-  "Retraité",
-  "Conventionné non salarié",
-];
-const CNAM_FILIERES = [
-  "Filière publique",
-  "Filière privée — médecin de famille",
-  "Système de remboursement",
-];
+const CNAM_REGIME_KEYS = ["public", "private", "independent", "student", "retired", "conventioned"] as const;
+const CNAM_FILIERE_KEYS = ["public", "privateFamily", "reimbursement"] as const;
 
 export default function ParametresComptePage() {
   const router = useRouter();
+  const t = useTranslations("patient.parametres.compte");
+  const locale = useLocale();
   const [profile, setProfile] = useState<PatientProfile | null>(null);
+  const MARITAL_LABEL: Record<NonNullable<PatientProfile["maritalStatus"]>, string> = {
+    single: t("marital.single"),
+    married: t("marital.married"),
+    divorced: t("marital.divorced"),
+    widowed: t("marital.widowed"),
+  };
   const [dependents, setDependents] = useState<Dependent[]>([]);
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
@@ -127,7 +116,7 @@ export default function ParametresComptePage() {
     const file = e.target.files?.[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      toast.error("Image > 5 Mo");
+      toast.error(t("toast.imageTooBig"));
       return;
     }
     setPhotoUploading(true);
@@ -142,9 +131,9 @@ export default function ParametresComptePage() {
       const data = await res.json();
       if (res.ok) {
         setProfile((p) => (p ? { ...p, photoUrl: data.photoUrl } : p));
-        toast.success("Photo mise à jour");
+        toast.success(t("toast.photoUpdated"));
       } else {
-        toast.error(data.error || "Erreur");
+        toast.error(data.error || t("toast.error"));
       }
     } finally {
       setPhotoUploading(false);
@@ -173,9 +162,9 @@ export default function ParametresComptePage() {
       {/* Page header */}
       <div className="flex items-end justify-between gap-4 mb-5">
         <div>
-          <div className="ds-eyebrow">Mon compte</div>
-          <h1 className="ds-page-title">Profil &amp; paramètres</h1>
-          <p className="ds-page-sub">Ces informations facilitent la prise de rendez-vous.</p>
+          <div className="ds-eyebrow">{t("eyebrow")}</div>
+          <h1 className="ds-page-title">{t("title")}</h1>
+          <p className="ds-page-sub">{t("subtitle")}</p>
         </div>
       </div>
 
@@ -194,7 +183,7 @@ export default function ParametresComptePage() {
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={profile.photoUrl}
-                  alt={profile.name ?? "Patient"}
+                  alt={profile.name ?? t("patientAlt")}
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -219,7 +208,7 @@ export default function ParametresComptePage() {
                 color: "var(--ink-700)",
                 boxShadow: "var(--shadow-1)",
               }}
-              aria-label="Changer la photo"
+              aria-label={t("changePhoto")}
             >
               {photoUploading ? (
                 <div className="w-3.5 h-3.5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -237,17 +226,17 @@ export default function ParametresComptePage() {
               {profile.name ?? "—"}
             </div>
             <div className="text-[13px]" style={{ color: "var(--ink-500)" }}>
-              Patient · Membre depuis 2024
+              {t("memberSince")}
             </div>
             <div className="flex gap-2 mt-2 flex-wrap">
               {profile.email && (
                 <span className="ds-chip ds-chip-mint">
-                  <CheckCircle className="w-3 h-3" /> Email vérifié
+                  <CheckCircle className="w-3 h-3" /> {t("emailVerified")}
                 </span>
               )}
               {profile.phone && (
                 <span className="ds-chip ds-chip-mint">
-                  <CheckCircle className="w-3 h-3" /> Téléphone
+                  <CheckCircle className="w-3 h-3" /> {t("phoneChip")}
                 </span>
               )}
             </div>
@@ -257,25 +246,25 @@ export default function ParametresComptePage() {
             className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-3 flex-1 min-w-[260px]"
             style={{ borderLeft: "1px solid var(--line-cool)", paddingLeft: 20 }}
           >
-            <ProfMini label="Email" v={profile.email ?? "—"} />
-            <ProfMini label="Téléphone" v={profile.phone ?? "—"} />
+            <ProfMini label={t("fields.email")} v={profile.email ?? "—"} />
+            <ProfMini label={t("fields.phone")} v={profile.phone ?? "—"} />
             <ProfMini
-              label="Naissance"
+              label={t("fields.birth")}
               v={
                 profile.dateOfBirth
-                  ? new Date(profile.dateOfBirth).toLocaleDateString("fr-FR")
+                  ? new Date(profile.dateOfBirth).toLocaleDateString(locale === "ar" ? "ar-TN" : "fr-FR")
                   : "—"
               }
             />
             <ProfMini
-              label="Genre"
-              v={profile.gender === "M" ? "Homme" : profile.gender === "F" ? "Femme" : "—"}
+              label={t("fields.gender")}
+              v={profile.gender === "M" ? t("gender.male") : profile.gender === "F" ? t("gender.female") : "—"}
             />
             <ProfMini
-              label="État civil"
+              label={t("fields.maritalStatus")}
               v={profile.maritalStatus ? MARITAL_LABEL[profile.maritalStatus] : "—"}
             />
-            <ProfMini label="Enfants" v={String(childrenCount)} />
+            <ProfMini label={t("fields.children")} v={String(childrenCount)} />
           </div>
         </div>
       </div>
@@ -287,7 +276,7 @@ export default function ParametresComptePage() {
           <div className="ds-card-patient">
             <div className="flex items-center justify-between mb-4">
               <div className="font-bold text-[16px]" style={{ color: "var(--ink-900)" }}>
-                Informations personnelles
+                {t("personalInfo")}
               </div>
               {!editing && (
                 <button
@@ -295,13 +284,13 @@ export default function ParametresComptePage() {
                   onClick={() => setEditing(true)}
                   className="ds-btn ds-btn-soft ds-btn-sm"
                 >
-                  <Pencil className="w-3.5 h-3.5" /> Modifier
+                  <Pencil className="w-3.5 h-3.5" /> {t("edit")}
                 </button>
               )}
             </div>
 
             {!editing ? (
-              <ReadOnlyFields profile={profile} childrenCount={childrenCount} />
+              <ReadOnlyFields profile={profile} childrenCount={childrenCount} maritalLabel={MARITAL_LABEL} />
             ) : (
               <EditForm
                 profile={profile}
@@ -320,9 +309,9 @@ export default function ParametresComptePage() {
                     if (res.ok) {
                       setProfile(data);
                       setEditing(false);
-                      toast.success("Profil mis à jour");
+                      toast.success(t("toast.profileUpdated"));
                     } else {
-                      toast.error(data.error || "Erreur");
+                      toast.error(data.error || t("toast.error"));
                     }
                   } finally {
                     setSavingProfile(false);
@@ -338,10 +327,10 @@ export default function ParametresComptePage() {
           <div className="ds-card-patient">
             <div className="flex items-center justify-between mb-4">
               <div className="font-bold text-[16px]" style={{ color: "var(--ink-900)" }}>
-                Cartes d&apos;assurance
+                {t("insuranceCards")}
               </div>
               <span className="ds-chip ds-chip-mint">
-                <Shield className="w-3 h-3" /> Chiffré
+                <Shield className="w-3 h-3" /> {t("encrypted")}
               </span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -354,7 +343,7 @@ export default function ParametresComptePage() {
                 onView={() => setViewCard("cnam")}
               />
               <InsuranceCard
-                label={profile.insuranceProvider ?? "Mutuelle"}
+                label={profile.insuranceProvider ?? t("mutuelle")}
                 holder={profile.name ?? ""}
                 number={profile.insuranceNumber}
                 cardUrl={profile.insuranceCardUrl}
@@ -367,33 +356,33 @@ export default function ParametresComptePage() {
           {/* Preferences — directly under Cartes d'assurance */}
           <div className="ds-card-patient mt-5">
             <div className="font-bold text-[16px] mb-3" style={{ color: "var(--ink-900)" }}>
-              Préférences
+              {t("preferences")}
             </div>
             <div className="flex flex-col">
               <PrefRow
                 icon={<Bell className="w-4 h-4" />}
-                label="Rappels de rendez-vous"
-                sub="SMS et email 24h avant"
+                label={t("prefs.rdvReminders.label")}
+                sub={t("prefs.rdvReminders.sub")}
                 on={prefRdvReminder}
                 onChange={setPrefRdvReminder}
               />
               <PrefRow
                 icon={<MessageCircle className="w-4 h-4" />}
-                label="Newsletter santé"
-                sub="Conseils mensuels"
+                label={t("prefs.newsletter.label")}
+                sub={t("prefs.newsletter.sub")}
                 on={prefNewsletter}
                 onChange={setPrefNewsletter}
               />
               <PrefRow
                 icon={<Globe className="w-4 h-4" />}
-                label="Langue"
-                sub="Français · prête à utiliser"
-                chip="FR"
+                label={t("prefs.language.label")}
+                sub={t("prefs.language.sub")}
+                chip={locale === "ar" ? "AR" : "FR"}
               />
               <PrefRow
                 icon={<Shield className="w-4 h-4" />}
-                label="Sécurité &amp; mot de passe"
-                sub="2FA, changer mot de passe, sessions"
+                label={t("prefs.security.label")}
+                sub={t("prefs.security.sub")}
                 href="/parametres/securite"
               />
             </div>
@@ -435,36 +424,38 @@ export default function ParametresComptePage() {
 }
 
 /* ───────── Read-only fields ───────── */
-function ReadOnlyFields({ profile, childrenCount }: { profile: PatientProfile; childrenCount: number }) {
+function ReadOnlyFields({ profile, childrenCount, maritalLabel }: { profile: PatientProfile; childrenCount: number; maritalLabel: Record<NonNullable<PatientProfile["maritalStatus"]>, string> }) {
+  const t = useTranslations("patient.parametres.compte");
+  const locale = useLocale();
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <Field label="Prénom" v={profile.name?.split(/\s+/)[0] ?? "—"} />
-      <Field label="Nom" v={profile.name?.split(/\s+/).slice(1).join(" ") || "—"} />
-      <Field label="Email" v={profile.email ?? "—"} />
-      <Field label="Téléphone" v={profile.phone ?? "—"} />
+      <Field label={t("fields.firstName")} v={profile.name?.split(/\s+/)[0] ?? "—"} />
+      <Field label={t("fields.lastName")} v={profile.name?.split(/\s+/).slice(1).join(" ") || "—"} />
+      <Field label={t("fields.email")} v={profile.email ?? "—"} />
+      <Field label={t("fields.phone")} v={profile.phone ?? "—"} />
       <Field
-        label="Date de naissance"
-        v={profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString("fr-FR") : "—"}
+        label={t("fields.dateOfBirth")}
+        v={profile.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString(locale === "ar" ? "ar-TN" : "fr-FR") : "—"}
       />
       <Field
-        label="Genre"
-        v={profile.gender === "M" ? "Homme" : profile.gender === "F" ? "Femme" : "—"}
+        label={t("fields.gender")}
+        v={profile.gender === "M" ? t("gender.male") : profile.gender === "F" ? t("gender.female") : "—"}
       />
       <Field
-        label="État civil"
-        v={profile.maritalStatus ? MARITAL_LABEL[profile.maritalStatus] : "—"}
+        label={t("fields.maritalStatus")}
+        v={profile.maritalStatus ? maritalLabel[profile.maritalStatus] : "—"}
       />
-      <Field label="Enfants" v={String(childrenCount)} />
-      <Field label="Profession" v={profile.occupation ?? "—"} />
-      <Field label="CIN" v={profile.cin ?? "—"} />
-      <Field label="Taille" v={profile.heightCm ? `${profile.heightCm} cm` : "—"} />
-      <Field label="Poids" v={profile.weightKg ? `${profile.weightKg} kg` : "—"} />
-      <Field label="Groupe sanguin" v={profile.bloodType ?? "—"} />
-      <Field label="Adresse" v={profile.addressStreet ?? "—"} wide />
-      <Field label="Code postal" v={profile.addressPostalCode ?? "—"} />
-      <Field label="Ville" v={profile.addressCity ?? "—"} />
+      <Field label={t("fields.children")} v={String(childrenCount)} />
+      <Field label={t("fields.occupation")} v={profile.occupation ?? "—"} />
+      <Field label={t("fields.cin")} v={profile.cin ?? "—"} />
+      <Field label={t("fields.height")} v={profile.heightCm ? `${profile.heightCm} cm` : "—"} />
+      <Field label={t("fields.weight")} v={profile.weightKg ? `${profile.weightKg} kg` : "—"} />
+      <Field label={t("fields.bloodType")} v={profile.bloodType ?? "—"} />
+      <Field label={t("fields.address")} v={profile.addressStreet ?? "—"} wide />
+      <Field label={t("fields.postalCode")} v={profile.addressPostalCode ?? "—"} />
+      <Field label={t("fields.city")} v={profile.addressCity ?? "—"} />
       <Field
-        label="Contact d'urgence"
+        label={t("fields.emergencyContact")}
         v={
           profile.emergencyContactName
             ? `${profile.emergencyContactName}${
@@ -490,6 +481,7 @@ function EditForm({
   onSave: (patch: Partial<PatientProfile>) => Promise<void>;
   onCancel: () => void;
 }) {
+  const t = useTranslations("patient.parametres.compte");
   const [firstName, setFirstName] = useState(profile.name?.split(/\s+/)[0] ?? "");
   const [lastName, setLastName] = useState(profile.name?.split(/\s+/).slice(1).join(" ") ?? "");
   const email = profile.email ?? "";
@@ -515,7 +507,7 @@ function EditForm({
   function submit(e: React.FormEvent) {
     e.preventDefault();
     if (cin && !/^\d{8}$/.test(cin)) {
-      toast.error("Le CIN doit comporter exactement 8 chiffres");
+      toast.error(t("toast.cinFormat"));
       return;
     }
     const fullName = `${firstName.trim()} ${lastName.trim()}`.trim();
@@ -542,77 +534,77 @@ function EditForm({
 
   return (
     <form onSubmit={submit} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-      <Inp label="Prénom" value={firstName} onChange={setFirstName} />
-      <Inp label="Nom" value={lastName} onChange={setLastName} />
+      <Inp label={t("fields.firstName")} value={firstName} onChange={setFirstName} />
+      <Inp label={t("fields.lastName")} value={lastName} onChange={setLastName} />
       {/* Email is identity-bound and cannot be changed inline — managed via Sécurité. */}
       <div className="sm:col-span-2">
-        <Label>Email</Label>
+        <Label>{t("fields.email")}</Label>
         <div
           className="text-[13.5px] font-semibold rounded-xl px-3 py-2.5 truncate"
           style={{ background: "var(--surface-2)", color: "var(--ink-900)" }}
-          title="L'adresse email est verrouillée. Contactez le support pour la modifier."
+          title={t("emailLockedTitle")}
         >
           {email || "—"}
         </div>
       </div>
-      <Inp label="Date de naissance" type="date" value={dateOfBirth} onChange={setDateOfBirth} />
+      <Inp label={t("fields.dateOfBirth")} type="date" value={dateOfBirth} onChange={setDateOfBirth} />
       <Sel
-        label="Genre"
+        label={t("fields.gender")}
         value={gender}
         onChange={(v) => setGender(v as "" | "M" | "F")}
         options={[
           ["", "—"],
-          ["M", "Homme"],
-          ["F", "Femme"],
+          ["M", t("gender.male")],
+          ["F", t("gender.female")],
         ]}
       />
       <Sel
-        label="État civil"
+        label={t("fields.maritalStatus")}
         value={maritalStatus}
         onChange={(v) => setMaritalStatus(v as "" | NonNullable<PatientProfile["maritalStatus"]>)}
         options={[
           ["", "—"],
-          ["single", "Célibataire"],
-          ["married", "Marié(e)"],
-          ["divorced", "Divorcé(e)"],
-          ["widowed", "Veuf(ve)"],
+          ["single", t("marital.single")],
+          ["married", t("marital.married")],
+          ["divorced", t("marital.divorced")],
+          ["widowed", t("marital.widowed")],
         ]}
       />
-      <Inp label="Profession" value={occupation} onChange={setOccupation} />
+      <Inp label={t("fields.occupation")} value={occupation} onChange={setOccupation} />
       <Inp
-        label="CIN"
+        label={t("fields.cin")}
         value={cin}
         onChange={(v) => setCin(v.replace(/\D/g, "").slice(0, 8))}
         maxLength={8}
         inputMode="numeric"
-        placeholder="8 chiffres"
+        placeholder={t("cinPlaceholder")}
       />
-      <Inp label="Taille (cm)" type="number" value={heightCm} onChange={setHeightCm} />
-      <Inp label="Poids (kg)" type="number" value={weightKg} onChange={setWeightKg} />
+      <Inp label={t("fields.heightCm")} type="number" value={heightCm} onChange={setHeightCm} />
+      <Inp label={t("fields.weightKg")} type="number" value={weightKg} onChange={setWeightKg} />
       <Sel
-        label="Groupe sanguin"
+        label={t("fields.bloodType")}
         value={bloodType}
         onChange={setBloodType}
         options={[
           ["", "—"],
-          ...(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((t) => [t, t] as [string, string])),
+          ...(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"].map((x) => [x, x] as [string, string])),
         ]}
       />
-      <Inp label="Adresse" value={addressStreet} onChange={setAddressStreet} wide />
-      <Inp label="Code postal" value={addressPostalCode} onChange={setAddressPostalCode} />
-      <Inp label="Ville" value={addressCity} onChange={setAddressCity} />
+      <Inp label={t("fields.address")} value={addressStreet} onChange={setAddressStreet} wide />
+      <Inp label={t("fields.postalCode")} value={addressPostalCode} onChange={setAddressPostalCode} />
+      <Inp label={t("fields.city")} value={addressCity} onChange={setAddressCity} />
       <Inp
-        label="Contact d'urgence (nom)"
+        label={t("fields.emergencyName")}
         value={emergencyContactName}
         onChange={setEmergencyContactName}
       />
       <Inp
-        label="Contact d'urgence (téléphone)"
+        label={t("fields.emergencyPhone")}
         value={emergencyContactPhone}
         onChange={setEmergencyContactPhone}
       />
       <Inp
-        label="Lien de parenté"
+        label={t("fields.emergencyRelation")}
         value={emergencyContactRelation}
         onChange={setEmergencyContactRelation}
         wide
@@ -620,10 +612,10 @@ function EditForm({
 
       <div className="sm:col-span-2 flex gap-2 justify-end mt-1">
         <button type="button" onClick={onCancel} className="ds-btn ds-btn-ghost">
-          <X className="w-4 h-4" /> Annuler
+          <X className="w-4 h-4" /> {t("cancel")}
         </button>
         <button type="submit" disabled={saving} className="ds-btn ds-btn-primary">
-          <Save className="w-4 h-4" /> {saving ? "Enregistrement…" : "Enregistrer"}
+          <Save className="w-4 h-4" /> {saving ? t("saving") : t("save")}
         </button>
       </div>
     </form>
@@ -641,10 +633,11 @@ function InsuranceViewModal({
   profile: PatientProfile;
   onClose: () => void;
 }) {
+  const t = useTranslations("patient.parametres.compte");
   const isCnam = kind === "cnam";
   const number = isCnam ? profile.cnamNumber : profile.insuranceNumber;
   const url = isCnam ? profile.cnamCardUrl : profile.insuranceCardUrl;
-  const provider = isCnam ? "CNAM" : profile.insuranceProvider ?? "Mutuelle";
+  const provider = isCnam ? "CNAM" : profile.insuranceProvider ?? t("mutuelle");
   const isPdf = !!url && url.toLowerCase().endsWith(".pdf");
 
   return (
@@ -659,7 +652,7 @@ function InsuranceViewModal({
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--line-cool)]">
           <h2 className="font-bold text-[16px]" style={{ color: "var(--ink-900)" }}>
-            {isCnam ? "Carte CNAM" : "Carte mutuelle"}
+            {isCnam ? t("cnamCard") : t("mutuelleCard")}
           </h2>
           <button onClick={onClose} className="p-1 rounded hover:bg-[color:var(--surface-2)]">
             <X className="w-4 h-4" />
@@ -672,7 +665,7 @@ function InsuranceViewModal({
                 className="text-[11px] font-bold uppercase tracking-wider mb-0.5"
                 style={{ color: "var(--ink-400)" }}
               >
-                Compagnie
+                {t("fields.company")}
               </div>
               <div className="text-[14px] font-semibold" style={{ color: "var(--ink-900)" }}>
                 {provider}
@@ -683,7 +676,7 @@ function InsuranceViewModal({
                 className="text-[11px] font-bold uppercase tracking-wider mb-0.5"
                 style={{ color: "var(--ink-400)" }}
               >
-                Numéro
+                {t("fields.number")}
               </div>
               <div
                 className="text-[14px] font-mono font-semibold"
@@ -697,7 +690,7 @@ function InsuranceViewModal({
                 className="text-[11px] font-bold uppercase tracking-wider mb-0.5"
                 style={{ color: "var(--ink-400)" }}
               >
-                Assuré
+                {t("fields.insured")}
               </div>
               <div className="text-[14px] font-semibold" style={{ color: "var(--ink-900)" }}>
                 {profile.name ?? "—"}
@@ -722,7 +715,7 @@ function InsuranceViewModal({
                     rel="noreferrer"
                     className="ds-btn ds-btn-primary ds-btn-sm"
                   >
-                    Ouvrir le PDF
+                    {t("openPdf")}
                   </a>
                 </div>
               ) : (
@@ -730,7 +723,7 @@ function InsuranceViewModal({
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={url}
-                    alt={`Carte ${provider}`}
+                    alt={t("cardAlt", { provider })}
                     className="w-full max-h-[400px] object-contain bg-white"
                   />
                 </a>
@@ -740,7 +733,7 @@ function InsuranceViewModal({
                 className="p-8 text-center text-[13px]"
                 style={{ color: "var(--ink-500)" }}
               >
-                Aucune photo enregistrée pour cette carte.
+                {t("noCardPhoto")}
               </div>
             )}
           </div>
@@ -761,7 +754,10 @@ function InsuranceModal({
   onClose: () => void;
   onSaved: (p: PatientProfile) => void;
 }) {
+  const t = useTranslations("patient.parametres.compte");
   const isCnam = kind === "cnam";
+  const CNAM_REGIMES = CNAM_REGIME_KEYS.map((k) => t(`cnamRegimes.${k}` as const));
+  const CNAM_FILIERES = CNAM_FILIERE_KEYS.map((k) => t(`cnamFilieres.${k}` as const));
   const [cnamNumber, setCnamNumber] = useState(profile.cnamNumber ?? "");
   const [regime, setRegime] = useState(CNAM_REGIMES[0]);
   const [filiere, setFiliere] = useState(CNAM_FILIERES[0]);
@@ -795,7 +791,7 @@ function InsuranceModal({
         merged = await patchRes.json();
       } else {
         const e = await patchRes.json().catch(() => ({}));
-        toast.error(e.error || "Validation échouée");
+        toast.error(e.error || t("toast.validationFailed"));
       }
 
       // 2. Upload card if provided
@@ -813,12 +809,12 @@ function InsuranceModal({
             ...merged,
             ...(isCnam ? { cnamCardUrl: data.url } : { insuranceCardUrl: data.url }),
           };
-          toast.success("Carte enregistrée");
+          toast.success(t("toast.cardSaved"));
         } else {
-          toast.error("Échec de l'upload de la carte");
+          toast.error(t("toast.cardUploadFailed"));
         }
       } else {
-        toast.success("Informations enregistrées");
+        toast.success(t("toast.infoSaved"));
       }
 
       onSaved(merged);
@@ -839,7 +835,7 @@ function InsuranceModal({
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--line-cool)]">
           <h2 className="font-bold text-[16px]" style={{ color: "var(--ink-900)" }}>
-            {isCnam ? "Carte CNAM" : "Mutuelle / Assurance complémentaire"}
+            {isCnam ? t("cnamCard") : t("mutuelleModalTitle")}
           </h2>
           <button onClick={onClose} className="p-1 rounded hover:bg-[color:var(--surface-2)]">
             <X className="w-4 h-4" />
@@ -849,34 +845,34 @@ function InsuranceModal({
           {isCnam ? (
             <>
               <Inp
-                label="Numéro d'affiliation CNAM"
+                label={t("cnamAffiliationNumber")}
                 value={cnamNumber}
                 onChange={setCnamNumber}
-                placeholder="Ex. 12345678"
+                placeholder={t("cnamNumberPlaceholder")}
                 maxLength={20}
                 wide
               />
               <Sel
-                label="Régime"
+                label={t("regime")}
                 value={regime}
                 onChange={setRegime}
                 options={CNAM_REGIMES.map((r) => [r, r] as [string, string])}
                 wide
               />
               <Sel
-                label="Filière de soins"
+                label={t("filiere")}
                 value={filiere}
                 onChange={setFiliere}
                 options={CNAM_FILIERES.map((r) => [r, r] as [string, string])}
                 wide
               />
               <Sel
-                label="Qualité"
+                label={t("quality")}
                 value={quality}
                 onChange={(v) => setQuality(v as "titulaire" | "ayant-droit")}
                 options={[
-                  ["titulaire", "Assuré social titulaire"],
-                  ["ayant-droit", "Ayant droit"],
+                  ["titulaire", t("qualityHolder")],
+                  ["ayant-droit", t("qualityDependent")],
                 ]}
                 wide
               />
@@ -884,24 +880,23 @@ function InsuranceModal({
                 className="text-[11px] sm:col-span-2 px-1"
                 style={{ color: "var(--ink-500)" }}
               >
-                Régime, filière et qualité sont utilisés pour faciliter votre prise en charge.
-                Seul le numéro CNAM est stocké de façon permanente.
+                {t("cnamHelp")}
               </p>
             </>
           ) : (
             <>
               <Sel
-                label="Compagnie"
+                label={t("fields.company")}
                 value={insuranceProvider}
                 onChange={setInsuranceProvider}
-                options={[["", "—"], ...TN_INSURANCE_PROVIDERS.map((p) => [p, p] as [string, string])]}
+                options={[["", "—"], ...TN_INSURANCE_PROVIDERS.map((p) => [p, p] as [string, string]), ["Autre", t("other")]]}
                 wide
               />
               <Inp
-                label="Numéro de contrat / adhérent"
+                label={t("contractNumber")}
                 value={insuranceNumber}
                 onChange={setInsuranceNumber}
-                placeholder="Ex. CON-123456"
+                placeholder={t("contractPlaceholder")}
                 maxLength={30}
                 wide
               />
@@ -909,14 +904,14 @@ function InsuranceModal({
           )}
 
           <div className="sm:col-span-2">
-            <Label>Photo de la carte (JPG/PNG/PDF, max 10 Mo)</Label>
+            <Label>{t("cardPhotoLabel")}</Label>
             <label
               className="flex items-center gap-2 rounded-xl border border-dashed cursor-pointer p-3 hover:bg-[color:var(--surface-2)] transition-colors"
               style={{ borderColor: "var(--line-strong)" }}
             >
               <Upload className="w-4 h-4" style={{ color: "var(--primary-600)" }} />
               <span className="text-[13px]" style={{ color: "var(--ink-700)" }}>
-                {file ? file.name : "Choisir un fichier"}
+                {file ? file.name : t("chooseFile")}
               </span>
               <input
                 type="file"
@@ -929,10 +924,10 @@ function InsuranceModal({
 
           <div className="sm:col-span-2 flex justify-end gap-2 mt-1">
             <button type="button" onClick={onClose} className="ds-btn ds-btn-ghost">
-              <X className="w-4 h-4" /> Annuler
+              <X className="w-4 h-4" /> {t("cancel")}
             </button>
             <button type="submit" disabled={saving} className="ds-btn ds-btn-primary">
-              <Save className="w-4 h-4" /> {saving ? "Enregistrement…" : "Enregistrer"}
+              <Save className="w-4 h-4" /> {saving ? t("saving") : t("save")}
             </button>
           </div>
         </form>
@@ -1074,6 +1069,7 @@ function InsuranceCard({
   onAdd: () => void;
   onView?: () => void;
 }) {
+  const t = useTranslations("patient.parametres.compte");
   const filled = !!number;
   return (
     <div
@@ -1105,7 +1101,7 @@ function InsuranceCard({
             marginBottom: filled ? 4 : 0,
           }}
         >
-          {filled ? maskCard(number!) : "Ajouter votre carte"}
+          {filled ? maskCard(number!) : t("addYourCard")}
         </div>
         {filled && holder && <div className="text-[11.5px] opacity-70 truncate">{holder}</div>}
         <div className="mt-2 flex gap-2 items-center flex-wrap">
@@ -1120,7 +1116,7 @@ function InsuranceCard({
             }
           >
             {filled ? <Pencil className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-            {filled ? "Modifier" : "Ajouter"}
+            {filled ? t("edit") : t("add")}
           </button>
           {filled && onView && (
             <button
@@ -1134,7 +1130,7 @@ function InsuranceCard({
               }}
             >
               <ImageIcon className="w-3.5 h-3.5" />
-              Voir
+              {t("view")}
             </button>
           )}
         </div>

@@ -196,7 +196,46 @@
     "errorGeneric": "حدث خطأ. يرجى المحاولة مجدداً.",
     "otpPlaceholder": "123456",
     "emailPlaceholder": "email@example.com",
-    "passwordPlaceholder": "••••••••"
+    "passwordPlaceholder": "••••••••",
+    "inscription": {
+      "mobileTitle": "أنشئ فضاء المريض",
+      "formTitle": "أنشئ حسابي",
+      "formSubtitle": "اطلع على جميع خدمات الصحة عبر الإنترنت.",
+      "heroTitle": "صحتك، <br></br>في متناول يدك",
+      "heroSubtitle": "أنشئ فضاء المريض الخاص بك وأدر جميع مواعيدك الطبية عبر الإنترنت بكل بساطة.",
+      "feature": {
+        "1": "احجز عبر الإنترنت 24/24 مع أفضل الأطباء",
+        "2": "اطلع على ملفك الطبي ووصفاتك",
+        "3": "متابعة صحية مخصصة",
+        "4": "أدر مواعيد عائلتك بأكملها"
+      },
+      "nameLabel": "الاسم الكامل",
+      "namePlaceholder": "الاسم اللقب",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "your@email.com",
+      "phoneLabel": "رقم الهاتف",
+      "passwordLabel": "كلمة المرور",
+      "passwordPlaceholder": "8 أحرف على الأقل",
+      "securityLabel": "الأمان",
+      "strength": {
+        "weak": "ضعيف",
+        "medium": "متوسط",
+        "strong": "قوي"
+      },
+      "terms": "أقبل <cgu>الشروط العامة للاستخدام</cgu> و<privacy>سياسة الخصوصية</privacy> لدكتوري.",
+      "creating": "جاري الإنشاء...",
+      "submitBtn": "أنشئ فضاء المريض",
+      "alreadyAccount": "مسجل من قبل؟",
+      "login": "تسجيل الدخول",
+      "errors": {
+        "emailFormat": "صيغة البريد الإلكتروني غير صحيحة",
+        "phoneFormat": "رقم تونسي غير صحيح (مثال: +216 XX XXX XXX)",
+        "nameMin": "يجب أن يحتوي الاسم على حرفين على الأقل",
+        "passwordMin": "يجب أن تحتوي كلمة المرور على 8 أحرف على الأقل",
+        "checkInfo": "يرجى التحقق من المعلومات المُدخلة.",
+        "generic": "حدث خطأ. حاول مرة أخرى."
+      }
+    }
   },
   "secretaryLogin": {
     "badge": "فضاء السكرتيرة",
@@ -2642,6 +2681,1013 @@
       "statusPending": "قيد الانتظار",
       "prevMonth": "الشهر السابق",
       "nextMonth": "الشهر التالي"
+    },
+    "parametres": {
+      "compte": {
+        "eyebrow": "حسابي",
+        "title": "الملف الشخصي والإعدادات",
+        "subtitle": "تسهّل هذه المعلومات حجز المواعيد.",
+        "patientAlt": "مريض",
+        "changePhoto": "تغيير الصورة",
+        "memberSince": "مريض · عضو منذ 2024",
+        "emailVerified": "البريد الإلكتروني مُؤكَّد",
+        "phoneChip": "الهاتف",
+        "personalInfo": "المعلومات الشخصية",
+        "edit": "تعديل",
+        "add": "إضافة",
+        "view": "عرض",
+        "save": "حفظ",
+        "saving": "جارٍ الحفظ…",
+        "cancel": "إلغاء",
+        "insuranceCards": "بطاقات التأمين",
+        "encrypted": "مشفّر",
+        "mutuelle": "تأمين تكميلي",
+        "preferences": "التفضيلات",
+        "addYourCard": "أضف بطاقتك",
+        "cnamCard": "بطاقة CNAM",
+        "mutuelleCard": "بطاقة التأمين التكميلي",
+        "mutuelleModalTitle": "تأمين تكميلي / تأمين إضافي",
+        "cnamAffiliationNumber": "رقم الانتساب CNAM",
+        "cnamNumberPlaceholder": "مثال. 12345678",
+        "regime": "النظام",
+        "filiere": "مسار العلاج",
+        "quality": "الصفة",
+        "qualityHolder": "مؤمَّن اجتماعي صاحب الحق",
+        "qualityDependent": "ذو حق",
+        "cnamHelp": "تُستخدم النظام والمسار والصفة لتسهيل تكفّل العلاج. يُحفظ رقم CNAM وحده بشكل دائم.",
+        "contractNumber": "رقم العقد / المنخرط",
+        "contractPlaceholder": "مثال. CON-123456",
+        "cardPhotoLabel": "صورة البطاقة (JPG/PNG/PDF، 10 ميغا كحد أقصى)",
+        "chooseFile": "اختر ملفًا",
+        "other": "أخرى",
+        "openPdf": "فتح PDF",
+        "cardAlt": "بطاقة {provider}",
+        "noCardPhoto": "لم تُسجَّل أي صورة لهذه البطاقة.",
+        "emailLockedTitle": "عنوان البريد مقفل. تواصل مع الدعم لتعديله.",
+        "cinPlaceholder": "8 أرقام",
+        "fields": {
+          "firstName": "الاسم",
+          "lastName": "اللقب",
+          "email": "البريد الإلكتروني",
+          "phone": "الهاتف",
+          "dateOfBirth": "تاريخ الميلاد",
+          "birth": "الميلاد",
+          "gender": "الجنس",
+          "maritalStatus": "الحالة المدنية",
+          "children": "الأطفال",
+          "occupation": "المهنة",
+          "cin": "بطاقة التعريف",
+          "height": "الطول",
+          "heightCm": "الطول (سم)",
+          "weight": "الوزن",
+          "weightKg": "الوزن (كغ)",
+          "bloodType": "فصيلة الدم",
+          "address": "العنوان",
+          "postalCode": "الرمز البريدي",
+          "city": "المدينة",
+          "emergencyContact": "جهة الاتصال في حالة الطوارئ",
+          "emergencyName": "جهة الطوارئ (الاسم)",
+          "emergencyPhone": "جهة الطوارئ (الهاتف)",
+          "emergencyRelation": "صلة القرابة",
+          "company": "الشركة",
+          "number": "الرقم",
+          "insured": "المؤمَّن"
+        },
+        "gender": {
+          "male": "ذكر",
+          "female": "أنثى"
+        },
+        "marital": {
+          "single": "أعزب/عزباء",
+          "married": "متزوج(ة)",
+          "divorced": "مطلق(ة)",
+          "widowed": "أرمل(ة)"
+        },
+        "cnamRegimes": {
+          "public": "أجير القطاع العام",
+          "private": "أجير القطاع الخاص",
+          "independent": "عامل مستقل",
+          "student": "طالب",
+          "retired": "متقاعد",
+          "conventioned": "منخرط غير أجير"
+        },
+        "cnamFilieres": {
+          "public": "المسار العام",
+          "privateFamily": "المسار الخاص — طبيب العائلة",
+          "reimbursement": "نظام التعويض"
+        },
+        "prefs": {
+          "rdvReminders": {
+            "label": "تذكيرات بالمواعيد",
+            "sub": "SMS وبريد إلكتروني قبل 24 ساعة"
+          },
+          "newsletter": {
+            "label": "نشرة الصحة",
+            "sub": "نصائح شهرية"
+          },
+          "language": {
+            "label": "اللغة",
+            "sub": "العربية · جاهزة للاستخدام"
+          },
+          "security": {
+            "label": "الأمان وكلمة المرور",
+            "sub": "2FA، تغيير كلمة المرور، الجلسات"
+          }
+        },
+        "toast": {
+          "imageTooBig": "الصورة > 5 ميغا",
+          "photoUpdated": "تم تحديث الصورة",
+          "profileUpdated": "تم تحديث الملف الشخصي",
+          "cinFormat": "يجب أن تتكوّن بطاقة التعريف من 8 أرقام بالضبط",
+          "validationFailed": "فشل التحقق",
+          "cardSaved": "تم حفظ البطاقة",
+          "cardUploadFailed": "فشل رفع البطاقة",
+          "infoSaved": "تم حفظ المعلومات",
+          "error": "خطأ"
+        }
+      },
+      "notifications": {
+        "eyebrow": "الإعدادات",
+        "title": "الإشعارات والتذكيرات",
+        "subtitle": "اختر القنوات وتواتر التذكيرات حتى لا يفوتك شيء.",
+        "saving": "جارٍ الحفظ…",
+        "offsets": {
+          "month": "قبل شهر",
+          "week": "قبل أسبوع",
+          "days2": "قبل يومين",
+          "day1": "قبل يوم",
+          "hours2": "قبل ساعتين",
+          "sameDay": "في نفس اليوم"
+        },
+        "channels": {
+          "title": "القنوات",
+          "subtitle": "كيف تودّ أن نُعلِمك؟",
+          "email": {
+            "title": "البريد الإلكتروني",
+            "sub": "للمهم فقط"
+          },
+          "sms": {
+            "title": "SMS",
+            "sub": "تذكيرات وتأكيدات"
+          },
+          "push": {
+            "title": "إشعارات التطبيق",
+            "sub": "لـ Doktori على الويب والجوّال"
+          }
+        },
+        "rdvReminders": {
+          "title": "تذكيرات المواعيد",
+          "subtitle": "اختر متى تتلقى التذكيرات قبل الموعد.",
+          "note": "تتبع التذكيرات القنوات المُفعّلة أعلاه."
+        },
+        "vaccines": {
+          "title": "تذكيرات اللقاحات",
+          "subtitle": "كن مُنبَّهًا قبل استحقاق اللقاح.",
+          "enable": "تفعيل تذكيرات اللقاحات",
+          "daysBefore": "قبل {n} أيام"
+        },
+        "meds": {
+          "title": "تذكيرات العلاجات",
+          "subtitle": "فعِّل الميزة بشكل عام. اختر المواعيد بشكل فردي لكل علاج.",
+          "rowTitle": "تذكيرات تناول الأدوية",
+          "rowSub": "فعِّل الميزة بشكل عام.",
+          "configure": "إعداد علاجاتي"
+        },
+        "otherEmail": {
+          "title": "إشعارات أخرى عبر البريد",
+          "healthTips": {
+            "label": "نصائح صحية",
+            "sub": "نشرة شهرية، أخبار Doktori"
+          },
+          "offers": {
+            "label": "عروض وترويج",
+            "sub": "توصيات مخصصة، شركاء"
+          }
+        },
+        "toast": {
+          "saveError": "فشل الحفظ"
+        }
+      },
+      "securite": {
+        "eyebrow": "الإعدادات",
+        "title": "الأمان",
+        "subtitle": "أدِر كلمة مرورك وهاتفك والمصادقة الثنائية.",
+        "cancel": "إلغاء",
+        "save": "حفظ",
+        "saving": "جارٍ الحفظ…",
+        "back": "رجوع",
+        "twoFa": {
+          "title": "المصادقة الثنائية (2FA)",
+          "intro": "عزِّز أمان حسابك باستخدام تطبيق مصادقة (Google Authenticator، Authy…).",
+          "enabledBadge": "2FA مُفعَّلة",
+          "disableBtn": "تعطيل 2FA",
+          "enableBtn": "تفعيل المصادقة الثنائية",
+          "enterPasswordToConfirm": "أدخل كلمة المرور للتأكيد:",
+          "disabling": "جارٍ التعطيل…",
+          "confirm": "تأكيد",
+          "scanStep": "امسح رمز QR بتطبيقك",
+          "qrAlt": "رمز QR لـ 2FA",
+          "manualEntry": "أو أدخل هذا الرمز يدويًا:",
+          "scannedNext": "مسحتُ رمز QR ←",
+          "enterVerifyCode": "أدخل رمز التحقق",
+          "verifyHint": "افتح تطبيق المصادقة وأدخل الرمز المكوّن من 6 أرقام.",
+          "verifying": "جارٍ التحقق…",
+          "verify": "تحقّق",
+          "backupCodesTitle": "رموز الاحتياط — احفظها!",
+          "backupCodesWarn": "تتيح لك هذه الرموز الوصول إلى حسابك إذا فقدت هاتفك. لن تُعرَض بعد هذه الصفحة.",
+          "savedCodes": "حفظتُ رموزي"
+        },
+        "email": {
+          "title": "عنوان البريد الإلكتروني",
+          "verified": "مُؤكَّد",
+          "verifiedTitle": "عنوان بريد إلكتروني مُؤكَّد",
+          "none": "لا يوجد عنوان بريد مُسجَّل.",
+          "lockedNote": "يُستخدم البريد كمعرّف تسجيل دخول ولا يمكن تعديله من حسابك. تواصل مع الدعم إذا احتجت إلى تغييره."
+        },
+        "phone": {
+          "title": "رقم الهاتف",
+          "edit": "تعديل",
+          "currentLabel": "الرقم الحالي:",
+          "sending": "جارٍ الإرسال…",
+          "sendCode": "إرسال الرمز",
+          "codeSentTo": "تم إرسال رمز من 6 أرقام إلى <b>{phone}</b>.",
+          "takenByOther": "تم استخدام هذا الرقم للتو من حساب آخر.",
+          "toast": {
+            "codeSent": "تم إرسال الرمز عبر SMS",
+            "updated": "تم تحديث رقم الهاتف",
+            "wrongCode": "رمز غير صحيح"
+          }
+        },
+        "password": {
+          "title": "كلمة المرور",
+          "change": "تغيير",
+          "intro": "اضبط كلمة مرور لا تقل عن 8 أحرف لتأمين حسابك.",
+          "currentLabel": "كلمة المرور الحالية (اتركها فارغة إذا لم تُحدَّد سابقًا)",
+          "newLabel": "كلمة المرور الجديدة",
+          "confirmLabel": "تأكيد",
+          "placeholder": "كلمة المرور",
+          "minPlaceholder": "8 أحرف على الأقل",
+          "confirmPlaceholder": "أعد إدخال كلمة المرور الجديدة",
+          "toast": {
+            "tooShort": "يجب أن تتكوّن كلمة المرور الجديدة من 8 أحرف على الأقل",
+            "mismatch": "كلمتا المرور غير متطابقتين",
+            "updated": "تم تحديث كلمة المرور"
+          }
+        },
+        "toast": {
+          "setupError": "خطأ أثناء الإعداد",
+          "networkError": "خطأ في الشبكة",
+          "enabled": "تم تفعيل 2FA بنجاح!",
+          "invalidCode": "رمز غير صالح",
+          "disabled": "تم تعطيل 2FA.",
+          "disableError": "خطأ أثناء التعطيل",
+          "copied": "تم النسخ!",
+          "error": "خطأ"
+        }
+      },
+      "confidentialite": {
+        "back": "رجوع",
+        "title": "الخصوصية",
+        "myConsents": "موافقاتي",
+        "intro": "أدِر تفضيلات خصوصيتك. يمكنك تعديل هذه الخيارات في أي وقت.",
+        "saving": "جارٍ الحفظ…",
+        "savePrefs": "حفظ تفضيلاتي",
+        "gdprNotice": "وفقًا لـ RGPD، يمكنك ممارسة حقوقك في الاطلاع والتصحيح والحذف بالتواصل مع <a>rgpd@doktori.tn</a>.",
+        "essential": {
+          "label": "ملفات تعريف الارتباط الأساسية",
+          "required": "إلزامي",
+          "desc": "ضرورية لعمل الموقع. لا يمكن تعطيلها."
+        },
+        "consents": {
+          "cookiesAnalytics": {
+            "label": "كوكيز التحليلات",
+            "desc": "تساعدنا على فهم كيف تستخدم التطبيق لتحسين خدماتنا."
+          },
+          "cookiesMarketing": {
+            "label": "كوكيز التسويق",
+            "desc": "تتيح عرض إعلانات مخصصة حسب اهتماماتك."
+          },
+          "marketingEmail": {
+            "label": "بريد تسويقي",
+            "desc": "تلقي عروض ونصائح صحية وأخبار Doktori عبر البريد."
+          },
+          "researchAnonymized": {
+            "label": "بيانات بحث مجهولة الهوية",
+            "desc": "المساهمة في البحث الطبي ببيانات مجهولة الهوية."
+          }
+        },
+        "toast": {
+          "saved": "تم حفظ تفضيلات الخصوصية.",
+          "saveError": "خطأ أثناء الحفظ",
+          "networkError": "خطأ في الشبكة"
+        }
+      },
+      "sessions": {
+        "back": "رجوع",
+        "title": "الجلسات النشطة",
+        "intro": "هذه الأجهزة لديها وصول إلى حساب Doktori الخاص بك.",
+        "revoking": "جارٍ الإلغاء…",
+        "revokeAllOthers": "إلغاء كل الجلسات الأخرى",
+        "noneFound": "لم يُعثر على جلسة نشطة.",
+        "unknownDevice": "جهاز غير معروف",
+        "currentSession": "الجلسة الحالية",
+        "lastActivity": "آخر نشاط",
+        "createdOn": "أُنشئت في",
+        "todoNote": "ملاحظة: إلغاء الجلسة لا يقطع رموز JWT الحالية (يتطلب تنفيذ NextAuth للتطبيق الفوري).",
+        "toast": {
+          "revoked": "تم إلغاء الجلسة.",
+          "revokeError": "خطأ أثناء الإلغاء",
+          "allOthersRevoked": "تم إلغاء جميع الجلسات الأخرى."
+        }
+      },
+      "rechercheMedicale": {
+        "backToSettings": "العودة إلى الإعدادات",
+        "title": "البحث الطبي",
+        "subtitle": "المساهمة بشكل مجهول في البحث في تونس",
+        "ctaHeading": "هل ترغب في مساعدة البحث الطبي التونسي؟",
+        "ctaBody": "يمكن أن تسهم بياناتك الطبية (مجهولة الهوية تمامًا) في فهم أفضل للأمراض الأكثر شيوعًا في تونس، وتحسين الوقاية وتوجيه سياسات الصحة العامة.",
+        "pills": {
+          "anonymous": {
+            "title": "مجهول 100%",
+            "desc": "لا رابط مباشر بهويتك"
+          },
+          "law": {
+            "title": "قانون 2004-63",
+            "desc": "متوافق مع التشريع التونسي"
+          },
+          "reversible": {
+            "title": "قابل للتراجع",
+            "desc": "يمكن تعطيله في أي وقت"
+          }
+        },
+        "participate": "المشاركة في البرنامج",
+        "activeSince": "مُفعَّل منذ {date}",
+        "toggleAnytime": "يمكنك تفعيله أو تعطيله في أي وقت",
+        "learnMore": "اعرف المزيد",
+        "legalRef": {
+          "prefix": "المرجع القانوني:",
+          "linkText": "القانون التونسي عدد 2004-63",
+          "suffix": "المتعلق بحماية المعطيات الشخصية."
+        },
+        "details": {
+          "title": "كيف يعمل ذلك؟",
+          "anon": {
+            "title": "إخفاء هوية كامل.",
+            "body": "قبل أي مشاركة، تُحذف اسمك ولقبك وهاتفك وبريدك وعنوانك ومعرّفاتك. تبقى فقط بيانات مجمَّعة كالفئة العمرية والجنس والمنطقة والأمراض."
+          },
+          "uses": {
+            "title": "الاستخدامات المسموحة.",
+            "body": "يمكن استخدام البيانات المجهولة لـ:",
+            "list1": "إحصاءات مجمَّعة للصحة العامة",
+            "list2": "دراسات سريرية مع شركاء بحث أكاديميين تونسيين (جامعات تونس وصفاقس وسوسة والمنستير)",
+            "list3": "تحسين الوقاية"
+          },
+          "noSale": {
+            "title": "لا بيع.",
+            "body": "لن تُباع بياناتك أبدًا لجهات تجارية أو مختبرات أدوية خاصة أو شركات تأمين."
+          },
+          "reversible": {
+            "title": "إمكانية التراجع.",
+            "body": "يمكنك سحب موافقتك في أي وقت من هذه الصفحة. أما البيانات المجهولة المستخدمة في دراسات جارية فلا يمكن تعقّبها (لكونها مجهولة)."
+          },
+          "understood": "فهمت"
+        },
+        "toast": {
+          "thanksContrib": "شكرًا! أنت تساهم الآن في البحث الطبي التونسي.",
+          "withdrawn": "تم سحب مشاركتك.",
+          "saveError": "خطأ أثناء الحفظ"
+        }
+      }
+    },
+    "mesDocuments": {
+      "eyebrow": "تخزين مشفّر",
+      "title": "مستنداتي",
+      "subtitle": "وصفات وتحاليل وأشعة — كل شيء في مكان واحد.",
+      "upload": "رفع",
+      "sending": "جارٍ الإرسال…",
+      "browse": "تصفّح",
+      "sort": "ترتيب",
+      "cancel": "إلغاء",
+      "save": "حفظ",
+      "share": "مشاركة",
+      "docType": "نوع المستند",
+      "titleLabel": "العنوان",
+      "titleOptional": "العنوان (اختياري)",
+      "titlePlaceholder": "مثال. تحليل دم بتاريخ 12 ماي",
+      "confirmDelete": "هل تريد حذف هذا المستند نهائيًا؟",
+      "sharedWith": "مشترَك مع:",
+      "private": "خاص — غير مُشترَك",
+      "doctorBadge": "طبيب",
+      "createdByDoctor": "أنشأه {name}",
+      "dropZone": {
+        "title": "اسحب وأفلت مستنداتك",
+        "hint": "PDF، JPG، PNG · 10 ميغا كحد أقصى · تشفير من طرف إلى طرف"
+      },
+      "empty": {
+        "title": "لا توجد مستندات بعد",
+        "sub": "ستظهر هنا وصفاتك وتحاليلك وأشعتك."
+      },
+      "uploadCategories": {
+        "rx": "وصفة طبية",
+        "lab": "تحليل بيولوجي",
+        "xr": "أشعة",
+        "rep": "تقرير",
+        "ins": "بطاقة تأمين"
+      },
+      "filters": {
+        "all": "الكل",
+        "rx": "الوصفات",
+        "lab": "التحاليل",
+        "xr": "الأشعة",
+        "rep": "التقارير",
+        "ins": "بطاقات التأمين"
+      },
+      "modal": {
+        "upload": "رفع مستند",
+        "edit": "تعديل المستند",
+        "share": "مشاركة مع طبيب",
+        "shareIntro": "اختر الأطباء الذين يمكنهم رؤية هذا المستند في ملفك.",
+        "noDoctorsFound": "لا يوجد طبيب. احجز موعدًا أولًا حتى تتمكّن من المشاركة."
+      },
+      "aria": {
+        "preview": "معاينة",
+        "downloadPdf": "تنزيل PDF",
+        "shareDoctor": "مشاركة مع طبيب",
+        "edit": "تعديل",
+        "delete": "حذف",
+        "askAi": "اسأل الذكاء الاصطناعي"
+      },
+      "toast": {
+        "fileTooBig": "الملف كبير جدًا (15 ميغا كحد أقصى)",
+        "uploaded": "تم رفع المستند",
+        "uploadError": "خطأ أثناء الرفع",
+        "updated": "تم تحديث المستند",
+        "deleted": "تم حذف المستند",
+        "shareRemoved": "تم إلغاء المشاركة",
+        "sharedWithN": "مُشترَك مع {n, plural, one {# طبيب} other {# أطباء}}",
+        "shareFailed": "فشل المشاركة",
+        "error": "خطأ"
+      }
+    },
+    "dossier": {
+      "eyebrow": "سرّي · مشفّر",
+      "title": "الملف الطبي",
+      "subtitle": "شارك هذه البيانات بشكل انتقائي مع الطبيب أثناء الاستشارة.",
+      "manageSharing": "إدارة المشاركة",
+      "patientAlt": "مريض",
+      "patientId": "معرف المريض",
+      "exportPdf": "تصدير PDF",
+      "dobMissing": "تاريخ الميلاد غير مذكور",
+      "yearsOld": "{age} سنة",
+      "fact": {
+        "blood": "الدم",
+        "height": "الطول",
+        "weight": "الوزن",
+        "bmi": "مؤشر كتلة الجسم"
+      },
+      "sections": {
+        "allergies": "الحساسيات",
+        "antecedents": "السوابق",
+        "vaccinations": "التطعيمات",
+        "treatments": "العلاجات الحالية",
+        "recentConsultations": "الاستشارات الأخيرة",
+        "relatives": "أقاربي"
+      },
+      "empty": {
+        "allergies": "لا توجد حساسية مُسجّلة.",
+        "antecedents": "لا توجد سوابق مسجلة. أضف تحاليلك البيولوجية أو اطلب من طبيبك استكمال ملفك.",
+        "vaccinations": "لا يوجد تطعيم مسجل.",
+        "treatments": "لا يوجد علاج حالي.",
+        "consultations": "لا توجد استشارة مسجلة.",
+        "relativesName": "لا يوجد قريب مسجل",
+        "relativesSub": "أضف أقاربك لإدارة مواعيدهم"
+      },
+      "fullBook": "السجل الكامل",
+      "longTerm": "طويل الأمد",
+      "consultation": "استشارة",
+      "common": {
+        "eyebrow": "الملف الطبي",
+        "backToDossier": "العودة إلى الملف",
+        "back": "رجوع",
+        "add": "إضافة",
+        "save": "حفظ",
+        "cancel": "إلغاء",
+        "edit": "تعديل",
+        "delete": "حذف",
+        "close": "إغلاق",
+        "relation": {
+          "child": "ابن/ابنة",
+          "parent": "والد/والدة",
+          "spouse": "زوج/زوجة",
+          "sibling": "أخ/أخت",
+          "other": "آخر",
+          "default": "قريب"
+        }
+      },
+      "allergies": {
+        "title": "الحساسيات",
+        "addBtn": "إضافة حساسية",
+        "countLabel": "{count, plural, =0 {لا توجد حساسية} one {# حساسية مسجلة} other {# حساسيات مسجلة}}",
+        "empty": "لا توجد حساسية مسجلة",
+        "diagnosedOn": "تم التشخيص",
+        "severity": {
+          "mild": "خفيفة",
+          "moderate": "متوسطة",
+          "severe": "شديدة"
+        },
+        "modal": {
+          "addTitle": "إضافة حساسية",
+          "editTitle": "تعديل الحساسية"
+        },
+        "form": {
+          "allergen": "المُحسِّس",
+          "allergenPlaceholder": "بنسلين، فول سوداني...",
+          "severity": "الشدة",
+          "reaction": "ردة الفعل",
+          "reactionPlaceholder": "حكة، انتفاخ...",
+          "diagnosedOn": "تاريخ التشخيص"
+        },
+        "confirm": {
+          "delete": "حذف هذه الحساسية؟"
+        },
+        "toast": {
+          "allergenRequired": "اسم المُحسِّس مطلوب",
+          "added": "تمت إضافة الحساسية",
+          "updated": "تم تعديل الحساسية",
+          "deleted": "تم حذف الحساسية",
+          "saveError": "خطأ أثناء الحفظ",
+          "deleteError": "خطأ أثناء الحذف"
+        }
+      },
+      "analyses": {
+        "title": "التحاليل البيولوجية",
+        "addBtn": "إضافة تحليل",
+        "countLabel": "{count, plural, =0 {لا يوجد تحليل} one {# تحليل مسجل} other {# تحاليل مسجلة}}",
+        "empty": "لا يوجد تحليل مسجل",
+        "viewPdf": "عرض PDF",
+        "sending": "جاري الإرسال...",
+        "modal": {
+          "title": "إضافة تحليل"
+        },
+        "form": {
+          "title": "العنوان",
+          "titlePlaceholder": "تحليل دم، سكري...",
+          "lab": "المخبر",
+          "testDate": "تاريخ التحليل",
+          "file": "ملف (PDF, JPEG, PNG · حد أقصى 10 م.ب.)"
+        },
+        "confirm": {
+          "delete": "حذف هذا التحليل؟"
+        },
+        "toast": {
+          "titleRequired": "العنوان مطلوب",
+          "fileRequired": "الملف مطلوب",
+          "fileTooBig": "الملف كبير جداً (حد أقصى 10 م.ب.)",
+          "added": "تمت إضافة التحليل",
+          "deleted": "تم حذف التحليل",
+          "sendError": "خطأ أثناء الإرسال",
+          "deleteError": "خطأ أثناء الحذف"
+        }
+      },
+      "traitements": {
+        "title": "العلاجات",
+        "addBtn": "إضافة علاج",
+        "countLabel": "{current} حالي · {archived, plural, one {# مؤرشف} other {# مؤرشفون}}",
+        "ongoing": "حالي",
+        "history": "السجل",
+        "since": "منذ {date}",
+        "stopped": "توقف {date}",
+        "empty": {
+          "ongoingTitle": "لا يوجد علاج حالي",
+          "ongoingSub": "أضف أدويتك لتتبعها."
+        },
+        "modal": {
+          "addTitle": "إضافة علاج",
+          "editTitle": "تعديل العلاج"
+        },
+        "tabs": {
+          "info": "معلومات",
+          "reminder": "التذكيرات"
+        },
+        "form": {
+          "medication": "الدواء",
+          "dosage": "الجرعة",
+          "frequency": "التواتر",
+          "frequencyPlaceholder": "مرتين/يوم",
+          "start": "البداية",
+          "end": "النهاية (إذا توقف)",
+          "notes": "ملاحظات"
+        },
+        "presets": {
+          "morning": "صباحاً",
+          "midday": "ظهراً",
+          "evening": "مساءً"
+        },
+        "reminder": {
+          "enableTitle": "تفعيل تذكير لهذا العلاج",
+          "enableSub": "ستتلقى إشعاراً في الأوقات المختارة.",
+          "momentsLabel": "أوقات اليوم",
+          "scheduledLabel": "الأوقات المبرمجة",
+          "addTime": "إضافة وقت",
+          "empty": "لا توجد أوقات مبرمجة.",
+          "channelsNote": "تتبع التذكيرات قنوات الإعدادات > الإشعارات."
+        },
+        "confirm": {
+          "delete": "حذف هذا العلاج؟"
+        },
+        "toast": {
+          "nameRequired": "اسم الدواء مطلوب",
+          "endAfterStart": "يجب أن يكون تاريخ الانتهاء بعد تاريخ البداية",
+          "added": "تمت إضافة العلاج",
+          "updated": "تم تعديل العلاج",
+          "deleted": "تم حذف العلاج",
+          "saveError": "خطأ أثناء الحفظ",
+          "deleteError": "خطأ أثناء الحذف"
+        }
+      },
+      "vaccinations": {
+        "title": "دفتر التطعيم",
+        "addBtn": "إضافة لقاح",
+        "countLabel": "{count, plural, =0 {لا يوجد لقاح} one {# لقاح مسجل} other {# لقاحات مسجلة}}",
+        "empty": "لا يوجد لقاح مسجل",
+        "givenBy": "بواسطة",
+        "batch": "الدفعة",
+        "modal": {
+          "addTitle": "إضافة لقاح",
+          "editTitle": "تعديل اللقاح"
+        },
+        "form": {
+          "name": "اسم اللقاح",
+          "date": "التاريخ",
+          "batch": "رقم الدفعة",
+          "givenBy": "تم إعطاؤه من قبل",
+          "givenByPlaceholder": "د. ...، مركز...",
+          "notes": "ملاحظات",
+          "searching": "جاري البحث…"
+        },
+        "confirm": {
+          "delete": "حذف هذا اللقاح؟"
+        },
+        "toast": {
+          "nameAndDateRequired": "اسم اللقاح والتاريخ مطلوبان",
+          "added": "تمت إضافة اللقاح",
+          "updated": "تم تعديل اللقاح",
+          "deleted": "تم حذف اللقاح",
+          "saveError": "خطأ أثناء الحفظ",
+          "deleteError": "خطأ أثناء الحذف"
+        }
+      },
+      "rappels": {
+        "title": "تذكيرات العلاجات",
+        "addBtn": "إضافة تذكير",
+        "countLabel": "{count, plural, =0 {لا يوجد تذكير} one {# مفعّل} other {# مفعّلون}}",
+        "active": "المفعّلة",
+        "disabled": "المعطّلة",
+        "pause": "إيقاف مؤقت",
+        "resume": "استئناف",
+        "disable": "تعطيل",
+        "pausedUntil": "متوقف حتى {date}",
+        "empty": {
+          "active": "لا يوجد تذكير مفعّل."
+        },
+        "modal": {
+          "addTitle": "تذكير جديد",
+          "editTitle": "تعديل التذكير"
+        },
+        "form": {
+          "chronicDisease": "مرض مزمن",
+          "diseasePlaceholder": "اختر مرضاً (اختياري)",
+          "diseaseNone": "لا شيء (أخرى)",
+          "medication": "الدواء",
+          "medicationPlaceholder": "مثال: غلوكوفاج",
+          "dosage": "الجرعة",
+          "frequency": "التواتر",
+          "channel": "قناة الإشعار",
+          "channelSms": "رسالة قصيرة",
+          "channelEmail": "بريد إلكتروني",
+          "channelPush": "إشعار"
+        },
+        "freq": {
+          "h8": "كل 8 ساعات",
+          "h12": "كل 12 ساعة",
+          "h24": "كل يوم (24 ساعة)",
+          "h48": "كل يومين (48 ساعة)",
+          "h168": "كل أسبوع",
+          "everyN": "كل {n} ساعة"
+        },
+        "confirm": {
+          "disable": "تعطيل هذا التذكير؟"
+        },
+        "toast": {
+          "nameRequired": "اسم الدواء مطلوب",
+          "added": "تمت إضافة التذكير",
+          "updated": "تم تعديل التذكير",
+          "disabled": "تم تعطيل التذكير",
+          "paused": "تم إيقاف التذكير لمدة 7 أيام",
+          "resumed": "تم استئناف التذكير",
+          "saveError": "خطأ أثناء الحفظ",
+          "deleteError": "خطأ أثناء الحذف"
+        }
+      },
+      "enfants": {
+        "title": "دفتر صحة الطفل",
+        "subtitle": "تابع روزنامة التطعيم الرسمية التونسية (0-2 سنة).",
+        "scheduleTitle": "الروزنامة الرسمية للتطعيم تونس",
+        "scheduleEmpty": "لا توجد لقاحات في الروزنامة.",
+        "manageFamily": "إدارة العائلة",
+        "notFound": "الطفل غير موجود.",
+        "ageLess1": "< شهر",
+        "ageMonths": "{months} شهراً",
+        "ageYears": "{years, plural, one {# سنة} other {# سنوات}}",
+        "atMonths": "في {months} شهراً",
+        "rangeMonths": "{min}-{max} شهراً",
+        "receivedOn": "تم إعطاؤه في {date}",
+        "dose": "جرعة {n}",
+        "complete": "مكتمل",
+        "upToDate": "محدّث",
+        "upcoming": "قادم",
+        "markBtn": "تسجيل",
+        "empty": {
+          "title": "لا يوجد طفل مسجل",
+          "subtitle": "أضف أطفالك في العائلة لمتابعة تطعيماتهم."
+        },
+        "form": {
+          "dateAdministration": "تاريخ الإعطاء",
+          "doseNumber": "رقم الجرعة",
+          "notesOptional": "ملاحظات (اختياري)"
+        },
+        "confirm": {
+          "deleteRecord": "حذف هذا التسجيل؟"
+        },
+        "alert": {
+          "saveError": "خطأ أثناء الحفظ"
+        }
+      }
+    },
+    "maFamille": {
+      "eyebrow": "عائلتي",
+      "title": "أقاربي",
+      "addBtn": "إضافة قريب",
+      "countLabel": "{count, plural, =0 {لا يوجد قريب مسجل} one {# قريب مسجل} other {# أقارب مسجلين}}",
+      "bornOn": "من مواليد {date}",
+      "genderMale": "ذكر",
+      "genderFemale": "أنثى",
+      "saving": "جاري الحفظ...",
+      "update": "تحديث",
+      "empty": {
+        "title": "لا يوجد قريب مسجل",
+        "subtitle": "أضف أطفالك أو والديك أو زوجك لحجز موعد باسمهم."
+      },
+      "confirmDelete": {
+        "title": "حذف {name}؟",
+        "body": "هذا الإجراء لا رجعة فيه. المواعيد السابقة لن تتأثر."
+      },
+      "form": {
+        "firstName": "الاسم",
+        "lastName": "اللقب",
+        "dob": "تاريخ الميلاد",
+        "gender": "الجنس",
+        "relation": "العلاقة"
+      },
+      "toast": {
+        "deleted": "تم حذف القريب",
+        "added": "تمت إضافة القريب",
+        "updated": "تم تحديث القريب",
+        "error": "خطأ",
+        "formError": "خطأ، تحقق من الحقول"
+      }
+    },
+    "grossesse": {
+      "title": "متابعة الحمل",
+      "introSubtitle": "تابعي حملك أسبوعاً بأسبوع. أدخلي تاريخ الولادة المتوقع.",
+      "dueDateLabel": "تاريخ الولادة المتوقع",
+      "dueDateHint": "يحدده عادة طبيبك في الاستشارة الأولى.",
+      "dueDateShort": "التاريخ المتوقع",
+      "startTracking": "بدء المتابعة",
+      "endTracking": "إنهاء المتابعة",
+      "articlesTitle": "مقالات للاكتشاف",
+      "currentWeek": "الأسبوع الحالي",
+      "keyMilestones": "المراحل الرئيسية",
+      "week": "الأسبوع {n}",
+      "youAreHere": "أنت هنا",
+      "past": "مضى",
+      "alertError": "خطأ",
+      "confirmEnd": "إنهاء متابعة الحمل؟",
+      "milestone": {
+        "4": "الاختبار",
+        "12": "الثلث الأول",
+        "20": "الفحص بالموجات فوق الصوتية",
+        "32": "التحضير",
+        "40": "الموعد"
+      }
+    },
+    "monParrainage": {
+      "title": "برنامج الإحالة",
+      "subtitle": "ادعُ أقاربك إلى دكتوري واكسب مكافآت.",
+      "shareText": "اعثر على طبيب واحجز موعداً بسهولة عبر دكتوري 🏥",
+      "emailSubject": "اكتشف دكتوري",
+      "yourCode": "رمزك",
+      "copyCode": "نسخ الرمز",
+      "copied": "تم النسخ",
+      "copy": "نسخ",
+      "linkToShare": "الرابط للمشاركة",
+      "share": "مشاركة",
+      "email": "بريد إلكتروني",
+      "learnMore": "اعرف أكثر",
+      "loading": "جاري التحميل...",
+      "loadError": "خطأ في التحميل.",
+      "howItWorks": "كيف يعمل؟",
+      "steps": {
+        "1": "شارك رابطك مع أصدقائك وعائلتك.",
+        "2": "يسجلون عبر رابطك المخصص.",
+        "3": "عند حجز أول موعد لهم، تكسب مكافأة."
+      },
+      "stats": {
+        "friends": "الأصدقاء المسجلون",
+        "rdv": "المواعيد المحجوزة",
+        "rewards": "المكافآت"
+      }
+    },
+    "monEspace": {
+      "eyebrow": "فضائي",
+      "howAreYou": "كيف تشعر؟",
+      "help": "مساعدة",
+      "newRdv": "موعد جديد",
+      "patientFallback": "مريض",
+      "close": "إغلاق",
+      "leaveReview": "اترك تقييماً",
+      "activate": "تفعيل",
+      "learnMore": "اعرف أكثر",
+      "seeAll": "عرض الكل",
+      "seeMyDoctors": "أطبائي",
+      "viewDetails": "عرض التفاصيل",
+      "takeCareTitle": "اعتنِ بنفسك",
+      "noUpcomingDesc": "لا يوجد موعد قادم. ابحث عن طبيب قريب منك بنقرات قليلة.",
+      "nextRdv": "الموعد القادم",
+      "agendaHere": "ستظهر مواعيدك هنا",
+      "completeProfile": "أكمل ملفك",
+      "percentDone": "{pct}٪ مكتمل",
+      "popularSpecialties": "التخصصات الشائعة",
+      "all": "الكل",
+      "vitalSnapshot": "لمحة حيوية",
+      "seeFullDossier": "عرض ملفي الكامل",
+      "recentActivity": "النشاط الأخير",
+      "noRecentActivity": "لا يوجد نشاط حديث. ستظهر مواعيدك ووصفاتك وتقييماتك هنا.",
+      "vaccineReminder": "تذكير اللقاح",
+      "vaccineReminderSub": "تذكر التحقق من لقاحاتك الموصى بها. يمكن لمدرب الذكاء الاصطناعي توجيهك.",
+      "askCoach": "اسأل المدرب",
+      "reviewBanner": "لديك <strong>{count}</strong> {count, plural, one {استشارة بدون تقييم} other {استشارات بدون تقييم}}. تقييمك يساعد المرضى الآخرين!",
+      "researchBanner": "ساعد البحث الطبي التونسي — اكتشف برنامج إخفاء الهوية",
+      "pushBanner": "فعّل الإشعارات لتلقي تذكيرات المواعيد",
+      "cancelWindowError": "الإلغاء غير ممكن: هذا الطبيب لا يقبل الإلغاء قبل أقل من {hours} ساعة من الموعد.",
+      "greeting": {
+        "morning": "صباح الخير",
+        "afternoon": "مساء الخير",
+        "evening": "مساء الخير",
+        "night": "ليلة سعيدة"
+      },
+      "upcomingCount": {
+        "zero": "لا يوجد موعد هذا الأسبوع",
+        "one": "موعد قادم واحد",
+        "other": "{count} مواعيد قادمة"
+      },
+      "timeline": {
+        "booking": "موعد مؤكد مع {name}",
+        "cancelled": "موعد ملغى مع {name}",
+        "completed": "استشارة منتهية مع {name}"
+      },
+      "tour": {
+        "quickActions": {
+          "title": "إجراءات سريعة",
+          "content": "ابحث عن طبيب، استشر ملفك الطبي، وثائقك أو أطلق نداء استغاثة بنقرة واحدة."
+        },
+        "upcoming": {
+          "title": "مواعيدك القادمة",
+          "content": "اعثر على استشاراتك القادمة مع اسم الطبيب والتاريخ والنوع. يمكنك الإلغاء من هنا."
+        },
+        "recent": {
+          "title": "النشاط الأخير",
+          "content": "تابع سجل إجراءاتك: الحجوزات، الإلغاءات، الاستشارات."
+        }
+      },
+      "quick": {
+        "findDoctor": "ابحث عن طبيب",
+        "findDoctorSub": "التخصص، الاسم، المدينة",
+        "sos": "استغاثة طارئة",
+        "sosSub": "طبيب متاح 24/7",
+        "teleconsult": "استشارة عن بعد",
+        "teleconsultSub": "استشارة بالفيديو",
+        "myRdv": "مواعيدي",
+        "myRdvSub": "عرض السجل الكامل"
+      },
+      "steps": {
+        "personal": "المعلومات الشخصية",
+        "phone": "رقم الهاتف",
+        "cnam": "بطاقة CNAM",
+        "history": "السوابق الطبية",
+        "complete": "إكمال",
+        "add": "إضافة"
+      },
+      "spec": {
+        "generaliste": "طبيب عام",
+        "dentiste": "طبيب أسنان",
+        "dermatologue": "طبيب جلدية",
+        "pediatre": "طبيب أطفال",
+        "gynecologue": "طبيب نسائي",
+        "ophtalmologue": "طبيب عيون",
+        "orl": "أنف وأذن وحنجرة",
+        "cardiologue": "طبيب قلب"
+      },
+      "vital": {
+        "blood": "فصيلة الدم",
+        "allergies": "الحساسيات",
+        "height": "الطول",
+        "weight": "الوزن"
+      },
+      "cancelConfirm": {
+        "title": "إلغاء هذا الموعد؟",
+        "body": "هذا الإجراء لا رجعة فيه. سيتعين عليك حجز موعد جديد.",
+        "no": "لا",
+        "yes": "نعم، إلغاء"
+      }
+    },
+    "mesNotifications": {
+      "toastAllRead": "تم تحديد الإشعارات كمقروءة"
+    },
+    "coachIa": {
+      "title": "مدرب الذكاء الاصطناعي",
+      "headerSub": "ليست استشارة طبية — راجع طبيباً لأي تشخيص.",
+      "emergency": "طوارئ: 190 / 198",
+      "describeSymptoms": "صف أعراضك — سأوجهك إلى التخصص المناسب.",
+      "bookWith": "احجز موعداً مع {specialty}",
+      "send": "إرسال",
+      "inputPlaceholder": "صف أعراضك…",
+      "messageAria": "رسالة",
+      "footerLabel": "مدرب الذكاء الاصطناعي — ليست استشارة طبية",
+      "readDisclaimer": "اقرأ التحفظ",
+      "error": {
+        "401": "انتهت الجلسة — أعد تسجيل الدخول",
+        "403": "الخدمة غير متاحة",
+        "429": "تم الوصول إلى الحد (10 رسائل/24 ساعة). حاول لاحقاً.",
+        "503": "الخدمة غير متوفرة — حاول لاحقاً",
+        "default": "خطأ",
+        "network": "خطأ في الشبكة — أعد المحاولة"
+      }
+    },
+    "favoris": {
+      "eyebrow": "المفضّلة",
+      "title": "الأطباء المفضّلون",
+      "countLabel": "{count, plural, =0 {لا يوجد طبيب محفوظ} one {# طبيب محفوظ} other {# أطباء محفوظون}}",
+      "findDoctor": "ابحث عن طبيب",
+      "searchPlaceholder": "ابحث في مفضّلتك…",
+      "clear": "مسح",
+      "remove": "إزالة من المفضّلة",
+      "viewProfile": "عرض الملف",
+      "rdv": "موعد",
+      "emptyTitle": "لا يوجد مفضّل حالياً",
+      "emptySub": "اضغط على القلب في صفحة طبيب لتجده هنا.",
+      "noMatch": "لا يوجد مفضّل يطابق « {query} ».",
+      "toastRemoved": "تمت إزالته من مفضّلتك"
+    },
+    "avis": {
+      "thankYou": "شكراً على ردك!",
+      "thankYouSub": "ردك يساعد المرضى الآخرين على إيجاد الطبيب المناسب.",
+      "backHome": "العودة للرئيسية",
+      "title": "رأيك يهمنا",
+      "subtitle": "كيف كانت استشارتك؟",
+      "overallRating": "التقييم العام",
+      "detailedCriteria": "معايير مفصلة (اختياري)",
+      "punctuality": "الالتزام بالوقت",
+      "communication": "التواصل",
+      "cleanliness": "نظافة العيادة",
+      "staff": "الموظفون / السكرتارية",
+      "commentLabel": "تعليق (اختياري)",
+      "commentPlaceholder": "شارك تجربتك...",
+      "sending": "جاري الإرسال...",
+      "publish": "نشر تقييمي",
+      "errorNoRating": "الرجاء اختيار تقييم عام",
+      "errorGeneric": "خطأ"
     }
+  },
+  "footer": {
+    "tagline": "منصة حجز المواعيد الطبية في تونس",
+    "platformTitle": "المنصة",
+    "platform": {
+      "about": "من نحن",
+      "blog": "المدونة",
+      "faq": "الأسئلة الشائعة",
+      "sos": "طبيب الطوارئ"
+    },
+    "legalTitle": "قانوني",
+    "legal": {
+      "terms": "الإشعار القانوني",
+      "cgu": "شروط الاستخدام",
+      "privacy": "سياسة الخصوصية"
+    },
+    "doctorSpaceTitle": "فضاء الطبيب",
+    "doctorSpaceCopy": "هل أنت طبيب وترغب في الانضمام إلى دكتوري؟",
+    "doctorSpaceCta": "فضاء الطبيب",
+    "newsletterTitle": "النشرة الصحية",
+    "newsletterCopy": "استقبل شهرياً أفضل نصائحنا الصحية وآخر مستجدات دكتوري."
   }
 }

@@ -3,8 +3,9 @@
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useTranslations, useLocale } from "next-intl";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { ar, fr } from "date-fns/locale";
 import {
   Upload,
   Download,
@@ -54,25 +55,26 @@ interface DocItem {
   note?: string | null;
 }
 
-const UPLOAD_CATEGORIES: { id: Exclude<Filter, "all">; label: string }[] = [
-  { id: "rx", label: "Ordonnance" },
-  { id: "lab", label: "Analyse biologique" },
-  { id: "xr", label: "Radiologie" },
-  { id: "rep", label: "Compte-rendu" },
-  { id: "ins", label: "Carte assurance" },
-];
-
-const FILTERS: { id: Filter; label: string }[] = [
-  { id: "all", label: "Tout" },
-  { id: "rx", label: "Ordonnances" },
-  { id: "lab", label: "Analyses" },
-  { id: "xr", label: "Radiologie" },
-  { id: "rep", label: "Comptes-rendus" },
-  { id: "ins", label: "Cartes assurance" },
-];
-
 export default function MesDocumentsPage() {
   const router = useRouter();
+  const t = useTranslations("patient.mesDocuments");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
+  const UPLOAD_CATEGORIES: { id: Exclude<Filter, "all">; label: string }[] = [
+    { id: "rx", label: t("uploadCategories.rx") },
+    { id: "lab", label: t("uploadCategories.lab") },
+    { id: "xr", label: t("uploadCategories.xr") },
+    { id: "rep", label: t("uploadCategories.rep") },
+    { id: "ins", label: t("uploadCategories.ins") },
+  ];
+  const FILTERS: { id: Filter; label: string }[] = [
+    { id: "all", label: t("filters.all") },
+    { id: "rx", label: t("filters.rx") },
+    { id: "lab", label: t("filters.lab") },
+    { id: "xr", label: t("filters.xr") },
+    { id: "rep", label: t("filters.rep") },
+    { id: "ins", label: t("filters.ins") },
+  ];
   const [loading, setLoading] = useState(true);
   const [documents, setDocuments] = useState<DocItem[]>([]);
   const [filter, setFilter] = useState<Filter>("all");
@@ -268,7 +270,7 @@ export default function MesDocumentsPage() {
   async function confirmUpload() {
     if (!pendingFile) return;
     if (pendingFile.size > 15 * 1024 * 1024) {
-      toast.error("Fichier trop volumineux (15 Mo max)");
+      toast.error(t("toast.fileTooBig"));
       return;
     }
     setUploading(true);
@@ -284,12 +286,12 @@ export default function MesDocumentsPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success("Document téléversé");
+        toast.success(t("toast.uploaded"));
         setPendingFile(null);
         setPendingTitle("");
         await loadAll();
       } else {
-        toast.error(data.error || "Erreur d'upload");
+        toast.error(data.error || t("toast.uploadError"));
       }
     } finally {
       setUploading(false);
@@ -307,11 +309,11 @@ export default function MesDocumentsPage() {
     });
     const data = await res.json();
     if (res.ok) {
-      toast.success("Document mis à jour");
+      toast.success(t("toast.updated"));
       setEditingDoc(null);
       await loadAll();
     } else {
-      toast.error(data.error || "Erreur");
+      toast.error(data.error || t("toast.error"));
     }
   }
 
@@ -361,14 +363,14 @@ export default function MesDocumentsPage() {
       if (res.ok) {
         toast.success(
           doctorIds.length === 0
-            ? "Partage retiré"
-            : `Partagé avec ${doctorIds.length} médecin${doctorIds.length > 1 ? "s" : ""}`,
+            ? t("toast.shareRemoved")
+            : t("toast.sharedWithN", { n: doctorIds.length }),
         );
         setSharingDoc(null);
         await loadAll();
       } else {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || "Échec du partage");
+        toast.error(data.error || t("toast.shareFailed"));
       }
     } finally {
       setSavingShare(false);
@@ -377,7 +379,7 @@ export default function MesDocumentsPage() {
 
   async function deleteDoc(doc: DocItem) {
     if (!doc.attachmentId && !doc.sharedDocId) return;
-    if (!confirm("Supprimer définitivement ce document ?")) return;
+    if (!confirm(t("confirmDelete"))) return;
     const url = doc.sharedDocId
       ? `/api/patient-documents/${doc.sharedDocId}`
       : `/api/me/attachments/${doc.attachmentId}`;
@@ -386,10 +388,10 @@ export default function MesDocumentsPage() {
       credentials: "include",
     });
     if (res.ok) {
-      toast.success("Document supprimé");
+      toast.success(t("toast.deleted"));
       setDocuments((prev) => prev.filter((d) => d.id !== doc.id));
     } else {
-      toast.error("Erreur");
+      toast.error(t("toast.error"));
     }
   }
 
@@ -437,9 +439,9 @@ export default function MesDocumentsPage() {
       {/* Page header */}
       <div className="flex items-end justify-between gap-4 mb-5">
         <div>
-          <div className="ds-eyebrow">Stockage chiffré</div>
-          <h1 className="ds-page-title">Mes documents</h1>
-          <p className="ds-page-sub">Ordonnances, analyses, radios — tout au même endroit.</p>
+          <div className="ds-eyebrow">{t("eyebrow")}</div>
+          <h1 className="ds-page-title">{t("title")}</h1>
+          <p className="ds-page-sub">{t("subtitle")}</p>
         </div>
         <button
           type="button"
@@ -447,7 +449,7 @@ export default function MesDocumentsPage() {
           disabled={uploading}
           className="ds-btn ds-btn-primary"
         >
-          <Upload className="w-4 h-4" /> {uploading ? "Envoi…" : "Téléverser"}
+          <Upload className="w-4 h-4" /> {uploading ? t("sending") : t("upload")}
         </button>
       </div>
 
@@ -500,10 +502,10 @@ export default function MesDocumentsPage() {
             className="font-bold text-[16px] mb-0.5"
             style={{ color: "var(--ink-900)", fontFamily: "Manrope, sans-serif" }}
           >
-            Glissez-déposez vos documents
+            {t("dropZone.title")}
           </div>
           <div className="text-[13px]" style={{ color: "var(--ink-500)" }}>
-            PDF, JPG, PNG · 10 Mo max · Chiffrement de bout en bout
+            {t("dropZone.hint")}
           </div>
         </div>
         <button
@@ -512,7 +514,7 @@ export default function MesDocumentsPage() {
           disabled={uploading}
           className="ds-btn ds-btn-soft ds-btn-sm shrink-0"
         >
-          {uploading ? "Envoi…" : "Parcourir"}
+          {uploading ? t("sending") : t("browse")}
         </button>
       </div>
 
@@ -547,7 +549,7 @@ export default function MesDocumentsPage() {
         })}
         <div className="flex-1" />
         <button type="button" className="ds-btn ds-btn-ghost ds-btn-sm">
-          <Filter className="w-3.5 h-3.5" /> Trier
+          <Filter className="w-3.5 h-3.5" /> {t("sort")}
         </button>
       </div>
 
@@ -564,10 +566,10 @@ export default function MesDocumentsPage() {
             className="font-bold text-[15px] mb-1"
             style={{ color: "var(--ink-900)" }}
           >
-            Aucun document pour l&apos;instant
+            {t("empty.title")}
           </p>
           <p className="text-[13.5px]" style={{ color: "var(--ink-500)" }}>
-            Vos ordonnances, analyses et radios apparaîtront ici.
+            {t("empty.sub")}
           </p>
         </div>
       ) : (
@@ -597,7 +599,7 @@ export default function MesDocumentsPage() {
       {/* Upload — category picker modal */}
       {pendingFile && (
         <Modal
-          title="Téléverser un document"
+          title={t("modal.upload")}
           onClose={() => {
             setPendingFile(null);
             if (fileInputRef.current) fileInputRef.current.value = "";
@@ -611,7 +613,7 @@ export default function MesDocumentsPage() {
             {pendingFile.name} · {(pendingFile.size / 1024).toFixed(0)} Ko
           </p>
 
-          <FormLabel>Type de document</FormLabel>
+          <FormLabel>{t("docType")}</FormLabel>
           <div className="flex gap-1.5 flex-wrap mb-3">
             {UPLOAD_CATEGORIES.map((c) => {
               const on = pendingCategory === c.id;
@@ -632,12 +634,12 @@ export default function MesDocumentsPage() {
             })}
           </div>
 
-          <FormLabel>Titre (optionnel)</FormLabel>
+          <FormLabel>{t("titleOptional")}</FormLabel>
           <input
             type="text"
             value={pendingTitle}
             onChange={(e) => setPendingTitle(e.target.value)}
-            placeholder="Ex. Prise de sang du 12 mai"
+            placeholder={t("titlePlaceholder")}
             maxLength={200}
             className="w-full rounded-xl px-3 py-2.5 text-[13.5px] font-semibold outline-none mb-4"
             style={{
@@ -656,7 +658,7 @@ export default function MesDocumentsPage() {
               }}
               className="ds-btn ds-btn-ghost"
             >
-              Annuler
+              {t("cancel")}
             </button>
             <button
               type="button"
@@ -664,7 +666,7 @@ export default function MesDocumentsPage() {
               disabled={uploading}
               className="ds-btn ds-btn-primary"
             >
-              <Upload className="w-4 h-4" /> {uploading ? "Envoi…" : "Téléverser"}
+              <Upload className="w-4 h-4" /> {uploading ? t("sending") : t("upload")}
             </button>
           </div>
         </Modal>
@@ -672,8 +674,8 @@ export default function MesDocumentsPage() {
 
       {/* Edit modal — modify category / title of an uploaded doc */}
       {editingDoc && (
-        <Modal title="Modifier le document" onClose={() => setEditingDoc(null)}>
-          <FormLabel>Type de document</FormLabel>
+        <Modal title={t("modal.edit")} onClose={() => setEditingDoc(null)}>
+          <FormLabel>{t("docType")}</FormLabel>
           <div className="flex gap-1.5 flex-wrap mb-3">
             {UPLOAD_CATEGORIES.map((c) => {
               const on = editCategory === c.id;
@@ -694,7 +696,7 @@ export default function MesDocumentsPage() {
             })}
           </div>
 
-          <FormLabel>Titre</FormLabel>
+          <FormLabel>{t("titleLabel")}</FormLabel>
           <input
             type="text"
             value={editTitle}
@@ -714,20 +716,19 @@ export default function MesDocumentsPage() {
               onClick={() => setEditingDoc(null)}
               className="ds-btn ds-btn-ghost"
             >
-              Annuler
+              {t("cancel")}
             </button>
             <button type="button" onClick={saveEdit} className="ds-btn ds-btn-primary">
-              <Pencil className="w-4 h-4" /> Enregistrer
+              <Pencil className="w-4 h-4" /> {t("save")}
             </button>
           </div>
         </Modal>
       )}
 
       {sharingDoc && (
-        <Modal title="Partager avec un médecin" onClose={() => setSharingDoc(null)}>
+        <Modal title={t("modal.share")} onClose={() => setSharingDoc(null)}>
           <div className="mb-3 text-[13px]" style={{ color: "var(--ink-500)" }}>
-            Sélectionnez les médecins qui pourront voir ce document dans votre
-            fiche patient.
+            {t("modal.shareIntro")}
           </div>
           {myDoctors.length === 0 ? (
             <div
@@ -737,8 +738,7 @@ export default function MesDocumentsPage() {
                 color: "var(--ink-500)",
               }}
             >
-              Aucun médecin trouvé. Prenez d&apos;abord un rendez-vous pour
-              pouvoir partager des documents.
+              {t("modal.noDoctorsFound")}
             </div>
           ) : (
             <ul className="space-y-1.5 max-h-[300px] overflow-y-auto pe-1">
@@ -821,7 +821,7 @@ export default function MesDocumentsPage() {
               onClick={() => setSharingDoc(null)}
               className="ds-btn ds-btn-ghost flex-1"
             >
-              Annuler
+              {t("cancel")}
             </button>
             <button
               type="button"
@@ -830,7 +830,7 @@ export default function MesDocumentsPage() {
               className="ds-btn ds-btn-primary flex-1"
             >
               <Share2 className="w-4 h-4" />
-              {savingShare ? "…" : "Partager"}
+              {savingShare ? "…" : t("share")}
             </button>
           </div>
         </Modal>
@@ -894,6 +894,9 @@ function DocCard({
   onDelete?: () => void;
   onShare?: () => void;
 }) {
+  const t = useTranslations("patient.mesDocuments");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
   const isMine = !!doc.attachmentId;
   return (
     <div className="ds-card-patient overflow-hidden" style={{ padding: 0 }}>
@@ -918,7 +921,7 @@ function DocCard({
               background: "var(--primary-500, #0ea5a4)",
               color: "#fff",
             }}
-            title={`Créé par ${doc.doctorBadge}`}
+            title={t("createdByDoctor", { name: doc.doctorBadge })}
           >
             {doc.doctorBadge}
           </span>
@@ -930,7 +933,7 @@ function DocCard({
               color: "var(--ink-500)",
             }}
           >
-            Médecin
+            {t("doctorBadge")}
           </span>
         )}
       </div>
@@ -942,7 +945,7 @@ function DocCard({
           {doc.title}
         </div>
         <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
-          {doc.source} · {format(new Date(doc.date), "d MMM yyyy", { locale: fr })}
+          {doc.source} · {format(new Date(doc.date), "d MMM yyyy", { locale: dateLocale })}
           {typeof doc.sizeBytes === "number" && doc.sizeBytes > 0 && (
             <> · {(doc.sizeBytes / 1024).toFixed(0)} Ko</>
           )}
@@ -955,7 +958,7 @@ function DocCard({
             {(doc.sharedDoctorNames?.length ?? 0) > 0 ? (
               <>
                 <span style={{ color: "var(--primary-600)", fontWeight: 600 }}>
-                  Partagé avec :
+                  {t("sharedWith")}
                 </span>
                 {doc.sharedDoctorNames!.map((name, i) => (
                   <span
@@ -969,7 +972,7 @@ function DocCard({
               </>
             ) : (
               <span style={{ color: "var(--ink-400)", fontStyle: "italic" }}>
-                Privé — non partagé
+                {t("private")}
               </span>
             )}
           </div>
@@ -982,8 +985,8 @@ function DocCard({
               target="_blank"
               rel="noreferrer"
               className="ds-btn ds-btn-soft ds-btn-sm flex-1"
-              aria-label="Aperçu"
-              title="Aperçu"
+              aria-label={t("aria.preview")}
+              title={t("aria.preview")}
             >
               <FileText className="w-3.5 h-3.5" />
             </a>
@@ -993,8 +996,8 @@ function DocCard({
             target={doc.fileUrl ? "_blank" : undefined}
             rel="noreferrer"
             className="ds-btn ds-btn-soft ds-btn-sm flex-1"
-            aria-label="Télécharger en PDF"
-            title="Télécharger en PDF"
+            aria-label={t("aria.downloadPdf")}
+            title={t("aria.downloadPdf")}
           >
             <Download className="w-3.5 h-3.5" />
           </a>
@@ -1005,8 +1008,8 @@ function DocCard({
                   type="button"
                   onClick={onShare}
                   className="ds-btn ds-btn-ghost ds-btn-sm"
-                  aria-label="Partager avec un médecin"
-                  title="Partager avec un médecin"
+                  aria-label={t("aria.shareDoctor")}
+                  title={t("aria.shareDoctor")}
                   style={
                     (doc.sharedWithDoctorIds?.length ?? 0) > 0
                       ? { color: "var(--primary-600)" }
@@ -1020,7 +1023,7 @@ function DocCard({
                 type="button"
                 onClick={onEdit}
                 className="ds-btn ds-btn-ghost ds-btn-sm"
-                aria-label="Modifier"
+                aria-label={t("aria.edit")}
               >
                 <Pencil className="w-3.5 h-3.5" />
               </button>
@@ -1028,7 +1031,7 @@ function DocCard({
                 type="button"
                 onClick={onDelete}
                 className="ds-btn ds-btn-ghost ds-btn-sm"
-                aria-label="Supprimer"
+                aria-label={t("aria.delete")}
                 style={{ color: "#E11D48" }}
               >
                 <Trash2 className="w-3.5 h-3.5" />
@@ -1038,7 +1041,7 @@ function DocCard({
             <a
               href="/coach-ia"
               className="ds-btn ds-btn-ghost ds-btn-sm flex-1"
-              aria-label="Demander à l'IA"
+              aria-label={t("aria.askAi")}
             >
               <MessageCircle className="w-3.5 h-3.5" />
             </a>

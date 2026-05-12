@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeft,
@@ -24,6 +25,8 @@ interface Consent {
 
 export default function RechercheMedicalePage() {
   const router = useRouter();
+  const t = useTranslations("patient.parametres.rechercheMedicale");
+  const locale = useLocale();
   const [token, setToken] = useState<string | null>(null);
   const [consent, setConsent] = useState<Consent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -79,11 +82,11 @@ export default function RechercheMedicalePage() {
         setConsent(data.consent);
         toast.success(
           granted
-            ? "Merci ! Vous contribuez désormais à la recherche médicale tunisienne."
-            : "Votre participation a été retirée."
+            ? t("toast.thanksContrib")
+            : t("toast.withdrawn")
         );
       } else {
-        toast.error("Erreur lors de l'enregistrement");
+        toast.error(t("toast.saveError"));
       }
     } finally {
       setSaving(false);
@@ -111,16 +114,16 @@ export default function RechercheMedicalePage() {
             href="/parametres"
             className="inline-flex items-center gap-1 text-white/80 hover:text-white text-sm mb-3"
           >
-            <ChevronLeft className="h-4 w-4" /> Retour aux paramètres
+            <ChevronLeft className="h-4 w-4" /> {t("backToSettings")}
           </a>
           <div className="flex items-center gap-3">
             <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/20">
               <Microscope className="h-5 w-5 text-white" strokeWidth={2} />
             </div>
             <div>
-              <h1 className="text-xl font-black">Recherche médicale</h1>
+              <h1 className="text-xl font-black">{t("title")}</h1>
               <p className="text-white/70 text-xs mt-0.5">
-                Contribuer anonymement à la recherche en Tunisie
+                {t("subtitle")}
               </p>
             </div>
           </div>
@@ -134,13 +137,10 @@ export default function RechercheMedicalePage() {
             <Heart className="h-5 w-5 text-primary mt-0.5 shrink-0" />
             <div>
               <h2 className="font-bold text-foreground">
-                Voulez-vous aider la recherche médicale tunisienne&nbsp;?
+                {t("ctaHeading")}
               </h2>
               <p className="text-sm text-gray-600 mt-2">
-                Vos données médicales (entièrement anonymisées) peuvent
-                contribuer à mieux comprendre les maladies les plus fréquentes
-                en Tunisie, à améliorer la prévention et à orienter les
-                politiques de santé publique.
+                {t("ctaBody")}
               </p>
             </div>
           </div>
@@ -150,27 +150,27 @@ export default function RechercheMedicalePage() {
             <div className="rounded-xl border border-border bg-secondary/40 p-3 text-xs text-foreground/80 flex items-start gap-2">
               <Lock className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <div>
-                <strong>100% anonyme</strong>
+                <strong>{t("pills.anonymous.title")}</strong>
                 <div className="text-gray-500 mt-0.5">
-                  Aucun lien direct avec votre identité
+                  {t("pills.anonymous.desc")}
                 </div>
               </div>
             </div>
             <div className="rounded-xl border border-border bg-secondary/40 p-3 text-xs text-foreground/80 flex items-start gap-2">
               <ShieldCheck className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <div>
-                <strong>Loi 2004-63</strong>
+                <strong>{t("pills.law.title")}</strong>
                 <div className="text-gray-500 mt-0.5">
-                  Conforme à la législation tunisienne
+                  {t("pills.law.desc")}
                 </div>
               </div>
             </div>
             <div className="rounded-xl border border-border bg-secondary/40 p-3 text-xs text-foreground/80 flex items-start gap-2">
               <CheckCircle className="h-4 w-4 text-primary mt-0.5 shrink-0" />
               <div>
-                <strong>Réversible</strong>
+                <strong>{t("pills.reversible.title")}</strong>
                 <div className="text-gray-500 mt-0.5">
-                  Désactivable à tout moment
+                  {t("pills.reversible.desc")}
                 </div>
               </div>
             </div>
@@ -180,12 +180,12 @@ export default function RechercheMedicalePage() {
           <div className="flex items-center justify-between gap-4 pt-2 border-t border-border">
             <div>
               <p className="text-sm font-semibold text-foreground">
-                Participer au programme
+                {t("participate")}
               </p>
               <p className="text-xs text-gray-500">
                 {isGranted
-                  ? `Activé depuis le ${new Date(consent!.grantedAt!).toLocaleDateString("fr-FR")}`
-                  : "Vous pouvez l'activer ou le désactiver à tout moment"}
+                  ? t("activeSince", { date: new Date(consent!.grantedAt!).toLocaleDateString(locale === "ar" ? "ar-TN" : "fr-FR") })
+                  : t("toggleAnytime")}
               </p>
             </div>
             <button
@@ -212,23 +212,23 @@ export default function RechercheMedicalePage() {
             className="text-sm text-primary hover:underline inline-flex items-center gap-1"
           >
             <Info className="h-3.5 w-3.5" />
-            En savoir plus
+            {t("learnMore")}
           </button>
         </div>
 
         {/* Reference */}
         <div className="rounded-2xl border border-border bg-white p-5 shadow-sm">
           <p className="text-xs text-gray-500">
-            Référence légale :{" "}
+            {t("legalRef.prefix")}{" "}
             <a
               href="https://www.inpdp.nat.tn"
               target="_blank"
               rel="noopener"
               className="text-primary hover:underline"
             >
-              Loi tunisienne n° 2004-63
+              {t("legalRef.linkText")}
             </a>{" "}
-            relative à la protection des données à caractère personnel.
+            {t("legalRef.suffix")}
           </p>
         </div>
       </div>
@@ -245,7 +245,7 @@ export default function RechercheMedicalePage() {
           >
             <div className="p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-bold text-lg">Comment ça marche&nbsp;?</h2>
+                <h2 className="font-bold text-lg">{t("details.title")}</h2>
                 <button
                   type="button"
                   onClick={() => setShowDetails(false)}
@@ -256,41 +256,32 @@ export default function RechercheMedicalePage() {
               </div>
               <div className="space-y-3 text-sm text-gray-700">
                 <p>
-                  <strong className="text-foreground">Anonymisation totale.</strong>{" "}
-                  Avant tout partage, votre nom, prénom, téléphone, email,
-                  adresse et identifiants sont supprimés. Seules restent des
-                  données agrégées comme la tranche d'âge, le sexe, la région et
-                  les pathologies.
+                  <strong className="text-foreground">{t("details.anon.title")}</strong>{" "}
+                  {t("details.anon.body")}
                 </p>
                 <p>
-                  <strong className="text-foreground">Usages autorisés.</strong>{" "}
-                  Les données anonymisées peuvent être utilisées pour&nbsp;:
+                  <strong className="text-foreground">{t("details.uses.title")}</strong>{" "}
+                  {t("details.uses.body")}
                 </p>
                 <ul className="list-disc ps-5 space-y-1">
-                  <li>statistiques agrégées de santé publique</li>
-                  <li>études cliniques avec partenaires de recherche
-                    académiques tunisiens (université de Tunis, Sfax, Sousse,
-                    Monastir)</li>
-                  <li>amélioration de la prévention</li>
+                  <li>{t("details.uses.list1")}</li>
+                  <li>{t("details.uses.list2")}</li>
+                  <li>{t("details.uses.list3")}</li>
                 </ul>
                 <p>
-                  <strong className="text-foreground">Aucune vente.</strong>{" "}
-                  Vos données ne seront jamais vendues à des tiers commerciaux,
-                  laboratoires pharmaceutiques privés ou assureurs.
+                  <strong className="text-foreground">{t("details.noSale.title")}</strong>{" "}
+                  {t("details.noSale.body")}
                 </p>
                 <p>
-                  <strong className="text-foreground">Réversibilité.</strong>{" "}
-                  Vous pouvez retirer votre consentement à tout moment depuis
-                  cette page. Les données déjà anonymisées et utilisées dans
-                  des études en cours ne pourront cependant plus être tracées
-                  (elles sont anonymes).
+                  <strong className="text-foreground">{t("details.reversible.title")}</strong>{" "}
+                  {t("details.reversible.body")}
                 </p>
               </div>
               <Button
                 onClick={() => setShowDetails(false)}
                 className="w-full bg-primary hover:bg-doktori-teal-dark text-white"
               >
-                J'ai compris
+                {t("details.understood")}
               </Button>
             </div>
           </div>

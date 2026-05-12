@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Baby, ChevronRight, Loader2, Syringe } from "lucide-react";
 
@@ -19,15 +20,16 @@ function ageInMonths(dob: string): number {
   return (now.getFullYear() - birth.getFullYear()) * 12 + (now.getMonth() - birth.getMonth());
 }
 
-function formatAge(months: number): string {
-  if (months < 1) return "< 1 mois";
-  if (months < 24) return `${months} mois`;
-  const years = Math.floor(months / 12);
-  return `${years} an${years > 1 ? "s" : ""}`;
-}
-
 export default function CarnetEnfantsPage() {
   const router = useRouter();
+  const t = useTranslations("patient.dossier.enfants");
+  const tc = useTranslations("patient.dossier.common");
+  function formatAge(months: number): string {
+    if (months < 1) return t("ageLess1");
+    if (months < 24) return t("ageMonths", { months });
+    const years = Math.floor(months / 12);
+    return t("ageYears", { years });
+  }
   const [token, setToken] = useState<string | null>(null);
   const [dependents, setDependents] = useState<Dependent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -80,30 +82,26 @@ export default function CarnetEnfantsPage() {
           href="/dossier-medical"
           className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--primary-600)] mb-2"
         >
-          ← Retour au dossier
+          ← {tc("backToDossier")}
         </a>
-        <div className="ds-eyebrow">DOSSIER MÉDICAL</div>
+        <div className="ds-eyebrow">{tc("eyebrow")}</div>
         <h1 className="ds-page-title flex items-center gap-2">
-          <Baby className="w-6 h-6 text-[color:var(--primary-600)]" /> Carnet de santé enfant
+          <Baby className="w-6 h-6 text-[color:var(--primary-600)]" /> {t("title")}
         </h1>
-        <p className="ds-page-sub">
-          Suivez le calendrier vaccinal officiel tunisien (0-2 ans) pour chacun de vos enfants.
-        </p>
+        <p className="ds-page-sub">{t("subtitle")}</p>
       </div>
 
       <div>
 
         {dependents.length === 0 ? (
           <div className="bg-white rounded-2xl border border-border shadow-sm p-8 text-center">
-            <p className="text-foreground font-semibold mb-2">Aucun enfant enregistré</p>
-            <p className="text-sm text-muted-foreground mb-4">
-              Ajoutez vos enfants dans votre famille pour suivre leurs vaccinations.
-            </p>
+            <p className="text-foreground font-semibold mb-2">{t("empty.title")}</p>
+            <p className="text-sm text-muted-foreground mb-4">{t("empty.subtitle")}</p>
             <Link
               href="/ma-famille"
               className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-sm font-bold"
             >
-              Gérer ma famille
+              {t("manageFamily")}
             </Link>
           </div>
         ) : (

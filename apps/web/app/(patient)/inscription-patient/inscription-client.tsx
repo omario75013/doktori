@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -30,28 +31,30 @@ function getPasswordStrength(password: string): PasswordStrength | null {
   return "strong";
 }
 
-const STRENGTH_CONFIG: Record<PasswordStrength, { label: string; color: string; width: string }> = {
-  weak: { label: "Faible", color: "bg-red-500", width: "w-1/3" },
-  medium: { label: "Moyen", color: "bg-amber-400", width: "w-2/3" },
-  strong: { label: "Fort", color: "bg-green-500", width: "w-full" },
+const STRENGTH_CONFIG: Record<PasswordStrength, { color: string; width: string }> = {
+  weak: { color: "bg-red-500", width: "w-1/3" },
+  medium: { color: "bg-amber-400", width: "w-2/3" },
+  strong: { color: "bg-green-500", width: "w-full" },
 };
-
-function validateEmail(email: string): string | null {
-  if (!email) return null;
-  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? null : "Format d'email invalide";
-}
-
-function validatePhone(phone: string): string | null {
-  if (!phone) return null;
-  const normalized = phone.replace(/[\s\-()]/g, "");
-  return /^(\+216|216|0)?[2-9]\d{7}$/.test(normalized)
-    ? null
-    : "Numéro tunisien invalide (ex: +216 XX XXX XXX)";
-}
 
 export function InscriptionPatientClient() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations("patientAuth.inscription");
+  const STRENGTH_LABEL: Record<PasswordStrength, string> = {
+    weak: t("strength.weak"),
+    medium: t("strength.medium"),
+    strong: t("strength.strong"),
+  };
+  function validateEmail(email: string): string | null {
+    if (!email) return null;
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email) ? null : t("errors.emailFormat");
+  }
+  function validatePhone(phone: string): string | null {
+    if (!phone) return null;
+    const normalized = phone.replace(/[\s\-()]/g, "");
+    return /^(\+216|216|0)?[2-9]\d{7}$/.test(normalized) ? null : t("errors.phoneFormat");
+  }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [termsAccepted, setTermsAccepted] = useState(false);
@@ -139,7 +142,7 @@ export function InscriptionPatientClient() {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(typeof data.error === "string" ? data.error : "Veuillez vérifier les informations saisies.");
+        setError(typeof data.error === "string" ? data.error : t("errors.checkInfo"));
         return;
       }
 
@@ -167,7 +170,7 @@ export function InscriptionPatientClient() {
 
       router.push("/mon-espace");
     } catch {
-      setError("Une erreur est survenue. Veuillez réessayer.");
+      setError(t("errors.generic"));
     } finally {
       setLoading(false);
     }
@@ -195,19 +198,19 @@ export function InscriptionPatientClient() {
           </div>
 
           <h1 className="font-heading text-3xl xl:text-4xl font-black leading-tight tracking-tight">
-            Votre santé, <br />à portée de main
+            {t.rich("heroTitle", { br: () => <br /> })}
           </h1>
           <p className="mt-4 text-white/70 text-sm leading-relaxed max-w-sm">
-            Créez votre espace patient et gérez tous vos rendez-vous médicaux en ligne, en toute simplicité.
+            {t("heroSubtitle")}
           </p>
         </div>
 
         <div className="relative z-10 space-y-5 mt-auto">
           {[
-            { icon: Calendar, text: "Prenez RDV en ligne 24h/24 avec les meilleurs médecins" },
-            { icon: FileText, text: "Accédez à votre dossier médical et ordonnances" },
-            { icon: Heart, text: "Suivi personnalisé de votre santé" },
-            { icon: UserRound, text: "Gérez les RDV de toute votre famille" },
+            { icon: Calendar, text: t("feature.1") },
+            { icon: FileText, text: t("feature.2") },
+            { icon: Heart, text: t("feature.3") },
+            { icon: UserRound, text: t("feature.4") },
           ].map(({ icon: Icon, text }) => (
             <div key={text} className="flex items-center gap-3">
               <div className="h-8 w-8 rounded-lg bg-white/15 flex items-center justify-center shrink-0">
@@ -229,26 +232,26 @@ export function InscriptionPatientClient() {
             <Stethoscope className="h-5 w-5" />
             <span className="font-bold">Doktori</span>
           </div>
-          <h1 className="text-lg font-bold">Créer votre espace patient</h1>
+          <h1 className="text-lg font-bold">{t("mobileTitle")}</h1>
         </div>
 
         <div className="flex-1 flex items-center justify-center px-4 py-8 sm:px-8 lg:px-12">
           <div className="w-full max-w-md">
             <div className="mb-8">
-              <h2 className="text-2xl font-black text-foreground">Créer mon compte</h2>
-              <p className="text-sm text-muted-foreground mt-1">Accédez à tous vos services de santé en ligne.</p>
+              <h2 className="text-2xl font-black text-foreground">{t("formTitle")}</h2>
+              <p className="text-sm text-muted-foreground mt-1">{t("formSubtitle")}</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5" noValidate>
               {/* Full name */}
               <div className="space-y-1.5">
                 <Label htmlFor="name" className="text-foreground font-semibold">
-                  Nom complet <span className="text-red-500">*</span>
+                  {t("nameLabel")} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="name"
                   name="name"
-                  placeholder="Prénom Nom"
+                  placeholder={t("namePlaceholder")}
                   required
                   value={form.name}
                   onChange={handleChange}
@@ -258,7 +261,7 @@ export function InscriptionPatientClient() {
                 {touched.name && form.name.trim().length > 0 && form.name.trim().length < 2 && (
                   <p className="text-xs text-red-600 flex items-center gap-1">
                     <AlertCircle className="h-3 w-3 flex-shrink-0" />
-                    Le nom doit contenir au moins 2 caractères
+                    {t("errors.nameMin")}
                   </p>
                 )}
               </div>
@@ -266,13 +269,13 @@ export function InscriptionPatientClient() {
               {/* Email */}
               <div className="space-y-1.5">
                 <Label htmlFor="email" className="text-foreground font-semibold">
-                  Adresse email <span className="text-red-500">*</span>
+                  {t("emailLabel")} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="email"
                   name="email"
                   type="email"
-                  placeholder="votre@email.com"
+                  placeholder={t("emailPlaceholder")}
                   autoComplete="email"
                   required
                   value={form.email}
@@ -291,7 +294,7 @@ export function InscriptionPatientClient() {
               {/* Phone */}
               <div className="space-y-1.5">
                 <Label htmlFor="phone" className="text-foreground font-semibold">
-                  Numéro de téléphone <span className="text-red-500">*</span>
+                  {t("phoneLabel")} <span className="text-red-500">*</span>
                 </Label>
                 <PhoneInput
                   id="phone"
@@ -315,13 +318,13 @@ export function InscriptionPatientClient() {
               {/* Password + strength indicator */}
               <div className="space-y-1.5">
                 <Label htmlFor="password" className="text-foreground font-semibold">
-                  Mot de passe <span className="text-red-500">*</span>
+                  {t("passwordLabel")} <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="password"
                   name="password"
                   type="password"
-                  placeholder="Minimum 8 caractères"
+                  placeholder={t("passwordPlaceholder")}
                   autoComplete="new-password"
                   required
                   value={form.password}
@@ -342,14 +345,14 @@ export function InscriptionPatientClient() {
                       passwordStrength === "medium" ? "text-amber-600" :
                       "text-green-600"
                     }`}>
-                      Sécurité : {STRENGTH_CONFIG[passwordStrength].label}
+                      {t("securityLabel")} : {STRENGTH_LABEL[passwordStrength]}
                     </p>
                   </div>
                 )}
                 {passwordTooShort && (
                   <p className="text-xs text-red-600 flex items-center gap-1">
                     <AlertCircle className="h-3 w-3 flex-shrink-0" />
-                    Le mot de passe doit contenir au moins 8 caractères
+                    {t("errors.passwordMin")}
                   </p>
                 )}
               </div>
@@ -364,15 +367,18 @@ export function InscriptionPatientClient() {
                   className="mt-0.5 h-4 w-4 rounded border-gray-300 accent-primary cursor-pointer"
                 />
                 <Label htmlFor="terms" className="text-sm text-foreground/70 leading-relaxed cursor-pointer font-normal">
-                  J'accepte les{" "}
-                  <a href="/legal/cgu" className="text-primary font-semibold hover:underline">
-                    Conditions Générales d'Utilisation
-                  </a>{" "}
-                  et la{" "}
-                  <a href="/confidentialite" className="text-primary font-semibold hover:underline">
-                    Politique de confidentialité
-                  </a>{" "}
-                  de Doktori.
+                  {t.rich("terms", {
+                    cgu: (chunks) => (
+                      <a href="/legal/cgu" className="text-primary font-semibold hover:underline">
+                        {chunks}
+                      </a>
+                    ),
+                    privacy: (chunks) => (
+                      <a href="/confidentialite" className="text-primary font-semibold hover:underline">
+                        {chunks}
+                      </a>
+                    ),
+                  })}
                 </Label>
               </div>
 
@@ -391,11 +397,11 @@ export function InscriptionPatientClient() {
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 me-2 animate-spin" />
-                    Création en cours...
+                    {t("creating")}
                   </>
                 ) : (
                   <>
-                    Créer mon espace patient
+                    {t("submitBtn")}
                     <Check className="h-4 w-4 ms-2" />
                   </>
                 )}
@@ -403,9 +409,9 @@ export function InscriptionPatientClient() {
             </form>
 
             <p className="text-center text-sm text-muted-foreground mt-6">
-              Déjà inscrit ?{" "}
+              {t("alreadyAccount")}{" "}
               <a href="/connexion-patient" className="font-bold text-primary hover:underline">
-                Se connecter
+                {t("login")}
               </a>
             </p>
           </div>

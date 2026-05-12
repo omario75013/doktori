@@ -3,10 +3,11 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations, useLocale } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Monitor, Smartphone, Globe, ShieldAlert, X, CheckCircle } from "lucide-react";
 import { formatDistanceToNow, format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { ar, fr } from "date-fns/locale";
 
 interface PatientSession {
   id: string;
@@ -28,6 +29,9 @@ function DeviceIcon({ label }: { label: string | null }) {
 
 export default function SessionsParametresPage() {
   const router = useRouter();
+  const t = useTranslations("patient.parametres.sessions");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
   const [token, setToken] = useState<string | null>(null);
   const [sessions, setSessions] = useState<PatientSession[]>([]);
   const [loading, setLoading] = useState(true);
@@ -67,9 +71,9 @@ export default function SessionsParametresPage() {
       });
       if (res.ok) {
         setSessions((prev) => prev.filter((s) => s.id !== id));
-        toast.success("Session révoquée.");
+        toast.success(t("toast.revoked"));
       } else {
-        toast.error("Erreur lors de la révocation");
+        toast.error(t("toast.revokeError"));
       }
     } finally {
       setRevoking(null);
@@ -87,9 +91,9 @@ export default function SessionsParametresPage() {
       if (res.ok) {
         // Keep only current session in UI
         setSessions((prev) => prev.filter((s) => s.isCurrent));
-        toast.success("Toutes les autres sessions ont été révoquées.");
+        toast.success(t("toast.allOthersRevoked"));
       } else {
-        toast.error("Erreur lors de la révocation");
+        toast.error(t("toast.revokeError"));
       }
     } finally {
       setRevokingAll(false);
@@ -103,15 +107,15 @@ export default function SessionsParametresPage() {
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()} className="text-sm text-gray-500 hover:text-foreground transition-colors">
-            ← Retour
+            ← {t("back")}
           </button>
-          <h1 className="text-xl font-bold text-foreground">Sessions actives</h1>
+          <h1 className="text-xl font-bold text-foreground">{t("title")}</h1>
         </div>
 
         <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
           <div className="flex items-center justify-between mb-4">
             <p className="text-sm text-gray-500 dark:text-gray-400">
-              Ces appareils ont accès à votre compte Doktori.
+              {t("intro")}
             </p>
             {otherSessions.length > 1 && (
               <Button
@@ -122,7 +126,7 @@ export default function SessionsParametresPage() {
                 className="rounded-xl border-red-200 text-red-600 hover:bg-red-50 text-xs"
               >
                 <ShieldAlert className="w-3.5 h-3.5 mr-1.5" />
-                {revokingAll ? "Révocation…" : "Révoquer tout le reste"}
+                {revokingAll ? t("revoking") : t("revokeAllOthers")}
               </Button>
             )}
           </div>
@@ -135,7 +139,7 @@ export default function SessionsParametresPage() {
             </div>
           ) : sessions.length === 0 ? (
             <div className="text-center py-8 text-gray-400 text-sm">
-              Aucune session active trouvée.
+              {t("noneFound")}
             </div>
           ) : (
             <div className="space-y-2">
@@ -154,12 +158,12 @@ export default function SessionsParametresPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <p className="text-sm font-medium text-foreground truncate">
-                        {s.deviceLabel ?? "Appareil inconnu"}
+                        {s.deviceLabel ?? t("unknownDevice")}
                       </p>
                       {s.isCurrent && (
                         <span className="flex items-center gap-1 text-[10px] font-semibold text-green-600 bg-green-50 dark:bg-green-900/20 px-1.5 py-0.5 rounded-full">
                           <CheckCircle className="w-2.5 h-2.5" />
-                          Session actuelle
+                          {t("currentSession")}
                         </span>
                       )}
                     </div>
@@ -171,12 +175,12 @@ export default function SessionsParametresPage() {
                         </span>
                       )}
                       <span className="text-xs text-gray-400">
-                        Dernière activité{" "}
-                        {formatDistanceToNow(new Date(s.lastActiveAt), { addSuffix: true, locale: fr })}
+                        {t("lastActivity")}{" "}
+                        {formatDistanceToNow(new Date(s.lastActiveAt), { addSuffix: true, locale: dateLocale })}
                       </span>
                     </div>
                     <p className="text-[11px] text-gray-300 dark:text-gray-600 mt-0.5">
-                      Créée le {format(new Date(s.createdAt), "d MMM yyyy", { locale: fr })}
+                      {t("createdOn")} {format(new Date(s.createdAt), "d MMM yyyy", { locale: dateLocale })}
                     </p>
                   </div>
                   {!s.isCurrent && (
@@ -201,7 +205,7 @@ export default function SessionsParametresPage() {
         </div>
 
         <p className="text-xs text-gray-400 text-center px-4">
-          TODO: La révocation active n'interrompt pas les tokens JWT existants (implémentation NextAuth requise pour enforcement en temps réel).
+          {t("todoNote")}
         </p>
       </div>
     </div>

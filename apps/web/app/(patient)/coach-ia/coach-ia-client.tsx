@@ -17,6 +17,7 @@
 import { useEffect, useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Send } from "lucide-react";
 import { SPECIALTIES } from "@doktori/shared";
 import { DisclaimerModal } from "./disclaimer-modal";
@@ -62,18 +63,18 @@ function specialtyLabel(id: string): string {
   return SPECIALTIES.find((s) => s.id === id)?.label ?? id;
 }
 
-function errorForStatus(status: number): string {
+function errorForStatus(status: number, t: (k: string) => string): string {
   switch (status) {
     case 401:
-      return "Session expirée — reconnectez-vous";
+      return t("error.401");
     case 403:
-      return "Service non disponible";
+      return t("error.403");
     case 429:
-      return "Limite atteinte (10 messages/24h ou cap de coût). Réessayez plus tard.";
+      return t("error.429");
     case 503:
-      return "Service indisponible — réessayez plus tard";
+      return t("error.503");
     default:
-      return "Erreur";
+      return t("error.default");
   }
 }
 
@@ -88,6 +89,7 @@ interface CoachIaClientProps {
 
 export function CoachIaClient({ disclaimerHtml }: CoachIaClientProps) {
   const router = useRouter();
+  const t = useTranslations("patient.coachIa");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -179,13 +181,13 @@ export function CoachIaClient({ disclaimerHtml }: CoachIaClientProps) {
         } catch {
           // ignore JSON parse failures
         }
-        setError(serverMsg || errorForStatus(res.status));
+        setError(serverMsg || errorForStatus(res.status, t));
         setLoading(false);
         return;
       }
 
       if (!res.body) {
-        setError("Erreur");
+        setError(t("error.default"));
         setLoading(false);
         return;
       }
@@ -249,7 +251,7 @@ export function CoachIaClient({ disclaimerHtml }: CoachIaClientProps) {
       });
     } catch (e) {
       console.warn("[coach-ia] send failed:", e);
-      setError("Erreur réseau — réessayez");
+      setError(t("error.network"));
     } finally {
       setLoading(false);
     }
@@ -292,16 +294,16 @@ export function CoachIaClient({ disclaimerHtml }: CoachIaClientProps) {
       {/* Header */}
       <header className="sticky top-0 z-10 bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between gap-3">
         <div className="flex flex-col">
-          <h1 className="text-base font-semibold text-foreground">Coach IA</h1>
+          <h1 className="text-base font-semibold text-foreground">{t("title")}</h1>
           <p className="text-xs text-gray-500">
-            Pas un avis médical — consultez un médecin pour tout diagnostic.
+            {t("headerSub")}
           </p>
         </div>
         <a
           href="tel:190"
           className="rounded-xl bg-red-600 text-white px-3 py-2 text-sm font-medium hover:bg-red-700 whitespace-nowrap"
         >
-          🚨 Urgence : 190 / 198
+          🚨 {t("emergency")}
         </a>
       </header>
 
@@ -309,8 +311,7 @@ export function CoachIaClient({ disclaimerHtml }: CoachIaClientProps) {
       <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4 bg-gray-50">
         {messages.length === 0 && (
           <div className="text-center text-sm text-gray-500 mt-8">
-            Décrivez vos symptômes — je vous oriente vers la spécialité
-            adaptée.
+            {t("describeSymptoms")}
           </div>
         )}
 
@@ -337,7 +338,7 @@ export function CoachIaClient({ disclaimerHtml }: CoachIaClientProps) {
                       href={`/recherche?specialty=${id}`}
                       className="inline-block me-2 mt-1 rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-xs hover:bg-blue-200"
                     >
-                      Prendre RDV avec un {specialtyLabel(id)}
+                      {t("bookWith", { specialty: specialtyLabel(id) })}
                     </Link>
                   ))}
                 </div>
@@ -383,28 +384,28 @@ export function CoachIaClient({ disclaimerHtml }: CoachIaClientProps) {
             onKeyDown={handleKeyDown}
             disabled={loading}
             rows={2}
-            placeholder="Décrivez vos symptômes…"
+            placeholder={t("inputPlaceholder")}
             className="flex-1 resize-none rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:opacity-50"
-            aria-label="Message"
+            aria-label={t("messageAria")}
           />
           <button
             type="submit"
             disabled={!input.trim() || loading}
             className="rounded-xl bg-foreground text-white px-4 py-2 text-sm font-medium hover:bg-foreground/90 disabled:opacity-50 flex items-center gap-1"
-            aria-label="Envoyer"
+            aria-label={t("send")}
           >
             <Send className="h-4 w-4" />
-            <span className="hidden sm:inline">Envoyer</span>
+            <span className="hidden sm:inline">{t("send")}</span>
           </button>
         </div>
         <p className="mt-2 text-xs text-gray-500 text-center">
-          Coach IA — Pas un avis médical —{" "}
+          {t("footerLabel")} —{" "}
           <button
             type="button"
             onClick={showDisclaimerAgain}
             className="underline hover:text-gray-700"
           >
-            Lire le disclaimer
+            {t("readDisclaimer")}
           </button>
         </p>
       </form>

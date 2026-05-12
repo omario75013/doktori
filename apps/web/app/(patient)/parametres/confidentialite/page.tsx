@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Shield, CheckCircle, Info } from "lucide-react";
 
@@ -15,25 +16,6 @@ interface ConsentState {
   research_anonymized: boolean;
 }
 
-const CONSENT_LABELS: Record<ConsentType, { label: string; description: string }> = {
-  cookies_analytics: {
-    label: "Cookies analytiques",
-    description: "Nous aide à comprendre comment vous utilisez l'application pour améliorer nos services.",
-  },
-  cookies_marketing: {
-    label: "Cookies marketing",
-    description: "Permettent d'afficher des publicités personnalisées selon vos intérêts.",
-  },
-  marketing_email: {
-    label: "Emails marketing",
-    description: "Recevoir des offres, conseils santé et actualités Doktori par email.",
-  },
-  research_anonymized: {
-    label: "Données de recherche anonymisées",
-    description: "Contribuer à la recherche médicale avec des données rendues anonymes.",
-  },
-};
-
 const CONSENT_TYPES: ConsentType[] = [
   "cookies_analytics",
   "cookies_marketing",
@@ -43,7 +25,15 @@ const CONSENT_TYPES: ConsentType[] = [
 
 export default function ConfidentialiteParametresPage() {
   const router = useRouter();
+  const t = useTranslations("patient.parametres.confidentialite");
   const [token, setToken] = useState<string | null>(null);
+
+  const CONSENT_LABELS: Record<ConsentType, { label: string; description: string }> = {
+    cookies_analytics: { label: t("consents.cookiesAnalytics.label"), description: t("consents.cookiesAnalytics.desc") },
+    cookies_marketing: { label: t("consents.cookiesMarketing.label"), description: t("consents.cookiesMarketing.desc") },
+    marketing_email: { label: t("consents.marketingEmail.label"), description: t("consents.marketingEmail.desc") },
+    research_anonymized: { label: t("consents.researchAnonymized.label"), description: t("consents.researchAnonymized.desc") },
+  };
   const [consents, setConsents] = useState<ConsentState>({
     cookies_analytics: false,
     cookies_marketing: false,
@@ -96,12 +86,12 @@ export default function ConfidentialiteParametresPage() {
         body: JSON.stringify({ consents }),
       });
       if (res.ok) {
-        toast.success("Préférences de confidentialité enregistrées.");
+        toast.success(t("toast.saved"));
       } else {
-        toast.error("Erreur lors de l'enregistrement");
+        toast.error(t("toast.saveError"));
       }
     } catch {
-      toast.error("Erreur réseau");
+      toast.error(t("toast.networkError"));
     } finally {
       setSaving(false);
     }
@@ -116,28 +106,28 @@ export default function ConfidentialiteParametresPage() {
       <div className="max-w-2xl mx-auto px-4 py-8 space-y-6">
         <div className="flex items-center gap-3">
           <button onClick={() => router.back()} className="text-sm text-gray-500 hover:text-foreground transition-colors">
-            ← Retour
+            ← {t("back")}
           </button>
-          <h1 className="text-xl font-bold text-foreground">Confidentialité</h1>
+          <h1 className="text-xl font-bold text-foreground">{t("title")}</h1>
         </div>
 
         <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-6">
           <div className="flex items-center gap-2 mb-1">
             <Shield className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Mes consentements</h2>
+            <h2 className="font-semibold text-foreground">{t("myConsents")}</h2>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-5">
-            Gérez vos préférences de confidentialité. Vous pouvez modifier ces choix à tout moment.
+            {t("intro")}
           </p>
 
           {/* Essential — forced on */}
           <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 rounded-xl px-4 py-3 mb-2">
             <div className="flex-1 me-4">
               <div className="flex items-center gap-1.5 mb-0.5">
-                <p className="text-sm font-medium text-foreground">Cookies essentiels</p>
-                <span className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 px-1.5 py-0.5 rounded-full">Obligatoire</span>
+                <p className="text-sm font-medium text-foreground">{t("essential.label")}</p>
+                <span className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 px-1.5 py-0.5 rounded-full">{t("essential.required")}</span>
               </div>
-              <p className="text-xs text-gray-400">Nécessaires au fonctionnement du site. Ne peuvent pas être désactivés.</p>
+              <p className="text-xs text-gray-400">{t("essential.desc")}</p>
             </div>
             <div className="w-10 h-6 bg-primary rounded-full opacity-60 cursor-not-allowed shrink-0 relative">
               <span className="block w-4 h-4 rounded-full bg-white absolute end-1 top-1" />
@@ -189,8 +179,9 @@ export default function ConfidentialiteParametresPage() {
           <div className="mt-5 flex items-start gap-2 text-xs text-gray-400 bg-gray-50 dark:bg-gray-900 rounded-xl p-3">
             <Info className="w-4 h-4 shrink-0 mt-0.5" />
             <p>
-              Conformément au RGPD, vous pouvez exercer vos droits d'accès, de rectification et de suppression en
-              contactant <a href="mailto:rgpd@doktori.tn" className="text-primary hover:underline">rgpd@doktori.tn</a>.
+              {t.rich("gdprNotice", {
+                a: (chunks) => <a href="mailto:rgpd@doktori.tn" className="text-primary hover:underline">{chunks}</a>,
+              })}
             </p>
           </div>
         </div>
@@ -200,7 +191,7 @@ export default function ConfidentialiteParametresPage() {
           disabled={saving || loading}
           className="w-full rounded-xl h-12 bg-primary hover:bg-primary/90 font-semibold"
         >
-          {saving ? "Enregistrement…" : "Enregistrer mes préférences"}
+          {saving ? t("saving") : t("savePrefs")}
         </Button>
       </div>
     </div>

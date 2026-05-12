@@ -110,7 +110,7 @@ export default function MesNotificationsPage() {
       setItems((prev) =>
         prev.map((n) => ({ ...n, readAt: n.readAt ?? new Date().toISOString() })),
       );
-      toast.success("Notifications marquées comme lues");
+      toast.success(t("toastAllRead"));
     }
   }
 

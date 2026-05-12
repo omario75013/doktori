@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Gift, Share2, Copy, Check, Users, Calendar, Award, MessageCircle, Mail } from "lucide-react";
 
 type ReferralData = {
@@ -17,6 +18,7 @@ type ReferralData = {
 
 export default function ParrainagePage() {
   const router = useRouter();
+  const t = useTranslations("patient.monParrainage");
   const [token, setToken] = useState<string | null>(null);
   const [data, setData] = useState<ReferralData | null>(null);
   const [loading, setLoading] = useState(true);
@@ -53,8 +55,7 @@ export default function ParrainagePage() {
   }, [token, router]);
 
   const shareUrl = data ? `https://doktori.tn/?ref=${data.code}` : "";
-  const shareText =
-    "Trouve un médecin et prends rendez-vous facilement sur Doktori 🏥";
+  const shareText = t("shareText");
 
   async function handleShare() {
     if (!data) return;
@@ -83,7 +84,7 @@ export default function ParrainagePage() {
   if (loading) {
     return (
       <div className="min-h-screen bg-secondary flex items-center justify-center">
-        <p className="text-sm text-muted-foreground">Chargement...</p>
+        <p className="text-sm text-muted-foreground">{t("loading")}</p>
       </div>
     );
   }
@@ -91,7 +92,7 @@ export default function ParrainagePage() {
   if (!data) {
     return (
       <div className="min-h-screen bg-secondary flex items-center justify-center px-4">
-        <p className="text-sm text-muted-foreground">Erreur de chargement.</p>
+        <p className="text-sm text-muted-foreground">{t("loadError")}</p>
       </div>
     );
   }
@@ -104,17 +105,17 @@ export default function ParrainagePage() {
             <Gift className="h-8 w-8 text-primary" strokeWidth={2} />
           </div>
           <h1 className="font-heading text-2xl font-bold text-foreground sm:text-3xl">
-            Programme de parrainage
+            {t("title")}
           </h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            Invitez vos proches sur Doktori et gagnez des récompenses.
+            {t("subtitle")}
           </p>
         </header>
 
         {/* Code card */}
         <div className="rounded-2xl border border-border bg-white p-6 shadow-sm sm:p-8">
           <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Votre code
+            {t("yourCode")}
           </p>
           <div className="mt-2 flex items-center justify-between gap-3 rounded-xl bg-secondary/40 px-5 py-4">
             <span className="font-mono text-2xl font-black text-primary tracking-wider">
@@ -124,23 +125,23 @@ export default function ParrainagePage() {
               type="button"
               onClick={handleCopy}
               className="inline-flex items-center gap-1.5 rounded-full border border-border bg-white px-3 py-1.5 text-xs font-bold text-foreground hover:border-primary"
-              aria-label="Copier le code"
+              aria-label={t("copyCode")}
             >
               {copied ? (
                 <>
                   <Check className="h-3.5 w-3.5 text-doktori-green-dark" />
-                  Copié
+                  {t("copied")}
                 </>
               ) : (
                 <>
                   <Copy className="h-3.5 w-3.5" />
-                  Copier
+                  {t("copy")}
                 </>
               )}
             </button>
           </div>
 
-          <p className="mt-4 text-xs text-muted-foreground">Lien à partager</p>
+          <p className="mt-4 text-xs text-muted-foreground">{t("linkToShare")}</p>
           <div className="mt-1 break-all rounded-xl bg-secondary/40 px-4 py-2 text-sm font-mono text-foreground">
             {shareUrl}
           </div>
@@ -152,7 +153,7 @@ export default function ParrainagePage() {
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-bold text-white hover:bg-doktori-teal-dark"
             >
               <Share2 className="h-4 w-4" strokeWidth={2.5} />
-              Partager
+              {t("share")}
             </button>
             <a
               href={`https://wa.me/?text=${encodeURIComponent(`${shareText} ${shareUrl}`)}`}
@@ -164,11 +165,11 @@ export default function ParrainagePage() {
               WhatsApp
             </a>
             <a
-              href={`mailto:?subject=${encodeURIComponent("Découvre Doktori")}&body=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`}
+              href={`mailto:?subject=${encodeURIComponent(t("emailSubject"))}&body=${encodeURIComponent(`${shareText}\n\n${shareUrl}`)}`}
               className="inline-flex flex-1 items-center justify-center gap-2 rounded-full border border-border bg-white px-6 py-3 text-sm font-bold text-foreground hover:border-primary"
             >
               <Mail className="h-4 w-4" strokeWidth={2.5} />
-              Email
+              {t("email")}
             </a>
           </div>
         </div>
@@ -177,36 +178,36 @@ export default function ParrainagePage() {
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <StatCard
             icon={<Users className="h-5 w-5" />}
-            label="Amis inscrits"
+            label={t("stats.friends")}
             value={data.stats.friendsJoined}
           />
           <StatCard
             icon={<Calendar className="h-5 w-5" />}
-            label="RDV pris"
+            label={t("stats.rdv")}
             value={data.stats.rdvTaken}
           />
           <StatCard
             icon={<Award className="h-5 w-5" />}
-            label="Récompenses"
+            label={t("stats.rewards")}
             value={data.stats.rewardsEarned}
           />
         </div>
 
         {/* How it works */}
         <div className="mt-6 rounded-2xl border border-border bg-white p-6">
-          <p className="font-bold text-foreground">Comment ça marche ?</p>
+          <p className="font-bold text-foreground">{t("howItWorks")}</p>
           <ol className="mt-3 space-y-2 text-sm text-muted-foreground">
             <li className="flex gap-2">
               <span className="font-bold text-primary">1.</span>
-              <span>Partagez votre lien à vos amis et votre famille.</span>
+              <span>{t("steps.1")}</span>
             </li>
             <li className="flex gap-2">
               <span className="font-bold text-primary">2.</span>
-              <span>Ils s&apos;inscrivent en arrivant via votre lien personnalisé.</span>
+              <span>{t("steps.2")}</span>
             </li>
             <li className="flex gap-2">
               <span className="font-bold text-primary">3.</span>
-              <span>Lorsqu&apos;ils prennent leur premier RDV, vous gagnez une récompense.</span>
+              <span>{t("steps.3")}</span>
             </li>
           </ol>
         </div>

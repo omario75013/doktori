@@ -214,7 +214,46 @@
     "errorGeneric": "Une erreur est survenue. Veuillez réessayer.",
     "otpPlaceholder": "123456",
     "emailPlaceholder": "votre@email.com",
-    "passwordPlaceholder": "••••••••"
+    "passwordPlaceholder": "••••••••",
+    "inscription": {
+      "mobileTitle": "Créer votre espace patient",
+      "formTitle": "Créer mon compte",
+      "formSubtitle": "Accédez à tous vos services de santé en ligne.",
+      "heroTitle": "Votre santé, <br></br>à portée de main",
+      "heroSubtitle": "Créez votre espace patient et gérez tous vos rendez-vous médicaux en ligne, en toute simplicité.",
+      "feature": {
+        "1": "Prenez RDV en ligne 24h/24 avec les meilleurs médecins",
+        "2": "Accédez à votre dossier médical et ordonnances",
+        "3": "Suivi personnalisé de votre santé",
+        "4": "Gérez les RDV de toute votre famille"
+      },
+      "nameLabel": "Nom complet",
+      "namePlaceholder": "Prénom Nom",
+      "emailLabel": "Adresse email",
+      "emailPlaceholder": "votre@email.com",
+      "phoneLabel": "Numéro de téléphone",
+      "passwordLabel": "Mot de passe",
+      "passwordPlaceholder": "Minimum 8 caractères",
+      "securityLabel": "Sécurité",
+      "strength": {
+        "weak": "Faible",
+        "medium": "Moyen",
+        "strong": "Fort"
+      },
+      "terms": "J'accepte les <cgu>Conditions Générales d'Utilisation</cgu> et la <privacy>Politique de confidentialité</privacy> de Doktori.",
+      "creating": "Création en cours...",
+      "submitBtn": "Créer mon espace patient",
+      "alreadyAccount": "Déjà inscrit ?",
+      "login": "Se connecter",
+      "errors": {
+        "emailFormat": "Format d'email invalide",
+        "phoneFormat": "Numéro tunisien invalide (ex: +216 XX XXX XXX)",
+        "nameMin": "Le nom doit contenir au moins 2 caractères",
+        "passwordMin": "Le mot de passe doit contenir au moins 8 caractères",
+        "checkInfo": "Veuillez vérifier les informations saisies.",
+        "generic": "Une erreur est survenue. Veuillez réessayer."
+      }
+    }
   },
   "secretaryLogin": {
     "badge": "ESPACE SECRÉTAIRE",
@@ -2642,6 +2681,1013 @@
       "statusPending": "En attente",
       "prevMonth": "Mois précédent",
       "nextMonth": "Mois suivant"
+    },
+    "parametres": {
+      "compte": {
+        "eyebrow": "Mon compte",
+        "title": "Profil & paramètres",
+        "subtitle": "Ces informations facilitent la prise de rendez-vous.",
+        "patientAlt": "Patient",
+        "changePhoto": "Changer la photo",
+        "memberSince": "Patient · Membre depuis 2024",
+        "emailVerified": "Email vérifié",
+        "phoneChip": "Téléphone",
+        "personalInfo": "Informations personnelles",
+        "edit": "Modifier",
+        "add": "Ajouter",
+        "view": "Voir",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "cancel": "Annuler",
+        "insuranceCards": "Cartes d'assurance",
+        "encrypted": "Chiffré",
+        "mutuelle": "Mutuelle",
+        "preferences": "Préférences",
+        "addYourCard": "Ajouter votre carte",
+        "cnamCard": "Carte CNAM",
+        "mutuelleCard": "Carte mutuelle",
+        "mutuelleModalTitle": "Mutuelle / Assurance complémentaire",
+        "cnamAffiliationNumber": "Numéro d'affiliation CNAM",
+        "cnamNumberPlaceholder": "Ex. 12345678",
+        "regime": "Régime",
+        "filiere": "Filière de soins",
+        "quality": "Qualité",
+        "qualityHolder": "Assuré social titulaire",
+        "qualityDependent": "Ayant droit",
+        "cnamHelp": "Régime, filière et qualité sont utilisés pour faciliter votre prise en charge. Seul le numéro CNAM est stocké de façon permanente.",
+        "contractNumber": "Numéro de contrat / adhérent",
+        "contractPlaceholder": "Ex. CON-123456",
+        "cardPhotoLabel": "Photo de la carte (JPG/PNG/PDF, max 10 Mo)",
+        "chooseFile": "Choisir un fichier",
+        "other": "Autre",
+        "openPdf": "Ouvrir le PDF",
+        "cardAlt": "Carte {provider}",
+        "noCardPhoto": "Aucune photo enregistrée pour cette carte.",
+        "emailLockedTitle": "L'adresse email est verrouillée. Contactez le support pour la modifier.",
+        "cinPlaceholder": "8 chiffres",
+        "fields": {
+          "firstName": "Prénom",
+          "lastName": "Nom",
+          "email": "Email",
+          "phone": "Téléphone",
+          "dateOfBirth": "Date de naissance",
+          "birth": "Naissance",
+          "gender": "Genre",
+          "maritalStatus": "État civil",
+          "children": "Enfants",
+          "occupation": "Profession",
+          "cin": "CIN",
+          "height": "Taille",
+          "heightCm": "Taille (cm)",
+          "weight": "Poids",
+          "weightKg": "Poids (kg)",
+          "bloodType": "Groupe sanguin",
+          "address": "Adresse",
+          "postalCode": "Code postal",
+          "city": "Ville",
+          "emergencyContact": "Contact d'urgence",
+          "emergencyName": "Contact d'urgence (nom)",
+          "emergencyPhone": "Contact d'urgence (téléphone)",
+          "emergencyRelation": "Lien de parenté",
+          "company": "Compagnie",
+          "number": "Numéro",
+          "insured": "Assuré"
+        },
+        "gender": {
+          "male": "Homme",
+          "female": "Femme"
+        },
+        "marital": {
+          "single": "Célibataire",
+          "married": "Marié(e)",
+          "divorced": "Divorcé(e)",
+          "widowed": "Veuf(ve)"
+        },
+        "cnamRegimes": {
+          "public": "Salarié secteur public",
+          "private": "Salarié secteur privé",
+          "independent": "Travailleur indépendant",
+          "student": "Étudiant",
+          "retired": "Retraité",
+          "conventioned": "Conventionné non salarié"
+        },
+        "cnamFilieres": {
+          "public": "Filière publique",
+          "privateFamily": "Filière privée — médecin de famille",
+          "reimbursement": "Système de remboursement"
+        },
+        "prefs": {
+          "rdvReminders": {
+            "label": "Rappels de rendez-vous",
+            "sub": "SMS et email 24h avant"
+          },
+          "newsletter": {
+            "label": "Newsletter santé",
+            "sub": "Conseils mensuels"
+          },
+          "language": {
+            "label": "Langue",
+            "sub": "Français · prête à utiliser"
+          },
+          "security": {
+            "label": "Sécurité & mot de passe",
+            "sub": "2FA, changer mot de passe, sessions"
+          }
+        },
+        "toast": {
+          "imageTooBig": "Image > 5 Mo",
+          "photoUpdated": "Photo mise à jour",
+          "profileUpdated": "Profil mis à jour",
+          "cinFormat": "Le CIN doit comporter exactement 8 chiffres",
+          "validationFailed": "Validation échouée",
+          "cardSaved": "Carte enregistrée",
+          "cardUploadFailed": "Échec de l'upload de la carte",
+          "infoSaved": "Informations enregistrées",
+          "error": "Erreur"
+        }
+      },
+      "notifications": {
+        "eyebrow": "PARAMÈTRES",
+        "title": "Notifications & rappels",
+        "subtitle": "Choisissez les canaux et la fréquence des rappels pour ne rien manquer.",
+        "saving": "Enregistrement…",
+        "offsets": {
+          "month": "1 mois avant",
+          "week": "1 semaine avant",
+          "days2": "2 jours avant",
+          "day1": "1 jour avant",
+          "hours2": "2 h avant",
+          "sameDay": "Le jour même"
+        },
+        "channels": {
+          "title": "Canaux",
+          "subtitle": "Comment souhaitez-vous être notifié(e) ?",
+          "email": {
+            "title": "Email",
+            "sub": "Important uniquement"
+          },
+          "sms": {
+            "title": "SMS",
+            "sub": "Rappels & confirmations"
+          },
+          "push": {
+            "title": "Notifications app",
+            "sub": "Pour Doktori web & mobile"
+          }
+        },
+        "rdvReminders": {
+          "title": "Rappels de rendez-vous",
+          "subtitle": "Choisissez quand recevoir les rappels avant un rendez-vous.",
+          "note": "Les rappels suivent les canaux activés ci-dessus."
+        },
+        "vaccines": {
+          "title": "Rappels de vaccins",
+          "subtitle": "Soyez prévenu(e) avant qu'un vaccin n'arrive à échéance.",
+          "enable": "Activer les rappels vaccinaux",
+          "daysBefore": "{n} jours avant"
+        },
+        "meds": {
+          "title": "Rappels de traitements",
+          "subtitle": "Active la fonctionnalité globalement. Choisissez les horaires individuellement dans chaque traitement.",
+          "rowTitle": "Rappels de prise de médicaments",
+          "rowSub": "Active la fonctionnalité globalement.",
+          "configure": "Configurer mes traitements"
+        },
+        "otherEmail": {
+          "title": "Autres notifications par email",
+          "healthTips": {
+            "label": "Conseils santé",
+            "sub": "Newsletter mensuelle, actualités Doktori"
+          },
+          "offers": {
+            "label": "Offres & promotions",
+            "sub": "Recommandations personnalisées, partenaires"
+          }
+        },
+        "toast": {
+          "saveError": "Échec de l'enregistrement"
+        }
+      },
+      "securite": {
+        "eyebrow": "PARAMÈTRES",
+        "title": "Sécurité",
+        "subtitle": "Gérez votre mot de passe, votre téléphone et la double authentification.",
+        "cancel": "Annuler",
+        "save": "Enregistrer",
+        "saving": "Enregistrement…",
+        "back": "Retour",
+        "twoFa": {
+          "title": "Double authentification (2FA)",
+          "intro": "Renforcez la sécurité de votre compte avec une application d'authentification (Google Authenticator, Authy…).",
+          "enabledBadge": "2FA activée",
+          "disableBtn": "Désactiver la 2FA",
+          "enableBtn": "Activer la double authentification",
+          "enterPasswordToConfirm": "Entrez votre mot de passe pour confirmer :",
+          "disabling": "Désactivation…",
+          "confirm": "Confirmer",
+          "scanStep": "Scannez ce QR code avec votre application",
+          "qrAlt": "QR Code 2FA",
+          "manualEntry": "Ou entrez ce code manuellement :",
+          "scannedNext": "J'ai scanné le QR code →",
+          "enterVerifyCode": "Entrez le code de vérification",
+          "verifyHint": "Ouvrez votre application d'authentification et entrez le code à 6 chiffres.",
+          "verifying": "Vérification…",
+          "verify": "Vérifier",
+          "backupCodesTitle": "Codes de secours — Sauvegardez-les !",
+          "backupCodesWarn": "Ces codes permettent d'accéder à votre compte si vous perdez votre téléphone. Ils ne seront plus affichés après cette page.",
+          "savedCodes": "J'ai sauvegardé mes codes"
+        },
+        "email": {
+          "title": "Adresse email",
+          "verified": "Vérifié",
+          "verifiedTitle": "Adresse email vérifiée",
+          "none": "Aucune adresse email enregistrée.",
+          "lockedNote": "L'adresse email sert d'identifiant de connexion et ne peut pas être modifiée depuis votre compte. Contactez le support si vous devez la changer."
+        },
+        "phone": {
+          "title": "Numéro de téléphone",
+          "edit": "Modifier",
+          "currentLabel": "Numéro actuel :",
+          "sending": "Envoi…",
+          "sendCode": "Envoyer le code",
+          "codeSentTo": "Un code à 6 chiffres a été envoyé au <b>{phone}</b>.",
+          "takenByOther": "Ce numéro vient d'être pris par un autre compte.",
+          "toast": {
+            "codeSent": "Code envoyé par SMS",
+            "updated": "Numéro de téléphone mis à jour",
+            "wrongCode": "Code incorrect"
+          }
+        },
+        "password": {
+          "title": "Mot de passe",
+          "change": "Changer",
+          "intro": "Définissez un mot de passe d'au moins 8 caractères pour sécuriser votre compte.",
+          "currentLabel": "Mot de passe actuel (laisser vide si jamais défini)",
+          "newLabel": "Nouveau mot de passe",
+          "confirmLabel": "Confirmer",
+          "placeholder": "Mot de passe",
+          "minPlaceholder": "Min. 8 caractères",
+          "confirmPlaceholder": "Répétez le nouveau mot de passe",
+          "toast": {
+            "tooShort": "Le nouveau mot de passe doit faire au moins 8 caractères",
+            "mismatch": "Les mots de passe ne correspondent pas",
+            "updated": "Mot de passe mis à jour"
+          }
+        },
+        "toast": {
+          "setupError": "Erreur lors de la configuration",
+          "networkError": "Erreur réseau",
+          "enabled": "2FA activée avec succès !",
+          "invalidCode": "Code invalide",
+          "disabled": "2FA désactivée.",
+          "disableError": "Erreur lors de la désactivation",
+          "copied": "Copié !",
+          "error": "Erreur"
+        }
+      },
+      "confidentialite": {
+        "back": "Retour",
+        "title": "Confidentialité",
+        "myConsents": "Mes consentements",
+        "intro": "Gérez vos préférences de confidentialité. Vous pouvez modifier ces choix à tout moment.",
+        "saving": "Enregistrement…",
+        "savePrefs": "Enregistrer mes préférences",
+        "gdprNotice": "Conformément au RGPD, vous pouvez exercer vos droits d'accès, de rectification et de suppression en contactant <a>rgpd@doktori.tn</a>.",
+        "essential": {
+          "label": "Cookies essentiels",
+          "required": "Obligatoire",
+          "desc": "Nécessaires au fonctionnement du site. Ne peuvent pas être désactivés."
+        },
+        "consents": {
+          "cookiesAnalytics": {
+            "label": "Cookies analytiques",
+            "desc": "Nous aide à comprendre comment vous utilisez l'application pour améliorer nos services."
+          },
+          "cookiesMarketing": {
+            "label": "Cookies marketing",
+            "desc": "Permettent d'afficher des publicités personnalisées selon vos intérêts."
+          },
+          "marketingEmail": {
+            "label": "Emails marketing",
+            "desc": "Recevoir des offres, conseils santé et actualités Doktori par email."
+          },
+          "researchAnonymized": {
+            "label": "Données de recherche anonymisées",
+            "desc": "Contribuer à la recherche médicale avec des données rendues anonymes."
+          }
+        },
+        "toast": {
+          "saved": "Préférences de confidentialité enregistrées.",
+          "saveError": "Erreur lors de l'enregistrement",
+          "networkError": "Erreur réseau"
+        }
+      },
+      "sessions": {
+        "back": "Retour",
+        "title": "Sessions actives",
+        "intro": "Ces appareils ont accès à votre compte Doktori.",
+        "revoking": "Révocation…",
+        "revokeAllOthers": "Révoquer tout le reste",
+        "noneFound": "Aucune session active trouvée.",
+        "unknownDevice": "Appareil inconnu",
+        "currentSession": "Session actuelle",
+        "lastActivity": "Dernière activité",
+        "createdOn": "Créée le",
+        "todoNote": "TODO: La révocation active n'interrompt pas les tokens JWT existants (implémentation NextAuth requise pour enforcement en temps réel).",
+        "toast": {
+          "revoked": "Session révoquée.",
+          "revokeError": "Erreur lors de la révocation",
+          "allOthersRevoked": "Toutes les autres sessions ont été révoquées."
+        }
+      },
+      "rechercheMedicale": {
+        "backToSettings": "Retour aux paramètres",
+        "title": "Recherche médicale",
+        "subtitle": "Contribuer anonymement à la recherche en Tunisie",
+        "ctaHeading": "Voulez-vous aider la recherche médicale tunisienne ?",
+        "ctaBody": "Vos données médicales (entièrement anonymisées) peuvent contribuer à mieux comprendre les maladies les plus fréquentes en Tunisie, à améliorer la prévention et à orienter les politiques de santé publique.",
+        "pills": {
+          "anonymous": {
+            "title": "100% anonyme",
+            "desc": "Aucun lien direct avec votre identité"
+          },
+          "law": {
+            "title": "Loi 2004-63",
+            "desc": "Conforme à la législation tunisienne"
+          },
+          "reversible": {
+            "title": "Réversible",
+            "desc": "Désactivable à tout moment"
+          }
+        },
+        "participate": "Participer au programme",
+        "activeSince": "Activé depuis le {date}",
+        "toggleAnytime": "Vous pouvez l'activer ou le désactiver à tout moment",
+        "learnMore": "En savoir plus",
+        "legalRef": {
+          "prefix": "Référence légale :",
+          "linkText": "Loi tunisienne n° 2004-63",
+          "suffix": "relative à la protection des données à caractère personnel."
+        },
+        "details": {
+          "title": "Comment ça marche ?",
+          "anon": {
+            "title": "Anonymisation totale.",
+            "body": "Avant tout partage, votre nom, prénom, téléphone, email, adresse et identifiants sont supprimés. Seules restent des données agrégées comme la tranche d'âge, le sexe, la région et les pathologies."
+          },
+          "uses": {
+            "title": "Usages autorisés.",
+            "body": "Les données anonymisées peuvent être utilisées pour :",
+            "list1": "statistiques agrégées de santé publique",
+            "list2": "études cliniques avec partenaires de recherche académiques tunisiens (université de Tunis, Sfax, Sousse, Monastir)",
+            "list3": "amélioration de la prévention"
+          },
+          "noSale": {
+            "title": "Aucune vente.",
+            "body": "Vos données ne seront jamais vendues à des tiers commerciaux, laboratoires pharmaceutiques privés ou assureurs."
+          },
+          "reversible": {
+            "title": "Réversibilité.",
+            "body": "Vous pouvez retirer votre consentement à tout moment depuis cette page. Les données déjà anonymisées et utilisées dans des études en cours ne pourront cependant plus être tracées (elles sont anonymes)."
+          },
+          "understood": "J'ai compris"
+        },
+        "toast": {
+          "thanksContrib": "Merci ! Vous contribuez désormais à la recherche médicale tunisienne.",
+          "withdrawn": "Votre participation a été retirée.",
+          "saveError": "Erreur lors de l'enregistrement"
+        }
+      }
+    },
+    "mesDocuments": {
+      "eyebrow": "Stockage chiffré",
+      "title": "Mes documents",
+      "subtitle": "Ordonnances, analyses, radios — tout au même endroit.",
+      "upload": "Téléverser",
+      "sending": "Envoi…",
+      "browse": "Parcourir",
+      "sort": "Trier",
+      "cancel": "Annuler",
+      "save": "Enregistrer",
+      "share": "Partager",
+      "docType": "Type de document",
+      "titleLabel": "Titre",
+      "titleOptional": "Titre (optionnel)",
+      "titlePlaceholder": "Ex. Prise de sang du 12 mai",
+      "confirmDelete": "Supprimer définitivement ce document ?",
+      "sharedWith": "Partagé avec :",
+      "private": "Privé — non partagé",
+      "doctorBadge": "Médecin",
+      "createdByDoctor": "Créé par {name}",
+      "dropZone": {
+        "title": "Glissez-déposez vos documents",
+        "hint": "PDF, JPG, PNG · 10 Mo max · Chiffrement de bout en bout"
+      },
+      "empty": {
+        "title": "Aucun document pour l'instant",
+        "sub": "Vos ordonnances, analyses et radios apparaîtront ici."
+      },
+      "uploadCategories": {
+        "rx": "Ordonnance",
+        "lab": "Analyse biologique",
+        "xr": "Radiologie",
+        "rep": "Compte-rendu",
+        "ins": "Carte assurance"
+      },
+      "filters": {
+        "all": "Tout",
+        "rx": "Ordonnances",
+        "lab": "Analyses",
+        "xr": "Radiologie",
+        "rep": "Comptes-rendus",
+        "ins": "Cartes assurance"
+      },
+      "modal": {
+        "upload": "Téléverser un document",
+        "edit": "Modifier le document",
+        "share": "Partager avec un médecin",
+        "shareIntro": "Sélectionnez les médecins qui pourront voir ce document dans votre fiche patient.",
+        "noDoctorsFound": "Aucun médecin trouvé. Prenez d'abord un rendez-vous pour pouvoir partager des documents."
+      },
+      "aria": {
+        "preview": "Aperçu",
+        "downloadPdf": "Télécharger en PDF",
+        "shareDoctor": "Partager avec un médecin",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "askAi": "Demander à l'IA"
+      },
+      "toast": {
+        "fileTooBig": "Fichier trop volumineux (15 Mo max)",
+        "uploaded": "Document téléversé",
+        "uploadError": "Erreur d'upload",
+        "updated": "Document mis à jour",
+        "deleted": "Document supprimé",
+        "shareRemoved": "Partage retiré",
+        "sharedWithN": "Partagé avec {n, plural, one {# médecin} other {# médecins}}",
+        "shareFailed": "Échec du partage",
+        "error": "Erreur"
+      }
+    },
+    "dossier": {
+      "eyebrow": "Confidentiel · chiffré",
+      "title": "Dossier médical",
+      "subtitle": "Partagez sélectivement ces données avec un médecin lors d'une consultation.",
+      "manageSharing": "Gérer le partage",
+      "patientAlt": "Patient",
+      "patientId": "ID Patient",
+      "exportPdf": "Exporter PDF",
+      "dobMissing": "Date de naissance non renseignée",
+      "yearsOld": "{age} ans",
+      "fact": {
+        "blood": "Sang",
+        "height": "Taille",
+        "weight": "Poids",
+        "bmi": "IMC"
+      },
+      "sections": {
+        "allergies": "Allergies",
+        "antecedents": "Antécédents",
+        "vaccinations": "Vaccinations",
+        "treatments": "Traitements en cours",
+        "recentConsultations": "Consultations récentes",
+        "relatives": "Mes proches"
+      },
+      "empty": {
+        "allergies": "Aucune allergie déclarée.",
+        "antecedents": "Aucun antécédent enregistré. Ajoutez vos analyses biologiques ou demandez à votre médecin de compléter votre dossier.",
+        "vaccinations": "Aucun vaccin enregistré.",
+        "treatments": "Aucun traitement en cours.",
+        "consultations": "Aucune consultation enregistrée.",
+        "relativesName": "Aucun proche enregistré",
+        "relativesSub": "Ajoutez vos proches pour gérer leurs rendez-vous"
+      },
+      "fullBook": "Carnet complet",
+      "longTerm": "Long terme",
+      "consultation": "Consultation",
+      "common": {
+        "eyebrow": "DOSSIER MÉDICAL",
+        "backToDossier": "Retour au dossier",
+        "back": "Retour",
+        "add": "Ajouter",
+        "save": "Enregistrer",
+        "cancel": "Annuler",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "close": "Fermer",
+        "relation": {
+          "child": "Enfant",
+          "parent": "Parent",
+          "spouse": "Conjoint(e)",
+          "sibling": "Frère / sœur",
+          "other": "Autre",
+          "default": "Proche"
+        }
+      },
+      "allergies": {
+        "title": "Allergies",
+        "addBtn": "Ajouter une allergie",
+        "countLabel": "{count, plural, =0 {Aucune allergie déclarée} one {# allergie déclarée} other {# allergies déclarées}}",
+        "empty": "Aucune allergie déclarée",
+        "diagnosedOn": "Diagnostiqué",
+        "severity": {
+          "mild": "Légère",
+          "moderate": "Modérée",
+          "severe": "Sévère"
+        },
+        "modal": {
+          "addTitle": "Ajouter une allergie",
+          "editTitle": "Modifier l'allergie"
+        },
+        "form": {
+          "allergen": "Allergène",
+          "allergenPlaceholder": "Pénicilline, arachides...",
+          "severity": "Sévérité",
+          "reaction": "Réaction",
+          "reactionPlaceholder": "Démangeaisons, gonflement...",
+          "diagnosedOn": "Diagnostiqué le"
+        },
+        "confirm": {
+          "delete": "Supprimer cette allergie ?"
+        },
+        "toast": {
+          "allergenRequired": "Allergène requis",
+          "added": "Allergie ajoutée",
+          "updated": "Allergie modifiée",
+          "deleted": "Allergie supprimée",
+          "saveError": "Erreur lors de l'enregistrement",
+          "deleteError": "Erreur lors de la suppression"
+        }
+      },
+      "analyses": {
+        "title": "Analyses biologiques",
+        "addBtn": "Ajouter une analyse",
+        "countLabel": "{count, plural, =0 {Aucune analyse enregistrée} one {# analyse enregistrée} other {# analyses enregistrées}}",
+        "empty": "Aucune analyse enregistrée",
+        "viewPdf": "Voir le PDF",
+        "sending": "Envoi...",
+        "modal": {
+          "title": "Ajouter une analyse"
+        },
+        "form": {
+          "title": "Titre",
+          "titlePlaceholder": "NFS, glycémie...",
+          "lab": "Laboratoire",
+          "testDate": "Date du test",
+          "file": "Fichier (PDF, JPEG, PNG · max 10 Mo)"
+        },
+        "confirm": {
+          "delete": "Supprimer cette analyse ?"
+        },
+        "toast": {
+          "titleRequired": "Titre requis",
+          "fileRequired": "Fichier requis",
+          "fileTooBig": "Fichier trop volumineux (max 10 Mo)",
+          "added": "Analyse ajoutée",
+          "deleted": "Analyse supprimée",
+          "sendError": "Erreur lors de l'envoi",
+          "deleteError": "Erreur lors de la suppression"
+        }
+      },
+      "traitements": {
+        "title": "Traitements",
+        "addBtn": "Ajouter un traitement",
+        "countLabel": "{current} en cours · {archived, plural, one {# archivé} other {# archivés}}",
+        "ongoing": "EN COURS",
+        "history": "HISTORIQUE",
+        "since": "Depuis {date}",
+        "stopped": "Arrêté {date}",
+        "empty": {
+          "ongoingTitle": "Aucun traitement en cours",
+          "ongoingSub": "Ajoutez vos médicaments pour en garder une trace."
+        },
+        "modal": {
+          "addTitle": "Ajouter un traitement",
+          "editTitle": "Modifier le traitement"
+        },
+        "tabs": {
+          "info": "Informations",
+          "reminder": "Rappels"
+        },
+        "form": {
+          "medication": "Médicament",
+          "dosage": "Dosage",
+          "frequency": "Fréquence",
+          "frequencyPlaceholder": "2x/jour",
+          "start": "Début",
+          "end": "Fin (si arrêté)",
+          "notes": "Notes"
+        },
+        "presets": {
+          "morning": "Matin",
+          "midday": "Midi",
+          "evening": "Soir"
+        },
+        "reminder": {
+          "enableTitle": "Activer un rappel pour ce traitement",
+          "enableSub": "Vous recevrez une notification aux horaires choisis.",
+          "momentsLabel": "Moments de la journée",
+          "scheduledLabel": "Horaires programmés",
+          "addTime": "Ajouter une heure",
+          "empty": "Aucun horaire programmé. Choisissez un moment ou ajoutez une heure libre.",
+          "channelsNote": "Les rappels suivent les canaux configurés dans Paramètres > Notifications."
+        },
+        "confirm": {
+          "delete": "Supprimer ce traitement ?"
+        },
+        "toast": {
+          "nameRequired": "Nom du médicament requis",
+          "endAfterStart": "La date de fin doit être supérieure ou égale à la date de début",
+          "added": "Traitement ajouté",
+          "updated": "Traitement modifié",
+          "deleted": "Traitement supprimé",
+          "saveError": "Erreur lors de l'enregistrement",
+          "deleteError": "Erreur lors de la suppression"
+        }
+      },
+      "vaccinations": {
+        "title": "Carnet de vaccination",
+        "addBtn": "Ajouter un vaccin",
+        "countLabel": "{count, plural, =0 {Aucun vaccin enregistré} one {# vaccin enregistré} other {# vaccins enregistrés}}",
+        "empty": "Aucun vaccin enregistré",
+        "givenBy": "Par",
+        "batch": "Lot",
+        "modal": {
+          "addTitle": "Ajouter un vaccin",
+          "editTitle": "Modifier le vaccin"
+        },
+        "form": {
+          "name": "Nom du vaccin",
+          "date": "Date",
+          "batch": "Numéro de lot",
+          "givenBy": "Administré par",
+          "givenByPlaceholder": "Dr. ..., centre...",
+          "notes": "Notes",
+          "searching": "Recherche…"
+        },
+        "confirm": {
+          "delete": "Supprimer ce vaccin ?"
+        },
+        "toast": {
+          "nameAndDateRequired": "Nom du vaccin et date requis",
+          "added": "Vaccin ajouté",
+          "updated": "Vaccin modifié",
+          "deleted": "Vaccin supprimé",
+          "saveError": "Erreur lors de l'enregistrement",
+          "deleteError": "Erreur lors de la suppression"
+        }
+      },
+      "rappels": {
+        "title": "Rappels traitements",
+        "addBtn": "Ajouter un rappel",
+        "countLabel": "{count, plural, =0 {Aucun rappel actif} one {# actif} other {# actifs}}",
+        "active": "Actifs",
+        "disabled": "Désactivés",
+        "pause": "Mettre en pause",
+        "resume": "Reprendre",
+        "disable": "Désactiver",
+        "pausedUntil": "En pause jusqu'au {date}",
+        "empty": {
+          "active": "Aucun rappel actif. Ajoutez-en un pour ne plus oublier votre traitement."
+        },
+        "modal": {
+          "addTitle": "Nouveau rappel",
+          "editTitle": "Modifier le rappel"
+        },
+        "form": {
+          "chronicDisease": "Maladie chronique",
+          "diseasePlaceholder": "Choisir une maladie (optionnel)",
+          "diseaseNone": "Aucune (autre)",
+          "medication": "Médicament",
+          "medicationPlaceholder": "Ex: Glucophage",
+          "dosage": "Dosage",
+          "frequency": "Fréquence",
+          "channel": "Canal de notification",
+          "channelSms": "SMS",
+          "channelEmail": "Email",
+          "channelPush": "Push (notification)"
+        },
+        "freq": {
+          "h8": "Toutes les 8 heures",
+          "h12": "Toutes les 12 heures",
+          "h24": "Tous les jours (24h)",
+          "h48": "Tous les 2 jours (48h)",
+          "h168": "Toutes les semaines",
+          "everyN": "Toutes les {n}h"
+        },
+        "confirm": {
+          "disable": "Désactiver ce rappel ?"
+        },
+        "toast": {
+          "nameRequired": "Nom du médicament requis",
+          "added": "Rappel ajouté",
+          "updated": "Rappel modifié",
+          "disabled": "Rappel désactivé",
+          "paused": "Rappel mis en pause 7 jours",
+          "resumed": "Rappel réactivé",
+          "saveError": "Erreur lors de l'enregistrement",
+          "deleteError": "Erreur lors de la suppression"
+        }
+      },
+      "enfants": {
+        "title": "Carnet de santé enfant",
+        "subtitle": "Suivez le calendrier vaccinal officiel tunisien (0-2 ans) pour chacun de vos enfants.",
+        "scheduleTitle": "Calendrier vaccinal officiel TN",
+        "scheduleEmpty": "Aucun vaccin dans le calendrier. (Le seed n'est peut-être pas encore appliqué.)",
+        "manageFamily": "Gérer ma famille",
+        "notFound": "Enfant introuvable.",
+        "ageLess1": "< 1 mois",
+        "ageMonths": "{months} mois",
+        "ageYears": "{years, plural, one {# an} other {# ans}}",
+        "atMonths": "À {months} mois",
+        "rangeMonths": "{min}-{max} mois",
+        "receivedOn": "Reçu le {date}",
+        "dose": "dose {n}",
+        "complete": "Complet",
+        "upToDate": "À jour",
+        "upcoming": "À venir",
+        "markBtn": "Marquer",
+        "empty": {
+          "title": "Aucun enfant enregistré",
+          "subtitle": "Ajoutez vos enfants dans votre famille pour suivre leurs vaccinations."
+        },
+        "form": {
+          "dateAdministration": "Date d'administration",
+          "doseNumber": "Numéro de dose",
+          "notesOptional": "Notes (optionnel)"
+        },
+        "confirm": {
+          "deleteRecord": "Supprimer cet enregistrement ?"
+        },
+        "alert": {
+          "saveError": "Erreur lors de l'enregistrement"
+        }
+      }
+    },
+    "maFamille": {
+      "eyebrow": "MA FAMILLE",
+      "title": "Mes proches",
+      "addBtn": "Ajouter un proche",
+      "countLabel": "{count, plural, =0 {Aucun proche enregistré} one {# proche enregistré} other {# proches enregistrés}}",
+      "bornOn": "Né(e) le {date}",
+      "genderMale": "Homme",
+      "genderFemale": "Femme",
+      "saving": "Enregistrement...",
+      "update": "Mettre à jour",
+      "empty": {
+        "title": "Aucun proche enregistré",
+        "subtitle": "Ajoutez vos enfants, parents ou conjoint(e) pour prendre rendez-vous en leur nom."
+      },
+      "confirmDelete": {
+        "title": "Supprimer {name} ?",
+        "body": "Cette action est irréversible. Les rendez-vous passés ne seront pas affectés."
+      },
+      "form": {
+        "firstName": "Prénom",
+        "lastName": "Nom",
+        "dob": "Date de naissance",
+        "gender": "Sexe",
+        "relation": "Relation"
+      },
+      "toast": {
+        "deleted": "Proche supprimé",
+        "added": "Proche ajouté",
+        "updated": "Proche mis à jour",
+        "error": "Erreur",
+        "formError": "Erreur, vérifiez les champs"
+      }
+    },
+    "grossesse": {
+      "title": "Suivi de grossesse",
+      "introSubtitle": "Suivez votre grossesse semaine par semaine. Renseignez votre date prévue d'accouchement.",
+      "dueDateLabel": "Date prévue d'accouchement",
+      "dueDateHint": "Calculée généralement par votre médecin lors de la première consultation.",
+      "dueDateShort": "Date prévue",
+      "startTracking": "Démarrer le suivi",
+      "endTracking": "Terminer le suivi",
+      "articlesTitle": "Articles à découvrir",
+      "currentWeek": "Semaine actuelle",
+      "keyMilestones": "Étapes clés",
+      "week": "Semaine {n}",
+      "youAreHere": "Vous y êtes",
+      "past": "Passée",
+      "alertError": "Erreur",
+      "confirmEnd": "Mettre fin au suivi de grossesse ?",
+      "milestone": {
+        "4": "Le test",
+        "12": "Premier trimestre",
+        "20": "Échographie morphologique",
+        "32": "Préparation",
+        "40": "Terme"
+      }
+    },
+    "monParrainage": {
+      "title": "Programme de parrainage",
+      "subtitle": "Invitez vos proches sur Doktori et gagnez des récompenses.",
+      "shareText": "Trouve un médecin et prends rendez-vous facilement sur Doktori 🏥",
+      "emailSubject": "Découvre Doktori",
+      "yourCode": "Votre code",
+      "copyCode": "Copier le code",
+      "copied": "Copié",
+      "copy": "Copier",
+      "linkToShare": "Lien à partager",
+      "share": "Partager",
+      "email": "Email",
+      "learnMore": "En savoir plus",
+      "loading": "Chargement...",
+      "loadError": "Erreur de chargement.",
+      "howItWorks": "Comment ça marche ?",
+      "steps": {
+        "1": "Partagez votre lien à vos amis et votre famille.",
+        "2": "Ils s'inscrivent en arrivant via votre lien personnalisé.",
+        "3": "Lorsqu'ils prennent leur premier RDV, vous gagnez une récompense."
+      },
+      "stats": {
+        "friends": "Amis inscrits",
+        "rdv": "RDV pris",
+        "rewards": "Récompenses"
+      }
+    },
+    "monEspace": {
+      "eyebrow": "Mon espace",
+      "howAreYou": "comment vous sentez-vous ?",
+      "help": "Aide",
+      "newRdv": "Nouveau RDV",
+      "patientFallback": "Patient",
+      "close": "Fermer",
+      "leaveReview": "Laisser un avis",
+      "activate": "Activer",
+      "learnMore": "En savoir plus",
+      "seeAll": "Tout voir",
+      "seeMyDoctors": "Voir mes médecins",
+      "viewDetails": "Voir les détails",
+      "takeCareTitle": "Prenez soin de vous",
+      "noUpcomingDesc": "Aucun rendez-vous à venir. Trouvez un médecin près de chez vous en quelques clics.",
+      "nextRdv": "Prochain rendez-vous",
+      "agendaHere": "Votre agenda apparaîtra ici",
+      "completeProfile": "Complétez votre profil",
+      "percentDone": "{pct} % terminé",
+      "popularSpecialties": "Spécialités populaires",
+      "all": "Toutes",
+      "vitalSnapshot": "Vital snapshot",
+      "seeFullDossier": "Voir mon dossier complet",
+      "recentActivity": "Activité récente",
+      "noRecentActivity": "Aucune activité récente. Vos rendez-vous, ordonnances et avis apparaîtront ici.",
+      "vaccineReminder": "Rappel vaccinal",
+      "vaccineReminderSub": "Pensez à vérifier vos vaccins recommandés. Notre Coach IA peut vous guider.",
+      "askCoach": "Demander au Coach IA",
+      "reviewBanner": "Vous avez <strong>{count}</strong> {count, plural, one {consultation sans avis} other {consultations sans avis}}. Votre retour aide les autres patients !",
+      "researchBanner": "Aidez la recherche médicale tunisienne — Découvrez le programme d'anonymisation",
+      "pushBanner": "Activez les notifications pour recevoir des rappels de rendez-vous",
+      "cancelWindowError": "Annulation impossible : ce médecin n'accepte plus d'annulation moins de {hours}h avant le rendez-vous.",
+      "greeting": {
+        "morning": "Bonjour",
+        "afternoon": "Bon après-midi",
+        "evening": "Bonsoir",
+        "night": "Bonne nuit"
+      },
+      "upcomingCount": {
+        "zero": "Aucun rendez-vous prévu cette semaine",
+        "one": "1 rendez-vous à venir",
+        "other": "{count} rendez-vous à venir"
+      },
+      "timeline": {
+        "booking": "Rendez-vous confirmé avec {name}",
+        "cancelled": "Rendez-vous annulé avec {name}",
+        "completed": "Consultation terminée avec {name}"
+      },
+      "tour": {
+        "quickActions": {
+          "title": "Actions rapides",
+          "content": "Trouvez un médecin, consultez votre dossier médical, vos documents ou lancez un SOS en un clic."
+        },
+        "upcoming": {
+          "title": "Vos prochains rendez-vous",
+          "content": "Retrouvez vos consultations à venir avec le nom du médecin, la date et le type (cabinet, vidéo). Vous pouvez annuler depuis ici."
+        },
+        "recent": {
+          "title": "Activité récente",
+          "content": "Suivez l'historique de vos actions : réservations, annulations, consultations terminées."
+        }
+      },
+      "quick": {
+        "findDoctor": "Trouver un médecin",
+        "findDoctorSub": "Spécialité, nom, ville",
+        "sos": "Urgence SOS",
+        "sosSub": "Médecin disponible 24/7",
+        "teleconsult": "Téléconsultation",
+        "teleconsultSub": "Consulter en vidéo",
+        "myRdv": "Mes rendez-vous",
+        "myRdvSub": "Voir l'historique complet"
+      },
+      "steps": {
+        "personal": "Informations personnelles",
+        "phone": "Numéro de téléphone",
+        "cnam": "Carte CNAM",
+        "history": "Antécédents médicaux",
+        "complete": "Compléter",
+        "add": "Ajouter"
+      },
+      "spec": {
+        "generaliste": "Généraliste",
+        "dentiste": "Dentiste",
+        "dermatologue": "Dermatologue",
+        "pediatre": "Pédiatre",
+        "gynecologue": "Gynécologue",
+        "ophtalmologue": "Ophtalmologue",
+        "orl": "ORL",
+        "cardiologue": "Cardiologue"
+      },
+      "vital": {
+        "blood": "Groupe sanguin",
+        "allergies": "Allergies",
+        "height": "Taille",
+        "weight": "Poids"
+      },
+      "cancelConfirm": {
+        "title": "Annuler ce rendez-vous ?",
+        "body": "Cette action est irréversible. Vous devrez reprendre un nouveau rendez-vous.",
+        "no": "Non",
+        "yes": "Oui, annuler"
+      }
+    },
+    "mesNotifications": {
+      "toastAllRead": "Notifications marquées comme lues"
+    },
+    "coachIa": {
+      "title": "Coach IA",
+      "headerSub": "Pas un avis médical — consultez un médecin pour tout diagnostic.",
+      "emergency": "Urgence : 190 / 198",
+      "describeSymptoms": "Décrivez vos symptômes — je vous oriente vers la spécialité adaptée.",
+      "bookWith": "Prendre RDV avec un {specialty}",
+      "send": "Envoyer",
+      "inputPlaceholder": "Décrivez vos symptômes…",
+      "messageAria": "Message",
+      "footerLabel": "Coach IA — Pas un avis médical",
+      "readDisclaimer": "Lire le disclaimer",
+      "error": {
+        "401": "Session expirée — reconnectez-vous",
+        "403": "Service non disponible",
+        "429": "Limite atteinte (10 messages/24h ou cap de coût). Réessayez plus tard.",
+        "503": "Service indisponible — réessayez plus tard",
+        "default": "Erreur",
+        "network": "Erreur réseau — réessayez"
+      }
+    },
+    "favoris": {
+      "eyebrow": "FAVORIS",
+      "title": "Médecins favoris",
+      "countLabel": "{count, plural, =0 {Aucun médecin sauvegardé} one {# médecin sauvegardé} other {# médecins sauvegardés}}",
+      "findDoctor": "Trouver un médecin",
+      "searchPlaceholder": "Rechercher dans vos favoris…",
+      "clear": "Effacer",
+      "remove": "Retirer des favoris",
+      "viewProfile": "Voir profil",
+      "rdv": "RDV",
+      "emptyTitle": "Aucun favori pour l'instant",
+      "emptySub": "Touchez le cœur sur la fiche d'un médecin pour le retrouver ici.",
+      "noMatch": "Aucun favori ne correspond à « {query} ».",
+      "toastRemoved": "Retiré de vos favoris"
+    },
+    "avis": {
+      "thankYou": "Merci pour votre retour !",
+      "thankYouSub": "Votre retour aide les autres patients à trouver le bon médecin.",
+      "backHome": "Retour à l'accueil",
+      "title": "Votre avis compte",
+      "subtitle": "Comment s'est passée votre consultation ?",
+      "overallRating": "Note globale",
+      "detailedCriteria": "Critères détaillés (optionnel)",
+      "punctuality": "Ponctualité",
+      "communication": "Communication",
+      "cleanliness": "Propreté du cabinet",
+      "staff": "Personnel / Secrétariat",
+      "commentLabel": "Commentaire (optionnel)",
+      "commentPlaceholder": "Partagez votre expérience...",
+      "sending": "Envoi...",
+      "publish": "Publier mon avis",
+      "errorNoRating": "Veuillez sélectionner une note globale",
+      "errorGeneric": "Erreur"
     }
+  },
+  "footer": {
+    "tagline": "La prise de rendez-vous médicaux en Tunisie",
+    "platformTitle": "Plateforme",
+    "platform": {
+      "about": "À propos",
+      "blog": "Blog",
+      "faq": "FAQ",
+      "sos": "SOS Médecin"
+    },
+    "legalTitle": "Légal",
+    "legal": {
+      "terms": "Mentions légales",
+      "cgu": "CGU",
+      "privacy": "Politique de confidentialité"
+    },
+    "doctorSpaceTitle": "Espace médecin",
+    "doctorSpaceCopy": "Vous êtes médecin et souhaitez rejoindre Doktori ?",
+    "doctorSpaceCta": "Espace médecin",
+    "newsletterTitle": "Newsletter santé",
+    "newsletterCopy": "Recevez chaque mois nos meilleurs conseils santé et nouveautés Doktori."
   }
 }

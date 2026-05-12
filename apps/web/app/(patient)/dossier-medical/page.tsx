@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { ar, fr } from "date-fns/locale";
 import {
   Shield,
   Plus,
@@ -9,14 +11,6 @@ import {
   Activity,
   ChevronRight,
 } from "lucide-react";
-
-const RELATION_LABEL: Record<string, string> = {
-  child: "Enfant",
-  parent: "Parent",
-  spouse: "Conjoint(e)",
-  sibling: "Frère / sœur",
-  other: "Autre",
-};
 
 interface PatientProfile {
   id: string;
@@ -47,6 +41,18 @@ function bmi(h?: number | null, w?: number | null): string {
 
 export default function DossierMedicalPage() {
   const router = useRouter();
+  const t = useTranslations("patient.dossier");
+  const tc = useTranslations("patient.dossier.common");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
+  const dateFnsLocaleTag = locale === "ar" ? "ar-TN" : "fr-FR";
+  const RELATION_LABEL: Record<string, string> = {
+    child: tc("relation.child"),
+    parent: tc("relation.parent"),
+    spouse: tc("relation.spouse"),
+    sibling: tc("relation.sibling"),
+    other: tc("relation.other"),
+  };
   const [profile, setProfile] = useState<PatientProfile | null>(null);
   const [dependents, setDependents] = useState<Array<{ id: string; name: string; relation: string | null; dateOfBirth: string | null; gender: string | null }>>([]);
   const [allergies, setAllergies] = useState<Array<{ id: string; allergen: string; severity: "mild" | "moderate" | "severe" }>>([]);
@@ -122,14 +128,12 @@ export default function DossierMedicalPage() {
       {/* Page header */}
       <div className="flex items-end justify-between gap-4 mb-5">
         <div>
-          <div className="ds-eyebrow">Confidentiel · chiffré</div>
-          <h1 className="ds-page-title">Dossier médical</h1>
-          <p className="ds-page-sub">
-            Partagez sélectivement ces données avec un médecin lors d&apos;une consultation.
-          </p>
+          <div className="ds-eyebrow">{t("eyebrow")}</div>
+          <h1 className="ds-page-title">{t("title")}</h1>
+          <p className="ds-page-sub">{t("subtitle")}</p>
         </div>
         <button type="button" className="ds-btn ds-btn-soft">
-          <Shield className="w-4 h-4" /> Gérer le partage
+          <Shield className="w-4 h-4" /> {t("manageSharing")}
         </button>
       </div>
 
@@ -151,7 +155,7 @@ export default function DossierMedicalPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={profile.photoUrl}
-                alt={profile.name ?? "Patient"}
+                alt={profile.name ?? t("patientAlt")}
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -160,22 +164,22 @@ export default function DossierMedicalPage() {
           </div>
           <div>
             <div className="text-[22px] font-extrabold mb-0.5" style={{ fontFamily: "Manrope, sans-serif" }}>
-              {profile?.name ?? "Patient"}
+              {profile?.name ?? t("patientAlt")}
             </div>
             <div className="text-[13px] opacity-85">
-              {profile?.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString("fr-FR") : "Date de naissance non renseignée"}
-              {age !== null ? ` · ${age} ans` : ""}
+              {profile?.dateOfBirth ? new Date(profile.dateOfBirth).toLocaleDateString(dateFnsLocaleTag) : t("dobMissing")}
+              {age !== null ? ` · ${t("yearsOld", { age })}` : ""}
               {profile?.gender ? ` · ${profile.gender}` : ""}
             </div>
             <div className="flex gap-5 mt-3.5 flex-wrap">
-              <Fact label="Sang" value={profile?.bloodType ?? "—"} />
-              <Fact label="Taille" value={profile?.heightCm ? `${profile.heightCm} cm` : "—"} />
-              <Fact label="Poids" value={profile?.weightKg ? `${profile.weightKg} kg` : "—"} />
-              <Fact label="IMC" value={bmi(profile?.heightCm, profile?.weightKg)} />
+              <Fact label={t("fact.blood")} value={profile?.bloodType ?? "—"} />
+              <Fact label={t("fact.height")} value={profile?.heightCm ? `${profile.heightCm} cm` : "—"} />
+              <Fact label={t("fact.weight")} value={profile?.weightKg ? `${profile.weightKg} kg` : "—"} />
+              <Fact label={t("fact.bmi")} value={bmi(profile?.heightCm, profile?.weightKg)} />
             </div>
           </div>
           <div className="flex flex-col gap-2 items-end">
-            <div className="text-[11px] opacity-70 font-bold tracking-wider uppercase">ID Patient</div>
+            <div className="text-[11px] opacity-70 font-bold tracking-wider uppercase">{t("patientId")}</div>
             <div className="font-mono text-[13px] font-semibold">
               DKT-{(profile?.id ?? "").slice(0, 4).toUpperCase()}-{(profile?.id ?? "").slice(4, 8).toUpperCase()}
             </div>
@@ -184,7 +188,7 @@ export default function DossierMedicalPage() {
               className="ds-btn ds-btn-sm"
               style={{ background: "rgba(255,255,255,.18)", color: "#fff" }}
             >
-              <Download className="w-3.5 h-3.5" /> Exporter PDF
+              <Download className="w-3.5 h-3.5" /> {t("exportPdf")}
             </button>
           </div>
         </div>
@@ -194,10 +198,10 @@ export default function DossierMedicalPage() {
       <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr] gap-5">
         {/* LEFT col */}
         <div className="flex flex-col gap-5">
-          <Section title="Allergies" actionHref="/dossier-medical/allergies">
+          <Section title={t("sections.allergies")} actionHref="/dossier-medical/allergies" addLabel={tc("add")}>
             {allergies.length === 0 ? (
               <p className="text-[13px]" style={{ color: "var(--ink-500)" }}>
-                Aucune allergie déclarée.
+                {t("empty.allergies")}
               </p>
             ) : (
               <div className="flex gap-2 flex-wrap">
@@ -212,17 +216,16 @@ export default function DossierMedicalPage() {
             )}
           </Section>
 
-          <Section title="Antécédents" actionHref="/dossier-medical/analyses">
+          <Section title={t("sections.antecedents")} actionHref="/dossier-medical/analyses" addLabel={tc("add")}>
             <p className="text-[13px]" style={{ color: "var(--ink-500)" }}>
-              Aucun antécédent enregistré. Ajoutez vos analyses biologiques ou demandez à votre
-              médecin de compléter votre dossier.
+              {t("empty.antecedents")}
             </p>
           </Section>
 
-          <Section title="Vaccinations" actionLabel="Carnet complet" actionHref="/dossier-medical/vaccinations">
+          <Section title={t("sections.vaccinations")} actionLabel={t("fullBook")} actionHref="/dossier-medical/vaccinations" addLabel={tc("add")}>
             {vaccinations.length === 0 ? (
               <p className="text-[13px]" style={{ color: "var(--ink-500)" }}>
-                Aucun vaccin enregistré.
+                {t("empty.vaccinations")}
               </p>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -230,7 +233,7 @@ export default function DossierMedicalPage() {
                   <VaccineRow
                     key={v.id}
                     label={v.vaccineName}
-                    date={new Date(v.dateReceived).toLocaleDateString("fr-FR", {
+                    date={new Date(v.dateReceived).toLocaleDateString(dateFnsLocaleTag, {
                       month: "2-digit",
                       year: "numeric",
                     })}
@@ -245,10 +248,10 @@ export default function DossierMedicalPage() {
 
         {/* RIGHT col */}
         <div className="flex flex-col gap-5">
-          <Section title="Traitements en cours" actionHref="/dossier-medical/traitements">
+          <Section title={t("sections.treatments")} actionHref="/dossier-medical/traitements" addLabel={tc("add")}>
             {medications.filter((m) => !m.endedAt).length === 0 ? (
               <p className="text-[13px]" style={{ color: "var(--ink-500)" }}>
-                Aucun traitement en cours.
+                {t("empty.treatments")}
               </p>
             ) : (
               <div className="flex flex-col gap-2.5">
@@ -262,7 +265,7 @@ export default function DossierMedicalPage() {
                       dose={
                         [m.dosage, m.frequency].filter(Boolean).join(" · ") || "—"
                       }
-                      until="Long terme"
+                      until={t("longTerm")}
                       tone={i % 2 === 0 ? "sky" : "amber"}
                     />
                   ))}
@@ -270,10 +273,10 @@ export default function DossierMedicalPage() {
             )}
           </Section>
 
-          <Section title="Consultations récentes">
+          <Section title={t("sections.recentConsultations")} addLabel={tc("add")}>
             {consultations.length === 0 ? (
               <p className="text-[13px]" style={{ color: "var(--ink-500)" }}>
-                Aucune consultation enregistrée.
+                {t("empty.consultations")}
               </p>
             ) : (
               <div className="relative ps-5">
@@ -281,37 +284,37 @@ export default function DossierMedicalPage() {
                 {consultations.slice(0, 5).map((c) => (
                   <ConsultDot
                     key={c.id}
-                    when={new Date(c.createdAt).toLocaleDateString("fr-FR", {
+                    when={new Date(c.createdAt).toLocaleDateString(dateFnsLocaleTag, {
                       day: "numeric",
                       month: "long",
                     })}
                     who={c.doctorName}
-                    what={c.assessment?.slice(0, 60) || "Consultation"}
+                    what={c.assessment?.slice(0, 60) || t("consultation")}
                   />
                 ))}
               </div>
             )}
           </Section>
 
-          <Section title="Mes proches" actionHref="/ma-famille">
+          <Section title={t("sections.relatives")} actionHref="/ma-famille" addLabel={tc("add")}>
             {dependents.length === 0 ? (
               <div className="flex flex-col gap-2">
                 <FamilyRow
-                  name="Aucun proche enregistré"
-                  rel="Ajoutez vos proches pour gérer leurs rendez-vous"
+                  name={t("empty.relativesName")}
+                  rel={t("empty.relativesSub")}
                   hue={["#5BAEBB", "#0F7B8A"]}
                 />
               </div>
             ) : (
               <div className="flex flex-col gap-2">
                 {dependents.map((d) => {
-                  const relLabel = RELATION_LABEL[d.relation ?? ""] ?? "Proche";
+                  const relLabel = RELATION_LABEL[d.relation ?? ""] ?? tc("relation.default");
                   const age = ageFromDob(d.dateOfBirth);
                   return (
                     <FamilyRow
                       key={d.id}
                       name={d.name}
-                      rel={age !== null ? `${relLabel} · ${age} ans` : relLabel}
+                      rel={age !== null ? `${relLabel} · ${t("yearsOld", { age })}` : relLabel}
                       hue={["#5BAEBB", "#0F7B8A"]}
                     />
                   );
@@ -342,13 +345,16 @@ function Section({
   title,
   children,
   actionHref,
-  actionLabel = "Ajouter",
+  actionLabel,
+  addLabel,
 }: {
   title: string;
   children: React.ReactNode;
   actionHref?: string;
   actionLabel?: string;
+  addLabel: string;
 }) {
+  const isAdd = !actionLabel;
   return (
     <div className="ds-card-patient">
       <div className="flex items-center justify-between mb-4">
@@ -361,9 +367,9 @@ function Section({
             className="inline-flex items-center gap-1 text-[13px] font-bold"
             style={{ color: "var(--primary-600)" }}
           >
-            {actionLabel === "Ajouter" ? (
+            {isAdd ? (
               <>
-                <Plus className="w-3.5 h-3.5" /> Ajouter
+                <Plus className="w-3.5 h-3.5" /> {addLabel}
               </>
             ) : (
               <>

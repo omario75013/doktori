@@ -2,9 +2,10 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
 import { Users, Plus, Trash2, X, Pencil } from "lucide-react";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { ar, fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,16 +20,19 @@ interface Dependent {
   createdAt: string;
 }
 
-const RELATIONS = [
-  { value: "child", label: "Enfant" },
-  { value: "parent", label: "Parent" },
-  { value: "spouse", label: "Conjoint(e)" },
-  { value: "sibling", label: "Frère / sœur" },
-  { value: "other", label: "Autre" },
-];
-
 export default function MaFamillePage() {
   const router = useRouter();
+  const t = useTranslations("patient.maFamille");
+  const tc = useTranslations("patient.dossier.common");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
+  const RELATIONS = [
+    { value: "child", label: tc("relation.child") },
+    { value: "parent", label: tc("relation.parent") },
+    { value: "spouse", label: tc("relation.spouse") },
+    { value: "sibling", label: tc("relation.sibling") },
+    { value: "other", label: tc("relation.other") },
+  ];
   const [token, setToken] = useState<string | null>(null);
   const [items, setItems] = useState<Dependent[]>([]);
   const [loading, setLoading] = useState(true);
@@ -78,9 +82,9 @@ export default function MaFamillePage() {
     });
     if (res.ok) {
       setItems((p) => p.filter((d) => d.id !== id));
-      toast.success("Proche supprimé");
+      toast.success(t("toast.deleted"));
     } else {
-      toast.error("Erreur");
+      toast.error(t("toast.error"));
     }
     setConfirmDelete(null);
   }
@@ -90,15 +94,12 @@ export default function MaFamillePage() {
       {/* Page header */}
       <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <div className="ds-eyebrow">MA FAMILLE</div>
-          <h1 className="ds-page-title">Mes proches</h1>
-          <p className="ds-page-sub">
-            {items.length} proche{items.length > 1 ? "s" : ""} enregistré
-            {items.length > 1 ? "s" : ""}
-          </p>
+          <div className="ds-eyebrow">{t("eyebrow")}</div>
+          <h1 className="ds-page-title">{t("title")}</h1>
+          <p className="ds-page-sub">{t("countLabel", { count: items.length })}</p>
         </div>
         <button onClick={() => setEditing("new")} className="ds-btn ds-btn-primary">
-          <Plus className="h-4 w-4" /> Ajouter un proche
+          <Plus className="h-4 w-4" /> {t("addBtn")}
         </button>
       </div>
 
@@ -112,12 +113,12 @@ export default function MaFamillePage() {
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[color:var(--primary-50)] mb-4">
               <Users className="h-7 w-7 text-[color:var(--primary-600)]" />
             </div>
-            <p className="font-bold text-[color:var(--ink-900)] mb-1">Aucun proche enregistré</p>
+            <p className="font-bold text-[color:var(--ink-900)] mb-1">{t("empty.title")}</p>
             <p className="text-sm text-[color:var(--ink-500)] mb-4 max-w-xs mx-auto">
-              Ajoutez vos enfants, parents ou conjoint(e) pour prendre rendez-vous en leur nom.
+              {t("empty.subtitle")}
             </p>
             <button onClick={() => setEditing("new")} className="ds-btn ds-btn-primary">
-              <Plus className="h-4 w-4" /> Ajouter un proche
+              <Plus className="h-4 w-4" /> {t("addBtn")}
             </button>
           </div>
         ) : (
@@ -150,21 +151,21 @@ export default function MaFamillePage() {
                         </span>
                       )}
                       {d.dateOfBirth && (
-                        <span>· Né(e) le {format(new Date(d.dateOfBirth), "d MMM yyyy", { locale: fr })}</span>
+                        <span>· {t("bornOn", { date: format(new Date(d.dateOfBirth), "d MMM yyyy", { locale: dateLocale }) })}</span>
                       )}
-                      {d.gender && <span>· {d.gender === "M" ? "Homme" : "Femme"}</span>}
+                      {d.gender && <span>· {d.gender === "M" ? t("genderMale") : t("genderFemale")}</span>}
                     </div>
                   </div>
                   <button
                     onClick={() => setEditing(d)}
-                    aria-label="Modifier"
+                    aria-label={tc("edit")}
                     className="inline-flex items-center justify-center w-9 h-9 rounded-full text-[color:var(--ink-500)] hover:bg-[color:var(--surface-2)] hover:text-[color:var(--primary-600)] transition-colors"
                   >
                     <Pencil className="h-4 w-4" />
                   </button>
                   <button
                     onClick={() => setConfirmDelete(d)}
-                    aria-label="Supprimer"
+                    aria-label={tc("delete")}
                     className="inline-flex items-center justify-center w-9 h-9 rounded-full text-red-500 hover:bg-red-50 transition-colors"
                   >
                     <Trash2 className="h-4 w-4" />
@@ -185,6 +186,9 @@ export default function MaFamillePage() {
             setEditing(null);
             if (token) void load(token);
           }}
+          relations={RELATIONS}
+          t={t}
+          tc={tc}
         />
       )}
 
@@ -200,22 +204,22 @@ export default function MaFamillePage() {
             <div className="flex items-center justify-center w-12 h-12 rounded-xl bg-red-50 mx-auto mb-4">
               <Trash2 className="h-6 w-6 text-red-500" />
             </div>
-            <h3 className="text-lg font-bold text-foreground text-center">Supprimer {confirmDelete.name} ?</h3>
+            <h3 className="text-lg font-bold text-foreground text-center">{t("confirmDelete.title", { name: confirmDelete.name })}</h3>
             <p className="mt-2 text-sm text-foreground/60 text-center">
-              Cette action est irréversible. Les rendez-vous passés ne seront pas affectés.
+              {t("confirmDelete.body")}
             </p>
             <div className="mt-6 flex gap-3">
               <button
                 onClick={() => setConfirmDelete(null)}
                 className="flex-1 rounded-xl border border-border px-4 py-2.5 text-sm font-semibold text-foreground hover:bg-secondary transition-colors"
               >
-                Annuler
+                {tc("cancel")}
               </button>
               <button
                 onClick={() => deleteOne(confirmDelete.id)}
                 className="flex-1 rounded-xl bg-red-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-red-700 transition-colors"
               >
-                Supprimer
+                {tc("delete")}
               </button>
             </div>
           </div>
@@ -230,11 +234,17 @@ function DependentFormModal({
   existing,
   onClose,
   onSaved,
+  relations,
+  t,
+  tc,
 }: {
   token: string;
   existing: Dependent | null;
   onClose: () => void;
   onSaved: () => void;
+  relations: Array<{ value: string; label: string }>;
+  t: ReturnType<typeof useTranslations>;
+  tc: ReturnType<typeof useTranslations>;
 }) {
   const initialParts = existing?.name.split(/\s+/) ?? [];
   const [firstName, setFirstName] = useState(initialParts[0] ?? "");
@@ -263,10 +273,10 @@ function DependentFormModal({
     });
     setSaving(false);
     if (res.ok) {
-      toast.success(existing ? "Proche mis à jour" : "Proche ajouté");
+      toast.success(existing ? t("toast.updated") : t("toast.added"));
       onSaved();
     } else {
-      toast.error("Erreur, vérifiez les champs");
+      toast.error(t("toast.formError"));
     }
   }
 
@@ -277,29 +287,29 @@ function DependentFormModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-5 border-b border-border">
-          <h3 className="font-bold text-foreground">{existing ? "Modifier" : "Ajouter un proche"}</h3>
-          <button onClick={onClose} aria-label="Fermer" className="p-1 rounded-full hover:bg-secondary">
+          <h3 className="font-bold text-foreground">{existing ? tc("edit") : t("addBtn")}</h3>
+          <button onClick={onClose} aria-label={tc("close")} className="p-1 rounded-full hover:bg-secondary">
             <X className="h-4 w-4" />
           </button>
         </div>
         <form onSubmit={submit} className="p-5 space-y-4">
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="firstName" className="text-xs font-semibold">Prénom *</Label>
+              <Label htmlFor="firstName" className="text-xs font-semibold">{t("form.firstName")} *</Label>
               <Input id="firstName" value={firstName} onChange={(e) => setFirstName(e.target.value)} required />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="lastName" className="text-xs font-semibold">Nom *</Label>
+              <Label htmlFor="lastName" className="text-xs font-semibold">{t("form.lastName")} *</Label>
               <Input id="lastName" value={lastName} onChange={(e) => setLastName(e.target.value)} required />
             </div>
           </div>
           <div className="space-y-1.5">
-            <Label htmlFor="dob" className="text-xs font-semibold">Date de naissance</Label>
+            <Label htmlFor="dob" className="text-xs font-semibold">{t("form.dob")}</Label>
             <Input id="dob" type="date" value={dob ?? ""} onChange={(e) => setDob(e.target.value)} />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-1.5">
-              <Label htmlFor="gender" className="text-xs font-semibold">Sexe</Label>
+              <Label htmlFor="gender" className="text-xs font-semibold">{t("form.gender")}</Label>
               <select
                 id="gender"
                 value={gender ?? ""}
@@ -307,12 +317,12 @@ function DependentFormModal({
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option value="">—</option>
-                <option value="M">Homme</option>
-                <option value="F">Femme</option>
+                <option value="M">{t("genderMale")}</option>
+                <option value="F">{t("genderFemale")}</option>
               </select>
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="relationship" className="text-xs font-semibold">Relation</Label>
+              <Label htmlFor="relationship" className="text-xs font-semibold">{t("form.relation")}</Label>
               <select
                 id="relationship"
                 value={relationship ?? ""}
@@ -320,14 +330,14 @@ function DependentFormModal({
                 className="flex h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
               >
                 <option value="">—</option>
-                {RELATIONS.map((r) => (
+                {relations.map((r) => (
                   <option key={r.value} value={r.value}>{r.label}</option>
                 ))}
               </select>
             </div>
           </div>
           <Button type="submit" disabled={saving} className="w-full h-11 rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold">
-            {saving ? "Enregistrement..." : existing ? "Mettre à jour" : "Ajouter"}
+            {saving ? t("saving") : existing ? t("update") : tc("add")}
           </Button>
         </form>
       </div>

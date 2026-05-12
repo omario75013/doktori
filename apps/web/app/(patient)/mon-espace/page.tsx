@@ -2,27 +2,20 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { useLocale, useTranslations } from "next-intl";
 import { format, isPast, differenceInMinutes } from "date-fns";
-import { fr } from "date-fns/locale";
-import { SPECIALTIES } from "@doktori/shared";
+import { ar, fr } from "date-fns/locale";
 import { GuidedTour } from "@/components/guided-tour";
-import { PatientMediaSection } from "@/components/patient-media-section";
 import { motion } from "framer-motion";
 import {
   Search,
   FileText,
-  AlertTriangle,
   Calendar,
-  User,
-  LogOut,
   ChevronRight,
   CheckCircle,
   XCircle,
   ClipboardList,
   Star,
-  Clock,
   Video,
   Siren,
   Bell,
@@ -80,11 +73,7 @@ function parsePatientFromToken(token: string): PatientInfo | null {
   }
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  cabinet: "Cabinet",
-  domicile: "Domicile",
-  teleconsultation: "Téléconsultation",
-};
+// TYPE_LABELS moved inside component to use translations
 
 const TYPE_COLORS: Record<string, string> = {
   cabinet: "bg-blue-50 text-blue-700",
@@ -113,7 +102,7 @@ const TIMELINE_BG: Record<TimelineItem["kind"], string> = {
   review: "bg-amber-50",
 };
 
-function buildTimeline(appointments: Appointment[]): TimelineItem[] {
+function buildTimeline(appointments: Appointment[], t: (k: string, v?: Record<string, string | number | Date>) => string): TimelineItem[] {
   const items: TimelineItem[] = [];
 
   for (const a of appointments) {
@@ -125,7 +114,7 @@ function buildTimeline(appointments: Appointment[]): TimelineItem[] {
         kind: "cancelled",
         doctorName: a.doctorName,
         date: startsAt,
-        label: `Rendez-vous annulé avec ${a.doctorName}`,
+        label: t("timeline.cancelled", { name: a.doctorName }),
       });
     } else if (a.status === "completed" || (a.status !== "cancelled" && isPast(startsAt))) {
       items.push({
@@ -133,7 +122,7 @@ function buildTimeline(appointments: Appointment[]): TimelineItem[] {
         kind: "completed",
         doctorName: a.doctorName,
         date: startsAt,
-        label: `Consultation terminée avec ${a.doctorName}`,
+        label: t("timeline.completed", { name: a.doctorName }),
       });
     } else {
       items.push({
@@ -141,7 +130,7 @@ function buildTimeline(appointments: Appointment[]): TimelineItem[] {
         kind: "booking",
         doctorName: a.doctorName,
         date: startsAt,
-        label: `Rendez-vous confirmé avec ${a.doctorName}`,
+        label: t("timeline.booking", { name: a.doctorName }),
       });
     }
   }
@@ -165,43 +154,10 @@ const fadeUp = {
   visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } } as const,
 };
 
-const QUICK_ACTIONS = [
-  {
-    href: "/recherche",
-    icon: <Search className="w-5 h-5 text-primary" />,
-    iconBg: "bg-primary/10",
-    title: "Trouver un médecin",
-    desc: "Rechercher par spécialité",
-    hoverBorder: "hover:border-primary/40",
-  },
-  {
-    href: "/sos",
-    icon: <Siren className="w-5 h-5 text-red-500" />,
-    iconBg: "bg-red-50",
-    title: "SOS Médecin",
-    desc: "Urgence médicale rapide",
-    hoverBorder: "hover:border-red-300",
-  },
-  {
-    href: "/mes-rdv",
-    icon: <Calendar className="w-5 h-5 text-primary" />,
-    iconBg: "bg-primary/10",
-    title: "Mes rendez-vous",
-    desc: "Consulter l'historique",
-    hoverBorder: "hover:border-primary/40",
-  },
-  {
-    href: "/dossier-medical",
-    icon: <FileText className="w-5 h-5 text-primary" />,
-    iconBg: "bg-primary/10",
-    title: "Mon dossier",
-    desc: "Données & documents médicaux",
-    hoverBorder: "hover:border-primary/40",
-  },
-];
-
 export default function PatientDashboardPage() {
-  const t = useTranslations("monEspace");
+  const t = useTranslations("patient.monEspace");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [patient, setPatient] = useState<PatientInfo | null>(null);
@@ -319,9 +275,7 @@ export default function PatientDashboardPage() {
       try {
         const data = await res.json();
         if (data?.error === "CANCEL_WINDOW_TOO_CLOSE" && typeof data.windowHours === "number") {
-          alert(
-            `Annulation impossible : ce médecin n'accepte plus d'annulation moins de ${data.windowHours}h avant le rendez-vous.`,
-          );
+          alert(t("cancelWindowError", { hours: data.windowHours }));
         } else if (typeof data?.error === "string") {
           alert(data.error);
         }
@@ -374,31 +328,31 @@ export default function PatientDashboardPage() {
   }
 
   const nextAppointment = upcoming[0] ?? null;
-  const patientName = patient?.name ?? patient?.phone ?? "Patient";
-  const timeline = buildTimeline(appointments);
+  const patientName = patient?.name ?? patient?.phone ?? t("patientFallback");
+  const timeline = buildTimeline(appointments, t);
 
   // Profile completion — derived from real patient fields.
   // Each step is 25% of the bar.
   const steps = [
     {
-      label: "Informations personnelles",
+      label: t("steps.personal"),
       done: !!(patient?.name && patient?.dateOfBirth && patient?.gender),
-      cta: "Compléter",
+      cta: t("steps.complete"),
     },
     {
-      label: "Numéro de téléphone",
+      label: t("steps.phone"),
       done: !!patient?.phone,
-      cta: "Compléter",
+      cta: t("steps.complete"),
     },
     {
-      label: "Carte CNAM",
+      label: t("steps.cnam"),
       done: !!patient?.cnamNumber,
-      cta: "Ajouter",
+      cta: t("steps.add"),
     },
     {
-      label: "Antécédents médicaux",
+      label: t("steps.history"),
       done: !!(patient?.bloodType || patient?.heightCm || patient?.weightKg),
-      cta: "Compléter",
+      cta: t("steps.complete"),
     },
   ];
   const completionPct = Math.round(
@@ -419,12 +373,12 @@ export default function PatientDashboardPage() {
   const hour = new Date().getHours();
   const greeting =
     hour >= 5 && hour < 12
-      ? "Bonjour"
+      ? t("greeting.morning")
       : hour >= 12 && hour < 18
-      ? "Bon après-midi"
+      ? t("greeting.afternoon")
       : hour >= 18 && hour < 22
-      ? "Bonsoir"
-      : "Bonne nuit";
+      ? t("greeting.evening")
+      : t("greeting.night");
 
   return (
     <div>
@@ -433,20 +387,20 @@ export default function PatientDashboardPage() {
         steps={[
           {
             target: "[data-tour='quick-actions']",
-            title: "Actions rapides",
-            content: "Trouvez un médecin, consultez votre dossier médical, vos documents ou lancez un SOS en un clic.",
+            title: t("tour.quickActions.title"),
+            content: t("tour.quickActions.content"),
             position: "bottom",
           },
           {
             target: "[data-tour='upcoming-rdv']",
-            title: "Vos prochains rendez-vous",
-            content: "Retrouvez vos consultations à venir avec le nom du médecin, la date et le type (cabinet, vidéo). Vous pouvez annuler depuis ici.",
+            title: t("tour.upcoming.title"),
+            content: t("tour.upcoming.content"),
             position: "bottom",
           },
           {
             target: "[data-tour='recent-activity']",
-            title: "Activité récente",
-            content: "Suivez l'historique de vos actions : réservations, annulations, consultations terminées.",
+            title: t("tour.recent.title"),
+            content: t("tour.recent.content"),
             position: "top",
           },
         ]}
@@ -460,30 +414,30 @@ export default function PatientDashboardPage() {
           className="flex items-end justify-between gap-4 mb-6"
         >
           <div className="min-w-0">
-            <div className="ds-eyebrow">Mon espace</div>
+            <div className="ds-eyebrow">{t("eyebrow")}</div>
             <h1 className="ds-page-title">
               {greeting} {patientName.split(" ")[0] ?? patientName},{" "}
               <span style={{ color: "var(--primary-500)" }}>
-                comment vous sentez-vous&nbsp;?
+                {t("howAreYou")}
               </span>
             </h1>
             <p className="ds-page-sub">
-              {format(new Date(), "EEEE d MMMM", { locale: fr })} ·{" "}
+              {format(new Date(), "EEEE d MMMM", { locale: dateLocale })} ·{" "}
               {upcoming.length === 0
-                ? "Aucun rendez-vous prévu cette semaine"
+                ? t("upcomingCount.zero")
                 : upcoming.length === 1
-                ? "1 rendez-vous à venir"
-                : `${upcoming.length} rendez-vous à venir`}
+                ? t("upcomingCount.one")
+                : t("upcomingCount.other", { count: upcoming.length })}
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <a href="/faq" className="ds-btn ds-btn-ghost ds-btn-sm">
               <ClipboardList className="w-4 h-4" />
-              Aide
+              {t("help")}
             </a>
             <a href="/recherche" className="ds-btn ds-btn-primary ds-btn-sm">
               <Calendar className="w-4 h-4" />
-              Nouveau RDV
+              {t("newRdv")}
             </a>
           </div>
         </motion.div>
@@ -498,10 +452,10 @@ export default function PatientDashboardPage() {
           >
             <Star className="w-5 h-5 text-amber-500 shrink-0" />
             <p className="flex-1 text-sm text-amber-800 dark:text-amber-200">
-              Vous avez{" "}
-              <span className="font-bold">{unreviewedCompleted.length}</span>{" "}
-              consultation{unreviewedCompleted.length > 1 ? "s" : ""} sans avis.
-              Votre retour aide les autres patients&nbsp;!
+              {t.rich("reviewBanner", {
+                count: unreviewedCompleted.length,
+                strong: (chunks) => <span className="font-bold">{chunks}</span>,
+              })}
             </p>
             <div className="flex items-center gap-2 shrink-0">
               {firstUnreviewed && (
@@ -509,12 +463,12 @@ export default function PatientDashboardPage() {
                   href={`/avis/${firstUnreviewed.id}`}
                   className="text-xs font-bold text-white bg-[#0891B2] hover:bg-[#0e7490] rounded-xl px-3 py-1.5 transition-colors"
                 >
-                  Laisser un avis
+                  {t("leaveReview")}
                 </a>
               )}
               <button
                 onClick={dismissReviewBanner}
-                aria-label="Fermer"
+                aria-label={t("close")}
                 className="text-amber-400 hover:text-amber-600 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -533,19 +487,18 @@ export default function PatientDashboardPage() {
           >
             <Microscope className="w-5 h-5 text-emerald-700 shrink-0" />
             <p className="flex-1 text-sm text-emerald-800 dark:text-emerald-200">
-              Aidez la recherche médicale tunisienne — Découvrez le programme
-              d'anonymisation
+              {t("researchBanner")}
             </p>
             <div className="flex items-center gap-2 shrink-0">
               <a
                 href="/parametres/recherche-medicale"
                 className="text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 rounded-xl px-3 py-1.5 transition-colors"
               >
-                En savoir plus
+                {t("learnMore")}
               </a>
               <button
                 onClick={dismissResearchBanner}
-                aria-label="Fermer"
+                aria-label={t("close")}
                 className="text-emerald-500 hover:text-emerald-700 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -564,18 +517,18 @@ export default function PatientDashboardPage() {
           >
             <Bell className="w-5 h-5 text-[#0891B2] shrink-0" />
             <p className="flex-1 text-sm text-cyan-800 dark:text-cyan-200">
-              Activez les notifications pour recevoir des rappels de rendez-vous
+              {t("pushBanner")}
             </p>
             <div className="flex items-center gap-2 shrink-0">
               <a
                 href="/parametres/notifications"
                 className="text-xs font-bold text-white bg-[#0891B2] hover:bg-[#0e7490] rounded-xl px-3 py-1.5 transition-colors"
               >
-                Activer
+                {t("activate")}
               </a>
               <button
                 onClick={dismissPushBanner}
-                aria-label="Fermer"
+                aria-label={t("close")}
                 className="text-cyan-400 hover:text-cyan-600 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -597,9 +550,9 @@ export default function PatientDashboardPage() {
               <Search className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="font-bold text-[14.5px] mb-0.5">Trouver un médecin</div>
+              <div className="font-bold text-[14.5px] mb-0.5">{t("quick.findDoctor")}</div>
               <div className="text-[12.5px]" style={{ color: "rgba(255,255,255,.85)" }}>
-                Spécialité, nom, ville
+                {t("quick.findDoctorSub")}
               </div>
             </div>
           </a>
@@ -608,9 +561,9 @@ export default function PatientDashboardPage() {
               <Siren className="w-5 h-5 text-white" />
             </div>
             <div>
-              <div className="font-bold text-[14.5px] mb-0.5">Urgence SOS</div>
+              <div className="font-bold text-[14.5px] mb-0.5">{t("quick.sos")}</div>
               <div className="text-[12.5px]" style={{ color: "rgba(255,255,255,.9)" }}>
-                Médecin disponible 24/7
+                {t("quick.sosSub")}
               </div>
             </div>
           </a>
@@ -620,10 +573,10 @@ export default function PatientDashboardPage() {
             </div>
             <div>
               <div className="font-bold text-[14.5px] mb-0.5" style={{ color: "var(--ink-900)" }}>
-                Téléconsultation
+                {t("quick.teleconsult")}
               </div>
               <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
-                Consulter en vidéo
+                {t("quick.teleconsultSub")}
               </div>
             </div>
           </a>
@@ -633,10 +586,10 @@ export default function PatientDashboardPage() {
             </div>
             <div>
               <div className="font-bold text-[14.5px] mb-0.5" style={{ color: "var(--ink-900)" }}>
-                Mes rendez-vous
+                {t("quick.myRdv")}
               </div>
               <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
-                Voir l&apos;historique complet
+                {t("quick.myRdvSub")}
               </div>
             </div>
           </a>
@@ -654,10 +607,10 @@ export default function PatientDashboardPage() {
             <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="font-bold text-[16px]" style={{ color: "var(--ink-900)" }}>
-                  Prochain rendez-vous
+                  {t("nextRdv")}
                 </div>
                 <div className="text-[13px] mt-0.5" style={{ color: "var(--ink-500)" }}>
-                  Votre agenda apparaîtra ici
+                  {t("agendaHere")}
                 </div>
               </div>
               <a
@@ -665,7 +618,7 @@ export default function PatientDashboardPage() {
                 className="inline-flex items-center gap-1 text-[13px] font-bold"
                 style={{ color: "var(--primary-600)" }}
               >
-                Tout voir <ChevronRight className="w-3.5 h-3.5" />
+                {t("seeAll")} <ChevronRight className="w-3.5 h-3.5" />
               </a>
             </div>
             <div
@@ -694,26 +647,26 @@ export default function PatientDashboardPage() {
                       {nextAppointment.doctorName}
                     </div>
                     <div className="text-[13.5px] mb-3" style={{ color: "var(--ink-500)" }}>
-                      {format(new Date(nextAppointment.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: fr })}
+                      {format(new Date(nextAppointment.startsAt), "EEEE d MMMM 'à' HH:mm", { locale: dateLocale })}
                     </div>
                     <a href="/mes-rdv" className="ds-btn ds-btn-primary ds-btn-sm">
-                      Voir les détails
+                      {t("viewDetails")}
                     </a>
                   </>
                 ) : (
                   <>
                     <div className="font-bold text-[17px] mb-1" style={{ color: "var(--ink-900)" }}>
-                      Prenez soin de vous
+                      {t("takeCareTitle")}
                     </div>
                     <div className="text-[13.5px] mb-3 leading-relaxed" style={{ color: "var(--ink-500)" }}>
-                      Aucun rendez-vous à venir. Trouvez un médecin près de chez vous en quelques clics.
+                      {t("noUpcomingDesc")}
                     </div>
                     <div className="flex gap-2 flex-wrap">
                       <a href="/recherche" className="ds-btn ds-btn-primary ds-btn-sm">
-                        <Search className="w-4 h-4" /> Trouver un médecin
+                        <Search className="w-4 h-4" /> {t("quick.findDoctor")}
                       </a>
                       <a href="/mes-rdv" className="ds-btn ds-btn-ghost ds-btn-sm">
-                        Voir mes médecins
+                        {t("seeMyDoctors")}
                       </a>
                     </div>
                   </>
@@ -736,10 +689,10 @@ export default function PatientDashboardPage() {
               </div>
               <div className="flex-1">
                 <div className="font-bold text-[14px]" style={{ color: "var(--ink-900)" }}>
-                  Complétez votre profil
+                  {t("completeProfile")}
                 </div>
                 <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
-                  {completionPct} % terminé
+                  {t("percentDone", { pct: completionPct })}
                 </div>
               </div>
               <div
@@ -810,26 +763,26 @@ export default function PatientDashboardPage() {
           <div className="ds-card-patient">
             <div className="flex items-center justify-between mb-4">
               <div className="font-bold text-[16px]" style={{ color: "var(--ink-900)" }}>
-                Spécialités populaires
+                {t("popularSpecialties")}
               </div>
               <a
                 href="/recherche"
                 className="inline-flex items-center gap-1 text-[13px] font-bold"
                 style={{ color: "var(--primary-600)" }}
               >
-                Toutes <ChevronRight className="w-3.5 h-3.5" />
+                {t("all")} <ChevronRight className="w-3.5 h-3.5" />
               </a>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
               {[
-                { l: "Généraliste", c: "primary" },
-                { l: "Dentiste", c: "sky" },
-                { l: "Dermatologue", c: "coral" },
-                { l: "Pédiatre", c: "amber" },
-                { l: "Gynécologue", c: "rose" },
-                { l: "Ophtalmologue", c: "sky" },
-                { l: "ORL", c: "primary" },
-                { l: "Cardiologue", c: "coral" },
+                { l: t("spec.generaliste"), c: "primary" },
+                { l: t("spec.dentiste"), c: "sky" },
+                { l: t("spec.dermatologue"), c: "coral" },
+                { l: t("spec.pediatre"), c: "amber" },
+                { l: t("spec.gynecologue"), c: "rose" },
+                { l: t("spec.ophtalmologue"), c: "sky" },
+                { l: t("spec.orl"), c: "primary" },
+                { l: t("spec.cardiologue"), c: "coral" },
               ].map((s) => (
                 <a
                   key={s.l}
@@ -854,14 +807,14 @@ export default function PatientDashboardPage() {
           {/* RIGHT — Vital snapshot */}
           <div className="ds-card-patient">
             <div className="font-bold text-[16px] mb-4" style={{ color: "var(--ink-900)" }}>
-              Vital snapshot
+              {t("vitalSnapshot")}
             </div>
             <div className="grid grid-cols-2 gap-2.5">
               {[
-                { label: "Groupe sanguin", value: "—", tone: "rose" },
-                { label: "Allergies", value: "—", tone: "amber" },
-                { label: "Taille", value: "—", tone: "primary" },
-                { label: "Poids", value: "—", tone: "sky" },
+                { label: t("vital.blood"), value: "—", tone: "rose" },
+                { label: t("vital.allergies"), value: "—", tone: "amber" },
+                { label: t("vital.height"), value: "—", tone: "primary" },
+                { label: t("vital.weight"), value: "—", tone: "sky" },
               ].map((s) => (
                 <div
                   key={s.label}
@@ -881,7 +834,7 @@ export default function PatientDashboardPage() {
               ))}
             </div>
             <a href="/dossier-medical" className="ds-btn ds-btn-soft ds-btn-sm w-full mt-3">
-              Voir mon dossier complet <ChevronRight className="w-3.5 h-3.5" />
+              {t("seeFullDossier")} <ChevronRight className="w-3.5 h-3.5" />
             </a>
           </div>
         </motion.section>
@@ -896,7 +849,7 @@ export default function PatientDashboardPage() {
           {/* LEFT — Activité récente */}
           <div className="ds-card-patient">
             <div className="font-bold text-[16px] mb-4" style={{ color: "var(--ink-900)" }}>
-              Activité récente
+              {t("recentActivity")}
             </div>
             <div className="flex flex-col gap-0">
               {timeline.length > 0 ? (
@@ -931,14 +884,14 @@ export default function PatientDashboardPage() {
                         </div>
                       </div>
                       <div className="text-[12px] font-semibold shrink-0" style={{ color: "var(--ink-400)" }}>
-                        {format(it.date, "d MMM", { locale: fr })}
+                        {format(it.date, "d MMM", { locale: dateLocale })}
                       </div>
                     </div>
                   );
                 })
               ) : (
                 <div className="py-3 text-[13px]" style={{ color: "var(--ink-500)" }}>
-                  Aucune activité récente. Vos rendez-vous, ordonnances et avis apparaîtront ici.
+                  {t("noRecentActivity")}
                 </div>
               )}
             </div>
@@ -958,13 +911,13 @@ export default function PatientDashboardPage() {
               </div>
               <div>
                 <div className="font-bold text-[14px] mb-1" style={{ color: "#7A4126" }}>
-                  Rappel vaccinal
+                  {t("vaccineReminder")}
                 </div>
                 <div className="text-[13px] leading-relaxed" style={{ color: "#8B5639" }}>
-                  Pensez à vérifier vos vaccins recommandés. Notre Coach IA peut vous guider.
+                  {t("vaccineReminderSub")}
                 </div>
                 <a href="/coach-ia" className="ds-btn ds-btn-ghost ds-btn-sm mt-2.5">
-                  Demander au Coach IA
+                  {t("askCoach")}
                 </a>
               </div>
             </div>
@@ -976,24 +929,24 @@ export default function PatientDashboardPage() {
         {cancelConfirm && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div className="mx-4 w-full max-w-sm rounded-2xl bg-white dark:bg-gray-800 p-6 shadow-xl border border-border dark:border-gray-700">
-              <h3 dir="ltr" className="text-lg font-bold text-foreground">
-                Annuler ce rendez-vous ?
+              <h3 className="text-lg font-bold text-foreground">
+                {t("cancelConfirm.title")}
               </h3>
               <p className="mt-2 text-sm text-gray-500 dark:text-gray-400">
-                Cette action est irréversible. Vous devrez reprendre un nouveau rendez-vous.
+                {t("cancelConfirm.body")}
               </p>
               <div className="mt-6 flex gap-3 justify-end">
                 <button
                   onClick={() => setCancelConfirm(null)}
                   className="rounded-xl border border-border dark:border-gray-600 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                 >
-                  Non
+                  {t("cancelConfirm.no")}
                 </button>
                 <button
                   onClick={() => cancelAppointment(cancelConfirm)}
                   className="rounded-xl bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700"
                 >
-                  Oui, annuler
+                  {t("cancelConfirm.yes")}
                 </button>
               </div>
             </div>

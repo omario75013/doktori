@@ -9,7 +9,7 @@ import { StarRating } from "@/components/star-rating";
 import { Star, CheckCircle } from "lucide-react";
 
 export default function SubmitReviewPage({ params }: { params: Promise<{ appointmentId: string }> }) {
-  const t = useTranslations("avis");
+  const t = useTranslations("patient.avis");
   const { appointmentId } = use(params);
   const router = useRouter();
   const [rating, setRating] = useState(0);
@@ -25,7 +25,7 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (rating === 0) {
-      setError("Veuillez sélectionner une note globale");
+      setError(t("errorNoRating"));
       return;
     }
     setLoading(true);
@@ -46,7 +46,7 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
     setLoading(false);
     if (!res.ok) {
       const err = await res.json();
-      setError(err.error || "Erreur");
+      setError(err.error || t("errorGeneric"));
       return;
     }
     setSuccess(true);
@@ -60,12 +60,12 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
             <CheckCircle className="w-8 h-8 text-primary" strokeWidth={2} />
           </div>
           <h1 className="text-2xl font-bold text-foreground mb-2">{t("thankYou")}</h1>
-          <p className="text-gray-500 mb-6">Votre retour aide les autres patients à trouver le bon médecin.</p>
+          <p className="text-gray-500 mb-6">{t("thankYouSub")}</p>
           <Button
             onClick={() => router.push("/")}
             className="bg-primary hover:bg-doktori-teal-dark h-12 rounded-xl w-full text-white"
           >
-            Retour à l'accueil
+            {t("backHome")}
           </Button>
         </div>
       </div>
@@ -80,47 +80,47 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
           <div className="w-14 h-14 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
             <Star className="w-7 h-7 text-primary" strokeWidth={2} />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">Votre avis compte</h1>
-          <p className="text-gray-500 mt-1">Comment s'est passée votre consultation ?</p>
+          <h1 className="text-2xl font-bold text-foreground">{t("title")}</h1>
+          <p className="text-gray-500 mt-1">{t("subtitle")}</p>
         </div>
 
         <form onSubmit={handleSubmit} className="rounded-2xl border border-border bg-white p-6 shadow-sm space-y-6">
           <div>
-            <p className="text-sm font-medium text-foreground mb-3">Note globale</p>
+            <p className="text-sm font-medium text-foreground mb-3">{t("overallRating")}</p>
             <StarRating value={rating} onChange={setRating} size="lg" />
           </div>
 
           <div className="space-y-4 rounded-xl border border-border bg-secondary/40 p-4">
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-              Critères détaillés (optionnel)
+              {t("detailedCriteria")}
             </p>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-foreground">Ponctualité</span>
+              <span className="text-sm text-foreground">{t("punctuality")}</span>
               <StarRating value={punctuality} onChange={setPunctuality} size="md" />
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-foreground">Communication</span>
+              <span className="text-sm text-foreground">{t("communication")}</span>
               <StarRating value={communication} onChange={setCommunication} size="md" />
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-foreground">Propreté du cabinet</span>
+              <span className="text-sm text-foreground">{t("cleanliness")}</span>
               <StarRating value={cleanliness} onChange={setCleanliness} size="md" />
             </div>
             <div className="flex items-center justify-between gap-4">
-              <span className="text-sm text-foreground">Personnel / Secrétariat</span>
+              <span className="text-sm text-foreground">{t("staff")}</span>
               <StarRating value={staff} onChange={setStaff} size="md" />
             </div>
           </div>
 
           <div>
             <label htmlFor="comment" className="block text-sm font-medium text-foreground mb-2">
-              Commentaire (optionnel)
+              {t("commentLabel")}
             </label>
             <Textarea
               id="comment"
               value={comment}
               onChange={(e) => setComment(e.target.value)}
-              placeholder="Partagez votre expérience..."
+              placeholder={t("commentPlaceholder")}
               rows={4}
               className="rounded-xl border-border focus:border-primary focus:ring-primary/20 resize-none"
             />
@@ -135,7 +135,7 @@ export default function SubmitReviewPage({ params }: { params: Promise<{ appoint
             className="w-full bg-primary hover:bg-doktori-teal-dark h-12 rounded-xl text-white font-medium"
             disabled={loading}
           >
-            {loading ? "Envoi..." : "Publier mon avis"}
+            {loading ? t("sending") : t("publish")}
           </Button>
         </form>
       </div>

@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { ar, fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +23,12 @@ interface Vaccination {
 
 export default function VaccinationsPage() {
   const router = useRouter();
+  const t = useTranslations("patient.dossier.vaccinations");
+  const tc = useTranslations("patient.dossier.common");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
+  void dateLocale;
+  const dateFnsLocaleTag = locale === "ar" ? "ar-TN" : "fr-FR";
   const [token, setToken] = useState<string | null>(null);
   const [items, setItems] = useState<Vaccination[]>([]);
   const [loading, setLoading] = useState(true);
@@ -86,7 +94,7 @@ export default function VaccinationsPage() {
     e.preventDefault();
     if (!token) return;
     if (!vaccineName.trim() || !dateReceived) {
-      toast.error("Nom du vaccin et date requis");
+      toast.error(t("toast.nameAndDateRequired"));
       return;
     }
     setSaving(true);
@@ -106,11 +114,11 @@ export default function VaccinationsPage() {
         body: JSON.stringify(body),
       });
       if (res.ok) {
-        toast.success(editing ? "Vaccin modifié" : "Vaccin ajouté");
+        toast.success(editing ? t("toast.updated") : t("toast.added"));
         setModalOpen(false);
         await load(token);
       } else {
-        toast.error("Erreur lors de l'enregistrement");
+        toast.error(t("toast.saveError"));
       }
     } finally {
       setSaving(false);
@@ -119,16 +127,16 @@ export default function VaccinationsPage() {
 
   async function handleDelete(id: string) {
     if (!token) return;
-    if (!confirm("Supprimer ce vaccin ?")) return;
+    if (!confirm(t("confirm.delete"))) return;
     const res = await fetch(`/api/me/vaccinations/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok || res.status === 204) {
-      toast.success("Vaccin supprimé");
+      toast.success(t("toast.deleted"));
       await load(token);
     } else {
-      toast.error("Erreur lors de la suppression");
+      toast.error(t("toast.deleteError"));
     }
   }
 
@@ -147,19 +155,16 @@ export default function VaccinationsPage() {
           href="/dossier-medical"
           className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--primary-600)] mb-2"
         >
-          <ChevronLeft className="h-3.5 w-3.5" /> Retour au dossier
+          <ChevronLeft className="h-3.5 w-3.5" /> {tc("backToDossier")}
         </a>
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <div className="ds-eyebrow">DOSSIER MÉDICAL</div>
-            <h1 className="ds-page-title">Carnet de vaccination</h1>
-            <p className="ds-page-sub">
-              {items.length} vaccin{items.length !== 1 ? "s" : ""} enregistré
-              {items.length !== 1 ? "s" : ""}
-            </p>
+            <div className="ds-eyebrow">{tc("eyebrow")}</div>
+            <h1 className="ds-page-title">{t("title")}</h1>
+            <p className="ds-page-sub">{t("countLabel", { count: items.length })}</p>
           </div>
           <button onClick={openAdd} className="ds-btn ds-btn-primary">
-            <Plus className="h-4 w-4" /> Ajouter un vaccin
+            <Plus className="h-4 w-4" /> {t("addBtn")}
           </button>
         </div>
       </div>
@@ -169,7 +174,7 @@ export default function VaccinationsPage() {
         {items.length === 0 ? (
           <div className="rounded-2xl border border-border bg-white p-8 text-center">
             <Syringe className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm text-muted-foreground">Aucun vaccin enregistré</p>
+            <p className="text-sm text-muted-foreground">{t("empty")}</p>
           </div>
         ) : (
           <div className="relative">
@@ -185,10 +190,10 @@ export default function VaccinationsPage() {
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-bold text-foreground">{v.vaccineName}</p>
                         <p className="text-xs text-muted-foreground mt-0.5">
-                          {new Date(v.dateReceived).toLocaleDateString("fr-FR", { year: "numeric", month: "long", day: "numeric" })}
+                          {new Date(v.dateReceived).toLocaleDateString(dateFnsLocaleTag, { year: "numeric", month: "long", day: "numeric" })}
                         </p>
-                        {v.givenBy && <p className="text-xs text-muted-foreground mt-1">Par : {v.givenBy}</p>}
-                        {v.batchNumber && <p className="text-xs text-muted-foreground">Lot : {v.batchNumber}</p>}
+                        {v.givenBy && <p className="text-xs text-muted-foreground mt-1">{t("givenBy")} : {v.givenBy}</p>}
+                        {v.batchNumber && <p className="text-xs text-muted-foreground">{t("batch")} : {v.batchNumber}</p>}
                         {v.notes && <p className="text-xs text-foreground/70 mt-2 whitespace-pre-line">{v.notes}</p>}
                       </div>
                       <div className="flex gap-1 shrink-0">
@@ -196,7 +201,7 @@ export default function VaccinationsPage() {
                           type="button"
                           onClick={() => openEdit(v)}
                           className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary"
-                          aria-label="Modifier"
+                          aria-label={tc("edit")}
                         >
                           <Pencil className="h-4 w-4" />
                         </button>
@@ -204,7 +209,7 @@ export default function VaccinationsPage() {
                           type="button"
                           onClick={() => handleDelete(v.id)}
                           className="p-2 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-600"
-                          aria-label="Supprimer"
+                          aria-label={tc("delete")}
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -223,35 +228,35 @@ export default function VaccinationsPage() {
           <div className="w-full max-w-md rounded-2xl bg-white shadow-xl" onClick={(e) => e.stopPropagation()}>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-bold text-lg">{editing ? "Modifier le vaccin" : "Ajouter un vaccin"}</h2>
+                <h2 className="font-bold text-lg">{editing ? t("modal.editTitle") : t("modal.addTitle")}</h2>
                 <button type="button" onClick={() => setModalOpen(false)} className="p-1 rounded hover:bg-gray-100">
                   <X className="h-5 w-5" />
                 </button>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="v-name" className="text-sm font-semibold">Nom du vaccin *</Label>
+                <Label htmlFor="v-name" className="text-sm font-semibold">{t("form.name")} *</Label>
                 <Input id="v-name" value={vaccineName} onChange={(e) => setVaccineName(e.target.value)} maxLength={120} required />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="v-date" className="text-sm font-semibold">Date *</Label>
+                <Label htmlFor="v-date" className="text-sm font-semibold">{t("form.date")} *</Label>
                 <Input id="v-date" type="date" value={dateReceived} onChange={(e) => setDateReceived(e.target.value)} required />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="v-batch" className="text-sm font-semibold">Numéro de lot</Label>
+                <Label htmlFor="v-batch" className="text-sm font-semibold">{t("form.batch")}</Label>
                 <Input id="v-batch" value={batchNumber} onChange={(e) => setBatchNumber(e.target.value)} maxLength={60} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="v-by" className="text-sm font-semibold">Administré par</Label>
-                <ProviderLookup id="v-by" value={givenBy} onChange={setGivenBy} />
+                <Label htmlFor="v-by" className="text-sm font-semibold">{t("form.givenBy")}</Label>
+                <ProviderLookup id="v-by" value={givenBy} onChange={setGivenBy} placeholder={t("form.givenByPlaceholder")} searchLabel={t("form.searching")} />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="v-notes" className="text-sm font-semibold">Notes</Label>
+                <Label htmlFor="v-notes" className="text-sm font-semibold">{t("form.notes")}</Label>
                 <Textarea id="v-notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} rows={2} />
               </div>
               <div className="flex gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setModalOpen(false)} className="flex-1">Annuler</Button>
+                <Button type="button" variant="outline" onClick={() => setModalOpen(false)} className="flex-1">{tc("cancel")}</Button>
                 <Button type="submit" disabled={saving} className="flex-1 bg-primary hover:bg-doktori-teal-dark text-white font-bold">
-                  {saving ? "..." : editing ? "Enregistrer" : "Ajouter"}
+                  {saving ? "..." : editing ? tc("save") : tc("add")}
                 </Button>
               </div>
             </form>
@@ -269,10 +274,14 @@ function ProviderLookup({
   id,
   value,
   onChange,
+  placeholder,
+  searchLabel,
 }: {
   id: string;
   value: string;
   onChange: (v: string) => void;
+  placeholder: string;
+  searchLabel: string;
 }) {
   const [open, setOpen] = useState(false);
   const [results, setResults] = useState<
@@ -325,7 +334,7 @@ function ProviderLookup({
           setTimeout(() => setOpen(false), 150);
         }}
         maxLength={120}
-        placeholder="Dr. ..., centre..."
+        placeholder={placeholder}
         autoComplete="off"
       />
       {open && value.trim().length >= 2 && (loading || results.length > 0) && (
@@ -339,7 +348,7 @@ function ProviderLookup({
         >
           {loading && results.length === 0 ? (
             <div className="px-3 py-2 text-xs" style={{ color: "var(--ink-500)" }}>
-              Recherche…
+              {searchLabel}
             </div>
           ) : (
             <ul className="max-h-64 overflow-y-auto">

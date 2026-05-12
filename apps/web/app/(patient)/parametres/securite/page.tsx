@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { PhoneInput } from "@/components/ui/phone-input";
@@ -24,6 +25,7 @@ interface TwoFaStatus {
 
 export default function SecuriteParametresPage() {
   const router = useRouter();
+  const t = useTranslations("patient.parametres.securite");
   const [token, setToken] = useState<string | null>(null);
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -71,10 +73,10 @@ export default function SecuriteParametresPage() {
         setSecret(data.secret);
         setStep("scan");
       } else {
-        toast.error(data.error || "Erreur lors de la configuration");
+        toast.error(data.error || t("toast.setupError"));
       }
     } catch {
-      toast.error("Erreur réseau");
+      toast.error(t("toast.networkError"));
     }
   }
 
@@ -92,9 +94,9 @@ export default function SecuriteParametresPage() {
         setBackupCodes(data.backupCodes ?? []);
         setStep("backup");
         setEnabled(true);
-        toast.success("2FA activée avec succès !");
+        toast.success(t("toast.enabled"));
       } else {
-        toast.error(data.error || "Code invalide");
+        toast.error(data.error || t("toast.invalidCode"));
       }
     } finally {
       setVerifying(false);
@@ -115,9 +117,9 @@ export default function SecuriteParametresPage() {
         setEnabled(false);
         setShowDisableForm(false);
         setDisablePassword("");
-        toast.success("2FA désactivée.");
+        toast.success(t("toast.disabled"));
       } else {
-        toast.error(data.error || "Erreur lors de la désactivation");
+        toast.error(data.error || t("toast.disableError"));
       }
     } finally {
       setDisabling(false);
@@ -125,7 +127,7 @@ export default function SecuriteParametresPage() {
   }
 
   function copyCode(c: string) {
-    navigator.clipboard.writeText(c).then(() => toast.success("Copié !"));
+    navigator.clipboard.writeText(c).then(() => toast.success(t("toast.copied")));
   }
 
   function finishSetup() {
@@ -140,9 +142,9 @@ export default function SecuriteParametresPage() {
     <div>
       <div className="space-y-5">
         <div>
-          <div className="ds-eyebrow">PARAMÈTRES</div>
-          <h1 className="ds-page-title">Sécurité</h1>
-          <p className="ds-page-sub">Gérez votre mot de passe, votre téléphone et la double authentification.</p>
+          <div className="ds-eyebrow">{t("eyebrow")}</div>
+          <h1 className="ds-page-title">{t("title")}</h1>
+          <p className="ds-page-sub">{t("subtitle")}</p>
         </div>
 
         <EmailCard />
@@ -153,10 +155,10 @@ export default function SecuriteParametresPage() {
         <div className="ds-card-patient p-6">
           <div className="flex items-center gap-2 mb-1">
             <ShieldCheck className="w-5 h-5 text-primary" />
-            <h2 className="font-semibold text-foreground">Double authentification (2FA)</h2>
+            <h2 className="font-semibold text-foreground">{t("twoFa.title")}</h2>
           </div>
           <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-            Renforcez la sécurité de votre compte avec une application d'authentification (Google Authenticator, Authy…).
+            {t("twoFa.intro")}
           </p>
 
           {loading ? (
@@ -169,7 +171,7 @@ export default function SecuriteParametresPage() {
                     <CheckCircle className="w-4 h-4 text-green-500" />
                   </div>
                   <span className="text-sm font-semibold text-green-700 dark:text-green-400">
-                    2FA activée
+                    {t("twoFa.enabledBadge")}
                   </span>
                 </div>
                 {!showDisableForm ? (
@@ -180,18 +182,18 @@ export default function SecuriteParametresPage() {
                     className="rounded-xl border-red-200 text-red-600 hover:bg-red-50"
                   >
                     <ShieldOff className="w-4 h-4 me-2" />
-                    Désactiver la 2FA
+                    {t("twoFa.disableBtn")}
                   </Button>
                 ) : (
                   <div className="mt-3 space-y-3 max-w-sm">
-                    <p className="text-sm text-gray-500">Entrez votre mot de passe pour confirmer :</p>
+                    <p className="text-sm text-gray-500">{t("twoFa.enterPasswordToConfirm")}</p>
                     <div className="relative">
                       <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
                         type="password"
                         value={disablePassword}
                         onChange={(e) => setDisablePassword(e.target.value)}
-                        placeholder="Mot de passe"
+                        placeholder={t("password.placeholder")}
                         className="ps-10 rounded-xl h-11"
                       />
                     </div>
@@ -202,7 +204,7 @@ export default function SecuriteParametresPage() {
                         onClick={() => { setShowDisableForm(false); setDisablePassword(""); }}
                         className="rounded-xl"
                       >
-                        Annuler
+                        {t("cancel")}
                       </Button>
                       <Button
                         size="sm"
@@ -210,7 +212,7 @@ export default function SecuriteParametresPage() {
                         disabled={disabling || !disablePassword}
                         className="rounded-xl bg-red-600 hover:bg-red-700 text-white"
                       >
-                        {disabling ? "Désactivation…" : "Confirmer"}
+                        {disabling ? t("twoFa.disabling") : t("twoFa.confirm")}
                       </Button>
                     </div>
                   </div>
@@ -219,23 +221,23 @@ export default function SecuriteParametresPage() {
             ) : (
               <Button onClick={startSetup} className="rounded-xl">
                 <QrCode className="w-4 h-4 me-2" />
-                Activer la double authentification
+                {t("twoFa.enableBtn")}
               </Button>
             )
           ) : step === "scan" ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-6 h-6 bg-primary/10 text-primary rounded-full flex items-center justify-center text-xs font-bold">1</span>
-                <p className="text-sm font-semibold text-foreground">Scannez ce QR code avec votre application</p>
+                <p className="text-sm font-semibold text-foreground">{t("twoFa.scanStep")}</p>
               </div>
               {qrDataUrl && (
                 <div className="inline-block rounded-xl border border-border p-2 bg-white">
-                  <img src={qrDataUrl} alt="QR Code 2FA" width={180} height={180} />
+                  <img src={qrDataUrl} alt={t("twoFa.qrAlt")} width={180} height={180} />
                 </div>
               )}
               {secret && (
                 <div className="bg-gray-50 dark:bg-gray-700 rounded-xl px-4 py-3">
-                  <p className="text-xs text-gray-500 mb-1">Ou entrez ce code manuellement :</p>
+                  <p className="text-xs text-gray-500 mb-1">{t("twoFa.manualEntry")}</p>
                   <div className="flex items-center gap-2">
                     <code className="text-sm font-mono text-foreground break-all">{secret}</code>
                     <button onClick={() => copyCode(secret!)} className="text-gray-400 hover:text-gray-600 shrink-0">
@@ -245,17 +247,17 @@ export default function SecuriteParametresPage() {
                 </div>
               )}
               <Button onClick={() => setStep("verify")} className="rounded-xl">
-                J'ai scanné le QR code →
+                {t("twoFa.scannedNext")}
               </Button>
             </div>
           ) : step === "verify" ? (
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-6 h-6 bg-primary/10 text-primary rounded-full flex items-center justify-center text-xs font-bold">2</span>
-                <p className="text-sm font-semibold text-foreground">Entrez le code de vérification</p>
+                <p className="text-sm font-semibold text-foreground">{t("twoFa.enterVerifyCode")}</p>
               </div>
               <p className="text-sm text-gray-500">
-                Ouvrez votre application d'authentification et entrez le code à 6 chiffres.
+                {t("twoFa.verifyHint")}
               </p>
               <Input
                 type="text"
@@ -269,14 +271,14 @@ export default function SecuriteParametresPage() {
               />
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setStep("scan")} className="rounded-xl">
-                  Retour
+                  {t("back")}
                 </Button>
                 <Button
                   onClick={verifyCode}
                   disabled={verifying || code.length !== 6}
                   className="rounded-xl"
                 >
-                  {verifying ? "Vérification…" : "Vérifier"}
+                  {verifying ? t("twoFa.verifying") : t("twoFa.verify")}
                 </Button>
               </div>
             </div>
@@ -284,13 +286,12 @@ export default function SecuriteParametresPage() {
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <span className="w-6 h-6 bg-green-100 text-green-600 rounded-full flex items-center justify-center text-xs font-bold">3</span>
-                <p className="text-sm font-semibold text-foreground">Codes de secours — Sauvegardez-les !</p>
+                <p className="text-sm font-semibold text-foreground">{t("twoFa.backupCodesTitle")}</p>
               </div>
               <div className="flex items-start gap-2 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700 rounded-xl p-3">
                 <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
                 <p className="text-xs text-amber-800 dark:text-amber-200">
-                  Ces codes permettent d'accéder à votre compte si vous perdez votre téléphone.
-                  Ils ne seront plus affichés après cette page.
+                  {t("twoFa.backupCodesWarn")}
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-2">
@@ -308,7 +309,7 @@ export default function SecuriteParametresPage() {
               </div>
               <Button onClick={finishSetup} className="rounded-xl">
                 <CheckCircle className="w-4 h-4 me-2" />
-                J'ai sauvegardé mes codes
+                {t("twoFa.savedCodes")}
               </Button>
             </div>
           )}
@@ -320,6 +321,7 @@ export default function SecuriteParametresPage() {
 
 /* ───────── Email display card (read-only) ───────── */
 function EmailCard() {
+  const t = useTranslations("patient.parametres.securite");
   const [email, setEmail] = useState<string>("");
   const [verified, setVerified] = useState<boolean>(false);
 
@@ -340,26 +342,25 @@ function EmailCard() {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Lock className="w-5 h-5 text-primary" />
-          <h2 className="font-semibold text-foreground">Adresse email</h2>
+          <h2 className="font-semibold text-foreground">{t("email.title")}</h2>
         </div>
         {verified && email && (
           <span
             className="ds-chip ds-chip-mint"
-            title="Adresse email vérifiée"
+            title={t("email.verifiedTitle")}
           >
-            <CheckCircle className="w-3 h-3" /> Vérifié
+            <CheckCircle className="w-3 h-3" /> {t("email.verified")}
           </span>
         )}
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-        {email || "Aucune adresse email enregistrée."}
+        {email || t("email.none")}
       </p>
       <p
         className="text-[12px] mt-2"
         style={{ color: "var(--ink-500)" }}
       >
-        L'adresse email sert d'identifiant de connexion et ne peut pas être modifiée depuis votre
-        compte. Contactez le support si vous devez la changer.
+        {t("email.lockedNote")}
       </p>
     </div>
   );
@@ -367,6 +368,7 @@ function EmailCard() {
 
 /* ───────── Phone change card ───────── */
 function PhoneChangeCard({ token }: { token: string | null }) {
+  const t = useTranslations("patient.parametres.securite");
   const [currentPhone, setCurrentPhone] = useState<string>("");
   const [open, setOpen] = useState(false);
   const [step, setStep] = useState<"input" | "verify">("input");
@@ -401,12 +403,12 @@ function PhoneChangeCard({ token }: { token: string | null }) {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success("Code envoyé par SMS");
+        toast.success(t("phone.toast.codeSent"));
         setStep("verify");
       } else if (res.status === 409 && data.error === "PHONE_ALREADY_USED") {
         setWarning(data.message);
       } else {
-        toast.error(data.error || "Erreur");
+        toast.error(data.error || t("toast.error"));
       }
     } finally {
       setSending(false);
@@ -428,7 +430,7 @@ function PhoneChangeCard({ token }: { token: string | null }) {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success("Numéro de téléphone mis à jour");
+        toast.success(t("phone.toast.updated"));
         setCurrentPhone(data.phone);
         setPhone("");
         setCode("");
@@ -436,9 +438,9 @@ function PhoneChangeCard({ token }: { token: string | null }) {
         setOpen(false);
       } else if (res.status === 409) {
         setStep("input");
-        setWarning(data.message || "Ce numéro vient d'être pris par un autre compte.");
+        setWarning(data.message || t("phone.takenByOther"));
       } else {
-        toast.error(data.error || "Code incorrect");
+        toast.error(data.error || t("phone.toast.wrongCode"));
       }
     } finally {
       setVerifying(false);
@@ -450,7 +452,7 @@ function PhoneChangeCard({ token }: { token: string | null }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <ShieldCheck className="w-5 h-5 text-primary" />
-          <h2 className="font-semibold text-foreground">Numéro de téléphone</h2>
+          <h2 className="font-semibold text-foreground">{t("phone.title")}</h2>
         </div>
         {!open && (
           <button
@@ -462,12 +464,12 @@ function PhoneChangeCard({ token }: { token: string | null }) {
             }}
             className="ds-btn ds-btn-soft ds-btn-sm"
           >
-            Modifier
+            {t("phone.edit")}
           </button>
         )}
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-        Numéro actuel : <span className="font-semibold text-foreground">{currentPhone || "—"}</span>
+        {t("phone.currentLabel")} <span className="font-semibold text-foreground">{currentPhone || "—"}</span>
       </p>
 
       {open && (
@@ -506,18 +508,17 @@ function PhoneChangeCard({ token }: { token: string | null }) {
                     setWarning(null);
                   }}
                 >
-                  Annuler
+                  {t("cancel")}
                 </Button>
                 <Button type="submit" disabled={sending || !phone} className="rounded-xl">
-                  {sending ? "Envoi…" : "Envoyer le code"}
+                  {sending ? t("phone.sending") : t("phone.sendCode")}
                 </Button>
               </div>
             </form>
           ) : (
             <form onSubmit={submitVerify} className="space-y-3">
               <p className="text-sm" style={{ color: "var(--ink-700)" }}>
-                Un code à 6 chiffres a été envoyé au{" "}
-                <span className="font-semibold">{phone}</span>.
+                {t.rich("phone.codeSentTo", { phone, b: (c) => <span className="font-semibold">{c}</span> })}
               </p>
               <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-2">
                 <Input
@@ -538,14 +539,14 @@ function PhoneChangeCard({ token }: { token: string | null }) {
                       setCode("");
                     }}
                   >
-                    Retour
+                    {t("back")}
                   </Button>
                   <Button
                     type="submit"
                     disabled={verifying || code.length !== 6}
                     className="rounded-xl"
                   >
-                    {verifying ? "Vérification…" : "Vérifier"}
+                    {verifying ? t("twoFa.verifying") : t("twoFa.verify")}
                   </Button>
                 </div>
               </div>
@@ -559,6 +560,7 @@ function PhoneChangeCard({ token }: { token: string | null }) {
 
 /* ───────── Password change card ───────── */
 function PasswordChangeCard({ token }: { token: string | null }) {
+  const t = useTranslations("patient.parametres.securite");
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
@@ -568,11 +570,11 @@ function PasswordChangeCard({ token }: { token: string | null }) {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (next.length < 8) {
-      toast.error("Le nouveau mot de passe doit faire au moins 8 caractères");
+      toast.error(t("password.toast.tooShort"));
       return;
     }
     if (next !== confirmPw) {
-      toast.error("Les mots de passe ne correspondent pas");
+      toast.error(t("password.toast.mismatch"));
       return;
     }
     setSaving(true);
@@ -588,13 +590,13 @@ function PasswordChangeCard({ token }: { token: string | null }) {
       });
       const data = await res.json();
       if (res.ok) {
-        toast.success("Mot de passe mis à jour");
+        toast.success(t("password.toast.updated"));
         setCurrent("");
         setNext("");
         setConfirmPw("");
         setOpen(false);
       } else {
-        toast.error(data.error || "Erreur");
+        toast.error(data.error || t("toast.error"));
       }
     } finally {
       setSaving(false);
@@ -606,7 +608,7 @@ function PasswordChangeCard({ token }: { token: string | null }) {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Lock className="w-5 h-5 text-primary" />
-          <h2 className="font-semibold text-foreground">Mot de passe</h2>
+          <h2 className="font-semibold text-foreground">{t("password.title")}</h2>
         </div>
         {!open && (
           <button
@@ -614,19 +616,19 @@ function PasswordChangeCard({ token }: { token: string | null }) {
             onClick={() => setOpen(true)}
             className="ds-btn ds-btn-soft ds-btn-sm"
           >
-            Changer
+            {t("password.change")}
           </button>
         )}
       </div>
       <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-        Définissez un mot de passe d'au moins 8 caractères pour sécuriser votre compte.
+        {t("password.intro")}
       </p>
 
       {open && (
         <form onSubmit={submit} className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div className="sm:col-span-2">
             <label className="block text-[11px] font-bold uppercase tracking-wider mb-1 text-[color:var(--ink-400)]">
-              Mot de passe actuel (laisser vide si jamais défini)
+              {t("password.currentLabel")}
             </label>
             <Input
               type="password"
@@ -638,13 +640,13 @@ function PasswordChangeCard({ token }: { token: string | null }) {
           </div>
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider mb-1 text-[color:var(--ink-400)]">
-              Nouveau mot de passe
+              {t("password.newLabel")}
             </label>
             <Input
               type="password"
               value={next}
               onChange={(e) => setNext(e.target.value)}
-              placeholder="Min. 8 caractères"
+              placeholder={t("password.minPlaceholder")}
               minLength={8}
               autoComplete="new-password"
               required
@@ -652,13 +654,13 @@ function PasswordChangeCard({ token }: { token: string | null }) {
           </div>
           <div>
             <label className="block text-[11px] font-bold uppercase tracking-wider mb-1 text-[color:var(--ink-400)]">
-              Confirmer
+              {t("password.confirmLabel")}
             </label>
             <Input
               type="password"
               value={confirmPw}
               onChange={(e) => setConfirmPw(e.target.value)}
-              placeholder="Répétez le nouveau mot de passe"
+              placeholder={t("password.confirmPlaceholder")}
               minLength={8}
               autoComplete="new-password"
               required
@@ -675,10 +677,10 @@ function PasswordChangeCard({ token }: { token: string | null }) {
                 setConfirmPw("");
               }}
             >
-              Annuler
+              {t("cancel")}
             </Button>
             <Button type="submit" disabled={saving} className="rounded-xl">
-              {saving ? "Enregistrement…" : "Enregistrer"}
+              {saving ? t("saving") : t("save")}
             </Button>
           </div>
         </form>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import {
   Heart,
@@ -25,6 +26,7 @@ interface Favorite {
 }
 
 export default function FavorisPage() {
+  const t = useTranslations("patient.favoris");
   const [items, setItems] = useState<Favorite[]>([]);
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState("");
@@ -54,7 +56,7 @@ export default function FavorisPage() {
       method: "DELETE",
       credentials: "include",
     });
-    if (res.ok) toast.success("Retiré de vos favoris");
+    if (res.ok) toast.success(t("toastRemoved"));
   }
 
   const q = query.trim().toLowerCase();
@@ -74,15 +76,12 @@ export default function FavorisPage() {
       {/* Header */}
       <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <div className="ds-eyebrow">FAVORIS</div>
-          <h1 className="ds-page-title">Médecins favoris</h1>
-          <p className="ds-page-sub">
-            {items.length} médecin{items.length > 1 ? "s" : ""} sauvegardé
-            {items.length > 1 ? "s" : ""}
-          </p>
+          <div className="ds-eyebrow">{t("eyebrow")}</div>
+          <h1 className="ds-page-title">{t("title")}</h1>
+          <p className="ds-page-sub">{t("countLabel", { count: items.length })}</p>
         </div>
         <Link href="/recherche" className="ds-btn ds-btn-primary">
-          <SearchIcon className="w-4 h-4" /> Trouver un médecin
+          <SearchIcon className="w-4 h-4" /> {t("findDoctor")}
         </Link>
       </div>
 
@@ -95,7 +94,7 @@ export default function FavorisPage() {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Rechercher dans vos favoris…"
+              placeholder={t("searchPlaceholder")}
               className="flex-1 bg-transparent outline-none text-[14px]"
               style={{ color: "var(--ink-900)" }}
             />
@@ -103,7 +102,7 @@ export default function FavorisPage() {
               <button
                 type="button"
                 onClick={() => setQuery("")}
-                aria-label="Effacer"
+                aria-label={t("clear")}
                 className="p-1 rounded hover:bg-[color:var(--surface-2)]"
               >
                 <X className="w-4 h-4" />
@@ -129,19 +128,19 @@ export default function FavorisPage() {
             <Heart className="h-8 w-8" />
           </div>
           <p className="font-bold text-[16px] mb-1" style={{ color: "var(--ink-900)" }}>
-            Aucun favori pour l&apos;instant
+            {t("emptyTitle")}
           </p>
           <p className="text-sm mb-4" style={{ color: "var(--ink-500)" }}>
-            Touchez le cœur sur la fiche d&apos;un médecin pour le retrouver ici.
+            {t("emptySub")}
           </p>
           <Link href="/recherche" className="ds-btn ds-btn-primary">
-            <SearchIcon className="w-4 h-4" /> Trouver un médecin
+            <SearchIcon className="w-4 h-4" /> {t("findDoctor")}
           </Link>
         </div>
       ) : filtered.length === 0 ? (
         <div className="ds-card-patient p-8 text-center">
           <p className="text-sm" style={{ color: "var(--ink-500)" }}>
-            Aucun favori ne correspond à « {query} ».
+            {t("noMatch", { query })}
           </p>
         </div>
       ) : (
@@ -160,7 +159,7 @@ export default function FavorisPage() {
               <div key={f.id} className="ds-card-patient p-4 relative">
                 <button
                   onClick={() => remove(f.doctorId)}
-                  aria-label="Retirer des favoris"
+                  aria-label={t("remove")}
                   className="absolute top-3 end-3 inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-rose-50 transition-colors"
                   style={{ color: "#E11D48" }}
                 >
@@ -215,13 +214,13 @@ export default function FavorisPage() {
                     href={`/medecin/${f.doctorSlug}`}
                     className="ds-btn ds-btn-ghost ds-btn-sm flex-1 justify-center"
                   >
-                    Voir profil
+                    {t("viewProfile")}
                   </Link>
                   <Link
                     href={`/rdv/${f.doctorSlug}`}
                     className="ds-btn ds-btn-primary ds-btn-sm flex-1 justify-center"
                   >
-                    <Calendar className="w-3.5 h-3.5" /> RDV
+                    <Calendar className="w-3.5 h-3.5" /> {t("rdv")}
                   </Link>
                 </div>
               </div>

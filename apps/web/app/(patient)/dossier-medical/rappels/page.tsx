@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { ar, fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +15,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Bell, Plus, Pencil, Trash2, X, ChevronLeft, Pause, Play } from "lucide-react";
+import { Plus, Pencil, Trash2, X, ChevronLeft, Pause, Play } from "lucide-react";
 
 interface Reminder {
   id: string;
@@ -35,16 +37,21 @@ interface Disease {
   reminderDefaultFreqHours: number;
 }
 
-const FREQUENCY_OPTIONS = [
-  { value: 8, label: "Toutes les 8 heures" },
-  { value: 12, label: "Toutes les 12 heures" },
-  { value: 24, label: "Tous les jours (24h)" },
-  { value: 48, label: "Tous les 2 jours (48h)" },
-  { value: 168, label: "Toutes les semaines" },
-];
-
 export default function ChronicRemindersPage() {
   const router = useRouter();
+  const t = useTranslations("patient.dossier.rappels");
+  const tc = useTranslations("patient.dossier.common");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
+  void dateLocale;
+  const dateFnsLocaleTag = locale === "ar" ? "ar-TN" : "fr-FR";
+  const FREQUENCY_OPTIONS = [
+    { value: 8, label: t("freq.h8") },
+    { value: 12, label: t("freq.h12") },
+    { value: 24, label: t("freq.h24") },
+    { value: 48, label: t("freq.h48") },
+    { value: 168, label: t("freq.h168") },
+  ];
   const [token, setToken] = useState<string | null>(null);
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [diseases, setDiseases] = useState<Disease[]>([]);
@@ -114,7 +121,7 @@ export default function ChronicRemindersPage() {
     e.preventDefault();
     if (!token) return;
     if (!medicationName.trim()) {
-      toast.error("Nom du médicament requis");
+      toast.error(t("toast.nameRequired"));
       return;
     }
     setSaving(true);
@@ -139,11 +146,11 @@ export default function ChronicRemindersPage() {
         body: JSON.stringify(body),
       });
       if (res.ok) {
-        toast.success(editing ? "Rappel modifié" : "Rappel ajouté");
+        toast.success(editing ? t("toast.updated") : t("toast.added"));
         setModalOpen(false);
         await load(token);
       } else {
-        toast.error("Erreur lors de l'enregistrement");
+        toast.error(t("toast.saveError"));
       }
     } finally {
       setSaving(false);
@@ -152,16 +159,16 @@ export default function ChronicRemindersPage() {
 
   async function handleDelete(id: string) {
     if (!token) return;
-    if (!confirm("Désactiver ce rappel ?")) return;
+    if (!confirm(t("confirm.disable"))) return;
     const res = await fetch(`/api/me/chronic-reminders/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok || res.status === 204) {
-      toast.success("Rappel désactivé");
+      toast.success(t("toast.disabled"));
       await load(token);
     } else {
-      toast.error("Erreur lors de la suppression");
+      toast.error(t("toast.deleteError"));
     }
   }
 
@@ -181,7 +188,7 @@ export default function ChronicRemindersPage() {
       body: JSON.stringify({ pausedUntil }),
     });
     if (res.ok) {
-      toast.success(isPaused ? "Rappel réactivé" : "Rappel mis en pause 7 jours");
+      toast.success(isPaused ? t("toast.resumed") : t("toast.paused"));
       await load(token);
     }
   }
@@ -204,18 +211,16 @@ export default function ChronicRemindersPage() {
           href="/dossier-medical"
           className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--primary-600)] mb-2"
         >
-          <ChevronLeft className="h-3.5 w-3.5" /> Retour au dossier
+          <ChevronLeft className="h-3.5 w-3.5" /> {tc("backToDossier")}
         </a>
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <div className="ds-eyebrow">DOSSIER MÉDICAL</div>
-            <h1 className="ds-page-title">Rappels traitements</h1>
-            <p className="ds-page-sub">
-              {active.length} actif{active.length !== 1 ? "s" : ""}
-            </p>
+            <div className="ds-eyebrow">{tc("eyebrow")}</div>
+            <h1 className="ds-page-title">{t("title")}</h1>
+            <p className="ds-page-sub">{t("countLabel", { count: active.length })}</p>
           </div>
           <button onClick={openAdd} className="ds-btn ds-btn-primary">
-            <Plus className="h-4 w-4" /> Ajouter un rappel
+            <Plus className="h-4 w-4" /> {t("addBtn")}
           </button>
         </div>
       </div>
@@ -224,11 +229,11 @@ export default function ChronicRemindersPage() {
 
         <section>
           <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider mb-2">
-            Actifs
+            {t("active")}
           </h2>
           {active.length === 0 ? (
             <div className="rounded-2xl border border-border bg-white p-6 text-center text-sm text-muted-foreground">
-              Aucun rappel actif. Ajoutez-en un pour ne plus oublier votre traitement.
+              {t("empty.active")}
             </div>
           ) : (
             <ul className="space-y-2">
@@ -240,6 +245,10 @@ export default function ChronicRemindersPage() {
                   onEdit={openEdit}
                   onDelete={handleDelete}
                   onTogglePause={togglePause}
+                  freqOptions={FREQUENCY_OPTIONS}
+                  t={t}
+                  tc={tc}
+                  dateFnsLocaleTag={dateFnsLocaleTag}
                 />
               ))}
             </ul>
@@ -249,7 +258,7 @@ export default function ChronicRemindersPage() {
         {inactive.length > 0 && (
           <section>
             <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider mb-2">
-              Désactivés
+              {t("disabled")}
             </h2>
             <ul className="space-y-2">
               {inactive.map((r) => (
@@ -261,6 +270,10 @@ export default function ChronicRemindersPage() {
                   onDelete={handleDelete}
                   onTogglePause={togglePause}
                   archived
+                  freqOptions={FREQUENCY_OPTIONS}
+                  t={t}
+                  tc={tc}
+                  dateFnsLocaleTag={dateFnsLocaleTag}
                 />
               ))}
             </ul>
@@ -280,7 +293,7 @@ export default function ChronicRemindersPage() {
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="flex items-center justify-between">
                 <h2 className="font-bold text-lg">
-                  {editing ? "Modifier le rappel" : "Nouveau rappel"}
+                  {editing ? t("modal.editTitle") : t("modal.addTitle")}
                 </h2>
                 <button
                   type="button"
@@ -292,7 +305,7 @@ export default function ChronicRemindersPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Maladie chronique</Label>
+                <Label className="text-sm font-semibold">{t("form.chronicDisease")}</Label>
                 <Select
                   value={diseaseSlug || "none"}
                   onValueChange={(v) => {
@@ -306,13 +319,13 @@ export default function ChronicRemindersPage() {
                   }}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Choisir une maladie (optionnel)" />
+                    <SelectValue placeholder={t("form.diseasePlaceholder")} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="none">Aucune (autre)</SelectItem>
+                    <SelectItem value="none">{t("form.diseaseNone")}</SelectItem>
                     {diseases.map((d) => (
                       <SelectItem key={d.slug} value={d.slug}>
-                        {d.nameFr}
+                        {locale === "ar" && d.nameAr ? d.nameAr : d.nameFr}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -321,7 +334,7 @@ export default function ChronicRemindersPage() {
 
               <div className="space-y-1.5">
                 <Label htmlFor="r-name" className="text-sm font-semibold">
-                  Médicament *
+                  {t("form.medication")} *
                 </Label>
                 <Input
                   id="r-name"
@@ -329,13 +342,13 @@ export default function ChronicRemindersPage() {
                   onChange={(e) => setMedicationName(e.target.value)}
                   maxLength={160}
                   required
-                  placeholder="Ex: Glucophage"
+                  placeholder={t("form.medicationPlaceholder")}
                 />
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="r-dosage" className="text-sm font-semibold">
-                  Dosage
+                  {t("form.dosage")}
                 </Label>
                 <Input
                   id="r-dosage"
@@ -347,7 +360,7 @@ export default function ChronicRemindersPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Fréquence</Label>
+                <Label className="text-sm font-semibold">{t("form.frequency")}</Label>
                 <Select
                   value={String(frequencyHours)}
                   onValueChange={(v) => setFrequencyHours(Number(v))}
@@ -366,7 +379,7 @@ export default function ChronicRemindersPage() {
               </div>
 
               <div className="space-y-1.5">
-                <Label className="text-sm font-semibold">Canal de notification</Label>
+                <Label className="text-sm font-semibold">{t("form.channel")}</Label>
                 <Select
                   value={channel}
                   onValueChange={(v) =>
@@ -377,9 +390,9 @@ export default function ChronicRemindersPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="sms">SMS</SelectItem>
-                    <SelectItem value="email">Email</SelectItem>
-                    <SelectItem value="push">Push (notification)</SelectItem>
+                    <SelectItem value="sms">{t("form.channelSms")}</SelectItem>
+                    <SelectItem value="email">{t("form.channelEmail")}</SelectItem>
+                    <SelectItem value="push">{t("form.channelPush")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -391,14 +404,14 @@ export default function ChronicRemindersPage() {
                   onClick={() => setModalOpen(false)}
                   className="flex-1"
                 >
-                  Annuler
+                  {tc("cancel")}
                 </Button>
                 <Button
                   type="submit"
                   disabled={saving}
                   className="flex-1 bg-primary hover:bg-doktori-teal-dark text-white font-bold"
                 >
-                  {saving ? "..." : editing ? "Enregistrer" : "Ajouter"}
+                  {saving ? "..." : editing ? tc("save") : tc("add")}
                 </Button>
               </div>
             </form>
@@ -416,6 +429,10 @@ function ReminderItem({
   onDelete,
   onTogglePause,
   archived = false,
+  freqOptions,
+  t,
+  tc,
+  dateFnsLocaleTag,
 }: {
   r: Reminder;
   diseases: Disease[];
@@ -423,13 +440,17 @@ function ReminderItem({
   onDelete: (id: string) => void;
   onTogglePause: (r: Reminder) => void;
   archived?: boolean;
+  freqOptions: Array<{ value: number; label: string }>;
+  t: ReturnType<typeof useTranslations>;
+  tc: ReturnType<typeof useTranslations>;
+  dateFnsLocaleTag: string;
 }) {
   const disease = diseases.find((d) => d.slug === r.diseaseSlug);
   const isPaused =
     r.pausedUntil && new Date(r.pausedUntil).getTime() > Date.now();
   const freqLabel =
-    FREQUENCY_OPTIONS.find((f) => f.value === r.frequencyHours)?.label ||
-    `Toutes les ${r.frequencyHours}h`;
+    freqOptions.find((f) => f.value === r.frequencyHours)?.label ||
+    t("freq.everyN", { n: r.frequencyHours });
 
   return (
     <li
@@ -451,8 +472,7 @@ function ReminderItem({
           </p>
           {isPaused && (
             <p className="text-xs text-amber-600 font-semibold mt-1">
-              En pause jusqu'au{" "}
-              {new Date(r.pausedUntil!).toLocaleDateString("fr-FR")}
+              {t("pausedUntil", { date: new Date(r.pausedUntil!).toLocaleDateString(dateFnsLocaleTag) })}
             </p>
           )}
         </div>
@@ -462,7 +482,7 @@ function ReminderItem({
               type="button"
               onClick={() => onTogglePause(r)}
               className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary"
-              aria-label={isPaused ? "Reprendre" : "Mettre en pause"}
+              aria-label={isPaused ? t("resume") : t("pause")}
             >
               {isPaused ? (
                 <Play className="h-4 w-4" />
@@ -475,7 +495,7 @@ function ReminderItem({
             type="button"
             onClick={() => onEdit(r)}
             className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary"
-            aria-label="Modifier"
+            aria-label={tc("edit")}
           >
             <Pencil className="h-4 w-4" />
           </button>
@@ -484,7 +504,7 @@ function ReminderItem({
               type="button"
               onClick={() => onDelete(r.id)}
               className="p-2 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-600"
-              aria-label="Désactiver"
+              aria-label={t("disable")}
             >
               <Trash2 className="h-4 w-4" />
             </button>

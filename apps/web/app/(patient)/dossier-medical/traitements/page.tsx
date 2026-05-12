@@ -2,6 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { ar, fr } from "date-fns/locale";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,14 +24,19 @@ interface Medication {
   createdAt: string;
 }
 
-const PRESET_TIMES: Array<{ key: string; label: string; time: string }> = [
-  { key: "morning", label: "Matin", time: "08:00" },
-  { key: "midday", label: "Midi", time: "13:00" },
-  { key: "evening", label: "Soir", time: "20:00" },
-];
-
 export default function TraitementsPage() {
   const router = useRouter();
+  const t = useTranslations("patient.dossier.traitements");
+  const tc = useTranslations("patient.dossier.common");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? ar : fr;
+  void dateLocale;
+  const dateFnsLocaleTag = locale === "ar" ? "ar-TN" : "fr-FR";
+  const PRESET_TIMES: Array<{ key: string; label: string; time: string }> = [
+    { key: "morning", label: t("presets.morning"), time: "08:00" },
+    { key: "midday", label: t("presets.midday"), time: "13:00" },
+    { key: "evening", label: t("presets.evening"), time: "20:00" },
+  ];
   const [token, setToken] = useState<string | null>(null);
   const [items, setItems] = useState<Medication[]>([]);
   const [loading, setLoading] = useState(true);
@@ -108,11 +115,11 @@ export default function TraitementsPage() {
     e.preventDefault();
     if (!token) return;
     if (!medicationName.trim()) {
-      toast.error("Nom du médicament requis");
+      toast.error(t("toast.nameRequired"));
       return;
     }
     if (startedAt && endedAt && endedAt < startedAt) {
-      toast.error("La date de fin doit être supérieure ou égale à la date de début");
+      toast.error(t("toast.endAfterStart"));
       return;
     }
     setSaving(true);
@@ -135,11 +142,11 @@ export default function TraitementsPage() {
         body: JSON.stringify(body),
       });
       if (res.ok) {
-        toast.success(editing ? "Traitement modifié" : "Traitement ajouté");
+        toast.success(editing ? t("toast.updated") : t("toast.added"));
         setModalOpen(false);
         await load(token);
       } else {
-        toast.error("Erreur lors de l'enregistrement");
+        toast.error(t("toast.saveError"));
       }
     } finally {
       setSaving(false);
@@ -148,16 +155,16 @@ export default function TraitementsPage() {
 
   async function handleDelete(id: string) {
     if (!token) return;
-    if (!confirm("Supprimer ce traitement ?")) return;
+    if (!confirm(t("confirm.delete"))) return;
     const res = await fetch(`/api/me/medications/${id}`, {
       method: "DELETE",
       headers: { Authorization: `Bearer ${token}` },
     });
     if (res.ok || res.status === 204) {
-      toast.success("Traitement supprimé");
+      toast.success(t("toast.deleted"));
       await load(token);
     } else {
-      toast.error("Erreur lors de la suppression");
+      toast.error(t("toast.deleteError"));
     }
   }
 
@@ -190,18 +197,18 @@ export default function TraitementsPage() {
           href="/dossier-medical"
           className="inline-flex items-center gap-1 text-xs font-semibold text-[color:var(--ink-500)] hover:text-[color:var(--primary-600)] mb-2"
         >
-          <ChevronLeft className="h-3.5 w-3.5" /> Retour au dossier
+          <ChevronLeft className="h-3.5 w-3.5" /> {tc("backToDossier")}
         </a>
         <div className="flex items-end justify-between gap-4 flex-wrap">
           <div>
-            <div className="ds-eyebrow">DOSSIER MÉDICAL</div>
-            <h1 className="ds-page-title">Traitements</h1>
+            <div className="ds-eyebrow">{tc("eyebrow")}</div>
+            <h1 className="ds-page-title">{t("title")}</h1>
             <p className="ds-page-sub">
-              {current.length} en cours · {history.length} archivé{history.length !== 1 ? "s" : ""}
+              {t("countLabel", { current: current.length, archived: history.length })}
             </p>
           </div>
           <button onClick={openAdd} className="ds-btn ds-btn-primary">
-            <Plus className="h-4 w-4" /> Ajouter un traitement
+            <Plus className="h-4 w-4" /> {t("addBtn")}
           </button>
         </div>
       </div>
@@ -209,21 +216,21 @@ export default function TraitementsPage() {
       <div className="grid gap-4">
         <section className="ds-card-patient p-5">
           <div className="ds-eyebrow mb-3 flex items-center gap-2">
-            <Pill className="h-3.5 w-3.5" /> EN COURS
+            <Pill className="h-3.5 w-3.5" /> {t("ongoing")}
           </div>
           {current.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[color:var(--line-cool)] bg-[color:var(--surface-2)] p-8 text-center">
               <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-[color:var(--primary-50)] mb-3">
                 <Pill className="h-5 w-5 text-[color:var(--primary-600)]" />
               </div>
-              <p className="text-sm font-semibold text-[color:var(--ink-700)]">Aucun traitement en cours</p>
+              <p className="text-sm font-semibold text-[color:var(--ink-700)]">{t("empty.ongoingTitle")}</p>
               <p className="text-xs text-[color:var(--ink-500)] mt-1">
-                Ajoutez vos médicaments pour en garder une trace.
+                {t("empty.ongoingSub")}
               </p>
             </div>
           ) : (
             <ul className="space-y-2">
-              {current.map((m) => <MedItem key={m.id} m={m} onEdit={openEdit} onDelete={handleDelete} />)}
+              {current.map((m) => <MedItem key={m.id} m={m} onEdit={openEdit} onDelete={handleDelete} t={t} tc={tc} dateFnsLocaleTag={dateFnsLocaleTag} />)}
             </ul>
           )}
         </section>
@@ -237,7 +244,7 @@ export default function TraitementsPage() {
             >
               <span className="ds-eyebrow flex items-center gap-2">
                 <History className="h-3.5 w-3.5" />
-                HISTORIQUE ({history.length})
+                {t("history")} ({history.length})
               </span>
               <ChevronDown
                 className={`h-4 w-4 text-[color:var(--ink-500)] transition-transform ${historyOpen ? "rotate-180" : ""}`}
@@ -245,7 +252,7 @@ export default function TraitementsPage() {
             </button>
             {historyOpen && (
               <ul className="space-y-2 mt-3">
-                {history.map((m) => <MedItem key={m.id} m={m} onEdit={openEdit} onDelete={handleDelete} archived />)}
+                {history.map((m) => <MedItem key={m.id} m={m} onEdit={openEdit} onDelete={handleDelete} archived t={t} tc={tc} dateFnsLocaleTag={dateFnsLocaleTag} />)}
               </ul>
             )}
           </section>
@@ -257,7 +264,7 @@ export default function TraitementsPage() {
           <div className="w-full max-w-md rounded-2xl bg-white shadow-xl max-h-[90vh] overflow-y-auto" onClick={(e) => e.stopPropagation()}>
             <form onSubmit={handleSubmit} className="p-6 space-y-4">
               <div className="flex items-center justify-between">
-                <h2 className="font-bold text-lg">{editing ? "Modifier le traitement" : "Ajouter un traitement"}</h2>
+                <h2 className="font-bold text-lg">{editing ? t("modal.editTitle") : t("modal.addTitle")}</h2>
                 <button type="button" onClick={() => setModalOpen(false)} className="p-1 rounded hover:bg-gray-100">
                   <X className="h-5 w-5" />
                 </button>
@@ -275,7 +282,7 @@ export default function TraitementsPage() {
                   }`}
                   style={{ color: modalTab === "info" ? "var(--ink-900)" : "var(--ink-500)" }}
                 >
-                  Informations
+                  {t("tabs.info")}
                 </button>
                 <button
                   type="button"
@@ -288,7 +295,7 @@ export default function TraitementsPage() {
                   style={{ color: modalTab === "reminder" ? "var(--ink-900)" : "var(--ink-500)" }}
                 >
                   <Bell className="w-3.5 h-3.5" />
-                  Rappels
+                  {t("tabs.reminder")}
                   {reminderEnabled && reminderTimes.length > 0 && (
                     <span
                       className="px-1.5 rounded-full text-[10px] font-bold"
@@ -305,26 +312,26 @@ export default function TraitementsPage() {
               {modalTab === "info" && (
               <>
               <div className="space-y-1.5">
-                <Label htmlFor="m-name" className="text-sm font-semibold">Médicament *</Label>
+                <Label htmlFor="m-name" className="text-sm font-semibold">{t("form.medication")} *</Label>
                 <Input id="m-name" value={medicationName} onChange={(e) => setMedicationName(e.target.value)} maxLength={160} required />
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="m-dosage" className="text-sm font-semibold">Dosage</Label>
+                  <Label htmlFor="m-dosage" className="text-sm font-semibold">{t("form.dosage")}</Label>
                   <Input id="m-dosage" value={dosage} onChange={(e) => setDosage(e.target.value)} maxLength={80} placeholder="500mg" />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="m-freq" className="text-sm font-semibold">Fréquence</Label>
-                  <Input id="m-freq" value={frequency} onChange={(e) => setFrequency(e.target.value)} maxLength={80} placeholder="2x/jour" />
+                  <Label htmlFor="m-freq" className="text-sm font-semibold">{t("form.frequency")}</Label>
+                  <Input id="m-freq" value={frequency} onChange={(e) => setFrequency(e.target.value)} maxLength={80} placeholder={t("form.frequencyPlaceholder")} />
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1.5">
-                  <Label htmlFor="m-start" className="text-sm font-semibold">Début</Label>
+                  <Label htmlFor="m-start" className="text-sm font-semibold">{t("form.start")}</Label>
                   <Input id="m-start" type="date" value={startedAt} onChange={(e) => setStartedAt(e.target.value)} />
                 </div>
                 <div className="space-y-1.5">
-                  <Label htmlFor="m-end" className="text-sm font-semibold">Fin (si arrêté)</Label>
+                  <Label htmlFor="m-end" className="text-sm font-semibold">{t("form.end")}</Label>
                   <Input
                     id="m-end"
                     type="date"
@@ -335,7 +342,7 @@ export default function TraitementsPage() {
                 </div>
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="m-notes" className="text-sm font-semibold">Notes</Label>
+                <Label htmlFor="m-notes" className="text-sm font-semibold">{t("form.notes")}</Label>
                 <Textarea id="m-notes" value={notes} onChange={(e) => setNotes(e.target.value)} maxLength={2000} rows={2} />
               </div>
               </>
@@ -347,13 +354,16 @@ export default function TraitementsPage() {
                   onEnabledChange={setReminderEnabled}
                   times={reminderTimes}
                   onTimesChange={setReminderTimes}
+                  t={t}
+                  tc={tc}
+                  presets={PRESET_TIMES}
                 />
               )}
 
               <div className="flex gap-2 pt-2">
-                <Button type="button" variant="outline" onClick={() => setModalOpen(false)} className="flex-1">Annuler</Button>
+                <Button type="button" variant="outline" onClick={() => setModalOpen(false)} className="flex-1">{tc("cancel")}</Button>
                 <Button type="submit" disabled={saving} className="flex-1 bg-primary hover:bg-doktori-teal-dark text-white font-bold">
-                  {saving ? "..." : editing ? "Enregistrer" : "Ajouter"}
+                  {saving ? "..." : editing ? tc("save") : tc("add")}
                 </Button>
               </div>
             </form>
@@ -370,14 +380,20 @@ function ReminderTab({
   onEnabledChange,
   times,
   onTimesChange,
+  t,
+  tc,
+  presets,
 }: {
   enabled: boolean;
   onEnabledChange: (v: boolean) => void;
   times: string[];
   onTimesChange: (v: string[]) => void;
+  t: ReturnType<typeof useTranslations>;
+  tc: ReturnType<typeof useTranslations>;
+  presets: Array<{ key: string; label: string; time: string }>;
 }) {
   function togglePreset(time: string) {
-    if (times.includes(time)) onTimesChange(times.filter((t) => t !== time));
+    if (times.includes(time)) onTimesChange(times.filter((x) => x !== time));
     else onTimesChange([...times, time].sort());
   }
   function addCustom() {
@@ -400,10 +416,10 @@ function ReminderTab({
       >
         <div>
           <div className="text-[13.5px] font-semibold">
-            Activer un rappel pour ce traitement
+            {t("reminder.enableTitle")}
           </div>
           <div className="text-[12px]" style={{ color: "var(--ink-500)" }}>
-            Vous recevrez une notification aux horaires choisis.
+            {t("reminder.enableSub")}
           </div>
         </div>
         <button
@@ -429,9 +445,9 @@ function ReminderTab({
       {enabled && (
         <>
           <div>
-            <Label className="text-sm font-semibold">Moments de la journée</Label>
+            <Label className="text-sm font-semibold">{t("reminder.momentsLabel")}</Label>
             <div className="flex gap-2 mt-2 flex-wrap">
-              {PRESET_TIMES.map((p) => {
+              {presets.map((p) => {
                 const on = times.includes(p.time);
                 return (
                   <button
@@ -453,13 +469,13 @@ function ReminderTab({
 
           <div>
             <div className="flex items-center justify-between mb-2">
-              <Label className="text-sm font-semibold">Horaires programmés</Label>
+              <Label className="text-sm font-semibold">{t("reminder.scheduledLabel")}</Label>
               <button
                 type="button"
                 onClick={addCustom}
                 className="ds-btn ds-btn-soft ds-btn-sm"
               >
-                <Plus className="w-3.5 h-3.5" /> Ajouter une heure
+                <Plus className="w-3.5 h-3.5" /> {t("reminder.addTime")}
               </button>
             </div>
             {times.length === 0 ? (
@@ -467,22 +483,22 @@ function ReminderTab({
                 className="text-[12px] rounded-lg p-3"
                 style={{ background: "var(--surface-2)", color: "var(--ink-500)" }}
               >
-                Aucun horaire programmé. Choisissez un moment ou ajoutez une heure libre.
+                {t("reminder.empty")}
               </p>
             ) : (
               <div className="flex flex-col gap-2">
-                {times.map((t, i) => (
+                {times.map((time, i) => (
                   <div key={i} className="flex items-center gap-2">
                     <Input
                       type="time"
-                      value={t}
+                      value={time}
                       onChange={(e) => updateAt(i, e.target.value)}
                       className="flex-1"
                     />
                     <button
                       type="button"
                       onClick={() => removeAt(i)}
-                      aria-label="Supprimer"
+                      aria-label={tc("delete")}
                       className="p-2 rounded-lg hover:bg-red-50"
                       style={{ color: "#E11D48" }}
                     >
@@ -493,7 +509,7 @@ function ReminderTab({
               </div>
             )}
             <p className="text-[11.5px] mt-2" style={{ color: "var(--ink-500)" }}>
-              Les rappels suivent les canaux configurés dans Paramètres &gt; Notifications.
+              {t("reminder.channelsNote")}
             </p>
           </div>
         </>
@@ -502,7 +518,7 @@ function ReminderTab({
   );
 }
 
-function MedItem({ m, onEdit, onDelete, archived = false }: { m: Medication; onEdit: (m: Medication) => void; onDelete: (id: string) => void; archived?: boolean }) {
+function MedItem({ m, onEdit, onDelete, archived = false, t, tc, dateFnsLocaleTag }: { m: Medication; onEdit: (m: Medication) => void; onDelete: (id: string) => void; archived?: boolean; t: ReturnType<typeof useTranslations>; tc: ReturnType<typeof useTranslations>; dateFnsLocaleTag: string }) {
   return (
     <li className={`rounded-2xl border ${archived ? "border-border bg-gray-50/50 opacity-80" : "border-border bg-white"} shadow-sm p-4`}>
       <div className="flex items-start justify-between gap-2">
@@ -515,18 +531,18 @@ function MedItem({ m, onEdit, onDelete, archived = false }: { m: Medication; onE
           )}
           {(m.startedAt || m.endedAt) && (
             <p className="text-xs text-muted-foreground mt-1">
-              {m.startedAt && `Depuis ${new Date(m.startedAt).toLocaleDateString("fr-FR")}`}
+              {m.startedAt && t("since", { date: new Date(m.startedAt).toLocaleDateString(dateFnsLocaleTag) })}
               {m.startedAt && m.endedAt && " — "}
-              {m.endedAt && `Arrêté ${new Date(m.endedAt).toLocaleDateString("fr-FR")}`}
+              {m.endedAt && t("stopped", { date: new Date(m.endedAt).toLocaleDateString(dateFnsLocaleTag) })}
             </p>
           )}
           {m.notes && <p className="text-xs text-foreground/70 mt-2 whitespace-pre-line">{m.notes}</p>}
         </div>
         <div className="flex gap-1 shrink-0">
-          <button type="button" onClick={() => onEdit(m)} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary" aria-label="Modifier">
+          <button type="button" onClick={() => onEdit(m)} className="p-2 rounded-lg hover:bg-secondary text-muted-foreground hover:text-primary" aria-label={tc("edit")}>
             <Pencil className="h-4 w-4" />
           </button>
-          <button type="button" onClick={() => onDelete(m.id)} className="p-2 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-600" aria-label="Supprimer">
+          <button type="button" onClick={() => onDelete(m.id)} className="p-2 rounded-lg hover:bg-red-50 text-muted-foreground hover:text-red-600" aria-label={tc("delete")}>
             <Trash2 className="h-4 w-4" />
           </button>
         </div>
