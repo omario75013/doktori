@@ -334,7 +334,18 @@
     "reset": "Réinitialiser",
     "chipNearMe": "📍 Près de moi",
     "chipPriceRange": "{min} - {max} DT",
-    "chipPriceInfinity": "∞"
+    "chipPriceInfinity": "∞",
+    "eyebrow": "Trouver un médecin",
+    "pageTitle": "Recherche médecins",
+    "subtitle": "Spécialité, ville, mode de consultation",
+    "totalCount": "{count} médecins",
+    "sortedByRelevance": "triés par pertinence",
+    "mapResults": "{count} résultats sur la carte",
+    "meta": {
+      "title": "Rechercher un médecin en Tunisie — RDV en ligne",
+      "description": "Trouvez un médecin par spécialité, ville ou nom et prenez rendez-vous en ligne. Généralistes, dentistes, dermatologues à Tunis, Ariana, La Marsa.",
+      "h1": "Rechercher un médecin en Tunisie"
+    }
   },
   "chatbot": {
     "openAriaLabel": "Ouvrir l'assistant Dokti",

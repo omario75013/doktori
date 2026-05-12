@@ -435,16 +435,16 @@ function RechercheInner() {
       {/* ═══════════════ PAGE HEADER (cyan redesign) ═══════════════ */}
       <div className="flex items-end justify-between gap-4 mb-4">
         <div>
-          <div className="ds-eyebrow">Trouver un médecin</div>
-          <h1 className="ds-page-title">Recherche médecins</h1>
+          <div className="ds-eyebrow">{t("eyebrow")}</div>
+          <h1 className="ds-page-title">{t("pageTitle")}</h1>
           {totalCount > 0 ? (
             <p className="ds-page-sub">
-              <strong style={{ color: "var(--ink-900)" }}>{totalCount} médecins</strong>
+              <strong style={{ color: "var(--ink-900)" }}>{t("totalCount", { count: totalCount })}</strong>
               {" · "}
-              triés par pertinence
+              {t("sortedByRelevance")}
             </p>
           ) : (
-            <p className="ds-page-sub">Spécialité, ville, mode de consultation</p>
+            <p className="ds-page-sub">{t("subtitle")}</p>
           )}
         </div>
       </div>
@@ -856,7 +856,7 @@ function RechercheInner() {
                   }}
                 >
                   <MapPin className="w-3.5 h-3.5" />
-                  {totalCount || results.length} résultats sur la carte
+                  {t("mapResults", { count: totalCount || results.length })}
                 </div>
                 <button
                   type="button"

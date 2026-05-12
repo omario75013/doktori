@@ -359,7 +359,18 @@
     "reset": "إعادة تعيين",
     "chipNearMe": "📍 قريب مني",
     "chipPriceRange": "{min} - {max} DT",
-    "chipPriceInfinity": "∞"
+    "chipPriceInfinity": "∞",
+    "eyebrow": "ابحث عن طبيب",
+    "pageTitle": "البحث عن أطباء",
+    "subtitle": "الاختصاص، المدينة، نمط الاستشارة",
+    "totalCount": "{count} طبيب",
+    "sortedByRelevance": "مرتّبون حسب الأهمية",
+    "mapResults": "{count} نتيجة على الخريطة",
+    "meta": {
+      "title": "البحث عن طبيب في تونس — حجز عبر الإنترنت",
+      "description": "ابحث عن طبيب حسب الاختصاص أو المدينة أو الاسم واحجز موعدك عبر الإنترنت. أطباء عامون، أطباء أسنان، أطباء جلد في تونس والأريانة والمرسى.",
+      "h1": "البحث عن طبيب في تونس"
+    }
   },
   "chatbot": {
     "openAriaLabel": "افتح معالج دوكتي",
