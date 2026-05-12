@@ -122,7 +122,7 @@ function ReferralList({ rows, direction, t }: { rows: Referral[]; direction: "in
               </p>
               <p className="text-xs text-gray-500">
                 {direction === "in" ? t("fromLabel") : t("toLabel")}
-                Dr. {r.counterpartName}
+                Dr. {r.counterpartName.replace(/^Dr\.?\s*/i, "")}
                 {r.counterpartSpecialty && ` · ${r.counterpartSpecialty}`}
               </p>
               <p className="text-xs text-gray-600 mt-1 line-clamp-2">{r.reason}</p>
