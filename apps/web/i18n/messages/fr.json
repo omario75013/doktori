@@ -605,7 +605,9 @@
       "savingButton": "Enregistrement…",
       "saveButton": "Enregistrer",
       "updatedSuccess": "Rendez-vous mis à jour",
-      "closeBtnLabel": "Fermer"
+      "closeBtnLabel": "Fermer",
+      "followupCancel": "Annuler",
+      "followupSubmit": "Programmer le suivi"
     },
     "patients": {
       "title": "Mes patients",

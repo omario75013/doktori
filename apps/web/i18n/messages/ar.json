@@ -605,7 +605,9 @@
       "savingButton": "جاري الحفظ…",
       "saveButton": "حفظ",
       "updatedSuccess": "تم تحديث الموعد",
-      "closeBtnLabel": "إغلاق"
+      "closeBtnLabel": "إغلاق",
+      "followupCancel": "إلغاء",
+      "followupSubmit": "جدولة المتابعة"
     },
     "patients": {
       "title": "مرضاي",

@@ -389,33 +389,38 @@ export default function RendezVousPage() {
   // Edit modal state
   const [editAppt, setEditAppt] = useState<Appointment | null>(null);
 
-  const fetchAppointments = useCallback(async () => {
-    setLoading(true);
+  // `silent` skips the setLoading(true) flicker so the polling/focus
+  // refreshes don't blank out the table every 20 seconds. The initial
+  // mount and explicit manual clicks call this without the flag and
+  // get the normal skeleton.
+  const fetchAppointments = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     setError(null);
     try {
       const qs = cabinetFilter === "all" ? "" : `?practiceId=${cabinetFilter}`;
-      const res = await fetch(`/api/appointments/doctor${qs}`);
+      const res = await fetch(`/api/appointments/doctor${qs}`, { cache: "no-store" });
       if (!res.ok) throw new Error(t("retry"));
       const data: Appointment[] = await res.json();
       setAppointments(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : t("retry"));
+      if (!silent) setError(e instanceof Error ? e.message : t("retry"));
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [cabinetFilter, t]);
 
   useEffect(() => {
     fetchAppointments();
-    // Poll every 20s + on tab focus so new bookings and patient cancellations
-    // surface without the doctor having to refresh. Aligned with the other
-    // doctor surfaces (dashboard today-summary 15s, calendrier 30s).
+    // Poll every 20s + on tab focus so new bookings and patient
+    // cancellations surface without the doctor having to refresh. We
+    // pass silent=true so the table stays visible — the user sees the
+    // rows update in place instead of a full-page skeleton flicker.
     const iv = setInterval(() => {
       if (typeof document === "undefined" || document.visibilityState === "visible") {
-        fetchAppointments();
+        fetchAppointments(true);
       }
     }, 20_000);
-    const onFocus = () => fetchAppointments();
+    const onFocus = () => fetchAppointments(true);
     window.addEventListener("focus", onFocus);
     return () => {
       clearInterval(iv);
@@ -637,7 +642,7 @@ export default function RendezVousPage() {
       <div className="p-6 space-y-3">
         <p className="text-red-500 text-sm">{error}</p>
         <button
-          onClick={fetchAppointments}
+          onClick={() => fetchAppointments()}
           className="text-sm text-primary hover:underline"
         >
           {t("retry")}
@@ -664,7 +669,7 @@ export default function RendezVousPage() {
             {t("newButton")}
           </button>
           <button
-            onClick={fetchAppointments}
+            onClick={() => fetchAppointments()}
             className="text-sm text-primary hover:text-doktori-teal-dark font-medium border border-border hover:bg-secondary rounded-xl px-3 py-2 transition-colors"
           >
             {t("refresh")}
@@ -974,14 +979,14 @@ export default function RendezVousPage() {
                 onClick={() => setFollowupDialogId(null)}
                 className="px-4 py-2 text-sm rounded-xl border border-border hover:bg-secondary text-gray-600 dark:text-gray-400 transition-colors"
               >
-                {t("cancelKeep")}
+                {t("followupCancel")}
               </button>
               <button
                 onClick={submitFollowup}
                 disabled={updating === followupDialogId}
                 className="px-4 py-2 text-sm rounded-xl bg-primary hover:bg-doktori-teal-dark text-white font-bold disabled:opacity-40 transition-colors"
               >
-                {updating === followupDialogId ? "..." : t("cancelConfirm")}
+                {updating === followupDialogId ? "..." : t("followupSubmit")}
               </button>
             </div>
           </div>
