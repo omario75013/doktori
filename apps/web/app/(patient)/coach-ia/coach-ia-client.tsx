@@ -335,7 +335,7 @@ export function CoachIaClient({ disclaimerHtml }: CoachIaClientProps) {
                     <Link
                       key={id}
                       href={`/recherche?specialty=${id}`}
-                      className="inline-block mr-2 mt-1 rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-xs hover:bg-blue-200"
+                      className="inline-block me-2 mt-1 rounded-full bg-blue-100 text-blue-700 px-3 py-1 text-xs hover:bg-blue-200"
                     >
                       Prendre RDV avec un {specialtyLabel(id)}
                     </Link>

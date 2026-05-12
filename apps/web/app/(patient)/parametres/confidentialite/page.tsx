@@ -132,7 +132,7 @@ export default function ConfidentialiteParametresPage() {
 
           {/* Essential — forced on */}
           <div className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 rounded-xl px-4 py-3 mb-2">
-            <div className="flex-1 mr-4">
+            <div className="flex-1 me-4">
               <div className="flex items-center gap-1.5 mb-0.5">
                 <p className="text-sm font-medium text-foreground">Cookies essentiels</p>
                 <span className="text-[10px] bg-gray-100 dark:bg-gray-700 text-gray-500 px-1.5 py-0.5 rounded-full">Obligatoire</span>
@@ -140,7 +140,7 @@ export default function ConfidentialiteParametresPage() {
               <p className="text-xs text-gray-400">Nécessaires au fonctionnement du site. Ne peuvent pas être désactivés.</p>
             </div>
             <div className="w-10 h-6 bg-primary rounded-full opacity-60 cursor-not-allowed shrink-0 relative">
-              <span className="block w-4 h-4 rounded-full bg-white absolute right-1 top-1" />
+              <span className="block w-4 h-4 rounded-full bg-white absolute end-1 top-1" />
             </div>
           </div>
 
@@ -161,7 +161,7 @@ export default function ConfidentialiteParametresPage() {
                     key={type}
                     className="flex items-center justify-between bg-gray-50 dark:bg-gray-900 rounded-xl px-4 py-3"
                   >
-                    <div className="flex-1 mr-4">
+                    <div className="flex-1 me-4">
                       <p className="text-sm font-medium text-foreground">{label}</p>
                       <p className="text-xs text-gray-400 mt-0.5">{description}</p>
                     </div>

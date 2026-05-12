@@ -607,7 +607,7 @@ export default function MesDocumentsPage() {
             className="text-[12.5px] mb-3 px-2.5 py-2 rounded-lg"
             style={{ background: "var(--surface-2)", color: "var(--ink-700)" }}
           >
-            <FileText className="inline w-3.5 h-3.5 mr-1" />
+            <FileText className="inline w-3.5 h-3.5 me-1" />
             {pendingFile.name} · {(pendingFile.size / 1024).toFixed(0)} Ko
           </p>
 
@@ -741,7 +741,7 @@ export default function MesDocumentsPage() {
               pouvoir partager des documents.
             </div>
           ) : (
-            <ul className="space-y-1.5 max-h-[300px] overflow-y-auto pr-1">
+            <ul className="space-y-1.5 max-h-[300px] overflow-y-auto pe-1">
               {myDoctors.map((d) => {
                 const checked = shareSelected.has(d.id);
                 return (

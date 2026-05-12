@@ -179,20 +179,20 @@ export default function SecuriteParametresPage() {
                     onClick={() => setShowDisableForm(true)}
                     className="rounded-xl border-red-200 text-red-600 hover:bg-red-50"
                   >
-                    <ShieldOff className="w-4 h-4 mr-2" />
+                    <ShieldOff className="w-4 h-4 me-2" />
                     Désactiver la 2FA
                   </Button>
                 ) : (
                   <div className="mt-3 space-y-3 max-w-sm">
                     <p className="text-sm text-gray-500">Entrez votre mot de passe pour confirmer :</p>
                     <div className="relative">
-                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                      <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
                       <Input
                         type="password"
                         value={disablePassword}
                         onChange={(e) => setDisablePassword(e.target.value)}
                         placeholder="Mot de passe"
-                        className="pl-10 rounded-xl h-11"
+                        className="ps-10 rounded-xl h-11"
                       />
                     </div>
                     <div className="flex gap-2">
@@ -218,7 +218,7 @@ export default function SecuriteParametresPage() {
               </div>
             ) : (
               <Button onClick={startSetup} className="rounded-xl">
-                <QrCode className="w-4 h-4 mr-2" />
+                <QrCode className="w-4 h-4 me-2" />
                 Activer la double authentification
               </Button>
             )
@@ -307,7 +307,7 @@ export default function SecuriteParametresPage() {
                 ))}
               </div>
               <Button onClick={finishSetup} className="rounded-xl">
-                <CheckCircle className="w-4 h-4 mr-2" />
+                <CheckCircle className="w-4 h-4 me-2" />
                 J'ai sauvegardé mes codes
               </Button>
             </div>

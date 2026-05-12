@@ -2374,5 +2374,20 @@
       "sectionSysteme": "Système",
       "templates": "Modèles ordonnances"
     }
+  },
+  "cookieBanner": {
+    "title": "Gestion des cookies",
+    "description": "Nous utilisons des cookies pour améliorer votre expérience. Les cookies essentiels sont nécessaires au fonctionnement du site.",
+    "customize": "Personnaliser mes choix",
+    "hideDetails": "Masquer les détails",
+    "essential": "Essentiels",
+    "essentialDesc": "Nécessaires au fonctionnement du site",
+    "analytics": "Analytiques",
+    "analyticsDesc": "Comprendre comment vous utilisez le site",
+    "marketing": "Marketing",
+    "marketingDesc": "Publicités personnalisées",
+    "rejectAll": "Refuser tout",
+    "saveChoices": "Enregistrer mes choix",
+    "acceptAll": "Tout accepter"
   }
 }

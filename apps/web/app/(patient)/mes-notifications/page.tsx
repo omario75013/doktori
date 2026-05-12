@@ -171,7 +171,7 @@ export default function MesNotificationsPage() {
               <li key={n.id}>
                 <button
                   onClick={() => markRead(n.id, n.link)}
-                  className={`w-full text-left rounded-xl border border-[color:var(--line-cool)] bg-white p-3.5 hover:border-[color:var(--primary-300)] transition-all flex gap-3 ${
+                  className={`w-full text-start rounded-xl border border-[color:var(--line-cool)] bg-white p-3.5 hover:border-[color:var(--primary-300)] transition-all flex gap-3 ${
                     !n.readAt ? "ring-2 ring-[color:var(--primary-50)]" : ""
                   }`}
                 >

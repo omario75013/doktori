@@ -90,7 +90,7 @@ export default function FavorisPage() {
       {items.length > 0 && (
         <div className="ds-card-patient mb-4" style={{ padding: 10 }}>
           <div className="flex items-center gap-2">
-            <SearchIcon className="w-4 h-4 ml-1" style={{ color: "var(--ink-500)" }} />
+            <SearchIcon className="w-4 h-4 ms-1" style={{ color: "var(--ink-500)" }} />
             <input
               type="text"
               value={query}
@@ -161,13 +161,13 @@ export default function FavorisPage() {
                 <button
                   onClick={() => remove(f.doctorId)}
                   aria-label="Retirer des favoris"
-                  className="absolute top-3 right-3 inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-rose-50 transition-colors"
+                  className="absolute top-3 end-3 inline-flex items-center justify-center w-8 h-8 rounded-full hover:bg-rose-50 transition-colors"
                   style={{ color: "#E11D48" }}
                 >
                   <X className="h-4 w-4" />
                 </button>
 
-                <Link href={`/medecin/${f.doctorSlug}`} className="flex items-center gap-3 pr-6">
+                <Link href={`/medecin/${f.doctorSlug}`} className="flex items-center gap-3 pe-6">
                   <div
                     className="w-14 h-14 rounded-2xl overflow-hidden grid place-items-center shrink-0 font-extrabold text-white text-[15px]"
                     style={{

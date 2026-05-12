@@ -2374,5 +2374,20 @@
       "sectionSysteme": "النظام",
       "templates": "نماذج الوصفات"
     }
+  },
+  "cookieBanner": {
+    "title": "إدارة ملفات تعريف الارتباط",
+    "description": "نستخدم ملفات تعريف الارتباط لتحسين تجربتك. الملفات الأساسية ضرورية لعمل الموقع.",
+    "customize": "تخصيص خياراتي",
+    "hideDetails": "إخفاء التفاصيل",
+    "essential": "أساسية",
+    "essentialDesc": "ضرورية لعمل الموقع",
+    "analytics": "إحصائيات",
+    "analyticsDesc": "فهم كيفية استخدامك للموقع",
+    "marketing": "تسويق",
+    "marketingDesc": "إعلانات مخصّصة",
+    "rejectAll": "رفض الكل",
+    "saveChoices": "حفظ خياراتي",
+    "acceptAll": "قبول الكل"
   }
 }

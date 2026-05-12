@@ -532,7 +532,7 @@ function RechercheInner() {
             <SlidersHorizontal className="h-5 w-5" strokeWidth={2.2} />
             {filterCount > 0 && (
               <span
-                className="ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
+                className="ms-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold"
                 style={{ background: "var(--primary-500)", color: "#fff" }}
               >
                 {filterCount}

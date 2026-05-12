@@ -173,11 +173,11 @@ export default function VaccinationsPage() {
           </div>
         ) : (
           <div className="relative">
-            <div className="absolute left-4 top-2 bottom-2 w-px bg-border" aria-hidden />
+            <div className="absolute start-4 top-2 bottom-2 w-px bg-border" aria-hidden />
             <ul className="space-y-3">
               {items.map((v) => (
-                <li key={v.id} className="relative pl-10">
-                  <span aria-hidden className="absolute left-2 top-4 flex h-5 w-5 items-center justify-center rounded-full bg-primary ring-2 ring-white">
+                <li key={v.id} className="relative ps-10">
+                  <span aria-hidden className="absolute start-2 top-4 flex h-5 w-5 items-center justify-center rounded-full bg-primary ring-2 ring-white">
                     <ShieldCheck className="h-3 w-3 text-white" />
                   </span>
                   <div className="rounded-2xl border border-border bg-white shadow-sm p-4">
@@ -330,7 +330,7 @@ function ProviderLookup({
       />
       {open && value.trim().length >= 2 && (loading || results.length > 0) && (
         <div
-          className="absolute z-30 left-0 right-0 mt-1 rounded-xl overflow-hidden"
+          className="absolute z-30 start-0 end-0 mt-1 rounded-xl overflow-hidden"
           style={{
             background: "#fff",
             border: "1px solid var(--line-cool)",
@@ -362,7 +362,7 @@ function ProviderLookup({
                         onChange(r.name);
                         setOpen(false);
                       }}
-                      className="w-full text-left px-3 py-2 text-sm hover:bg-[color:var(--surface-2)] flex items-center gap-3"
+                      className="w-full text-start px-3 py-2 text-sm hover:bg-[color:var(--surface-2)] flex items-center gap-3"
                     >
                       <div
                         className="w-9 h-9 rounded-full overflow-hidden shrink-0 grid place-items-center text-[11px] font-extrabold text-white"

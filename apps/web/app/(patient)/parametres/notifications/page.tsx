@@ -325,7 +325,7 @@ function ChannelCard({
           onChange(!on);
         }
       }}
-      className="rounded-xl border p-3 text-left transition cursor-pointer"
+      className="rounded-xl border p-3 text-start transition cursor-pointer"
       style={{
         borderColor: on ? "var(--primary-500)" : "var(--line-cool)",
         background: on ? "var(--primary-50)" : "#fff",
@@ -344,7 +344,7 @@ function ChannelCard({
         <span className="font-bold text-[13.5px]" style={{ color: "var(--ink-900)" }}>
           {title}
         </span>
-        <span className="ml-auto">
+        <span className="ms-auto">
           <Toggle on={on} onChange={onChange} />
         </span>
       </div>

@@ -276,7 +276,7 @@ export default function DossierMedicalPage() {
                 Aucune consultation enregistrée.
               </p>
             ) : (
-              <div className="relative pl-5">
+              <div className="relative ps-5">
                 <div className="absolute left-1.5 top-1.5 bottom-1.5 w-0.5" style={{ background: "var(--line-cool)" }} />
                 {consultations.slice(0, 5).map((c) => (
                   <ConsultDot

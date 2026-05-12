@@ -210,7 +210,7 @@ export default function CarnetEnfantDetailPage({ params }: { params: Promise<{ d
                         {vacc.dosesCount > 1 && <span>· dose {r.doseNumber}</span>}
                         <button
                           onClick={() => handleDelete(r.id)}
-                          className="ml-1 hover:text-red-600"
+                          className="ms-1 hover:text-red-600"
                           aria-label="Supprimer"
                         >
                           <Trash2 className="w-3 h-3" />

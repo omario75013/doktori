@@ -266,7 +266,7 @@ export default function RechercheMedicalePage() {
                   <strong className="text-foreground">Usages autorisés.</strong>{" "}
                   Les données anonymisées peuvent être utilisées pour&nbsp;:
                 </p>
-                <ul className="list-disc pl-5 space-y-1">
+                <ul className="list-disc ps-5 space-y-1">
                   <li>statistiques agrégées de santé publique</li>
                   <li>études cliniques avec partenaires de recherche
                     académiques tunisiens (université de Tunis, Sfax, Sousse,

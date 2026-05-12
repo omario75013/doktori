@@ -212,7 +212,7 @@ export default function ParametresComptePage() {
               type="button"
               onClick={() => photoInputRef.current?.click()}
               disabled={photoUploading}
-              className="absolute -bottom-1 -right-1 w-8 h-8 rounded-full grid place-items-center"
+              className="absolute -bottom-1 -end-1 w-8 h-8 rounded-full grid place-items-center"
               style={{
                 background: "#FFFFFF",
                 border: "1px solid var(--line-cool)",

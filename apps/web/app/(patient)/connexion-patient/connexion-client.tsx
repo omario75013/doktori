@@ -174,8 +174,8 @@ export function ConnexionPatientClient() {
           ))}
         </div>
 
-        <div aria-hidden className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-white/5" />
-        <div aria-hidden className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-accent/10" />
+        <div aria-hidden className="absolute -bottom-20 -end-20 h-64 w-64 rounded-full bg-white/5" />
+        <div aria-hidden className="absolute -top-10 -end-10 h-40 w-40 rounded-full bg-accent/10" />
       </div>
 
       {/* Right panel */}
@@ -252,7 +252,7 @@ export function ConnexionPatientClient() {
                     disabled={loading}
                   >
                     {loading ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t("sendingCode")}</>
+                      <><Loader2 className="h-4 w-4 me-2 animate-spin" />{t("sendingCode")}</>
                     ) : (
                       t("sendCodeBtn")
                     )}
@@ -286,7 +286,7 @@ export function ConnexionPatientClient() {
                     disabled={loading}
                   >
                     {loading ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t("verifying")}</>
+                      <><Loader2 className="h-4 w-4 me-2 animate-spin" />{t("verifying")}</>
                     ) : (
                       t("verifyBtn")
                     )}
@@ -340,7 +340,7 @@ export function ConnexionPatientClient() {
                     disabled={loading}
                   >
                     {loading ? (
-                      <><Loader2 className="h-4 w-4 mr-2 animate-spin" />{t("loggingIn")}</>
+                      <><Loader2 className="h-4 w-4 me-2 animate-spin" />{t("loggingIn")}</>
                     ) : (
                       t("loginBtn")
                     )}

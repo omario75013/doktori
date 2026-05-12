@@ -218,8 +218,8 @@ export function InscriptionPatientClient() {
           ))}
         </div>
 
-        <div aria-hidden className="absolute -bottom-20 -right-20 h-64 w-64 rounded-full bg-white/5" />
-        <div aria-hidden className="absolute -top-10 -right-10 h-40 w-40 rounded-full bg-accent/10" />
+        <div aria-hidden className="absolute -bottom-20 -end-20 h-64 w-64 rounded-full bg-white/5" />
+        <div aria-hidden className="absolute -top-10 -end-10 h-40 w-40 rounded-full bg-accent/10" />
       </div>
 
       {/* Right panel */}
@@ -390,13 +390,13 @@ export function InscriptionPatientClient() {
               >
                 {loading ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    <Loader2 className="h-4 w-4 me-2 animate-spin" />
                     Création en cours...
                   </>
                 ) : (
                   <>
                     Créer mon espace patient
-                    <Check className="h-4 w-4 ml-2" />
+                    <Check className="h-4 w-4 ms-2" />
                   </>
                 )}
               </Button>

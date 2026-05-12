@@ -164,11 +164,11 @@ export default function AnalysesPage() {
           </div>
         ) : (
           <div className="relative">
-            <div className="absolute left-4 top-2 bottom-2 w-px bg-border" aria-hidden />
+            <div className="absolute start-4 top-2 bottom-2 w-px bg-border" aria-hidden />
             <ul className="space-y-3">
               {items.map((a) => (
-                <li key={a.id} className="relative pl-10">
-                  <span aria-hidden className="absolute left-2 top-4 flex h-5 w-5 items-center justify-center rounded-full bg-primary ring-2 ring-white">
+                <li key={a.id} className="relative ps-10">
+                  <span aria-hidden className="absolute start-2 top-4 flex h-5 w-5 items-center justify-center rounded-full bg-primary ring-2 ring-white">
                     <FileText className="h-3 w-3 text-white" />
                   </span>
                   <div className="rounded-2xl border border-border bg-white shadow-sm p-4">

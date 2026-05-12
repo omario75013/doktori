@@ -205,7 +205,7 @@ export default function MesRdvPage() {
           >
             À venir{" "}
             <span
-              className="inline-block ml-2 px-2 rounded-full text-[11px]"
+              className="inline-block ms-2 px-2 rounded-full text-[11px]"
               style={{ background: "var(--primary-50)", color: "var(--primary-700)" }}
             >
               {upcoming.length}
@@ -235,7 +235,7 @@ export default function MesRdvPage() {
             <Filter className="w-4 h-4" /> Filtrer
             {activeFilterCount > 0 && (
               <span
-                className="ml-1 inline-block px-1.5 rounded-full text-[10px] font-bold"
+                className="ms-1 inline-block px-1.5 rounded-full text-[10px] font-bold"
                 style={{ background: "rgba(255,255,255,0.25)" }}
               >
                 {activeFilterCount}
@@ -827,7 +827,7 @@ function CalendarView({
               }}
             >
               <div
-                className="text-[11px] font-bold text-right mb-0.5"
+                className="text-[11px] font-bold text-end mb-0.5"
                 style={{ color: today ? "var(--primary-700)" : "var(--ink-700)" }}
               >
                 {d.getDate()}
@@ -840,7 +840,7 @@ function CalendarView({
                       key={a.id}
                       type="button"
                       onClick={() => onSelect(a)}
-                      className="text-left text-[10.5px] font-semibold rounded px-1 py-0.5 truncate"
+                      className="text-start text-[10.5px] font-semibold rounded px-1 py-0.5 truncate"
                       style={{
                         background: isVid ? "#E0F2FE" : "var(--primary-100)",
                         color: isVid ? "#075985" : "var(--primary-700)",
