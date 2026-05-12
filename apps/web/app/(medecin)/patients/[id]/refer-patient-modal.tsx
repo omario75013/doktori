@@ -42,56 +42,14 @@ export function ReferPatientModal({
     let alive = true;
     async function load() {
       try {
-        const res = await fetch("/api/doctor/network/connect", { cache: "no-store" });
+        // /api/doctor/network/peers returns only doctors currently in
+        // the user's "Mon réseau" (doctor_connections.status='accepted'),
+        // with name/specialty/photo already joined. Anyone NOT connected
+        // is excluded — referrals only flow inside the network.
+        const res = await fetch("/api/doctor/network/peers", { cache: "no-store" });
         if (!res.ok) throw new Error("Erreur");
-        const data = await res.json();
-        // Endpoint returns the raw rows — keep only accepted, then fetch
-        // peer names. The /reseau page renders names via SQL JOIN; for a
-        // simple modal we can derive them from /api/doctors/by-slug too,
-        // but the cheaper path is to call /api/doctor/peer-conversations
-        // which already exposes peerName / specialty / photo for each
-        // accepted connection.
-        const conv = await fetch("/api/doctor/peer-conversations", {
-          cache: "no-store",
-        });
-        if (!conv.ok) throw new Error("Erreur");
-        const threads = await conv.json();
-        // We also need accepted peers that don't yet have a conversation.
-        // Map from connection rows to doctor IDs and union with thread peers.
-        const acceptedIds: string[] = Array.isArray(data)
-          ? (data as Array<{ requesterId: string; addresseeId: string; status: string }>)
-              .filter((r) => r.status === "accepted")
-              .map((r) => (r.requesterId === r.addresseeId ? r.requesterId : r.addresseeId))
-          : [];
-        const peerSet = new Map<string, Peer>();
-        for (const th of threads as Array<{
-          peerId: string;
-          peerName: string;
-          peerSpecialty: string | null;
-          peerPhotoUrl: string | null;
-        }>) {
-          peerSet.set(th.peerId, {
-            id: th.peerId,
-            name: th.peerName,
-            specialty: th.peerSpecialty,
-            photoUrl: th.peerPhotoUrl,
-          });
-        }
-        // Fetch doctor details for any accepted peer not yet in the map.
-        const missing = acceptedIds.filter((id) => !peerSet.has(id));
-        if (missing.length > 0) {
-          for (const id of missing) {
-            try {
-              const r = await fetch(`/api/doctors/${id}/status`, { cache: "no-store" });
-              // status route returns minimal data — skip if no name; we
-              // simply omit unreferenceable peers rather than fail.
-              if (!r.ok) continue;
-            } catch {
-              /* ignore */
-            }
-          }
-        }
-        if (alive) setPeers(Array.from(peerSet.values()));
+        const data = (await res.json()) as Peer[];
+        if (alive) setPeers(Array.isArray(data) ? data : []);
       } catch {
         if (alive) toast.error(t("referLoadError"));
       } finally {
