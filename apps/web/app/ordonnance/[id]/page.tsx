@@ -3,7 +3,8 @@ import { eq } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import { SPECIALTIES } from "@doktori/shared";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { ar, fr } from "date-fns/locale";
+import { getLocale, getTranslations } from "next-intl/server";
 import { PrintButton } from "@/components/print-button";
 import { QRCode } from "@/components/qr-code";
 import { renderPrescriptionContent } from "@/lib/prescription-render";
@@ -17,6 +18,12 @@ export default async function PrescriptionPage({
 }) {
   const { id } = await params;
   const { print } = await searchParams;
+
+  const locale = (await getLocale()) || "fr";
+  const isAr = locale === "ar";
+  const dateLocale = isAr ? ar : fr;
+  const t = await getTranslations({ locale, namespace: "medicalDocs.ordonnance" });
+  const tc = await getTranslations({ locale, namespace: "medicalDocs.common" });
 
   const [result] = await db
     .select({
@@ -79,12 +86,16 @@ export default async function PrescriptionPage({
         />
       )}
 
-      <div id="prescription-root" className="max-w-2xl mx-auto p-8 print:p-0 bg-white min-h-screen">
+      <div
+        id="prescription-root"
+        dir={isAr ? "rtl" : "ltr"}
+        className="max-w-2xl mx-auto p-8 print:p-0 bg-white min-h-screen"
+      >
 
         {/* Print action bar — hidden on print */}
         <div className="no-print mb-6 flex items-center justify-between bg-secondary border border-border rounded-xl px-5 py-3">
           <p className="text-sm text-foreground font-medium">
-            Ordonnance — {result.patientName}
+            {t("headerLabel")} — {result.patientName}
           </p>
           <PrintButton />
         </div>
@@ -99,20 +110,20 @@ export default async function PrescriptionPage({
             <p className="text-sm text-gray-500 mt-2">{result.doctorAddress}</p>
           )}
           {result.doctorPhone && (
-            <p className="text-sm text-gray-500">Tél : {result.doctorPhone}</p>
+            <p className="text-sm text-gray-500">{tc("phoneLabel")} {result.doctorPhone}</p>
           )}
         </div>
 
         {/* Patient info + date row */}
         <div className="mb-8 flex justify-between items-start text-sm">
           <div>
-            <p className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">Patient</p>
+            <p className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">{tc("patient")}</p>
             <p className="font-semibold text-gray-800">{result.patientName || "—"}</p>
           </div>
-          <div className="text-right">
-            <p className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">Date</p>
+          <div className="text-end">
+            <p className="text-gray-400 text-xs uppercase tracking-wide mb-0.5">{tc("date")}</p>
             <p className="font-semibold text-gray-800">
-              {format(new Date(result.createdAt), "d MMMM yyyy", { locale: fr })}
+              {format(new Date(result.createdAt), "d MMMM yyyy", { locale: dateLocale })}
             </p>
           </div>
         </div>
@@ -120,7 +131,7 @@ export default async function PrescriptionPage({
         {/* Section title */}
         <div className="flex items-center gap-3 mb-4">
           <div className="h-px flex-1 bg-gray-200" />
-          <span className="text-xs font-bold uppercase tracking-widest text-gray-400">Ordonnance médicale</span>
+          <span className="text-xs font-bold uppercase tracking-widest text-gray-400">{t("sectionTitle")}</span>
           <div className="h-px flex-1 bg-gray-200" />
         </div>
 
@@ -147,7 +158,7 @@ export default async function PrescriptionPage({
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={result.doctorSignatureUrl}
-                alt="Signature du médecin"
+                alt={tc("signatureAlt")}
                 style={{
                   height: 64,
                   maxWidth: 200,
@@ -159,7 +170,7 @@ export default async function PrescriptionPage({
             ) : (
               <div className="h-16 border-b border-gray-300 mb-2" />
             )}
-            <p className="text-xs text-gray-500">Signature et cachet du médecin</p>
+            <p className="text-xs text-gray-500">{tc("signatureCaption")}</p>
             <p className="text-sm font-medium text-gray-700 mt-1">{result.doctorName}</p>
           </div>
         </div>
@@ -172,12 +183,12 @@ export default async function PrescriptionPage({
               size={80}
             />
             <div>
-              <p className="text-xs font-bold text-gray-600 mb-0.5">Vérification de l&apos;authenticité</p>
+              <p className="text-xs font-bold text-gray-600 mb-0.5">{tc("verificationTitle")}</p>
               <p className="text-xs text-gray-400">
-                Scannez ce QR code pour vérifier que cette ordonnance est authentique et n&apos;a pas été falsifiée.
+                {t("verifyHint")}
               </p>
               <p className="text-xs text-primary mt-1 font-mono break-all">
-                doktori.tn/verification-ordonnance
+                {t("verifyUrl")}
               </p>
             </div>
           </div>
@@ -185,8 +196,8 @@ export default async function PrescriptionPage({
 
         {/* Footer branding — visible on screen and print */}
         <div className="mt-12 pt-4 border-t border-gray-200 text-xs text-center text-gray-400">
-          Document généré via{" "}
-          <span className="font-semibold text-primary">Doktori.tn</span>
+          {tc("qrFooter")}{" "}
+          <span className="font-semibold text-primary">{tc("brand")}</span>
         </div>
       </div>
     </>

@@ -2389,5 +2389,228 @@
     "rejectAll": "Refuser tout",
     "saveChoices": "Enregistrer mes choix",
     "acceptAll": "Tout accepter"
+  },
+  "sos": {
+    "meta": {
+      "title": "SOS Médecin — Urgence médicale à domicile en Tunisie",
+      "description": "Trouvez un médecin disponible près de chez vous en quelques minutes. Fièvre, douleur aiguë, enfant malade — urgences non-vitales uniquement, réponse rapide.",
+      "ogDescription": "Trouvez un médecin disponible près de chez vous en quelques minutes pour une urgence non-vitale."
+    },
+    "client": {
+      "cancelConfirm": {
+        "title": "Confirmer l'annulation",
+        "messageDoctorAccepted": "{doctorName} a déjà accepté votre demande. Êtes-vous sûr de vouloir annuler ?",
+        "defaultDoctor": "Le médecin",
+        "messageGeneric": "Voulez-vous vraiment annuler votre demande SOS ?",
+        "keep": "Non, garder",
+        "confirm": "Oui, annuler"
+      },
+      "intro": {
+        "badge": "Service d'urgence non-vitale",
+        "titleLine1": "Un médecin chez vous",
+        "titleLine2": "en quelques minutes",
+        "heroAlt": "Médecin tunisien rassurant lors d'une consultation d'urgence",
+        "subtitle": "Fièvre, douleur aiguë, enfant malade... Doktori localise et contacte automatiquement le médecin le plus proche disponible pour une visite à domicile.",
+        "ctaButton": "Demander un médecin maintenant",
+        "samuTitle": "Urgence vitale ?",
+        "samuBody": "Composez le {samu} ou le {protection}. Doktori SOS est destiné aux consultations urgentes non-vitales uniquement.",
+        "samuLabel": "190 (SAMU)",
+        "protectionLabel": "198 (Protection civile)",
+        "howItWorks": "Comment ça marche",
+        "fourSteps": "4 étapes simples",
+        "step1Title": "Décrivez",
+        "step1Desc": "Indiquez vos symptômes et vos coordonnées",
+        "step2Title": "Localisation",
+        "step2Desc": "Nous détectons automatiquement votre position GPS",
+        "step3Title": "Matching",
+        "step3Desc": "Nous contactons les médecins SOS dans votre zone",
+        "step4Title": "Prise en charge",
+        "step4Desc": "Un médecin accepte et vous contacte directement",
+        "trustResponseLabel": "Temps de réponse moyen",
+        "trustResponseValue": "< 15 minutes",
+        "trustCoverageLabel": "Zone de couverture",
+        "trustCoverageValue": "Grand Tunis",
+        "trustVerifiedLabel": "Médecins vérifiés",
+        "trustVerifiedValue": "100% inscrits",
+        "faqTitle": "Questions fréquentes",
+        "faq1Q": "Combien coûte une consultation SOS ?",
+        "faq1A": "Le tarif est fixé par le médecin (généralement entre 50 et 100 DT). Vous serez informé du montant avant de confirmer.",
+        "faq2Q": "Et si aucun médecin n'est disponible ?",
+        "faq2A": "Vous pouvez relancer une recherche ou contacter le SAMU (190) pour les urgences vitales. Notre réseau de médecins s'agrandit chaque jour.",
+        "faq3Q": "Le médecin vient à domicile ?",
+        "faq3A": "Selon la disponibilité, le médecin peut vous recevoir à son cabinet, se déplacer chez vous, ou proposer une téléconsultation."
+      },
+      "form": {
+        "headerTitle": "Demande SOS",
+        "headerSubtitle": "Consultation urgente non-vitale",
+        "nameLabel": "Votre nom",
+        "namePlaceholder": "Prénom et nom",
+        "phoneLabel": "Téléphone",
+        "phonePlaceholder": "+216 XX XXX XXX",
+        "symptomLabel": "Type de symptôme",
+        "symptomFever": "Fièvre",
+        "symptomPain": "Douleur aiguë",
+        "symptomChild": "Enfant malade",
+        "symptomOther": "Autre",
+        "descriptionLabel": "Description",
+        "descriptionOptional": "(optionnel)",
+        "descriptionPlaceholder": "Décrivez vos symptômes pour aider le médecin...",
+        "submit": "Localiser et envoyer la demande",
+        "back": "Retour"
+      },
+      "locating": {
+        "title": "Obtention de votre position...",
+        "subtitle": "Veuillez autoriser l'accès à votre localisation"
+      },
+      "waiting": {
+        "remaining": "restantes",
+        "searching": "Recherche en cours...",
+        "body": "Nous contactons les médecins disponibles dans votre quartier. Vous serez notifié dès qu'un médecin accepte.",
+        "cancelling": "Annulation...",
+        "cancel": "Annuler ma demande"
+      },
+      "accepted": {
+        "title": "Médecin trouvé !",
+        "subtitle": "Un médecin a accepté votre demande",
+        "doctorRole": "Médecin généraliste",
+        "callButton": "Appeler Dr. {lastName}",
+        "footer": "Vous recevrez un SMS de confirmation. Convenez de la modalité (cabinet, domicile ou téléconsultation) directement avec le médecin.",
+        "cancel": "Annuler"
+      },
+      "expired": {
+        "title": "Aucun médecin disponible",
+        "body": "Aucun médecin n'a pu répondre à votre demande dans le délai imparti. Vous pouvez réessayer ou contacter le SAMU (190).",
+        "retry": "Réessayer",
+        "callSamu": "Appeler le SAMU (190)"
+      },
+      "cancelled": {
+        "title": "Demande annulée",
+        "body": "Votre demande SOS a été annulée. Vous pouvez en créer une nouvelle à tout moment.",
+        "newRequest": "Nouvelle demande"
+      },
+      "errors": {
+        "geoUnsupported": "Géolocalisation non supportée par votre navigateur",
+        "geoDenied": "Veuillez autoriser l'accès à votre position dans les paramètres de votre navigateur",
+        "geoUnavailable": "Position indisponible. Vérifiez que le GPS est activé sur votre appareil",
+        "geoTimeout": "La localisation a pris trop de temps. Réessayez",
+        "geoGeneric": "Impossible d'obtenir votre position",
+        "sendFailed": "Erreur lors de l'envoi de la demande"
+      }
+    },
+    "medecin": {
+      "loading": "Chargement...",
+      "actionErrorClose": "Fermer",
+      "cancelModal": {
+        "title": "Annuler la consultation ?",
+        "body": "Cette action annulera la consultation en cours. Le patient sera notifié.",
+        "no": "Non",
+        "yesCancel": "Oui, annuler"
+      },
+      "header": {
+        "title": "SOS Docteur",
+        "subtitle": "Activez le mode urgence pour recevoir des demandes de consultation rapide dans votre zone.",
+        "notVital": "Ce n'est PAS un service d'urgence vitale — composez le 190 pour le SAMU."
+      },
+      "settings": {
+        "statusAvailable": "Vous êtes disponible — les patients peuvent vous solliciter",
+        "statusDisabled": "Mode SOS désactivé",
+        "radiusLabel": "Rayon (km)",
+        "feeLabel": "Tarif consultation urgence (DT)",
+        "allDayLabel": "24h/24 (toujours disponible)",
+        "fromLabel": "Disponible de",
+        "toLabel": "à",
+        "deactivate": "Désactiver le mode SOS",
+        "activate": "Activer le mode SOS",
+        "geoUnsupported": "Géolocalisation non supportée par votre navigateur",
+        "geoDenied": "Impossible d'obtenir votre position. Autorisez la géolocalisation.",
+        "genericError": "Erreur"
+      },
+      "active": {
+        "title": "Consultation en cours",
+        "patient": "Patient :",
+        "symptom": "Symptôme :",
+        "symptomUnspecified": "Non spécifié",
+        "distance": "Distance :",
+        "elapsed": "Temps écoulé :",
+        "complete": "Consultation terminée",
+        "cancelling": "Annulation...",
+        "cancel": "Annuler",
+        "feeLabel": "Tarif de la consultation (DT)",
+        "saving": "Enregistrement...",
+        "confirmComplete": "Confirmer et clôturer",
+        "back": "Retour",
+        "acceptError": "Erreur lors de l'acceptation",
+        "invalidFee": "Veuillez saisir un tarif valide",
+        "closeError": "Erreur lors de la clôture",
+        "cancelError": "Erreur lors de l'annulation"
+      },
+      "feed": {
+        "title": "Demandes en cours ({count})",
+        "liveUpdate": "Mise à jour en temps réel",
+        "empty": "Aucune demande pour le moment",
+        "symptomUnspecified": "Non spécifié",
+        "accept": "Accepter",
+        "declineChoose": "Décliner — choisir une raison",
+        "decline": "Décliner",
+        "reasonTooFar": "Trop loin",
+        "reasonUnavailable": "Pas disponible",
+        "reasonOutOfScope": "Hors compétence",
+        "reasonOther": "Autre"
+      },
+      "history": {
+        "title": "Historique SOS",
+        "kpiRevenues": "Ce mois (recettes)",
+        "kpiCommission": "Commission",
+        "kpiNet": "Net",
+        "kpiSessions": "Sessions",
+        "empty": "Aucune session dans l'historique.",
+        "colDate": "Date",
+        "colPatient": "Patient",
+        "colSymptom": "Symptôme",
+        "colStatus": "Statut",
+        "colFee": "Tarif",
+        "colRating": "Note",
+        "symptomDash": "—"
+      }
+    }
+  },
+  "medicalDocs": {
+    "common": {
+      "patient": "Patient",
+      "date": "Date",
+      "phoneLabel": "Tél :",
+      "signatureAlt": "Signature du médecin",
+      "signatureCaption": "Signature et cachet du médecin",
+      "verificationTitle": "Vérification de l'authenticité",
+      "qrFooter": "Document généré via",
+      "brand": "Doktori.tn"
+    },
+    "ordonnance": {
+      "headerLabel": "Ordonnance",
+      "sectionTitle": "Ordonnance médicale",
+      "verifyHint": "Scannez ce QR code pour vérifier que cette ordonnance est authentique et n'a pas été falsifiée.",
+      "verifyUrl": "doktori.tn/verification-ordonnance"
+    },
+    "certificat": {
+      "verifyHint": "Scannez ce QR code pour vérifier que ce certificat est authentique et n'a pas été falsifié.",
+      "verifyUrl": "doktori.tn/certificat-medical"
+    },
+    "verification": {
+      "metaTitle": "Vérification d'ordonnance — Doktori",
+      "metaDescription": "Vérifiez l'authenticité d'une ordonnance médicale émise via Doktori.",
+      "emptyTitle": "Vérification d'ordonnance",
+      "emptyDescription": "Cette page permet de vérifier l'authenticité d'une ordonnance médicale émise via Doktori. Scannez le QR code présent sur l'ordonnance pour être redirigé ici automatiquement.",
+      "backHome": "Retour à l'accueil",
+      "validTitle": "Ordonnance vérifiée",
+      "validSubtitle": "Cette ordonnance est authentique.",
+      "doctorLabel": "Médecin",
+      "patientLabel": "Patient",
+      "dateLabel": "Date",
+      "contentLabel": "Contenu",
+      "verifiedFooter": "Vérification effectuée via",
+      "invalidTitle": "Ordonnance non trouvée",
+      "invalidSubtitle": "Ce QR code ne correspond à aucune ordonnance valide dans notre système.",
+      "invalidExplanation": "Cela peut signifier que l'ordonnance a été falsifiée ou que le QR code est endommagé. Si vous pensez qu'il s'agit d'une erreur, veuillez contacter le médecin directement."
+    }
   }
 }
