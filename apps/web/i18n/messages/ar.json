@@ -1863,7 +1863,9 @@
       "uploadingButton": "جار الإرسال...",
       "uploadButton": "رفع الملف",
       "uploadFileRequired": "الملف والعنوان إلزاميان",
-      "uploadFailed": "فشل الرفع"
+      "uploadFailed": "فشل الرفع",
+      "referButton": "إحالة",
+      "referTooltip": "إحالة هذا المريض إلى زميل"
     },
     "quickActions": {
       "sectionTitle": "إجراءات سريعة (الجرس)",

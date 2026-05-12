@@ -1863,7 +1863,9 @@
       "uploadingButton": "Envoi...",
       "uploadButton": "Téléverser",
       "uploadFileRequired": "Fichier et titre obligatoires",
-      "uploadFailed": "Upload échoué"
+      "uploadFailed": "Upload échoué",
+      "referButton": "Référer",
+      "referTooltip": "Référer ce patient à un confrère"
     },
     "quickActions": {
       "sectionTitle": "Actions rapides (cloche)",
