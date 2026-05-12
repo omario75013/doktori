@@ -44,6 +44,14 @@ interface DocItem {
   // Current list of doctors the patient has shared this document with
   // (only meaningful when sharedDocId is set).
   sharedWithDoctorIds?: string[];
+  // Resolved doctor names from /api/me/doctors, in the same order as
+  // sharedWithDoctorIds. Drives the "Partagé avec Dr X, Dr Y" line.
+  sharedDoctorNames?: string[];
+  // File metadata for the details row.
+  filename?: string;
+  sizeBytes?: number | null;
+  mimeType?: string | null;
+  note?: string | null;
 }
 
 const UPLOAD_CATEGORIES: { id: Exclude<Filter, "all">; label: string }[] = [
@@ -85,6 +93,30 @@ export default function MesDocumentsPage() {
 
   async function loadAll() {
     const merged: DocItem[] = [];
+
+    // 0. Doctor name lookup (drives the "Partagé avec Dr X" line on each
+    //    patient-owned card). One fetch covers every share recipient since
+    //    the picker source is the same connected-doctors list.
+    let doctorMap = new Map<string, string>(
+      myDoctors.map((d) => [d.id, d.name]),
+    );
+    if (doctorMap.size === 0) {
+      try {
+        const r = await fetch("/api/me/doctors", { credentials: "include" });
+        if (r.ok) {
+          const data = await r.json();
+          const items = (data.items ?? []) as Array<{ id: string; name: string; specialty?: string | null; photoUrl?: string | null }>;
+          setMyDoctors(items);
+          doctorMap = new Map(items.map((d) => [d.id, d.name]));
+        }
+      } catch {
+        /* ignore */
+      }
+    }
+    const resolveNames = (ids: string[] | undefined): string[] =>
+      (ids ?? [])
+        .map((id) => doctorMap.get(id))
+        .filter((n): n is string => !!n);
 
     // 1. Generated documents (read-only)
     try {
@@ -168,6 +200,11 @@ export default function MesDocumentsPage() {
             sharedDocId: byDoctor ? undefined : d.id,
             doctorBadge: byDoctor ? (d.doctorName ?? "Médecin") : undefined,
             sharedWithDoctorIds: byDoctor ? undefined : (d.sharedWithDoctorIds ?? []),
+            sharedDoctorNames: byDoctor ? undefined : resolveNames(d.sharedWithDoctorIds),
+            filename: d.fileName,
+            sizeBytes: d.sizeBytes,
+            mimeType: d.mimeType,
+            note: d.note,
           });
           if (d.fileUrl) seenFileUrls.add(d.fileUrl);
         }
@@ -201,6 +238,11 @@ export default function MesDocumentsPage() {
             fileUrl: a.fileUrl,
             attachmentId: a.id,
             sharedWithDoctorIds: sharedIds,
+            sharedDoctorNames: resolveNames(sharedIds),
+            filename: a.filename,
+            sizeBytes: a.sizeBytes,
+            mimeType: a.mimeType,
+            note: a.description,
           });
         }
       }
@@ -886,9 +928,40 @@ function DocCard({
         >
           {doc.title}
         </div>
-        <div className="text-[12.5px] mb-3" style={{ color: "var(--ink-500)" }}>
+        <div className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
           {doc.source} · {format(new Date(doc.date), "d MMM yyyy", { locale: fr })}
+          {typeof doc.sizeBytes === "number" && doc.sizeBytes > 0 && (
+            <> · {(doc.sizeBytes / 1024).toFixed(0)} Ko</>
+          )}
         </div>
+        {/* Sharing line — only on patient-owned items (attachment or
+            patient_documents). Doctor-created docs already carry the
+            "Dr X" badge in the image header. */}
+        {(doc.attachmentId || doc.sharedDocId) && (
+          <div className="text-[12px] mb-3 mt-1 flex items-start gap-1 flex-wrap" style={{ color: "var(--ink-500)" }}>
+            {(doc.sharedDoctorNames?.length ?? 0) > 0 ? (
+              <>
+                <span style={{ color: "var(--primary-600)", fontWeight: 600 }}>
+                  Partagé avec :
+                </span>
+                {doc.sharedDoctorNames!.map((name, i) => (
+                  <span
+                    key={`${name}-${i}`}
+                    className="rounded-full px-2 py-0.5 text-[11px] font-semibold"
+                    style={{ background: "var(--primary-50, #ECFEFF)", color: "var(--primary-700, #0e7490)" }}
+                  >
+                    Dr {name.replace(/^Dr\.?\s*/i, "")}
+                  </span>
+                ))}
+              </>
+            ) : (
+              <span style={{ color: "var(--ink-400)", fontStyle: "italic" }}>
+                Privé — non partagé
+              </span>
+            )}
+          </div>
+        )}
+        {!doc.attachmentId && !doc.sharedDocId && <div className="mb-3" />}
         <div className="flex gap-1.5">
           {doc.previewUrl && (
             <a
