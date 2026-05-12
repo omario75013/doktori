@@ -74,8 +74,10 @@ export function SidebarNav({
     let cancelled = false;
     async function load() {
       try {
+        // Messagerie now hosts peer-doctor chat (the patient ↔ doctor
+        // surface was retired). The badge counts unread peer messages.
         const [r1, r2] = await Promise.all([
-          fetch("/api/messages/unread", { cache: "no-store" }),
+          fetch("/api/doctor/peer-messages/unread-count", { cache: "no-store" }),
           fetch("/api/staff/conversations/unread", { cache: "no-store" }),
         ]);
         if (!cancelled) {

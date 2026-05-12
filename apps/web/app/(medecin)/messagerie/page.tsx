@@ -11,16 +11,19 @@ import {
   AlertCircle,
   X,
   Pencil,
+  ImagePlus,
+  Check,
+  Trash2,
 } from "lucide-react";
 import { CallButton } from "@/components/call-ui";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
 
-// /messagerie hosts peer-doctor messaging — the patient ↔ doctor chat
-// surface was removed. Threads, polling, and the chat pane are inlined
-// here so the route is self-contained; /reseau/messagerie now redirects
-// here so old deep links keep working.
+// /messagerie hosts peer-doctor messaging.
+// Live updates via Socket.IO (reuses the existing SOS server). Polling
+// stays as a fallback when the WS server isn't reachable.
+// Messages support: text, image (max 5 MB), edit (own), soft-delete (own).
 
 type Thread = {
   id: string;
@@ -38,8 +41,12 @@ type Message = {
   conversationId: string;
   senderId: string;
   body: string;
+  imageUrl: string | null;
+  imageMimeType: string | null;
   createdAt: string;
   readAt: string | null;
+  editedAt: string | null;
+  deletedAt: string | null;
 };
 
 type DoctorStatus = {
@@ -57,11 +64,6 @@ function StatusBanner({ status, onEdit }: { status: DoctorStatus; onEdit: () => 
       <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
       <span className="flex-1 text-amber-800 dark:text-amber-200">
         <span className="font-medium">{t("statusBanner", { status: status.statusMessage })}</span>
-        {status.statusActiveUntil && (
-          <span className="ml-1 text-amber-600 dark:text-amber-400 text-xs">
-            (jusqu&apos;au {new Date(status.statusActiveUntil).toLocaleDateString("fr-TN")})
-          </span>
-        )}
       </span>
       <button onClick={onEdit} className="text-amber-600 hover:text-amber-800 dark:text-amber-400 flex-shrink-0">
         <Pencil className="w-4 h-4" />
@@ -110,14 +112,12 @@ function StatusModal({
           <h2 className="text-lg font-semibold text-gray-900 dark:text-white">{t("statusMessage")}</h2>
           <button onClick={onClose}><X className="w-5 h-5 text-gray-400" /></button>
         </div>
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("statusMessage")}</label>
         <input
           value={msg}
           onChange={(e) => setMsg(e.target.value)}
           placeholder="Ex: En congé jusqu'au 5 mai"
           className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-teal-500"
         />
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("awayMessage")}</label>
         <textarea
           value={away}
           onChange={(e) => setAway(e.target.value)}
@@ -125,7 +125,6 @@ function StatusModal({
           placeholder="Réponse automatique..."
           className="w-full rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-teal-500 resize-none"
         />
-        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">{t("statusUntil")}</label>
         <input
           type="date"
           value={until}
@@ -159,12 +158,18 @@ export default function MessageriePage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const [myId, setMyId] = useState<string | null>(null);
   const [doctorStatus, setDoctorStatus] = useState<DoctorStatus | null>(null);
   const [showStatusModal, setShowStatusModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState("");
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const socketRef = useRef<unknown>(null);
   const searchParams = useSearchParams();
 
   useEffect(() => {
@@ -177,6 +182,9 @@ export default function MessageriePage() {
       .catch(() => {});
   }, []);
 
+  // Load + poll the thread list. Poll is still here as a safety net even
+  // when the socket is up — a fresh conversation may not have an open
+  // socket subscription yet.
   useEffect(() => {
     async function load() {
       setLoading(true);
@@ -187,9 +195,9 @@ export default function MessageriePage() {
         setThreads(data);
         const peer = searchParams.get("peer");
         const convId = searchParams.get("conv");
-        if (convId && data.some((t) => t.id === convId)) {
+        if (convId && data.some((th) => th.id === convId)) {
           setActiveId(convId);
-        } else if (peer && !data.some((t) => t.peerId === peer)) {
+        } else if (peer && !data.some((th) => th.peerId === peer)) {
           const res2 = await fetch("/api/doctor/peer-conversations", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -202,7 +210,7 @@ export default function MessageriePage() {
             if (res3.ok) setThreads(await res3.json());
           }
         } else if (peer) {
-          const found = data.find((t) => t.peerId === peer);
+          const found = data.find((th) => th.peerId === peer);
           if (found) setActiveId(found.id);
         } else if (data.length > 0) {
           setActiveId(data[0].id);
@@ -225,6 +233,8 @@ export default function MessageriePage() {
     return () => clearInterval(iv);
   }, [searchParams]);
 
+  // Load messages for the active conversation + connect a Socket.IO client
+  // to its room. Falls back to a 10s poll if the socket can't be loaded.
   useEffect(() => {
     if (!activeId) {
       setMessages([]);
@@ -241,31 +251,121 @@ export default function MessageriePage() {
       }
     }
     loadMessages();
-    const interval = setInterval(loadMessages, 10_000);
-    return () => clearInterval(interval);
+    const poll = setInterval(loadMessages, 10_000);
+
+    type SocketLike = {
+      emit: (e: string, ...a: unknown[]) => void;
+      on: (e: string, fn: (...a: unknown[]) => void) => void;
+      disconnect: () => void;
+    };
+    let cancelled = false;
+    let sock: SocketLike | null = null;
+    (async () => {
+      try {
+        const { io } = await import("socket.io-client");
+        if (cancelled) return;
+        const url =
+          typeof window !== "undefined"
+            ? `${window.location.protocol}//${window.location.hostname}:3010`
+            : "http://localhost:3010";
+        sock = io(url, { path: "/sos-socket", transports: ["websocket", "polling"] }) as unknown as SocketLike;
+        sock.emit("join-peer-conv", activeId);
+        sock.on("message:new", (m: unknown) => {
+          const msg = m as Message;
+          if (msg.conversationId !== activeId) return;
+          setMessages((prev) => (prev.some((p) => p.id === msg.id) ? prev : [...prev, msg]));
+        });
+        sock.on("message:updated", (m: unknown) => {
+          const msg = m as Message;
+          setMessages((prev) => prev.map((p) => (p.id === msg.id ? msg : p)));
+        });
+        sock.on("message:deleted", (m: unknown) => {
+          const msg = m as { id: string };
+          setMessages((prev) =>
+            prev.map((p) =>
+              p.id === msg.id
+                ? { ...p, body: "", imageUrl: null, deletedAt: new Date().toISOString() }
+                : p,
+            ),
+          );
+        });
+        socketRef.current = sock;
+      } catch {
+        /* socket.io client missing or server unreachable — poll fallback */
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+      clearInterval(poll);
+      try {
+        sock?.emit("leave-peer-conv", activeId);
+        sock?.disconnect();
+      } catch {
+        /* ignore */
+      }
+      socketRef.current = null;
+    };
   }, [activeId]);
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  function pickImage() {
+    fileRef.current?.click();
+  }
+
+  function onImageSelected(e: React.ChangeEvent<HTMLInputElement>) {
+    const f = e.target.files?.[0];
+    if (!f) return;
+    if (f.size > 5 * 1024 * 1024) {
+      toast.error("Image trop volumineuse (max 5 Mo)");
+      return;
+    }
+    setImageFile(f);
+    setImagePreview(URL.createObjectURL(f));
+    e.target.value = "";
+  }
+
+  function clearImage() {
+    setImageFile(null);
+    if (imagePreview) URL.revokeObjectURL(imagePreview);
+    setImagePreview(null);
+  }
+
   async function sendMessage(e: React.FormEvent) {
     e.preventDefault();
-    if (!activeId || !input.trim()) return;
+    if (!activeId) return;
+    if (!input.trim() && !imageFile) return;
     setSending(true);
     try {
-      const res = await fetch(`/api/doctor/peer-conversations/${activeId}/messages`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ body: input.trim() }),
-      });
+      let res: Response;
+      if (imageFile) {
+        const fd = new FormData();
+        fd.append("body", input.trim());
+        fd.append("file", imageFile);
+        res = await fetch(`/api/doctor/peer-conversations/${activeId}/messages`, {
+          method: "POST",
+          body: fd,
+        });
+      } else {
+        res = await fetch(`/api/doctor/peer-conversations/${activeId}/messages`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body: input.trim() }),
+        });
+      }
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err.error ?? "Erreur");
       }
       const data = await res.json();
-      setMessages((prev) => [...prev, data.message]);
+      setMessages((prev) =>
+        prev.some((m) => m.id === data.message.id) ? prev : [...prev, data.message],
+      );
       setInput("");
+      clearImage();
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Erreur");
     } finally {
@@ -273,7 +373,56 @@ export default function MessageriePage() {
     }
   }
 
-  const activeThread = threads.find((t) => t.id === activeId);
+  async function saveEdit() {
+    if (!editingId || !activeId) return;
+    const body = editDraft.trim();
+    if (!body) return;
+    try {
+      const res = await fetch(
+        `/api/doctor/peer-conversations/${activeId}/messages/${editingId}`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ body }),
+        },
+      );
+      if (res.ok) {
+        const data = await res.json();
+        setMessages((prev) => prev.map((p) => (p.id === data.message.id ? data.message : p)));
+        setEditingId(null);
+        setEditDraft("");
+      } else {
+        const e = await res.json().catch(() => ({}));
+        toast.error(e.error ?? "Erreur");
+      }
+    } catch {
+      toast.error("Erreur");
+    }
+  }
+
+  async function deleteMessage(messageId: string) {
+    if (!activeId) return;
+    if (!confirm("Supprimer ce message ?")) return;
+    try {
+      const res = await fetch(
+        `/api/doctor/peer-conversations/${activeId}/messages/${messageId}`,
+        { method: "DELETE" },
+      );
+      if (res.ok) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === messageId
+              ? { ...m, body: "", imageUrl: null, deletedAt: new Date().toISOString() }
+              : m,
+          ),
+        );
+      }
+    } catch {
+      toast.error("Erreur");
+    }
+  }
+
+  const activeThread = threads.find((th) => th.id === activeId);
 
   return (
     <div className="w-full">
@@ -335,8 +484,8 @@ export default function MessageriePage() {
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-semibold truncate">{th.peerName}</p>
                         {th.unread > 0 && (
-                          <span className="text-[10px] px-1.5 bg-red-500 text-white rounded-full font-bold">
-                            {th.unread}
+                          <span className="text-[10px] px-1.5 bg-red-500 text-white rounded-full font-bold min-w-[18px] text-center">
+                            {th.unread > 99 ? "99+" : th.unread}
                           </span>
                         )}
                       </div>
@@ -395,36 +544,126 @@ export default function MessageriePage() {
                 ) : (
                   messages.map((m) => {
                     const isMe = m.senderId === myId;
+                    const isDeleted = !!m.deletedAt;
+                    const isEditingThis = editingId === m.id;
                     return (
-                      <div
-                        key={m.id}
-                        className={`flex ${isMe ? "justify-end" : "justify-start"}`}
-                      >
-                        <div
-                          className={`max-w-[75%] rounded-2xl px-3 py-2 text-sm ${
-                            isMe
-                              ? "bg-primary text-white"
-                              : "bg-secondary text-foreground"
-                          }`}
-                        >
-                          <p className="whitespace-pre-wrap break-words">{m.body}</p>
-                          <p
-                            className={`text-[10px] mt-0.5 ${
-                              isMe ? "text-white/70" : "text-gray-400"
-                            }`}
+                      <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"} group`}>
+                        <div className="max-w-[75%]">
+                          <div
+                            className={`rounded-2xl px-3 py-2 text-sm ${
+                              isMe ? "bg-primary text-white" : "bg-secondary text-foreground"
+                            } ${isDeleted ? "italic opacity-70" : ""}`}
                           >
-                            {format(new Date(m.createdAt), "HH:mm", { locale: fr })}
-                          </p>
+                            {isDeleted ? (
+                              <p>Message supprimé</p>
+                            ) : isEditingThis ? (
+                              <div className="space-y-1.5">
+                                <textarea
+                                  value={editDraft}
+                                  onChange={(e) => setEditDraft(e.target.value)}
+                                  rows={2}
+                                  className="w-full rounded-lg bg-white/15 text-white placeholder-white/60 px-2 py-1 text-sm focus:outline-none resize-none"
+                                  autoFocus
+                                />
+                                <div className="flex gap-1.5 justify-end">
+                                  <button
+                                    type="button"
+                                    onClick={() => { setEditingId(null); setEditDraft(""); }}
+                                    className="text-[11px] px-2 py-1 rounded-md bg-white/15 hover:bg-white/25"
+                                  >
+                                    Annuler
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={saveEdit}
+                                    className="text-[11px] px-2 py-1 rounded-md bg-white text-primary font-medium hover:bg-white/90"
+                                  >
+                                    <Check className="w-3 h-3 inline" /> Enregistrer
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <>
+                                {m.imageUrl && (
+                                  // eslint-disable-next-line @next/next/no-img-element
+                                  <img
+                                    src={m.imageUrl}
+                                    alt="image"
+                                    className="rounded-lg mb-1 max-h-72 cursor-pointer"
+                                    onClick={() => window.open(m.imageUrl!, "_blank")}
+                                  />
+                                )}
+                                {m.body && (
+                                  <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                                )}
+                              </>
+                            )}
+                            <p className={`text-[10px] mt-0.5 ${isMe ? "text-white/70" : "text-gray-400"}`}>
+                              {format(new Date(m.createdAt), "HH:mm", { locale: fr })}
+                              {m.editedAt && !isDeleted && " · modifié"}
+                            </p>
+                          </div>
+                          {isMe && !isDeleted && !isEditingThis && (
+                            <div className="flex gap-1.5 mt-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                              {!m.imageUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => { setEditingId(m.id); setEditDraft(m.body); }}
+                                  className="text-[10px] text-gray-400 hover:text-primary"
+                                >
+                                  Modifier
+                                </button>
+                              )}
+                              <button
+                                type="button"
+                                onClick={() => deleteMessage(m.id)}
+                                className="text-[10px] text-gray-400 hover:text-red-500"
+                              >
+                                <Trash2 className="w-3 h-3 inline" /> Supprimer
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     );
                   })
                 )}
               </div>
+              {imagePreview && (
+                <div className="px-3 pt-2 flex items-center gap-2">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={imagePreview} alt="preview" className="h-16 w-16 rounded-lg object-cover" />
+                  <span className="text-xs text-gray-500 truncate flex-1">
+                    {imageFile?.name} · {imageFile ? Math.round(imageFile.size / 1024) : 0} Ko
+                  </span>
+                  <button
+                    type="button"
+                    onClick={clearImage}
+                    className="text-gray-400 hover:text-red-500"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
               <form
                 onSubmit={sendMessage}
                 className="p-3 border-t border-border flex items-center gap-2"
               >
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  onChange={onImageSelected}
+                  className="hidden"
+                />
+                <button
+                  type="button"
+                  onClick={pickImage}
+                  className="inline-flex items-center justify-center h-10 w-10 rounded-xl border border-border bg-white hover:bg-secondary text-gray-600"
+                  title="Joindre une image (max 5 Mo)"
+                >
+                  <ImagePlus className="h-4 w-4" />
+                </button>
                 <input
                   type="text"
                   value={input}
@@ -435,7 +674,7 @@ export default function MessageriePage() {
                 />
                 <button
                   type="submit"
-                  disabled={sending || !input.trim()}
+                  disabled={sending || (!input.trim() && !imageFile)}
                   className="inline-flex items-center justify-center h-10 w-10 rounded-xl bg-primary text-white hover:opacity-90 disabled:opacity-60"
                 >
                   {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}

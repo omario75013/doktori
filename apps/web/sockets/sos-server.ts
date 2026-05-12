@@ -52,6 +52,20 @@ io.on("connection", (socket) => {
     socket.join("doctors-all");
   });
 
+  // Peer-doctor chat — one room per conversation. The HTTP /broadcast
+  // endpoint emits "message:new", "message:updated", "message:deleted"
+  // into peer-conv:<conversationId> after the DB write.
+  socket.on("join-peer-conv", (conversationId: string) => {
+    if (typeof conversationId === "string" && conversationId.length > 0) {
+      socket.join(`peer-conv:${conversationId}`);
+    }
+  });
+  socket.on("leave-peer-conv", (conversationId: string) => {
+    if (typeof conversationId === "string" && conversationId.length > 0) {
+      socket.leave(`peer-conv:${conversationId}`);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log(`[SOS-SOCKET] Disconnect: ${socket.id}`);
   });

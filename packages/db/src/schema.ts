@@ -1410,9 +1410,17 @@ export const doctorMessages = pgTable(
     senderId: uuid("sender_id")
       .notNull()
       .references(() => doctors.id, { onDelete: "cascade" }),
+    // Body may be empty when the message is image-only — Drizzle keeps it
+    // NOT NULL; route stores an empty string in that case.
     body: text("body").notNull(),
+    // Optional image attachment (max 5 MB enforced at the API). Stored in R2.
+    imageUrl: text("image_url"),
+    imageMimeType: varchar("image_mime_type", { length: 60 }),
     readAt: timestamp("read_at"),
     createdAt: timestamp("created_at").defaultNow(),
+    // Soft-edit + soft-delete so we keep an audit trail.
+    editedAt: timestamp("edited_at"),
+    deletedAt: timestamp("deleted_at"),
   },
   (table) => [index("doctor_messages_conv_idx").on(table.conversationId, table.createdAt)]
 );
