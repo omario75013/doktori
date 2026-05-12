@@ -24,6 +24,22 @@ const FONTS: FontChoice[] = [
   { id: "homemade", family: "Homemade Apple", size: 44 },
   { id: "kalam", family: "Kalam", size: 50 },
   { id: "pacifico", family: "Pacifico", size: 54 },
+  { id: "satisfy", family: "Satisfy", size: 60 },
+  { id: "parisienne", family: "Parisienne", size: 62 },
+  { id: "alex-brush", family: "Alex Brush", size: 64 },
+  { id: "tangerine", family: "Tangerine", size: 80 },
+  { id: "yellowtail", family: "Yellowtail", size: 56 },
+  { id: "kaushan", family: "Kaushan Script", size: 54 },
+  { id: "cookie", family: "Cookie", size: 60 },
+  { id: "mr-dafoe", family: "Mr Dafoe", size: 64 },
+  { id: "marck", family: "Marck Script", size: 58 },
+  { id: "rouge", family: "Rouge Script", size: 60 },
+  { id: "pinyon", family: "Pinyon Script", size: 64 },
+  { id: "italianno", family: "Italianno", size: 72 },
+  { id: "herr-von", family: "Herr Von Muellerhoff", size: 70 },
+  { id: "league-script", family: "League Script", size: 60 },
+  { id: "meddon", family: "Meddon", size: 44 },
+  { id: "monsieur-la", family: "Monsieur La Doulaise", size: 64 },
 ];
 
 const GOOGLE_FONTS_HREF =
@@ -37,6 +53,22 @@ const GOOGLE_FONTS_HREF =
     "family=Homemade+Apple",
     "family=Kalam:wght@500;700",
     "family=Pacifico",
+    "family=Satisfy",
+    "family=Parisienne",
+    "family=Alex+Brush",
+    "family=Tangerine:wght@400;700",
+    "family=Yellowtail",
+    "family=Kaushan+Script",
+    "family=Cookie",
+    "family=Mr+Dafoe",
+    "family=Marck+Script",
+    "family=Rouge+Script",
+    "family=Pinyon+Script",
+    "family=Italianno",
+    "family=Herr+Von+Muellerhoff",
+    "family=League+Script",
+    "family=Meddon",
+    "family=Monsieur+La+Doulaise",
   ].join("&") +
   "&display=swap";
 
@@ -165,7 +197,7 @@ export function SignatureGallery({
           {emptyHint}
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[420px] overflow-y-auto pr-1">
           {FONTS.map((f) => {
             const active = f.id === pickedId;
             return (

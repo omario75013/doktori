@@ -15,6 +15,10 @@ export function SignaturePad({
   clearLabel,
   cancelLabel,
   helperText,
+  lineStyleLabel,
+  lineStyleSolid,
+  lineStyleDashed,
+  lineStyleDotted,
   inkColor = "#0F172A",
 }: {
   onSaved: (signatureUrl: string) => void;
@@ -23,6 +27,10 @@ export function SignaturePad({
   clearLabel: string;
   cancelLabel: string;
   helperText: string;
+  lineStyleLabel: string;
+  lineStyleSolid: string;
+  lineStyleDashed: string;
+  lineStyleDotted: string;
   inkColor?: string;
 }) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -31,6 +39,13 @@ export function SignaturePad({
   const lastPt = useRef<{ x: number; y: number } | null>(null);
   const [empty, setEmpty] = useState(true);
   const [saving, setSaving] = useState(false);
+  // Line style applied to each new stroke. Continuous = solid; the
+  // others use canvas setLineDash so existing strokes don't shift.
+  const [lineStyle, setLineStyle] = useState<"solid" | "dashed" | "dotted">("solid");
+  const lineStyleRef = useRef<"solid" | "dashed" | "dotted">("solid");
+  useEffect(() => {
+    lineStyleRef.current = lineStyle;
+  }, [lineStyle]);
 
   // Size the canvas to its CSS box × devicePixelRatio so strokes stay
   // crisp on hi-DPI screens. Re-size on viewport resize too.
@@ -89,6 +104,10 @@ export function SignaturePad({
     // Quadratic-curve smoothing between samples — gives a more natural
     // pen feel than straight lineTo segments.
     const mid = { x: (lastPt.current.x + pt.x) / 2, y: (lastPt.current.y + pt.y) / 2 };
+    const style = lineStyleRef.current;
+    if (style === "dashed") ctx.setLineDash([8, 5]);
+    else if (style === "dotted") ctx.setLineDash([1, 4]);
+    else ctx.setLineDash([]);
     ctx.beginPath();
     ctx.moveTo(lastPt.current.x, lastPt.current.y);
     ctx.quadraticCurveTo(lastPt.current.x, lastPt.current.y, mid.x, mid.y);
@@ -145,6 +164,34 @@ export function SignaturePad({
   return (
     <div className="space-y-3">
       <p className="text-xs text-gray-500">{helperText}</p>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-xs text-gray-500 me-1">{lineStyleLabel}</span>
+        {([
+          { id: "solid", label: lineStyleSolid, preview: "border-t-[2px] border-solid" },
+          { id: "dashed", label: lineStyleDashed, preview: "border-t-[2px] border-dashed" },
+          { id: "dotted", label: lineStyleDotted, preview: "border-t-[2px] border-dotted" },
+        ] as const).map((opt) => {
+          const active = lineStyle === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              onClick={() => setLineStyle(opt.id)}
+              className={`inline-flex items-center gap-2 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors border ${
+                active
+                  ? "bg-primary text-white border-primary"
+                  : "bg-white text-gray-600 border-border hover:bg-secondary"
+              }`}
+            >
+              <span
+                className={`inline-block w-6 ${opt.preview}`}
+                style={{ borderColor: active ? "#fff" : inkColor }}
+              />
+              {opt.label}
+            </button>
+          );
+        })}
+      </div>
       <div
         ref={wrapRef}
         className="rounded-2xl border border-border bg-white relative overflow-hidden"

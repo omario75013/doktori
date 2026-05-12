@@ -1166,7 +1166,11 @@
       "signatureModeGallery": "معرض",
       "signatureGalleryHint": "اكتب اسمك واختر نمط الخط. ستُستخدم النتيجة كتوقيع.",
       "signatureGalleryNamePlaceholder": "د. الاسم الكامل",
-      "signatureGalleryEmpty": "اكتب اسمك لعرض أنماط التوقيع."
+      "signatureGalleryEmpty": "اكتب اسمك لعرض أنماط التوقيع.",
+      "signatureLineStyle": "نوع الخط",
+      "signatureLineSolid": "متصل",
+      "signatureLineDashed": "متقطع",
+      "signatureLineDotted": "منقّط"
     },
     "verification": {
       "pageTitle": "التحقق من الحساب",

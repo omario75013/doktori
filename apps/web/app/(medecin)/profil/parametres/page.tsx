@@ -683,6 +683,10 @@ export default function SettingsPage() {
                   saveLabel={t("signatureSaveDraw")}
                   clearLabel={t("signatureClear")}
                   cancelLabel={t("signatureBackToUpload")}
+                  lineStyleLabel={t("signatureLineStyle")}
+                  lineStyleSolid={t("signatureLineSolid")}
+                  lineStyleDashed={t("signatureLineDashed")}
+                  lineStyleDotted={t("signatureLineDotted")}
                   onCancel={() => setSignatureMode("upload")}
                   onSaved={(url) => {
                     setSignatureUrl(url);

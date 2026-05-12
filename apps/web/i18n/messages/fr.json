@@ -1166,7 +1166,11 @@
       "signatureModeGallery": "Galerie",
       "signatureGalleryHint": "Saisissez votre nom et choisissez un style d'écriture. Le résultat sera utilisé comme signature.",
       "signatureGalleryNamePlaceholder": "Dr. Prénom Nom",
-      "signatureGalleryEmpty": "Saisissez votre nom pour voir les styles de signature."
+      "signatureGalleryEmpty": "Saisissez votre nom pour voir les styles de signature.",
+      "signatureLineStyle": "Style de trait",
+      "signatureLineSolid": "Continu",
+      "signatureLineDashed": "Tirets",
+      "signatureLineDotted": "Pointillés"
     },
     "verification": {
       "pageTitle": "Vérification du compte",
