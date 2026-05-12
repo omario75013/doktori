@@ -6,6 +6,7 @@
 
 import {
   TEMPLATE_VARIABLES,
+  VARIABLE_ALIASES,
   resolveVariable,
   type TemplateContext,
   type VariableFormat,
@@ -113,12 +114,15 @@ export function render(template: string, ctx: TemplateContext): RenderResult {
   const locale = ctx.locale ?? "fr";
 
   const body = template.replace(PLACEHOLDER_RE, (match, name: string) => {
-    // Unknown variable — preserve the placeholder
-    if (!(name in TEMPLATE_VARIABLES)) {
+    // Unknown variable — preserve the placeholder. Aliases (e.g.
+    // `patient_first_name` → `first_name`) count as known so the
+    // placeholder gets resolved rather than left in the rendered output.
+    const canonical = VARIABLE_ALIASES[name] ?? name;
+    if (!(canonical in TEMPLATE_VARIABLES)) {
       return match;
     }
 
-    const entry = TEMPLATE_VARIABLES[name];
+    const entry = TEMPLATE_VARIABLES[canonical];
     const value = resolveVariable(name, ctx);
 
     if (value === null || value === undefined) {

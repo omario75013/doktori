@@ -791,7 +791,8 @@
       "setAsPrimary": "Définir comme cabinet principal",
       "nameRequired": "Nom *",
       "cityRequired": "Ville *",
-      "addressRequired": "Adresse *"
+      "addressRequired": "Adresse *",
+      "searchPlaceholder": "Rechercher un cabinet (nom, ville, adresse)…"
     },
     "profil": {
       "title": "Mon profil",
@@ -1356,7 +1357,17 @@
       "loading": "Chargement...",
       "savingButton": "Enregistrement...",
       "saveButton": "Enregistrer",
-      "savedConfirmation": "✓ Enregistré"
+      "savedConfirmation": "✓ Enregistré",
+      "searchPlaceholder": "Rechercher une assurance…",
+      "selectAll": "Tout sélectionner",
+      "clearAll": "Tout désélectionner",
+      "selectedCount": "sélectionnée(s)",
+      "noMatch": "Aucune assurance ne correspond à votre recherche.",
+      "saveSuccess": "Conventions enregistrées",
+      "saveError": "Erreur lors de l'enregistrement",
+      "unsavedChanges": "Modifications non enregistrées",
+      "noChanges": "Aucune modification en attente",
+      "savedAt": "Enregistré à {time}"
     },
     "domicile": {
       "pageTitle": "Visites à domicile",

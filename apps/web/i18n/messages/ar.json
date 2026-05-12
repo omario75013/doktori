@@ -791,7 +791,8 @@
       "setAsPrimary": "تعيين كعيادة رئيسية",
       "nameRequired": "الاسم *",
       "cityRequired": "المدينة *",
-      "addressRequired": "العنوان *"
+      "addressRequired": "العنوان *",
+      "searchPlaceholder": "ابحث عن عيادة (الاسم، المدينة، العنوان)…"
     },
     "profil": {
       "title": "ملفي الشخصي",
@@ -1356,7 +1357,17 @@
       "loading": "جاري التحميل...",
       "savingButton": "جاري الحفظ...",
       "saveButton": "حفظ",
-      "savedConfirmation": "✓ تم الحفظ"
+      "savedConfirmation": "✓ تم الحفظ",
+      "searchPlaceholder": "البحث عن تأمين…",
+      "selectAll": "تحديد الكل",
+      "clearAll": "إلغاء الكل",
+      "selectedCount": "محدد(ة)",
+      "noMatch": "لا يوجد تأمين مطابق لبحثك.",
+      "saveSuccess": "تم حفظ الاتفاقيات",
+      "saveError": "خطأ أثناء الحفظ",
+      "unsavedChanges": "تغييرات غير محفوظة",
+      "noChanges": "لا تغييرات معلقة",
+      "savedAt": "حُفظ في {time}"
     },
     "domicile": {
       "pageTitle": "الزيارات المنزلية",

@@ -49,6 +49,7 @@ export default function CabinetsPage() {
   const tCommon = useTranslations("medecin.common");
 
   const [practices, setPractices] = useState<Practice[]>([]);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -394,8 +395,39 @@ export default function CabinetsPage() {
           </Button>
         </div>
       ) : (
-        <div className="space-y-3">
-          {practices.map((p) => (
+        <>
+        {practices.length >= 2 && (
+          <div className="relative max-w-md">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder={t("searchPlaceholder")}
+              className="w-full h-10 rounded-xl border border-border bg-white dark:bg-gray-900 ps-9 pe-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+            />
+            <svg
+              className="absolute start-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 pointer-events-none"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <circle cx="11" cy="11" r="7" strokeWidth="2" />
+              <path d="m21 21-4.3-4.3" strokeWidth="2" strokeLinecap="round" />
+            </svg>
+          </div>
+        )}
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+          {practices
+            .filter((p) => {
+              const q = query.trim().toLowerCase();
+              if (!q) return true;
+              return (
+                p.name.toLowerCase().includes(q) ||
+                p.city.toLowerCase().includes(q) ||
+                (p.address ?? "").toLowerCase().includes(q)
+              );
+            })
+            .map((p) => (
             <div
               key={p.id}
               className={`rounded-3xl border bg-white dark:bg-gray-900 shadow-sm p-5 space-y-3 transition ${
@@ -614,6 +646,7 @@ export default function CabinetsPage() {
             </div>
           ))}
         </div>
+        </>
       )}
     </div>
   );

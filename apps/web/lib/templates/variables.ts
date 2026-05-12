@@ -234,7 +234,7 @@ export const TEMPLATE_VARIABLES: Record<string, VariableEntry> = {
 
 // ── Aliases ───────────────────────────────────────────────────────────────────
 // Common alternative names some templates use; resolved to the canonical entry.
-const VARIABLE_ALIASES: Record<string, string> = {
+export const VARIABLE_ALIASES: Record<string, string> = {
   patient_first_name: "first_name",
   patient_last_name: "last_name",
   patient_full_name: "full_name",
