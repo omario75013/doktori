@@ -1882,6 +1882,21 @@
       "quickActionsLabel": "إجراءات سريعة"
     }
   },
+  "patientNotifications": {
+    "eyebrow": "الإشعارات",
+    "pageTitle": "إشعاراتي",
+    "allRead": "كل شيء مقروء",
+    "unread": "{count} غير مقروء{plural}",
+    "markAllRead": "وضع علامة مقروء على الكل",
+    "filterAll": "الكل",
+    "filterUnread": "غير المقروءة",
+    "emptyTitle": "لا توجد إشعارات",
+    "emptyAllRead": "تمت قراءة جميع إشعاراتك.",
+    "emptyNoYet": "لم تتلقَّ أي إشعار بعد.",
+    "typeRdvConfirmed": "تم تأكيد الموعد",
+    "typeRdvCancelled": "تم إلغاء الموعد",
+    "typeRdvRescheduled": "تم تغيير الموعد"
+  },
   "onboarding": {
     "welcomeBadge": "مرحباً بك في دكتوري",
     "setupTitle": "أعدّ فضاء طبيبك",

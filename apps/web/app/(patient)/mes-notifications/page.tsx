@@ -4,8 +4,31 @@ import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Bell, Check, CheckCheck, Inbox } from "lucide-react";
 import { format } from "date-fns";
-import { fr } from "date-fns/locale";
+import { fr, arSA } from "date-fns/locale";
+import { useTranslations, useLocale } from "next-intl";
 import { toast } from "sonner";
+
+// Server-stored titles snapshot the locale at insert time (currently FR).
+// When we recognise the notification type we render a translated heading
+// instead so Arabic readers don't see a French title above an Arabic
+// chrome. The body (which contains doctor name + datetime) stays as
+// stored — full body i18n would require restructuring payload columns.
+function translatedTitle(
+  type: string,
+  fallback: string,
+  t: (k: string) => string,
+): string {
+  switch (type) {
+    case "rdv_confirmed":
+      return t("typeRdvConfirmed");
+    case "rdv_cancelled":
+      return t("typeRdvCancelled");
+    case "rdv_rescheduled":
+      return t("typeRdvRescheduled");
+    default:
+      return fallback;
+  }
+}
 
 interface Notification {
   id: string;
@@ -20,6 +43,9 @@ interface Notification {
 type Filter = "all" | "unread";
 
 export default function MesNotificationsPage() {
+  const t = useTranslations("patientNotifications");
+  const locale = useLocale();
+  const dateLocale = locale === "ar" ? arSA : fr;
   const router = useRouter();
   const [token, setToken] = useState<string | null>(null);
   const [items, setItems] = useState<Notification[]>([]);
@@ -95,15 +121,17 @@ export default function MesNotificationsPage() {
       {/* Header */}
       <div className="mb-6 flex items-end justify-between gap-4 flex-wrap">
         <div>
-          <div className="ds-eyebrow">NOTIFICATIONS</div>
-          <h1 className="ds-page-title">Mes notifications</h1>
+          <div className="ds-eyebrow">{t("eyebrow")}</div>
+          <h1 className="ds-page-title">{t("pageTitle")}</h1>
           <p className="ds-page-sub">
-            {unreadCount > 0 ? `${unreadCount} non lue${unreadCount > 1 ? "s" : ""}` : "Tout est lu"}
+            {unreadCount > 0
+              ? t("unread", { count: unreadCount, plural: unreadCount > 1 ? "s" : "" })
+              : t("allRead")}
           </p>
         </div>
         {unreadCount > 0 && (
           <button onClick={markAllRead} className="ds-btn ds-btn-ghost">
-            <CheckCheck className="h-4 w-4" /> Tout marquer lu
+            <CheckCheck className="h-4 w-4" /> {t("markAllRead")}
           </button>
         )}
       </div>
@@ -117,7 +145,7 @@ export default function MesNotificationsPage() {
             onClick={() => setFilter(f)}
             className={`ds-tab ${filter === f ? "on" : ""}`}
           >
-            {f === "all" ? "Toutes" : "Non lues"}
+            {f === "all" ? t("filterAll") : t("filterUnread")}
           </button>
         ))}
       </div>
@@ -132,11 +160,9 @@ export default function MesNotificationsPage() {
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[color:var(--primary-50)] mb-4">
               <Inbox className="h-7 w-7 text-[color:var(--primary-600)]" />
             </div>
-            <p className="font-bold text-[color:var(--ink-900)] mb-1">Aucune notification</p>
+            <p className="font-bold text-[color:var(--ink-900)] mb-1">{t("emptyTitle")}</p>
             <p className="text-sm text-[color:var(--ink-500)]">
-              {filter === "unread"
-                ? "Toutes vos notifications ont été lues."
-                : "Vous n'avez encore reçu aucune notification."}
+              {filter === "unread" ? t("emptyAllRead") : t("emptyNoYet")}
             </p>
           </div>
         ) : (
@@ -167,10 +193,10 @@ export default function MesNotificationsPage() {
                             : "font-bold text-[color:var(--ink-900)]"
                         }`}
                       >
-                        {n.title}
+                        {translatedTitle(n.type, n.title, t)}
                       </p>
                       <span className="text-xs text-[color:var(--ink-500)] shrink-0">
-                        {format(new Date(n.createdAt), "d MMM HH:mm", { locale: fr })}
+                        {format(new Date(n.createdAt), "d MMM HH:mm", { locale: dateLocale })}
                       </span>
                     </div>
                     {n.body && (

@@ -1882,6 +1882,21 @@
       "quickActionsLabel": "Actions rapides"
     }
   },
+  "patientNotifications": {
+    "eyebrow": "NOTIFICATIONS",
+    "pageTitle": "Mes notifications",
+    "allRead": "Tout est lu",
+    "unread": "{count} non lue{plural}",
+    "markAllRead": "Tout marquer lu",
+    "filterAll": "Toutes",
+    "filterUnread": "Non lues",
+    "emptyTitle": "Aucune notification",
+    "emptyAllRead": "Toutes vos notifications ont été lues.",
+    "emptyNoYet": "Vous n'avez encore reçu aucune notification.",
+    "typeRdvConfirmed": "Rendez-vous confirmé",
+    "typeRdvCancelled": "Rendez-vous annulé",
+    "typeRdvRescheduled": "Rendez-vous décalé"
+  },
   "onboarding": {
     "welcomeBadge": "Bienvenue sur Doktori",
     "setupTitle": "Configurez votre espace médecin",
