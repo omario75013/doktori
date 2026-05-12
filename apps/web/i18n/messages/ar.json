@@ -1482,7 +1482,10 @@
       "cancel": "إلغاء",
       "send": "إرسال",
       "referSuccess": "تمت إحالة المريض",
-      "referLoadError": "تعذّر تحميل الزملاء"
+      "referLoadError": "تعذّر تحميل الزملاء",
+      "peerSearchPlaceholder": "ابحث عن زميل (الاسم، الاختصاص)…",
+      "peerNoMatch": "لا يوجد زميل مطابق",
+      "peerSelected": "مختار"
     },
     "calendrier": {
       "pageTitle": "التقويم",

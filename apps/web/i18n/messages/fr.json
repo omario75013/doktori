@@ -1482,7 +1482,10 @@
       "cancel": "Annuler",
       "send": "Envoyer",
       "referSuccess": "Patient référé",
-      "referLoadError": "Impossible de charger les confrères"
+      "referLoadError": "Impossible de charger les confrères",
+      "peerSearchPlaceholder": "Rechercher un confrère (nom, spécialité)…",
+      "peerNoMatch": "Aucun confrère ne correspond",
+      "peerSelected": "Sélectionné"
     },
     "calendrier": {
       "pageTitle": "Calendrier",
