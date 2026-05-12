@@ -17,24 +17,28 @@ export function GooglePlayIcon({ className }: { className?: string }) {
   );
 }
 
-export function AppStoreBadge() {
+export async function AppStoreBadge() {
+  const { getTranslations } = await import("next-intl/server");
+  const t = await getTranslations("storeBadge");
   return (
     <div className="inline-flex h-[52px] items-center gap-3 rounded-xl bg-black/90 px-5 text-white cursor-default">
       <AppleIcon className="h-7 w-7" />
-      <div className="text-left">
-        <div className="text-[9px] font-medium uppercase tracking-wide opacity-60">Bientôt sur</div>
+      <div className="text-start">
+        <div className="text-[9px] font-medium uppercase tracking-wide opacity-60">{t("comingSoonOn")}</div>
         <div className="text-base font-semibold leading-tight">App Store</div>
       </div>
     </div>
   );
 }
 
-export function GooglePlayBadge() {
+export async function GooglePlayBadge() {
+  const { getTranslations } = await import("next-intl/server");
+  const t = await getTranslations("storeBadge");
   return (
     <div className="inline-flex h-[52px] items-center gap-3 rounded-xl bg-black/90 px-5 text-white cursor-default">
       <GooglePlayIcon className="h-6 w-6" />
-      <div className="text-left">
-        <div className="text-[9px] font-medium uppercase tracking-wide opacity-60">Bientôt sur</div>
+      <div className="text-start">
+        <div className="text-[9px] font-medium uppercase tracking-wide opacity-60">{t("comingSoonOn")}</div>
         <div className="text-base font-semibold leading-tight">Google Play</div>
       </div>
     </div>

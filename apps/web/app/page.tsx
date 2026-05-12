@@ -565,7 +565,7 @@ export default async function HomePage() {
                 </p>
                 <div
                   className="mt-3 flex gap-0.5"
-                  aria-label={`${tt.rating} étoiles sur 5`}
+                  aria-label={t("testimonials.starsAria", { count: tt.rating })}
                 >
                   {Array.from({ length: Math.max(0, Math.min(5, tt.rating)) }).map(
                     (_, j) => (
@@ -826,7 +826,7 @@ export default async function HomePage() {
                         <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
                           <Search className="h-4 w-4 text-primary" />
                         </div>
-                        <span className="text-[10px] text-[#64748B]">Rechercher un médecin...</span>
+                        <span className="text-[10px] text-[#64748B]">{t("appShowcase.searchHint")}</span>
                       </div>
                     </div>
                     {[
@@ -862,7 +862,7 @@ export default async function HomePage() {
                   <div className="flex h-6 w-6 items-center justify-center rounded-full bg-accent">
                     <CheckCircle2 className="h-3.5 w-3.5 text-white" />
                   </div>
-                  <span className="text-[10px] font-semibold text-foreground">RDV confirmé !</span>
+                  <span className="text-[10px] font-semibold text-foreground">{t("appShowcase.rdvConfirmed")}</span>
                 </div>
               </div>
             </div>
@@ -872,21 +872,23 @@ export default async function HomePage() {
           <div className="text-center md:text-start">
             <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary">
               <Smartphone className="h-3.5 w-3.5" />
-              Nouveau
+              {t("appShowcase.badge")}
             </div>
             <h2 className="mt-4 font-heading text-3xl font-black leading-tight text-foreground sm:text-4xl">
-              Doktori dans<br />
-              <span className="text-primary">votre poche</span>
+              {t.rich("appShowcase.title", {
+                span: (chunks) => <span className="text-primary">{chunks}</span>,
+                br: () => <br />,
+              })}
             </h2>
             <p className="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
-              Prenez rendez-vous en 2 clics, recevez des rappels automatiques et accédez à SOS Docteur — le tout depuis votre téléphone.
+              {t("appShowcase.description")}
             </p>
             <ul className="mt-6 space-y-2.5 text-sm text-foreground">
               {[
-                "Réservation instantanée 24/7",
-                "Rappels SMS avant chaque RDV",
-                "SOS Docteur — médecin en 2 min",
-                "100% gratuit pour les patients",
+                t("appShowcase.feature1"),
+                t("appShowcase.feature2"),
+                t("appShowcase.feature3"),
+                t("appShowcase.feature4"),
               ].map((item) => (
                 <li key={item} className="flex items-center gap-2 justify-center md:justify-start">
                   <CheckCircle2 className="h-4 w-4 shrink-0 text-accent" />

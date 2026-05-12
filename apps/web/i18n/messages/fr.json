@@ -85,7 +85,21 @@
     "footerContactLocation": "Tunis, Tunisie",
     "footerCopyright": "© 2025–2026 Doktori · Édité par Random Walkers SUARL · RNE 1625867B",
     "iosApp": "iOS App",
-    "androidApp": "Android App"
+    "androidApp": "Android App",
+    "appShowcase": {
+      "searchHint": "Rechercher un médecin...",
+      "rdvConfirmed": "RDV confirmé !",
+      "badge": "Nouveau",
+      "title": "Doktori dans<br></br><span>votre poche</span>",
+      "description": "Prenez rendez-vous en 2 clics, recevez des rappels automatiques et accédez à SOS Docteur — le tout depuis votre téléphone.",
+      "feature1": "Réservation instantanée 24/7",
+      "feature2": "Rappels SMS avant chaque RDV",
+      "feature3": "SOS Docteur — médecin en 2 min",
+      "feature4": "100% gratuit pour les patients"
+    },
+    "testimonials": {
+      "starsAria": "{count} étoiles sur 5"
+    }
   },
   "auth": {
     "loginTitle": "Espace médecin",
@@ -3700,5 +3714,8 @@
     "doctorSpaceCta": "Espace médecin",
     "newsletterTitle": "Newsletter santé",
     "newsletterCopy": "Recevez chaque mois nos meilleurs conseils santé et nouveautés Doktori."
+  },
+  "storeBadge": {
+    "comingSoonOn": "Bientôt sur"
   }
 }
