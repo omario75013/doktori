@@ -654,35 +654,19 @@ export function DashboardClient({
   const [liveTodayCount, setLiveTodayCount] = useState(todayCount);
   const [liveToConfirm, setLiveToConfirm] = useState(toConfirm);
   const [liveNoShowCount, setLiveNoShowCount] = useState(noShowCount);
-  // Mirror of the secretary's waiting-room counter so the doctor can
-  // see "how many patients are physically waiting" without leaving the
-  // dashboard. Polled on the same 15-second cadence as the other KPIs.
-  const [liveWaitingCount, setLiveWaitingCount] = useState(waitingRoomCount);
   useEffect(() => {
     let cancelled = false;
     async function refresh() {
       try {
-        const [r1, r2] = await Promise.all([
-          fetch("/api/doctor/today-summary", {
-            credentials: "include",
-            cache: "no-store",
-          }),
-          fetch("/api/doctor/waiting-room", {
-            credentials: "include",
-            cache: "no-store",
-          }),
-        ]);
-        if (cancelled) return;
-        if (r1.ok) {
-          const d = await r1.json();
-          if (typeof d.todayCount === "number") setLiveTodayCount(d.todayCount);
-          if (typeof d.toConfirmCount === "number") setLiveToConfirm(d.toConfirmCount);
-          if (typeof d.noShowMonthCount === "number") setLiveNoShowCount(d.noShowMonthCount);
-        }
-        if (r2.ok) {
-          const w = await r2.json();
-          if (typeof w.count === "number") setLiveWaitingCount(w.count);
-        }
+        const r = await fetch("/api/doctor/today-summary", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (!r.ok || cancelled) return;
+        const d = await r.json();
+        if (typeof d.todayCount === "number") setLiveTodayCount(d.todayCount);
+        if (typeof d.toConfirmCount === "number") setLiveToConfirm(d.toConfirmCount);
+        if (typeof d.noShowMonthCount === "number") setLiveNoShowCount(d.noShowMonthCount);
       } catch {
         /* ignore */
       }
@@ -722,14 +706,6 @@ export function DashboardClient({
       accentColor: "bg-red-400",
       icon: AlertCircle,
       iconBg: "bg-red-50 text-red-500",
-    },
-    {
-      label: t("waitingRoom"),
-      value: liveWaitingCount,
-      sublabel: t("waitingRoomSub"),
-      accentColor: "bg-teal-500",
-      icon: Users,
-      iconBg: "bg-teal-50 text-teal-600",
     },
   ];
 

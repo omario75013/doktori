@@ -450,7 +450,6 @@
       "quickActionAddPatient": "إضافة مريض",
       "quickActionMyCalendar": "تقويمي",
       "quickActionMyStats": "إحصائياتي",
-      "waitingRoom": "غرفة الانتظار",
       "noWaitingPatients": "لا يوجد مرضى في الانتظار حالياً.",
       "arrivedAt": "وصل في {time}",
       "recentActivity": "النشاط الأخير",
@@ -474,8 +473,7 @@
       "chartRevenue": "المداخيل",
       "chartRevenueSub": "محصلة",
       "chartCancellation": "نسبة الإلغاء",
-      "chartCancellationSub": "متوسط الفترة",
-      "waitingRoomSub": "مرضى حاضرون"
+      "chartCancellationSub": "متوسط الفترة"
     },
     "agenda": {
       "title": "إعداد جدول المواعيد",

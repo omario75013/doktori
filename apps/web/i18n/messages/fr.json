@@ -450,7 +450,6 @@
       "quickActionAddPatient": "Ajouter un patient",
       "quickActionMyCalendar": "Mon calendrier",
       "quickActionMyStats": "Mes statistiques",
-      "waitingRoom": "Salle d'attente",
       "noWaitingPatients": "Aucun patient en attente pour le moment.",
       "arrivedAt": "Arrivé à {time}",
       "recentActivity": "Activité récente",
@@ -474,8 +473,7 @@
       "chartRevenue": "Recettes",
       "chartRevenueSub": "encaissées",
       "chartCancellation": "Taux d'annulation",
-      "chartCancellationSub": "moyenne période",
-      "waitingRoomSub": "patients présents"
+      "chartCancellationSub": "moyenne période"
     },
     "agenda": {
       "title": "Configuration de l'agenda",
