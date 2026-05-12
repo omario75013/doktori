@@ -654,9 +654,13 @@ export function DashboardClient({
   const [liveTodayCount, setLiveTodayCount] = useState(todayCount);
   const [liveToConfirm, setLiveToConfirm] = useState(toConfirm);
   const [liveNoShowCount, setLiveNoShowCount] = useState(noShowCount);
+  // Manual waiting-room counter set by the secretary — polled on a
+  // shorter cadence (10s) than the SSR-driven KPIs so the doctor sees
+  // each click without a perceptible delay.
+  const [liveWaitingCount, setLiveWaitingCount] = useState(waitingRoomCount);
   useEffect(() => {
     let cancelled = false;
-    async function refresh() {
+    async function refreshKpis() {
       try {
         const r = await fetch("/api/doctor/today-summary", {
           credentials: "include",
@@ -671,13 +675,32 @@ export function DashboardClient({
         /* ignore */
       }
     }
-    void refresh();
-    const id = setInterval(refresh, 15_000);
-    const onFocus = () => void refresh();
+    async function refreshWaiting() {
+      try {
+        const r = await fetch("/api/doctor/waiting-room", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (!r.ok || cancelled) return;
+        const d = await r.json();
+        if (typeof d.count === "number") setLiveWaitingCount(d.count);
+      } catch {
+        /* ignore */
+      }
+    }
+    void refreshKpis();
+    void refreshWaiting();
+    const idKpis = setInterval(refreshKpis, 15_000);
+    const idWaiting = setInterval(refreshWaiting, 10_000);
+    const onFocus = () => {
+      void refreshKpis();
+      void refreshWaiting();
+    };
     window.addEventListener("focus", onFocus);
     return () => {
       cancelled = true;
-      clearInterval(id);
+      clearInterval(idKpis);
+      clearInterval(idWaiting);
       window.removeEventListener("focus", onFocus);
     };
   }, []);
@@ -901,7 +924,7 @@ export function DashboardClient({
       {/* ── Day Overview: focused on TODAY's work, top-of-page priority ── */}
       <DayOverviewCard
         todayAppts={todayAppts}
-        waitingCount={waitingRoomCount}
+        waitingCount={liveWaitingCount}
         completionRate={completionRate}
       />
 
@@ -1003,7 +1026,7 @@ export function DashboardClient({
             </span>
           </div>
           <span className="text-2xl font-black text-green-700 dark:text-green-300 tabular-nums">
-            {waitingRoomCount}
+            {liveWaitingCount}
           </span>
         </div>
         {waitingPatients.length === 0 ? (
