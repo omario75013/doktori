@@ -4,6 +4,7 @@ import { getPatientFromRequest } from "@/lib/patient-auth";
 import { db, appointments, patients } from "@doktori/db";
 import { eq, and, sql } from "drizzle-orm";
 import { applyNoShowPolicy } from "@/lib/noshow-policy";
+import { notifyPatientAppointmentChange } from "@/lib/notify-patient-rdv";
 
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   // Patient path: can only cancel their own appointment
@@ -56,6 +57,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       .set({ status, updatedAt: now })
       .where(and(eq(appointments.id, id), eq(appointments.doctorId, doctorId)))
       .returning();
+
+    // Patient notification on real state transitions (confirm / cancel).
+    // No-show is doctor-only flagging; no patient ping for that.
+    if (status === "confirmed" && current.status !== "confirmed") {
+      void notifyPatientAppointmentChange(id, "confirmed");
+    } else if (status === "cancelled" && current.status !== "cancelled") {
+      void notifyPatientAppointmentChange(id, "cancelled");
+    }
 
     // Reliability counters — only bump on a true transition into the flagged state
     if (status === "no_show" && current.status !== "no_show") {
