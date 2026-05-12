@@ -610,7 +610,13 @@
       "updatedSuccess": "Rendez-vous mis à jour",
       "closeBtnLabel": "Fermer",
       "followupCancel": "Annuler",
-      "followupSubmit": "Programmer le suivi"
+      "followupSubmit": "Programmer le suivi",
+      "timeLabel": "Heure",
+      "availableSlots": "Créneaux disponibles",
+      "loadingSlots": "Chargement des créneaux…",
+      "noSlotsForDate": "Aucun créneau disponible ce jour-là. Activez « Heure libre » pour proposer un horaire personnalisé.",
+      "pickCustomTime": "Heure libre",
+      "backToSlots": "Voir mes créneaux"
     },
     "patients": {
       "title": "Mes patients",

@@ -114,6 +114,45 @@ function NewAppointmentModal({
       p.phone.includes(patientSearch)
   );
 
+  // Pull the doctor's real schedule slots for the selected date so the
+  // modal acts like the public booking widget: doctor picks from their
+  // own availability instead of typing a free-form time.
+  const [availableSlots, setAvailableSlots] = useState<Array<{
+    startTime: string;
+    endTime: string;
+    practiceId: string;
+  }>>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [customTime, setCustomTime] = useState(false);
+  useEffect(() => {
+    if (!date || customTime) return;
+    let cancelled = false;
+    setSlotsLoading(true);
+    fetch(`/api/doctor/availability?date=${date}`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled) return;
+        const slots = (d?.days?.[0]?.slots ?? []) as Array<{
+          startTime: string;
+          endTime: string;
+          practiceId: string;
+        }>;
+        setAvailableSlots(slots);
+        // Auto-select the first slot when the date changes if the
+        // current time isn't in the new list.
+        if (slots.length > 0 && !slots.some((s) => s.startTime === startTime)) {
+          setStartTime(slots[0].startTime);
+        }
+      })
+      .catch(() => setAvailableSlots([]))
+      .finally(() => {
+        if (!cancelled) setSlotsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [date, customTime]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -231,18 +270,69 @@ function NewAppointmentModal({
               />
             </div>
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-                Heure <span className="text-red-500">*</span>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1 flex items-center justify-between">
+                <span>{t("timeLabel")} <span className="text-red-500">*</span></span>
+                <button
+                  type="button"
+                  onClick={() => setCustomTime((v) => !v)}
+                  className="text-[10px] font-medium text-primary hover:underline normal-case tracking-normal"
+                >
+                  {customTime ? t("backToSlots") : t("pickCustomTime")}
+                </button>
               </label>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                required
-                className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
-              />
+              {customTime ? (
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  required
+                  className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
+                />
+              ) : (
+                <div className="h-11 flex items-center justify-center text-sm font-semibold text-foreground border border-border rounded-xl bg-secondary/40 px-3">
+                  {availableSlots.find((s) => s.startTime === startTime)
+                    ? startTime
+                    : (availableSlots[0]?.startTime ?? "—")}
+                </div>
+              )}
             </div>
           </div>
+
+          {/* Doctor's own availability — only shown when NOT in custom-time mode */}
+          {!customTime && (
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+                {t("availableSlots")}
+              </label>
+              {slotsLoading ? (
+                <p className="text-xs text-gray-400 py-3">{t("loadingSlots")}</p>
+              ) : availableSlots.length === 0 ? (
+                <div className="text-xs text-gray-400 py-3 px-3 rounded-xl border border-dashed border-border bg-secondary/30">
+                  {t("noSlotsForDate")}
+                </div>
+              ) : (
+                <div className="max-h-40 overflow-y-auto pe-1 grid grid-cols-3 sm:grid-cols-4 gap-1.5">
+                  {availableSlots.map((s, i) => {
+                    const active = s.startTime === startTime;
+                    return (
+                      <button
+                        key={`${s.startTime}-${s.practiceId}-${i}`}
+                        type="button"
+                        onClick={() => setStartTime(s.startTime)}
+                        className={`h-9 rounded-lg text-xs font-medium border transition-colors ${
+                          active
+                            ? "bg-primary text-white border-primary"
+                            : "bg-white dark:bg-gray-800 text-foreground border-border hover:border-primary/60"
+                        }`}
+                      >
+                        {s.startTime}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Type */}
           <div>

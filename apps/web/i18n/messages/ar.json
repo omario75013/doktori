@@ -610,7 +610,13 @@
       "updatedSuccess": "تم تحديث الموعد",
       "closeBtnLabel": "إغلاق",
       "followupCancel": "إلغاء",
-      "followupSubmit": "جدولة المتابعة"
+      "followupSubmit": "جدولة المتابعة",
+      "timeLabel": "الوقت",
+      "availableSlots": "المواعيد المتاحة",
+      "loadingSlots": "جاري تحميل المواعيد…",
+      "noSlotsForDate": "لا توجد مواعيد متاحة في هذا اليوم. فعّل « وقت حر » لاقتراح موعد مخصّص.",
+      "pickCustomTime": "وقت حر",
+      "backToSlots": "عرض مواعيدي"
     },
     "patients": {
       "title": "مرضاي",
