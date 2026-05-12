@@ -188,14 +188,14 @@ export default function MesRdvPage() {
       {/* Page header */}
       <div className="flex items-end justify-between gap-4 mb-5">
         <div>
-          <div className="ds-eyebrow">Mon agenda</div>
-          <h1 className="ds-page-title">Mes rendez-vous</h1>
+          <div className="ds-eyebrow">{t("eyebrow")}</div>
+          <h1 className="ds-page-title">{t("pageTitle")}</h1>
           <p className="ds-page-sub">
-            {upcoming.length} à venir · {past.length} passés
+            {t("countSummary", { upcoming: upcoming.length, past: past.length })}
           </p>
         </div>
         <a href="/recherche" className="ds-btn ds-btn-primary">
-          <Plus className="w-4 h-4" /> Nouveau rendez-vous
+          <Plus className="w-4 h-4" /> {t("newAppointment")}
         </a>
       </div>
 
@@ -207,7 +207,7 @@ export default function MesRdvPage() {
             className={`ds-tab ${tab === "upcoming" ? "on" : ""}`}
             onClick={() => setTab("upcoming")}
           >
-            À venir{" "}
+            {t("tabUpcoming")}{" "}
             <span
               className="inline-block ms-2 px-2 rounded-full text-[11px]"
               style={{ background: "var(--primary-50)", color: "var(--primary-700)" }}
@@ -220,14 +220,14 @@ export default function MesRdvPage() {
             className={`ds-tab ${tab === "past" ? "on" : ""}`}
             onClick={() => setTab("past")}
           >
-            Passés
+            {t("tabPast")}
           </button>
           <button
             type="button"
             className={`ds-tab ${tab === "cancelled" ? "on" : ""}`}
             onClick={() => setTab("cancelled")}
           >
-            Annulés
+            {t("tabCancelled")}
           </button>
         </div>
         <div className="flex gap-2">
@@ -236,7 +236,7 @@ export default function MesRdvPage() {
             onClick={() => setFilterOpen((v) => !v)}
             className={`ds-btn ds-btn-sm ${filterOpen ? "ds-btn-primary" : "ds-btn-ghost"}`}
           >
-            <Filter className="w-4 h-4" /> Filtrer
+            <Filter className="w-4 h-4" /> {t("filter")}
             {activeFilterCount > 0 && (
               <span
                 className="ms-1 inline-block px-1.5 rounded-full text-[10px] font-bold"
@@ -251,7 +251,7 @@ export default function MesRdvPage() {
             onClick={() => setView((v) => (v === "list" ? "calendar" : "list"))}
             className={`ds-btn ds-btn-sm ${view === "calendar" ? "ds-btn-primary" : "ds-btn-ghost"}`}
           >
-            <Calendar className="w-4 h-4" /> {view === "calendar" ? "Vue liste" : "Vue calendrier"}
+            <Calendar className="w-4 h-4" /> {view === "calendar" ? t("viewList") : t("viewCalendar")}
           </button>
         </div>
       </div>
@@ -261,7 +261,7 @@ export default function MesRdvPage() {
           <div className="grid grid-cols-1 sm:grid-cols-[1fr_auto_auto_auto] gap-3 items-end">
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: "var(--ink-400)" }}>
-                Recherche
+                {t("searchLabel")}
               </div>
               <input
                 value={searchQ}
@@ -273,7 +273,7 @@ export default function MesRdvPage() {
             </div>
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: "var(--ink-400)" }}>
-                Type
+                {t("fieldType")}
               </div>
               <select
                 value={typeFilter}
@@ -281,14 +281,14 @@ export default function MesRdvPage() {
                 className="rounded-xl px-3 py-2 text-[13.5px] outline-none"
                 style={{ background: "#fff", border: "1px solid var(--line-cool)" }}
               >
-                <option value="all">Tous</option>
-                <option value="cabinet">Cabinet</option>
-                <option value="teleconsult">Téléconsult</option>
+                <option value="all">{t("filterAll")}</option>
+                <option value="cabinet">{t("typeCabinet")}</option>
+                <option value="teleconsult">{t("typeTeleconsult")}</option>
               </select>
             </div>
             <div>
               <div className="text-[11px] font-bold uppercase tracking-wider mb-1" style={{ color: "var(--ink-400)" }}>
-                Pour
+                {t("fieldFor")}
               </div>
               <select
                 value={proche}
@@ -296,9 +296,9 @@ export default function MesRdvPage() {
                 className="rounded-xl px-3 py-2 text-[13.5px] outline-none"
                 style={{ background: "#fff", border: "1px solid var(--line-cool)" }}
               >
-                <option value="all">Tous</option>
-                <option value="self">Moi</option>
-                <option value="proche">Un proche</option>
+                <option value="all">{t("filterAll")}</option>
+                <option value="self">{t("filterSelf")}</option>
+                <option value="proche">{t("filterProche")}</option>
               </select>
             </div>
             {activeFilterCount > 0 && (
@@ -311,7 +311,7 @@ export default function MesRdvPage() {
                 }}
                 className="ds-btn ds-btn-ghost ds-btn-sm"
               >
-                <X className="w-3.5 h-3.5" /> Effacer
+                <X className="w-3.5 h-3.5" /> {t("clear")}
               </button>
             )}
           </div>
@@ -336,15 +336,15 @@ export default function MesRdvPage() {
               <Calendar className="w-7 h-7" style={{ color: "var(--primary-500)" }} />
             </div>
             <p className="font-bold text-[15px] mb-1" style={{ color: "var(--ink-900)" }}>
-              {tab === "upcoming" ? "Aucun rendez-vous à venir" : tab === "past" ? "Aucun rendez-vous passé" : "Aucun rendez-vous annulé"}
+              {tab === "upcoming" ? t("emptyUpcoming") : tab === "past" ? t("emptyPast") : t("emptyCancelled")}
             </p>
             {tab === "upcoming" && (
               <>
                 <p className="text-[13.5px] mb-4" style={{ color: "var(--ink-500)" }}>
-                  Trouvez un médecin et prenez rendez-vous en quelques clics.
+                  {t("emptyHint")}
                 </p>
                 <a href="/recherche" className="ds-btn ds-btn-primary ds-btn-sm">
-                  Trouver un médecin
+                  {t("findDoctorCta")}
                 </a>
               </>
             )}
@@ -371,14 +371,14 @@ export default function MesRdvPage() {
             </div>
             <div className="flex-1 min-w-0">
               <div className="font-bold text-[14px]" style={{ color: "var(--ink-900)" }}>
-                Bilan annuel à programmer
+                {t("checkupTitle")}
               </div>
               <div className="text-[13px]" style={{ color: "var(--ink-500)" }}>
-                Pensez à programmer un bilan complet avec votre généraliste.
+                {t("checkupDescription")}
               </div>
             </div>
             <a href="/recherche?specialty=generaliste" className="ds-btn ds-btn-primary ds-btn-sm shrink-0">
-              Programmer
+              {t("checkupCta")}
             </a>
           </div>
         )}
@@ -416,6 +416,9 @@ const RELATION_LABEL: Record<string, string> = {
 };
 
 function ApptCard({ a, onOpen }: { a: Appointment; onOpen: () => void }) {
+  const t = useTranslations("patient.mesRdv");
+  const locale = useLocale();
+  const dateLocaleApt = locale === "ar" ? ar : fr;
   const date = new Date(a.startsAt);
   const end = new Date(a.endsAt);
   const isVideo = a.type === "teleconsult" || a.type === "teleconsultation";
@@ -478,18 +481,18 @@ function ApptCard({ a, onOpen }: { a: Appointment; onOpen: () => void }) {
             </div>
             {isVideo && (
               <span className="ds-chip ds-chip-sky">
-                <Video className="w-3 h-3" /> Vidéo
+                <Video className="w-3 h-3" /> {t("video")}
               </span>
             )}
             {isConfirmed ? (
               <span className="ds-chip ds-chip-mint">
-                <CheckCircle className="w-3 h-3" /> Confirmé
+                <CheckCircle className="w-3 h-3" /> {t("statusConfirmed")}
               </span>
             ) : isPending ? (
-              <span className="ds-chip ds-chip-amber">En attente</span>
+              <span className="ds-chip ds-chip-amber">{t("statusPending")}</span>
             ) : isCancelled ? (
               <span className="ds-chip" style={{ background: "#F3F4F6", color: "#6B7280" }}>
-                Annulé
+                {t("statusCancelled")}
               </span>
             ) : null}
             {a.beneficiaryName && (
@@ -499,13 +502,15 @@ function ApptCard({ a, onOpen }: { a: Appointment; onOpen: () => void }) {
                   background: "var(--tone-coral-bg, #FEEBE2)",
                   color: "#B05F3D",
                 }}
-                title={`Rendez-vous pour ${a.beneficiaryName}${
-                  a.beneficiaryRelation && RELATION_LABEL[a.beneficiaryRelation]
-                    ? ` (${RELATION_LABEL[a.beneficiaryRelation]})`
-                    : ""
-                }`}
+                title={t("apptForTitle", {
+                  name: a.beneficiaryName,
+                  relation:
+                    a.beneficiaryRelation && RELATION_LABEL[a.beneficiaryRelation]
+                      ? ` (${RELATION_LABEL[a.beneficiaryRelation]})`
+                      : "",
+                })}
               >
-                <Users className="w-3 h-3" /> Pour {a.beneficiaryName}
+                <Users className="w-3 h-3" /> {t("forBeneficiary", { name: a.beneficiaryName })}
               </span>
             )}
           </div>
@@ -514,7 +519,7 @@ function ApptCard({ a, onOpen }: { a: Appointment; onOpen: () => void }) {
           </div>
           <div className="flex gap-3.5 text-[12.5px] mt-1.5 flex-wrap" style={{ color: "var(--ink-500)" }}>
             <span className="inline-flex items-center gap-1">
-              <Calendar className="w-3.5 h-3.5" /> {format(date, "HH:mm", { locale: fr })} · {dur} min
+              <Calendar className="w-3.5 h-3.5" /> {format(date, "HH:mm", { locale: dateLocaleApt })} · {t("durationMin", { count: dur })}
             </span>
             <span className="inline-flex items-center gap-1">
               <MapPin className="w-3.5 h-3.5" />
@@ -536,11 +541,11 @@ function ApptCard({ a, onOpen }: { a: Appointment; onOpen: () => void }) {
               rel="noopener noreferrer"
               className="ds-btn ds-btn-primary ds-btn-sm"
             >
-              Itinéraire
+              {t("directions")}
             </a>
           )}
           <button type="button" onClick={onOpen} className="ds-btn ds-btn-ghost ds-btn-sm">
-            Détails
+            {t("details")}
           </button>
         </div>
       </div>
@@ -591,7 +596,7 @@ function DetailsModal({
       >
         <div className="flex items-center justify-between px-5 py-4 border-b border-[color:var(--line-cool)]">
           <h2 className="font-bold text-[16px]" style={{ color: "var(--ink-900)" }}>
-            Détails du rendez-vous
+            {t("detailsTitle")}
           </h2>
           <button onClick={onClose} className="p-1 rounded hover:bg-[color:var(--surface-2)]">
             <X className="w-4 h-4" />
@@ -654,7 +659,7 @@ function DetailsModal({
                 onClick={() => onSetMode("reschedule")}
                 className="ds-btn ds-btn-soft ds-btn-sm flex-1 justify-center"
               >
-                <ClipboardList className="w-4 h-4" /> Décaler
+                <ClipboardList className="w-4 h-4" /> {t("reschedule")}
               </button>
               <button
                 type="button"
@@ -666,7 +671,7 @@ function DetailsModal({
                   border: "none",
                 }}
               >
-                <X className="w-4 h-4" /> Annuler
+                <X className="w-4 h-4" /> {t("cancel")}
               </button>
             </div>
           )}
@@ -677,9 +682,7 @@ function DetailsModal({
               style={{ background: "var(--surface-2)" }}
             >
               <div className="text-[12.5px] font-bold" style={{ color: "var(--ink-900)" }}>
-                {mode === "reschedule"
-                  ? "Pourquoi souhaitez-vous décaler ce rendez-vous ?"
-                  : "Indiquez la raison de l'annulation"}
+                {mode === "reschedule" ? t("rescheduleQuestion") : t("cancelQuestion")}
               </div>
               <textarea
                 value={note}
@@ -699,7 +702,7 @@ function DetailsModal({
                   }}
                   className="ds-btn ds-btn-ghost ds-btn-sm"
                 >
-                  Retour
+                  {t("back")}
                 </button>
                 <button
                   type="button"
@@ -708,10 +711,10 @@ function DetailsModal({
                   className="ds-btn ds-btn-primary ds-btn-sm"
                 >
                   {saving
-                    ? "Envoi…"
+                    ? t("sending")
                     : mode === "reschedule"
-                    ? "Demander un report"
-                    : "Confirmer l'annulation"}
+                    ? t("requestReschedule")
+                    : t("confirmCancel")}
                 </button>
               </div>
             </div>
@@ -719,7 +722,7 @@ function DetailsModal({
 
           {!canEdit && !isCancelled && (
             <p className="text-[12.5px]" style={{ color: "var(--ink-500)" }}>
-              Ce rendez-vous ne peut plus être modifié (statut « {a.status} »).
+              {t("notEditable", { status: a.status })}
             </p>
           )}
 
@@ -730,7 +733,7 @@ function DetailsModal({
               target="_blank"
               rel="noreferrer"
             >
-              Voir le médecin
+              {t("viewDoctor")}
             </a>
             {!isVideo && a.doctorAddress && (
               <a
@@ -739,7 +742,7 @@ function DetailsModal({
                 rel="noreferrer"
                 className="ds-btn ds-btn-ghost ds-btn-sm"
               >
-                Itinéraire
+                {t("directions")}
               </a>
             )}
           </div>

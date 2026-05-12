@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Home,
   Calendar,
@@ -31,20 +32,21 @@ type Me = {
 } | null;
 
 const NAV_ITEMS = [
-  { href: "/mon-espace", icon: Home, label: "Accueil" },
-  { href: "/mes-rdv", icon: Calendar, label: "Rendez-vous" },
-  { href: "/dossier-medical", icon: FolderOpen, label: "Dossier médical" },
-  { href: "/mes-documents", icon: FileText, label: "Documents" },
-  { href: "/parametres/compte", icon: User, label: "Profil" },
+  { href: "/mon-espace", icon: Home, key: "home" },
+  { href: "/mes-rdv", icon: Calendar, key: "appointments" },
+  { href: "/dossier-medical", icon: FolderOpen, key: "medicalFile" },
+  { href: "/mes-documents", icon: FileText, key: "documents" },
+  { href: "/parametres/compte", icon: User, key: "profile" },
 ] as const;
 
 const SHORTCUT_ITEMS = [
-  { href: "/recherche", icon: Search, label: "Trouvez un médecin" },
-  { href: "/dossier-medical/traitements", icon: Pill, label: "Mes traitements" },
-  { href: "/ma-famille", icon: Heart, label: "Proches" },
+  { href: "/recherche", icon: Search, key: "findDoctor" },
+  { href: "/dossier-medical/traitements", icon: Pill, key: "treatments" },
+  { href: "/ma-famille", icon: Heart, key: "family" },
 ] as const;
 
 export function PatientSidebar() {
+  const t = useTranslations("patient.sidebar");
   const pathname = usePathname();
   const router = useRouter();
   const [me, setMe] = useState<Me>(null);
@@ -141,7 +143,7 @@ export function PatientSidebar() {
         </div>
       </Link>
 
-      <div className="sb-section-label">Navigation</div>
+      <div className="sb-section-label">{t("navigation")}</div>
       <nav className="sb-nav">
         {NAV_ITEMS.map((it) => {
           const Icon = it.icon;
@@ -154,13 +156,13 @@ export function PatientSidebar() {
               <span className="sb-icon">
                 <Icon className="w-5 h-5" strokeWidth={1.8} />
               </span>
-              {it.label}
+              {t(`nav.${it.key}` as Parameters<typeof t>[0])}
             </Link>
           );
         })}
       </nav>
 
-      <div className="sb-section-label">Raccourcis</div>
+      <div className="sb-section-label">{t("shortcuts")}</div>
       <nav className="sb-nav">
         {SHORTCUT_ITEMS.map((it) => {
           const Icon = it.icon;
@@ -169,7 +171,7 @@ export function PatientSidebar() {
               <span className="sb-icon">
                 <Icon className="w-5 h-5" strokeWidth={1.8} />
               </span>
-              {it.label}
+              {t(`nav.${it.key}` as Parameters<typeof t>[0])}
             </Link>
           );
         })}
@@ -180,15 +182,15 @@ export function PatientSidebar() {
         <button
           type="button"
           onClick={() => setFavOpen((v) => !v)}
-          className="w-full text-left flex items-center justify-between"
+          className="w-full text-start flex items-center justify-between"
           style={{ background: "transparent", border: 0, padding: 0, color: "inherit", cursor: "pointer", font: "inherit" }}
         >
-          <span>Favoris{favs.length > 0 ? ` (${favs.length})` : ""}</span>
+          <span>{t("favorites")}{favs.length > 0 ? ` (${favs.length})` : ""}</span>
           <span aria-hidden style={{ fontSize: 10, opacity: 0.6 }}>{favOpen ? "▾" : "▸"}</span>
         </button>
       </div>
       {favOpen && (
-        <nav className="sb-nav" aria-label="Favoris">
+        <nav className="sb-nav" aria-label={t("favorites")}>
           {favs.length === 0 ? (
             <Link
               href="/recherche"
@@ -196,7 +198,7 @@ export function PatientSidebar() {
               style={{ color: "var(--ink-500)", fontStyle: "italic", fontSize: 12.5 }}
             >
               <Heart className="w-4 h-4" />
-              Aucun favori — explorer
+              {t("noFavoritesExplore")}
             </Link>
           ) : (
             favs.map((f) => {
@@ -233,7 +235,7 @@ export function PatientSidebar() {
               className="sb-item"
               style={{ color: "var(--primary-600)", fontWeight: 700, fontSize: 12.5 }}
             >
-              Voir tous →
+              {t("viewAll")}
             </Link>
           )}
         </nav>
@@ -244,8 +246,8 @@ export function PatientSidebar() {
       <Link href="/sos" className="sb-sos">
         <span className="sos-pulse" />
         <Siren className="w-4 h-4" strokeWidth={2} />
-        Urgence SOS
-        <span style={{ marginLeft: "auto", opacity: 0.85, fontWeight: 600, fontSize: 12 }}>
+        {t("emergencyCta")}
+        <span style={{ marginInlineStart: "auto", opacity: 0.85, fontWeight: 600, fontSize: 12 }}>
           24/7
         </span>
       </Link>
@@ -261,46 +263,46 @@ export function PatientSidebar() {
           <div className="sb-avatar">
             {me?.photoUrl ? (
               // eslint-disable-next-line @next/next/no-img-element
-              <img src={me.photoUrl} alt={me.name ?? "Patient"} />
+              <img src={me.photoUrl} alt={me.name ?? t("account")} />
             ) : (
               initials
             )}
           </div>
           <div className="sb-user-meta">
-            <div className="sb-user-name">{me?.name ?? "Mon compte"}</div>
+            <div className="sb-user-name">{me?.name ?? t("account")}</div>
             <div className="sb-user-sub">{me?.email ?? me?.phone ?? ""}</div>
           </div>
           <MoreHorizontal className="w-4 h-4 shrink-0" style={{ color: "var(--ink-400)" }} />
         </button>
         {menuOpen && (
           <div className="sb-user-menu" role="menu">
-            <div className="sb-menu-section">Paramètres</div>
+            <div className="sb-menu-section">{t("settings")}</div>
             <Link href="/parametres" className="sb-menu-item" role="menuitem">
-              Tous les paramètres
+              {t("allSettings")}
             </Link>
             <Link href="/parametres/compte" className="sb-menu-item" role="menuitem">
               <User className="w-4 h-4" />
-              Mon compte
+              {t("myAccount")}
             </Link>
             <Link href="/parametres/notifications" className="sb-menu-item" role="menuitem">
               <Bell className="w-4 h-4" />
-              Notifications
+              {t("notifications")}
             </Link>
             <Link href="/parametres/securite" className="sb-menu-item" role="menuitem">
               <Lock className="w-4 h-4" />
-              Sécurité
+              {t("security")}
             </Link>
             <Link href="/parametres/sessions" className="sb-menu-item" role="menuitem">
               <ShieldCheck className="w-4 h-4" />
-              Sessions
+              {t("sessions")}
             </Link>
             <Link href="/parametres/confidentialite" className="sb-menu-item" role="menuitem">
               <Settings className="w-4 h-4" />
-              Confidentialité
+              {t("privacy")}
             </Link>
             <Link href="/parametres/recherche-medicale" className="sb-menu-item" role="menuitem">
               <Microscope className="w-4 h-4" />
-              Recherche médicale
+              {t("medicalResearch")}
             </Link>
             <div className="sb-menu-sep" />
             <button
@@ -310,7 +312,7 @@ export function PatientSidebar() {
               role="menuitem"
             >
               <LogOut className="w-4 h-4" />
-              Déconnexion
+              {t("logout")}
             </button>
           </div>
         )}

@@ -776,7 +776,7 @@ function RechercheInner() {
                       style={{ padding: "6px 12px", fontSize: 12.5 }}
                       onClick={() => setShowMap(false)}
                     >
-                      <Calendar className="w-3.5 h-3.5" /> Liste
+                      <Calendar className="w-3.5 h-3.5" /> {t("viewList")}
                     </button>
                     <button
                       type="button"
@@ -784,7 +784,7 @@ function RechercheInner() {
                       style={{ padding: "6px 12px", fontSize: 12.5 }}
                       onClick={() => setShowMap(true)}
                     >
-                      <MapPin className="w-3.5 h-3.5" /> Carte
+                      <MapPin className="w-3.5 h-3.5" /> {t("viewMap")}
                     </button>
                   </div>
                   <label className="ds-btn ds-btn-ghost ds-btn-sm cursor-pointer relative">
@@ -1012,7 +1012,7 @@ function RechercheInner() {
                     }`}
                   >
                     <List className="h-3.5 w-3.5" strokeWidth={2.5} />
-                    Liste
+                    {t("viewList")}
                   </button>
                   <button
                     type="button"
@@ -1024,7 +1024,7 @@ function RechercheInner() {
                     }`}
                   >
                     <Map className="h-3.5 w-3.5" strokeWidth={2.5} />
-                    Carte ({results.length})
+                    {t("viewMap")} ({results.length})
                   </button>
                 </>
               )}
