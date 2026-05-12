@@ -63,30 +63,50 @@ export async function PATCH(req: NextRequest) {
     nextValue = v;
   }
 
-  // Upsert with atomic arithmetic. For inc/dec we let Postgres compute
-  // the new value so two concurrent clicks both register.
-  const incExpr = op === "inc"
-    ? sql`LEAST(${doctorWaitingRoom.count} + 1, 50)`
-    : op === "dec"
-    ? sql`GREATEST(${doctorWaitingRoom.count} - 1, 0)`
-    : sql`${nextValue}`;
+  // Try UPDATE first — for an inc/dec on an existing row, Postgres
+  // computes the new value atomically referencing the existing count.
+  // If no row matches the doctorId, fall through and INSERT a fresh
+  // one with the seed value.
+  const updateSet =
+    op === "inc"
+      ? { count: sql<number>`LEAST(${doctorWaitingRoom.count} + 1, 50)` }
+      : op === "dec"
+      ? { count: sql<number>`GREATEST(${doctorWaitingRoom.count} - 1, 0)` }
+      : { count: nextValue ?? 0 };
 
-  const [row] = await db
-    .insert(doctorWaitingRoom)
-    .values({
-      doctorId: ctx.doctorId,
-      count: op === "set" ? (nextValue ?? 0) : op === "inc" ? 1 : 0,
+  const updated = await db
+    .update(doctorWaitingRoom)
+    .set({
+      ...updateSet,
+      updatedAt: new Date(),
       updatedByType: ctx.selfType,
       updatedById: ctx.selfId,
     })
-    .onConflictDoUpdate({
-      target: doctorWaitingRoom.doctorId,
-      set: {
-        count: incExpr,
-        updatedAt: new Date(),
-        updatedByType: ctx.selfType,
-        updatedById: ctx.selfId,
-      },
+    .where(eq(doctorWaitingRoom.doctorId, ctx.doctorId))
+    .returning({
+      count: doctorWaitingRoom.count,
+      updatedAt: doctorWaitingRoom.updatedAt,
+      updatedByType: doctorWaitingRoom.updatedByType,
+    });
+
+  if (updated.length > 0) {
+    return NextResponse.json({
+      count: updated[0].count,
+      updatedAt: updated[0].updatedAt,
+      updatedByType: updated[0].updatedByType,
+    });
+  }
+
+  // First-ever change for this doctor — insert the seed row.
+  const seedCount =
+    op === "set" ? nextValue ?? 0 : op === "inc" ? 1 : 0;
+  const [inserted] = await db
+    .insert(doctorWaitingRoom)
+    .values({
+      doctorId: ctx.doctorId,
+      count: seedCount,
+      updatedByType: ctx.selfType,
+      updatedById: ctx.selfId,
     })
     .returning({
       count: doctorWaitingRoom.count,
@@ -95,8 +115,8 @@ export async function PATCH(req: NextRequest) {
     });
 
   return NextResponse.json({
-    count: row.count,
-    updatedAt: row.updatedAt,
-    updatedByType: row.updatedByType,
+    count: inserted.count,
+    updatedAt: inserted.updatedAt,
+    updatedByType: inserted.updatedByType,
   });
 }
