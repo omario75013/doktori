@@ -74,21 +74,42 @@ export default function MesRdvPage() {
   async function submitAction(appt: Appointment, type: "reschedule" | "cancel", note: string) {
     setActionSaving(true);
     try {
-      const res = await fetch(`/api/appointments/${appt.id}/change-request`, {
+      // Cancel = direct cancellation (subject to the doctor's cancellation
+      // window). Reschedule still goes through change-request — the doctor
+      // must propose a new slot, so cancel_requested stays for that flow.
+      const url =
+        type === "cancel"
+          ? `/api/appointments/${appt.id}/cancel`
+          : `/api/appointments/${appt.id}/change-request`;
+      const body =
+        type === "cancel"
+          ? undefined
+          : JSON.stringify({ type, note: note.trim() || undefined });
+      const res = await fetch(url, {
         method: "POST",
         credentials: "include",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type, note: note.trim() || undefined }),
+        headers: body ? { "Content-Type": "application/json" } : undefined,
+        body,
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (res.ok) {
-        toast.success(type === "cancel" ? "Demande d'annulation envoyée" : "Demande de report envoyée");
+        toast.success(
+          type === "cancel" ? "Rendez-vous annulé" : "Demande de report envoyée",
+        );
         setActionMode(null);
         setActionNote("");
         setSelectedAppt(null);
         await reload();
+      } else if (
+        type === "cancel" &&
+        data?.error === "CANCEL_WINDOW_TOO_CLOSE" &&
+        typeof data.windowHours === "number"
+      ) {
+        toast.error(
+          `Annulation impossible : ce médecin n'accepte plus d'annulation moins de ${data.windowHours}h avant le rendez-vous.`,
+        );
       } else {
-        toast.error(data.error || "Erreur");
+        toast.error(typeof data?.error === "string" ? data.error : "Erreur");
       }
     } finally {
       setActionSaving(false);

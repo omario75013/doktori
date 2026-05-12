@@ -278,7 +278,23 @@ export default function RendezVousPage() {
     cancelled: tStatus("cancelled"),
     completed: tStatus("completed"),
     no_show: tStatus("no_show"),
+    cancel_requested: "Annulation demandée",
+    reschedule_requested: "Report demandé",
   };
+
+  async function respondRequest(appt: Appointment, action: "accept" | "decline") {
+    try {
+      setUpdating(appt.id);
+      const res = await fetch(`/api/appointments/${appt.id}/respond-request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action }),
+      });
+      if (res.ok) await fetchAppointments();
+    } finally {
+      setUpdating(null);
+    }
+  }
 
   const ACTIONS: { status: string; label: string }[] = [
     { status: "confirmed", label: t("actionConfirm") },
@@ -776,16 +792,42 @@ export default function RendezVousPage() {
                                 : t("arrived")}
                             </button>
                           )}
-                          {ACTIONS.filter((a) => a.status !== appt.status).map((action) => (
-                            <button
-                              key={action.status}
-                              disabled={isUpdating}
-                              onClick={() => updateStatus(appt.id, action.status)}
-                              className="text-xs px-2.5 py-1.5 rounded-xl border border-border hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                            >
-                              {isUpdating ? "..." : action.label}
-                            </button>
-                          ))}
+                          {/* Patient-initiated cancel/reschedule requests
+                              short-circuit the normal action row: doctor
+                              decides Accept (→ apply) or Decline (→ revert
+                              to confirmed) via /respond-request. */}
+                          {(appt.status === "cancel_requested" ||
+                            appt.status === "reschedule_requested") ? (
+                            <>
+                              <button
+                                disabled={isUpdating}
+                                onClick={() => respondRequest(appt, "accept")}
+                                className="text-xs px-2.5 py-1.5 rounded-xl border border-red-300 bg-red-50 text-red-700 hover:bg-red-100 disabled:opacity-40 transition-colors font-medium"
+                              >
+                                {appt.status === "cancel_requested"
+                                  ? "Accepter l'annulation"
+                                  : "Accepter le report"}
+                              </button>
+                              <button
+                                disabled={isUpdating}
+                                onClick={() => respondRequest(appt, "decline")}
+                                className="text-xs px-2.5 py-1.5 rounded-xl border border-border hover:bg-secondary disabled:opacity-40 transition-colors"
+                              >
+                                Refuser
+                              </button>
+                            </>
+                          ) : (
+                            ACTIONS.filter((a) => a.status !== appt.status).map((action) => (
+                              <button
+                                key={action.status}
+                                disabled={isUpdating}
+                                onClick={() => updateStatus(appt.id, action.status)}
+                                className="text-xs px-2.5 py-1.5 rounded-xl border border-border hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                              >
+                                {isUpdating ? "..." : action.label}
+                              </button>
+                            ))
+                          )}
                           {!isTerminal && (
                             <button
                               onClick={() => setEditAppt(appt)}
