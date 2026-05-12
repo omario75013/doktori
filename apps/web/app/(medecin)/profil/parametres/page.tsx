@@ -16,6 +16,7 @@ import {
   PenLine,
   Upload,
   Trash2,
+  Pencil,
   Copy,
   Clock,
   CheckCircle2,
@@ -23,6 +24,8 @@ import {
   Plus,
   Info,
 } from "lucide-react";
+import { SignaturePad } from "./signature-pad";
+import { SignatureGallery } from "./signature-gallery";
 
 type NotificationPrefs = {
   emailNewBooking: boolean;
@@ -94,11 +97,21 @@ export default function SettingsPage() {
   // Doctor signature image — uploaded once, embedded on prescriptions.
   const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
   const [signatureBusy, setSignatureBusy] = useState(false);
+  const [signatureMode, setSignatureMode] = useState<"upload" | "draw" | "gallery">("upload");
+  const [doctorDisplayName, setDoctorDisplayName] = useState<string>("");
   useEffect(() => {
     fetch("/api/doctor/signature", { credentials: "include" })
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (d && typeof d.signatureUrl === "string") setSignatureUrl(d.signatureUrl);
+      })
+      .catch(() => {});
+    // Prefill the gallery name field with the doctor's profile name.
+    fetch("/api/doctor/me", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const n = d?.doctor?.name ?? d?.name;
+        if (typeof n === "string" && n.trim()) setDoctorDisplayName(n.trim());
       })
       .catch(() => {});
   }, []);
@@ -601,28 +614,97 @@ export default function SettingsPage() {
               </div>
             </div>
           ) : (
-            <label
-              className={`block rounded-2xl border border-dashed border-border bg-secondary/30 px-6 py-10 text-center cursor-pointer hover:bg-secondary/60 ${
-                signatureBusy ? "opacity-50 pointer-events-none" : ""
-              }`}
-            >
-              <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
-              <p className="text-sm font-semibold text-foreground">
-                {t("signatureUpload")}
-              </p>
-              <p className="text-xs text-gray-500 mt-1">{t("signatureHint")}</p>
-              <input
-                type="file"
-                accept="image/png,image/jpeg,image/webp"
-                className="hidden"
-                disabled={signatureBusy}
-                onChange={(e) => {
-                  const f = e.target.files?.[0];
-                  if (f) void uploadSignature(f);
-                  e.target.value = "";
-                }}
-              />
-            </label>
+            <div className="space-y-3">
+              <div className="inline-flex rounded-xl border border-border bg-white p-1">
+                <button
+                  type="button"
+                  onClick={() => setSignatureMode("upload")}
+                  className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                    signatureMode === "upload"
+                      ? "bg-primary text-white"
+                      : "text-gray-600 hover:bg-secondary"
+                  }`}
+                >
+                  <Upload className="h-3.5 w-3.5" />
+                  {t("signatureModeUpload")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSignatureMode("draw")}
+                  className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                    signatureMode === "draw"
+                      ? "bg-primary text-white"
+                      : "text-gray-600 hover:bg-secondary"
+                  }`}
+                >
+                  <Pencil className="h-3.5 w-3.5" />
+                  {t("signatureModeDraw")}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSignatureMode("gallery")}
+                  className={`inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg font-medium transition-colors ${
+                    signatureMode === "gallery"
+                      ? "bg-primary text-white"
+                      : "text-gray-600 hover:bg-secondary"
+                  }`}
+                >
+                  <PenLine className="h-3.5 w-3.5" />
+                  {t("signatureModeGallery")}
+                </button>
+              </div>
+
+              {signatureMode === "upload" ? (
+                <label
+                  className={`block rounded-2xl border border-dashed border-border bg-secondary/30 px-6 py-10 text-center cursor-pointer hover:bg-secondary/60 ${
+                    signatureBusy ? "opacity-50 pointer-events-none" : ""
+                  }`}
+                >
+                  <Upload className="h-6 w-6 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm font-semibold text-foreground">
+                    {t("signatureUpload")}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">{t("signatureHint")}</p>
+                  <input
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    className="hidden"
+                    disabled={signatureBusy}
+                    onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) void uploadSignature(f);
+                      e.target.value = "";
+                    }}
+                  />
+                </label>
+              ) : signatureMode === "draw" ? (
+                <SignaturePad
+                  helperText={t("signatureDrawHint")}
+                  saveLabel={t("signatureSaveDraw")}
+                  clearLabel={t("signatureClear")}
+                  cancelLabel={t("signatureBackToUpload")}
+                  onCancel={() => setSignatureMode("upload")}
+                  onSaved={(url) => {
+                    setSignatureUrl(url);
+                    setSignatureMode("upload");
+                  }}
+                />
+              ) : (
+                <SignatureGallery
+                  defaultName={doctorDisplayName}
+                  helperText={t("signatureGalleryHint")}
+                  namePlaceholder={t("signatureGalleryNamePlaceholder")}
+                  emptyHint={t("signatureGalleryEmpty")}
+                  saveLabel={t("signatureSaveDraw")}
+                  cancelLabel={t("signatureBackToUpload")}
+                  onCancel={() => setSignatureMode("upload")}
+                  onSaved={(url) => {
+                    setSignatureUrl(url);
+                    setSignatureMode("upload");
+                  }}
+                />
+              )}
+            </div>
           )}
         </Section>
       )}

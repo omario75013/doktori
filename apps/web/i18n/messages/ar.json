@@ -1156,7 +1156,17 @@
       "signatureHint": "PNG أو JPG أو WebP — يُفضّل خلفية شفافة. الحد الأقصى 2 ميغابايت.",
       "signatureReplace": "استبدال",
       "signatureRemove": "حذف",
-      "signaturePreviewAlt": "معاينة التوقيع"
+      "signaturePreviewAlt": "معاينة التوقيع",
+      "signatureModeUpload": "رفع",
+      "signatureModeDraw": "رسم",
+      "signatureDrawHint": "ارسم توقيعك بالفأرة أو بإصبعك. اضغط حفظ لاستخدامه على وصفاتك.",
+      "signatureSaveDraw": "حفظ التوقيع",
+      "signatureClear": "مسح",
+      "signatureBackToUpload": "إلغاء",
+      "signatureModeGallery": "معرض",
+      "signatureGalleryHint": "اكتب اسمك واختر نمط الخط. ستُستخدم النتيجة كتوقيع.",
+      "signatureGalleryNamePlaceholder": "د. الاسم الكامل",
+      "signatureGalleryEmpty": "اكتب اسمك لعرض أنماط التوقيع."
     },
     "verification": {
       "pageTitle": "التحقق من الحساب",

@@ -1156,7 +1156,17 @@
       "signatureHint": "PNG, JPG ou WebP — fond transparent recommandé. Max 2 Mo.",
       "signatureReplace": "Remplacer",
       "signatureRemove": "Supprimer",
-      "signaturePreviewAlt": "Aperçu de la signature"
+      "signaturePreviewAlt": "Aperçu de la signature",
+      "signatureModeUpload": "Téléverser",
+      "signatureModeDraw": "Dessiner",
+      "signatureDrawHint": "Dessinez votre signature à la souris ou au doigt. Cliquez sur Enregistrer pour l'utiliser sur vos ordonnances.",
+      "signatureSaveDraw": "Enregistrer la signature",
+      "signatureClear": "Effacer",
+      "signatureBackToUpload": "Annuler",
+      "signatureModeGallery": "Galerie",
+      "signatureGalleryHint": "Saisissez votre nom et choisissez un style d'écriture. Le résultat sera utilisé comme signature.",
+      "signatureGalleryNamePlaceholder": "Dr. Prénom Nom",
+      "signatureGalleryEmpty": "Saisissez votre nom pour voir les styles de signature."
     },
     "verification": {
       "pageTitle": "Vérification du compte",
