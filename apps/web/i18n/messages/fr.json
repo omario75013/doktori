@@ -474,7 +474,8 @@
       "chartRevenue": "Recettes",
       "chartRevenueSub": "encaissées",
       "chartCancellation": "Taux d'annulation",
-      "chartCancellationSub": "moyenne période"
+      "chartCancellationSub": "moyenne période",
+      "waitingRoomSub": "patients présents"
     },
     "agenda": {
       "title": "Configuration de l'agenda",

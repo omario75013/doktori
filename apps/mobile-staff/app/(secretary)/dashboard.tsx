@@ -53,6 +53,9 @@ export default function SecretaryDashboard() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [now] = useState(new Date());
+  // Waiting-room counter — shared with the doctor in real time.
+  const [waitingCount, setWaitingCount] = useState(0);
+  const [waitingBusy, setWaitingBusy] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -64,7 +67,39 @@ export default function SecretaryDashboard() {
     } finally {
       setLoading(false);
     }
+    // Best-effort refresh of the waiting-room counter alongside the
+    // appointments fetch so the dashboard renders consistent data.
+    try {
+      const wr = await api<{ count: number }>(`/api/doctor/waiting-room`, { noRedirect: true });
+      if (typeof wr?.count === "number") setWaitingCount(wr.count);
+    } catch {
+      /* ignore — keep last known value */
+    }
   }, [now]);
+
+  const updateWaiting = useCallback(async (op: "inc" | "dec" | "set", value?: number) => {
+    if (waitingBusy) return;
+    setWaitingBusy(true);
+    // Optimistic update — flip back on failure.
+    const prev = waitingCount;
+    const next =
+      op === "inc" ? Math.min(prev + 1, 50)
+      : op === "dec" ? Math.max(prev - 1, 0)
+      : Math.max(0, Math.min(value ?? 0, 50));
+    setWaitingCount(next);
+    try {
+      const r = await api<{ count: number }>(`/api/doctor/waiting-room`, {
+        method: "PATCH",
+        body: JSON.stringify(op === "set" ? { op, value: next } : { op }),
+        noRedirect: true,
+      });
+      if (typeof r?.count === "number") setWaitingCount(r.count);
+    } catch {
+      setWaitingCount(prev);
+    } finally {
+      setWaitingBusy(false);
+    }
+  }, [waitingBusy, waitingCount]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -110,6 +145,58 @@ export default function SecretaryDashboard() {
           <KpiCard label={t("secretary.dashboard.toConfirm")} value={pending} icon="time-outline" iconColor="#D97706" />
           <KpiCard label={t("secretary.dashboard.confirmed")} value={confirmed} icon="checkmark-circle-outline" iconColor="#059669" />
           <KpiCard label={t("secretary.dashboard.absences")} value={noShow} icon="alert-circle-outline" iconColor="#DC2626" />
+        </View>
+
+        {/* Waiting room counter */}
+        <View style={styles.waitingCard}>
+          <View style={styles.waitingHeader}>
+            <Ionicons name="people" size={18} color={colors.teal} />
+            <Text style={styles.waitingTitle}>{t("secretary.dashboard.waitingRoom")}</Text>
+          </View>
+          <Text style={styles.waitingHint}>{t("secretary.dashboard.waitingHint")}</Text>
+          <View style={styles.waitingControls}>
+            <Pressable
+              onPress={() => updateWaiting("dec")}
+              disabled={waitingBusy || waitingCount === 0}
+              style={({ pressed }) => [
+                styles.waitingBtn,
+                (waitingCount === 0 || waitingBusy) && styles.waitingBtnDisabled,
+                pressed && { opacity: 0.7 },
+              ]}
+            >
+              <Ionicons name="remove" size={26} color={colors.foreground} />
+            </Pressable>
+            <View style={styles.waitingValueBox}>
+              <Text style={styles.waitingValue}>{waitingCount}</Text>
+              <Text style={styles.waitingValueLabel}>
+                {waitingCount === 1
+                  ? t("secretary.dashboard.waitingPatientSingular")
+                  : t("secretary.dashboard.waitingPatientPlural")}
+              </Text>
+            </View>
+            <Pressable
+              onPress={() => updateWaiting("inc")}
+              disabled={waitingBusy || waitingCount >= 50}
+              style={({ pressed }) => [
+                styles.waitingBtn,
+                styles.waitingBtnPrimary,
+                (waitingCount >= 50 || waitingBusy) && styles.waitingBtnDisabled,
+                pressed && { opacity: 0.85 },
+              ]}
+            >
+              <Ionicons name="add" size={26} color="#fff" />
+            </Pressable>
+          </View>
+          {waitingCount > 0 ? (
+            <Pressable
+              onPress={() => updateWaiting("set", 0)}
+              disabled={waitingBusy}
+              style={({ pressed }) => [styles.waitingReset, pressed && { opacity: 0.6 }]}
+            >
+              <Ionicons name="refresh" size={13} color={colors.foregroundSecondary} />
+              <Text style={styles.waitingResetText}>{t("secretary.dashboard.waitingReset")}</Text>
+            </Pressable>
+          ) : null}
         </View>
 
         {/* Today's schedule */}
@@ -231,4 +318,49 @@ const styles = StyleSheet.create({
   badgeText: { fontSize: 11, fontWeight: "600" },
   reason: { fontSize: 12, color: colors.foregroundSecondary },
   phone: { fontSize: 12, color: colors.teal, fontWeight: "600" },
+  waitingCard: {
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.bg,
+    padding: spacing.lg,
+    gap: spacing.sm,
+  },
+  waitingHeader: { flexDirection: "row", alignItems: "center", gap: spacing.xs },
+  waitingTitle: { fontSize: 15, fontWeight: "700", color: colors.foreground },
+  waitingHint: { fontSize: 12, color: colors.foregroundSecondary },
+  waitingControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: spacing.md,
+    marginTop: spacing.sm,
+  },
+  waitingBtn: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bgSecondary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  waitingBtnPrimary: {
+    backgroundColor: colors.teal,
+    borderColor: colors.teal,
+  },
+  waitingBtnDisabled: { opacity: 0.4 },
+  waitingValueBox: { flex: 1, alignItems: "center" },
+  waitingValue: { fontSize: 40, fontWeight: "800", color: colors.foreground, lineHeight: 44 },
+  waitingValueLabel: { fontSize: 11, color: colors.foregroundSecondary, marginTop: 2 },
+  waitingReset: {
+    flexDirection: "row",
+    alignSelf: "center",
+    alignItems: "center",
+    gap: 4,
+    paddingVertical: 4,
+    paddingHorizontal: spacing.sm,
+  },
+  waitingResetText: { fontSize: 12, color: colors.foregroundSecondary, fontWeight: "600" },
 });

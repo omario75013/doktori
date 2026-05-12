@@ -474,7 +474,8 @@
       "chartRevenue": "المداخيل",
       "chartRevenueSub": "محصلة",
       "chartCancellation": "نسبة الإلغاء",
-      "chartCancellationSub": "متوسط الفترة"
+      "chartCancellationSub": "متوسط الفترة",
+      "waitingRoomSub": "مرضى حاضرون"
     },
     "agenda": {
       "title": "إعداد جدول المواعيد",

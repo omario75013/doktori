@@ -926,7 +926,12 @@
       "statusConfirmed": "مؤكّد",
       "statusCompleted": "منجز",
       "statusCancelled": "ملغى",
-      "statusAbsent": "غائب"
+      "statusAbsent": "غائب",
+      "waitingRoom": "المرضى في غرفة الانتظار",
+      "waitingHint": "أضف عند وصول كل مريض. يرى الطبيب العدّاد مباشرة.",
+      "waitingPatientSingular": "مريض في الانتظار",
+      "waitingPatientPlural": "مرضى في الانتظار",
+      "waitingReset": "إعادة تعيين"
     },
     "settings": {
       "title": "المزيد",

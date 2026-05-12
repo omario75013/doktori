@@ -874,6 +874,20 @@ export const medicalCertificates = pgTable("medical_certificates", {
 export type MedicalCertificate = typeof medicalCertificates.$inferSelect;
 export type NewMedicalCertificate = typeof medicalCertificates.$inferInsert;
 
+// ── Waiting Room ─────────────────────────────────────────
+// Counter set by the secretary (or doctor) for how many patients are
+// currently physically in the cabinet's waiting area. One row per
+// doctor; absence of a row == zero.
+export const doctorWaitingRoom = pgTable("doctor_waiting_room", {
+  doctorId: uuid("doctor_id").primaryKey().references(() => doctors.id, { onDelete: "cascade" }),
+  count: integer("count").notNull().default(0),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedByType: varchar("updated_by_type", { length: 16 }),
+  updatedById: uuid("updated_by_id"),
+});
+
+export type DoctorWaitingRoom = typeof doctorWaitingRoom.$inferSelect;
+
 // ── SOS Sessions ─────────────────────────────────────────
 export const sosSessions = pgTable("sos_sessions", {
   id: uuid("id").primaryKey().defaultRandom(),

@@ -926,7 +926,12 @@
       "statusConfirmed": "Confirmé",
       "statusCompleted": "Terminé",
       "statusCancelled": "Annulé",
-      "statusAbsent": "Absent"
+      "statusAbsent": "Absent",
+      "waitingRoom": "Patients en salle d'attente",
+      "waitingHint": "Incrémentez à chaque patient qui arrive. Le médecin voit le compteur en temps réel.",
+      "waitingPatientSingular": "patient en attente",
+      "waitingPatientPlural": "patients en attente",
+      "waitingReset": "Réinitialiser"
     },
     "settings": {
       "title": "Plus",
