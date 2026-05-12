@@ -37,6 +37,7 @@ export function SignaturePad({
   const wrapRef = useRef<HTMLDivElement | null>(null);
   const drawing = useRef(false);
   const lastPt = useRef<{ x: number; y: number } | null>(null);
+  const prevMid = useRef<{ x: number; y: number } | null>(null);
   const [empty, setEmpty] = useState(true);
   const [saving, setSaving] = useState(false);
   // Line style applied to each new stroke. Continuous = solid; the
@@ -86,6 +87,7 @@ export function SignaturePad({
     drawing.current = true;
     const pt = getPoint(e);
     lastPt.current = pt;
+    prevMid.current = pt;
     const ctx = canvasRef.current?.getContext("2d");
     if (!ctx) return;
     // Single tap → small dot so dotting an "i" registers.
@@ -99,25 +101,28 @@ export function SignaturePad({
   function onPointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
     if (!drawing.current) return;
     const ctx = canvasRef.current?.getContext("2d");
-    if (!ctx || !lastPt.current) return;
+    if (!ctx || !lastPt.current || !prevMid.current) return;
     const pt = getPoint(e);
-    // Quadratic-curve smoothing between samples — gives a more natural
-    // pen feel than straight lineTo segments.
+    // Chain quadratic curves anchored on the previous mid-point so the
+    // path is one continuous stroke — otherwise each segment starts
+    // back at `lastPt` and leaves visible breaks.
     const mid = { x: (lastPt.current.x + pt.x) / 2, y: (lastPt.current.y + pt.y) / 2 };
     const style = lineStyleRef.current;
     if (style === "dashed") ctx.setLineDash([8, 5]);
     else if (style === "dotted") ctx.setLineDash([1, 4]);
     else ctx.setLineDash([]);
     ctx.beginPath();
-    ctx.moveTo(lastPt.current.x, lastPt.current.y);
+    ctx.moveTo(prevMid.current.x, prevMid.current.y);
     ctx.quadraticCurveTo(lastPt.current.x, lastPt.current.y, mid.x, mid.y);
     ctx.stroke();
+    prevMid.current = mid;
     lastPt.current = pt;
   }
 
   function onPointerUp() {
     drawing.current = false;
     lastPt.current = null;
+    prevMid.current = null;
   }
 
   function clear() {
