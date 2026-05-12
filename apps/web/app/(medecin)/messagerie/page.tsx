@@ -13,7 +13,12 @@ import {
   Pencil,
   ImagePlus,
   Check,
+  CheckCheck,
   Trash2,
+  Phone,
+  PhoneMissed,
+  PhoneOff,
+  RotateCw,
 } from "lucide-react";
 import { CallButton } from "@/components/call-ui";
 import { format } from "date-fns";
@@ -47,6 +52,25 @@ type Message = {
   readAt: string | null;
   editedAt: string | null;
   deletedAt: string | null;
+};
+
+type CallSession = {
+  id: string;
+  callerId: string;
+  calleeId: string;
+  status: string;
+  createdAt: string;
+  answeredAt: string | null;
+  endedAt: string | null;
+};
+
+// Outbound messages live in local state alongside server-confirmed rows
+// so failed sends can be retried without losing their content. Confirmed
+// rows are flattened into Message, optimistic rows carry the extra fields.
+type OutboxItem = Message & {
+  _localId: string;
+  _status: "sending" | "sent" | "failed";
+  _file?: File | null;
 };
 
 type DoctorStatus = {
@@ -157,6 +181,8 @@ export default function MessageriePage() {
   const [threads, setThreads] = useState<Thread[]>([]);
   const [activeId, setActiveId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [calls, setCalls] = useState<CallSession[]>([]);
+  const [outbox, setOutbox] = useState<OutboxItem[]>([]);
   const [input, setInput] = useState("");
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
@@ -238,14 +264,21 @@ export default function MessageriePage() {
   useEffect(() => {
     if (!activeId) {
       setMessages([]);
+      setCalls([]);
+      setOutbox([]);
       return;
     }
+    // Reset outbox on conversation switch so failed sends don't leak between
+    // threads. They'd be confusing inside the wrong context.
+    setOutbox([]);
     async function loadMessages() {
       try {
-        const res = await fetch(`/api/doctor/peer-conversations/${activeId}/messages`);
-        if (!res.ok) return;
-        const data: Message[] = await res.json();
-        setMessages(data);
+        const [mr, cr] = await Promise.all([
+          fetch(`/api/doctor/peer-conversations/${activeId}/messages`),
+          fetch(`/api/doctor/peer-conversations/${activeId}/calls`),
+        ]);
+        if (mr.ok) setMessages((await mr.json()) as Message[]);
+        if (cr.ok) setCalls((await cr.json()) as CallSession[]);
       } catch {
         /* silent */
       }
@@ -334,17 +367,17 @@ export default function MessageriePage() {
     setImagePreview(null);
   }
 
-  async function sendMessage(e: React.FormEvent) {
-    e.preventDefault();
+  async function deliverOutbox(item: OutboxItem) {
     if (!activeId) return;
-    if (!input.trim() && !imageFile) return;
-    setSending(true);
+    setOutbox((prev) =>
+      prev.map((o) => (o._localId === item._localId ? { ...o, _status: "sending" } : o)),
+    );
     try {
       let res: Response;
-      if (imageFile) {
+      if (item._file) {
         const fd = new FormData();
-        fd.append("body", input.trim());
-        fd.append("file", imageFile);
+        fd.append("body", item.body);
+        fd.append("file", item._file);
         res = await fetch(`/api/doctor/peer-conversations/${activeId}/messages`, {
           method: "POST",
           body: fd,
@@ -353,24 +386,64 @@ export default function MessageriePage() {
         res = await fetch(`/api/doctor/peer-conversations/${activeId}/messages`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ body: input.trim() }),
+          body: JSON.stringify({ body: item.body }),
         });
       }
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error ?? "Erreur");
-      }
+      if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error ?? "Erreur");
       const data = await res.json();
+      // Drop the optimistic row and add the server-confirmed one.
+      setOutbox((prev) => prev.filter((o) => o._localId !== item._localId));
       setMessages((prev) =>
         prev.some((m) => m.id === data.message.id) ? prev : [...prev, data.message],
       );
-      setInput("");
-      clearImage();
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Erreur");
+      setOutbox((prev) =>
+        prev.map((o) => (o._localId === item._localId ? { ...o, _status: "failed" } : o)),
+      );
+      toast.error(e instanceof Error ? e.message : "Erreur d'envoi");
+    }
+  }
+
+  async function sendMessage(e: React.FormEvent) {
+    e.preventDefault();
+    if (!activeId || !myId) return;
+    if (!input.trim() && !imageFile) return;
+    const localId = `out-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const item: OutboxItem = {
+      _localId: localId,
+      _status: "sending",
+      _file: imageFile,
+      id: localId,
+      conversationId: activeId,
+      senderId: myId,
+      body: input.trim(),
+      imageUrl: imagePreview, // preview URL for instant display
+      imageMimeType: imageFile?.type ?? null,
+      createdAt: new Date().toISOString(),
+      readAt: null,
+      editedAt: null,
+      deletedAt: null,
+    };
+    setOutbox((prev) => [...prev, item]);
+    setInput("");
+    setImageFile(null);
+    setImagePreview(null);
+    setSending(true);
+    try {
+      await deliverOutbox(item);
     } finally {
       setSending(false);
     }
+  }
+
+  async function retryOutbox(localId: string) {
+    const item = outbox.find((o) => o._localId === localId);
+    if (!item) return;
+    await deliverOutbox(item);
+  }
+
+  function discardOutbox(localId: string) {
+    setOutbox((prev) => prev.filter((o) => o._localId !== localId));
   }
 
   async function saveEdit() {
@@ -423,6 +496,66 @@ export default function MessageriePage() {
   }
 
   const activeThread = threads.find((th) => th.id === activeId);
+
+  // Merge messages + outbox + calls into a single chronological timeline.
+  // - "message" entries render as left/right bubbles.
+  // - "outbox" entries are unsent messages still in local state (sending /
+  //   failed). They never come back from the server until delivered.
+  // - "call" entries render as centered system bubbles in the middle of
+  //   the chat with the call duration + start time.
+  type TimelineEntry =
+    | { kind: "message"; ts: number; message: Message }
+    | { kind: "outbox"; ts: number; item: OutboxItem }
+    | { kind: "call"; ts: number; call: CallSession };
+  const timeline: TimelineEntry[] = [
+    ...messages.map((m) => ({
+      kind: "message" as const,
+      ts: new Date(m.createdAt).getTime(),
+      message: m,
+    })),
+    ...outbox.map((o) => ({
+      kind: "outbox" as const,
+      ts: new Date(o.createdAt).getTime(),
+      item: o,
+    })),
+    ...calls.map((c) => ({
+      kind: "call" as const,
+      ts: new Date(c.createdAt).getTime(),
+      call: c,
+    })),
+  ].sort((a, b) => a.ts - b.ts);
+
+  function formatDuration(seconds: number): string {
+    if (seconds < 60) return `${seconds}s`;
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return s === 0 ? `${m} min` : `${m} min ${s.toString().padStart(2, "0")}`;
+  }
+
+  function callLabel(c: CallSession): { icon: typeof Phone; label: string; tone: string } {
+    if (c.answeredAt && c.endedAt) {
+      const dur = Math.round(
+        (new Date(c.endedAt).getTime() - new Date(c.answeredAt).getTime()) / 1000,
+      );
+      return {
+        icon: Phone,
+        label: `Appel — ${formatDuration(Math.max(dur, 1))}`,
+        tone: "text-emerald-700 bg-emerald-50 border-emerald-200",
+      };
+    }
+    if (c.endedAt && !c.answeredAt) {
+      return {
+        icon: PhoneMissed,
+        label: c.callerId === myId ? "Appel non décroché" : "Appel manqué",
+        tone: "text-rose-700 bg-rose-50 border-rose-200",
+      };
+    }
+    return {
+      icon: PhoneOff,
+      label: "Appel terminé",
+      tone: "text-gray-600 bg-gray-50 border-gray-200",
+    };
+  }
 
   return (
     <div className="w-full">
@@ -537,15 +670,94 @@ export default function MessageriePage() {
                 />
               </div>
               <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-2">
-                {messages.length === 0 ? (
+                {timeline.length === 0 ? (
                   <p className="text-center text-sm text-gray-400 italic py-8">
                     {t("noMessages")}
                   </p>
                 ) : (
-                  messages.map((m) => {
+                  timeline.map((entry) => {
+                    // ── Call log — centered system bubble ──────────────
+                    if (entry.kind === "call") {
+                      const { call } = entry;
+                      const { icon: Icon, label, tone } = callLabel(call);
+                      return (
+                        <div key={`call-${call.id}`} className="flex justify-center my-2">
+                          <span
+                            className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-[11px] font-medium ${tone}`}
+                          >
+                            <Icon className="h-3 w-3" />
+                            {label}
+                            <span className="opacity-70">
+                              · {format(new Date(call.createdAt), "HH:mm", { locale: fr })}
+                            </span>
+                          </span>
+                        </div>
+                      );
+                    }
+
+                    // ── Outbox — unsent / failed local message ─────────
+                    if (entry.kind === "outbox") {
+                      const o = entry.item;
+                      const isFailed = o._status === "failed";
+                      return (
+                        <div key={o._localId} className="flex justify-end">
+                          <div className="max-w-[75%]">
+                            <div
+                              className={`rounded-2xl px-3 py-2 text-sm ${
+                                isFailed
+                                  ? "bg-red-50 text-red-900 border border-red-200"
+                                  : "bg-primary/70 text-white"
+                              }`}
+                            >
+                              {o.imageUrl && (
+                                // eslint-disable-next-line @next/next/no-img-element
+                                <img
+                                  src={o.imageUrl}
+                                  alt="image"
+                                  className="rounded-lg mb-1 max-h-72"
+                                />
+                              )}
+                              {o.body && (
+                                <p className="whitespace-pre-wrap break-words">{o.body}</p>
+                              )}
+                            </div>
+                            {isFailed ? (
+                              <div className="mt-0.5 flex items-center justify-end gap-2 text-[11px]">
+                                <span className="inline-flex items-center gap-1 text-red-600">
+                                  <AlertCircle className="w-3 h-3" />
+                                  Échec de l&apos;envoi
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => retryOutbox(o._localId)}
+                                  className="inline-flex items-center gap-1 text-primary font-semibold hover:underline"
+                                >
+                                  <RotateCw className="w-3 h-3" /> Réessayer
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => discardOutbox(o._localId)}
+                                  className="text-gray-500 hover:underline"
+                                >
+                                  Annuler
+                                </button>
+                              </div>
+                            ) : (
+                              <p className="text-[10px] mt-0.5 text-right text-gray-400">
+                                Envoi… <Loader2 className="w-3 h-3 inline animate-spin" />
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    // ── Confirmed message ─────────────────────────────
+                    const m = entry.message;
                     const isMe = m.senderId === myId;
                     const isDeleted = !!m.deletedAt;
                     const isEditingThis = editingId === m.id;
+                    const isRead = !!m.readAt;
                     return (
                       <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"} group`}>
                         <div className="max-w-[75%]">
@@ -598,10 +810,23 @@ export default function MessageriePage() {
                                 )}
                               </>
                             )}
-                            <p className={`text-[10px] mt-0.5 ${isMe ? "text-white/70" : "text-gray-400"}`}>
-                              {format(new Date(m.createdAt), "HH:mm", { locale: fr })}
-                              {m.editedAt && !isDeleted && " · modifié"}
-                            </p>
+                          </div>
+                          {/* Timestamp under the bubble, with single/double
+                              tick on own messages (✓ sent, ✓✓ blue read). */}
+                          <div
+                            className={`mt-0.5 flex items-center gap-1 text-[10px] text-gray-400 ${
+                              isMe ? "justify-end" : "justify-start"
+                            }`}
+                          >
+                            <span>{format(new Date(m.createdAt), "HH:mm", { locale: fr })}</span>
+                            {m.editedAt && !isDeleted && <span>· modifié</span>}
+                            {isMe && !isDeleted && (
+                              isRead ? (
+                                <CheckCheck className="w-3 h-3 text-sky-500" />
+                              ) : (
+                                <Check className="w-3 h-3" />
+                              )
+                            )}
                           </div>
                           {isMe && !isDeleted && !isEditingThis && (
                             <div className="flex gap-1.5 mt-0.5 justify-end opacity-0 group-hover:opacity-100 transition-opacity">
