@@ -3,164 +3,267 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Loader2, Save, Type } from "lucide-react";
 
-// Generates a signature by rendering the doctor's name in a curated
-// list of handwriting fonts. The doctor types their name, picks a
-// style, and we rasterize the chosen tile to a transparent PNG that
-// goes through the same /api/doctor/signature upload path as the
-// other two modes.
+// Builds a gallery of signature-style renderings of the doctor's name.
+// Each tile is a script font + a hand-drawn flourish (underline, paraph
+// loop, swoosh, wave, double-stroke …) + optional slant. The point is
+// that every tile feels like a *signature*, not just a name typed in a
+// fancy font — so each combination produces visibly different ink.
 //
-// To reach 200+ visual choices without loading 200 separate font
-// families (each Google Font costs an HTTP request + paint), we list
-// ~90 real handwriting/script Google Fonts and multiply each by three
-// style variants — regular, italic, bold. The browser synthesizes
-// italic/bold for faces that don't ship those weights, which is more
-// than good enough for a signature preview.
+// We render previews in SVG (cheap, vectorial, scales fine for 200+
+// tiles) and only spin up a canvas on save to rasterize the chosen
+// combination at 2× for the PNG upload.
 
-type BaseFont = { id: string; family: string; size: number };
-type Variant = { id: string; label: string; fontStyle: string; fontWeight: number };
-type FontChoice = BaseFont & {
-  variantId: string;
-  variantLabel: string;
-  fontStyle: string;
-  fontWeight: number;
-  key: string;
+type BaseFont = {
+  id: string;
+  family: string;
+  // Approximate cap height as a fraction of the SVG box height. Used so
+  // each font sits on roughly the same baseline regardless of metrics.
+  baselineRatio?: number;
 };
 
-// 90+ handwriting / script Google Fonts. All are confirmed present
-// on fonts.google.com under the Handwriting category.
+type FlourishId =
+  | "plain"
+  | "underline"
+  | "paraph"
+  | "double"
+  | "wave"
+  | "swoosh"
+  | "loop";
+
+type Flourish = {
+  id: FlourishId;
+  label: string;
+  /** When true, the text is drawn with an italic slant (signature feel). */
+  slant?: boolean;
+  /** Draw the decorator on a 2D canvas context. */
+  draw: (ctx: CanvasRenderingContext2D, box: Box) => void;
+};
+
+type Box = {
+  // The bounding box of the actual rendered text on the canvas.
+  textLeft: number;
+  textRight: number;
+  baselineY: number;
+  capTop: number;
+  width: number;
+  height: number;
+  ink: string;
+};
+
+type Model = {
+  key: string;
+  font: BaseFont;
+  flourish: Flourish;
+};
+
+// 32 distinct script / handwriting Google Fonts. Enough variety in
+// slant, weight, and style that combined with 7 flourishes we end up
+// with 224 visually different signature renderings.
 const BASE_FONTS: BaseFont[] = [
-  { id: "caveat", family: "Caveat", size: 56 },
-  { id: "sacramento", family: "Sacramento", size: 56 },
-  { id: "great-vibes", family: "Great Vibes", size: 54 },
-  { id: "dancing-script", family: "Dancing Script", size: 52 },
-  { id: "allura", family: "Allura", size: 56 },
-  { id: "homemade-apple", family: "Homemade Apple", size: 38 },
-  { id: "kalam", family: "Kalam", size: 42 },
-  { id: "pacifico", family: "Pacifico", size: 46 },
-  { id: "satisfy", family: "Satisfy", size: 50 },
-  { id: "parisienne", family: "Parisienne", size: 54 },
-  { id: "alex-brush", family: "Alex Brush", size: 56 },
-  { id: "tangerine", family: "Tangerine", size: 68 },
-  { id: "yellowtail", family: "Yellowtail", size: 48 },
-  { id: "kaushan-script", family: "Kaushan Script", size: 46 },
-  { id: "cookie", family: "Cookie", size: 52 },
-  { id: "mr-dafoe", family: "Mr Dafoe", size: 56 },
-  { id: "marck-script", family: "Marck Script", size: 50 },
-  { id: "rouge-script", family: "Rouge Script", size: 54 },
-  { id: "pinyon-script", family: "Pinyon Script", size: 56 },
-  { id: "italianno", family: "Italianno", size: 62 },
-  { id: "herr-von-muellerhoff", family: "Herr Von Muellerhoff", size: 60 },
-  { id: "league-script", family: "League Script", size: 52 },
-  { id: "meddon", family: "Meddon", size: 38 },
-  { id: "monsieur-la-doulaise", family: "Monsieur La Doulaise", size: 56 },
-  { id: "bad-script", family: "Bad Script", size: 44 },
-  { id: "berkshire-swash", family: "Berkshire Swash", size: 46 },
-  { id: "cedarville-cursive", family: "Cedarville Cursive", size: 40 },
-  { id: "clicker-script", family: "Clicker Script", size: 50 },
-  { id: "courgette", family: "Courgette", size: 46 },
-  { id: "damion", family: "Damion", size: 46 },
-  { id: "dawning-of-a-new-day", family: "Dawning of a New Day", size: 44 },
-  { id: "devonshire", family: "Devonshire", size: 56 },
-  { id: "engagement", family: "Engagement", size: 50 },
-  { id: "ephesis", family: "Ephesis", size: 52 },
-  { id: "euphoria-script", family: "Euphoria Script", size: 52 },
-  { id: "felipa", family: "Felipa", size: 48 },
-  { id: "fondamento", family: "Fondamento", size: 44 },
-  { id: "give-you-glory", family: "Give You Glory", size: 38 },
-  { id: "gochi-hand", family: "Gochi Hand", size: 42 },
-  { id: "grand-hotel", family: "Grand Hotel", size: 48 },
-  { id: "handlee", family: "Handlee", size: 42 },
-  { id: "hurricane", family: "Hurricane", size: 54 },
-  { id: "imperial-script", family: "Imperial Script", size: 54 },
-  { id: "indie-flower", family: "Indie Flower", size: 42 },
-  { id: "inspiration", family: "Inspiration", size: 54 },
-  { id: "just-another-hand", family: "Just Another Hand", size: 50 },
-  { id: "just-me-again-down-here", family: "Just Me Again Down Here", size: 44 },
-  { id: "kavivanar", family: "Kavivanar", size: 42 },
-  { id: "kristi", family: "Kristi", size: 50 },
-  { id: "la-belle-aurore", family: "La Belle Aurore", size: 42 },
-  { id: "lavishly-yours", family: "Lavishly Yours", size: 56 },
-  { id: "loved-by-the-king", family: "Loved by the King", size: 44 },
-  { id: "lovers-quarrel", family: "Lovers Quarrel", size: 52 },
-  { id: "mea-culpa", family: "Mea Culpa", size: 54 },
-  { id: "miniver", family: "Miniver", size: 46 },
-  { id: "miss-fajardose", family: "Miss Fajardose", size: 58 },
-  { id: "mr-bedfort", family: "Mr Bedfort", size: 54 },
-  { id: "mr-de-haviland", family: "Mr De Haviland", size: 56 },
-  { id: "mrs-saint-delafield", family: "Mrs Saint Delafield", size: 54 },
-  { id: "mrs-sheppards", family: "Mrs Sheppards", size: 50 },
-  { id: "ms-madi", family: "Ms Madi", size: 54 },
-  { id: "nanum-pen-script", family: "Nanum Pen Script", size: 42 },
-  { id: "niconne", family: "Niconne", size: 48 },
-  { id: "norican", family: "Norican", size: 46 },
-  { id: "nothing-you-could-do", family: "Nothing You Could Do", size: 40 },
-  { id: "over-the-rainbow", family: "Over the Rainbow", size: 42 },
-  { id: "oooh-baby", family: "Oooh Baby", size: 56 },
-  { id: "pangolin", family: "Pangolin", size: 42 },
-  { id: "patrick-hand", family: "Patrick Hand", size: 42 },
-  { id: "petit-formal-script", family: "Petit Formal Script", size: 46 },
-  { id: "playball", family: "Playball", size: 46 },
-  { id: "princess-sofia", family: "Princess Sofia", size: 52 },
-  { id: "qwigley", family: "Qwigley", size: 56 },
-  { id: "reenie-beanie", family: "Reenie Beanie", size: 44 },
-  { id: "rochester", family: "Rochester", size: 50 },
-  { id: "ruge-boogie", family: "Ruge Boogie", size: 54 },
-  { id: "sail", family: "Sail", size: 46 },
-  { id: "sansita-swashed", family: "Sansita Swashed", size: 42 },
-  { id: "sedgwick-ave", family: "Sedgwick Ave", size: 42 },
-  { id: "shadows-into-light", family: "Shadows Into Light", size: 42 },
-  { id: "smooch", family: "Smooch", size: 54 },
-  { id: "sofia", family: "Sofia", size: 46 },
-  { id: "square-peg", family: "Square Peg", size: 50 },
-  { id: "stalemate", family: "Stalemate", size: 48 },
-  { id: "style-script", family: "Style Script", size: 54 },
-  { id: "sunshiney", family: "Sunshiney", size: 42 },
-  { id: "swanky-and-moo-moo", family: "Swanky and Moo Moo", size: 46 },
-  { id: "the-nautigal", family: "The Nautigal", size: 54 },
-  { id: "twinkle-star", family: "Twinkle Star", size: 42 },
-  { id: "updock", family: "Updock", size: 50 },
-  { id: "waterfall", family: "Waterfall", size: 54 },
-  { id: "whisper", family: "Whisper", size: 54 },
-  { id: "yesteryear", family: "Yesteryear", size: 46 },
-  { id: "zeyada", family: "Zeyada", size: 42 },
-  { id: "architects-daughter", family: "Architects Daughter", size: 42 },
-  { id: "beau-rivage", family: "Beau Rivage", size: 50 },
-  { id: "birthstone", family: "Birthstone", size: 56 },
-  { id: "birthstone-bounce", family: "Birthstone Bounce", size: 54 },
-  { id: "bonheur-royale", family: "Bonheur Royale", size: 50 },
-  { id: "caveat-brush", family: "Caveat Brush", size: 48 },
-  { id: "comforter", family: "Comforter", size: 50 },
-  { id: "comforter-brush", family: "Comforter Brush", size: 48 },
-  { id: "estonia", family: "Estonia", size: 50 },
-  { id: "eyesome-script", family: "Eyesome Script", size: 52 },
-  { id: "fuzzy-bubbles", family: "Fuzzy Bubbles", size: 44 },
-  { id: "gwendolyn", family: "Gwendolyn", size: 56 },
-  { id: "kolker-brush", family: "Kolker Brush", size: 50 },
-  { id: "mansalva", family: "Mansalva", size: 44 },
-  { id: "moon-dance", family: "Moon Dance", size: 50 },
-  { id: "montecarlo", family: "MonteCarlo", size: 50 },
-  { id: "permanent-marker", family: "Permanent Marker", size: 44 },
-  { id: "petemoss", family: "Petemoss", size: 50 },
-  { id: "shalimar", family: "Shalimar", size: 56 },
-  { id: "splash", family: "Splash", size: 50 },
-  { id: "water-brush", family: "Water Brush", size: 50 },
-  { id: "send-flowers", family: "Send Flowers", size: 50 },
+  { id: "great-vibes", family: "Great Vibes" },
+  { id: "allura", family: "Allura" },
+  { id: "alex-brush", family: "Alex Brush" },
+  { id: "italianno", family: "Italianno" },
+  { id: "mr-dafoe", family: "Mr Dafoe" },
+  { id: "pinyon-script", family: "Pinyon Script" },
+  { id: "mr-de-haviland", family: "Mr De Haviland" },
+  { id: "mrs-saint-delafield", family: "Mrs Saint Delafield" },
+  { id: "monsieur-la-doulaise", family: "Monsieur La Doulaise" },
+  { id: "herr-von-muellerhoff", family: "Herr Von Muellerhoff" },
+  { id: "miss-fajardose", family: "Miss Fajardose" },
+  { id: "mea-culpa", family: "Mea Culpa" },
+  { id: "ms-madi", family: "Ms Madi" },
+  { id: "sacramento", family: "Sacramento" },
+  { id: "parisienne", family: "Parisienne" },
+  { id: "tangerine", family: "Tangerine" },
+  { id: "satisfy", family: "Satisfy" },
+  { id: "kaushan-script", family: "Kaushan Script" },
+  { id: "dancing-script", family: "Dancing Script" },
+  { id: "yellowtail", family: "Yellowtail" },
+  { id: "pacifico", family: "Pacifico" },
+  { id: "homemade-apple", family: "Homemade Apple" },
+  { id: "caveat", family: "Caveat" },
+  { id: "kalam", family: "Kalam" },
+  { id: "rouge-script", family: "Rouge Script" },
+  { id: "league-script", family: "League Script" },
+  { id: "petit-formal-script", family: "Petit Formal Script" },
+  { id: "rochester", family: "Rochester" },
+  { id: "norican", family: "Norican" },
+  { id: "qwigley", family: "Qwigley" },
+  { id: "marck-script", family: "Marck Script" },
+  { id: "permanent-marker", family: "Permanent Marker" },
 ];
 
-const VARIANTS: Variant[] = [
-  { id: "regular", label: "Regular", fontStyle: "normal", fontWeight: 400 },
-  { id: "italic", label: "Italique", fontStyle: "italic", fontWeight: 400 },
-  { id: "bold", label: "Gras", fontStyle: "normal", fontWeight: 700 },
+// Each flourish receives the bounding box of the just-drawn text and
+// adds an "ink" stroke on top — the kind of mark a real person makes
+// when finalizing a signature.
+const FLOURISHES: Flourish[] = [
+  {
+    id: "plain",
+    label: "Sobre",
+    slant: true,
+    draw: () => {},
+  },
+  {
+    id: "underline",
+    label: "Soulignée",
+    slant: true,
+    draw: (ctx, b) => {
+      const y = b.baselineY + Math.max(6, b.height * 0.06);
+      ctx.beginPath();
+      ctx.lineWidth = Math.max(2, b.height * 0.025);
+      ctx.lineCap = "round";
+      ctx.strokeStyle = b.ink;
+      ctx.moveTo(b.textLeft - 4, y);
+      // Slight rise at the end so it doesn't look mechanical.
+      ctx.quadraticCurveTo(
+        (b.textLeft + b.textRight) / 2,
+        y + 2,
+        b.textRight + 4,
+        y - 2,
+      );
+      ctx.stroke();
+    },
+  },
+  {
+    id: "paraph",
+    label: "Avec paraphe",
+    slant: true,
+    draw: (ctx, b) => {
+      // Classic "paraph" — long horizontal stroke that curls into a
+      // loop at the end. Very common on French signatures.
+      const y = b.baselineY + Math.max(8, b.height * 0.08);
+      ctx.beginPath();
+      ctx.lineWidth = Math.max(2, b.height * 0.022);
+      ctx.lineCap = "round";
+      ctx.strokeStyle = b.ink;
+      ctx.moveTo(b.textLeft - 10, y - 4);
+      ctx.bezierCurveTo(
+        b.textLeft + b.width * 0.2,
+        y + 6,
+        b.textRight - b.width * 0.2,
+        y - 6,
+        b.textRight + 8,
+        y,
+      );
+      // The loop.
+      ctx.bezierCurveTo(
+        b.textRight + 28,
+        y + 12,
+        b.textRight + 12,
+        y - 18,
+        b.textRight + 2,
+        y - 6,
+      );
+      ctx.stroke();
+    },
+  },
+  {
+    id: "double",
+    label: "Double trait",
+    slant: true,
+    draw: (ctx, b) => {
+      const y1 = b.baselineY + Math.max(6, b.height * 0.06);
+      const y2 = y1 + Math.max(3, b.height * 0.03);
+      ctx.lineWidth = Math.max(1.4, b.height * 0.016);
+      ctx.lineCap = "round";
+      ctx.strokeStyle = b.ink;
+      for (const yy of [y1, y2]) {
+        ctx.beginPath();
+        ctx.moveTo(b.textLeft - 6, yy);
+        ctx.quadraticCurveTo(
+          (b.textLeft + b.textRight) / 2,
+          yy + 1.5,
+          b.textRight + 6,
+          yy - 1,
+        );
+        ctx.stroke();
+      }
+    },
+  },
+  {
+    id: "wave",
+    label: "Vague",
+    slant: true,
+    draw: (ctx, b) => {
+      const y = b.baselineY + Math.max(8, b.height * 0.08);
+      const amp = Math.max(3, b.height * 0.03);
+      ctx.lineWidth = Math.max(2, b.height * 0.022);
+      ctx.lineCap = "round";
+      ctx.strokeStyle = b.ink;
+      ctx.beginPath();
+      ctx.moveTo(b.textLeft - 4, y);
+      const segments = 6;
+      const step = (b.textRight - b.textLeft + 8) / segments;
+      for (let i = 0; i < segments; i++) {
+        const x1 = b.textLeft - 4 + step * (i + 0.5);
+        const x2 = b.textLeft - 4 + step * (i + 1);
+        const dir = i % 2 === 0 ? -1 : 1;
+        ctx.quadraticCurveTo(x1, y + amp * dir, x2, y);
+      }
+      ctx.stroke();
+    },
+  },
+  {
+    id: "swoosh",
+    label: "Trait courbe",
+    slant: true,
+    draw: (ctx, b) => {
+      // A single long bezier sweeping from under the start of the name
+      // up past the end — the kind of stroke that finishes a signature
+      // with a flick of the wrist.
+      ctx.lineWidth = Math.max(2, b.height * 0.024);
+      ctx.lineCap = "round";
+      ctx.strokeStyle = b.ink;
+      const yStart = b.baselineY + b.height * 0.1;
+      const yEnd = b.baselineY - b.height * 0.05;
+      ctx.beginPath();
+      ctx.moveTo(b.textLeft - 14, yStart);
+      ctx.bezierCurveTo(
+        b.textLeft + b.width * 0.3,
+        b.baselineY + b.height * 0.18,
+        b.textRight - b.width * 0.1,
+        b.baselineY - b.height * 0.12,
+        b.textRight + 24,
+        yEnd,
+      );
+      ctx.stroke();
+    },
+  },
+  {
+    id: "loop",
+    label: "Boucle finale",
+    slant: true,
+    draw: (ctx, b) => {
+      // Looped flourish at the end of the name, like crossing a T but
+      // wrapping back around itself.
+      ctx.lineWidth = Math.max(2, b.height * 0.024);
+      ctx.lineCap = "round";
+      ctx.strokeStyle = b.ink;
+      const cx = b.textRight + 18;
+      const cy = b.baselineY - b.height * 0.05;
+      const r = Math.max(10, b.height * 0.12);
+      ctx.beginPath();
+      ctx.moveTo(b.textRight, b.baselineY);
+      ctx.bezierCurveTo(
+        b.textRight + 6,
+        b.baselineY,
+        cx - r,
+        cy + r,
+        cx,
+        cy,
+      );
+      ctx.bezierCurveTo(cx + r, cy - r, cx - r, cy - r, cx - r * 0.4, cy + r * 0.4);
+      ctx.stroke();
+    },
+  },
 ];
 
-const FONTS: FontChoice[] = BASE_FONTS.flatMap((f) =>
-  VARIANTS.map((v) => ({
-    ...f,
-    variantId: v.id,
-    variantLabel: v.label,
-    fontStyle: v.fontStyle,
-    fontWeight: v.fontWeight,
-    key: `${f.id}--${v.id}`,
+const MODELS: Model[] = BASE_FONTS.flatMap((font) =>
+  FLOURISHES.map((flourish) => ({
+    key: `${font.id}__${flourish.id}`,
+    font,
+    flourish,
   })),
 );
 
@@ -179,6 +282,57 @@ function ensureFontsLoaded() {
   link.rel = "stylesheet";
   link.href = GOOGLE_FONTS_HREF;
   document.head.appendChild(link);
+}
+
+// Render one model onto a canvas. Used for save (high-res) and could
+// also drive thumbnails — we use SVG for thumbnails instead because
+// rendering 200+ canvases simultaneously kills the page.
+function renderToCanvas(
+  model: Model,
+  name: string,
+  inkColor: string,
+  width: number,
+  height: number,
+): HTMLCanvasElement {
+  const scale = Math.min(window.devicePixelRatio || 1, 2.5);
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(width * scale);
+  canvas.height = Math.round(height * scale);
+  const ctx = canvas.getContext("2d")!;
+  ctx.scale(scale, scale);
+  ctx.clearRect(0, 0, width, height);
+  ctx.fillStyle = inkColor;
+
+  // Fit the text inside (width - margin) by shrinking the font size.
+  let fontSize = Math.floor(height * 0.55);
+  const family = `"${model.font.family}", cursive`;
+  const slant = model.flourish.slant ? "italic" : "normal";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  let textWidth = 0;
+  while (fontSize > 16) {
+    ctx.font = `${slant} 400 ${fontSize}px ${family}`;
+    textWidth = ctx.measureText(name).width;
+    if (textWidth <= width - 60) break;
+    fontSize -= 2;
+  }
+  const textLeft = (width - textWidth) / 2;
+  const textRight = textLeft + textWidth;
+  const baselineY = height * 0.62;
+  const capTop = baselineY - fontSize * 0.72;
+  ctx.fillText(name, textLeft, baselineY);
+
+  model.flourish.draw(ctx, {
+    textLeft,
+    textRight,
+    baselineY,
+    capTop,
+    width: textWidth,
+    height,
+    ink: inkColor,
+  });
+
+  return canvas;
 }
 
 export function SignatureGallery({
@@ -203,7 +357,7 @@ export function SignatureGallery({
   inkColor?: string;
 }) {
   const [name, setName] = useState(defaultName ?? "");
-  const [pickedKey, setPickedKey] = useState<string>(FONTS[0].key);
+  const [pickedKey, setPickedKey] = useState<string>(MODELS[0].key);
   const [saving, setSaving] = useState(false);
   const [fontsReady, setFontsReady] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
@@ -220,7 +374,7 @@ export function SignatureGallery({
   }, []);
 
   const picked = useMemo(
-    () => FONTS.find((f) => f.key === pickedKey) ?? FONTS[0],
+    () => MODELS.find((m) => m.key === pickedKey) ?? MODELS[0],
     [pickedKey],
   );
 
@@ -229,31 +383,7 @@ export function SignatureGallery({
     if (!value) return;
     setSaving(true);
     try {
-      const scale = 2;
-      const width = 520;
-      const height = 160;
-      const canvas = document.createElement("canvas");
-      canvas.width = width * scale;
-      canvas.height = height * scale;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) throw new Error("Canvas non disponible");
-      ctx.scale(scale, scale);
-      ctx.clearRect(0, 0, width, height);
-      ctx.fillStyle = inkColor;
-      ctx.textBaseline = "middle";
-      ctx.textAlign = "center";
-
-      let fontSize = picked.size;
-      const family = `"${picked.family}", cursive`;
-      const buildFont = (px: number) =>
-        `${picked.fontStyle} ${picked.fontWeight} ${px}px ${family}`;
-      ctx.font = buildFont(fontSize);
-      while (ctx.measureText(value).width > width - 40 && fontSize > 22) {
-        fontSize -= 2;
-        ctx.font = buildFont(fontSize);
-      }
-      ctx.fillText(value, width / 2, height / 2);
-
+      const canvas = renderToCanvas(picked, value, inkColor, 520, 160);
       const blob: Blob | null = await new Promise((res) =>
         canvas.toBlob((b) => res(b), "image/png"),
       );
@@ -301,48 +431,23 @@ export function SignatureGallery({
       ) : (
         <>
           <p className="text-[11px] text-gray-400">
-            {FONTS.length} styles disponibles
+            {MODELS.length} modèles de signature
           </p>
           <div
             ref={scrollRef}
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[460px] overflow-y-auto overflow-x-hidden pe-1 -me-1"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 max-h-[520px] overflow-y-auto overflow-x-hidden pe-1 -me-1"
           >
-            {FONTS.map((f) => {
-              const active = f.key === pickedKey;
-              return (
-                <button
-                  key={f.key}
-                  type="button"
-                  onClick={() => setPickedKey(f.key)}
-                  className={`group relative flex items-center justify-center rounded-xl border bg-white px-3 py-4 text-center transition-colors overflow-hidden min-w-0 ${
-                    active
-                      ? "border-primary ring-2 ring-primary/20"
-                      : "border-border hover:border-primary/50"
-                  }`}
-                  style={{ minHeight: 88 }}
-                  title={`${f.family} — ${f.variantLabel}`}
-                >
-                  <span
-                    className="block max-w-full truncate"
-                    style={{
-                      fontFamily: `"${f.family}", cursive`,
-                      fontStyle: f.fontStyle,
-                      fontWeight: f.fontWeight,
-                      fontSize: Math.min(f.size * 0.6, 32),
-                      color: inkColor,
-                      lineHeight: 1.1,
-                      visibility: fontsReady ? "visible" : "hidden",
-                    }}
-                  >
-                    {name.trim()}
-                  </span>
-                  <span className="absolute bottom-1 end-2 text-[9px] uppercase tracking-wide text-gray-300 truncate max-w-[80%]">
-                    {f.family}
-                    {f.variantId !== "regular" ? " · " + f.variantLabel : ""}
-                  </span>
-                </button>
-              );
-            })}
+            {MODELS.map((m) => (
+              <SignatureTile
+                key={m.key}
+                model={m}
+                name={name.trim()}
+                inkColor={inkColor}
+                fontsReady={fontsReady}
+                active={m.key === pickedKey}
+                onPick={() => setPickedKey(m.key)}
+              />
+            ))}
           </div>
         </>
       )}
@@ -372,4 +477,156 @@ export function SignatureGallery({
       </div>
     </div>
   );
+}
+
+// Thumbnail. We render the text + flourish in SVG so the browser
+// composites 200+ tiles cheaply (one paint, no canvas-per-tile cost).
+function SignatureTile({
+  model,
+  name,
+  inkColor,
+  fontsReady,
+  active,
+  onPick,
+}: {
+  model: Model;
+  name: string;
+  inkColor: string;
+  fontsReady: boolean;
+  active: boolean;
+  onPick: () => void;
+}) {
+  // SVG box: w=240, h=88 (preview).
+  const W = 240;
+  const H = 88;
+  const family = `"${model.font.family}", cursive`;
+  const slant = model.flourish.slant ? "italic" : "normal";
+  // We don't have measureText in SVG, so approximate the text bbox
+  // using the actual <text> element via a ref + getBBox after mount.
+  const textRef = useRef<SVGTextElement | null>(null);
+  const flourishRef = useRef<SVGGElement | null>(null);
+
+  useEffect(() => {
+    if (!textRef.current || !flourishRef.current || !fontsReady) return;
+    const bbox = textRef.current.getBBox();
+    const textLeft = bbox.x;
+    const textRight = bbox.x + bbox.width;
+    const baselineY = parseFloat(textRef.current.getAttribute("y") || "0");
+    // Project the canvas-flourish draw onto an offscreen canvas, then
+    // convert each subpath into an SVG <path> by tracing the same math.
+    // Simpler: just rerun the flourish via a tiny canvas-to-svg shim
+    // built per-tile. Cheap because each tile only fires once.
+    const paths = traceFlourish(model.flourish, {
+      textLeft,
+      textRight,
+      baselineY,
+      capTop: bbox.y,
+      width: bbox.width,
+      height: H,
+      ink: inkColor,
+    });
+    flourishRef.current.innerHTML = paths;
+  }, [model, name, inkColor, fontsReady]);
+
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      className={`group relative flex items-center justify-center rounded-xl border bg-white px-2 py-3 text-center transition-colors overflow-hidden min-w-0 ${
+        active
+          ? "border-primary ring-2 ring-primary/20"
+          : "border-border hover:border-primary/50"
+      }`}
+      style={{ minHeight: 100 }}
+      title={`${model.font.family} — ${model.flourish.label}`}
+    >
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        height={H}
+        style={{ visibility: fontsReady ? "visible" : "hidden", maxWidth: "100%" }}
+      >
+        <text
+          ref={textRef}
+          x={W / 2}
+          y={H * 0.6}
+          textAnchor="middle"
+          fontFamily={family}
+          fontStyle={slant}
+          fontSize={Math.min(H * 0.55, 38)}
+          fill={inkColor}
+        >
+          {name}
+        </text>
+        <g ref={flourishRef} stroke={inkColor} fill="none" />
+      </svg>
+      <span className="absolute bottom-1 end-2 text-[9px] uppercase tracking-wide text-gray-300 truncate max-w-[80%]">
+        {model.font.family} · {model.flourish.label}
+      </span>
+    </button>
+  );
+}
+
+// Translates a canvas-based flourish into SVG path markup. We can't
+// just reuse `draw()` directly because it talks to Canvas2D — so we
+// build a tiny recorder that captures path commands and re-emits them
+// as SVG.
+function traceFlourish(flourish: Flourish, box: Box): string {
+  const out: string[] = [];
+  const state: {
+    path: string;
+    lineWidth: number;
+    lineCap: CanvasLineCap;
+    strokeStyle: string;
+  } = { path: "", lineWidth: 2, lineCap: "round", strokeStyle: box.ink };
+  const recorder = {
+    get lineWidth() {
+      return state.lineWidth;
+    },
+    set lineWidth(v: number) {
+      state.lineWidth = v;
+    },
+    get lineCap() {
+      return state.lineCap;
+    },
+    set lineCap(v: CanvasLineCap) {
+      state.lineCap = v;
+    },
+    get strokeStyle() {
+      return state.strokeStyle;
+    },
+    set strokeStyle(v: string) {
+      state.strokeStyle = v;
+    },
+    beginPath() {
+      state.path = "";
+    },
+    moveTo(x: number, y: number) {
+      state.path += `M${x.toFixed(2)} ${y.toFixed(2)} `;
+    },
+    lineTo(x: number, y: number) {
+      state.path += `L${x.toFixed(2)} ${y.toFixed(2)} `;
+    },
+    quadraticCurveTo(cx: number, cy: number, x: number, y: number) {
+      state.path += `Q${cx.toFixed(2)} ${cy.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} `;
+    },
+    bezierCurveTo(
+      c1x: number,
+      c1y: number,
+      c2x: number,
+      c2y: number,
+      x: number,
+      y: number,
+    ) {
+      state.path += `C${c1x.toFixed(2)} ${c1y.toFixed(2)} ${c2x.toFixed(2)} ${c2y.toFixed(2)} ${x.toFixed(2)} ${y.toFixed(2)} `;
+    },
+    stroke() {
+      if (!state.path) return;
+      out.push(
+        `<path d="${state.path.trim()}" stroke-width="${state.lineWidth.toFixed(2)}" stroke-linecap="round" />`,
+      );
+    },
+  } as unknown as CanvasRenderingContext2D;
+  flourish.draw(recorder, box);
+  return out.join("");
 }
