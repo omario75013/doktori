@@ -7,6 +7,7 @@ import { sql } from "drizzle-orm";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { getTranslations } from "next-intl/server";
+import { ReferralActions } from "./referral-actions";
 
 type Referral = {
   id: string;
@@ -17,6 +18,7 @@ type Referral = {
   shareMedicalRecord: boolean;
   suggestedAppointmentAt: string | null;
   createdAt: string;
+  patientId: string;
   patientName: string;
   patientPhone: string;
   counterpartName: string;
@@ -42,6 +44,7 @@ export default async function ReferencementsPage() {
       r.share_medical_record AS "shareMedicalRecord",
       r.suggested_appointment_at AS "suggestedAppointmentAt",
       r.created_at AS "createdAt",
+      p.id AS "patientId",
       p.name AS "patientName",
       p.phone AS "patientPhone",
       d.name AS "counterpartName",
@@ -108,28 +111,42 @@ function ReferralList({ rows, direction, t }: { rows: Referral[]; direction: "in
   return (
     <ul className="divide-y divide-border">
       {rows.map((r) => (
-        <li key={r.id} className="py-3 flex items-start gap-3">
-          <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-foreground">
-              {r.patientName}
-              <span className="text-gray-400 font-normal"> · {r.patientPhone}</span>
-            </p>
-            <p className="text-xs text-gray-500">
-              {direction === "in" ? t("fromLabel") : t("toLabel")}
-              Dr. {r.counterpartName}
-              {r.counterpartSpecialty && ` · ${r.counterpartSpecialty}`}
-            </p>
-            <p className="text-xs text-gray-600 mt-1 line-clamp-2">{r.reason}</p>
-            <p className="text-xs text-gray-400 mt-1">
-              {format(new Date(r.createdAt), "d MMM yyyy", { locale: fr })}
-            </p>
+        <li key={r.id} className="py-3">
+          <div className="flex items-start gap-3">
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-foreground">
+                {r.patientName}
+                <span className="text-gray-400 font-normal"> · {r.patientPhone}</span>
+              </p>
+              <p className="text-xs text-gray-500">
+                {direction === "in" ? t("fromLabel") : t("toLabel")}
+                Dr. {r.counterpartName}
+                {r.counterpartSpecialty && ` · ${r.counterpartSpecialty}`}
+              </p>
+              <p className="text-xs text-gray-600 mt-1 line-clamp-2">{r.reason}</p>
+              <p className="text-xs text-gray-400 mt-1">
+                {format(new Date(r.createdAt), "d MMM yyyy", { locale: fr })}
+              </p>
+            </div>
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <StatusBadge status={r.status} t={t} />
+              {r.shareMedicalRecord && (
+                <ConsentBadge status={r.patientConsentStatus} t={t} />
+              )}
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-1 shrink-0">
-            <StatusBadge status={r.status} t={t} />
-            {r.shareMedicalRecord && (
-              <ConsentBadge status={r.patientConsentStatus} t={t} />
-            )}
-          </div>
+          {/* Action row — incoming referrals only. Outgoing rows stay
+              read-only (the originating doctor doesn't decide outcomes). */}
+          {direction === "in" && (
+            <ReferralActions
+              referralId={r.id}
+              patientId={r.patientId}
+              patientName={r.patientName}
+              status={r.status}
+              consentStatus={r.patientConsentStatus}
+              shareMedicalRecord={r.shareMedicalRecord}
+            />
+          )}
         </li>
       ))}
     </ul>

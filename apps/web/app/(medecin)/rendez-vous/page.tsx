@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { Calendar, CalendarPlus, X, Search, Phone, MessageSquare, UserCheck, Pencil } from "lucide-react";
@@ -53,15 +54,27 @@ const TERMINAL_STATUSES = ["cancelled", "completed", "no_show"];
 function NewAppointmentModal({
   onClose,
   onCreated,
+  prefillPatientId,
+  prefillPatientName,
 }: {
   onClose: () => void;
   onCreated: () => void;
+  // When set (deep-linked from a referral), the modal auto-selects this
+  // patient — even if /api/doctor/patients doesn't list them yet (the
+  // doctor has no prior appointments with them). Synthetic option is
+  // prepended to patientOptions so the picker can highlight it.
+  prefillPatientId?: string;
+  prefillPatientName?: string;
 }) {
   const t = useTranslations("medecin.appointments");
-  const [patientOptions, setPatientOptions] = useState<PatientOption[]>([]);
+  const [patientOptions, setPatientOptions] = useState<PatientOption[]>(
+    prefillPatientId && prefillPatientName
+      ? [{ id: prefillPatientId, name: prefillPatientName, phone: "" }]
+      : [],
+  );
   const [patientsLoading, setPatientsLoading] = useState(true);
   const [patientSearch, setPatientSearch] = useState("");
-  const [selectedPatientId, setSelectedPatientId] = useState("");
+  const [selectedPatientId, setSelectedPatientId] = useState(prefillPatientId ?? "");
   const [date, setDate] = useState(() => format(new Date(), "yyyy-MM-dd"));
   const [startTime, setStartTime] = useState("09:00");
   const [type, setType] = useState<"cabinet" | "teleconsult" | "domicile">("cabinet");
@@ -72,10 +85,28 @@ function NewAppointmentModal({
   useEffect(() => {
     fetch("/api/doctor/patients")
       .then((r) => r.json())
-      .then((data: PatientOption[]) => setPatientOptions(Array.isArray(data) ? data : []))
-      .catch(() => setPatientOptions([]))
+      .then((data: PatientOption[]) => {
+        const list = Array.isArray(data) ? data : [];
+        // Make sure the prefill patient stays in the list when the
+        // doctor has no prior appointments with them (referral case).
+        if (
+          prefillPatientId &&
+          prefillPatientName &&
+          !list.some((p) => p.id === prefillPatientId)
+        ) {
+          list.unshift({ id: prefillPatientId, name: prefillPatientName, phone: "" });
+        }
+        setPatientOptions(list);
+      })
+      .catch(() => {
+        if (prefillPatientId && prefillPatientName) {
+          setPatientOptions([{ id: prefillPatientId, name: prefillPatientName, phone: "" }]);
+        } else {
+          setPatientOptions([]);
+        }
+      })
       .finally(() => setPatientsLoading(false));
-  }, []);
+  }, [prefillPatientId, prefillPatientName]);
 
   const filteredPatients = patientOptions.filter(
     (p) =>
@@ -309,6 +340,24 @@ export default function RendezVousPage() {
   const [error, setError] = useState<string | null>(null);
   const [updating, setUpdating] = useState<string | null>(null);
   const [showNewRdvModal, setShowNewRdvModal] = useState(false);
+  const [prefillPatientId, setPrefillPatientId] = useState<string | undefined>(undefined);
+  const [prefillPatientName, setPrefillPatientName] = useState<string | undefined>(undefined);
+  const searchParams = useSearchParams();
+  const router = useRouter();
+
+  // Referrals → "Accepter et prendre RDV" lands here with
+  // ?newRdvFor=<patientId>&newRdvName=<name>. Open the modal pre-filled
+  // and strip the query string so a back-nav doesn't re-open it.
+  useEffect(() => {
+    const pid = searchParams.get("newRdvFor");
+    const pname = searchParams.get("newRdvName");
+    if (pid && pname) {
+      setPrefillPatientId(pid);
+      setPrefillPatientName(pname);
+      setShowNewRdvModal(true);
+      router.replace("/rendez-vous", { scroll: false });
+    }
+  }, [searchParams, router]);
 
   // CNAM modal state
   const [cnamDialogAppointmentId, setCnamDialogAppointmentId] = useState<string | null>(null);
@@ -869,8 +918,14 @@ export default function RendezVousPage() {
       {/* New appointment modal */}
       {showNewRdvModal && (
         <NewAppointmentModal
-          onClose={() => setShowNewRdvModal(false)}
+          onClose={() => {
+            setShowNewRdvModal(false);
+            setPrefillPatientId(undefined);
+            setPrefillPatientName(undefined);
+          }}
           onCreated={fetchAppointments}
+          prefillPatientId={prefillPatientId}
+          prefillPatientName={prefillPatientName}
         />
       )}
 
