@@ -774,7 +774,59 @@ export default function MessageriePage() {
                     const isRead = !!m.readAt;
                     return (
                       <div key={m.id} className={`flex ${isMe ? "justify-end" : "justify-start"} group`}>
-                        <div className="max-w-[75%]">
+                        <div className={`flex items-center gap-1.5 max-w-[75%] ${isMe ? "flex-row" : "flex-row-reverse"}`}>
+                          {/* 3-dots menu trigger — only on own messages.
+                              Sits beside the bubble so the bubble stays
+                              uncluttered. Fades in on hover or when open. */}
+                          {isMe && !isDeleted && !isEditingThis && (
+                            <div data-msg-menu className="relative shrink-0">
+                              <button
+                                type="button"
+                                aria-label="Actions du message"
+                                onClick={() =>
+                                  setOpenMenuId((cur) => (cur === m.id ? null : m.id))
+                                }
+                                className={`h-6 w-6 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-secondary/60 transition-opacity ${
+                                  openMenuId === m.id ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                                }`}
+                              >
+                                <MoreVertical className="w-4 h-4" />
+                              </button>
+                              {openMenuId === m.id && (
+                                <div
+                                  data-msg-menu
+                                  className="absolute right-0 top-7 z-20 min-w-[140px] rounded-xl border border-border bg-white dark:bg-gray-900 shadow-lg py-1"
+                                >
+                                  {!m.imageUrl && (
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setEditingId(m.id);
+                                        setEditDraft(m.body);
+                                        setOpenMenuId(null);
+                                      }}
+                                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-secondary/60"
+                                    >
+                                      <Pencil className="w-3.5 h-3.5" />
+                                      Modifier
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOpenMenuId(null);
+                                      deleteMessage(m.id);
+                                    }}
+                                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                    Supprimer
+                                  </button>
+                                </div>
+                              )}
+                            </div>
+                          )}
+                          <div className="min-w-0">
                           <div
                             className={`rounded-2xl px-3 py-2 text-sm ${
                               isMe ? "bg-primary text-white" : "bg-secondary text-foreground"
@@ -842,59 +894,7 @@ export default function MessageriePage() {
                               )
                             )}
                           </div>
-                          {isMe && !isDeleted && !isEditingThis && (
-                            <div
-                              data-msg-menu
-                              className={`relative mt-0.5 flex justify-end transition-opacity ${
-                                openMenuId === m.id
-                                  ? "opacity-100"
-                                  : "opacity-0 group-hover:opacity-100"
-                              }`}
-                            >
-                              <button
-                                type="button"
-                                aria-label="Actions du message"
-                                onClick={() =>
-                                  setOpenMenuId((cur) => (cur === m.id ? null : m.id))
-                                }
-                                className="h-5 w-5 rounded-full flex items-center justify-center text-gray-400 hover:text-gray-700 hover:bg-secondary/60"
-                              >
-                                <MoreVertical className="w-3.5 h-3.5" />
-                              </button>
-                              {openMenuId === m.id && (
-                                <div
-                                  data-msg-menu
-                                  className="absolute right-0 top-6 z-20 min-w-[140px] rounded-xl border border-border bg-white dark:bg-gray-900 shadow-lg py-1"
-                                >
-                                  {!m.imageUrl && (
-                                    <button
-                                      type="button"
-                                      onClick={() => {
-                                        setEditingId(m.id);
-                                        setEditDraft(m.body);
-                                        setOpenMenuId(null);
-                                      }}
-                                      className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-gray-700 dark:text-gray-200 hover:bg-secondary/60"
-                                    >
-                                      <Pencil className="w-3.5 h-3.5" />
-                                      Modifier
-                                    </button>
-                                  )}
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setOpenMenuId(null);
-                                      deleteMessage(m.id);
-                                    }}
-                                    className="w-full flex items-center gap-2 px-3 py-1.5 text-xs text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
-                                  >
-                                    <Trash2 className="w-3.5 h-3.5" />
-                                    Supprimer
-                                  </button>
-                                </div>
-                              )}
-                            </div>
-                          )}
+                          </div>
                         </div>
                       </div>
                     );
