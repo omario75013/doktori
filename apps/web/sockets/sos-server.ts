@@ -6,7 +6,15 @@ const BROADCAST_SECRET =
   process.env.SOCKETIO_BROADCAST_SECRET || "dev-broadcast-secret";
 
 const httpServer = createServer((req, res) => {
-  // Simple HTTP endpoint for broadcasting events from Next.js API routes
+  // CORS preflight + permissive headers so the API route (and dev probes)
+  // can hit /broadcast from a browser origin without a 403/blocked.
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Authorization, Content-Type");
+  res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
+  if (req.method === "OPTIONS") {
+    res.writeHead(204).end();
+    return;
+  }
   if (req.method === "POST" && req.url === "/broadcast") {
     const auth = req.headers.authorization;
     if (auth !== `Bearer ${BROADCAST_SECRET}`) {
@@ -23,6 +31,8 @@ const httpServer = createServer((req, res) => {
           payload: unknown;
         };
         io.to(room).emit(event, payload);
+        const size = io.sockets.adapter.rooms.get(room)?.size ?? 0;
+        console.log(`[SOS-SOCKET] broadcast → ${room} (${event}) to ${size} client(s)`);
         res
           .writeHead(200, { "Content-Type": "application/json" })
           .end('{"ok":true}');
@@ -58,11 +68,13 @@ io.on("connection", (socket) => {
   socket.on("join-peer-conv", (conversationId: string) => {
     if (typeof conversationId === "string" && conversationId.length > 0) {
       socket.join(`peer-conv:${conversationId}`);
+      console.log(`[SOS-SOCKET] ${socket.id} joined peer-conv:${conversationId}`);
     }
   });
   socket.on("leave-peer-conv", (conversationId: string) => {
     if (typeof conversationId === "string" && conversationId.length > 0) {
       socket.leave(`peer-conv:${conversationId}`);
+      console.log(`[SOS-SOCKET] ${socket.id} left peer-conv:${conversationId}`);
     }
   });
 

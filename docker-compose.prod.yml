@@ -23,6 +23,26 @@ services:
       retries: 3
       start_period: 20s
 
+  doktori-socket:
+    # Socket.IO server (peer-doctor chat + SOS rooms). Reuses the web
+    # image — same node_modules, same TypeScript runtime — and starts the
+    # tsx-compiled socket entry point instead of next.
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: doktori-socket
+    command: ["node", "node_modules/.bin/tsx", "apps/web/sockets/sos-server.ts"]
+    working_dir: /app
+    ports:
+      - "3010:3010"
+    env_file: .env
+    environment:
+      - TZ=Africa/Tunis
+      - SOCKETIO_PORT=3010
+    restart: unless-stopped
+    networks:
+      - dartank-network
+
   redis:
     image: redis:7-alpine
     container_name: doktori-redis

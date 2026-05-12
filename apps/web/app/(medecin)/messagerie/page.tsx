@@ -24,6 +24,7 @@ import { CallButton } from "@/components/call-ui";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { toast } from "sonner";
+import { io, type Socket } from "socket.io-client";
 
 // /messagerie hosts peer-doctor messaging.
 // Live updates via Socket.IO (reuses the existing SOS server). Polling
@@ -284,52 +285,45 @@ export default function MessageriePage() {
       }
     }
     loadMessages();
-    const poll = setInterval(loadMessages, 10_000);
+    // Long-cadence poll (30s) as a safety net for missed WS pushes after a
+    // disconnect/reconnect. Real-time delivery is the WS path.
+    const poll = setInterval(loadMessages, 30_000);
 
-    type SocketLike = {
-      emit: (e: string, ...a: unknown[]) => void;
-      on: (e: string, fn: (...a: unknown[]) => void) => void;
-      disconnect: () => void;
-    };
-    let cancelled = false;
-    let sock: SocketLike | null = null;
-    (async () => {
-      try {
-        const { io } = await import("socket.io-client");
-        if (cancelled) return;
-        const url =
-          typeof window !== "undefined"
-            ? `${window.location.protocol}//${window.location.hostname}:3010`
-            : "http://localhost:3010";
-        sock = io(url, { path: "/sos-socket", transports: ["websocket", "polling"] }) as unknown as SocketLike;
-        sock.emit("join-peer-conv", activeId);
-        sock.on("message:new", (m: unknown) => {
-          const msg = m as Message;
-          if (msg.conversationId !== activeId) return;
-          setMessages((prev) => (prev.some((p) => p.id === msg.id) ? prev : [...prev, msg]));
-        });
-        sock.on("message:updated", (m: unknown) => {
-          const msg = m as Message;
-          setMessages((prev) => prev.map((p) => (p.id === msg.id ? msg : p)));
-        });
-        sock.on("message:deleted", (m: unknown) => {
-          const msg = m as { id: string };
-          setMessages((prev) =>
-            prev.map((p) =>
-              p.id === msg.id
-                ? { ...p, body: "", imageUrl: null, deletedAt: new Date().toISOString() }
-                : p,
-            ),
-          );
-        });
-        socketRef.current = sock;
-      } catch {
-        /* socket.io client missing or server unreachable — poll fallback */
-      }
-    })();
+    let sock: Socket | null = null;
+    try {
+      const url =
+        typeof window !== "undefined"
+          ? `${window.location.protocol}//${window.location.hostname}:3010`
+          : "http://localhost:3010";
+      sock = io(url, {
+        path: "/sos-socket",
+        transports: ["websocket", "polling"],
+        reconnection: true,
+        reconnectionDelay: 500,
+      });
+      sock.on("connect", () => sock?.emit("join-peer-conv", activeId));
+      sock.on("message:new", (m: Message) => {
+        if (m.conversationId !== activeId) return;
+        setMessages((prev) => (prev.some((p) => p.id === m.id) ? prev : [...prev, m]));
+      });
+      sock.on("message:updated", (m: Message) => {
+        setMessages((prev) => prev.map((p) => (p.id === m.id ? m : p)));
+      });
+      sock.on("message:deleted", (m: { id: string }) => {
+        setMessages((prev) =>
+          prev.map((p) =>
+            p.id === m.id
+              ? { ...p, body: "", imageUrl: null, deletedAt: new Date().toISOString() }
+              : p,
+          ),
+        );
+      });
+      socketRef.current = sock;
+    } catch {
+      /* socket server unreachable — poll fallback */
+    }
 
     return () => {
-      cancelled = true;
       clearInterval(poll);
       try {
         sock?.emit("leave-peer-conv", activeId);
