@@ -17,6 +17,7 @@ type Referral = {
   patientConsentStatus: string;
   shareMedicalRecord: boolean;
   suggestedAppointmentAt: string | null;
+  notesForReceivingDoctor: string | null;
   createdAt: string;
   patientId: string;
   patientName: string;
@@ -43,6 +44,7 @@ export default async function ReferencementsPage() {
       r.patient_consent_status AS "patientConsentStatus",
       r.share_medical_record AS "shareMedicalRecord",
       r.suggested_appointment_at AS "suggestedAppointmentAt",
+      r.notes_for_receiving_doctor AS "notesForReceivingDoctor",
       r.created_at AS "createdAt",
       p.id AS "patientId",
       p.name AS "patientName",
@@ -135,18 +137,24 @@ function ReferralList({ rows, direction, t }: { rows: Referral[]; direction: "in
               )}
             </div>
           </div>
-          {/* Action row — incoming referrals only. Outgoing rows stay
-              read-only (the originating doctor doesn't decide outcomes). */}
-          {direction === "in" && (
-            <ReferralActions
-              referralId={r.id}
-              patientId={r.patientId}
-              patientName={r.patientName}
-              status={r.status}
-              consentStatus={r.patientConsentStatus}
-              shareMedicalRecord={r.shareMedicalRecord}
-            />
-          )}
+          {/* Action row — "Voir les détails" is shown on every row;
+              accept/decline/book actions only on incoming rows. */}
+          <ReferralActions
+            referralId={r.id}
+            patientId={r.patientId}
+            patientName={r.patientName}
+            patientPhone={r.patientPhone}
+            counterpartName={r.counterpartName}
+            counterpartSpecialty={r.counterpartSpecialty}
+            direction={direction}
+            status={r.status}
+            consentStatus={r.patientConsentStatus}
+            shareMedicalRecord={r.shareMedicalRecord}
+            reason={r.reason}
+            notesForReceivingDoctor={r.notesForReceivingDoctor}
+            suggestedAppointmentAt={r.suggestedAppointmentAt}
+            createdAt={r.createdAt}
+          />
         </li>
       ))}
     </ul>
