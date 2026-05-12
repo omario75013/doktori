@@ -29,6 +29,9 @@ export async function GET() {
       bio: secretaries.bio,
       permissions: secretaries.permissions,
       monthlyDayOffAllowance: secretaries.monthlyDayOffAllowance,
+      // doctorId so the secretary client can join the waiting-room WS
+      // room that's keyed by doctor id.
+      doctorId: secretaries.doctorId,
     })
     .from(secretaries)
     .where(eq(secretaries.id, auth.secretaryId))

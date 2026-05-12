@@ -210,6 +210,7 @@ export default async function DashboardPage({
       averageRating={averageRating}
       recentActivity={recentActivity}
       waitingRoomCount={waitingPatients.length}
+      doctorId={doctorId}
       waitingPatients={waitingPatients}
     />
     </>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db, doctorWaitingRoom } from "@doktori/db";
 import { eq, sql } from "drizzle-orm";
 import { requireStaff } from "@/lib/staff-context";
+import { broadcastSos } from "@/lib/sos-broadcast";
 
 // Waiting-room counter — shared between the doctor and their
 // secretary. Both web (NextAuth cookie) and mobile (Bearer JWT) callers
@@ -90,11 +91,15 @@ export async function PATCH(req: NextRequest) {
     });
 
   if (updated.length > 0) {
-    return NextResponse.json({
+    const payload = {
       count: updated[0].count,
       updatedAt: updated[0].updatedAt,
       updatedByType: updated[0].updatedByType,
-    });
+    };
+    // Fire-and-forget WS push so any connected dashboards for this
+    // doctor (mobile + web, secretary + doctor) flip immediately.
+    void broadcastSos(`waiting-room:${ctx.doctorId}`, "waiting:update", payload);
+    return NextResponse.json(payload);
   }
 
   // First-ever change for this doctor — insert the seed row.
@@ -114,9 +119,11 @@ export async function PATCH(req: NextRequest) {
       updatedByType: doctorWaitingRoom.updatedByType,
     });
 
-  return NextResponse.json({
+  const payload = {
     count: inserted.count,
     updatedAt: inserted.updatedAt,
     updatedByType: inserted.updatedByType,
-  });
+  };
+  void broadcastSos(`waiting-room:${ctx.doctorId}`, "waiting:update", payload);
+  return NextResponse.json(payload);
 }

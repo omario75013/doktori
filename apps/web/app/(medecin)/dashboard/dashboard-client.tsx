@@ -81,6 +81,7 @@ type DashboardClientProps = {
   smsPlan?: string;
   waitingRoomCount?: number;
   waitingPatients?: { id: string; patientName: string; checkedInAt: Date; startsAt: Date }[];
+  doctorId?: string;
   // New quick stats
   totalPatients?: number;
   monthTotal?: number;
@@ -642,6 +643,7 @@ export function DashboardClient({
   recentActivity = [],
   waitingRoomCount = 0,
   waitingPatients = [],
+  doctorId,
 }: DashboardClientProps) {
   const t = useTranslations("medecin.dashboard");
   const tStatus = useTranslations("medecin.appointments.status");
@@ -690,7 +692,9 @@ export function DashboardClient({
     void refreshKpis();
     void refreshWaiting();
     const idKpis = setInterval(refreshKpis, 15_000);
-    const idWaiting = setInterval(refreshWaiting, 10_000);
+    // 30s instead of 10s — WS is the primary path; this poll is just a
+    // safety net for missed pushes after a reconnect.
+    const idWaiting = setInterval(refreshWaiting, 30_000);
     const onFocus = () => {
       void refreshKpis();
       void refreshWaiting();
@@ -703,6 +707,45 @@ export function DashboardClient({
       window.removeEventListener("focus", onFocus);
     };
   }, []);
+
+  // WebSocket subscription for the waiting-room counter. The server
+  // broadcasts "waiting:update" into the per-doctor room every time
+  // PATCH /api/doctor/waiting-room writes, so the doctor sees the
+  // secretary's clicks instantly instead of after the poll fallback.
+  useEffect(() => {
+    if (!doctorId) return;
+    let sock: import("socket.io-client").Socket | null = null;
+    let cancelled = false;
+    (async () => {
+      const { io } = await import("socket.io-client");
+      if (cancelled) return;
+      const url =
+        typeof window !== "undefined"
+          ? `${window.location.protocol}//${window.location.hostname}:3010`
+          : "http://localhost:3010";
+      sock = io(url, {
+        path: "/sos-socket",
+        transports: ["websocket", "polling"],
+        reconnection: true,
+        reconnectionDelay: 500,
+      });
+      sock.on("connect", () => sock?.emit("join-waiting-room", doctorId));
+      sock.on("waiting:update", (payload: { count?: number }) => {
+        if (typeof payload?.count === "number") setLiveWaitingCount(payload.count);
+      });
+    })().catch(() => {
+      /* socket server unreachable — poll fallback covers this */
+    });
+    return () => {
+      cancelled = true;
+      try {
+        sock?.emit("leave-waiting-room", doctorId);
+        sock?.disconnect();
+      } catch {
+        /* ignore */
+      }
+    };
+  }, [doctorId]);
 
   const kpis = [
     {

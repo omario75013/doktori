@@ -78,6 +78,21 @@ io.on("connection", (socket) => {
     }
   });
 
+  // Waiting-room counter — one room per doctor. The /api/doctor/waiting-room
+  // PATCH route POSTs to /broadcast with `waiting:update` after each DB
+  // write so every connected dashboard (doctor + secretary) updates in
+  // real time instead of waiting for the next poll cycle.
+  socket.on("join-waiting-room", (doctorId: string) => {
+    if (typeof doctorId === "string" && doctorId.length > 0) {
+      socket.join(`waiting-room:${doctorId}`);
+    }
+  });
+  socket.on("leave-waiting-room", (doctorId: string) => {
+    if (typeof doctorId === "string" && doctorId.length > 0) {
+      socket.leave(`waiting-room:${doctorId}`);
+    }
+  });
+
   socket.on("disconnect", () => {
     console.log(`[SOS-SOCKET] Disconnect: ${socket.id}`);
   });

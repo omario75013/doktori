@@ -122,6 +122,8 @@ export default function SecretaireDashboardPage() {
   useEffect(() => {
     if (status !== "authenticated") return;
     let cancelled = false;
+    let sock: import("socket.io-client").Socket | null = null;
+
     async function pull() {
       try {
         const r = await fetch("/api/doctor/waiting-room", { credentials: "include" });
@@ -132,13 +134,48 @@ export default function SecretaireDashboardPage() {
         /* ignore */
       }
     }
+
+    async function joinWaitingRoom() {
+      try {
+        // Need the doctorId to join the right WS room.
+        const pr = await fetch("/api/secretary/profile", { credentials: "include" });
+        if (!pr.ok || cancelled) return;
+        const profile = await pr.json();
+        const docId = profile?.doctorId;
+        if (!docId) return;
+        const { io } = await import("socket.io-client");
+        if (cancelled) return;
+        const url =
+          typeof window !== "undefined"
+            ? `${window.location.protocol}//${window.location.hostname}:3010`
+            : "http://localhost:3010";
+        sock = io(url, {
+          path: "/sos-socket",
+          transports: ["websocket", "polling"],
+          reconnection: true,
+          reconnectionDelay: 500,
+        });
+        sock.on("connect", () => sock?.emit("join-waiting-room", docId));
+        sock.on("waiting:update", (payload: { count?: number }) => {
+          if (typeof payload?.count === "number") setWaitingCount(payload.count);
+        });
+      } catch {
+        /* WS unavailable — poll fallback covers this */
+      }
+    }
+
     void pull();
-    // Light 30s poll so the doctor + the secretary stay in sync if the
-    // other surface also changes the count.
+    void joinWaitingRoom();
+    // 30s safety-net poll for missed WS pushes on disconnect/reconnect.
     const id = setInterval(pull, 30_000);
     return () => {
       cancelled = true;
       clearInterval(id);
+      try {
+        sock?.disconnect();
+      } catch {
+        /* ignore */
+      }
     };
   }, [status]);
 
