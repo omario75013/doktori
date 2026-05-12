@@ -2121,7 +2121,13 @@
       "statusNoShow": "Absent",
       "statusArrived": "Arrivé(e)",
       "errorUnknown": "Erreur inconnue",
-      "errorPrefix": "Erreur : {message}"
+      "errorPrefix": "Erreur : {message}",
+      "waitingRoomManualHint": "Compteur manuel",
+      "waitingPatientSg": "patient",
+      "waitingPatientPl": "patients",
+      "waitingIncrease": "Ajouter un patient",
+      "waitingDecrease": "Retirer un patient",
+      "waitingReset": "Remettre à zéro"
     },
     "rendezVous": {
       "title": "Rendez-vous",

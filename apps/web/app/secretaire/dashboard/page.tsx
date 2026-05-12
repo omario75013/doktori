@@ -16,6 +16,9 @@ import {
   Phone,
   Coffee,
   ChevronRight,
+  Plus,
+  Minus,
+  RotateCcw,
 } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
@@ -108,6 +111,65 @@ export default function SecretaireDashboardPage() {
     const interval = setInterval(() => setNow(new Date()), 60_000);
     return () => clearInterval(interval);
   }, []);
+
+  // ── Waiting-room manual counter ──────────────────────────────────
+  // The list below tracks patients who were checked in against a
+  // specific appointment. The secretary also needs to count walk-ins
+  // and patients waiting without a slot — this counter does that.
+  const [waitingCount, setWaitingCount] = useState(0);
+  const [waitingBusy, setWaitingBusy] = useState(false);
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    let cancelled = false;
+    async function pull() {
+      try {
+        const r = await fetch("/api/doctor/waiting-room", { credentials: "include" });
+        if (!r.ok || cancelled) return;
+        const d = await r.json();
+        if (typeof d.count === "number") setWaitingCount(d.count);
+      } catch {
+        /* ignore */
+      }
+    }
+    void pull();
+    // Light 30s poll so the doctor + the secretary stay in sync if the
+    // other surface also changes the count.
+    const id = setInterval(pull, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [status]);
+
+  async function changeWaiting(op: "inc" | "dec" | "set", value?: number) {
+    if (waitingBusy) return;
+    const prev = waitingCount;
+    const next =
+      op === "inc" ? Math.min(prev + 1, 50)
+      : op === "dec" ? Math.max(prev - 1, 0)
+      : Math.max(0, Math.min(value ?? 0, 50));
+    setWaitingCount(next);
+    setWaitingBusy(true);
+    try {
+      const r = await fetch("/api/doctor/waiting-room", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(op === "set" ? { op, value: next } : { op }),
+      });
+      if (r.ok) {
+        const d = await r.json();
+        if (typeof d.count === "number") setWaitingCount(d.count);
+      } else {
+        setWaitingCount(prev);
+      }
+    } catch {
+      setWaitingCount(prev);
+    } finally {
+      setWaitingBusy(false);
+    }
+  }
 
   useEffect(() => {
     if (status !== "authenticated") return;
@@ -256,14 +318,56 @@ export default function SecretaireDashboardPage() {
         transition={{ duration: 0.35, delay: 0.2 }}
         className="bg-white dark:bg-gray-900 rounded-2xl border border-border shadow-sm overflow-hidden"
       >
-        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+        <div className="px-5 py-4 border-b border-border flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <Coffee className="h-4 w-4 shrink-0" style={{ color: "#0891B2" }} strokeWidth={2.5} />
             <h2 className="font-bold text-foreground">{t("waitingRoom")}</h2>
-            {waitingPatients.length > 0 && (
-              <span className="ml-1 inline-flex items-center justify-center h-5 w-5 rounded-full text-xs font-bold text-white" style={{ background: "#0891B2" }}>
-                {waitingPatients.length}
-              </span>
+            <span className="ms-1 text-xs text-muted-foreground">
+              {t("waitingRoomManualHint")}
+            </span>
+          </div>
+          {/* Manual counter — secretary declares how many patients are
+              currently in the room. Persists server-side so the doctor
+              sees the same number. */}
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => changeWaiting("dec")}
+              disabled={waitingBusy || waitingCount === 0}
+              className="h-9 w-9 inline-flex items-center justify-center rounded-full border border-border bg-white hover:bg-secondary disabled:opacity-40 transition-colors"
+              aria-label={t("waitingDecrease")}
+            >
+              <Minus className="h-4 w-4" />
+            </button>
+            <div className="min-w-[64px] text-center">
+              <div className="text-2xl font-black text-foreground leading-none">
+                {waitingCount}
+              </div>
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground mt-0.5">
+                {waitingCount === 1 ? t("waitingPatientSg") : t("waitingPatientPl")}
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => changeWaiting("inc")}
+              disabled={waitingBusy || waitingCount >= 50}
+              className="h-9 w-9 inline-flex items-center justify-center rounded-full text-white disabled:opacity-40 transition-colors"
+              style={{ background: "#0891B2" }}
+              aria-label={t("waitingIncrease")}
+            >
+              <Plus className="h-4 w-4" />
+            </button>
+            {waitingCount > 0 && (
+              <button
+                type="button"
+                onClick={() => changeWaiting("set", 0)}
+                disabled={waitingBusy}
+                className="ms-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+                title={t("waitingReset")}
+              >
+                <RotateCcw className="h-3.5 w-3.5" />
+                {t("waitingReset")}
+              </button>
             )}
           </div>
         </div>

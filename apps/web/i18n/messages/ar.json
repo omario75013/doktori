@@ -2121,7 +2121,13 @@
       "statusNoShow": "غائب",
       "statusArrived": "وصل/وصلت",
       "errorUnknown": "خطأ غير معروف",
-      "errorPrefix": "خطأ: {message}"
+      "errorPrefix": "خطأ: {message}",
+      "waitingRoomManualHint": "عدّاد يدوي",
+      "waitingPatientSg": "مريض",
+      "waitingPatientPl": "مرضى",
+      "waitingIncrease": "إضافة مريض",
+      "waitingDecrease": "إزالة مريض",
+      "waitingReset": "إعادة الضبط"
     },
     "rendezVous": {
       "title": "المواعيد",
