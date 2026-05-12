@@ -99,7 +99,12 @@ export function NotificationsBell({ role }: { role?: Role }) {
                 title = `Demande de connexion${n.requesterName ? ` : Dr ${n.requesterName.replace(/^Dr\.?\s*/i, "")}` : ""}`;
                 break;
               case "connection_accepted":
-                title = `${n.requesterName ? `Dr ${n.requesterName.replace(/^Dr\.?\s*/i, "")} ` : ""}a accepté votre invitation`;
+                title = `${n.requesterName ? `Dr ${n.requesterName.replace(/^Dr\.?\s*/i, "")} ` : "Un confrère "}a accepté votre invitation`;
+                break;
+              case "peer_message":
+                title = n.requesterName
+                  ? `Nouveau message — Dr ${n.requesterName.replace(/^Dr\.?\s*/i, "")}`
+                  : "Nouveau message d'un confrère";
                 break;
               case "appointment_cancelled_by_patient":
                 title = `RDV annulé${n.patientName ? ` par ${n.patientName}` : ""}`;

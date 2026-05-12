@@ -80,43 +80,53 @@ export async function GET() {
       .orderBy(desc(doctorNotifications.createdAt))
       .limit(20);
 
-    // Resolve requester display names so the dropdown shows "Dr X" instead
-    // of a UUID payload.
-    const requesterIds = events
-      .map((e) => {
+    // Resolve any peer-doctor UUID embedded in the payload — requesterId
+    // (connection_request), byDoctorId (connection_accepted), senderId
+    // (peer_message). Any value matching a doctor row will be displayed.
+    const peerIdFields = ["requesterId", "byDoctorId", "senderId"] as const;
+    const peerIds = events
+      .flatMap((e) => {
         const p = (e.payload ?? {}) as Record<string, unknown>;
-        return typeof p.requesterId === "string" ? p.requesterId : null;
-      })
-      .filter((v): v is string => !!v);
+        return peerIdFields
+          .map((k) => p[k])
+          .filter((v): v is string => typeof v === "string");
+      });
     const nameById = new Map<string, string>();
-    if (requesterIds.length > 0) {
+    if (peerIds.length > 0) {
       const rows = await db
         .select({ id: doctors.id, name: doctors.name })
         .from(doctors)
-        .where(inArray(doctors.id, requesterIds));
+        .where(inArray(doctors.id, peerIds));
       for (const r of rows) nameById.set(r.id, r.name);
     }
 
     for (const e of events) {
       const p = (e.payload ?? {}) as Record<string, unknown>;
       const requesterId = typeof p.requesterId === "string" ? p.requesterId : null;
+      const byDoctorId = typeof p.byDoctorId === "string" ? p.byDoctorId : null;
+      const senderId = typeof p.senderId === "string" ? p.senderId : null;
+      const peerId = requesterId ?? byDoctorId ?? senderId;
       const patientName = typeof p.patientName === "string" ? p.patientName : null;
+      const conversationId =
+        typeof p.conversationId === "string" ? p.conversationId : null;
       const href =
         e.type === "connection_request" || e.type === "connection_accepted"
           ? "/reseau"
-          : e.type === "appointment_cancelled_by_patient" ||
-              e.type === "appointment_rescheduled_by_patient" ||
-              e.type === "appointment_booked"
-            ? "/rendez-vous"
-            : e.type?.startsWith("referral")
-              ? "/reseau/referencements"
-              : "/dashboard";
+          : e.type === "peer_message"
+            ? `/reseau/messagerie${conversationId ? `?conv=${conversationId}` : ""}`
+            : e.type === "appointment_cancelled_by_patient" ||
+                e.type === "appointment_rescheduled_by_patient" ||
+                e.type === "appointment_booked"
+              ? "/rendez-vous"
+              : e.type?.startsWith("referral")
+                ? "/reseau/referencements"
+                : "/dashboard";
       feed.push({
         id: e.id,
         kind: "doctor_event",
         type: e.type,
         patientName,
-        requesterName: requesterId ? (nameById.get(requesterId) ?? null) : null,
+        requesterName: peerId ? (nameById.get(peerId) ?? null) : null,
         createdAt: (e.createdAt instanceof Date
           ? e.createdAt
           : new Date(e.createdAt as unknown as string)

@@ -83,6 +83,18 @@ export default function PeerMessagingPage() {
       }
     }
     load();
+    // Poll the conversation list so a new peer message creates a row +
+    // unread badge without requiring a manual page refresh. 15s mirrors
+    // the doctor topbar bell cadence.
+    const iv = setInterval(async () => {
+      try {
+        const r = await fetch("/api/doctor/peer-conversations", { cache: "no-store" });
+        if (r.ok) setThreads(await r.json());
+      } catch {
+        /* ignore */
+      }
+    }, 15_000);
+    return () => clearInterval(iv);
   }, [searchParams]);
 
   useEffect(() => {
