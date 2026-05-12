@@ -56,7 +56,30 @@ export async function GET(_req: NextRequest) {
     patientName: r.patientName ?? "Patient",
   }));
 
+  // Live KPI counts so the dashboard reflects status changes (no_show
+  // marked from /rendez-vous, pending → confirmed, etc.) without a full
+  // page reload. Same windows as the server-rendered page: current
+  // calendar month for no_shows, today for pending-to-confirm.
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const monthRows = await db
+    .select({ id: appointments.id })
+    .from(appointments)
+    .where(
+      and(
+        eq(appointments.doctorId, doctorId),
+        eq(appointments.status, "no_show"),
+        gte(appointments.startsAt, monthStart),
+      ),
+    );
+  const noShowMonthCount = monthRows.length;
+  const toConfirmCount = rows.filter((r) => r.status === "pending").length;
+
   return NextResponse.json({
+    noShowMonthCount,
+    toConfirmCount,
+    todayCount: rows.length,
     waitingCount,
     todayAppts,
   });

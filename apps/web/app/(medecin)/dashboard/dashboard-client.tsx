@@ -647,10 +647,45 @@ export function DashboardClient({
   const t = useTranslations("medecin.dashboard");
   const tStatus = useTranslations("medecin.appointments.status");
 
+  // Live KPI counters — server-rendered initial values, kept fresh by a
+  // 15s poll on /api/doctor/today-summary so marking a no_show or
+  // confirming a pending RDV elsewhere reflects on the dashboard without
+  // a hard refresh.
+  const [liveTodayCount, setLiveTodayCount] = useState(todayCount);
+  const [liveToConfirm, setLiveToConfirm] = useState(toConfirm);
+  const [liveNoShowCount, setLiveNoShowCount] = useState(noShowCount);
+  useEffect(() => {
+    let cancelled = false;
+    async function refresh() {
+      try {
+        const r = await fetch("/api/doctor/today-summary", {
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (!r.ok || cancelled) return;
+        const d = await r.json();
+        if (typeof d.todayCount === "number") setLiveTodayCount(d.todayCount);
+        if (typeof d.toConfirmCount === "number") setLiveToConfirm(d.toConfirmCount);
+        if (typeof d.noShowMonthCount === "number") setLiveNoShowCount(d.noShowMonthCount);
+      } catch {
+        /* ignore */
+      }
+    }
+    void refresh();
+    const id = setInterval(refresh, 15_000);
+    const onFocus = () => void refresh();
+    window.addEventListener("focus", onFocus);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+      window.removeEventListener("focus", onFocus);
+    };
+  }, []);
+
   const kpis = [
     {
       label: t("today"),
-      value: todayCount,
+      value: liveTodayCount,
       sublabel: t("appointments"),
       accentColor: "bg-primary",
       icon: Calendar,
@@ -658,7 +693,7 @@ export function DashboardClient({
     },
     {
       label: t("toConfirm"),
-      value: toConfirm,
+      value: liveToConfirm,
       sublabel: t("pending"),
       accentColor: "bg-orange-400",
       icon: Clock,
@@ -666,7 +701,7 @@ export function DashboardClient({
     },
     {
       label: t("noShows"),
-      value: noShowCount,
+      value: liveNoShowCount,
       sublabel: t("missed"),
       accentColor: "bg-red-400",
       icon: AlertCircle,
