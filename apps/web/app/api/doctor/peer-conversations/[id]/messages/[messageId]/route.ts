@@ -3,7 +3,32 @@ import { z } from "zod";
 import { requireAuth } from "@/lib/require-auth";
 import { db, doctorMessages, doctorConversations } from "@doktori/db";
 import { and, eq, isNull, or } from "drizzle-orm";
-import { broadcastPeerMessage } from "../../../../../../../lib/peer-message-broadcast";
+// Inline broadcast — see the parent /messages/route.ts for the rationale.
+async function broadcastPeerMessage(
+  conversationId: string,
+  event: "message:new" | "message:updated" | "message:deleted",
+  payload: unknown,
+) {
+  try {
+    const port = process.env.SOCKETIO_PORT || "3010";
+    const secret = process.env.SOCKETIO_BROADCAST_SECRET || "dev-broadcast-secret";
+    await fetch(`http://127.0.0.1:${port}/broadcast`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${secret}`,
+      },
+      body: JSON.stringify({
+        room: `peer-conv:${conversationId}`,
+        event,
+        payload,
+      }),
+      signal: AbortSignal.timeout(800),
+    });
+  } catch {
+    /* socket server offline — clients keep their poll fallback */
+  }
+}
 
 async function loadOwnedMessage(
   conversationId: string,

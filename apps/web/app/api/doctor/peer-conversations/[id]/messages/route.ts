@@ -5,7 +5,35 @@ import { requireAuth } from "@/lib/require-auth";
 import { db, doctorConversations, doctorMessages, doctorNotifications } from "@doktori/db";
 import { and, eq, or, asc, isNull, ne } from "drizzle-orm";
 import { uploadToR2 } from "@/lib/r2";
-import { broadcastPeerMessage } from "../../../../../../lib/peer-message-broadcast";
+// Inline broadcast: fire-and-forget POST to the local Socket.IO server
+// (sockets/sos-server.ts, port 3010) so a peer-message INSERT pushes
+// immediately to everyone in the conversation room. Falls through when
+// the WS server is down — clients keep their 10s poll fallback.
+async function broadcastPeerMessage(
+  conversationId: string,
+  event: "message:new" | "message:updated" | "message:deleted",
+  payload: unknown,
+) {
+  try {
+    const port = process.env.SOCKETIO_PORT || "3010";
+    const secret = process.env.SOCKETIO_BROADCAST_SECRET || "dev-broadcast-secret";
+    await fetch(`http://127.0.0.1:${port}/broadcast`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${secret}`,
+      },
+      body: JSON.stringify({
+        room: `peer-conv:${conversationId}`,
+        event,
+        payload,
+      }),
+      signal: AbortSignal.timeout(800),
+    });
+  } catch {
+    /* socket server offline — clients keep their poll fallback */
+  }
+}
 
 const MAX_IMAGE_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME = new Set([
