@@ -223,6 +223,13 @@ export default function RdvPage({
   const [questionError, setQuestionError] = useState<string | null>(null);
   const [appointmentId, setAppointmentId] = useState<string | null>(null);
   const [payingNow, setPayingNow] = useState(false);
+  // Same-day conflict prompt: when the server returns 409
+  // SAME_DAY_APPOINTMENT_EXISTS we surface the existing slot here so the
+  // user can decide whether to reschedule it to the new time.
+  const [sameDayConflict, setSameDayConflict] = useState<{
+    id: string;
+    startsAt: string;
+  } | null>(null);
 
   // Load dependents the first time the user picks "for a relative".
   useEffect(() => {
@@ -355,6 +362,10 @@ export default function RdvPage({
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    await submitBooking();
+  }
+
+  async function submitBooking(replaceAppointmentId?: string) {
     if (!doctor || !booking) return;
 
     setSubmitting(true);
@@ -380,11 +391,21 @@ export default function RdvPage({
           questionnaire: Object.keys(questionnaireAnswers).length > 0
             ? questionnaireAnswers
             : undefined,
+          replaceAppointmentId,
         }),
       });
 
       if (!res.ok) {
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
+        // Same-day duplicate: surface the conflict modal instead of erroring out.
+        if (res.status === 409 && data?.error === "SAME_DAY_APPOINTMENT_EXISTS" && data?.existing?.id) {
+          setSameDayConflict({
+            id: data.existing.id,
+            startsAt: data.existing.startsAt,
+          });
+          setSubmitting(false);
+          return;
+        }
         throw new Error(
           typeof data.error === "string" ? data.error : "Erreur lors de la réservation"
         );
@@ -1346,6 +1367,57 @@ export default function RdvPage({
         )}
 
         </AnimatePresence>
+
+        {/* Same-day duplicate booking — reschedule prompt */}
+        {sameDayConflict && booking && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: "rgba(15,23,42,0.45)" }}
+            onClick={() => !submitting && setSameDayConflict(null)}
+          >
+            <div
+              className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-5"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-[15px] font-bold text-gray-900 mb-1">
+                Vous avez déjà un rendez-vous ce jour-là
+              </h3>
+              <p className="text-[13px] text-gray-600 mb-3">
+                Un rendez-vous est déjà prévu le{" "}
+                {format(parseISO(sameDayConflict.startsAt), "EEEE d MMMM", { locale: fr })}{" "}
+                à {format(parseISO(sameDayConflict.startsAt), "HH:mm")}.
+              </p>
+              <p className="text-[13px] text-gray-700 mb-4">
+                Voulez-vous décaler ce rendez-vous au nouveau créneau{" "}
+                <span className="font-semibold">{booking.startTime}</span> ? Le médecin
+                sera informé du changement.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSameDayConflict(null)}
+                  disabled={submitting}
+                  className="flex-1 py-2 rounded-lg border border-gray-200 text-sm text-gray-600 hover:bg-gray-50 disabled:opacity-50"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const id = sameDayConflict.id;
+                    setSameDayConflict(null);
+                    void submitBooking(id);
+                  }}
+                  disabled={submitting}
+                  className="flex-1 py-2 rounded-lg bg-teal-600 text-white text-sm font-medium hover:bg-teal-700 disabled:opacity-50"
+                >
+                  Décaler ce RDV
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* bottom padding on mobile to account for sticky CTA */}
         {step === "form" && <div className="sm:hidden h-24" />}
       </div>

@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server";
-import { db, patients, doctors, doctorSchedules, doctorPractices, appointmentTypes, patientDependents, appointmentAnswers } from "@doktori/db";
+import { db, patients, doctors, doctorSchedules, doctorPractices, appointmentTypes, patientDependents, appointmentAnswers, appointments } from "@doktori/db";
 import { createAppointment, getAvailableSlots } from "@/lib/queries/appointments";
 import { assertPlanLimit, PlanLimitError } from "@/lib/plan-gates";
 import { bookAppointmentSchema } from "@doktori/validation";
 import { formatPhone, SPECIALTIES } from "@doktori/shared";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, gte, lte, ne, inArray, not } from "drizzle-orm";
+import { notifyDoctorAppointmentEvent } from "@/lib/notify-doctor-rdv";
 import { DEFAULT_NOSHOW_THRESHOLD, SUSPENSION_DAYS } from "@/lib/noshow-policy";
 import { sendSMS } from "@/lib/sms";
 import { sendEmail } from "@/lib/email";
@@ -182,6 +183,47 @@ export async function POST(req: Request) {
   const startsAt = new Date(`${parsed.data.date}T${parsed.data.startTime}:00`);
   const endsAt = new Date(startsAt.getTime() + slotDuration * 60 * 1000);
 
+  // Same-day duplicate guard. If the patient already has an active RDV with
+  // this doctor on the chosen date, return 409 and let the client decide
+  // whether to reschedule the existing row (re-POST with replaceAppointmentId).
+  // Skipped when the client is explicitly replacing.
+  const dayStart = new Date(`${parsed.data.date}T00:00:00`);
+  const dayEnd = new Date(`${parsed.data.date}T23:59:59`);
+  if (!parsed.data.replaceAppointmentId) {
+    const [existingSameDay] = await db
+      .select({
+        id: appointments.id,
+        startsAt: appointments.startsAt,
+        endsAt: appointments.endsAt,
+        status: appointments.status,
+      })
+      .from(appointments)
+      .where(
+        and(
+          eq(appointments.doctorId, parsed.data.doctorId),
+          eq(appointments.patientId, patient.id),
+          gte(appointments.startsAt, dayStart),
+          lte(appointments.startsAt, dayEnd),
+          not(inArray(appointments.status, ["cancelled", "completed", "no_show"])),
+        ),
+      )
+      .limit(1);
+    if (existingSameDay) {
+      return NextResponse.json(
+        {
+          error: "SAME_DAY_APPOINTMENT_EXISTS",
+          existing: {
+            id: existingSameDay.id,
+            startsAt: existingSameDay.startsAt,
+            endsAt: existingSameDay.endsAt,
+            status: existingSameDay.status,
+          },
+        },
+        { status: 409 },
+      );
+    }
+  }
+
   // Resolve practiceId: explicit → validate; otherwise fall back to doctor's primary practice
   // (appointments.practice_id is NOT NULL since migration 0063).
   let resolvedPracticeId: string | undefined;
@@ -233,6 +275,58 @@ export async function POST(req: Request) {
   }
 
   try {
+    // Reschedule-in-place path: patient confirmed the "you already have a
+    // RDV that day, move it?" prompt. Validate ownership, then update the
+    // existing row's time and notify the doctor.
+    if (parsed.data.replaceAppointmentId) {
+      const [existing] = await db
+        .select()
+        .from(appointments)
+        .where(
+          and(
+            eq(appointments.id, parsed.data.replaceAppointmentId),
+            eq(appointments.patientId, patient.id),
+            eq(appointments.doctorId, parsed.data.doctorId),
+          ),
+        )
+        .limit(1);
+      if (!existing) {
+        return NextResponse.json(
+          { error: "RDV à modifier introuvable" },
+          { status: 404 },
+        );
+      }
+      if (["cancelled", "completed", "no_show"].includes(existing.status)) {
+        return NextResponse.json(
+          { error: "Ce RDV ne peut plus être modifié" },
+          { status: 409 },
+        );
+      }
+      const previousStartsAt = existing.startsAt;
+      const [updated] = await db
+        .update(appointments)
+        // Reschedule resets status to pending — doctor re-validates the
+        // new slot before SMS/email reminders fire.
+        .set({ startsAt, endsAt, status: "pending", updatedAt: new Date() })
+        .where(eq(appointments.id, existing.id))
+        .returning();
+
+      // Notify the doctor: patient moved their RDV.
+      void notifyDoctorAppointmentEvent(
+        parsed.data.doctorId,
+        "appointment_rescheduled_by_patient",
+        {
+          appointmentId: updated.id,
+          patientId: patient.id,
+          patientName: patient.name,
+          previousStartsAt: previousStartsAt.toISOString(),
+          newStartsAt: updated.startsAt.toISOString(),
+        },
+      );
+
+      return NextResponse.json({ ...updated, ...noShowWarning });
+    }
+
     const appointment = await createAppointment({
       doctorId: parsed.data.doctorId,
       patientId: patient.id,

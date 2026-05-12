@@ -19,6 +19,11 @@ export const bookAppointmentSchema = z.object({
   practiceId: z.string().uuid().optional(),
   // Teleconsult: appointment type (cabinet, teleconsult, home_visit)
   type: z.enum(["cabinet", "teleconsult", "home_visit"]).optional(),
+  // Reschedule-in-place: if the patient already has a same-day RDV with this
+  // doctor and confirms the prompt to move it, the client re-POSTs with this
+  // field set to the existing appointment id. The server then updates that
+  // row's startsAt/endsAt instead of inserting a second one.
+  replaceAppointmentId: z.string().uuid().optional(),
 });
 
 export const cancelAppointmentSchema = z.object({
