@@ -198,9 +198,11 @@ function DayOverviewCard({
   completionRate: number | null;
 }) {
   const t = useTranslations("medecin.dashboard");
-  // Live polling: re-fetch the waiting-room count + today's appointments every
-  // 15s so the doctor sees check-ins from the secretary in near real-time.
-  const [liveWaiting, setLiveWaiting] = useState(waitingCount);
+  // Today's appointments are still polled internally — they come from
+  // /api/doctor/today-summary which is the right source. The waiting
+  // count, however, is now driven entirely by the parent (which polls
+  // /api/doctor/waiting-room every 10s — the secretary's manual
+  // counter), so we just consume the prop and let it re-render.
   const [liveAppts, setLiveAppts] = useState(todayAppts);
   useEffect(() => {
     let cancelled = false;
@@ -212,7 +214,6 @@ function DayOverviewCard({
         });
         if (!res.ok || cancelled) return;
         const data = await res.json();
-        if (typeof data.waitingCount === "number") setLiveWaiting(data.waitingCount);
         if (Array.isArray(data.todayAppts)) {
           setLiveAppts(
             data.todayAppts.map((a: { id: string; startsAt: string; patientName: string }) => ({
@@ -226,8 +227,6 @@ function DayOverviewCard({
       }
     }
     const id = setInterval(refresh, 15_000);
-    // Also refresh when the tab regains focus so the doctor doesn't see stale
-    // data after switching apps.
     const onFocus = () => void refresh();
     window.addEventListener("focus", onFocus);
     return () => {
@@ -238,7 +237,7 @@ function DayOverviewCard({
   }, []);
 
   const effectiveAppts = liveAppts.length > 0 ? liveAppts : todayAppts;
-  const effectiveWaiting = liveWaiting;
+  const effectiveWaiting = waitingCount;
   const now = new Date();
   // Sort by startsAt to find the next upcoming today (live data)
   const sorted = [...effectiveAppts].sort(
