@@ -82,10 +82,11 @@ export default function PatientLayout() {
         options={{ title: t("patient.tabs.dossier"), tabBarIcon: icon("folder-outline") }}
       />
       <Tabs.Screen
-        name="profil"
-        options={{ title: t("patient.tabs.moi"), tabBarIcon: icon("person-outline") }}
+        name="plus-menu"
+        options={{ title: t("patient.tabs.plus"), tabBarIcon: icon("grid-outline") }}
       />
       {/* Hidden routes */}
+      <Tabs.Screen name="profil" options={{ href: null }} />
       <Tabs.Screen name="ordonnances" options={{ href: null }} />
       <Tabs.Screen name="messages" options={{ href: null }} />
       <Tabs.Screen name="notifications" options={{ href: null }} />

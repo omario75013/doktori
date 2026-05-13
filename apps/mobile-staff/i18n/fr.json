@@ -2059,7 +2059,37 @@
       "ordonnances": "Ordonnances",
       "profil": "Profil",
       "dossier": "Dossier",
-      "moi": "Moi"
+      "moi": "Moi",
+      "plus": "Plus"
+    },
+    "profilHealth": {
+      "label": "MON PROFIL SANTÉ",
+      "profil": "Profil",
+      "profilSub": "Mes infos",
+      "traitements": "Traitements",
+      "traitementsSub": "En cours",
+      "ordonnances": "Ordonnances",
+      "ordonnancesSub": "Mes prescriptions",
+      "vaccins": "Vaccins",
+      "vaccinsSub": "Carnet"
+    },
+    "plusMenu": {
+      "title": "Plus",
+      "favoris": "Favoris",
+      "famille": "Ma famille",
+      "documents": "Mes documents",
+      "parrainage": "Mon parrainage",
+      "recherche": "Recherche",
+      "comparer": "Comparer",
+      "coachIa": "Coach IA",
+      "domicile": "Domicile",
+      "parametres": "Paramètres",
+      "messages": "Messages",
+      "notifications": "Notifications",
+      "profilSection": "Mon profil",
+      "logout": "Se déconnecter",
+      "logoutConfirmTitle": "Se déconnecter ?",
+      "logoutConfirmBody": "Vous devrez vous reconnecter."
     },
     "home": {
       "greeting": "Bonjour{name} 👋",

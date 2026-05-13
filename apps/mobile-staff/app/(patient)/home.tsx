@@ -125,7 +125,7 @@ export default function PatientHome() {
   return (
     <View style={styles.root}>
       <ScrollView
-        contentContainerStyle={{ paddingBottom: spacing["2xl"] }}
+        contentContainerStyle={{ paddingBottom: 100 }}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.teal} />
         }
@@ -267,6 +267,45 @@ export default function PatientHome() {
               <Text style={styles.emptyApptCta}>{t("patient.home.bookNow")}</Text>
             </Pressable>
           )}
+        </View>
+
+        {/* Mon profil santé */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>{t("patient.profilHealth.label")}</Text>
+        </View>
+        <View style={[styles.grid, { marginTop: 0 }]}>
+          <ActionCard
+            iconName="person-outline"
+            iconBg={colors.bgSecondary}
+            iconColor={colors.teal}
+            title={t("patient.profilHealth.profil")}
+            subtitle={t("patient.profilHealth.profilSub")}
+            onPress={() => router.push("/(patient)/profil")}
+          />
+          <ActionCard
+            iconName="medkit-outline"
+            iconBg={colors.bgSecondary}
+            iconColor={colors.teal}
+            title={t("patient.profilHealth.traitements")}
+            subtitle={t("patient.profilHealth.traitementsSub")}
+            onPress={() => router.push("/(patient)/dossier-medical")}
+          />
+          <ActionCard
+            iconName="document-text-outline"
+            iconBg={colors.bgSecondary}
+            iconColor={colors.teal}
+            title={t("patient.profilHealth.ordonnances")}
+            subtitle={t("patient.profilHealth.ordonnancesSub")}
+            onPress={() => router.push("/(patient)/ordonnances")}
+          />
+          <ActionCard
+            iconName="shield-checkmark-outline"
+            iconBg={colors.bgSecondary}
+            iconColor={colors.teal}
+            title={t("patient.profilHealth.vaccins")}
+            subtitle={t("patient.profilHealth.vaccinsSub")}
+            onPress={() => router.push("/(patient)/dossier-medical")}
+          />
         </View>
       </ScrollView>
     </View>

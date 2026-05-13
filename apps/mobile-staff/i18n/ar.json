@@ -2059,7 +2059,37 @@
       "ordonnances": "الوصفات",
       "profil": "الملف",
       "dossier": "الملف",
-      "moi": "أنا"
+      "moi": "أنا",
+      "plus": "المزيد"
+    },
+    "profilHealth": {
+      "label": "ملفي الصحي",
+      "profil": "الملف",
+      "profilSub": "بياناتي",
+      "traitements": "العلاجات",
+      "traitementsSub": "الحالية",
+      "ordonnances": "الوصفات",
+      "ordonnancesSub": "وصفاتي",
+      "vaccins": "اللقاحات",
+      "vaccinsSub": "السجل"
+    },
+    "plusMenu": {
+      "title": "المزيد",
+      "favoris": "المفضلة",
+      "famille": "عائلتي",
+      "documents": "مستنداتي",
+      "parrainage": "إحالاتي",
+      "recherche": "البحث",
+      "comparer": "مقارنة",
+      "coachIa": "المدرب الذكي",
+      "domicile": "زيارة منزلية",
+      "parametres": "الإعدادات",
+      "messages": "الرسائل",
+      "notifications": "الإشعارات",
+      "profilSection": "ملفي",
+      "logout": "تسجيل الخروج",
+      "logoutConfirmTitle": "تسجيل الخروج؟",
+      "logoutConfirmBody": "سيتعين عليك إعادة تسجيل الدخول."
     },
     "home": {
       "greeting": "مرحباً{name} 👋",
