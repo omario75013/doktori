@@ -1,7 +1,8 @@
-import { NextResponse } from "next/server";
+import { NextResponse, type NextRequest } from "next/server";
 import { randomBytes } from "crypto";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
+import { requireAuth } from "@/lib/require-auth";
 import {
   db,
   patientReferrals,
@@ -87,11 +88,13 @@ export async function POST(req: Request) {
   return NextResponse.json({ ok: true, referral: created }, { status: 201 });
 }
 
-export async function GET() {
-  const session = await auth();
-  if (!session?.user?.id || session.user.role !== "doctor") {
+export async function GET(req: NextRequest) {
+  const user = await requireAuth(req);
+  if (!user || (user.role !== "doctor" && user.role !== "secretary")) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+  const doctorId = user.role === "doctor" ? user.id : user.doctorId;
+  const session = { user: { id: doctorId } };
 
   const rows = await db
     .select({

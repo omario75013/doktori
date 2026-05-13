@@ -39,12 +39,11 @@ type Conversation = {
   patientPhone?: string;
 };
 
-type Tab = "patients" | "medecins" | "equipe";
+type Tab = "medecins" | "equipe";
 
 export default function MessagerieScreen() {
   const { locale } = useLocale();
-  const [tab, setTab] = useState<Tab>("patients");
-  const [patients, setPatients] = useState<Conversation[]>([]);
+  const [tab, setTab] = useState<Tab>("medecins");
   const [team, setTeam] = useState<Conversation[]>([]);
   const [peers, setPeers] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
@@ -114,17 +113,14 @@ export default function MessagerieScreen() {
 
   const load = useCallback(async () => {
     try {
-      const [ptRaw, tmRaw, peersRaw] = await Promise.all([
-        api<unknown>("/api/doctor/conversations").catch(() => []),
+      const [tmRaw, peersRaw] = await Promise.all([
         api<unknown>("/api/staff/conversations").catch(() => []),
         api<unknown>("/api/doctor/peer-conversations").catch(() => []),
       ]);
-      const pt = Array.isArray(ptRaw) ? (ptRaw as Conversation[]) : [];
       const tm = Array.isArray(tmRaw)
         ? (tmRaw as Conversation[])
         : ((tmRaw as { conversations?: Conversation[] })?.conversations ?? []);
       const pr = Array.isArray(peersRaw) ? (peersRaw as Conversation[]) : [];
-      setPatients(pt);
       setTeam(tm);
       setPeers(pr);
     } catch (e) {
@@ -137,8 +133,7 @@ export default function MessagerieScreen() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const data =
-    tab === "patients" ? patients : tab === "medecins" ? peers : team;
+  const data = tab === "medecins" ? peers : team;
 
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
@@ -217,12 +212,6 @@ export default function MessagerieScreen() {
 
       <View style={styles.tabs}>
         <TabBtn
-          icon="people"
-          label={`${t("doctor.messagerie.patients")}${patients.length ? ` · ${patients.length}` : ""}`}
-          active={tab === "patients"}
-          onPress={() => setTab("patients")}
-        />
-        <TabBtn
           icon="person"
           label={`${t("doctor.messagerie.doctors")}${peers.length ? ` · ${peers.length}` : ""}`}
           active={tab === "medecins"}
@@ -256,11 +245,9 @@ export default function MessagerieScreen() {
             <View style={styles.empty}>
               <Ionicons name="chatbubbles-outline" size={32} color={colors.foregroundSecondary} />
               <Text style={styles.emptyText}>
-                {tab === "patients"
-                  ? t("doctor.messagerie.noPatients")
-                  : tab === "medecins"
-                    ? t("doctor.messagerie.noDoctors")
-                    : t("doctor.messagerie.team.empty")}
+                {tab === "medecins"
+                  ? t("doctor.messagerie.noDoctors")
+                  : t("doctor.messagerie.team.empty")}
               </Text>
             </View>
           }
@@ -291,10 +278,7 @@ function TabBtn({
 }
 
 function ConversationRow({ conversation, kind }: { conversation: Conversation; kind: Tab }) {
-  const displayName =
-    kind === "patients"
-      ? (conversation.patientName ?? conversation.peerName ?? "Patient")
-      : (conversation.peerName ?? "Conversation");
+  const displayName = conversation.peerName ?? "Conversation";
   const unread = conversation.unreadCount ?? conversation.unread ?? 0;
   const initials = displayName
     .split(" ")
@@ -305,12 +289,8 @@ function ConversationRow({ conversation, kind }: { conversation: Conversation; k
   const time = conversation.lastMessageAt
     ? new Date(conversation.lastMessageAt).toLocaleDateString("fr-FR", { day: "numeric", month: "short" })
     : null;
-  const peerId =
-    kind === "patients"
-      ? (conversation.patientId ?? conversation.peerId ?? "")
-      : (conversation.peerId ?? "");
-  const chatKind =
-    kind === "patients" ? "patient" : kind === "medecins" ? "peer" : "team";
+  const peerId = conversation.peerId ?? "";
+  const chatKind = kind === "medecins" ? "peer" : "team";
 
   // Role badge for team tab — distinguishes secretary vs peer doctor
   const roleBadge =
@@ -320,8 +300,8 @@ function ConversationRow({ conversation, kind }: { conversation: Conversation; k
         : t("doctor.messagerie.team.roleDoctor")
       : null;
 
-  const avatarBg = kind === "equipe" ? "#FEF3C7" : kind === "patients" ? "#DCFCE7" : "#DBEAFE";
-  const avatarFg = kind === "equipe" ? "#92400E" : kind === "patients" ? "#166534" : "#1E40AF";
+  const avatarBg = kind === "equipe" ? "#FEF3C7" : "#DBEAFE";
+  const avatarFg = kind === "equipe" ? "#92400E" : "#1E40AF";
 
   function open() {
     router.push({
@@ -331,10 +311,7 @@ function ConversationRow({ conversation, kind }: { conversation: Conversation; k
         kind: chatKind,
         peerName: displayName,
         peerId,
-        peerType:
-          kind === "patients"
-            ? "patient"
-            : (conversation.peerType ?? (kind === "medecins" ? "doctor" : "secretary")),
+        peerType: conversation.peerType ?? (kind === "medecins" ? "doctor" : "secretary"),
       },
     });
   }
@@ -342,9 +319,7 @@ function ConversationRow({ conversation, kind }: { conversation: Conversation; k
   const lastMessageFallback =
     kind === "medecins"
       ? t("doctor.messagerie.peerColleague")
-      : kind === "equipe"
-        ? t("doctor.messagerie.team.openConversation")
-        : t("doctor.messagerie.openConversation");
+      : t("doctor.messagerie.team.openConversation");
 
   return (
     <Pressable style={styles.row} onPress={open}>

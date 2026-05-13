@@ -63,7 +63,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiBaseUrl": "https://doktori.tn"
+      "apiBaseUrl": "http://127.0.0.1:3000"
     }
   }
 }
