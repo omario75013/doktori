@@ -10,7 +10,7 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 import { Screen, Loader, Empty, formatMillimes } from "./_ui";
@@ -143,6 +143,17 @@ export default function Motifs() {
               <View style={{ gap: 8 }}>
                 <Pressable onPress={() => setEditing(m)} style={styles.iconBtn}>
                   <Ionicons name="pencil" size={14} color={colors.teal} />
+                </Pressable>
+                <Pressable
+                  onPress={() =>
+                    router.push({
+                      pathname: "/(doctor)/more/motif-questions/[typeId]" as never,
+                      params: { typeId: m.id },
+                    })
+                  }
+                  style={styles.iconBtn}
+                >
+                  <Ionicons name="help-circle" size={14} color={colors.teal} />
                 </Pressable>
                 <Pressable
                   onPress={() => deleteMotif(m.id, m.name)}

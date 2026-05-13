@@ -10,7 +10,12 @@ import { uploadToR2 } from "@/lib/r2";
 // prescriptions and any other generated document. PNG with a
 // transparent background gives the cleanest result on the printed RDV.
 
-const ALLOWED = new Set(["image/png", "image/jpeg", "image/webp"]);
+const ALLOWED = new Set([
+  "image/png",
+  "image/jpeg",
+  "image/webp",
+  "image/svg+xml",
+]);
 const MAX_BYTES = 2 * 1024 * 1024;
 
 export async function GET(req: NextRequest) {

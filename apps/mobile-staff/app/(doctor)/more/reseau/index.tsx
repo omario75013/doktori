@@ -16,7 +16,7 @@ import {
 import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
-import { Loader, Empty } from "./_ui";
+import { Loader, Empty } from "../_ui";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -526,7 +526,21 @@ export default function Reseau() {
 
   return (
     <>
-      <Stack.Screen options={{ title: t("doctor.reseau.title"), headerShadowVisible: false }} />
+      <Stack.Screen
+        options={{
+          title: t("doctor.reseau.title"),
+          headerShadowVisible: false,
+          headerRight: () => (
+            <Pressable
+              onPress={() => router.push("/(doctor)/more/reseau/messagerie")}
+              hitSlop={10}
+              style={{ paddingHorizontal: spacing.sm }}
+            >
+              <Ionicons name="chatbubbles-outline" size={22} color={colors.foreground} />
+            </Pressable>
+          ),
+        }}
+      />
 
       <View style={styles.root}>
         {/* Tab bar */}
@@ -707,7 +721,7 @@ function MonReseauTab({
             <Pressable
               key={c.id}
               style={styles.connectionCard}
-              onPress={() => onOpenProfile(c)}
+              onPress={() => router.push({ pathname: "/(doctor)/more/reseau/[id]", params: { id: c.doctorId } })}
             >
               <Avatar photoUrl={c.photoUrl} name={c.name} size={44} />
               <View style={styles.doctorInfo}>

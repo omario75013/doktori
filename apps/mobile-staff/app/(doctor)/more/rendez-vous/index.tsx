@@ -12,10 +12,10 @@ import {
   Alert,
   ActivityIndicator,
 } from "react-native";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
-import { Loader, Empty, formatDate } from "./_ui";
+import { Loader, Empty, formatDate } from "../_ui";
 
 type Appointment = {
   id: string;
@@ -470,6 +470,35 @@ function ApptDetailModal({
             </View>
           </View>
         )}
+
+        {/* Consultation / Questionnaire navigation */}
+        <Text style={styles.actionsTitle}>{t("doctor.rdv.clinicalActions")}</Text>
+        <View style={styles.actionsGrid}>
+          <Pressable
+            onPress={() => {
+              onClose();
+              router.push(`/(doctor)/more/rendez-vous/${appt.id}/consultation` as never);
+            }}
+            style={[styles.actionBtn, { borderColor: colors.teal }]}
+          >
+            <Ionicons name="clipboard" size={20} color={colors.teal} />
+            <Text style={[styles.actionBtnText, { color: colors.teal }]}>
+              {t("doctor.rdvConsultation.openConsultation")}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              onClose();
+              router.push(`/(doctor)/more/rendez-vous/${appt.id}/questionnaire` as never);
+            }}
+            style={[styles.actionBtn, { borderColor: "#3B82F6" }]}
+          >
+            <Ionicons name="chatbubbles" size={20} color="#3B82F6" />
+            <Text style={[styles.actionBtnText, { color: "#3B82F6" }]}>
+              {t("doctor.rdvQuestionnaire.viewQuestionnaire")}
+            </Text>
+          </Pressable>
+        </View>
 
         {/* Status actions */}
         <Text style={styles.actionsTitle}>{t("doctor.rdv.actions")}</Text>

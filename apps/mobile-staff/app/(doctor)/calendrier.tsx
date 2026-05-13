@@ -16,6 +16,7 @@ import {
   Dimensions,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, radii, api, t, tArray } from "@doktori/mobile-core";
 
@@ -1637,6 +1638,24 @@ function ApptDetailSheet({
                   { text: t("doctor.calendrier.cancelYes"), style: "destructive", onPress: () => onAction("cancelled") },
                 ])
               }
+            />
+            <ActionBtn
+              icon="clipboard"
+              label={t("doctor.rdvConsultation.openConsultation")}
+              tone="primary"
+              onPress={() => {
+                onClose();
+                router.push(`/(doctor)/more/rendez-vous/${appt.id}/consultation` as never);
+              }}
+            />
+            <ActionBtn
+              icon="chatbubbles"
+              label={t("doctor.rdvQuestionnaire.viewQuestionnaire")}
+              tone="primary"
+              onPress={() => {
+                onClose();
+                router.push(`/(doctor)/more/rendez-vous/${appt.id}/questionnaire` as never);
+              }}
             />
           </View>
 

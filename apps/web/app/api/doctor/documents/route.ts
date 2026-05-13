@@ -30,7 +30,20 @@ export async function GET(_req: NextRequest) {
     .where(eq(doctorDocuments.doctorId, doctor.id))
     .orderBy(doctorDocuments.uploadedAt);
 
-  return NextResponse.json({ documents: docs });
+  const [statusRow] = await db
+    .select({
+      verificationStatus: doctors.verificationStatus,
+      verificationNote: doctors.verificationNote,
+    })
+    .from(doctors)
+    .where(eq(doctors.id, doctor.id))
+    .limit(1);
+
+  return NextResponse.json({
+    documents: docs,
+    verificationStatus: statusRow?.verificationStatus ?? "pending",
+    verificationNote: statusRow?.verificationNote ?? null,
+  });
 }
 
 export async function POST(req: NextRequest) {

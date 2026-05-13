@@ -9,11 +9,15 @@ import {
   ScrollView,
   Alert,
   ActivityIndicator,
+  Image,
+  Dimensions,
 } from "react-native";
 import { Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
+import { colors, spacing, radii, api, t } from "@doktori/mobile-core";
 import { Screen, Loader, Empty } from "./_ui";
+
+type Photo = { url: string; alt?: string };
 
 type Practice = {
   id: string;
@@ -24,12 +28,115 @@ type Practice = {
   isPrimary: boolean;
   isActive: boolean;
   kind: "cabinet" | "clinic";
+  photos?: Photo[] | null;
 };
 
+const MAX_CABINET_PHOTOS = 5;
+
 export default function Cabinets() {
-  const { locale } = useLocale();
   const [rows, setRows] = useState<Practice[] | null>(null);
   const [editing, setEditing] = useState<Partial<Practice> | null>(null);
+  const [viewer, setViewer] = useState<{ practiceId: string; index: number } | null>(null);
+  const [uploadingPracticeId, setUploadingPracticeId] = useState<string | null>(null);
+
+  // Lookups so child components can find latest photos array (after optimistic updates).
+  const findPractice = useCallback(
+    (id: string): Practice | undefined => rows?.find((p) => p.id === id),
+    [rows]
+  );
+
+  function setPracticePhotos(id: string, photos: Photo[]) {
+    setRows((prev) => (prev ?? []).map((p) => (p.id === id ? { ...p, photos } : p)));
+  }
+
+  async function pickAndUploadPhoto(practiceId: string) {
+    const practice = findPractice(practiceId);
+    if (!practice) return;
+    if ((practice.photos ?? []).length >= MAX_CABINET_PHOTOS) {
+      Alert.alert(
+        t("common.error"),
+        t("doctor.cabinetGallery.limitReached", { max: MAX_CABINET_PHOTOS })
+      );
+      return;
+    }
+    // expo-image-picker is not installed in this app yet — load dynamically.
+    let ImagePicker: typeof import("expo-image-picker") | null = null;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      ImagePicker = require("expo-image-picker");
+    } catch {
+      Alert.alert(t("common.error"), t("doctor.cabinetGallery.pickerMissing"));
+      return;
+    }
+    if (!ImagePicker) return;
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(t("common.error"), t("doctor.cabinetGallery.permDenied"));
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+        allowsEditing: false,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      const asset = result.assets[0];
+
+      setUploadingPracticeId(practiceId);
+      const form = new FormData();
+      const filename = asset.fileName ?? `cabinet-${Date.now()}.jpg`;
+      const mime = asset.mimeType ?? "image/jpeg";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      form.append("file", { uri: asset.uri, name: filename, type: mime } as any);
+
+      const res = await api<{ url: string; photos: Photo[] }>(
+        `/api/medecin/cabinets/${practiceId}/photos`,
+        { method: "POST", body: form, noRedirect: true }
+      );
+      setPracticePhotos(practiceId, res.photos);
+    } catch (e) {
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error ? e.message : t("doctor.cabinetGallery.uploadError")
+      );
+    } finally {
+      setUploadingPracticeId(null);
+    }
+  }
+
+  async function deletePhoto(practiceId: string, index: number) {
+    try {
+      const res = await api<{ ok: boolean; photos: Photo[] }>(
+        `/api/medecin/cabinets/${practiceId}/photos?index=${index}`,
+        { method: "DELETE", noRedirect: true }
+      );
+      setPracticePhotos(practiceId, res.photos);
+    } catch (e) {
+      Alert.alert(
+        t("common.error"),
+        e instanceof Error ? e.message : t("doctor.cabinetGallery.deleteError")
+      );
+    }
+  }
+
+  function confirmDeletePhoto(practiceId: string, index: number, onAfter?: () => void) {
+    Alert.alert(
+      t("doctor.cabinetGallery.deleteTitle"),
+      t("doctor.cabinetGallery.deleteConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("common.delete"),
+          style: "destructive",
+          onPress: async () => {
+            await deletePhoto(practiceId, index);
+            onAfter?.();
+          },
+        },
+      ]
+    );
+  }
 
   const load = useCallback(async () => {
     try {
@@ -107,10 +214,11 @@ export default function Cabinets() {
             <View
               key={p.id}
               style={[
-                styles.row,
+                styles.rowWrap,
                 p.isPrimary && { borderColor: colors.teal, borderWidth: 1.5 },
               ]}
             >
+            <View style={styles.row}>
               <View style={styles.icon}>
                 <Ionicons
                   name={p.kind === "clinic" ? "medkit" : "business"}
@@ -162,6 +270,13 @@ export default function Cabinets() {
                 )}
               </View>
             </View>
+            <PhotoStrip
+              photos={p.photos ?? []}
+              uploading={uploadingPracticeId === p.id}
+              onAdd={() => pickAndUploadPhoto(p.id)}
+              onOpen={(idx) => setViewer({ practiceId: p.id, index: idx })}
+            />
+            </View>
           ))
         )}
       </Screen>
@@ -173,7 +288,19 @@ export default function Cabinets() {
       >
         {editing && (
           <PracticeEditor
-            practice={editing}
+            practice={
+              // hydrate with latest photos from rows
+              editing.id
+                ? { ...editing, photos: findPractice(editing.id)?.photos ?? editing.photos ?? [] }
+                : editing
+            }
+            uploading={uploadingPracticeId === editing.id}
+            onAddPhoto={editing.id ? () => pickAndUploadPhoto(editing.id!) : undefined}
+            onDeletePhoto={
+              editing.id
+                ? (idx) => confirmDeletePhoto(editing.id!, idx)
+                : undefined
+            }
             onClose={() => setEditing(null)}
             onSaved={async () => {
               setEditing(null);
@@ -182,16 +309,108 @@ export default function Cabinets() {
           />
         )}
       </Modal>
+
+      <Modal
+        visible={!!viewer}
+        animationType="fade"
+        transparent
+        onRequestClose={() => setViewer(null)}
+      >
+        {viewer && (() => {
+          const practice = findPractice(viewer.practiceId);
+          const photo = practice?.photos?.[viewer.index];
+          if (!photo) return null;
+          return (
+            <View style={styles.viewerRoot}>
+              <Pressable
+                onPress={() => setViewer(null)}
+                style={styles.viewerClose}
+                hitSlop={12}
+              >
+                <Ionicons name="close" size={26} color="#FFFFFF" />
+              </Pressable>
+              <Image
+                source={{ uri: photo.url }}
+                style={styles.viewerImage}
+                resizeMode="contain"
+              />
+              <Pressable
+                onPress={() =>
+                  confirmDeletePhoto(viewer.practiceId, viewer.index, () =>
+                    setViewer(null)
+                  )
+                }
+                style={styles.viewerDelete}
+              >
+                <Ionicons name="trash" size={18} color="#FFFFFF" />
+                <Text style={styles.viewerDeleteText}>{t("common.delete")}</Text>
+              </Pressable>
+            </View>
+          );
+        })()}
+      </Modal>
     </>
+  );
+}
+
+function PhotoStrip({
+  photos,
+  uploading,
+  onAdd,
+  onOpen,
+}: {
+  photos: Photo[];
+  uploading: boolean;
+  onAdd: () => void;
+  onOpen: (index: number) => void;
+}) {
+  const canAdd = photos.length < MAX_CABINET_PHOTOS;
+  return (
+    <ScrollView
+      horizontal
+      showsHorizontalScrollIndicator={false}
+      contentContainerStyle={styles.stripContent}
+      style={styles.strip}
+    >
+      {photos.map((p, i) => (
+        <Pressable key={`${p.url}-${i}`} onPress={() => onOpen(i)} style={styles.thumb}>
+          <Image source={{ uri: p.url }} style={styles.thumbImg} />
+        </Pressable>
+      ))}
+      {canAdd && (
+        <Pressable
+          onPress={onAdd}
+          disabled={uploading}
+          style={[styles.addTile, uploading && { opacity: 0.5 }]}
+        >
+          {uploading ? (
+            <ActivityIndicator color={colors.teal} />
+          ) : (
+            <>
+              <Ionicons name="add" size={20} color={colors.teal} />
+              <Text style={styles.addTileText}>
+                {t("doctor.cabinetGallery.addPhoto")}
+              </Text>
+            </>
+          )}
+        </Pressable>
+      )}
+    </ScrollView>
   );
 }
 
 function PracticeEditor({
   practice,
+  uploading,
+  onAddPhoto,
+  onDeletePhoto,
   onClose,
   onSaved,
 }: {
   practice: Partial<Practice>;
+  uploading?: boolean;
+  onAddPhoto?: () => void;
+  onDeletePhoto?: (index: number) => void;
   onClose: () => void;
   onSaved: () => void | Promise<void>;
 }) {
@@ -294,6 +513,81 @@ function PracticeEditor({
           </Text>
         </Pressable>
 
+        {practice.id && onAddPhoto && (
+          <View style={{ gap: spacing.sm, marginTop: spacing.md }}>
+            <Text style={styles.fieldLabel}>
+              {t("doctor.cabinetGallery.manage")}
+            </Text>
+            <Text style={{ fontSize: 11, color: colors.foregroundSecondary }}>
+              {t("doctor.cabinetGallery.sectionHint")}
+            </Text>
+            <View style={styles.grid}>
+              {(practice.photos ?? []).map((ph, i, arr) => (
+                <View key={`${ph.url}-${i}`} style={styles.gridCell}>
+                  <Image source={{ uri: ph.url }} style={styles.gridImg} />
+                  <View style={styles.gridActions}>
+                    <Pressable
+                      onPress={() =>
+                        Alert.alert(
+                          t("common.error"),
+                          t("doctor.cabinetGallery.reorderUnavailable")
+                        )
+                      }
+                      disabled={i === 0}
+                      style={[styles.miniBtn, i === 0 && { opacity: 0.3 }]}
+                      accessibilityLabel={t("doctor.cabinetGallery.moveUp")}
+                    >
+                      <Ionicons name="arrow-up" size={12} color={colors.foreground} />
+                    </Pressable>
+                    <Pressable
+                      onPress={() =>
+                        Alert.alert(
+                          t("common.error"),
+                          t("doctor.cabinetGallery.reorderUnavailable")
+                        )
+                      }
+                      disabled={i === arr.length - 1}
+                      style={[styles.miniBtn, i === arr.length - 1 && { opacity: 0.3 }]}
+                      accessibilityLabel={t("doctor.cabinetGallery.moveDown")}
+                    >
+                      <Ionicons name="arrow-down" size={12} color={colors.foreground} />
+                    </Pressable>
+                    <Pressable
+                      onPress={() => onDeletePhoto?.(i)}
+                      style={[styles.miniBtn, { borderColor: colors.danger }]}
+                    >
+                      <Ionicons name="trash" size={12} color={colors.danger} />
+                    </Pressable>
+                  </View>
+                </View>
+              ))}
+              {(practice.photos ?? []).length < MAX_CABINET_PHOTOS && (
+                <Pressable
+                  onPress={onAddPhoto}
+                  disabled={!!uploading}
+                  style={[styles.gridAdd, uploading && { opacity: 0.5 }]}
+                >
+                  {uploading ? (
+                    <ActivityIndicator color={colors.teal} />
+                  ) : (
+                    <>
+                      <Ionicons name="add" size={20} color={colors.teal} />
+                      <Text style={styles.addTileText}>
+                        {t("doctor.cabinetGallery.addPhoto")}
+                      </Text>
+                    </>
+                  )}
+                </Pressable>
+              )}
+              {(practice.photos ?? []).length === 0 && !uploading && (
+                <Text style={{ fontSize: 12, color: colors.foregroundSecondary }}>
+                  {t("doctor.cabinetGallery.noPhotos")}
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
+
         <Pressable
           onPress={submit}
           disabled={saving}
@@ -328,15 +622,124 @@ function Field({
 }
 
 const styles = StyleSheet.create({
+  rowWrap: {
+    borderRadius: radii.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+    overflow: "hidden",
+  },
   row: {
     flexDirection: "row",
     alignItems: "flex-start",
     gap: spacing.sm,
     padding: spacing.md,
-    borderRadius: radii.lg,
+  },
+  strip: {
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+    backgroundColor: colors.bgSecondary,
+  },
+  stripContent: {
+    padding: spacing.sm,
+    gap: spacing.sm,
+    flexDirection: "row",
+  },
+  thumb: {
+    width: 64,
+    height: 64,
+    borderRadius: radii.md,
+    overflow: "hidden",
+    backgroundColor: colors.bg,
+  },
+  thumbImg: { width: "100%", height: "100%" },
+  addTile: {
+    width: 64,
+    height: 64,
+    borderRadius: radii.md,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: colors.teal,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.bg,
+    gap: 2,
+  },
+  addTileText: { fontSize: 9, fontWeight: "700", color: colors.teal },
+  viewerRoot: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.95)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  viewerImage: {
+    width: Dimensions.get("window").width,
+    height: Dimensions.get("window").height * 0.75,
+  },
+  viewerClose: {
+    position: "absolute",
+    top: 40,
+    right: 16,
+    zIndex: 2,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "rgba(0,0,0,0.5)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  viewerDelete: {
+    position: "absolute",
+    bottom: 40,
+    alignSelf: "center",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderRadius: radii.full,
+    backgroundColor: colors.danger,
+  },
+  viewerDeleteText: { color: "#FFFFFF", fontWeight: "700", fontSize: 13 },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
+  gridCell: {
+    width: 100,
     borderWidth: 1,
     borderColor: colors.border,
+    borderRadius: radii.md,
+    overflow: "hidden",
     backgroundColor: colors.bg,
+  },
+  gridImg: { width: "100%", height: 70 },
+  gridActions: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    padding: 4,
+    gap: 2,
+  },
+  miniBtn: {
+    width: 24,
+    height: 24,
+    borderRadius: radii.sm ?? 6,
+    borderWidth: 1,
+    borderColor: colors.border,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  gridAdd: {
+    width: 100,
+    height: 100,
+    borderRadius: radii.md,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: colors.teal,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 2,
   },
   icon: {
     height: 40,

@@ -1,23 +1,23 @@
-import { NextResponse } from "next/server";
-import { auth } from "@/lib/auth";
+import { NextResponse, type NextRequest } from "next/server";
+import { requireAuth } from "@/lib/require-auth";
 import { db, appointments, appointmentAnswers, appointmentTypeQuestions } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 
 export async function GET(
-  _req: Request,
+  req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const session = await auth();
-  if (!session?.user?.id) {
+  const user = await requireAuth(req);
+  if (!user || (user.role !== "doctor" && user.role !== "secretary")) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+  const doctorId = user.role === "doctor" ? user.id : user.doctorId;
 
-  // Verify doctor owns this appointment
   const [appointment] = await db
     .select({ id: appointments.id, doctorId: appointments.doctorId })
     .from(appointments)
-    .where(and(eq(appointments.id, id), eq(appointments.doctorId, session.user.id)))
+    .where(and(eq(appointments.id, id), eq(appointments.doctorId, doctorId)))
     .limit(1);
 
   if (!appointment) {

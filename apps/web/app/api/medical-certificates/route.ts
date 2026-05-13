@@ -5,6 +5,7 @@ import {
   medicalCertificates,
   appointments,
   prescriptionTemplates,
+  patients,
 } from "@doktori/db";
 import { eq, and, desc, sql } from "drizzle-orm";
 import { randomBytes } from "crypto";
@@ -23,9 +24,21 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const patientId = searchParams.get("patientId");
-    if (!patientId) {
+    const doctorScope = searchParams.get("doctorId");
+
+    // Allow doctor-wide listing when caller asks for `?doctorId=me`
+    // (used by the mobile "all my certificates" screen). Otherwise, a
+    // patientId is required (mirrors the patient-fiche tab usage).
+    if (!patientId && doctorScope !== "me") {
       return NextResponse.json({ error: "patientId requis" }, { status: 400 });
     }
+
+    const where = patientId
+      ? and(
+          eq(medicalCertificates.patientId, patientId),
+          eq(medicalCertificates.doctorId, user.id),
+        )
+      : eq(medicalCertificates.doctorId, user.id);
 
     const rows = await db
       .select({
@@ -35,14 +48,13 @@ export async function GET(req: NextRequest) {
         createdAt: medicalCertificates.createdAt,
         appointmentId: medicalCertificates.appointmentId,
         verificationToken: medicalCertificates.verificationToken,
+        templateId: medicalCertificates.templateId,
+        patientId: medicalCertificates.patientId,
+        patientName: patients.name,
       })
       .from(medicalCertificates)
-      .where(
-        and(
-          eq(medicalCertificates.patientId, patientId),
-          eq(medicalCertificates.doctorId, user.id),
-        ),
-      )
+      .leftJoin(patients, eq(medicalCertificates.patientId, patients.id))
+      .where(where)
       .orderBy(desc(medicalCertificates.createdAt));
 
     return NextResponse.json(rows);

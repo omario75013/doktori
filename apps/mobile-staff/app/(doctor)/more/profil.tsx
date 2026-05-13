@@ -297,6 +297,15 @@ export default function Profil() {
               {t("doctor.profil.editSettings")}
             </Text>
           </Pressable>
+          <Pressable
+            onPress={() => router.push("/(doctor)/more/signature")}
+            style={styles.settingsLink}
+          >
+            <Ionicons name="create-outline" size={14} color={colors.teal} />
+            <Text style={styles.settingsLinkText}>
+              {t("doctor.signature.section")}
+            </Text>
+          </Pressable>
         </Card>
       </Screen>
 

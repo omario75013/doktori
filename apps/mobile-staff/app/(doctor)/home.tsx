@@ -31,6 +31,29 @@ type DoctorMe = { id: string; name: string; email: string };
 type Secretary = { id: string; name: string; photoUrl: string | null; isActive: boolean };
 type BillingInfo = { plan: string; smsUsed: number; smsLimit: number; renewsAt: string | null };
 
+type ActivityItem = {
+  id: string;
+  status: string;
+  startsAt: string;
+  updatedAt: string;
+  patientName: string;
+};
+
+type MobileDashboard = {
+  todayCount: number;
+  waitingRoomCount: number;
+  teleconsultCount: number;
+  walletBalance: number;
+  sms: { used: number; limit: number; plan: string };
+  monthTotal: number;
+  monthCompleted: number;
+  monthNoShows: number;
+  monthNoShowsRolling: number;
+  completionRate: number | null;
+  totalPatients: number;
+  recentActivity: ActivityItem[];
+};
+
 function getStatusLabels(): Record<string, string> {
   return {
     pending: t("doctor.home.toConfirm"),
@@ -56,21 +79,24 @@ export default function Home() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [secretaries, setSecretaries] = useState<Secretary[]>([]);
   const [billing, setBilling] = useState<BillingInfo | null>(null);
+  const [dashboard, setDashboard] = useState<MobileDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const load = useCallback(async () => {
     try {
-      const [profile, list, secs, bill] = await Promise.all([
+      const [profile, list, secs, bill, dash] = await Promise.all([
         api<DoctorMe>("/api/doctor/me"),
         api<Appointment[]>("/api/appointments/doctor"),
         api<Secretary[]>("/api/secretaries").catch(() => []),
         api<BillingInfo>("/api/billing/current").catch(() => null),
+        api<MobileDashboard>("/api/doctor/mobile-dashboard").catch(() => null),
       ]);
       setMe(profile);
       setAppointments(list);
       setSecretaries(Array.isArray(secs) ? secs : []);
       setBilling(bill);
+      setDashboard(dash);
     } catch (e) {
       console.warn("home load failed", e);
     } finally {
@@ -79,9 +105,26 @@ export default function Home() {
     }
   }, []);
 
+  // Poll dashboard every 30s for live waiting-room count (replaces WebSocket).
+  const pollDashboard = useCallback(async () => {
+    try {
+      const dash = await api<MobileDashboard>("/api/doctor/mobile-dashboard");
+      setDashboard(dash);
+    } catch {
+      /* swallow — next tick may succeed */
+    }
+  }, []);
+
   useEffect(() => {
     void load();
   }, [load]);
+
+  useEffect(() => {
+    const id = setInterval(() => {
+      void pollDashboard();
+    }, 30_000);
+    return () => clearInterval(id);
+  }, [pollDashboard]);
 
   const today = new Date();
   const startOfToday = new Date(today);
@@ -184,6 +227,62 @@ export default function Home() {
           <Kpi label={t("doctor.home.upcoming")} value={String(pendingTodayCount)} />
           <Kpi label={t("doctor.home.week")} value={String(upcomingCount)} />
         </View>
+
+        {/* Web-parity KPI row: waiting room, teleconsult, revenue, patients */}
+        {dashboard && (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.kpiScrollRow}
+          >
+            <BigKpi
+              icon="people"
+              label={t("doctor.home.kpiWaitingRoom")}
+              value={String(dashboard.waitingRoomCount)}
+              tone={dashboard.waitingRoomCount > 0 ? "live" : "neutral"}
+              sub={
+                dashboard.waitingRoomCount > 0
+                  ? t("doctor.home.waitingRoomLive")
+                  : t("doctor.home.waitingNone")
+              }
+              onPress={() => router.push("/(doctor)/calendrier")}
+            />
+            <BigKpi
+              icon="videocam"
+              label={t("doctor.home.kpiTeleconsult")}
+              value={String(dashboard.teleconsultCount)}
+              tone="teal"
+            />
+            <BigKpi
+              icon="wallet"
+              label={t("doctor.home.kpiRevenue")}
+              value={`${(dashboard.walletBalance / 1000).toFixed(1)}`}
+              sub={t("doctor.home.tnd")}
+              tone="green"
+              onPress={() => router.push("/(doctor)/more/wallet" as never)}
+            />
+            <BigKpi
+              icon="medkit"
+              label={t("doctor.home.kpiPatients")}
+              value={String(dashboard.totalPatients)}
+              tone="neutral"
+            />
+          </ScrollView>
+        )}
+
+        {/* SMS counter card */}
+        {dashboard && dashboard.sms.limit > 0 && (
+          <SmsCard sms={dashboard.sms} />
+        )}
+
+        {/* Completion rate card */}
+        {dashboard && (
+          <CompletionRateCard
+            rate={dashboard.completionRate}
+            completed={dashboard.monthCompleted}
+            noShows={dashboard.monthNoShows}
+          />
+        )}
 
         {nextAppt ? (
           <Pressable
@@ -298,6 +397,18 @@ export default function Home() {
           </Pressable>
         )}
 
+        {/* Recent activity feed (web parity) */}
+        {dashboard && dashboard.recentActivity.length > 0 && (
+          <View style={{ gap: spacing.sm }}>
+            <Text style={styles.sectionTitle}>{t("doctor.home.recentActivity")}</Text>
+            <View style={styles.activityList}>
+              {dashboard.recentActivity.slice(0, 6).map((it) => (
+                <ActivityRow key={it.id} item={it} />
+              ))}
+            </View>
+          </View>
+        )}
+
         {todayAppts.length > 0 && (
           <View style={{ gap: spacing.sm }}>
             <Text style={styles.sectionTitle}>{t("doctor.home.todayAgenda")}</Text>
@@ -327,6 +438,168 @@ function Kpi({ label, value }: { label: string; value: string }) {
     <View style={styles.kpi}>
       <Text style={styles.kpiValue}>{value}</Text>
       <Text style={styles.kpiLabel}>{label}</Text>
+    </View>
+  );
+}
+
+function BigKpi({
+  icon,
+  label,
+  value,
+  sub,
+  tone,
+  onPress,
+}: {
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  label: string;
+  value: string;
+  sub?: string;
+  tone: "teal" | "green" | "live" | "neutral";
+  onPress?: () => void;
+}) {
+  const toneColors: Record<"teal" | "green" | "live" | "neutral", { bg: string; fg: string; dot?: string }> = {
+    teal: { bg: `${colors.teal}15`, fg: colors.teal },
+    green: { bg: "#DCFCE7", fg: "#15803D" },
+    live: { bg: "#FEE2E2", fg: "#B91C1C", dot: "#EF4444" },
+    neutral: { bg: colors.bgSecondary, fg: colors.foreground },
+  };
+  const c = toneColors[tone];
+  const body = (
+    <>
+      <View style={styles.bigKpiHead}>
+        <Ionicons name={icon} size={16} color={c.fg} />
+        {c.dot && <View style={[styles.liveDot, { backgroundColor: c.dot }]} />}
+      </View>
+      <Text style={[styles.bigKpiValue, { color: c.fg }]}>{value}</Text>
+      <Text style={styles.bigKpiLabel} numberOfLines={1}>
+        {label}
+      </Text>
+      {sub ? (
+        <Text style={[styles.bigKpiSub, { color: c.fg }]} numberOfLines={1}>
+          {sub}
+        </Text>
+      ) : null}
+    </>
+  );
+  if (onPress) {
+    return (
+      <Pressable style={[styles.bigKpi, { backgroundColor: c.bg }]} onPress={onPress}>
+        {body}
+      </Pressable>
+    );
+  }
+  return <View style={[styles.bigKpi, { backgroundColor: c.bg }]}>{body}</View>;
+}
+
+function SmsCard({ sms }: { sms: { used: number; limit: number; plan: string } }) {
+  const unlimited = sms.limit >= 999999;
+  const pct = unlimited ? 0 : Math.min(100, Math.round((sms.used / Math.max(1, sms.limit)) * 100));
+  let barColor: string = colors.green;
+  if (pct >= 90) barColor = colors.danger;
+  else if (pct >= 70) barColor = colors.amber;
+  const remaining = unlimited ? 0 : Math.max(0, sms.limit - sms.used);
+
+  return (
+    <View style={styles.smsCard}>
+      <View style={styles.smsHead}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.smsTitle}>{t("doctor.home.smsUsageTitle")}</Text>
+          <Text style={styles.smsSub}>
+            {unlimited
+              ? t("doctor.home.smsUsageUnlimited")
+              : remaining > 0
+              ? t("doctor.home.smsRemaining", { count: remaining })
+              : t("doctor.home.smsExhausted")}
+          </Text>
+        </View>
+        <Text style={[styles.smsCount, { color: barColor }]}>
+          {unlimited ? `${sms.used}` : `${sms.used} / ${sms.limit}`}
+        </Text>
+      </View>
+      {!unlimited && (
+        <View style={styles.progressTrack}>
+          <View
+            style={[styles.progressFill, { width: `${pct}%`, backgroundColor: barColor }]}
+          />
+        </View>
+      )}
+    </View>
+  );
+}
+
+function CompletionRateCard({
+  rate,
+  completed,
+  noShows,
+}: {
+  rate: number | null;
+  completed: number;
+  noShows: number;
+}) {
+  const total = completed + noShows;
+  if (rate === null) {
+    return (
+      <View style={styles.smsCard}>
+        <Text style={styles.smsTitle}>{t("doctor.home.completionRateTitle")}</Text>
+        <Text style={styles.smsSub}>{t("doctor.home.completionRateEmpty")}</Text>
+      </View>
+    );
+  }
+  let barColor: string = colors.green;
+  if (rate < 60) barColor = colors.danger;
+  else if (rate < 80) barColor = colors.amber;
+  return (
+    <View style={styles.smsCard}>
+      <View style={styles.smsHead}>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.smsTitle}>{t("doctor.home.completionRateTitle")}</Text>
+          <Text style={styles.smsSub}>
+            {t("doctor.home.completionRateSub", { completed, total })}
+          </Text>
+        </View>
+        <Text style={[styles.smsCount, { color: barColor }]}>{rate}%</Text>
+      </View>
+      <View style={styles.progressTrack}>
+        <View style={[styles.progressFill, { width: `${rate}%`, backgroundColor: barColor }]} />
+      </View>
+    </View>
+  );
+}
+
+function ActivityRow({ item }: { item: ActivityItem }) {
+  const { locale } = useLocale();
+  const labelMap: Record<string, { icon: React.ComponentProps<typeof Ionicons>["name"]; color: string; key: string }> = {
+    completed: { icon: "checkmark-circle", color: "#16A34A", key: "doctor.home.activityCompleted" },
+    confirmed: { icon: "calendar", color: colors.teal, key: "doctor.home.activityConfirmed" },
+    pending: { icon: "time", color: "#B45309", key: "doctor.home.activityPending" },
+    cancelled: { icon: "close-circle", color: "#6B7280", key: "doctor.home.activityCancelled" },
+    no_show: { icon: "alert-circle", color: "#B91C1C", key: "doctor.home.activityNoShow" },
+  };
+  const cfg = labelMap[item.status] ?? labelMap.confirmed;
+  const updated = new Date(item.updatedAt);
+  const diffMin = Math.max(0, Math.floor((Date.now() - updated.getTime()) / 60000));
+  let timeAgo: string;
+  if (diffMin < 1) timeAgo = t("doctor.home.justNow");
+  else if (diffMin < 60) timeAgo = t("doctor.home.ago", { value: t("doctor.home.minutesShort", { n: diffMin }) });
+  else if (diffMin < 60 * 24)
+    timeAgo = t("doctor.home.ago", { value: t("doctor.home.hoursShort", { n: Math.floor(diffMin / 60) }) });
+  else
+    timeAgo = t("doctor.home.ago", { value: t("doctor.home.daysShort", { n: Math.floor(diffMin / (60 * 24)) }) });
+
+  // locale only consumed by Date.toLocaleString in alternate UIs — referenced to satisfy lint
+  void locale;
+
+  return (
+    <View style={styles.activityRow}>
+      <View style={[styles.activityIcon, { backgroundColor: `${cfg.color}1A` }]}>
+        <Ionicons name={cfg.icon} size={16} color={cfg.color} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.activityLabel}>
+          {t(cfg.key)} — {item.patientName}
+        </Text>
+        <Text style={styles.activityTime}>{timeAgo}</Text>
+      </View>
     </View>
   );
 }
@@ -666,4 +939,58 @@ const styles = StyleSheet.create({
   planSms: { alignItems: "center" },
   planSmsValue: { fontSize: 18, fontWeight: "800", color: colors.teal },
   planSmsLabel: { fontSize: 10, color: colors.foregroundSecondary, fontWeight: "700", textTransform: "uppercase" },
+
+  kpiScrollRow: { gap: spacing.sm, paddingRight: spacing.sm },
+  bigKpi: {
+    width: 140,
+    padding: spacing.md,
+    borderRadius: radii.xl,
+    gap: 2,
+  },
+  bigKpiHead: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
+  bigKpiValue: { fontSize: 24, fontWeight: "800", marginTop: 4 },
+  bigKpiLabel: { fontSize: 11, fontWeight: "600", color: colors.foreground, marginTop: 2 },
+  bigKpiSub: { fontSize: 10, fontWeight: "700", marginTop: 2, opacity: 0.85 },
+  liveDot: { width: 8, height: 8, borderRadius: 4 },
+
+  smsCard: {
+    padding: spacing.md,
+    borderRadius: radii.xl,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+    gap: spacing.sm,
+  },
+  smsHead: { flexDirection: "row", alignItems: "center", gap: spacing.sm },
+  smsTitle: { fontSize: 13, fontWeight: "700", color: colors.foreground },
+  smsSub: { fontSize: 11, color: colors.foregroundSecondary, marginTop: 2 },
+  smsCount: { fontSize: 16, fontWeight: "800" },
+  progressTrack: {
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: colors.border,
+    overflow: "hidden",
+  },
+  progressFill: { height: "100%", borderRadius: 4 },
+
+  activityList: { gap: spacing.xs },
+  activityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    padding: spacing.sm,
+    borderRadius: radii.lg,
+    backgroundColor: colors.bg,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  activityIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  activityLabel: { fontSize: 13, color: colors.foreground, fontWeight: "600" },
+  activityTime: { fontSize: 11, color: colors.foregroundSecondary, marginTop: 2 },
 });
