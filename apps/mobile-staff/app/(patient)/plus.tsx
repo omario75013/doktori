@@ -101,11 +101,11 @@ export default function PlusRadialMenu() {
       onPress: () => go("/(patient)/mes-documents"),
     },
     {
-      key: "sos",
-      label: t("patient.plus.sos"),
-      icon: "alert-circle",
-      bg: "#E11D48",
-      iconColor: "#FFFFFF",
+      key: "traitement",
+      label: t("patient.plus.traitement"),
+      icon: "medkit-outline",
+      bg: "#FFFFFF",
+      iconColor: colors.teal,
       dx: R * COS45,
       dy: -(R * SIN45 + 30),
       onPress: () => {
@@ -114,8 +114,7 @@ export default function PlusRadialMenu() {
           duration: 120,
           useNativeDriver: true,
         }).start(() => {
-          Linking.openURL("tel:190").catch(() => {});
-          router.back();
+          router.replace("/(patient)/dossier-medical" as never);
         });
       },
     },

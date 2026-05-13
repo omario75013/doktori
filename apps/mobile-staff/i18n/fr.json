@@ -2557,9 +2557,10 @@
       "bookRdv": "Prendre un rendez-vous",
       "video": "Téléconsulter",
       "upload": "Ajouter un document",
-      "reserveRdv": "Réserver RDV",
+      "reserveRdv": "Rendez-vous",
       "teleconsult": "Téléconsult",
       "document": "Document",
+      "traitement": "Traitement",
       "sos": "SOS"
     }
   },

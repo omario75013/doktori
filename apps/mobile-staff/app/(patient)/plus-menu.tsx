@@ -68,7 +68,6 @@ export default function PatientPlusMenu() {
     { key: "coachIa", label: t("patient.plusMenu.coachIa"), icon: "sparkles-outline", to: "/(patient)/coach-ia" },
     { key: "domicile", label: t("patient.plusMenu.domicile"), icon: "home-outline", to: "/(patient)/domicile" },
     { key: "parametres", label: t("patient.plusMenu.parametres"), icon: "settings-outline", to: "/(patient)/parametres" },
-    { key: "messages", label: t("patient.plusMenu.messages"), icon: "chatbubbles-outline", to: "/(patient)/messages" },
     { key: "notifications", label: t("patient.plusMenu.notifications"), icon: "notifications-outline", to: "/(patient)/notifications" },
   ];
 

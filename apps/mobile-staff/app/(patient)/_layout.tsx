@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { GestureResponderEvent } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { colors, t, useLocale } from "@doktori/mobile-core";
 
 type IconName = React.ComponentProps<typeof Ionicons>["name"];
@@ -40,6 +41,7 @@ function FabButton({
 
 export default function PatientLayout() {
   useLocale(); // re-render on locale change so tab labels update
+  const insets = useSafeAreaInsets();
   return (
     <Tabs
       screenOptions={{
@@ -48,9 +50,9 @@ export default function PatientLayout() {
         tabBarInactiveTintColor: colors.foregroundSecondary,
         tabBarStyle: {
           borderTopColor: colors.border,
-          height: 64,
+          height: 64 + insets.bottom,
           paddingTop: 6,
-          paddingBottom: 8,
+          paddingBottom: 8 + insets.bottom,
         },
         tabBarLabelStyle: { fontSize: 11, fontWeight: "600" },
       }}

@@ -2557,9 +2557,10 @@
       "bookRdv": "حجز موعد",
       "video": "استشارة فيديو",
       "upload": "إضافة مستند",
-      "reserveRdv": "حجز موعد",
+      "reserveRdv": "موعد",
       "teleconsult": "استشارة فيديو",
       "document": "مستند",
+      "traitement": "علاج",
       "sos": "إستغاثة"
     }
   },
