@@ -329,6 +329,7 @@ function DropdownPicker({
             </Pressable>
 
             <FlatList
+              style={{ flex: 1 }}
               data={filtered}
               keyExtractor={(it) => it.value}
               keyboardShouldPersistTaps="handled"
@@ -1133,7 +1134,7 @@ const styles = StyleSheet.create({
     justifyContent: "flex-end",
   },
   ddSheet: {
-    maxHeight: "75%",
+    height: "75%",
     backgroundColor: colors.bg,
     borderTopLeftRadius: radii.lg,
     borderTopRightRadius: radii.lg,
