@@ -62,7 +62,8 @@ function getMonthGrid(year: number, month: number): (Date | null)[] {
 }
 
 function getDowLetters(): string[] {
-  return (t("doctor.calendrier.dowLetters") as unknown as string[]) ?? ["L","M","M","J","V","S","D"];
+  const arr = tArray("doctor.calendrier.dowLetters");
+  return arr.length > 0 ? arr : ["L","M","M","J","V","S","D"];
 }
 
 type Appointment = {
