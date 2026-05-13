@@ -169,6 +169,12 @@ export default function PlusScreen() {
           description: t("doctor.more.parrainageDesc"),
           onPress: () => go("/(doctor)/more/parrainage"),
         },
+        {
+          label: t("doctor.more.parrainageMedecin"),
+          icon: "medical",
+          description: t("doctor.more.parrainageMedecinDesc"),
+          onPress: () => go("/(doctor)/more/parrainage-medecin"),
+        },
       ],
     },
     {

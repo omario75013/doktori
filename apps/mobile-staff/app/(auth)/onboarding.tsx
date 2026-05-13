@@ -241,7 +241,7 @@ export default function Onboarding() {
     if (SecureStore) {
       await SecureStore.setItemAsync(ONBOARDING_KEY, "1");
     }
-    router.replace("/(auth)/role");
+    router.replace("/(auth)/patient-login");
   }
 
   function handleScroll(e: NativeSyntheticEvent<NativeScrollEvent>) {

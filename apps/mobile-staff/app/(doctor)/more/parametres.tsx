@@ -24,6 +24,10 @@ type Prefs = {
   pushCancellation: boolean;
   pushRemindersEnabled: boolean;
   smsEnabled: boolean;
+  cancelAlertChannels: string[];
+  cancelAlertTemplate: string | null;
+  reminderOffsetsHours: number[];
+  cancelAlertOffsetsHours: number[];
 };
 
 type Me = {
@@ -31,7 +35,33 @@ type Me = {
   totpEnrolledAt?: string | null;
 };
 
-type Tab = "notifications" | "security" | "systeme";
+type Tab = "notifications" | "reminders" | "cancelAlerts" | "signature" | "security" | "about" | "systeme";
+
+const REMINDER_PRESETS: { hours: number; key: string }[] = [
+  { hours: 168, key: "reminder7Days" },
+  { hours: 72, key: "reminder3Days" },
+  { hours: 48, key: "reminder48Hours" },
+  { hours: 24, key: "reminder24Hours" },
+  { hours: 4, key: "reminder4Hours" },
+  { hours: 2, key: "reminder2Hours" },
+  { hours: 1, key: "reminder1Hour" },
+];
+
+const CANCEL_PRESETS: { hours: number; key: string }[] = [
+  { hours: 0, key: "cancelImmediate" },
+  { hours: 1, key: "cancel1HourBefore" },
+  { hours: 2, key: "cancel2HoursBefore" },
+  { hours: 4, key: "cancel4HoursBefore" },
+  { hours: 24, key: "cancel24HoursBefore" },
+];
+
+const CHANNELS: { value: string; key: string }[] = [
+  { value: "email", key: "channelEmail" },
+  { value: "sms", key: "channelSms" },
+  { value: "push", key: "channelPush" },
+];
+
+const CANCEL_WINDOW_OPTIONS = [0, 1, 2, 4, 12, 24, 48];
 
 export default function Parametres() {
   const { locale } = useLocale();
@@ -42,6 +72,17 @@ export default function Parametres() {
 
   // Système tab
   const [cacheCleared, setCacheCleared] = useState(false);
+
+  // Cancel window (separate API)
+  const [cancelWindowHours, setCancelWindowHours] = useState<number>(2);
+  const [savingCancelWindow, setSavingCancelWindow] = useState(false);
+
+  // Signature
+  const [signatureUrl, setSignatureUrl] = useState<string | null>(null);
+  const [signatureBusy, setSignatureBusy] = useState(false);
+
+  // Saving banner for prefs
+  const [savingPrefs, setSavingPrefs] = useState(false);
 
   function handleSoon() {
     Alert.alert(t("doctor.parametres.comingSoon"), t("doctor.parametres.comingSoonDesc"));
@@ -95,8 +136,135 @@ export default function Parametres() {
       } catch {
         /* ignore */
       }
+      try {
+        const cw = await api<{ hours: number }>("/api/doctor/cancel-window");
+        if (typeof cw?.hours === "number") setCancelWindowHours(cw.hours);
+      } catch {
+        /* ignore */
+      }
+      try {
+        const sig = await api<{ signatureUrl: string | null }>("/api/doctor/signature");
+        if (sig && typeof sig.signatureUrl === "string") setSignatureUrl(sig.signatureUrl);
+      } catch {
+        /* ignore */
+      }
     })();
   }, []);
+
+  async function savePrefs(next: Prefs) {
+    setPrefs(next);
+    setSavingPrefs(true);
+    try {
+      await api("/api/doctor/notification-prefs", { method: "PUT", body: next });
+    } catch {
+      Alert.alert(t("common.error"), t("doctor.parametres.saveError"));
+    } finally {
+      setSavingPrefs(false);
+    }
+  }
+
+  function toggleOffset(field: "reminderOffsetsHours" | "cancelAlertOffsetsHours", hours: number) {
+    if (!prefs) return;
+    const cur = prefs[field] ?? [];
+    const has = cur.includes(hours);
+    const next = {
+      ...prefs,
+      [field]: has ? cur.filter((h) => h !== hours) : [...cur, hours].sort((a, b) => b - a),
+    };
+    void savePrefs(next);
+  }
+
+  function toggleCancelChannel(channel: string) {
+    if (!prefs) return;
+    const cur = prefs.cancelAlertChannels ?? [];
+    const has = cur.includes(channel);
+    void savePrefs({
+      ...prefs,
+      cancelAlertChannels: has ? cur.filter((c) => c !== channel) : [...cur, channel],
+    });
+  }
+
+  async function saveCancelWindow(hours: number) {
+    setSavingCancelWindow(true);
+    try {
+      const d = await api<{ hours: number }>("/api/doctor/cancel-window", {
+        method: "PATCH",
+        body: { hours },
+      });
+      if (typeof d?.hours === "number") setCancelWindowHours(d.hours);
+    } catch {
+      Alert.alert(t("common.error"), t("doctor.parametres.saveError"));
+    } finally {
+      setSavingCancelWindow(false);
+    }
+  }
+
+  async function pickAndUploadSignature() {
+    let ImagePicker: typeof import("expo-image-picker") | null = null;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      ImagePicker = require("expo-image-picker");
+    } catch {
+      Alert.alert(t("common.error"), t("doctor.verification.pickerMissing"));
+      return;
+    }
+    if (!ImagePicker) return;
+    try {
+      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!perm.granted) {
+        Alert.alert(t("common.error"), t("doctor.verification.permDenied"));
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.9,
+        allowsEditing: false,
+      });
+      if (result.canceled || !result.assets?.[0]) return;
+      const asset = result.assets[0];
+      setSignatureBusy(true);
+      const form = new FormData();
+      const filename = asset.fileName ?? `signature-${Date.now()}.png`;
+      const mime = asset.mimeType ?? "image/png";
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      form.append("file", { uri: asset.uri, name: filename, type: mime } as any);
+      const r = await api<{ signatureUrl: string }>("/api/doctor/signature", {
+        method: "POST",
+        body: form,
+        noRedirect: true,
+      });
+      if (r?.signatureUrl) setSignatureUrl(r.signatureUrl);
+    } catch (e) {
+      Alert.alert(t("common.error"), e instanceof Error ? e.message : t("doctor.parametres.saveError"));
+    } finally {
+      setSignatureBusy(false);
+    }
+  }
+
+  function removeSignature() {
+    Alert.alert(
+      t("doctor.parametres.signatureRemove"),
+      t("doctor.parametres.signatureRemoveConfirm"),
+      [
+        { text: t("common.cancel"), style: "cancel" },
+        {
+          text: t("doctor.parametres.signatureRemove"),
+          style: "destructive",
+          onPress: async () => {
+            setSignatureBusy(true);
+            try {
+              await api("/api/doctor/signature", { method: "DELETE" });
+              setSignatureUrl(null);
+            } catch {
+              Alert.alert(t("common.error"), t("doctor.parametres.saveError"));
+            } finally {
+              setSignatureBusy(false);
+            }
+          },
+        },
+      ]
+    );
+  }
 
   async function toggle(key: keyof Prefs) {
     if (!prefs) return;
@@ -218,50 +386,23 @@ export default function Parametres() {
       <Stack.Screen options={{ title: t("doctor.parametres.title") }} />
 
       {/* Tab bar */}
-      <View style={styles.tabBar}>
-        <Pressable
-          onPress={() => setTab("notifications")}
-          style={[styles.tabBtn, tab === "notifications" && styles.tabBtnActive]}
-        >
-          <Ionicons
-            name="notifications"
-            size={14}
-            color={tab === "notifications" ? "#FFFFFF" : colors.foreground}
-          />
-          <Text style={[styles.tabBtnText, tab === "notifications" && { color: "#FFFFFF" }]}>
-            {t("doctor.parametres.tabNotifs")}
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setTab("security")}
-          style={[styles.tabBtn, tab === "security" && styles.tabBtnActive]}
-        >
-          <Ionicons
-            name="shield-checkmark"
-            size={14}
-            color={tab === "security" ? "#FFFFFF" : colors.foreground}
-          />
-          <Text style={[styles.tabBtnText, tab === "security" && { color: "#FFFFFF" }]}>
-            {t("doctor.parametres.tabSecurity")}
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={() => setTab("systeme")}
-          style={[styles.tabBtn, tab === "systeme" && styles.tabBtnActive]}
-        >
-          <Ionicons
-            name="settings"
-            size={14}
-            color={tab === "systeme" ? "#FFFFFF" : colors.foreground}
-          />
-          <Text style={[styles.tabBtnText, tab === "systeme" && { color: "#FFFFFF" }]}>
-            {t("doctor.parametres.tabSystem")}
-          </Text>
-        </Pressable>
-      </View>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.tabBar}
+        contentContainerStyle={styles.tabBarContent}
+      >
+        <TabButton tab="notifications" current={tab} setTab={setTab} icon="notifications" label={t("doctor.parametres.tabNotifs")} />
+        <TabButton tab="reminders" current={tab} setTab={setTab} icon="alarm" label={t("doctor.parametres.tabReminders")} />
+        <TabButton tab="cancelAlerts" current={tab} setTab={setTab} icon="warning" label={t("doctor.parametres.tabCancelAlerts")} />
+        <TabButton tab="signature" current={tab} setTab={setTab} icon="create" label={t("doctor.parametres.tabSignature")} />
+        <TabButton tab="security" current={tab} setTab={setTab} icon="shield-checkmark" label={t("doctor.parametres.tabSecurity")} />
+        <TabButton tab="systeme" current={tab} setTab={setTab} icon="settings" label={t("doctor.parametres.tabSystem")} />
+        <TabButton tab="about" current={tab} setTab={setTab} icon="information-circle" label={t("doctor.parametres.tabAbout")} />
+      </ScrollView>
 
       <Screen>
-        {tab === "notifications" ? (
+        {tab === "notifications" && (
           <>
             <Card title={t("doctor.parametres.emailNotifs")}>
               <Toggle label={t("doctor.parametres.newBooking")} value={prefs.emailNewBooking} onChange={() => toggle("emailNewBooking")} disabled={saving === "emailNewBooking"} />
@@ -283,7 +424,201 @@ export default function Parametres() {
               {t("doctor.parametres.offsetsHint")}
             </Banner>
           </>
-        ) : tab === "security" ? (
+        )}
+
+        {tab === "reminders" && (
+          <>
+            <Card title={t("doctor.parametres.remindersActivation")}>
+              <Toggle
+                label={t("doctor.parametres.sendReminders")}
+                value={prefs.pushRemindersEnabled}
+                onChange={() => toggle("pushRemindersEnabled")}
+                disabled={saving === "pushRemindersEnabled"}
+              />
+            </Card>
+            <Card title={t("doctor.parametres.whenToSendReminder")}>
+              <Text style={styles.sectionDesc}>
+                {t("doctor.parametres.whenToSendReminderDesc")}
+              </Text>
+              <View style={styles.chipsWrap}>
+                {REMINDER_PRESETS.map((p) => {
+                  const active = (prefs.reminderOffsetsHours ?? []).includes(p.hours);
+                  return (
+                    <Pressable
+                      key={p.hours}
+                      disabled={!prefs.pushRemindersEnabled || savingPrefs}
+                      onPress={() => toggleOffset("reminderOffsetsHours", p.hours)}
+                      style={[
+                        styles.chip,
+                        active && styles.chipActive,
+                        (!prefs.pushRemindersEnabled || savingPrefs) && { opacity: 0.5 },
+                      ]}
+                    >
+                      <Text style={[styles.chipText, active && { color: "#FFFFFF" }]}>
+                        {t(`doctor.parametres.${p.key}`)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              {prefs.reminderOffsetsHours
+                ?.filter((h) => !REMINDER_PRESETS.some((p) => p.hours === h))
+                .map((h) => (
+                  <Pressable
+                    key={`custom-${h}`}
+                    onPress={() => toggleOffset("reminderOffsetsHours", h)}
+                    style={[styles.chip, styles.chipActive, { alignSelf: "flex-start", marginTop: 6 }]}
+                  >
+                    <Text style={[styles.chipText, { color: "#FFFFFF" }]}>
+                      {h}
+                      {t("doctor.parametres.hours")}
+                    </Text>
+                  </Pressable>
+                ))}
+            </Card>
+          </>
+        )}
+
+        {tab === "cancelAlerts" && (
+          <>
+            <Card title={t("doctor.parametres.cancelChannels")}>
+              <Text style={styles.sectionDesc}>{t("doctor.parametres.cancelChannelsDesc")}</Text>
+              <View style={styles.chipsWrap}>
+                {CHANNELS.map((c) => {
+                  const active = (prefs.cancelAlertChannels ?? []).includes(c.value);
+                  return (
+                    <Pressable
+                      key={c.value}
+                      onPress={() => toggleCancelChannel(c.value)}
+                      disabled={savingPrefs}
+                      style={[styles.chip, active && styles.chipActive, savingPrefs && { opacity: 0.6 }]}
+                    >
+                      <Text style={[styles.chipText, active && { color: "#FFFFFF" }]}>
+                        {t(`doctor.parametres.${c.key}`)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </Card>
+
+            <Card title={t("doctor.parametres.whenToNotifyPatient")}>
+              <Text style={styles.sectionDesc}>{t("doctor.parametres.whenToNotifyPatientDesc")}</Text>
+              <View style={styles.chipsWrap}>
+                {CANCEL_PRESETS.map((p) => {
+                  const active = (prefs.cancelAlertOffsetsHours ?? []).includes(p.hours);
+                  return (
+                    <Pressable
+                      key={p.hours}
+                      onPress={() => toggleOffset("cancelAlertOffsetsHours", p.hours)}
+                      disabled={savingPrefs}
+                      style={[styles.chip, active && styles.chipActive, savingPrefs && { opacity: 0.6 }]}
+                    >
+                      <Text style={[styles.chipText, active && { color: "#FFFFFF" }]}>
+                        {t(`doctor.parametres.${p.key}`)}
+                      </Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+            </Card>
+
+            <Card title={t("doctor.parametres.messageTemplate")}>
+              <TextInput
+                value={prefs.cancelAlertTemplate ?? ""}
+                onChangeText={(v) => setPrefs({ ...prefs, cancelAlertTemplate: v })}
+                onBlur={() => prefs && savePrefs(prefs)}
+                placeholder={t("doctor.parametres.messageTemplatePlaceholder")}
+                placeholderTextColor={colors.foregroundSecondary}
+                multiline
+                style={[styles.input, { minHeight: 90, textAlignVertical: "top" }]}
+              />
+              <Text style={[styles.sectionDesc, { marginTop: 6 }]}>
+                {t("doctor.parametres.messageTemplateHint")}
+              </Text>
+            </Card>
+
+            <Card title={t("doctor.parametres.patientCancelWindow")}>
+              <Text style={styles.sectionDesc}>{t("doctor.parametres.patientCancelWindowDesc")}</Text>
+              <View style={styles.chipsWrap}>
+                {CANCEL_WINDOW_OPTIONS.map((h) => {
+                  const active = cancelWindowHours === h;
+                  const label =
+                    h === 0
+                      ? t("doctor.parametres.noDelay")
+                      : h < 24
+                      ? `${h}${t("doctor.parametres.hours")}`
+                      : `${h / 24}${t("doctor.parametres.days")}`;
+                  return (
+                    <Pressable
+                      key={h}
+                      onPress={() => saveCancelWindow(h)}
+                      disabled={savingCancelWindow}
+                      style={[styles.chip, active && styles.chipActive, savingCancelWindow && { opacity: 0.6 }]}
+                    >
+                      <Text style={[styles.chipText, active && { color: "#FFFFFF" }]}>{label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+              <Text style={[styles.sectionDesc, { marginTop: 6 }]}>
+                {t("doctor.parametres.currentValue")}{" "}
+                <Text style={{ fontWeight: "700", color: colors.foreground }}>
+                  {cancelWindowHours === 0
+                    ? t("doctor.parametres.noDelay")
+                    : `${cancelWindowHours}${t("doctor.parametres.hours")}`}
+                </Text>
+              </Text>
+            </Card>
+          </>
+        )}
+
+        {tab === "signature" && (
+          <>
+            <Card title={t("doctor.parametres.tabSignature")}>
+              <Text style={styles.sectionDesc}>{t("doctor.parametres.signatureDesc")}</Text>
+              {signatureUrl ? (
+                <View style={{ alignItems: "center", paddingVertical: spacing.md }}>
+                  <Image
+                    source={{ uri: signatureUrl }}
+                    style={{ width: 240, height: 100, resizeMode: "contain", backgroundColor: "#FFFFFF", borderRadius: radii.md, borderWidth: 1, borderColor: colors.border }}
+                  />
+                  <View style={{ flexDirection: "row", gap: spacing.sm, marginTop: spacing.md }}>
+                    <Pressable
+                      onPress={pickAndUploadSignature}
+                      disabled={signatureBusy}
+                      style={[styles.secBtn, signatureBusy && { opacity: 0.5 }]}
+                    >
+                      <Text style={styles.secBtnText}>{t("doctor.parametres.signatureReplace")}</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={removeSignature}
+                      disabled={signatureBusy}
+                      style={[styles.secBtn, styles.secBtnDanger, signatureBusy && { opacity: 0.5 }]}
+                    >
+                      <Text style={[styles.secBtnText, { color: colors.danger }]}>
+                        {t("doctor.parametres.signatureRemove")}
+                      </Text>
+                    </Pressable>
+                  </View>
+                </View>
+              ) : (
+                <Pressable
+                  onPress={pickAndUploadSignature}
+                  disabled={signatureBusy}
+                  style={[styles.uploadBox, signatureBusy && { opacity: 0.5 }]}
+                >
+                  <Ionicons name="cloud-upload-outline" size={28} color={colors.teal} />
+                  <Text style={styles.uploadTitle}>{t("doctor.parametres.signatureUpload")}</Text>
+                  <Text style={styles.sectionDesc}>{t("doctor.parametres.signatureHint")}</Text>
+                </Pressable>
+              )}
+              <Banner>{t("doctor.parametres.signatureDrawSoon")}</Banner>
+            </Card>
+          </>
+        )}
+
+        {tab === "security" && (
           <>
             <Card title={t("doctor.parametres.passwordSection")}>
               <View style={styles.secRow}>
@@ -341,7 +676,48 @@ export default function Parametres() {
               {t("doctor.parametres.twoFaHint2")}
             </Banner>
           </>
-        ) : (
+        )}
+
+        {tab === "about" && (
+          <>
+            <Card title={t("doctor.parametres.aboutAppName")}>
+              <View style={styles.aboutHead}>
+                <View style={styles.aboutIcon}>
+                  <Ionicons name="shield-checkmark" size={28} color={colors.teal} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.aboutTitle}>{t("doctor.parametres.aboutAppName")}</Text>
+                  <Text style={styles.sectionDesc}>{t("doctor.parametres.aboutVersionLabel")}</Text>
+                </View>
+              </View>
+              <Text style={[styles.sectionDesc, { lineHeight: 20, marginTop: spacing.sm }]}>
+                {t("doctor.parametres.aboutDescriptionFull")}
+              </Text>
+              <View style={styles.aboutGrid}>
+                <View style={styles.aboutCell}>
+                  <Text style={styles.aboutCellLabel}>{t("doctor.parametres.aboutDeveloper")}</Text>
+                  <Text style={styles.aboutCellValue}>RandomWalkers</Text>
+                </View>
+                <View style={styles.aboutCell}>
+                  <Text style={styles.aboutCellLabel}>{t("doctor.parametres.aboutPlatform")}</Text>
+                  <Pressable onPress={() => Linking.openURL("https://doktori.tn")}>
+                    <Text style={[styles.aboutCellValue, { color: colors.teal }]}>doktori.tn</Text>
+                  </Pressable>
+                </View>
+                <View style={styles.aboutCell}>
+                  <Text style={styles.aboutCellLabel}>{t("doctor.parametres.aboutRights")}</Text>
+                  <Text style={styles.aboutCellValue}>{t("doctor.parametres.aboutRightsValue")}</Text>
+                </View>
+                <View style={styles.aboutCell}>
+                  <Text style={styles.aboutCellLabel}>{t("doctor.parametres.aboutLicence")}</Text>
+                  <Text style={styles.aboutCellValue}>{t("doctor.parametres.aboutLicenceValue")}</Text>
+                </View>
+              </View>
+            </Card>
+          </>
+        )}
+
+        {tab === "systeme" && (
           <>
             <Card title={t("doctor.parametres.displaySection")}>
               <View style={styles.sysRow}>
@@ -575,6 +951,31 @@ export default function Parametres() {
   );
 }
 
+function TabButton({
+  tab,
+  current,
+  setTab,
+  icon,
+  label,
+}: {
+  tab: Tab;
+  current: Tab;
+  setTab: (t: Tab) => void;
+  icon: React.ComponentProps<typeof Ionicons>["name"];
+  label: string;
+}) {
+  const active = current === tab;
+  return (
+    <Pressable
+      onPress={() => setTab(tab)}
+      style={[styles.tabBtn, active && styles.tabBtnActive]}
+    >
+      <Ionicons name={icon} size={14} color={active ? "#FFFFFF" : colors.foreground} />
+      <Text style={[styles.tabBtnText, active && { color: "#FFFFFF" }]}>{label}</Text>
+    </Pressable>
+  );
+}
+
 function SysRow({
   icon,
   label,
@@ -635,11 +1036,7 @@ function Toggle({
 
 const styles = StyleSheet.create({
   tabBar: {
-    flexDirection: "row",
-    paddingHorizontal: spacing.lg,
-    paddingTop: spacing.sm,
-    paddingBottom: spacing.xs,
-    gap: spacing.xs,
+    flexGrow: 0,
     backgroundColor: colors.bg,
   },
   tabBtn: {
@@ -788,5 +1185,102 @@ const styles = StyleSheet.create({
     fontFamily: "monospace",
     fontWeight: "700",
     color: colors.foreground,
+  },
+
+  tabBarContent: {
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xs,
+    gap: spacing.xs,
+  },
+
+  sectionDesc: {
+    fontSize: 12,
+    color: colors.foregroundSecondary,
+    marginBottom: spacing.sm,
+    lineHeight: 17,
+  },
+  chipsWrap: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.xs,
+  },
+  chip: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: 6,
+    borderRadius: radii.full,
+    backgroundColor: colors.bgSecondary,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  chipActive: {
+    backgroundColor: colors.teal,
+    borderColor: colors.teal,
+  },
+  chipText: {
+    fontSize: 12,
+    fontWeight: "600",
+    color: colors.foreground,
+  },
+
+  uploadBox: {
+    borderWidth: 1,
+    borderStyle: "dashed",
+    borderColor: colors.border,
+    borderRadius: radii.md,
+    paddingVertical: spacing.lg,
+    paddingHorizontal: spacing.md,
+    alignItems: "center",
+    gap: 4,
+    marginVertical: spacing.sm,
+  },
+  uploadTitle: {
+    fontSize: 14,
+    fontWeight: "700",
+    color: colors.foreground,
+    marginTop: 6,
+  },
+
+  aboutHead: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.md,
+    paddingVertical: spacing.sm,
+  },
+  aboutIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: radii.lg,
+    backgroundColor: colors.bgSecondary,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  aboutTitle: {
+    fontSize: 18,
+    fontWeight: "800",
+    color: colors.foreground,
+  },
+  aboutGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  aboutCell: {
+    flexBasis: "47%",
+    flexGrow: 1,
+    backgroundColor: colors.bgSecondary,
+    padding: spacing.md,
+    borderRadius: radii.md,
+  },
+  aboutCellLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.foreground,
+    marginBottom: 2,
+  },
+  aboutCellValue: {
+    fontSize: 13,
+    color: colors.foregroundSecondary,
   },
 });

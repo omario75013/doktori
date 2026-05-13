@@ -15,6 +15,7 @@ export async function GET() {
     .select({
       consultationMode: doctors.consultationMode,
       teleconsultFee: doctors.teleconsultFee,
+      consultationFee: doctors.consultationFee,
     })
     .from(doctors)
     .where(eq(doctors.id, doctor.id))
@@ -27,6 +28,7 @@ export async function GET() {
   return NextResponse.json({
     consultationMode: row.consultationMode,
     teleconsultFee: row.teleconsultFee,
+    consultationFee: row.consultationFee,
   });
 }
 

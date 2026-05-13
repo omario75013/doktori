@@ -5,10 +5,10 @@ import { sql } from "drizzle-orm";
 import { generateInvoiceHTML } from "@/lib/invoice-template";
 
 export async function GET(
-  _req: Request,
+  req: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const doctor = await requireDoctor();
+  const doctor = await requireDoctor(req);
   if (doctor instanceof NextResponse) return doctor;
 
   const { id } = await params;

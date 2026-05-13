@@ -4,6 +4,9 @@
     "slug": "doktori-staff",
     "scheme": "doktori-pro",
     "version": "0.1.0",
+    "updates": {
+      "enabled": false
+    },
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -60,10 +63,7 @@
       "typedRoutes": true
     },
     "extra": {
-      "apiBaseUrl": "https://doktori.tn",
-      "eas": {
-        "projectId": "doktori-staff"
-      }
+      "apiBaseUrl": "https://doktori.tn"
     }
   }
 }

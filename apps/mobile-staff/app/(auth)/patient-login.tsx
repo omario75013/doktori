@@ -26,7 +26,7 @@ type OtpVerifyResponse = {
 
 export default function PatientLogin() {
   const { locale } = useLocale();
-  const [loginTab, setLoginTab] = useState<"phone" | "email">("phone");
+  const [loginTab, setLoginTab] = useState<"phone" | "email">("email");
   const [step, setStep] = useState<"phone" | "code">("phone");
   const [digits, setDigits] = useState("");
   const [code, setCode] = useState("");
@@ -147,19 +147,19 @@ export default function PatientLogin() {
             {step === "phone" && (
               <View style={styles.tabRow}>
                 <Pressable
-                  style={[styles.tabBtn, loginTab === "phone" && styles.tabBtnActive]}
-                  onPress={() => setLoginTab("phone")}
-                >
-                  <Text style={[styles.tabBtnText, loginTab === "phone" && styles.tabBtnTextActive]}>
-                    {t("patientAuth.tabPhone")}
-                  </Text>
-                </Pressable>
-                <Pressable
                   style={[styles.tabBtn, loginTab === "email" && styles.tabBtnActive]}
                   onPress={() => setLoginTab("email")}
                 >
                   <Text style={[styles.tabBtnText, loginTab === "email" && styles.tabBtnTextActive]}>
                     {t("patientAuth.tabEmail")}
+                  </Text>
+                </Pressable>
+                <Pressable
+                  style={[styles.tabBtn, loginTab === "phone" && styles.tabBtnActive]}
+                  onPress={() => setLoginTab("phone")}
+                >
+                  <Text style={[styles.tabBtnText, loginTab === "phone" && styles.tabBtnTextActive]}>
+                    {t("patientAuth.tabPhone")}
                   </Text>
                 </Pressable>
               </View>
