@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   FlatList,
   Image,
   Pressable,
@@ -60,6 +61,14 @@ export default function PatientFavoris() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      router.replace("/(patient)/plus-menu" as never);
+      return true;
+    });
+    return () => sub.remove();
+  }, [router]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await load();
@@ -101,7 +110,7 @@ export default function PatientFavoris() {
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+        <Pressable onPress={() => router.replace("/(patient)/plus-menu" as never)} style={styles.backBtn} hitSlop={8}>
           <Ionicons name="chevron-back" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={styles.title}>{t("patient.favoris.title")}</Text>

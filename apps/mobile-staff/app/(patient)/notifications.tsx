@@ -7,6 +7,7 @@ import {
   Pressable,
   RefreshControl,
   StyleSheet,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -111,6 +112,14 @@ export default function PatientNotifications() {
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      router.replace("/(patient)/plus-menu" as never);
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await load();
@@ -137,7 +146,7 @@ export default function PatientNotifications() {
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn}>
+        <Pressable onPress={() => router.replace("/(patient)/plus-menu" as never)} style={styles.backBtn}>
           <Ionicons name="arrow-back" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={styles.title}>Notifications</Text>

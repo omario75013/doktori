@@ -2143,7 +2143,13 @@
       "resultsCount": "{count} résultat(s)",
       "empty": "Aucun médecin trouvé",
       "emptyHint": "Essayez d'élargir vos critères de recherche",
-      "error": "Erreur de recherche, réessayez"
+      "error": "Erreur de recherche, réessayez",
+      "permissionDenied": "Localisation refusée — activez-la dans les réglages",
+      "recenter": "Recentrer",
+      "mapUnavailable": "Carte indisponible dans Expo Go — disponible dans l'APK installée",
+      "km": "km",
+      "sortByDistance": "Trier par distance",
+      "viewProfile": "Voir le profil"
     },
     "dossier": {
       "title": "Dossier médical",
@@ -2550,7 +2556,10 @@
       "body": "Que voulez-vous faire ?",
       "bookRdv": "Prendre un rendez-vous",
       "video": "Téléconsulter",
-      "upload": "Ajouter un document"
+      "upload": "Ajouter un document",
+      "reserveRdv": "Réserver RDV",
+      "teleconsult": "Téléconsult",
+      "sos": "SOS"
     }
   },
   "doctor.modeles.title": "Modèles",

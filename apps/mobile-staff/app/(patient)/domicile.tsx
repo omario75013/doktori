@@ -1,7 +1,8 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   Modal,
   Pressable,
   ScrollView,
@@ -60,6 +61,14 @@ const TIME_SLOTS = ["09:00", "10:00", "11:00", "14:00", "15:00", "16:00", "17:00
 export default function PatientDomicile() {
   useLocale();
   const router = useRouter();
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      router.replace("/(patient)/plus-menu" as never);
+      return true;
+    });
+    return () => sub.remove();
+  }, [router]);
 
   const [step, setStep] = useState<"form" | "done">("form");
   const [specialty, setSpecialty] = useState<string | null>(null);
@@ -133,7 +142,7 @@ export default function PatientDomicile() {
     return (
       <SafeAreaView edges={["top"]} style={styles.root}>
         <View style={styles.header}>
-          <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+          <Pressable onPress={() => router.replace("/(patient)/plus-menu" as never)} style={styles.backBtn} hitSlop={8}>
             <Ionicons name="chevron-back" size={22} color={colors.foreground} />
           </Pressable>
           <Text style={styles.title}>{t("patient.domicile.title")}</Text>
@@ -145,7 +154,7 @@ export default function PatientDomicile() {
           </View>
           <Text style={styles.successTitle}>{t("patient.domicile.successTitle")}</Text>
           <Text style={styles.successText}>{t("patient.domicile.successText")}</Text>
-          <Pressable style={styles.primaryBtn} onPress={() => router.back()}>
+          <Pressable style={styles.primaryBtn} onPress={() => router.replace("/(patient)/plus-menu" as never)}>
             <Text style={styles.primaryBtnText}>{t("patient.domicile.successCta")}</Text>
           </Pressable>
         </View>
@@ -156,7 +165,7 @@ export default function PatientDomicile() {
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+        <Pressable onPress={() => router.replace("/(patient)/plus-menu" as never)} style={styles.backBtn} hitSlop={8}>
           <Ionicons name="chevron-back" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={styles.title}>{t("patient.domicile.title")}</Text>

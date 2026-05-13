@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  BackHandler,
   Image,
   Modal,
   Pressable,
@@ -78,6 +79,14 @@ export default function PatientComparer() {
     return () => clearTimeout(id);
   }, [query, modalOpen, searchDoctors]);
 
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      router.replace("/(patient)/plus-menu" as never);
+      return true;
+    });
+    return () => sub.remove();
+  }, [router]);
+
   function addDoctor(d: Doctor) {
     setSelected((cur) => {
       if (cur.find((x) => x.id === d.id)) return cur;
@@ -98,7 +107,7 @@ export default function PatientComparer() {
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backBtn} hitSlop={8}>
+        <Pressable onPress={() => router.replace("/(patient)/plus-menu" as never)} style={styles.backBtn} hitSlop={8}>
           <Ionicons name="chevron-back" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={styles.title}>{t("patient.comparer.title")}</Text>

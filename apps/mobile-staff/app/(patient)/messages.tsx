@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   RefreshControl,
   StyleSheet,
+  BackHandler,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -38,6 +39,14 @@ export default function PatientMessages() {
 
   useEffect(() => { load(); }, []);
 
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      router.replace("/(patient)/plus-menu" as never);
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
+
   async function load() {
     setError(null);
     try {
@@ -60,6 +69,9 @@ export default function PatientMessages() {
   return (
     <SafeAreaView edges={["top"]} style={styles.root}>
       <View style={styles.header}>
+        <Pressable onPress={() => router.replace("/(patient)/plus-menu" as never)} style={styles.backBtn} hitSlop={8}>
+          <Ionicons name="chevron-back" size={22} color={colors.foreground} />
+        </Pressable>
         <Text style={styles.title}>Messages</Text>
       </View>
 
@@ -118,7 +130,8 @@ export default function PatientMessages() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  header: { paddingHorizontal: spacing.xl, paddingTop: spacing.md, paddingBottom: spacing.sm },
+  header: { flexDirection: "row", alignItems: "center", paddingHorizontal: spacing.xl, paddingTop: spacing.md, paddingBottom: spacing.sm, gap: spacing.sm },
+  backBtn: { width: 32, height: 32, alignItems: "center", justifyContent: "center" },
   title: { fontSize: 22, fontWeight: "700", color: colors.foreground },
   emptyState: { flex: 1, alignItems: "center", justifyContent: "center", gap: spacing.sm, padding: spacing.xl },
   emptyText: { fontSize: 15, color: colors.foregroundSecondary, textAlign: "center" },

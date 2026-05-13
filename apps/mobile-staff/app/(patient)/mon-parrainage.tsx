@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   FlatList,
   Pressable,
   Share,
@@ -66,6 +67,14 @@ export default function PatientMonParrainage() {
     load();
   }, [load]);
 
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      router.replace("/(patient)/plus-menu" as never);
+      return true;
+    });
+    return () => sub.remove();
+  }, [router]);
+
   async function copyCode() {
     if (!data?.code) return;
     // expo-clipboard not installed — show the code in an alert so user can long-press to copy
@@ -103,7 +112,7 @@ export default function PatientMonParrainage() {
   if (loading) {
     return (
       <SafeAreaView edges={["top"]} style={s.root}>
-        <Header onBack={() => router.back()} />
+        <Header onBack={() => router.replace("/(patient)/plus-menu" as never)} />
         <ActivityIndicator color={colors.teal} style={{ marginTop: spacing["3xl"] }} />
       </SafeAreaView>
     );
@@ -112,7 +121,7 @@ export default function PatientMonParrainage() {
   if (err) {
     return (
       <SafeAreaView edges={["top"]} style={s.root}>
-        <Header onBack={() => router.back()} />
+        <Header onBack={() => router.replace("/(patient)/plus-menu" as never)} />
         <View style={s.center}>
           <Text style={s.errText}>{err}</Text>
           <Pressable onPress={load} style={s.primaryBtn}>
@@ -128,7 +137,7 @@ export default function PatientMonParrainage() {
 
   return (
     <SafeAreaView edges={["top"]} style={s.root}>
-      <Header onBack={() => router.back()} />
+      <Header onBack={() => router.replace("/(patient)/plus-menu" as never)} />
       <FlatList
         data={history}
         keyExtractor={(it) => it.id}

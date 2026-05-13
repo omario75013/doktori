@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   FlatList,
   Linking,
   Pressable,
@@ -77,6 +78,14 @@ export default function PatientMesDocuments() {
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      router.replace("/(patient)/plus-menu" as never);
+      return true;
+    });
+    return () => sub.remove();
+  }, [router]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -190,7 +199,7 @@ export default function PatientMesDocuments() {
   return (
     <SafeAreaView edges={["top"]} style={s.root}>
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} style={s.back} hitSlop={8}>
+        <Pressable onPress={() => router.replace("/(patient)/plus-menu" as never)} style={s.back} hitSlop={8}>
           <Ionicons name="chevron-back" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={s.title}>{t("patient.documents.title")}</Text>

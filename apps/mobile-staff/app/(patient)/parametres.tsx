@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  BackHandler,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -37,10 +38,18 @@ export default function PatientParametres() {
   const router = useRouter();
   const [tab, setTab] = useState<TabId>("compte");
 
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      router.replace("/(patient)/plus-menu" as never);
+      return true;
+    });
+    return () => sub.remove();
+  }, [router]);
+
   return (
     <SafeAreaView edges={["top"]} style={s.root}>
       <View style={s.header}>
-        <Pressable onPress={() => router.back()} style={s.back} hitSlop={8}>
+        <Pressable onPress={() => router.replace("/(patient)/plus-menu" as never)} style={s.back} hitSlop={8}>
           <Ionicons name="chevron-back" size={22} color={colors.foreground} />
         </Pressable>
         <Text style={s.title}>{t("patient.parametres.title")}</Text>

@@ -8,6 +8,7 @@ import {
   Alert,
   Linking,
   ActivityIndicator,
+  BackHandler,
   Switch,
   StyleSheet,
 } from "react-native";
@@ -114,6 +115,14 @@ export default function PatientProfil() {
   const [notifEnabled, setNotifEnabled] = useState(true);
 
   useEffect(() => { load(); }, []);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      router.replace("/(patient)/home" as never);
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
 
   async function load() {
     try {
