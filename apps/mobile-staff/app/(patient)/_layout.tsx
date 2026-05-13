@@ -43,6 +43,10 @@ export default function PatientLayout() {
       <Tabs.Screen name="doctor/[slug]" options={{ href: null }} />
       <Tabs.Screen name="booking/[slug]" options={{ href: null }} />
       <Tabs.Screen name="chat/[id]" options={{ href: null }} />
+      <Tabs.Screen name="teleconsult/[appointmentId]" options={{ href: null }} />
+      <Tabs.Screen name="favoris" options={{ href: null }} />
+      <Tabs.Screen name="ma-famille" options={{ href: null }} />
+      <Tabs.Screen name="avis/[appointmentId]" options={{ href: null }} />
     </Tabs>
   );
 }
