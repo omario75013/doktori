@@ -2,12 +2,12 @@ import { useState, useEffect, useCallback } from "react";
 import {
   View,
   Text,
-  TextInput,
   Pressable,
   ScrollView,
-  ActivityIndicator,
   RefreshControl,
   StyleSheet,
+  Alert,
+  Linking,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router } from "expo-router";
@@ -15,25 +15,6 @@ import { Ionicons } from "@expo/vector-icons";
 import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 
 const PATIENT_TOKEN_KEY = "doktori.patient.token";
-
-const SPECIALTIES = [
-  { label: "Généraliste", value: "generaliste" },
-  { label: "Cardiologue", value: "cardiologue" },
-  { label: "Pédiatre", value: "pediatre" },
-  { label: "Dermatologue", value: "dermatologue" },
-  { label: "Dentiste", value: "dentiste" },
-];
-
-type Doctor = {
-  id: string;
-  name: string;
-  specialty: string;
-  city: string;
-  slug: string;
-  photoUrl: string | null;
-  averageRating?: number;
-  availableToday?: boolean;
-};
 
 type Appointment = {
   id: string;
@@ -45,402 +26,450 @@ type Appointment = {
   doctorSpecialty: string;
 };
 
+type Patient = { id: string; name: string | null; email?: string | null };
+
 async function getPatientToken(): Promise<string | null> {
   const SecureStore = await import("expo-secure-store").catch(() => null);
   return SecureStore ? SecureStore.getItemAsync(PATIENT_TOKEN_KEY) : null;
 }
 
+function initialsOf(name: string | null | undefined): string {
+  if (!name) return "?";
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .map((p) => p[0])
+    .slice(0, 2)
+    .join("")
+    .toUpperCase();
+}
+
+function firstNameOf(name: string | null | undefined): string {
+  if (!name) return "";
+  return name.split(" ")[0] ?? "";
+}
+
 export default function PatientHome() {
-  const { locale } = useLocale();
-  const [patientName, setPatientName] = useState<string | null>(null);
-  const [query, setQuery] = useState("");
-  const [selectedSpecialty, setSelectedSpecialty] = useState<string | null>(null);
-  const [results, setResults] = useState<Doctor[]>([]);
-  const [defaultDoctors, setDefaultDoctors] = useState<Doctor[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [loadingDefault, setLoadingDefault] = useState(true);
+  useLocale();
+  const [patient, setPatient] = useState<Patient | null>(null);
   const [nextAppt, setNextAppt] = useState<Appointment | null>(null);
+  const [upcomingCount, setUpcomingCount] = useState<number>(0);
+  const [unreadNotifs, setUnreadNotifs] = useState<number>(0);
   const [refreshing, setRefreshing] = useState(false);
-  const [isSearchActive, setIsSearchActive] = useState(false);
-  const [searchError, setSearchError] = useState<string | null>(null);
 
   useEffect(() => {
     loadData();
-    loadDefaultDoctors();
   }, []);
 
   async function loadData() {
     try {
       const token = await getPatientToken();
       if (!token) return;
-      const appts = await api<Appointment[]>("/api/appointments/patient", { token });
-      const upcoming = appts.filter(
+      const [me, appts] = await Promise.all([
+        api<Patient>("/api/patients/me", { token }).catch(() => null),
+        api<Appointment[]>("/api/appointments/patient", { token }).catch(() => [] as Appointment[]),
+      ]);
+      if (me) setPatient(me);
+      const upcoming = (appts ?? []).filter(
         (a) => a.status !== "cancelled" && new Date(a.startsAt) > new Date()
       );
       setNextAppt(upcoming[0] ?? null);
+      setUpcomingCount(upcoming.length);
+      // best-effort notif count
+      try {
+        const notifs = await api<Array<{ readAt?: string | null }>>(
+          "/api/notifications/patient",
+          { token }
+        );
+        setUnreadNotifs(notifs.filter((n) => !n.readAt).length);
+      } catch {
+        /* ignore */
+      }
     } catch {
       // silent fail
-    }
-  }
-
-  async function loadDefaultDoctors() {
-    setLoadingDefault(true);
-    try {
-      const data = await api<{ hits: Doctor[] }>("/api/search", { skipAuth: true });
-      setDefaultDoctors(data.hits ?? []);
-    } catch {
-      // silent fail
-    } finally {
-      setLoadingDefault(false);
     }
   }
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await Promise.all([loadData(), loadDefaultDoctors()]);
+    await loadData();
     setRefreshing(false);
   }, []);
 
-  async function search(q: string, specialty: string | null) {
-    if (!q && !specialty) {
-      setIsSearchActive(false);
-      setResults([]);
-      return;
-    }
-    setIsSearchActive(true);
-    setSearching(true);
-    setSearchError(null);
-    try {
-      const params = new URLSearchParams();
-      if (q) params.set("q", q);
-      if (specialty) params.set("specialty", specialty);
-      const data = await api<{ hits: Doctor[] }>(`/api/search?${params.toString()}`, {
-        skipAuth: true,
-      });
-      setResults(data.hits ?? []);
-    } catch {
-      setSearchError(t("common.error"));
-    } finally {
-      setSearching(false);
-    }
+  function openSos() {
+    Alert.alert(t("patient.home.sosTitle"), t("patient.home.sosBody"), [
+      {
+        text: t("patient.home.sosCallSamu"),
+        onPress: () => Linking.openURL("tel:190").catch(() => undefined),
+      },
+      {
+        text: t("patient.home.sosCallDoctor"),
+        onPress: () => router.push("/(patient)/rendez-vous"),
+      },
+      { text: t("common.cancel"), style: "cancel" },
+    ]);
   }
 
-  function handleQueryChange(text: string) {
-    setQuery(text);
-    search(text, selectedSpecialty);
+  function formatDatePill(iso: string) {
+    const d = new Date(iso);
+    const day = d.toLocaleDateString("fr-FR", { weekday: "short" }).replace(".", "");
+    const num = d.toLocaleDateString("fr-FR", { day: "2-digit" });
+    const month = d.toLocaleDateString("fr-FR", { month: "short" }).replace(".", "");
+    const time = d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+    return { day, num, month, time };
   }
 
-  function handleSpecialty(spec: string) {
-    const next = selectedSpecialty === spec ? null : spec;
-    setSelectedSpecialty(next);
-    search(query, next);
-  }
-
-  function minutesUntil(iso: string): number {
-    return Math.round((new Date(iso).getTime() - Date.now()) / 60000);
-  }
-
-  const canJoin = nextAppt
-    ? nextAppt.type === "teleconsult" && Math.abs(minutesUntil(nextAppt.startsAt)) <= 15
-    : false;
+  const firstName = firstNameOf(patient?.name);
+  const initials = initialsOf(patient?.name);
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.root}>
+    <View style={styles.root}>
       <ScrollView
-        style={{ flex: 1 }}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.teal} />}
-        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: spacing["2xl"] }}
+        refreshControl={
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.teal} />
+        }
       >
-        {/* Header */}
-        <View style={styles.headerBar}>
-          <View>
-            <Text style={styles.greeting}>
-              {t("patient.home.greeting", { name: patientName ? `, ${patientName}` : "" })}
-            </Text>
-            <Text style={styles.subGreeting}>{t("patient.home.subGreeting")}</Text>
-          </View>
-          <View style={{ flexDirection: "row", alignItems: "center", gap: spacing.sm }}>
+        {/* Teal header */}
+        <SafeAreaView edges={["top"]} style={styles.header}>
+          <View style={styles.headerTopRow}>
+            <Pressable
+              onPress={() => router.push("/(patient)/profil")}
+              style={styles.avatar}
+              accessibilityRole="button"
+            >
+              <Text style={styles.avatarText}>{initials}</Text>
+            </Pressable>
+            <View style={{ flex: 1, marginLeft: spacing.md }}>
+              <Text style={styles.helloSmall}>
+                {t("patient.home.helloSmall")}
+                {firstName ? `, ${firstName}` : ""}
+              </Text>
+              <Text style={styles.helloName} numberOfLines={1}>
+                {patient?.name ?? t("patient.home.welcome")}
+              </Text>
+            </View>
             <Pressable
               onPress={() => router.push("/(patient)/notifications")}
-              style={styles.iconBtn}
+              style={styles.bellBtn}
+              accessibilityLabel="notifications"
             >
-              <Ionicons name="notifications-outline" size={22} color={colors.teal} />
-            </Pressable>
-            <Pressable onPress={() => router.push("/(patient)/profil")}>
-              <View style={styles.avatar}>
-                <Ionicons name="person" size={20} color={colors.teal} />
-              </View>
+              <Ionicons name="notifications-outline" size={22} color="#FFFFFF" />
+              {unreadNotifs > 0 && <View style={styles.bellDot} />}
             </Pressable>
           </View>
+
+          <Text style={styles.headerTitle}>{t("patient.home.heroTitle")}</Text>
+          <Text style={styles.headerSub}>{t("patient.home.heroSub")}</Text>
+
+          <Pressable
+            onPress={() => router.push("/(patient)/recherche")}
+            style={styles.searchBar}
+          >
+            <Ionicons name="search-outline" size={18} color={colors.foregroundSecondary} />
+            <Text style={styles.searchPh}>{t("patient.home.searchPlaceholder")}</Text>
+            <View style={styles.kbdHint}>
+              <Text style={styles.kbdText}>⌘K</Text>
+            </View>
+          </Pressable>
+        </SafeAreaView>
+
+        {/* 2×2 action grid */}
+        <View style={styles.grid}>
+          <ActionCard
+            iconName="calendar-outline"
+            iconBg={colors.bgSecondary}
+            iconColor={colors.teal}
+            title={t("patient.home.cardRdvTitle")}
+            subtitle={t("patient.home.cardRdvSub", { count: upcomingCount })}
+            onPress={() => router.push("/(patient)/rendez-vous")}
+          />
+          <ActionCard
+            iconName="videocam-outline"
+            iconBg={colors.bgSecondary}
+            iconColor={colors.teal}
+            title={t("patient.home.cardVideoTitle")}
+            subtitle={t("patient.home.cardVideoSub")}
+            onPress={() => router.push("/(patient)/rendez-vous")}
+          />
+          <ActionCard
+            iconName="folder-outline"
+            iconBg={colors.bgSecondary}
+            iconColor={colors.teal}
+            title={t("patient.home.cardDossierTitle")}
+            subtitle={t("patient.home.cardDossierSub")}
+            onPress={() => router.push("/(patient)/dossier-medical")}
+          />
+          <ActionCard
+            iconName="sunny-outline"
+            iconBg="#FFF1E6"
+            iconColor="#F97316"
+            title={t("patient.home.cardSosTitle")}
+            subtitle={t("patient.home.cardSosSub")}
+            onPress={openSos}
+          />
         </View>
 
-        {/* Search */}
-        <View style={styles.searchRow}>
-          <Ionicons name="search-outline" size={18} color={colors.foregroundSecondary} style={styles.searchIcon} />
-          <TextInput
-            style={styles.searchInput}
-            value={query}
-            onChangeText={handleQueryChange}
-            placeholder={t("patient.home.searchPlaceholder")}
-            placeholderTextColor={colors.foregroundSecondary}
-            returnKeyType="search"
-          />
-          {query.length > 0 && (
-            <Pressable onPress={() => { setQuery(""); search("", selectedSpecialty); }}>
-              <Ionicons name="close-circle" size={18} color={colors.foregroundSecondary} />
+        {/* Next appointment */}
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>{t("patient.home.nextRdvLabel")}</Text>
+          {nextAppt ? (
+            <Pressable
+              style={styles.apptCard}
+              onPress={() => router.push("/(patient)/rendez-vous")}
+            >
+              {(() => {
+                const p = formatDatePill(nextAppt.startsAt);
+                return (
+                  <View style={styles.datePill}>
+                    <Text style={styles.datePillDay}>{p.day}</Text>
+                    <Text style={styles.datePillNum}>{p.num}</Text>
+                    <Text style={styles.datePillMonth}>{p.month}</Text>
+                  </View>
+                );
+              })()}
+              <View style={{ flex: 1 }}>
+                <Text style={styles.apptDoctor} numberOfLines={1}>
+                  {nextAppt.doctorName}
+                </Text>
+                <Text style={styles.apptSpec} numberOfLines={1}>
+                  {nextAppt.doctorSpecialty}
+                </Text>
+                <View style={styles.apptTimeRow}>
+                  <Ionicons name="time-outline" size={13} color={colors.foregroundSecondary} />
+                  <Text style={styles.apptTime}>
+                    {new Date(nextAppt.startsAt).toLocaleTimeString("fr-FR", {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                    {"  ·  "}
+                    {Math.max(
+                      15,
+                      Math.round(
+                        (new Date(nextAppt.endsAt).getTime() -
+                          new Date(nextAppt.startsAt).getTime()) /
+                          60000
+                      )
+                    )}{" "}
+                    min
+                  </Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={20} color={colors.foregroundSecondary} />
+            </Pressable>
+          ) : (
+            <Pressable
+              style={styles.emptyAppt}
+              onPress={() => router.push("/(patient)/recherche")}
+            >
+              <Ionicons name="calendar-outline" size={28} color={colors.foregroundSecondary} />
+              <Text style={styles.emptyApptText}>{t("patient.home.noNextRdv")}</Text>
+              <Text style={styles.emptyApptCta}>{t("patient.home.bookNow")}</Text>
             </Pressable>
           )}
         </View>
-
-        {/* Specialty chips */}
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsScroll} contentContainerStyle={styles.chipsContent}>
-          {SPECIALTIES.map((s) => (
-            <Pressable
-              key={s.value}
-              onPress={() => handleSpecialty(s.value)}
-              style={[styles.chip, selectedSpecialty === s.value && styles.chipActive]}
-            >
-              <Text style={[styles.chipText, selectedSpecialty === s.value && styles.chipTextActive]}>
-                {s.label}
-              </Text>
-            </Pressable>
-          ))}
-        </ScrollView>
-
-        {isSearchActive ? (
-          /* Search results */
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>{t("patient.home.searchResults")}</Text>
-            {searching ? (
-              <ActivityIndicator color={colors.teal} style={{ marginTop: spacing.lg }} />
-            ) : searchError ? (
-              <View style={styles.emptyState}>
-                <Text style={styles.emptyText}>{searchError}</Text>
-                <Pressable onPress={() => search(query, selectedSpecialty)} style={styles.retryBtn}>
-                  <Text style={styles.retryText}>{t("common.retry")}</Text>
-                </Pressable>
-              </View>
-            ) : results.length === 0 ? (
-              <View style={styles.emptyState}>
-                <Ionicons name="search-outline" size={40} color={colors.border} />
-                <Text style={styles.emptyText}>{t("patient.home.noResults")}</Text>
-              </View>
-            ) : (
-              results.map((doc) => <DoctorCard key={doc.id} doc={doc} />)
-            )}
-          </View>
-        ) : (
-          <>
-            {/* Next appointment card */}
-            {nextAppt && (
-              <View style={styles.section}>
-                <Text style={styles.sectionTitle}>{t("patient.home.nextRdv")}</Text>
-                <View style={styles.apptCard}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={styles.apptDoctor}>{nextAppt.doctorName}</Text>
-                    <Text style={styles.apptMeta}>{nextAppt.doctorSpecialty}</Text>
-                    <Text style={styles.apptDate}>
-                      {new Date(nextAppt.startsAt).toLocaleDateString("fr-FR", {
-                        weekday: "long", day: "numeric", month: "long",
-                      })} à {new Date(nextAppt.startsAt).toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" })}
-                    </Text>
-                    {minutesUntil(nextAppt.startsAt) > 0 && (
-                      <Text style={styles.countdown}>{t("patient.home.inMin", { min: minutesUntil(nextAppt.startsAt) })}</Text>
-                    )}
-                  </View>
-                  {canJoin && (
-                    <Pressable style={styles.joinBtn}>
-                      <Text style={styles.joinBtnText}>{t("patient.home.join")}</Text>
-                    </Pressable>
-                  )}
-                </View>
-              </View>
-            )}
-
-            {/* Default doctors list */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>{t("patient.home.availableDoctors")}</Text>
-              {loadingDefault ? (
-                <ActivityIndicator color={colors.teal} style={{ marginTop: spacing.lg }} />
-              ) : defaultDoctors.length === 0 ? (
-                <View style={styles.emptyState}>
-                  <Ionicons name="medical-outline" size={40} color={colors.border} />
-                  <Text style={styles.emptyText}>{t("patient.home.noDoctors")}</Text>
-                </View>
-              ) : (
-                defaultDoctors.map((doc) => <DoctorCard key={doc.id} doc={doc} />)
-              )}
-            </View>
-          </>
-        )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
-function DoctorCard({ doc }: { doc: Doctor }) {
+function ActionCard({
+  iconName,
+  iconBg,
+  iconColor,
+  title,
+  subtitle,
+  onPress,
+}: {
+  iconName: React.ComponentProps<typeof Ionicons>["name"];
+  iconBg: string;
+  iconColor: string;
+  title: string;
+  subtitle: string;
+  onPress: () => void;
+}) {
   return (
-    <Pressable
-      style={styles.doctorCard}
-      onPress={() => router.push({ pathname: "/(patient)/doctor/[slug]" as never, params: { slug: doc.slug } })}
-    >
-      <View style={styles.doctorAvatar}>
-        <Text style={styles.doctorAvatarText}>
-          {doc.name.split(" ").map((w: string) => w[0]).join("").slice(0, 2).toUpperCase()}
-        </Text>
+    <Pressable style={styles.card} onPress={onPress}>
+      <View style={[styles.cardIcon, { backgroundColor: iconBg }]}>
+        <Ionicons name={iconName} size={22} color={iconColor} />
       </View>
-      <View style={{ flex: 1, gap: 2 }}>
-        <Text style={styles.doctorName}>{doc.name}</Text>
-        <Text style={styles.doctorMeta}>{doc.specialty} • {doc.city}</Text>
-        {!!doc.averageRating && (
-          <View style={styles.ratingRow}>
-            <Ionicons name="star" size={12} color="#F59E0B" />
-            <Text style={styles.ratingText}>{doc.averageRating.toFixed(1)}</Text>
-          </View>
-        )}
-      </View>
-      {doc.availableToday && (
-        <View style={styles.availBadge}>
-          <Text style={styles.availText}>{t("patient.home.available")}</Text>
-        </View>
-      )}
+      <Text style={styles.cardTitle}>{title}</Text>
+      <Text style={styles.cardSub}>{subtitle}</Text>
     </Pressable>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: colors.bg },
-  headerBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  header: {
+    backgroundColor: colors.teal,
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.md,
-    paddingBottom: spacing.sm,
+    paddingBottom: spacing["2xl"] + spacing.md,
+    borderBottomLeftRadius: radii["2xl"],
+    borderBottomRightRadius: radii["2xl"],
   },
-  greeting: { fontSize: 20, fontWeight: "700", color: colors.foreground },
-  subGreeting: { fontSize: 13, color: colors.foregroundSecondary, marginTop: 2 },
-  avatar: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.full,
-    backgroundColor: colors.bgSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  iconBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: radii.full,
-    backgroundColor: colors.bgSecondary,
-    alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  searchRow: {
+  headerTopRow: {
     flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: spacing.xl,
     marginTop: spacing.sm,
-    marginBottom: spacing.md,
-    borderWidth: 1,
-    borderColor: colors.border,
-    borderRadius: radii.lg,
-    backgroundColor: colors.bg,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    gap: spacing.sm,
   },
-  searchIcon: { marginRight: 2 },
-  searchInput: { flex: 1, fontSize: 15, color: colors.foreground },
-  chipsScroll: { marginBottom: spacing.md },
-  chipsContent: { paddingHorizontal: spacing.xl, gap: spacing.sm },
-  chip: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs + 2,
+  avatar: {
+    width: 38,
+    height: 38,
     borderRadius: radii.full,
+    backgroundColor: "rgba(255,255,255,0.22)",
+    alignItems: "center",
+    justifyContent: "center",
     borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bg,
+    borderColor: "rgba(255,255,255,0.35)",
   },
-  chipActive: { backgroundColor: colors.teal, borderColor: colors.teal },
-  chipText: { fontSize: 13, fontWeight: "600", color: colors.foregroundSecondary },
-  chipTextActive: { color: "#FFFFFF" },
-  section: { paddingHorizontal: spacing.xl, marginBottom: spacing.xl },
-  sectionTitle: {
-    fontSize: 16,
+  avatarText: { color: "#FFFFFF", fontWeight: "700", fontSize: 13 },
+  helloSmall: { color: "rgba(255,255,255,0.85)", fontSize: 12, fontWeight: "500" },
+  helloName: { color: "#FFFFFF", fontSize: 18, fontWeight: "700", marginTop: 1 },
+  bellBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: radii.full,
+    backgroundColor: "rgba(255,255,255,0.18)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  bellDot: {
+    position: "absolute",
+    top: 8,
+    right: 9,
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: "#F97316",
+    borderWidth: 1.5,
+    borderColor: colors.teal,
+  },
+  headerTitle: {
+    color: "#FFFFFF",
+    fontSize: 22,
     fontWeight: "700",
-    color: colors.foreground,
-    marginBottom: spacing.md,
+    marginTop: spacing.xl,
   },
-  doctorCard: {
+  headerSub: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: 13,
+    marginTop: 4,
+  },
+  searchBar: {
     flexDirection: "row",
     alignItems: "center",
-    gap: spacing.md,
-    padding: spacing.md,
+    gap: spacing.sm,
+    backgroundColor: "#FFFFFF",
     borderRadius: radii.lg,
-    borderWidth: 1,
-    borderColor: colors.border,
-    backgroundColor: colors.bg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md,
+    marginTop: spacing.lg,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  searchPh: { flex: 1, color: colors.foregroundSecondary, fontSize: 14 },
+  kbdHint: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: colors.bgSecondary,
+  },
+  kbdText: { fontSize: 11, color: colors.foregroundSecondary, fontWeight: "600" },
+  grid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: spacing.xl,
+    marginTop: -spacing.xl,
+    gap: spacing.md,
+  },
+  card: {
+    width: "47%",
+    flexGrow: 1,
+    backgroundColor: "#FFFFFF",
+    borderRadius: radii.lg,
+    padding: spacing.md,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  cardIcon: {
+    width: 40,
+    height: 40,
+    borderRadius: radii.md,
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: spacing.sm,
   },
-  doctorAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: radii.full,
-    backgroundColor: colors.teal,
-    alignItems: "center",
-    justifyContent: "center",
+  cardTitle: { fontSize: 14, fontWeight: "700", color: colors.foreground },
+  cardSub: { fontSize: 12, color: colors.foregroundSecondary, marginTop: 2 },
+  section: { paddingHorizontal: spacing.xl, marginTop: spacing.xl },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: "700",
+    color: colors.foregroundSecondary,
+    letterSpacing: 0.8,
+    marginBottom: spacing.sm,
   },
-  doctorAvatarText: { color: "#FFF", fontWeight: "700", fontSize: 15 },
-  doctorName: { fontSize: 15, fontWeight: "700", color: colors.foreground },
-  doctorMeta: { fontSize: 12, color: colors.foregroundSecondary },
-  ratingRow: { flexDirection: "row", alignItems: "center", gap: 3, marginTop: 2 },
-  ratingText: { fontSize: 12, color: colors.foregroundSecondary },
-  availBadge: {
-    backgroundColor: colors.bgSecondary,
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 3,
-    borderRadius: radii.full,
-  },
-  availText: { fontSize: 11, fontWeight: "600", color: colors.teal },
   apptCard: {
     flexDirection: "row",
     alignItems: "center",
-    padding: spacing.lg,
+    backgroundColor: "#FFFFFF",
     borderRadius: radii.lg,
-    backgroundColor: colors.teal,
+    padding: spacing.md,
     gap: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
-  apptDoctor: { fontSize: 16, fontWeight: "700", color: "#FFF" },
-  apptMeta: { fontSize: 12, color: "rgba(255,255,255,0.75)", marginTop: 2 },
-  apptDate: { fontSize: 13, color: "#FFF", marginTop: 4 },
-  countdown: { fontSize: 12, color: "rgba(255,255,255,0.85)", marginTop: 2 },
-  joinBtn: {
-    backgroundColor: "#FFF",
-    borderRadius: radii.md,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-  },
-  joinBtnText: { color: colors.teal, fontWeight: "700", fontSize: 14 },
-  emptyApptCard: {
+  datePill: {
+    width: 64,
     alignItems: "center",
-    padding: spacing.xl,
-    gap: spacing.sm,
-    backgroundColor: colors.bgSecondary,
-    borderRadius: radii.lg,
-  },
-  emptyState: { alignItems: "center", paddingVertical: spacing.xl, gap: spacing.sm },
-  emptyText: { fontSize: 14, color: colors.foregroundSecondary, textAlign: "center" },
-  emptySubText: { fontSize: 13, color: colors.foregroundSecondary },
-  retryBtn: {
-    backgroundColor: colors.teal,
-    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: radii.md,
+    backgroundColor: colors.bgSecondary,
   },
-  retryText: { color: "#FFF", fontWeight: "700" },
+  datePillDay: {
+    fontSize: 11,
+    fontWeight: "600",
+    color: colors.teal,
+    textTransform: "uppercase",
+  },
+  datePillNum: {
+    fontSize: 20,
+    fontWeight: "800",
+    color: colors.foreground,
+    lineHeight: 22,
+    marginTop: 2,
+  },
+  datePillMonth: {
+    fontSize: 11,
+    color: colors.foregroundSecondary,
+    textTransform: "uppercase",
+  },
+  apptDoctor: { fontSize: 15, fontWeight: "700", color: colors.foreground },
+  apptSpec: { fontSize: 12, color: colors.foregroundSecondary, marginTop: 1 },
+  apptTimeRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    marginTop: 4,
+  },
+  apptTime: { fontSize: 12, color: colors.foregroundSecondary },
+  emptyAppt: {
+    alignItems: "center",
+    backgroundColor: "#FFFFFF",
+    borderRadius: radii.lg,
+    paddingVertical: spacing.xl,
+    paddingHorizontal: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: spacing.xs,
+  },
+  emptyApptText: { fontSize: 13, color: colors.foregroundSecondary },
+  emptyApptCta: { fontSize: 13, fontWeight: "700", color: colors.teal },
 });

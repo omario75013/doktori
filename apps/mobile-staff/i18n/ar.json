@@ -2054,15 +2054,17 @@
   "patient": {
     "tabs": {
       "home": "الرئيسية",
-      "rdv": "مواعيدي",
+      "rdv": "المواعيد",
       "messages": "الرسائل",
       "ordonnances": "الوصفات",
-      "profil": "الملف"
+      "profil": "الملف",
+      "dossier": "الملف",
+      "moi": "أنا"
     },
     "home": {
       "greeting": "مرحباً{name} 👋",
       "subGreeting": "ابحث عن طبيبك",
-      "searchPlaceholder": "طبيب، تخصص، مدينة…",
+      "searchPlaceholder": "ابحث عن طبيب…",
       "searchResults": "النتائج",
       "noResults": "لا نتائج",
       "nextRdv": "الموعد القادم",
@@ -2071,7 +2073,26 @@
       "noDoctors": "لم يُعثر على طبيب",
       "available": "متاح",
       "retrySearch": "إعادة المحاولة",
-      "inMin": "خلال {min} دقيقة"
+      "inMin": "خلال {min} دقيقة",
+      "helloSmall": "مرحبًا",
+      "welcome": "أهلاً بك",
+      "heroTitle": "كيف تشعر اليوم؟",
+      "heroSub": "طبيبك على بُعد نقرات",
+      "cardRdvTitle": "مواعيدي",
+      "cardRdvSub": "{count} قادم",
+      "cardVideoTitle": "فيديو",
+      "cardVideoSub": "استشارة",
+      "cardDossierTitle": "ملفي",
+      "cardDossierSub": "البيانات الطبية",
+      "cardSosTitle": "طوارئ",
+      "cardSosSub": "24/7",
+      "nextRdvLabel": "الموعد القادم",
+      "noNextRdv": "لا توجد مواعيد قادمة",
+      "bookNow": "حجز موعد",
+      "sosTitle": "طوارئ",
+      "sosBody": "ماذا تريد أن تفعل؟",
+      "sosCallSamu": "اتصل بالإسعاف (190)",
+      "sosCallDoctor": "عرض مواعيدي"
     },
     "recherche": {
       "title": "البحث عن طبيب",
@@ -2493,6 +2514,13 @@
       "errorTitle": "خطأ",
       "howItWorks": "كيف يعمل؟",
       "howItWorksBody": "شارك رمزك. كل صديق يسجل ويحجز موعداً يمنحك مكافأة."
+    },
+    "plus": {
+      "title": "إجراء سريع",
+      "body": "ماذا تريد أن تفعل؟",
+      "bookRdv": "حجز موعد",
+      "video": "استشارة فيديو",
+      "upload": "إضافة مستند"
     }
   },
   "doctor.modeles.title": "النماذج",

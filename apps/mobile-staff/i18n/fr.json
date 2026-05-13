@@ -2054,15 +2054,17 @@
   "patient": {
     "tabs": {
       "home": "Accueil",
-      "rdv": "Mes RDV",
+      "rdv": "RDV",
       "messages": "Messages",
       "ordonnances": "Ordonnances",
-      "profil": "Profil"
+      "profil": "Profil",
+      "dossier": "Dossier",
+      "moi": "Moi"
     },
     "home": {
       "greeting": "Bonjour{name} 👋",
       "subGreeting": "Trouvez votre médecin",
-      "searchPlaceholder": "Médecin, spécialité, ville…",
+      "searchPlaceholder": "Rechercher un médecin…",
       "searchResults": "Résultats",
       "noResults": "Aucun résultat",
       "nextRdv": "Prochain RDV",
@@ -2071,7 +2073,26 @@
       "noDoctors": "Aucun médecin trouvé",
       "available": "Disponible",
       "retrySearch": "Réessayer",
-      "inMin": "dans {min} min"
+      "inMin": "dans {min} min",
+      "helloSmall": "Bonjour",
+      "welcome": "Bienvenue",
+      "heroTitle": "Comment vous sentez-vous aujourd'hui ?",
+      "heroSub": "Un médecin est à quelques clics",
+      "cardRdvTitle": "Mes RDV",
+      "cardRdvSub": "{count} à venir",
+      "cardVideoTitle": "Vidéo",
+      "cardVideoSub": "Consulter",
+      "cardDossierTitle": "Mon dossier",
+      "cardDossierSub": "Données médicales",
+      "cardSosTitle": "SOS",
+      "cardSosSub": "24/7",
+      "nextRdvLabel": "PROCHAIN RENDEZ-VOUS",
+      "noNextRdv": "Aucun rendez-vous à venir",
+      "bookNow": "Prendre un rendez-vous",
+      "sosTitle": "Urgence",
+      "sosBody": "Que voulez-vous faire ?",
+      "sosCallSamu": "Appeler le SAMU (190)",
+      "sosCallDoctor": "Voir mes rendez-vous"
     },
     "recherche": {
       "title": "Rechercher un médecin",
@@ -2493,6 +2514,13 @@
       "errorTitle": "Erreur",
       "howItWorks": "Comment ça marche ?",
       "howItWorksBody": "Partagez votre code. Chaque ami inscrit + RDV vous fait gagner une récompense."
+    },
+    "plus": {
+      "title": "Action rapide",
+      "body": "Que voulez-vous faire ?",
+      "bookRdv": "Prendre un rendez-vous",
+      "video": "Téléconsulter",
+      "upload": "Ajouter un document"
     }
   },
   "doctor.modeles.title": "Modèles",
