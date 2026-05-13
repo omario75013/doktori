@@ -204,6 +204,7 @@ export default function PatientFicheScreen() {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
+        style={styles.tabsBarScroll}
         contentContainerStyle={styles.tabsBar}
       >
         {tabs.map((tt) => {
@@ -1097,10 +1098,12 @@ const styles = StyleSheet.create({
   metaRow: { paddingHorizontal: spacing.lg, paddingTop: spacing.sm },
   metaText: { fontSize: 12, color: colors.foregroundSecondary },
 
+  tabsBarScroll: { flexGrow: 0, flexShrink: 0 },
   tabsBar: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     gap: spacing.xs,
+    alignItems: "center",
   },
   tabPill: {
     flexDirection: "row",
