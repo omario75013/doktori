@@ -2149,7 +2149,11 @@
       "mapUnavailable": "الخريطة غير متوفرة في Expo Go — متوفرة في APK المثبت",
       "km": "كم",
       "sortByDistance": "ترتيب حسب المسافة",
-      "viewProfile": "عرض الملف"
+      "viewProfile": "عرض الملف",
+      "selectSpecialty": "اختر التخصص",
+      "selectCity": "اختر المدينة",
+      "searchInList": "بحث...",
+      "none": "لا شيء"
     },
     "dossier": {
       "title": "الملف الطبي",

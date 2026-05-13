@@ -2149,7 +2149,11 @@
       "mapUnavailable": "Carte indisponible dans Expo Go — disponible dans l'APK installée",
       "km": "km",
       "sortByDistance": "Trier par distance",
-      "viewProfile": "Voir le profil"
+      "viewProfile": "Voir le profil",
+      "selectSpecialty": "Choisir spécialité",
+      "selectCity": "Choisir ville",
+      "searchInList": "Rechercher...",
+      "none": "Aucune"
     },
     "dossier": {
       "title": "Dossier médical",

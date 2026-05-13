@@ -10,6 +10,8 @@ import {
   StyleSheet,
   Switch,
   BackHandler,
+  Modal,
+  FlatList,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Stack } from "expo-router";
@@ -56,13 +58,32 @@ const SPECIALTIES: { label: string; value: string }[] = [
 
 const CITIES: { label: string; value: string }[] = [
   { label: "Tunis", value: "tunis" },
+  { label: "Ariana", value: "ariana" },
+  { label: "Manouba", value: "manouba" },
+  { label: "Ben Arous", value: "ben-arous" },
+  { label: "La Marsa", value: "la-marsa" },
+  { label: "Carthage", value: "carthage" },
+  { label: "Gammarth", value: "gammarth" },
   { label: "Sfax", value: "sfax" },
   { label: "Sousse", value: "sousse" },
-  { label: "Ariana", value: "ariana" },
   { label: "Nabeul", value: "nabeul" },
   { label: "Monastir", value: "monastir" },
   { label: "Bizerte", value: "bizerte" },
   { label: "Gabès", value: "gabes" },
+  { label: "Kairouan", value: "kairouan" },
+  { label: "Béja", value: "beja" },
+  { label: "Gafsa", value: "gafsa" },
+  { label: "Kasserine", value: "kasserine" },
+  { label: "Sidi Bouzid", value: "sidi-bouzid" },
+  { label: "Mahdia", value: "mahdia" },
+  { label: "Médenine", value: "medenine" },
+  { label: "Tataouine", value: "tataouine" },
+  { label: "Tozeur", value: "tozeur" },
+  { label: "Kebili", value: "kebili" },
+  { label: "Siliana", value: "siliana" },
+  { label: "Le Kef", value: "le-kef" },
+  { label: "Jendouba", value: "jendouba" },
+  { label: "Zaghouan", value: "zaghouan" },
 ];
 
 // City centroids (fallback when doctor has no lat/lng)
@@ -202,6 +223,145 @@ function buildLeafletHtml(
   });
 </script>
 </body></html>`;
+}
+
+// ---------- DropdownPicker ----------
+type Item = { value: string; label: string };
+
+function DropdownPicker({
+  label,
+  value,
+  items,
+  placeholder,
+  onChange,
+  searchable,
+}: {
+  label: string;
+  value: string | null;
+  items: Item[];
+  placeholder: string;
+  onChange: (v: string | null) => void;
+  searchable?: boolean;
+}) {
+  const [open, setOpen] = useState(false);
+  const [q, setQ] = useState("");
+  const selected = useMemo(() => items.find((i) => i.value === value) ?? null, [items, value]);
+  const filtered = useMemo(() => {
+    if (!searchable || !q.trim()) return items;
+    const needle = q.trim().toLowerCase();
+    return items.filter((i) => i.label.toLowerCase().includes(needle));
+  }, [items, q, searchable]);
+
+  const close = () => {
+    setOpen(false);
+    setQ("");
+  };
+
+  return (
+    <>
+      <Text style={styles.filterLabel}>{label}</Text>
+      <Pressable
+        onPress={() => setOpen(true)}
+        style={styles.ddButton}
+      >
+        <Text
+          style={[
+            styles.ddButtonText,
+            !selected && styles.ddButtonPlaceholder,
+          ]}
+          numberOfLines={1}
+        >
+          {selected ? selected.label : placeholder}
+        </Text>
+        <Ionicons name="chevron-down" size={18} color={colors.foregroundSecondary} />
+      </Pressable>
+
+      <Modal
+        visible={open}
+        animationType="slide"
+        transparent
+        onRequestClose={close}
+      >
+        <View style={styles.ddBackdrop}>
+          <Pressable style={{ flex: 1 }} onPress={close} />
+          <SafeAreaView style={styles.ddSheet} edges={["bottom"]}>
+            <View style={styles.ddSheetHeader}>
+              <Text style={styles.ddSheetTitle}>{placeholder}</Text>
+              <Pressable onPress={close} hitSlop={10} style={styles.ddCloseBtn}>
+                <Ionicons name="close" size={22} color={colors.foreground} />
+              </Pressable>
+            </View>
+
+            {searchable && (
+              <View style={styles.ddSearchBox}>
+                <Ionicons name="search-outline" size={16} color={colors.foregroundSecondary} />
+                <TextInput
+                  style={styles.ddSearchInput}
+                  placeholder={t("patient.recherche.searchInList")}
+                  placeholderTextColor={colors.foregroundSecondary}
+                  value={q}
+                  onChangeText={setQ}
+                  autoCorrect={false}
+                  autoCapitalize="none"
+                />
+                {q.length > 0 && (
+                  <Pressable onPress={() => setQ("")} hitSlop={10}>
+                    <Ionicons name="close-circle" size={16} color={colors.foregroundSecondary} />
+                  </Pressable>
+                )}
+              </View>
+            )}
+
+            {/* Clear / None row */}
+            <Pressable
+              style={styles.ddItem}
+              onPress={() => {
+                onChange(null);
+                close();
+              }}
+            >
+              <Text style={[styles.ddItemText, styles.ddNoneText]}>
+                {t("patient.recherche.none")}
+              </Text>
+              {value === null && (
+                <Ionicons name="checkmark" size={18} color={colors.teal} />
+              )}
+            </Pressable>
+
+            <FlatList
+              data={filtered}
+              keyExtractor={(it) => it.value}
+              keyboardShouldPersistTaps="handled"
+              renderItem={({ item }) => {
+                const active = item.value === value;
+                return (
+                  <Pressable
+                    style={styles.ddItem}
+                    onPress={() => {
+                      onChange(item.value);
+                      close();
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.ddItemText,
+                        active && styles.ddItemTextActive,
+                      ]}
+                    >
+                      {item.label}
+                    </Text>
+                    {active && (
+                      <Ionicons name="checkmark" size={18} color={colors.teal} />
+                    )}
+                  </Pressable>
+                );
+              }}
+            />
+          </SafeAreaView>
+        </View>
+      </Modal>
+    </>
+  );
 }
 
 // ---------- screen ----------
@@ -531,53 +691,25 @@ export default function PatientRecherche() {
             />
           }
         >
-          {/* Specialty chips */}
-          <Text style={styles.filterLabel}>{t("patient.recherche.specialty")}</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsRow}
-            style={styles.chipsScroll}
-          >
-            {SPECIALTIES.map((s) => {
-              const active = specialty === s.value;
-              return (
-                <Pressable
-                  key={s.value}
-                  style={[styles.chip, active && styles.chipActive]}
-                  onPress={() => setSpecialty(active ? null : s.value)}
-                >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                    {s.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+          {/* Specialty dropdown */}
+          <DropdownPicker
+            label={t("patient.recherche.specialty")}
+            value={specialty}
+            items={SPECIALTIES}
+            placeholder={t("patient.recherche.selectSpecialty")}
+            onChange={setSpecialty}
+            searchable
+          />
 
-          {/* City chips */}
-          <Text style={styles.filterLabel}>{t("patient.recherche.city")}</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.chipsRow}
-            style={styles.chipsScroll}
-          >
-            {CITIES.map((c) => {
-              const active = city === c.value;
-              return (
-                <Pressable
-                  key={c.value}
-                  style={[styles.chip, active && styles.chipActive]}
-                  onPress={() => setCity(active ? null : c.value)}
-                >
-                  <Text style={[styles.chipText, active && styles.chipTextActive]}>
-                    {c.label}
-                  </Text>
-                </Pressable>
-              );
-            })}
-          </ScrollView>
+          {/* City dropdown */}
+          <DropdownPicker
+            label={t("patient.recherche.city")}
+            value={city}
+            items={CITIES}
+            placeholder={t("patient.recherche.selectCity")}
+            onChange={setCity}
+            searchable
+          />
 
           {/* Fee chips */}
           <Text style={styles.filterLabel}>{t("patient.recherche.fee")}</Text>
@@ -972,4 +1104,97 @@ const styles = StyleSheet.create({
   emptyState: { alignItems: "center", paddingVertical: spacing.xl, gap: spacing.sm },
   emptyText: { fontSize: 14, color: colors.foregroundSecondary, textAlign: "center" },
   emptySubText: { fontSize: 13, color: colors.foregroundSecondary, textAlign: "center" },
+  ddButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    borderRadius: radii.full,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.bg,
+  },
+  ddButtonText: {
+    flex: 1,
+    fontSize: 14,
+    fontWeight: "600",
+    color: colors.foreground,
+  },
+  ddButtonPlaceholder: {
+    fontWeight: "500",
+    color: colors.foregroundSecondary,
+  },
+  ddBackdrop: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.4)",
+    justifyContent: "flex-end",
+  },
+  ddSheet: {
+    maxHeight: "75%",
+    backgroundColor: colors.bg,
+    borderTopLeftRadius: radii.lg,
+    borderTopRightRadius: radii.lg,
+    paddingTop: spacing.md,
+  },
+  ddSheetHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.sm,
+  },
+  ddSheetTitle: {
+    fontSize: 16,
+    fontWeight: "700",
+    color: colors.foreground,
+  },
+  ddCloseBtn: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  ddSearchBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: spacing.sm,
+    marginHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: radii.lg,
+    backgroundColor: colors.bg,
+  },
+  ddSearchInput: {
+    flex: 1,
+    fontSize: 14,
+    color: colors.foreground,
+    padding: 0,
+  },
+  ddItem: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: spacing.lg,
+    paddingVertical: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  ddItemText: {
+    fontSize: 15,
+    color: colors.foreground,
+  },
+  ddItemTextActive: {
+    color: colors.teal,
+    fontWeight: "700",
+  },
+  ddNoneText: {
+    color: colors.foregroundSecondary,
+    fontStyle: "italic",
+  },
 });
