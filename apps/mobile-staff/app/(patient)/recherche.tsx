@@ -10,11 +10,11 @@ import {
   StyleSheet,
   Switch,
   BackHandler,
-  Platform,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { router, Stack } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
+import { WebView, type WebViewMessageEvent } from "react-native-webview";
 import { colors, spacing, radii, api, t, useLocale } from "@doktori/mobile-core";
 
 // ---------- types ----------
@@ -137,18 +137,71 @@ function formatDistance(km: number): string {
   return `${Math.round(km)} ${t("patient.recherche.km")}`;
 }
 
-// ---------- lazy map module (graceful fallback in Expo Go) ----------
-let MapsModule: typeof import("react-native-maps") | null | undefined = undefined;
-function loadMaps(): typeof import("react-native-maps") | null {
-  if (MapsModule !== undefined) return MapsModule;
-  try {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    MapsModule = require("react-native-maps");
-    return MapsModule as typeof import("react-native-maps");
-  } catch {
-    MapsModule = null;
-    return null;
+// ---------- Leaflet (OpenStreetMap) HTML builder ----------
+type MarkerData = { id: string; slug: string; name: string; specialty: string; city: string; lat: number; lng: number };
+
+function buildLeafletHtml(
+  center: LatLng,
+  zoom: number,
+  markers: MarkerData[],
+  userLoc: LatLng | null,
+  viewProfileLabel: string
+): string {
+  const safe = (s: string) =>
+    String(s ?? "")
+      .replace(/\\/g, "\\\\")
+      .replace(/'/g, "\\'")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+  const markersJs = markers
+    .map(
+      (m) =>
+        `addMarker(${m.lat},${m.lng},'${safe(m.id)}','${safe(m.slug)}','${safe(m.name)}','${safe(m.specialty)}','${safe(m.city)}');`
+    )
+    .join("\n");
+  const userJs = userLoc
+    ? `L.circleMarker([${userLoc.lat},${userLoc.lng}],{radius:7,color:'#0891B2',fillColor:'#0891B2',fillOpacity:0.6,weight:2}).addTo(map);`
+    : "";
+  return `<!DOCTYPE html>
+<html><head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no" />
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<style>
+  html,body,#map{margin:0;padding:0;height:100%;width:100%;background:#eee;}
+  .leaflet-popup-content{margin:8px 10px;font-family:-apple-system,Roboto,sans-serif;}
+  .pop-name{font-size:14px;font-weight:700;color:#111;}
+  .pop-meta{font-size:12px;color:#666;margin-top:2px;}
+  .pop-link{display:inline-block;margin-top:6px;font-size:12px;font-weight:700;color:#0891B2;text-decoration:none;}
+</style>
+</head><body>
+<div id="map"></div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+  var map = L.map('map',{zoomControl:true,attributionControl:true}).setView([${center.lat},${center.lng}], ${zoom});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{
+    maxZoom: 19,
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+  }).addTo(map);
+  function post(obj){try{window.ReactNativeWebView.postMessage(JSON.stringify(obj));}catch(e){}}
+  function addMarker(lat,lng,id,slug,name,specialty,city){
+    var m = L.marker([lat,lng]).addTo(map);
+    var html = '<div class="pop-name">'+name+'</div>'+
+      '<div class="pop-meta">'+specialty+(city?' &middot; '+city:'')+'</div>'+
+      '<a class="pop-link" href="#" onclick="post({type:\\'marker\\',slug:\\''+slug+'\\'});return false;">${safe(viewProfileLabel)}</a>';
+    m.bindPopup(html);
   }
+  ${userJs}
+  ${markersJs}
+  window.__recenter = function(lat,lng,z){ map.setView([lat,lng], z || 13, {animate:true}); };
+  document.addEventListener('message', function(ev){
+    try{ var d = JSON.parse(ev.data); if(d && d.type==='recenter') window.__recenter(d.lat,d.lng,d.zoom); }catch(e){}
+  });
+  window.addEventListener('message', function(ev){
+    try{ var d = JSON.parse(ev.data); if(d && d.type==='recenter') window.__recenter(d.lat,d.lng,d.zoom); }catch(e){}
+  });
+</script>
+</body></html>`;
 }
 
 // ---------- screen ----------
@@ -173,7 +226,7 @@ export default function PatientRecherche() {
   const [userLocation, setUserLocation] = useState<LatLng | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
 
-  const mapRef = useRef<unknown>(null);
+  const mapRef = useRef<WebView | null>(null);
 
   // Detect location on mount
   useEffect(() => {
@@ -286,97 +339,87 @@ export default function PatientRecherche() {
     return enriched;
   }, [results, userLocation, sortByDistance]);
 
-  const initialRegion = useMemo(() => {
-    const center = userLocation ?? TUNIS_DEFAULT;
-    return {
-      latitude: center.lat,
-      longitude: center.lng,
-      latitudeDelta: userLocation ? 0.15 : 0.5,
-      longitudeDelta: userLocation ? 0.15 : 0.5,
-    };
-  }, [userLocation]);
+  const mapCenter = useMemo<LatLng>(
+    () => userLocation ?? TUNIS_DEFAULT,
+    [userLocation]
+  );
+  const mapZoom = userLocation ? 12 : 7;
+
+  const mapMarkers = useMemo<MarkerData[]>(() => {
+    return displayedResults
+      .filter((r) => r.coords)
+      .map(({ doc, coords }) => ({
+        id: doc.id,
+        slug: doc.slug,
+        name: doc.name,
+        specialty: doc.specialty || "",
+        city: doc.city || "",
+        lat: coords!.lat,
+        lng: coords!.lng,
+      }));
+  }, [displayedResults]);
+
+  // Rebuild HTML only when marker set or user location changes (avoids reload churn).
+  const leafletHtml = useMemo(
+    () =>
+      buildLeafletHtml(
+        mapCenter,
+        mapZoom,
+        mapMarkers,
+        userLocation,
+        t("patient.recherche.viewProfile")
+      ),
+    [mapCenter, mapZoom, mapMarkers, userLocation]
+  );
 
   const recenter = useCallback(() => {
-    const Maps = loadMaps();
-    if (!Maps || !mapRef.current) return;
+    if (!mapRef.current) return;
     const target = userLocation ?? TUNIS_DEFAULT;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const m: any = mapRef.current;
-    if (typeof m.animateToRegion === "function") {
-      m.animateToRegion(
-        {
-          latitude: target.lat,
-          longitude: target.lng,
-          latitudeDelta: 0.1,
-          longitudeDelta: 0.1,
-        },
-        500
-      );
-    }
+    const msg = JSON.stringify({
+      type: "recenter",
+      lat: target.lat,
+      lng: target.lng,
+      zoom: 13,
+    });
+    mapRef.current.injectJavaScript(
+      `try{window.__recenter(${target.lat},${target.lng},13);}catch(e){};true;`
+    );
+    // also dispatch a message for completeness
+    void msg;
   }, [userLocation]);
+
+  const onMapMessage = useCallback((ev: WebViewMessageEvent) => {
+    try {
+      const data = JSON.parse(ev.nativeEvent.data) as { type?: string; slug?: string };
+      if (data?.type === "marker" && data.slug) {
+        router.push({
+          pathname: "/(patient)/doctor/[slug]" as never,
+          params: { slug: data.slug },
+        });
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   // ---------- map render ----------
   function renderMap() {
-    const Maps = loadMaps();
-    if (!Maps) {
-      return (
-        <View style={styles.mapPlaceholder}>
-          <Ionicons name="map-outline" size={48} color={colors.border} />
-          <Text style={styles.emptyText}>{t("patient.recherche.mapUnavailable")}</Text>
-        </View>
-      );
-    }
-    const MapView = Maps.default;
-    const Marker = Maps.Marker;
-    const Callout = Maps.Callout;
-    const PROVIDER_GOOGLE =
-      Platform.OS === "android" ? Maps.PROVIDER_GOOGLE : undefined;
-
     return (
       <View style={styles.mapContainer}>
-        <MapView
-          ref={(r: unknown) => {
+        <WebView
+          ref={(r) => {
             mapRef.current = r;
           }}
           style={StyleSheet.absoluteFillObject}
-          provider={PROVIDER_GOOGLE}
-          initialRegion={initialRegion}
-          showsUserLocation={!!userLocation}
-          showsMyLocationButton={false}
-        >
-          {displayedResults.map(({ doc, coords }) => {
-            if (!coords) return null;
-            return (
-              <Marker
-                key={doc.id}
-                coordinate={{ latitude: coords.lat, longitude: coords.lng }}
-                pinColor={colors.teal}
-              >
-                <Callout
-                  onPress={() =>
-                    router.push({
-                      pathname: "/(patient)/doctor/[slug]" as never,
-                      params: { slug: doc.slug },
-                    })
-                  }
-                >
-                  <View style={styles.callout}>
-                    <Text style={styles.calloutName} numberOfLines={1}>
-                      {doc.name}
-                    </Text>
-                    <Text style={styles.calloutMeta} numberOfLines={1}>
-                      {doc.specialty}
-                      {doc.city ? ` · ${doc.city}` : ""}
-                    </Text>
-                    <Text style={styles.calloutLink}>
-                      {t("patient.recherche.viewProfile")}
-                    </Text>
-                  </View>
-                </Callout>
-              </Marker>
-            );
-          })}
-        </MapView>
+          originWhitelist={["*"]}
+          source={{ html: leafletHtml }}
+          javaScriptEnabled
+          domStorageEnabled
+          onMessage={onMapMessage}
+          setSupportMultipleWindows={false}
+          androidLayerType="hardware"
+          allowsInlineMediaPlayback
+        />
 
         <Pressable style={styles.recenterBtn} onPress={recenter} hitSlop={6}>
           <Ionicons name="locate" size={20} color={colors.teal} />

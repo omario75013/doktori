@@ -34,12 +34,6 @@
       "adaptiveIcon": {
         "backgroundColor": "#0E7490"
       },
-      "_googleMapsNote": "Add a free Google Maps API key from https://console.cloud.google.com to the config.googleMaps.apiKey field below to enable native maps on Android. Without it, the map will fall back to the OSM-based Apple/default tiles on iOS and a blank gray map on Android.",
-      "config": {
-        "googleMaps": {
-          "apiKey": "REPLACE_WITH_GOOGLE_MAPS_API_KEY"
-        }
-      },
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO",

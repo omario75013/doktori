@@ -91,14 +91,14 @@ export default function PlusRadialMenu() {
       onPress: () => go("/(patient)/recherche"),
     },
     {
-      key: "video",
-      label: t("patient.plus.teleconsult"),
-      icon: "videocam-outline",
+      key: "document",
+      label: t("patient.plus.document"),
+      icon: "document-attach-outline",
       bg: "#FFFFFF",
       iconColor: colors.teal,
       dx: 0,
       dy: -(R + 30),
-      onPress: () => go("/(patient)/rendez-vous"),
+      onPress: () => go("/(patient)/mes-documents"),
     },
     {
       key: "sos",
