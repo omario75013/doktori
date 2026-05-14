@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
-import { Calendar, CalendarPlus, X, Search, Phone, MessageSquare, UserCheck, Pencil } from "lucide-react";
+import { Calendar, CalendarPlus, X, Search, Phone, MessageSquare, UserCheck, Pencil, Building2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { SMSModal } from "@/components/sms-modal";
@@ -22,6 +22,7 @@ type Appointment = {
   patientPhone: string;
   patientNoShowCount: number;
   patientLastMinuteCancelCount: number;
+  clinicName: string | null;
 };
 
 type Practice = {
@@ -31,6 +32,7 @@ type Practice = {
   kind: "cabinet" | "clinic";
   isPrimary: boolean;
   isActive: boolean;
+  clinicName: string | null;
 };
 
 type PatientOption = {
@@ -121,6 +123,7 @@ function NewAppointmentModal({
     startTime: string;
     endTime: string;
     practiceId: string;
+    available?: boolean;
   }>>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [customTime, setCustomTime] = useState(false);
@@ -132,14 +135,16 @@ function NewAppointmentModal({
       .then((r) => (r.ok ? r.json() : null))
       .then((d) => {
         if (cancelled) return;
-        const slots = (d?.days?.[0]?.slots ?? []) as Array<{
+        const raw = (d?.days?.[0]?.slots ?? []) as Array<{
           startTime: string;
           endTime: string;
           practiceId: string;
+          available?: boolean;
         }>;
+        // Filter out unavailable slots (booked or past) so the doctor never
+        // sees a slot they can't pick.
+        const slots = raw.filter((s) => s.available !== false);
         setAvailableSlots(slots);
-        // Auto-select the first slot when the date changes if the
-        // current time isn't in the new list.
         if (slots.length > 0 && !slots.some((s) => s.startTime === startTime)) {
           setStartTime(slots[0].startTime);
         }
@@ -298,41 +303,62 @@ function NewAppointmentModal({
             </div>
           </div>
 
-          {/* Doctor's own availability — only shown when NOT in custom-time mode */}
-          {!customTime && (
-            <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
-                {t("availableSlots")}
-              </label>
-              {slotsLoading ? (
-                <p className="text-xs text-gray-400 py-3">{t("loadingSlots")}</p>
-              ) : availableSlots.length === 0 ? (
-                <div className="text-xs text-gray-400 py-3 px-3 rounded-xl border border-dashed border-border bg-secondary/30">
-                  {t("noSlotsForDate")}
-                </div>
-              ) : (
-                <div className="max-h-40 overflow-y-auto pe-1 grid grid-cols-3 sm:grid-cols-4 gap-1.5">
-                  {availableSlots.map((s, i) => {
-                    const active = s.startTime === startTime;
-                    return (
-                      <button
-                        key={`${s.startTime}-${s.practiceId}-${i}`}
-                        type="button"
-                        onClick={() => setStartTime(s.startTime)}
-                        className={`h-9 rounded-lg text-xs font-medium border transition-colors ${
-                          active
-                            ? "bg-primary text-white border-primary"
-                            : "bg-white dark:bg-gray-800 text-foreground border-border hover:border-primary/60"
-                        }`}
+          {/* Doctor's own availability — only shown when NOT in custom-time mode.
+              Split into Matin (< 12:00) and Après-midi (>= 12:00) dropdowns;
+              unavailable slots are already filtered out upstream. */}
+          {!customTime && (() => {
+            const morning = availableSlots.filter((s) => Number(s.startTime.split(":")[0]) < 12);
+            const afternoon = availableSlots.filter((s) => Number(s.startTime.split(":")[0]) >= 12);
+            return (
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+                  {t("availableSlots")}
+                </label>
+                {slotsLoading ? (
+                  <p className="text-xs text-gray-400 py-3">{t("loadingSlots")}</p>
+                ) : availableSlots.length === 0 ? (
+                  <div className="text-xs text-gray-400 py-3 px-3 rounded-xl border border-dashed border-border bg-secondary/30">
+                    {t("noSlotsForDate")}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2">
+                    <div>
+                      <p className="text-[10px] font-semibold text-gray-500 mb-1">{t("morning")}</p>
+                      <select
+                        value={morning.some((s) => s.startTime === startTime) ? startTime : ""}
+                        onChange={(e) => e.target.value && setStartTime(e.target.value)}
+                        disabled={morning.length === 0}
+                        className="w-full h-10 rounded-xl border border-border px-2 text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
                       >
-                        {s.startTime}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
+                        <option value="">{morning.length === 0 ? "—" : t("selectSlot")}</option>
+                        {morning.map((s, i) => (
+                          <option key={`m-${s.startTime}-${i}`} value={s.startTime}>
+                            {s.startTime}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold text-gray-500 mb-1">{t("afternoon")}</p>
+                      <select
+                        value={afternoon.some((s) => s.startTime === startTime) ? startTime : ""}
+                        onChange={(e) => e.target.value && setStartTime(e.target.value)}
+                        disabled={afternoon.length === 0}
+                        className="w-full h-10 rounded-xl border border-border px-2 text-sm bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                      >
+                        <option value="">{afternoon.length === 0 ? "—" : t("selectSlot")}</option>
+                        {afternoon.map((s, i) => (
+                          <option key={`a-${s.startTime}-${i}`} value={s.startTime}>
+                            {s.startTime}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Type */}
           <div>
@@ -790,7 +816,7 @@ export default function RendezVousPage() {
                   : "bg-white border border-border text-foreground hover:bg-secondary"
               }`}
             >
-              {p.name}
+              {p.clinicName ? `${p.name} · ${p.clinicName}` : p.name}
               {p.kind === "clinic" && (
                 <span
                   className={`text-[10px] rounded-full px-1.5 py-0.5 ${
@@ -834,8 +860,16 @@ export default function RendezVousPage() {
                 const isUpdating = updating === appt.id;
                 return (
                   <tr key={appt.id} className="hover:bg-secondary transition-colors">
-                    <td className="px-4 py-3 whitespace-nowrap text-gray-700 dark:text-gray-300">
-                      {format(new Date(appt.startsAt), "EEE d MMM yyyy HH:mm", { locale: fr })}
+                    <td className="px-4 py-3 text-gray-700 dark:text-gray-300">
+                      <div className="whitespace-nowrap">
+                        {format(new Date(appt.startsAt), "EEE d MMM yyyy HH:mm", { locale: fr })}
+                      </div>
+                      {appt.clinicName && (
+                        <span className="inline-flex items-center gap-0.5 mt-1 bg-purple-100 text-purple-800 px-2 py-0.5 rounded-full text-[10px] font-semibold">
+                          <Building2 className="h-2.5 w-2.5 shrink-0" />
+                          {appt.clinicName}
+                        </span>
+                      )}
                     </td>
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2 flex-wrap">
@@ -1237,6 +1271,10 @@ function EditAppointmentModal({
   const t = useTranslations("medecin.appointments");
   const start = new Date(appointment.startsAt);
   const end = new Date(appointment.endsAt);
+  const initialDuration = Math.max(
+    5,
+    Math.round((end.getTime() - start.getTime()) / 60000) || 20,
+  );
   const [date, setDate] = useState(format(start, "yyyy-MM-dd"));
   const [startTime, setStartTime] = useState(format(start, "HH:mm"));
   const [endTime, setEndTime] = useState(format(end, "HH:mm"));
@@ -1246,6 +1284,84 @@ function EditAppointmentModal({
   const [reason, setReason] = useState(appointment.reason ?? "");
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Pull doctor availability for the chosen date and offer it as
+  // matin/après-midi dropdowns. The existing slot for THIS appointment
+  // appears as available (the server's getAvailableSlots filters by status
+  // excluding cancelled/no_show — the appointment being edited is otherwise
+  // a "booked" slot from its own perspective, so we re-include it manually).
+  const [slots, setSlots] = useState<Array<{
+    startTime: string;
+    endTime: string;
+    practiceId: string;
+    available?: boolean;
+  }>>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [customTime, setCustomTime] = useState(false);
+
+  // Build a default 08:00–18:00 / 30 min slot list used as a fallback
+  // when the doctor has no active schedule for the chosen date (e.g. a
+  // Saturday). Lets the doctor still pick any time from a dropdown.
+  function buildDefaultSlots(): Array<{ startTime: string; endTime: string; practiceId: string }> {
+    const out: Array<{ startTime: string; endTime: string; practiceId: string }> = [];
+    for (let m = 8 * 60; m + initialDuration <= 18 * 60; m += 30) {
+      const s = `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+      const e = m + initialDuration;
+      const eStr = `${String(Math.floor(e / 60)).padStart(2, "0")}:${String(e % 60).padStart(2, "0")}`;
+      out.push({ startTime: s, endTime: eStr, practiceId: "" });
+    }
+    return out;
+  }
+
+  useEffect(() => {
+    if (!date) return;
+    let cancelled = false;
+    setSlotsLoading(true);
+    fetch(`/api/doctor/availability?date=${date}`, { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (cancelled) return;
+        const raw = (d?.days?.[0]?.slots ?? []) as Array<{
+          startTime: string;
+          endTime: string;
+          practiceId: string;
+          available?: boolean;
+        }>;
+        const ownStart = format(new Date(appointment.startsAt), "HH:mm");
+        const ownDate = format(new Date(appointment.startsAt), "yyyy-MM-dd");
+        const filtered = raw.filter((s) => {
+          if (s.available !== false) return true;
+          return ownDate === date && s.startTime === ownStart;
+        });
+        // Fallback to default slots if the doctor has no schedule.
+        setSlots(filtered.length > 0 ? filtered : buildDefaultSlots());
+      })
+      .catch(() => setSlots(buildDefaultSlots()))
+      .finally(() => {
+        if (!cancelled) setSlotsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [date, appointment.startsAt]);
+
+  // When startTime changes via dropdown, derive endTime from the slot's
+  // endTime (keeps duration consistent with the doctor's schedule).
+  function pickSlot(time: string) {
+    setStartTime(time);
+    const match = slots.find((s) => s.startTime === time);
+    if (match) {
+      setEndTime(match.endTime);
+    } else {
+      // fallback: keep original duration
+      const [hh, mm] = time.split(":").map(Number);
+      const totalMin = hh * 60 + mm + initialDuration;
+      setEndTime(
+        `${String(Math.floor(totalMin / 60)).padStart(2, "0")}:${String(totalMin % 60).padStart(2, "0")}`,
+      );
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -1307,8 +1423,8 @@ function EditAppointmentModal({
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div className="grid grid-cols-2 gap-2">
-            <div className="col-span-2">
+          <div className="space-y-3">
+            <div>
               <label className="block text-xs font-semibold text-gray-600 mb-1">{t("dateLabel")}</label>
               <input
                 type="date"
@@ -1318,26 +1434,90 @@ function EditAppointmentModal({
                 className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">{t("startLabel")}</label>
-              <input
-                type="time"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                required
-                className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
+
+            <div className="flex items-center justify-between">
+              <label className="text-xs font-semibold text-gray-600">{t("startLabel")}</label>
+              <button
+                type="button"
+                onClick={() => setCustomTime((v) => !v)}
+                className="text-[10px] font-medium text-primary hover:underline"
+              >
+                {customTime ? t("backToSlots") : t("pickCustomTime")}
+              </button>
             </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-600 mb-1">{t("endLabel")}</label>
-              <input
-                type="time"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                required
-                className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              />
-            </div>
+
+            {customTime || (!slotsLoading && slots.length === 0) ? (
+              <>
+                {!customTime && slots.length === 0 && (
+                  <p className="text-[11px] text-gray-500 italic">
+                    {t("noSlotsForDate")}
+                  </p>
+                )}
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-500 mb-1">{t("startLabel")}</label>
+                    <input
+                      type="time"
+                      value={startTime}
+                      onChange={(e) => setStartTime(e.target.value)}
+                      required
+                      className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-semibold text-gray-500 mb-1">{t("endLabel")}</label>
+                    <input
+                      type="time"
+                      value={endTime}
+                      onChange={(e) => setEndTime(e.target.value)}
+                      required
+                      className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    />
+                  </div>
+                </div>
+              </>
+            ) : slotsLoading ? (
+              <p className="text-xs text-gray-400 py-2">{t("loadingSlots")}</p>
+            ) : (() => {
+              const morning = slots.filter((s) => Number(s.startTime.split(":")[0]) < 12);
+              const afternoon = slots.filter((s) => Number(s.startTime.split(":")[0]) >= 12);
+              return (
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-500 mb-1">{t("morning")}</p>
+                    <select
+                      value={morning.some((s) => s.startTime === startTime) ? startTime : ""}
+                      onChange={(e) => e.target.value && pickSlot(e.target.value)}
+                      disabled={morning.length === 0}
+                      className="w-full h-10 rounded-xl border border-border px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                    >
+                      <option value="">{morning.length === 0 ? "—" : t("selectSlot")}</option>
+                      {morning.map((s, i) => (
+                        <option key={`m-${s.startTime}-${i}`} value={s.startTime}>
+                          {s.startTime}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-semibold text-gray-500 mb-1">{t("afternoon")}</p>
+                    <select
+                      value={afternoon.some((s) => s.startTime === startTime) ? startTime : ""}
+                      onChange={(e) => e.target.value && pickSlot(e.target.value)}
+                      disabled={afternoon.length === 0}
+                      className="w-full h-10 rounded-xl border border-border px-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary disabled:opacity-50"
+                    >
+                      <option value="">{afternoon.length === 0 ? "—" : t("selectSlot")}</option>
+                      {afternoon.map((s, i) => (
+                        <option key={`a-${s.startTime}-${i}`} value={s.startTime}>
+                          {s.startTime}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+              );
+            })()}
           </div>
           <div>
             <label className="block text-xs font-semibold text-gray-600 mb-1">{t("typeLabel")}</label>

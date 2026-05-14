@@ -1342,10 +1342,20 @@ export const patientDocuments = pgTable(
     patientId: uuid("patient_id")
       .notNull()
       .references(() => patients.id, { onDelete: "cascade" }),
-    /** 'patient' | 'doctor' */
+    /** 'patient' | 'doctor' | 'lab' */
     uploadedBy: varchar("uploaded_by", { length: 10 }).notNull(),
     uploadedByDoctorId: uuid("uploaded_by_doctor_id").references(
       () => doctors.id,
+      { onDelete: "set null" }
+    ),
+    /** Lab that uploaded the file (set when uploadedBy='lab'). */
+    uploadedByLabId: uuid("uploaded_by_lab_id").references(
+      () => labs.id,
+      { onDelete: "set null" }
+    ),
+    /** Lab order that produced this document, if any. */
+    labOrderId: uuid("lab_order_id").references(
+      () => labOrders.id,
       { onDelete: "set null" }
     ),
     sharedWithDoctorIds: uuid("shared_with_doctor_ids").array().notNull().default(sql`'{}'::uuid[]`),
@@ -2539,3 +2549,113 @@ export const meilisearchSynonyms = pgTable("meilisearch_synonyms", {
 });
 export type MeilisearchSynonym = typeof meilisearchSynonyms.$inferSelect;
 export type NewMeilisearchSynonym = typeof meilisearchSynonyms.$inferInsert;
+
+// ── Clinic invitations ────────────────────────────────────
+// Replaces silent-add behaviour in /api/clinique/doctors. A clinic admin
+// invites a doctor by email; doctor sees the row in their bell and must
+// accept before joining `clinic_doctors`.
+export const clinicInvitations = pgTable(
+  "clinic_invitations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clinicId: uuid("clinic_id").notNull().references(() => clinics.id, { onDelete: "cascade" }),
+    // Either a known doctor row, or an email for off-platform invite.
+    doctorId: uuid("doctor_id").references(() => doctors.id, { onDelete: "cascade" }),
+    email: varchar("email", { length: 255 }),
+    role: varchar("role", { length: 20 }).notNull().default("member"), // admin | member
+    status: varchar("status", { length: 20 }).notNull().default("pending"), // pending | accepted | declined
+    token: varchar("token", { length: 64 }).notNull().unique(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("clinic_invitations_doctor_idx").on(t.doctorId, t.status),
+    index("clinic_invitations_clinic_idx").on(t.clinicId, t.status),
+  ],
+);
+export type ClinicInvitation = typeof clinicInvitations.$inferSelect;
+export type NewClinicInvitation = typeof clinicInvitations.$inferInsert;
+
+// ── Clinic notes (replaces localStorage) ──────────────────
+export const clinicNotes = pgTable(
+  "clinic_notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clinicId: uuid("clinic_id").notNull().references(() => clinics.id, { onDelete: "cascade" }),
+    /** 'clinic' | 'doctor' */
+    authorType: varchar("author_type", { length: 10 }).notNull().default("clinic"),
+    authorId: uuid("author_id"), // doctor id when authorType='doctor'
+    title: varchar("title", { length: 255 }),
+    body: text("body").notNull(),
+    pinned: boolean("pinned").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("clinic_notes_clinic_idx").on(t.clinicId)],
+);
+export type ClinicNote = typeof clinicNotes.$inferSelect;
+export type NewClinicNote = typeof clinicNotes.$inferInsert;
+
+// ── Labs / Radiology ─────────────────────────────────────
+// Third-party medical labs (analyses) + radiology centres. Mirrors
+// `clinics` shape so the admin verification flow can be reused.
+export const labs = pgTable("labs", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  name: varchar("name", { length: 255 }).notNull(),
+  slug: varchar("slug", { length: 255 }).notNull().unique(),
+  address: text("address").notNull(),
+  city: varchar("city", { length: 50 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  logoUrl: text("logo_url"),
+  plan: varchar("plan", { length: 20 }).notNull().default("free"),
+  /** Pending until admin verifies. Login is rejected when status != 'verified'. */
+  verificationStatus: varchar("verification_status", { length: 20 }).notNull().default("pending"),
+  /** Services offered: 'analyses_medicales' | 'radiologie' | 'imagerie' | 'echographie' | ... */
+  services: text("services").array().notNull().default(sql`'{}'::text[]`),
+  accreditations: text("accreditations").array().notNull().default(sql`'{}'::text[]`),
+  openingHours: jsonb("opening_hours"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+}, (t) => [
+  index("labs_city_idx").on(t.city),
+  index("labs_verification_idx").on(t.verificationStatus),
+]);
+export type Lab = typeof labs.$inferSelect;
+export type NewLab = typeof labs.$inferInsert;
+
+// ── Lab orders (ordonnance d'analyses) ────────────────────
+// Doctor creates an order targeting a specific lab (or null for "any
+// lab"). Lab fulfils it by uploading the result via
+// /api/laboratoire/orders/[id]/results, which writes a patient_documents
+// row already shared with the prescribing doctor.
+export const labOrders = pgTable(
+  "lab_orders",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    /** Null means the patient can fulfil at any lab. */
+    labId: uuid("lab_id").references(() => labs.id, { onDelete: "set null" }),
+    /** Array of { code, label } objects describing requested tests. */
+    tests: jsonb("tests").notNull().default(sql`'[]'::jsonb`),
+    instructions: text("instructions"),
+    urgency: varchar("urgency", { length: 10 }).notNull().default("routine"), // routine | urgent
+    /** pending | collected | completed | cancelled */
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    /** Short token used when a walk-in patient hands the order to a lab. */
+    accessToken: varchar("access_token", { length: 64 }).notNull().unique(),
+    completedByLabId: uuid("completed_by_lab_id").references(() => labs.id, { onDelete: "set null" }),
+    completedAt: timestamp("completed_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("lab_orders_doctor_idx").on(t.doctorId, t.status),
+    index("lab_orders_patient_idx").on(t.patientId),
+    index("lab_orders_lab_idx").on(t.labId, t.status),
+  ],
+);
+export type LabOrder = typeof labOrders.$inferSelect;
+export type NewLabOrder = typeof labOrders.$inferInsert;

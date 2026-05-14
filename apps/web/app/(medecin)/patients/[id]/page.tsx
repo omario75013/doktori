@@ -36,9 +36,11 @@ import {
   Mail,
   Send,
   X as XClose,
+  FlaskConical,
 } from "lucide-react";
 import { ReferPatientModal } from "./refer-patient-modal";
 import { CertificatesSection } from "./certificates-tab";
+import { LabOrdersSection } from "./lab-orders-tab";
 import { toast } from "sonner";
 import { QuillEditor } from "../../modeles/components/quill-editor";
 import { TemplateLookup } from "../../modeles/components/template-lookup";
@@ -349,7 +351,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
   const [deleting, setDeleting] = useState(false);
   const [viewerRole, setViewerRole] = useState<"doctor" | "secretary">("doctor");
   const [viewerPerms, setViewerPerms] = useState<Record<string, boolean> | null>(null);
-  const [tab, setTab] = useState<"general" | "dossier" | "rdv" | "ordonnances" | "certificats" | "documents" | "timeline">("general");
+  const [tab, setTab] = useState<"general" | "dossier" | "rdv" | "ordonnances" | "certificats" | "documents" | "timeline" | "laborders">("general");
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   // Documents shared via the new patient_documents table (patient uploads
   // they explicitly shared with this doctor + doctor-created shared docs).
@@ -672,6 +674,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
             { id: "ordonnances", label: t("tabPrescriptions"), icon: Pill },
             { id: "certificats", label: t("tabCertificates"), icon: Award },
             { id: "documents", label: t("tabDocuments"), icon: FileUp },
+            { id: "laborders", label: t("tabLabOrders"), icon: FlaskConical },
           ] as const).map((tabItem) => {
             const Icon = tabItem.icon;
             return (
@@ -906,6 +909,15 @@ function PatientDetail({ listPath }: { listPath: string }) {
           events={timeline}
           onRefresh={loadTimeline}
         />
+      )}
+
+      {tab === "laborders" && viewerRole === "doctor" && (
+        <LabOrdersSection patientId={params.id!} />
+      )}
+      {tab === "laborders" && viewerRole !== "doctor" && (
+        <div className="ds-card p-10 text-center text-sm text-gray-400">
+          Accès aux demandes d&apos;analyses réservé au médecin.
+        </div>
       )}
 
       {referOpen && patient && (

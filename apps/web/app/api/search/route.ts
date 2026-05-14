@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { meili, DOCTORS_INDEX, CLINICS_INDEX } from "@/lib/meilisearch";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
-import { db, doctorSchedules, appointments, doctors } from "@doktori/db";
+import { db, doctorSchedules, appointments, doctors, labs } from "@doktori/db";
 import { eq, and, gte, lte, not, inArray, sql } from "drizzle-orm";
 
 // ─────────────────────────────── UTILITIES ────────────────────────────────────
@@ -428,9 +428,43 @@ export async function GET(req: Request) {
     }
   }
 
+  // ── Lab search (DB-only — labs are not in Meilisearch) ────────────────────
+  let labHits: Array<{ id: string; name: string; slug: string; city: string; address: string; services: string[]; logoUrl: string | null }> = [];
+  if (q || city) {
+    try {
+      const labClauses = [eq(labs.verificationStatus, "verified")];
+      if (city) labClauses.push(eq(labs.city, city));
+      // text filter: match name, address, or service tags
+      const searchFor = (searchText || q || "").trim();
+      if (searchFor.length > 0) {
+        const pat = `%${searchFor}%`;
+        labClauses.push(
+          sql`(${labs.name} ILIKE ${pat} OR ${labs.address} ILIKE ${pat} OR EXISTS (SELECT 1 FROM unnest(${labs.services}) s WHERE s ILIKE ${pat}))`
+        );
+      }
+      const labRows = await db
+        .select({
+          id: labs.id,
+          name: labs.name,
+          slug: labs.slug,
+          city: labs.city,
+          address: labs.address,
+          services: labs.services,
+          logoUrl: labs.logoUrl,
+        })
+        .from(labs)
+        .where(and(...labClauses))
+        .limit(50);
+      labHits = labRows;
+    } catch {
+      // ignore
+    }
+  }
+
   return NextResponse.json({
     hits,
     clinics: clinicHits,
+    labs: labHits,
     totalCount: totalBeforeLimit,
     parsed: { specialty, city, text: searchText },
     expanded,

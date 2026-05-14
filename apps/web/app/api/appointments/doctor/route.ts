@@ -1,6 +1,6 @@
 import { NextResponse, NextRequest } from "next/server";
 import { z } from "zod";
-import { db, appointments, patients, doctorPractices } from "@doktori/db";
+import { db, appointments, patients, doctorPractices, clinics } from "@doktori/db";
 import { eq, and, gte, lte, desc } from "drizzle-orm";
 import { requireDoctorOrSecretaryUnified } from "@/lib/require-auth";
 
@@ -35,9 +35,12 @@ export async function GET(req: NextRequest) {
       patientPhone: patients.phone,
       patientNoShowCount: patients.noShowCount,
       patientLastMinuteCancelCount: patients.lastMinuteCancelCount,
+      clinicName: clinics.name,
     })
     .from(appointments)
     .innerJoin(patients, eq(appointments.patientId, patients.id))
+    .leftJoin(doctorPractices, eq(appointments.practiceId, doctorPractices.id))
+    .leftJoin(clinics, eq(doctorPractices.clinicId, clinics.id))
     .where(and(...conditions))
     .orderBy(desc(appointments.startsAt))
     .limit(100);

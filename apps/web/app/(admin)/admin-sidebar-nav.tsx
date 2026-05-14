@@ -32,6 +32,7 @@ import {
   BookOpen,
   ChevronLeft,
   ChevronRight,
+  FlaskConical,
 } from "lucide-react";
 
 const ADMIN_COLLAPSED_KEY = "doktori_admin_sidebar_collapsed";
@@ -59,6 +60,7 @@ const orgLinks: NavLink[] = [
   { href: "/admin/promotions", key: "promotions", icon: Tag },
   { href: "/admin/communications", key: "communications", icon: Phone },
   { href: "/admin/cliniques", key: "cliniques", icon: Building2 },
+  { href: "/admin/laboratoires", key: "labs", icon: FlaskConical },
   { href: "/admin/secretaires", key: "secretaires", icon: UserCog },
   { href: "/admin/parrainage", key: "parrainage", icon: Star },
   { href: "/admin/catalog/specialites", key: "catalogue", icon: FileText },

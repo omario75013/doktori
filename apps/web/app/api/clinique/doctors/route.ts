@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { db, clinics, clinicDoctors, doctors } from "@doktori/db";
+import { randomBytes } from "crypto";
+import { db, clinics, clinicDoctors, clinicInvitations, doctors } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 import { requireClinic } from "@/lib/clinic-auth";
 import { sendEmail } from "@/lib/email";
@@ -25,11 +26,6 @@ export async function GET() {
   return NextResponse.json({ doctors: rows });
 }
 
-// CONSENT NOTE: Doctors are currently added directly to clinic_doctors without an acceptance step.
-// A proper consent flow requires a clinic_invitations table with status (pending|accepted|declined)
-// and a doctor-facing acceptance endpoint. This is tracked as a required migration before scaling.
-// In the interim, an email notification is sent to the doctor immediately upon addition so they
-// are aware and can contact support to be removed if they did not consent.
 export async function POST(req: Request) {
   const clinic = await requireClinic();
   if (clinic instanceof NextResponse) return clinic;
@@ -50,69 +46,76 @@ export async function POST(req: Request) {
   const normalizedEmail = email.toLowerCase().trim();
   const assignedRole = role === "admin" ? "admin" : "member";
 
-  // Verify the doctor exists before adding
+  // Look up doctor by email (may be null for off-platform invites)
   const [doctor] = await db
     .select({ id: doctors.id, name: doctors.name, email: doctors.email })
     .from(doctors)
     .where(eq(doctors.email, normalizedEmail))
     .limit(1);
 
-  if (!doctor) {
-    return NextResponse.json(
-      { error: "Aucun médecin trouvé avec cet email" },
-      { status: 404 }
-    );
-  }
-
-  // Check if already in clinic
-  const [existing] = await db
-    .select({ id: clinicDoctors.id })
-    .from(clinicDoctors)
-    .where(
-      and(
-        eq(clinicDoctors.clinicId, clinic.id),
-        eq(clinicDoctors.doctorId, doctor.id)
+  // Check if already in clinic (only meaningful when doctor is on platform)
+  if (doctor) {
+    const [existing] = await db
+      .select({ id: clinicDoctors.id })
+      .from(clinicDoctors)
+      .where(
+        and(
+          eq(clinicDoctors.clinicId, clinic.id),
+          eq(clinicDoctors.doctorId, doctor.id)
+        )
       )
-    )
-    .limit(1);
+      .limit(1);
 
-  if (existing) {
-    return NextResponse.json(
-      { error: "Ce médecin fait déjà partie de la clinique" },
-      { status: 409 }
-    );
+    if (existing) {
+      return NextResponse.json(
+        { error: "Ce médecin fait déjà partie de la clinique" },
+        { status: 409 }
+      );
+    }
   }
 
-  // Fetch clinic details for the notification email
+  // Fetch clinic details for the invitation email
   const [clinicInfo] = await db
-    .select({ name: clinics.name })
+    .select({ name: clinics.name, city: clinics.city })
     .from(clinics)
     .where(eq(clinics.id, clinic.id))
     .limit(1);
 
   const clinicName = clinicInfo?.name ?? "une clinique";
 
-  await db.insert(clinicDoctors).values({
-    clinicId: clinic.id,
-    doctorId: doctor.id,
-    role: assignedRole,
+  const token = randomBytes(24).toString("hex");
+  const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+  const [invitation] = await db
+    .insert(clinicInvitations)
+    .values({
+      clinicId: clinic.id,
+      doctorId: doctor?.id ?? null,
+      email: doctor ? null : normalizedEmail,
+      role: assignedRole,
+      status: "pending",
+      token,
+      expiresAt,
+    })
+    .returning({ id: clinicInvitations.id });
+
+  // Email the doctor — non-blocking
+  const recipientEmail = doctor?.email ?? normalizedEmail;
+  const doctorName = doctor?.name ?? "Médecin";
+  void sendEmail({
+    to: recipientEmail,
+    subject: `Invitation à rejoindre ${clinicName} sur Doktori`,
+    html: `
+      <p>Bonjour Dr. ${doctorName},</p>
+      <p>La clinique <strong>${clinicName}</strong> vous invite à rejoindre son équipe sur Doktori en tant que <strong>${assignedRole}</strong>.</p>
+      <p>Connectez-vous à votre espace médecin et consultez vos invitations pour accepter ou refuser :</p>
+      <p><a href="https://doktori.tn/doctor/clinic-invitations" style="background:#0d9488;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;display:inline-block;">Voir mes invitations</a></p>
+      <p>Cette invitation expire dans 7 jours.</p>
+      <p>L'équipe Doktori</p>
+    `,
+  }).catch((err) => {
+    console.error("[clinic-invite-email]", err);
   });
 
-  // Notify the doctor by email — non-blocking so the response is not delayed
-  if (doctor.email) {
-    void sendEmail({
-      to: doctor.email,
-      subject: `Vous avez été ajouté(e) à ${clinicName} sur Doktori`,
-      html: `
-        <p>Bonjour Dr. ${doctor.name},</p>
-        <p>Vous avez été ajouté(e) en tant que <strong>${assignedRole}</strong> à la clinique <strong>${clinicName}</strong> sur Doktori.</p>
-        <p>Si vous n'avez pas consenti à rejoindre cette clinique ou si vous souhaitez être retiré(e), veuillez contacter le support à <a href="mailto:support@doktori.tn">support@doktori.tn</a>.</p>
-        <p>L'équipe Doktori</p>
-      `,
-    }).catch((err) => {
-      console.error("[clinic-invite-email]", err);
-    });
-  }
-
-  return NextResponse.json({ success: true, doctor: { id: doctor.id, name: doctor.name } });
+  return NextResponse.json({ success: true, invitationId: invitation?.id });
 }

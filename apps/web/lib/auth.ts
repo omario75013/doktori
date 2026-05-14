@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
-import { db, doctors, adminUsers, clinics, secretaries } from "@doktori/db";
+import { db, doctors, adminUsers, clinics, secretaries, labs } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -78,6 +78,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: { label: "Mot de passe", type: "password" },
       },
       async authorize(credentials) {
+        console.log("[clinic-auth] start", { hasEmail: !!credentials?.email, hasPw: !!credentials?.password });
         if (!credentials?.email || !credentials?.password) return null;
         const email = (credentials.email as string).trim().toLowerCase();
         const [clinic] = await db
@@ -85,14 +86,44 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           .from(clinics)
           .where(eq(clinics.email, email))
           .limit(1);
+        console.log("[clinic-auth] clinic lookup", { email, found: !!clinic, hashPrefix: clinic?.passwordHash?.slice(0, 20) });
         if (!clinic) return null;
         const valid = await compare(credentials.password as string, clinic.passwordHash);
+        console.log("[clinic-auth] compare", { valid });
         if (!valid) return null;
         return {
           id: clinic.id,
           name: clinic.name,
           email: clinic.email,
           role: "clinic" as const,
+        };
+      },
+    }),
+    Credentials({
+      id: "lab-credentials",
+      name: "Lab Login",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Mot de passe", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+        const email = (credentials.email as string).trim().toLowerCase();
+        const [lab] = await db
+          .select()
+          .from(labs)
+          .where(eq(labs.email, email))
+          .limit(1);
+        if (!lab) return null;
+        // Block login until an admin has marked the lab verified.
+        if (lab.verificationStatus !== "verified") return null;
+        const valid = await compare(credentials.password as string, lab.passwordHash);
+        if (!valid) return null;
+        return {
+          id: lab.id,
+          name: lab.name,
+          email: lab.email,
+          role: "lab" as const,
         };
       },
     }),

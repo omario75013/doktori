@@ -29,6 +29,7 @@ import {
   ArrowRight,
   Map,
   List,
+  FlaskConical,
 } from "lucide-react";
 
 interface Doctor {
@@ -55,9 +56,20 @@ interface ClinicResult {
   logoUrl?: string | null;
 }
 
+interface LabResult {
+  id: string;
+  name: string;
+  slug: string;
+  city: string;
+  address: string;
+  services: string[];
+  logoUrl: string | null;
+}
+
 interface SearchResponse {
   hits: Doctor[];
   clinics?: ClinicResult[];
+  labs?: LabResult[];
   totalCount: number;
   parsed: { specialty: string | null; city: string | null; text: string };
   expanded?: boolean;
@@ -176,6 +188,8 @@ function RechercheInner() {
   // Results
   const [results, setResults] = useState<Doctor[]>([]);
   const [clinicResults, setClinicResults] = useState<ClinicResult[]>([]);
+  const [labResults, setLabResults] = useState<LabResult[]>([]);
+  const [resultsTab, setResultsTab] = useState<"doctors" | "clinics" | "labs">("doctors");
   const [totalCount, setTotalCount] = useState(0);
   const [parsed, setParsed] = useState<{ specialty: string | null; city: string | null; text: string }>({
     specialty: null,
@@ -241,6 +255,7 @@ function RechercheInner() {
         setResults(hits);
         setPage(1);
         setClinicResults(data.clinics || []);
+        setLabResults(data.labs || []);
         setTotalCount(data.totalCount);
         setParsed(data.parsed);
         setExpanded(data.expanded || false);
@@ -754,7 +769,52 @@ function RechercheInner() {
                 </>
               )}
 
-              {/* Results count + Liste / Carte toggle + Trier value */}
+              {/* Results type tabs: Médecins / Cliniques / Labos */}
+              {(clinicResults.length > 0 || labResults.length > 0 || results.length > 0) && (
+                <div className="ds-tabs mb-2" style={{ padding: 3 }}>
+                  <button
+                    type="button"
+                    className={`ds-tab ${resultsTab === "doctors" ? "on" : ""}`}
+                    style={{ padding: "6px 14px", fontSize: 12.5 }}
+                    onClick={() => setResultsTab("doctors")}
+                  >
+                    <Stethoscope className="w-3.5 h-3.5" /> Médecins
+                    {results.length > 0 && (
+                      <span className="ms-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: resultsTab === "doctors" ? "rgba(255,255,255,.25)" : "var(--primary-50)", color: resultsTab === "doctors" ? "#fff" : "var(--primary-700)" }}>
+                        {results.length}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className={`ds-tab ${resultsTab === "clinics" ? "on" : ""}`}
+                    style={{ padding: "6px 14px", fontSize: 12.5 }}
+                    onClick={() => setResultsTab("clinics")}
+                  >
+                    <Building2 className="w-3.5 h-3.5" /> Cliniques
+                    {clinicResults.length > 0 && (
+                      <span className="ms-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: resultsTab === "clinics" ? "rgba(255,255,255,.25)" : "var(--primary-50)", color: resultsTab === "clinics" ? "#fff" : "var(--primary-700)" }}>
+                        {clinicResults.length}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    className={`ds-tab ${resultsTab === "labs" ? "on" : ""}`}
+                    style={{ padding: "6px 14px", fontSize: 12.5 }}
+                    onClick={() => setResultsTab("labs")}
+                  >
+                    <FlaskConical className="w-3.5 h-3.5" /> Labos
+                    {labResults.length > 0 && (
+                      <span className="ms-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold" style={{ background: resultsTab === "labs" ? "rgba(255,255,255,.25)" : "var(--primary-50)", color: resultsTab === "labs" ? "#fff" : "var(--primary-700)" }}>
+                        {labResults.length}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
+
+            {/* Results count + Liste / Carte toggle + Trier value */}
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <div className="text-[13.5px]" style={{ color: "var(--ink-500)" }}>
                   {loading ? (
@@ -935,15 +995,9 @@ function RechercheInner() {
               </div>
             )}
 
-            {/* Clinic results */}
-            {clinicResults.length > 0 && (
+            {/* Clinic results tab */}
+            {resultsTab === "clinics" && clinicResults.length > 0 && (
               <div className="mb-6">
-                <div className="mb-3 flex items-center gap-2">
-                  <Building2 className="h-4 w-4 text-primary" strokeWidth={2.5} />
-                  <span className="text-xs font-bold uppercase tracking-wider text-foreground">
-                    Centres médicaux
-                  </span>
-                </div>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {clinicResults.map((clinic) => (
                     <Link
@@ -978,6 +1032,68 @@ function RechercheInner() {
                 </div>
               </div>
             )}
+
+            {/* Lab results tab */}
+            {resultsTab === "labs" && (
+              <div className="mb-6">
+                {labResults.length === 0 && searched && !loading ? (
+                  <div className="rounded-2xl border border-border bg-white py-10 text-center">
+                    <FlaskConical className="mx-auto h-8 w-8 text-muted-foreground mb-3" strokeWidth={1.5} />
+                    <p className="text-sm font-semibold text-foreground">Aucun laboratoire trouvé</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Essayez une autre ville ou un autre terme.</p>
+                  </div>
+                ) : (
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    {labResults.map((lab) => (
+                      <Link
+                        key={lab.id}
+                        href={`/laboratoire/${lab.slug}`}
+                        className="group flex items-center gap-3 rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 p-4 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-md"
+                      >
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-secondary text-primary">
+                          {lab.logoUrl ? (
+                            // eslint-disable-next-line @next/next/no-img-element
+                            <img
+                              src={lab.logoUrl}
+                              alt={lab.name}
+                              className="h-10 w-10 rounded-lg object-contain"
+                            />
+                          ) : (
+                            <FlaskConical className="h-6 w-6" strokeWidth={2} />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-heading text-sm font-bold text-foreground truncate">
+                            {lab.name}
+                          </p>
+                          <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
+                            <MapPin className="h-3 w-3 shrink-0" strokeWidth={2.5} />
+                            {CITIES.find((c) => c.id === lab.city)?.label || lab.city}
+                          </p>
+                          {lab.services.length > 0 && (
+                            <div className="mt-1.5 flex flex-wrap gap-1">
+                              {lab.services.slice(0, 3).map((svc) => (
+                                <span
+                                  key={svc}
+                                  className="px-1.5 py-0.5 rounded-full text-[10px] font-semibold"
+                                  style={{ background: "var(--primary-50)", color: "var(--primary-700)" }}
+                                >
+                                  {svc.replace(/_/g, " ")}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                        <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5 group-hover:text-primary" strokeWidth={2.5} />
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Doctor-specific content (skeletons, map, list) */}
+            {resultsTab === "doctors" && (<>
 
             {/* Loading skeletons — reserve height equal to typical 20-result page to prevent CLS */}
             {loading && results.length === 0 && (
@@ -1168,6 +1284,8 @@ function RechercheInner() {
                 </div>
               );
             })()}
+
+          </>)}
           </div>
 
           {/* Sticky map column removed in cyan redesign — use the inline

@@ -17,6 +17,7 @@ import {
   X,
   Share2,
   Check,
+  FlaskConical,
 } from "lucide-react";
 
 type Filter = "all" | "rx" | "lab" | "xr" | "rep" | "ins";
@@ -42,6 +43,8 @@ interface DocItem {
   // Set when the doc was created by a doctor in fiche patient — shown as
   // a "Créé par Dr X" badge and remains strictly read-only.
   doctorBadge?: string;
+  // Set when the doc was uploaded by a lab — shown as "Laboratoire" chip.
+  labBadge?: string;
   // Current list of doctors the patient has shared this document with
   // (only meaningful when sharedDocId is set).
   sharedWithDoctorIds?: string[];
@@ -192,8 +195,8 @@ export default function MesDocumentsPage() {
         for (const d of sData.items ?? []) {
           // Sharing now lives on patient_attachments — patient-uploaded rows
           // in patient_documents are legacy copies and would create duplicates.
-          // Only surface doctor-created entries (ordonnances, free-form docs).
-          if (d.uploadedBy !== "doctor") {
+          // Only surface doctor-created and lab-created entries.
+          if (d.uploadedBy !== "doctor" && d.uploadedBy !== "lab") {
             // Track the file URL so the matching attachment doesn't double up.
             if (d.fileUrl) seenFileUrls.add(d.fileUrl);
             continue;
@@ -203,19 +206,25 @@ export default function MesDocumentsPage() {
             ? cat
             : "rep";
           const byDoctor = d.uploadedBy === "doctor";
+          const byLab = d.uploadedBy === "lab";
           merged.push({
             id: `pd-${d.id}`,
-            category: safeCat,
-            tone: byDoctor ? "primary" : "mint",
-            tag: byDoctor ? "Reçu du médecin" : "Partagé",
+            category: byLab ? "lab" : safeCat,
+            tone: byDoctor ? "primary" : byLab ? "sky" : "mint",
+            tag: byDoctor ? "Reçu du médecin" : byLab ? "Analyse" : "Partagé",
             title: d.title || d.fileName,
-            source: byDoctor ? (d.doctorName ?? "Médecin") : d.fileName,
+            source: byDoctor
+              ? (d.doctorName ?? "Médecin")
+              : byLab
+              ? (d.labName ?? "Laboratoire")
+              : d.fileName,
             date: d.createdAt,
             fileUrl: d.fileUrl,
-            sharedDocId: byDoctor ? undefined : d.id,
+            sharedDocId: byDoctor || byLab ? undefined : d.id,
             doctorBadge: byDoctor ? (d.doctorName ?? "Médecin") : undefined,
-            sharedWithDoctorIds: byDoctor ? undefined : (d.sharedWithDoctorIds ?? []),
-            sharedDoctorNames: byDoctor ? undefined : resolveNames(d.sharedWithDoctorIds),
+            labBadge: byLab ? (d.labName ?? "Laboratoire") : undefined,
+            sharedWithDoctorIds: byDoctor || byLab ? undefined : (d.sharedWithDoctorIds ?? []),
+            sharedDoctorNames: byDoctor || byLab ? undefined : resolveNames(d.sharedWithDoctorIds),
             filename: d.fileName,
             sizeBytes: d.sizeBytes,
             mimeType: d.mimeType,
@@ -914,7 +923,19 @@ function DocCard({
         >
           {doc.tag}
         </span>
-        {doc.doctorBadge ? (
+        {doc.labBadge ? (
+          <span
+            className="absolute top-2.5 right-2.5 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider max-w-[60%] truncate inline-flex items-center gap-1"
+            style={{
+              background: "#0ea5e9",
+              color: "#fff",
+            }}
+            title={`Laboratoire : ${doc.labBadge}`}
+          >
+            <FlaskConical className="w-2.5 h-2.5 shrink-0" strokeWidth={2.5} />
+            {doc.labBadge}
+          </span>
+        ) : doc.doctorBadge ? (
           <span
             className="absolute top-2.5 right-2.5 px-2 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider max-w-[60%] truncate"
             style={{

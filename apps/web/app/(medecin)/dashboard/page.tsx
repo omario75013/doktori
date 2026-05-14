@@ -4,6 +4,7 @@ import { db, appointments, patients } from "@doktori/db";
 import { eq, and, gte, lte, sql } from "drizzle-orm";
 import { DashboardClient } from "./dashboard-client";
 import { OnboardingTour } from "@/components/medecin/onboarding-tour";
+import { ClinicInvitationsBanner } from "./clinic-invitations-banner";
 import { getSMSUsage } from "@/lib/sms-quota";
 
 export default async function DashboardPage({
@@ -187,6 +188,7 @@ export default async function DashboardPage({
   return (
     <>
       <OnboardingTour enabled={tourEnabled} />
+      <ClinicInvitationsBanner />
       <DashboardClient
       rangeDays={rangeDays}
       doctorName={session.user.name ?? "Médecin"}

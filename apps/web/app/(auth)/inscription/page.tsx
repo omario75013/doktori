@@ -32,6 +32,7 @@ import {
   Camera,
   Upload,
   Building2,
+  FlaskConical,
 } from "lucide-react";
 
 // ─── Doctor steps ────────────────────────────────────────────────────────────
@@ -65,7 +66,7 @@ const roleFade = {
 
 // ─── Role toggle ─────────────────────────────────────────────────────────────
 
-type Role = "doctor" | "clinic";
+type Role = "doctor" | "clinic" | "lab";
 
 function RoleToggle({
   role,
@@ -80,7 +81,7 @@ function RoleToggle({
       <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-3">
         {t("youAre")}
       </p>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-3 gap-3">
         {(
           [
             {
@@ -94,6 +95,12 @@ function RoleToggle({
               icon: Building2,
               title: t("roleClinic"),
               sub: t("roleClinicSub"),
+            },
+            {
+              id: "lab" as Role,
+              icon: FlaskConical,
+              title: t("roleLab"),
+              sub: t("roleLabSub"),
             },
           ] as const
         ).map(({ id, icon: Icon, title, sub }) => {
@@ -538,6 +545,220 @@ function ClinicForm() {
           </Button>
         )}
       </div>
+    </form>
+  );
+}
+
+// ─── Lab form ────────────────────────────────────────────────────────────────
+// New medical lab / radiology centre signup. Posts to /api/labs/register
+// which creates the row with `verification_status='pending'`. We DON'T sign
+// the user in afterwards — the lab cannot log in until an admin verifies it.
+
+const LAB_SERVICE_OPTIONS = [
+  "analyses_medicales",
+  "radiologie",
+  "imagerie",
+  "echographie",
+];
+
+function LabForm() {
+  const t = useTranslations("auth");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
+  const [cguAccepted, setCguAccepted] = useState(false);
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+    password: "",
+    address: "",
+    city: "",
+    services: [] as string[],
+  });
+
+  function update<K extends keyof typeof form>(k: K, v: (typeof form)[K]) {
+    setForm((prev) => ({ ...prev, [k]: v }));
+  }
+  function toggleService(s: string) {
+    setForm((prev) => ({
+      ...prev,
+      services: prev.services.includes(s)
+        ? prev.services.filter((x) => x !== s)
+        : [...prev.services, s],
+    }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    if (!cguAccepted) return;
+    setLoading(true);
+    try {
+      const res = await fetch("/api/labs/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(form),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(typeof data.error === "string" ? data.error : t("checkFormError"));
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setError(t("registerError"));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (submitted) {
+    return (
+      <div className="rounded-2xl border-2 border-primary/40 bg-primary/5 p-8 text-center">
+        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-white">
+          <Check className="h-8 w-8" strokeWidth={3} />
+        </div>
+        <h2 className="font-heading text-2xl font-black text-foreground">
+          {t("labPendingTitle")}
+        </h2>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {t("labPendingBody")}
+        </p>
+      </div>
+    );
+  }
+
+  const ready =
+    form.name.length >= 3 &&
+    form.email &&
+    form.phone &&
+    form.password.length >= 8 &&
+    form.address &&
+    form.city &&
+    cguAccepted;
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark mb-1">
+            {t("labName")}
+          </label>
+          <input
+            value={form.name}
+            onChange={(e) => update("name", e.target.value)}
+            required
+            className="w-full h-11 rounded-xl border-2 border-border px-4 text-sm focus:border-primary outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark mb-1">
+            {t("emailLabel")}
+          </label>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => update("email", e.target.value)}
+            required
+            className="w-full h-11 rounded-xl border-2 border-border px-4 text-sm focus:border-primary outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark mb-1">
+            {t("phoneLabel")}
+          </label>
+          <input
+            value={form.phone}
+            onChange={(e) => update("phone", e.target.value)}
+            required
+            placeholder="71 XXX XXX"
+            className="w-full h-11 rounded-xl border-2 border-border px-4 text-sm focus:border-primary outline-none"
+          />
+        </div>
+        <div>
+          <label className="block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark mb-1">
+            {t("cityLabel")}
+          </label>
+          <input
+            value={form.city}
+            onChange={(e) => update("city", e.target.value)}
+            required
+            className="w-full h-11 rounded-xl border-2 border-border px-4 text-sm focus:border-primary outline-none"
+          />
+        </div>
+        <div className="md:col-span-2">
+          <label className="block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark mb-1">
+            {t("addressLabel")}
+          </label>
+          <input
+            value={form.address}
+            onChange={(e) => update("address", e.target.value)}
+            required
+            className="w-full h-11 rounded-xl border-2 border-border px-4 text-sm focus:border-primary outline-none"
+          />
+        </div>
+        <div className="md:col-span-2">
+          <label className="block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark mb-1">
+            {t("passwordLabel")}
+          </label>
+          <input
+            type="password"
+            value={form.password}
+            onChange={(e) => update("password", e.target.value)}
+            required
+            minLength={8}
+            className="w-full h-11 rounded-xl border-2 border-border px-4 text-sm focus:border-primary outline-none"
+          />
+        </div>
+      </div>
+
+      <div>
+        <p className="text-xs font-bold uppercase tracking-wider text-doktori-teal-dark mb-2">
+          {t("labServices")}
+        </p>
+        <div className="flex flex-wrap gap-2">
+          {LAB_SERVICE_OPTIONS.map((s) => {
+            const active = form.services.includes(s);
+            return (
+              <button
+                type="button"
+                key={s}
+                onClick={() => toggleService(s)}
+                className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
+                  active
+                    ? "border-primary bg-primary text-white"
+                    : "border-border bg-white hover:border-primary/50"
+                }`}
+              >
+                {t(`labService_${s}` as never, { default: s } as never) ?? s}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <label className="flex items-center gap-2 text-sm text-muted-foreground">
+        <input
+          type="checkbox"
+          checked={cguAccepted}
+          onChange={(e) => setCguAccepted(e.target.checked)}
+          className="h-4 w-4 rounded border-border accent-primary"
+        />
+        <span>{t("acceptTerms")}</span>
+      </label>
+
+      {error && (
+        <p className="text-sm text-red-600 bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+      )}
+
+      <button
+        type="submit"
+        disabled={loading || !ready}
+        className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-xl bg-primary font-heading text-base font-bold text-white shadow-lg shadow-primary/20 disabled:opacity-60"
+      >
+        {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : t("submitLab")}
+      </button>
     </form>
   );
 }
@@ -1154,7 +1375,7 @@ export default function InscriptionPage() {
                 exit="exit"
                 transition={{ duration: 0.2 }}
               >
-                {role === "doctor" ? <DoctorForm /> : <ClinicForm />}
+                {role === "doctor" ? <DoctorForm /> : role === "lab" ? <LabForm /> : <ClinicForm />}
               </motion.div>
             </AnimatePresence>
 

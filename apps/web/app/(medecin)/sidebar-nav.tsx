@@ -63,6 +63,7 @@ export function SidebarNav({
   const [collapsed, setCollapsed] = useState(false);
   const [unreadMsg, setUnreadMsg] = useState(0);
   const [unreadStaff, setUnreadStaff] = useState(0);
+  const [pendingRefs, setPendingRefs] = useState(0);
   const t = useTranslations("medecin.nav");
   const { hasFeature } = usePlan();
 
@@ -76,13 +77,15 @@ export function SidebarNav({
       try {
         // Messagerie now hosts peer-doctor chat (the patient ↔ doctor
         // surface was retired). The badge counts unread peer messages.
-        const [r1, r2] = await Promise.all([
+        const [r1, r2, r3] = await Promise.all([
           fetch("/api/doctor/peer-messages/unread-count", { cache: "no-store" }),
           fetch("/api/staff/conversations/unread", { cache: "no-store" }),
+          fetch("/api/doctor/referrals/pending-count", { cache: "no-store" }),
         ]);
         if (!cancelled) {
           if (r1.ok) setUnreadMsg((await r1.json()).count ?? 0);
           if (r2.ok) setUnreadStaff((await r2.json()).count ?? 0);
+          if (r3.ok) setPendingRefs((await r3.json()).count ?? 0);
         }
       } catch {
         /* silent */
@@ -128,7 +131,7 @@ export function SidebarNav({
       label: t("groupNetwork"),
       items: [
         { href: "/reseau", label: t("networkDoctors"), icon: Network, feature: "reseau" },
-        { href: "/reseau/referencements", label: t("referrals"), icon: FileText, feature: "reseau" },
+        { href: "/reseau/referencements", label: t("referrals"), icon: FileText, feature: "reseau", badge: pendingRefs },
       ],
     },
     {

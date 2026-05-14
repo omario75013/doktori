@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { db, patientDocuments, doctors } from "@doktori/db";
+import { db, patientDocuments, doctors, labs } from "@doktori/db";
 import { and, desc, eq, inArray, sql } from "drizzle-orm";
 import { requirePatientAuth } from "@/lib/patient-auth";
 import { uploadToR2 } from "@/lib/r2";
@@ -28,6 +28,7 @@ export async function GET(req: NextRequest) {
       id: patientDocuments.id,
       uploadedBy: patientDocuments.uploadedBy,
       uploadedByDoctorId: patientDocuments.uploadedByDoctorId,
+      uploadedByLabId: patientDocuments.uploadedByLabId,
       sharedWithDoctorIds: patientDocuments.sharedWithDoctorIds,
       fileUrl: patientDocuments.fileUrl,
       fileName: patientDocuments.fileName,
@@ -38,9 +39,11 @@ export async function GET(req: NextRequest) {
       note: patientDocuments.note,
       createdAt: patientDocuments.createdAt,
       doctorName: doctors.name,
+      labName: labs.name,
     })
     .from(patientDocuments)
     .leftJoin(doctors, eq(doctors.id, patientDocuments.uploadedByDoctorId))
+    .leftJoin(labs, eq(labs.id, patientDocuments.uploadedByLabId))
     .where(eq(patientDocuments.patientId, patient.id))
     .orderBy(desc(patientDocuments.createdAt));
 

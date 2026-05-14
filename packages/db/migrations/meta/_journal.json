@@ -22,6 +22,13 @@
       "when": 1778519519030,
       "tag": "0002_crazy_jubilee",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1778769764478,
+      "tag": "0003_woozy_thanos",
+      "breakpoints": true
     }
   ]
 }

@@ -148,6 +148,23 @@
     "roleDoctorSub": "Créez votre profil personnel",
     "roleClinic": "Clinique",
     "roleClinicSub": "Gérez plusieurs médecins",
+    "roleLab": "Laboratoire",
+    "roleLabSub": "Analyses & radiologie",
+    "labName": "Nom du laboratoire",
+    "labServices": "Services proposés",
+    "labService_analyses_medicales": "Analyses médicales",
+    "labService_radiologie": "Radiologie",
+    "labService_imagerie": "Imagerie médicale",
+    "labService_echographie": "Échographie",
+    "labPendingTitle": "Inscription enregistrée",
+    "labPendingBody": "Votre laboratoire est en attente de vérification par un administrateur. Vous recevrez un e-mail dès que votre compte sera activé.",
+    "submitLab": "Créer mon compte laboratoire",
+    "emailLabel": "Email",
+    "phoneLabel": "Téléphone",
+    "cityLabel": "Ville",
+    "addressLabel": "Adresse",
+    "passwordLabel": "Mot de passe",
+    "acceptTerms": "J'accepte les conditions générales d'utilisation",
     "stepIdentity": "Identité",
     "stepPractice": "Cabinet",
     "stepFinish": "Finaliser",
@@ -682,7 +699,10 @@
       "loadingSlots": "Chargement des créneaux…",
       "noSlotsForDate": "Aucun créneau disponible ce jour-là. Activez « Heure libre » pour proposer un horaire personnalisé.",
       "pickCustomTime": "Heure libre",
-      "backToSlots": "Voir mes créneaux"
+      "backToSlots": "Voir mes créneaux",
+      "morning": "Matin",
+      "afternoon": "Après-midi",
+      "selectSlot": "Choisir un créneau"
     },
     "patients": {
       "title": "Mes patients",
@@ -740,7 +760,26 @@
       "prevPageAriaLabel": "Page précédente",
       "nextPageAriaLabel": "Page suivante",
       "lastPageAriaLabel": "Dernière page",
-      "colPhone": "Téléphone"
+      "colPhone": "Téléphone",
+      "labOrders": {
+        "tabTitle": "Demandes d'analyses",
+        "newOrder": "Nouvelle demande",
+        "selectLab": "Choisir un laboratoire (optionnel)",
+        "anyLab": "Tout laboratoire",
+        "tests": "Analyses demandées",
+        "testsPlaceholder": "Ex: NFS, glycémie, créatinine",
+        "instructions": "Instructions / précisions",
+        "urgency": "Urgence",
+        "urgencyRoutine": "Routine",
+        "urgencyUrgent": "Urgent",
+        "submit": "Envoyer la demande",
+        "submitting": "Envoi…",
+        "statusPending": "En attente",
+        "statusCompleted": "Terminée",
+        "statusCancelled": "Annulée",
+        "cancel": "Annuler la demande",
+        "empty": "Aucune demande d'analyses"
+      }
     },
     "modeles": {
       "title": "Modèles de documents",
@@ -1786,6 +1825,7 @@
       "tabAppointments": "Rendez-vous",
       "tabPrescriptions": "Ordonnances",
       "tabDocuments": "Documents",
+      "tabLabOrders": "Demandes d'analyses",
       "chooseTemplate": "Choisir un modèle",
       "templateApplied": "Modèle appliqué",
       "docDeleted": "Document supprimé",
@@ -2050,6 +2090,14 @@
       "referralDeclinedAnon": "Référencement refusé",
       "referralCompleted": "Référencement terminé par Dr {name}",
       "referralCompletedAnon": "Référencement terminé"
+    },
+    "clinicInvitation": {
+      "banner": "Vous avez été invité(e) à rejoindre {clinicName}",
+      "accept": "Accepter",
+      "decline": "Refuser",
+      "accepted": "Invitation acceptée",
+      "declined": "Invitation refusée",
+      "error": "Une erreur est survenue"
     }
   },
   "patientNotifications": {
@@ -2385,6 +2433,52 @@
       "hiringDate": "En poste depuis le {date}"
     }
   },
+  "laboratoire": {
+    "nav": {
+      "espace": "Espace Laboratoire",
+      "dashboard": "Tableau de bord",
+      "orders": "Commandes",
+      "walkIn": "Walk-in",
+      "patients": "Patients",
+      "settings": "Paramètres",
+      "openMenu": "Ouvrir le menu",
+      "closeMenu": "Fermer le menu",
+      "logout": "Se déconnecter",
+      "loggingOut": "Déconnexion…"
+    },
+    "dashboard": {
+      "title": "Tableau de bord",
+      "pendingOrders": "Commandes en attente",
+      "completedToday": "Complétées aujourd'hui",
+      "resultsThisMonth": "Résultats ce mois",
+      "distinctPatients": "Patients distincts"
+    },
+    "orders": {
+      "title": "Commandes d'analyses",
+      "empty": "Aucune commande pour ce laboratoire.",
+      "statusPending": "En attente",
+      "statusCollected": "Prélèvement effectué",
+      "statusCompleted": "Complétée",
+      "statusCancelled": "Annulée",
+      "urgent": "Urgent",
+      "routine": "Routine",
+      "uploadResult": "Téléverser les résultats"
+    },
+    "walkIn": {
+      "title": "Walk-in — Résultats directs",
+      "searchPlaceholder": "Nom ou téléphone du patient…",
+      "uploadCta": "Téléverser les résultats"
+    },
+    "patients": {
+      "title": "Patients",
+      "empty": "Aucun patient pour ce laboratoire."
+    },
+    "parametres": {
+      "title": "Paramètres",
+      "save": "Enregistrer",
+      "saved": "Modifications enregistrées."
+    }
+  },
   "clinique": {
     "nav": {
       "espace": "Espace Clinique",
@@ -2447,7 +2541,18 @@
       "sectionOperations": "Opérations",
       "sectionAnalytics": "Analytics",
       "sectionSysteme": "Système",
-      "templates": "Modèles ordonnances"
+      "templates": "Modèles ordonnances",
+      "labs": "Laboratoires"
+    },
+    "laboratoires": {
+      "title": "Laboratoires",
+      "subtitle": "Vérifiez et activez les laboratoires inscrits",
+      "statusPending": "En attente",
+      "statusVerified": "Vérifié",
+      "statusRejected": "Rejeté",
+      "actionVerify": "Vérifier",
+      "actionReject": "Rejeter",
+      "empty": "Aucun laboratoire"
     }
   },
   "cookieBanner": {
@@ -3678,6 +3783,14 @@
         "yes": "Oui, annuler"
       }
     },
+    "labos": {
+      "tabTitle": "Labos",
+      "services": "Services",
+      "accreditations": "Accréditations",
+      "openingHours": "Horaires",
+      "viewOnMap": "Voir sur la carte",
+      "labBadge": "Laboratoire"
+    },
     "mesNotifications": {
       "toastAllRead": "Notifications marquées comme lues"
     },
@@ -3787,5 +3900,15 @@
   },
   "storeBadge": {
     "comingSoonOn": "Bientôt sur"
+  },
+  "cliniques": {
+    "title": "Cliniques",
+    "subtitle": "Trouvez une clinique près de chez vous",
+    "cityFilter": "Ville",
+    "allCities": "Toutes les villes",
+    "doctorsCount": "{count, plural, =0 {Aucun médecin} =1 {1 médecin} other {# médecins}}",
+    "viewClinic": "Voir la clinique",
+    "bookHere": "Prendre RDV",
+    "noClinics": "Aucune clinique trouvée"
   }
 }

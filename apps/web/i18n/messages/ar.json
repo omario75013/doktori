@@ -130,6 +130,23 @@
     "roleDoctorSub": "أنشئ ملفك الشخصي",
     "roleClinic": "عيادة",
     "roleClinicSub": "أدِر عدة أطباء",
+    "roleLab": "مخبر",
+    "roleLabSub": "تحاليل وأشعة",
+    "labName": "اسم المخبر",
+    "labServices": "الخدمات المقدمة",
+    "labService_analyses_medicales": "تحاليل طبية",
+    "labService_radiologie": "أشعة",
+    "labService_imagerie": "تصوير طبي",
+    "labService_echographie": "إيكوغرافيا",
+    "labPendingTitle": "تم تسجيل طلبك",
+    "labPendingBody": "مخبرك في انتظار التحقق من قبل مسؤول. ستتلقى رسالة بريد إلكتروني فور تفعيل حسابك.",
+    "submitLab": "إنشاء حساب المخبر",
+    "emailLabel": "البريد الإلكتروني",
+    "phoneLabel": "الهاتف",
+    "cityLabel": "المدينة",
+    "addressLabel": "العنوان",
+    "passwordLabel": "كلمة المرور",
+    "acceptTerms": "أوافق على الشروط العامة للاستخدام",
     "stepIdentity": "الهوية",
     "stepPractice": "العيادة",
     "stepFinish": "الإنهاء",
@@ -682,7 +699,10 @@
       "loadingSlots": "جاري تحميل المواعيد…",
       "noSlotsForDate": "لا توجد مواعيد متاحة في هذا اليوم. فعّل « وقت حر » لاقتراح موعد مخصّص.",
       "pickCustomTime": "وقت حر",
-      "backToSlots": "عرض مواعيدي"
+      "backToSlots": "عرض مواعيدي",
+      "morning": "صباحاً",
+      "afternoon": "بعد الظهر",
+      "selectSlot": "اختر موعداً"
     },
     "patients": {
       "title": "مرضاي",
@@ -740,7 +760,26 @@
       "prevPageAriaLabel": "الصفحة السابقة",
       "nextPageAriaLabel": "الصفحة التالية",
       "lastPageAriaLabel": "الصفحة الأخيرة",
-      "colPhone": "الهاتف"
+      "colPhone": "الهاتف",
+      "labOrders": {
+        "tabTitle": "طلبات التحاليل",
+        "newOrder": "طلب جديد",
+        "selectLab": "اختر مخبراً (اختياري)",
+        "anyLab": "أي مخبر",
+        "tests": "التحاليل المطلوبة",
+        "testsPlaceholder": "مثال: NFS، سكر...",
+        "instructions": "تعليمات",
+        "urgency": "الاستعجال",
+        "urgencyRoutine": "عادي",
+        "urgencyUrgent": "مستعجل",
+        "submit": "إرسال الطلب",
+        "submitting": "جاري الإرسال…",
+        "statusPending": "قيد الانتظار",
+        "statusCompleted": "مكتملة",
+        "statusCancelled": "ملغاة",
+        "cancel": "إلغاء الطلب",
+        "empty": "لا توجد طلبات"
+      }
     },
     "modeles": {
       "title": "نماذج الوثائق",
@@ -1786,6 +1825,7 @@
       "tabAppointments": "المواعيد",
       "tabPrescriptions": "الوصفات",
       "tabDocuments": "الوثائق",
+      "tabLabOrders": "طلبات التحاليل",
       "chooseTemplate": "اختيار نموذج",
       "templateApplied": "تم تطبيق النموذج",
       "docDeleted": "تم حذف الوثيقة",
@@ -2050,6 +2090,14 @@
       "referralDeclinedAnon": "تم رفض الإحالة",
       "referralCompleted": "أنهى د. {name} الإحالة",
       "referralCompletedAnon": "اكتملت الإحالة"
+    },
+    "clinicInvitation": {
+      "banner": "تمت دعوتك للانضمام إلى {clinicName}",
+      "accept": "قبول",
+      "decline": "رفض",
+      "accepted": "تم قبول الدعوة",
+      "declined": "تم رفض الدعوة",
+      "error": "حدث خطأ"
     }
   },
   "patientNotifications": {
@@ -2385,6 +2433,52 @@
       "hiringDate": "في المنصب منذ {date}"
     }
   },
+  "laboratoire": {
+    "nav": {
+      "espace": "فضاء المختبر",
+      "dashboard": "لوحة التحكم",
+      "orders": "الطلبيات",
+      "walkIn": "استقبال مباشر",
+      "patients": "المرضى",
+      "settings": "الإعدادات",
+      "openMenu": "فتح القائمة",
+      "closeMenu": "إغلاق القائمة",
+      "logout": "تسجيل الخروج",
+      "loggingOut": "جارٍ تسجيل الخروج…"
+    },
+    "dashboard": {
+      "title": "لوحة التحكم",
+      "pendingOrders": "الطلبيات المعلقة",
+      "completedToday": "مكتملة اليوم",
+      "resultsThisMonth": "النتائج هذا الشهر",
+      "distinctPatients": "المرضى المميزون"
+    },
+    "orders": {
+      "title": "طلبيات التحاليل",
+      "empty": "لا توجد طلبيات لهذا المختبر.",
+      "statusPending": "قيد الانتظار",
+      "statusCollected": "تم أخذ العينة",
+      "statusCompleted": "مكتملة",
+      "statusCancelled": "ملغاة",
+      "urgent": "عاجل",
+      "routine": "روتيني",
+      "uploadResult": "رفع النتائج"
+    },
+    "walkIn": {
+      "title": "استقبال مباشر — نتائج فورية",
+      "searchPlaceholder": "اسم المريض أو رقم الهاتف…",
+      "uploadCta": "رفع النتائج"
+    },
+    "patients": {
+      "title": "المرضى",
+      "empty": "لا يوجد مرضى لهذا المختبر."
+    },
+    "parametres": {
+      "title": "الإعدادات",
+      "save": "حفظ",
+      "saved": "تم حفظ التعديلات."
+    }
+  },
   "clinique": {
     "nav": {
       "espace": "فضاء العيادة",
@@ -2447,7 +2541,18 @@
       "sectionOperations": "العمليات",
       "sectionAnalytics": "التحليلات",
       "sectionSysteme": "النظام",
-      "templates": "نماذج الوصفات"
+      "templates": "نماذج الوصفات",
+      "labs": "المخابر"
+    },
+    "laboratoires": {
+      "title": "المخابر",
+      "subtitle": "تحقق من المخابر المسجلة وقم بتفعيلها",
+      "statusPending": "قيد الانتظار",
+      "statusVerified": "موثّق",
+      "statusRejected": "مرفوض",
+      "actionVerify": "توثيق",
+      "actionReject": "رفض",
+      "empty": "لا توجد مخابر"
     }
   },
   "cookieBanner": {
@@ -3678,6 +3783,14 @@
         "yes": "نعم، إلغاء"
       }
     },
+    "labos": {
+      "tabTitle": "المخابر",
+      "services": "الخدمات",
+      "accreditations": "الاعتمادات",
+      "openingHours": "ساعات العمل",
+      "viewOnMap": "عرض على الخريطة",
+      "labBadge": "مخبر"
+    },
     "mesNotifications": {
       "toastAllRead": "تم تحديد الإشعارات كمقروءة"
     },
@@ -3787,5 +3900,15 @@
   },
   "storeBadge": {
     "comingSoonOn": "قريباً على"
+  },
+  "cliniques": {
+    "title": "العيادات",
+    "subtitle": "ابحث عن عيادة قريبة منك",
+    "cityFilter": "المدينة",
+    "allCities": "كل المدن",
+    "doctorsCount": "{count, plural, =0 {لا يوجد أطباء} =1 {طبيب واحد} other {# أطباء}}",
+    "viewClinic": "عرض العيادة",
+    "bookHere": "حجز موعد",
+    "noClinics": "لا توجد عيادات"
   }
 }

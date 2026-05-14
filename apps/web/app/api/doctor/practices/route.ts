@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
-import { db, doctorPractices } from "@doktori/db";
+import { db, doctorPractices, clinics } from "@doktori/db";
 import { eq, and, asc, desc } from "drizzle-orm";
 
 export async function GET(req: NextRequest) {
@@ -11,13 +11,30 @@ export async function GET(req: NextRequest) {
   }
   const doctorId = user.role === "doctor" ? user.id : (user as { doctorId: string }).doctorId;
 
-  const practices = await db
-    .select()
+  const rows = await db
+    .select({
+      id: doctorPractices.id,
+      doctorId: doctorPractices.doctorId,
+      name: doctorPractices.name,
+      address: doctorPractices.address,
+      city: doctorPractices.city,
+      latitude: doctorPractices.latitude,
+      longitude: doctorPractices.longitude,
+      phone: doctorPractices.phone,
+      isPrimary: doctorPractices.isPrimary,
+      isActive: doctorPractices.isActive,
+      clinicId: doctorPractices.clinicId,
+      kind: doctorPractices.kind,
+      photos: doctorPractices.photos,
+      createdAt: doctorPractices.createdAt,
+      clinicName: clinics.name,
+    })
     .from(doctorPractices)
+    .leftJoin(clinics, eq(doctorPractices.clinicId, clinics.id))
     .where(eq(doctorPractices.doctorId, doctorId))
     .orderBy(desc(doctorPractices.isPrimary), asc(doctorPractices.createdAt));
 
-  return NextResponse.json(practices);
+  return NextResponse.json(rows);
 }
 
 export async function POST(req: NextRequest) {
