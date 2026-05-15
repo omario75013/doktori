@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requireAuth } from "@/lib/require-auth";
 import { db, prescriptions, appointments, prescriptionTemplates } from "@doktori/db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, or } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import { logTemplateAudit } from "@/lib/templates/audit";
 import { renderPrescriptionContent } from "@/lib/prescription-render";
@@ -26,12 +26,16 @@ export async function GET(req: NextRequest) {
         createdAt: prescriptions.createdAt,
         appointmentId: prescriptions.appointmentId,
         verificationToken: prescriptions.verificationToken,
+        sharedWithDoctorIds: prescriptions.sharedWithDoctorIds,
       })
       .from(prescriptions)
       .where(
         and(
           eq(prescriptions.patientId, patientId),
-          eq(prescriptions.doctorId, user.id),
+          or(
+            eq(prescriptions.doctorId, user.id),
+            sql`${user.id}::uuid = ANY(${prescriptions.sharedWithDoctorIds})`,
+          )!,
         ),
       )
       .orderBy(desc(prescriptions.createdAt));

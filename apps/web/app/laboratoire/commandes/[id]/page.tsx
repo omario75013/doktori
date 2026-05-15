@@ -1,11 +1,10 @@
 import { redirect, notFound } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { db, labOrders, patients, doctors } from "@doktori/db";
+import { db, labOrders, patients, doctors, labs, labUsers } from "@doktori/db";
 import { eq, and, or } from "drizzle-orm";
-import { getTranslations } from "next-intl/server";
 import Link from "next/link";
-import { ArrowLeft, AlertCircle, CheckCircle2, Clock, FlaskConical } from "lucide-react";
-import { UploadResultForm } from "./upload-result-form";
+import { ArrowLeft, AlertCircle, FlaskConical } from "lucide-react";
+import { OrderTabs } from "./order-tabs";
 
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-100 text-amber-800",
@@ -14,20 +13,33 @@ const STATUS_COLORS: Record<string, string> = {
   cancelled: "bg-red-100 text-red-800",
 };
 
+function statusLabel(key: string) {
+  switch (key) {
+    case "pending": return "En attente";
+    case "collected": return "Prélèvement effectué";
+    case "completed": return "Complétée";
+    case "cancelled": return "Annulée";
+    default: return key;
+  }
+}
+
 export default async function LaboratoireOrderDetailPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
   const session = await auth();
-  if (!session || (session.user as { role?: string }).role !== "lab") {
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (!session || (role !== "lab" && role !== "lab_user")) {
     redirect("/laboratoire-login");
   }
-  const labId = session.user.id;
-  const t = await getTranslations("laboratoire.orders");
+  const labId = role === "lab_user"
+    ? (session.user as { labId?: string }).labId!
+    : session.user.id;
 
   const { id } = await params;
 
+  // Fetch order with patient + doctor
   const rows = await db
     .select({
       id: labOrders.id,
@@ -37,11 +49,27 @@ export default async function LaboratoireOrderDetailPage({
       instructions: labOrders.instructions,
       createdAt: labOrders.createdAt,
       completedAt: labOrders.completedAt,
+      internalRef: labOrders.internalRef,
+      specimenCollectedAt: labOrders.specimenCollectedAt,
+      expectedResultAt: labOrders.expectedResultAt,
+      resultUploadedAt: labOrders.resultUploadedAt,
+      resultSummary: labOrders.resultSummary,
+      technicianId: labOrders.technicianId,
+      accessToken: labOrders.accessToken,
+      // Patient fields
+      patientId: patients.id,
       patientName: patients.name,
       patientPhone: patients.phone,
+      patientEmail: patients.email,
+      patientCin: patients.cin,
+      patientDob: patients.dateOfBirth,
+      patientGender: patients.gender,
+      // Doctor
+      doctorId: doctors.id,
       doctorName: doctors.name,
       doctorPhone: doctors.phone,
       doctorSpecialty: doctors.specialty,
+      doctorEmail: doctors.email,
     })
     .from(labOrders)
     .innerJoin(patients, eq(labOrders.patientId, patients.id))
@@ -56,25 +84,22 @@ export default async function LaboratoireOrderDetailPage({
   const order = rows[0];
   if (!order) notFound();
 
+  // Fetch lab kind (lab vs radiology)
+  const [labRow] = await db.select({ kind: labs.kind }).from(labs).where(eq(labs.id, labId)).limit(1);
+  const labKind = (labRow?.kind ?? "lab") as "lab" | "radiology";
+
+  // Fetch lab users for technician picker
+  const technicianList = await db
+    .select({ id: labUsers.id, firstName: labUsers.firstName, lastName: labUsers.lastName, role: labUsers.role })
+    .from(labUsers)
+    .where(and(eq(labUsers.labId, labId), eq(labUsers.isActive, true)));
+
   const tests = Array.isArray(order.tests)
     ? (order.tests as { code?: string; label?: string }[])
     : [];
 
-  const isCompleted = order.status === "completed";
-  const isCancelled = order.status === "cancelled";
-
-  function statusLabel(key: string) {
-    switch (key) {
-      case "pending": return t("statusPending");
-      case "collected": return t("statusCollected");
-      case "completed": return t("statusCompleted");
-      case "cancelled": return t("statusCancelled");
-      default: return key;
-    }
-  }
-
   return (
-    <div className="space-y-6 max-w-2xl">
+    <div className="space-y-6 max-w-3xl">
       {/* Back */}
       <Link
         href="/laboratoire/commandes"
@@ -88,96 +113,64 @@ export default async function LaboratoireOrderDetailPage({
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-2">
           <FlaskConical className="h-6 w-6" style={{ color: "#16A34A" }} strokeWidth={2.5} />
-          <h1 className="text-2xl font-black text-foreground">Commande d&apos;analyses</h1>
+          <h1 className="text-2xl font-black text-foreground">
+            {labKind === "radiology" ? "Demande d'imagerie" : "Commande d'analyses"}
+          </h1>
         </div>
         <div className="flex items-center gap-2">
           {order.urgency === "urgent" && (
             <span className="flex items-center gap-1 text-xs font-bold bg-red-100 text-red-700 px-2.5 py-1 rounded-full">
               <AlertCircle className="h-3.5 w-3.5" strokeWidth={2.5} />
-              {t("urgent")}
+              Urgent
             </span>
           )}
-          <span
-            className={`text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_COLORS[order.status] ?? "bg-gray-100 text-gray-600"}`}
-          >
+          <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${STATUS_COLORS[order.status] ?? "bg-gray-100 text-gray-600"}`}>
             {statusLabel(order.status)}
           </span>
         </div>
       </div>
 
-      {/* Info cards */}
-      <div className="grid sm:grid-cols-2 gap-4">
-        <div className="rounded-2xl border border-border bg-white p-5 space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-green-800">Patient</p>
-          <p className="font-semibold text-foreground">{order.patientName}</p>
-          <p className="text-sm text-muted-foreground" dir="ltr">{order.patientPhone}</p>
-        </div>
-        <div className="rounded-2xl border border-border bg-white p-5 space-y-2">
-          <p className="text-xs font-bold uppercase tracking-wider text-green-800">Médecin prescripteur</p>
-          <p className="font-semibold text-foreground">{order.doctorName}</p>
-          <p className="text-sm text-muted-foreground">{order.doctorSpecialty}</p>
-          <p className="text-sm text-muted-foreground" dir="ltr">{order.doctorPhone}</p>
-        </div>
-      </div>
-
-      {/* Tests */}
-      <div className="rounded-2xl border border-border bg-white p-5">
-        <p className="text-xs font-bold uppercase tracking-wider text-green-800 mb-3">Analyses demandées</p>
-        {tests.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Aucune analyse spécifiée.</p>
-        ) : (
-          <ul className="space-y-1.5">
-            {tests.map((test, i) => (
-              <li key={i} className="flex items-center gap-2 text-sm text-foreground">
-                <span className="h-1.5 w-1.5 rounded-full bg-green-500 shrink-0" />
-                {test.label ?? test.code ?? `Analyse ${i + 1}`}
-                {test.code && test.label && (
-                  <span className="text-xs text-muted-foreground">({test.code})</span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-
-      {/* Instructions */}
-      {order.instructions && (
-        <div className="rounded-2xl border border-border bg-white p-5">
-          <p className="text-xs font-bold uppercase tracking-wider text-green-800 mb-2">Instructions</p>
-          <p className="text-sm text-foreground whitespace-pre-line">{order.instructions}</p>
-        </div>
-      )}
-
-      {/* Dates */}
-      <div className="flex items-center gap-4 text-xs text-muted-foreground">
-        <span className="flex items-center gap-1">
-          <Clock className="h-3.5 w-3.5" />
-          Créé le {new Date(order.createdAt).toLocaleDateString("fr-TN")}
-        </span>
-        {order.completedAt && (
-          <span className="flex items-center gap-1">
-            <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />
-            Complété le {new Date(order.completedAt).toLocaleDateString("fr-TN")}
-          </span>
-        )}
-      </div>
-
-      {/* Upload form */}
-      {!isCompleted && !isCancelled ? (
-        <div className="rounded-2xl border border-border bg-white p-5">
-          <p className="text-xs font-bold uppercase tracking-wider text-green-800 mb-4">
-            {t("uploadResult")}
-          </p>
-          <UploadResultForm orderId={order.id} />
-        </div>
-      ) : isCompleted ? (
-        <div className="rounded-2xl border border-green-200 bg-green-50 p-5 flex items-center gap-3">
-          <CheckCircle2 className="h-5 w-5 text-green-600 shrink-0" strokeWidth={2.5} />
-          <p className="text-sm font-semibold text-green-800">
-            Les résultats ont été transmis avec succès.
-          </p>
-        </div>
-      ) : null}
+      {/* Tabbed UI */}
+      <OrderTabs
+        order={{
+          id: order.id,
+          status: order.status,
+          urgency: order.urgency,
+          tests,
+          instructions: order.instructions ?? null,
+          createdAt: order.createdAt.toISOString(),
+          completedAt: order.completedAt?.toISOString() ?? null,
+          internalRef: order.internalRef ?? null,
+          specimenCollectedAt: order.specimenCollectedAt?.toISOString() ?? null,
+          expectedResultAt: order.expectedResultAt?.toISOString() ?? null,
+          resultUploadedAt: order.resultUploadedAt?.toISOString() ?? null,
+          resultSummary: order.resultSummary ?? null,
+          technicianId: order.technicianId ?? null,
+          accessToken: order.accessToken,
+        }}
+        patient={{
+          id: order.patientId,
+          name: order.patientName,
+          phone: order.patientPhone,
+          email: order.patientEmail ?? null,
+          cin: order.patientCin ?? null,
+          dob: order.patientDob ?? null,
+          gender: order.patientGender ?? null,
+        }}
+        doctor={{
+          id: order.doctorId,
+          name: order.doctorName,
+          phone: order.doctorPhone,
+          specialty: order.doctorSpecialty,
+          email: order.doctorEmail,
+        }}
+        labKind={labKind}
+        technicians={technicianList.map((t) => ({
+          id: t.id,
+          name: `${t.firstName} ${t.lastName}`,
+          role: t.role,
+        }))}
+      />
     </div>
   );
 }

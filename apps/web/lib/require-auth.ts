@@ -15,6 +15,13 @@ export type AuthedUser =
   | { id: string; role: "admin"; source: "cookie" | "bearer" }
   | { id: string; role: "clinic"; source: "cookie" | "bearer" }
   | { id: string; role: "lab"; source: "cookie" | "bearer" }
+  | {
+      id: string;
+      role: "lab_user";
+      labId: string;
+      labUserRole: "admin" | "technician";
+      source: "cookie";
+    }
   | { id: string; role: "patient"; phone?: string; source: "bearer" };
 
 /**
@@ -48,6 +55,14 @@ export async function requireAuth(req?: NextRequest): Promise<AuthedUser | null>
         return { id: session.user.id, role, source: "cookie" };
       case "lab":
         return { id: session.user.id, role, source: "cookie" };
+      case "lab_user":
+        return {
+          id: session.user.id,
+          role,
+          labId: (session.user.labId as string) ?? "",
+          labUserRole: (session.user.labUserRole as "admin" | "technician") ?? "technician",
+          source: "cookie",
+        };
     }
   }
 

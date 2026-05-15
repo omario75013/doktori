@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import {
   Menu,
@@ -15,6 +15,12 @@ import {
   Settings,
   LogOut,
   FlaskConical,
+  MessageSquare,
+  Search,
+  FileText,
+  Folder,
+  Clock,
+  CalendarDays,
 } from "lucide-react";
 
 type LinkDef = {
@@ -28,20 +34,41 @@ const LINKS: LinkDef[] = [
   { href: "/laboratoire/commandes", key: "orders", icon: ClipboardList },
   { href: "/laboratoire/walk-in", key: "walkIn", icon: UserPlus },
   { href: "/laboratoire/patients", key: "patients", icon: Users },
+  { href: "/laboratoire/analyses", key: "analyses", icon: FlaskConical },
+  { href: "/laboratoire/resultats", key: "results", icon: FileText },
+  { href: "/laboratoire/documents", key: "documents", icon: Folder },
+  { href: "/laboratoire/agenda", key: "calendar", icon: CalendarDays },
+  { href: "/laboratoire/horaires", key: "schedule", icon: Clock },
+  { href: "/laboratoire/messages", key: "messages", icon: MessageSquare },
+  { href: "/laboratoire/recherche", key: "search", icon: Search },
   { href: "/laboratoire/parametres", key: "settings", icon: Settings },
 ];
 
-export function LaboratoireSidebarNav({ labName }: { labName: string }) {
+type StaffBadge = {
+  name: string;
+  labUserRole: "admin" | "technician";
+};
+
+export function LaboratoireSidebarNav({
+  labName,
+  staffBadge,
+}: {
+  labName: string;
+  staffBadge?: StaffBadge | null;
+}) {
   const t = useTranslations("laboratoire.nav");
   const pathname = usePathname();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const { data: session } = useSession();
+  const parentClinicId = (session?.user as { parentClinicId?: string | null } | undefined)?.parentClinicId ?? null;
+  const logoutDest = parentClinicId ? "/clinique-login" : "/laboratoire-login";
 
   async function handleLogout() {
     setLoggingOut(true);
-    await signOut({ callbackUrl: "/laboratoire-login" });
-    router.push("/laboratoire-login");
+    await signOut({ redirect: false });
+    router.push(logoutDest);
   }
 
   return (
@@ -83,6 +110,19 @@ export function LaboratoireSidebarNav({ labName }: { labName: string }) {
             <p className="text-white text-sm font-semibold truncate" title={labName}>
               {labName}
             </p>
+            {staffBadge && (
+              <div className="mt-1 flex flex-col gap-0.5">
+                <p className="text-green-200 text-xs truncate">{staffBadge.name}</p>
+                <span
+                  className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider w-fit"
+                  style={{ background: staffBadge.labUserRole === "admin" ? "#15803D" : "#166534", color: "#BBF7D0" }}
+                >
+                  {staffBadge.labUserRole === "admin"
+                    ? t("badgeAdmin" as Parameters<typeof t>[0])
+                    : t("badgeTechnician" as Parameters<typeof t>[0])}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 

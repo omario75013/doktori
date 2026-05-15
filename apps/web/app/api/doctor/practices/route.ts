@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { auth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
+import { rejectClinicDoctor } from "@/lib/clinic-doctor-guard";
 import { db, doctorPractices, clinics } from "@doktori/db";
 import { eq, and, asc, desc } from "drizzle-orm";
 
@@ -31,7 +32,12 @@ export async function GET(req: NextRequest) {
     })
     .from(doctorPractices)
     .leftJoin(clinics, eq(doctorPractices.clinicId, clinics.id))
-    .where(eq(doctorPractices.doctorId, doctorId))
+    .where(
+      and(
+        eq(doctorPractices.doctorId, doctorId),
+        eq(doctorPractices.isActive, true),
+      )
+    )
     .orderBy(desc(doctorPractices.isPrimary), asc(doctorPractices.createdAt));
 
   return NextResponse.json(rows);
@@ -43,6 +49,9 @@ export async function POST(req: NextRequest) {
     if (!user || user.role !== "doctor") {
       return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
     }
+    const session = await auth();
+    const clinicRejection = rejectClinicDoctor(session);
+    if (clinicRejection) return clinicRejection;
 
     const body = await req.json();
     const { name, address, city, latitude, longitude, phone, isPrimary } = body;

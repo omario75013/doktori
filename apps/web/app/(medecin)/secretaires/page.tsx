@@ -496,9 +496,23 @@ function AddSecretaryDialog({
     yearsOfExperience: "",
     monthlySalary: "",
     monthlyDayOffAllowance: "2",
+    practiceId: "",
   });
+  const [practices, setPractices] = useState<Array<{ id: string; name: string; city: string; isPrimary: boolean; clinicId: string | null; clinicName: string | null }>>([]);
   const [permissions, setPermissions] = useState<SecretaryPermissions>(DEFAULT_PERMISSIONS);
   const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/doctor/practices")
+      .then((r) => r.json())
+      .then((data: Array<{ id: string; name: string; city: string; isPrimary: boolean; clinicId: string | null; clinicName: string | null }>) => {
+        setPractices(Array.isArray(data) ? data : []);
+        // Auto-select the primary practice
+        const primary = Array.isArray(data) ? data.find((p) => p.isPrimary) : null;
+        if (primary) setForm((f) => ({ ...f, practiceId: primary.id }));
+      })
+      .catch(() => {});
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -522,6 +536,7 @@ function AddSecretaryDialog({
         payload.monthlySalary = Math.round(Number(form.monthlySalary) * 1000);
       if (form.monthlyDayOffAllowance)
         payload.monthlyDayOffAllowance = Number(form.monthlyDayOffAllowance);
+      if (form.practiceId) payload.practiceId = form.practiceId;
 
       const res = await fetch("/api/secretaries", {
         method: "POST",
@@ -574,6 +589,28 @@ function AddSecretaryDialog({
           <Field label={t("fieldDaysOff")}>
             <Input type="number" min="0" step="0.5" value={form.monthlyDayOffAllowance} onChange={(v) => setForm({ ...form, monthlyDayOffAllowance: v })} />
           </Field>
+          {practices.length > 0 && (
+            <Field label={t("cabinet")}>
+              {practices.length === 1 ? (
+                <div className="h-10 rounded-xl border border-border bg-gray-50 px-3 flex items-center text-sm text-muted-foreground">
+                  {practices[0].name} – {practices[0].city}
+                </div>
+              ) : (
+                <select
+                  value={form.practiceId}
+                  onChange={(e) => setForm({ ...form, practiceId: e.target.value })}
+                  className="w-full h-10 rounded-xl border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                >
+                  <option value="">{t("selectCabinet")}</option>
+                  {practices.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.name} – {p.city}{p.clinicName ? ` (${p.clinicName})` : ""}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </Field>
+          )}
         </fieldset>
 
         <div>

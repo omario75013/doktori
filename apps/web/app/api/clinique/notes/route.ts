@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db, clinicNotes } from "@doktori/db";
 import { eq, desc, sql } from "drizzle-orm";
 import { requireClinic } from "@/lib/clinic-auth";
+import { logClinicAudit } from "@/lib/audit";
 
 const createSchema = z.object({
   title: z.string().max(255).optional(),
@@ -54,6 +55,15 @@ export async function POST(req: Request) {
       pinned: pinned ?? false,
     })
     .returning();
+
+  void logClinicAudit({
+    clinicId: clinic.id,
+    actorType: "clinic",
+    actorId: clinic.id,
+    action: "note.create",
+    targetType: "note",
+    targetId: note?.id ?? null,
+  });
 
   return NextResponse.json({ note }, { status: 201 });
 }

@@ -19,9 +19,13 @@ const MAX_BYTES = 15 * 1024 * 1024;
 //   file, patientId, category?, title?, note?, doctorIdsToShare? (comma-sep or JSON array)
 export async function POST(req: NextRequest) {
   const user = await requireAuth(req);
-  if (!user || user.role !== "lab") {
+  const role = (user as { role?: string } | undefined)?.role;
+  if (!user || (role !== "lab" && role !== "lab_user")) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+  const labId = role === "lab_user"
+    ? (user as { labId?: string }).labId!
+    : user.id;
 
   const form = await req.formData().catch(() => null);
   if (!form) {
@@ -68,7 +72,7 @@ export async function POST(req: NextRequest) {
   // Upload to R2.
   const buf = Buffer.from(await file.arrayBuffer());
   const ext = (file.name.split(".").pop() ?? "bin").toLowerCase().slice(0, 8);
-  const key = `lab-results/${user.id}/${randomUUID()}.${ext}`;
+  const key = `lab-results/${labId}/${randomUUID()}.${ext}`;
   const fileUrl = await uploadToR2(buf, key, file.type);
 
   const [doc] = await db
@@ -76,7 +80,7 @@ export async function POST(req: NextRequest) {
     .values({
       patientId,
       uploadedBy: "lab",
-      uploadedByLabId: user.id,
+      uploadedByLabId: labId,
       labOrderId: null,
       sharedWithDoctorIds,
       fileUrl,

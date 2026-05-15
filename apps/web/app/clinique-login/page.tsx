@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { Suspense, useState } from "react";
 import { signIn } from "next-auth/react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   Building2,
@@ -17,11 +17,29 @@ import {
 } from "lucide-react";
 
 export default function CliniqueLoginPage() {
+  return (
+    <Suspense>
+      <CliniqueLoginForm />
+    </Suspense>
+  );
+}
+
+function CliniqueLoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const msgParam = searchParams.get("msg");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+
+  const msgText: Record<string, string> = {
+    "clinic-doctor": "Médecin affilié à une clinique : connectez-vous ici avec vos identifiants.",
+    "clinic-lab": "Laboratoire affilié à une clinique : connectez-vous ici avec vos identifiants.",
+  };
+
+  const succeeded = (r: { error?: string | null; url?: string | null } | undefined) =>
+    !!r && !r.error && !!r.url && !r.url.includes("/clinique-login");
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -29,16 +47,52 @@ export default function CliniqueLoginPage() {
     setLoading(true);
 
     try {
-      const result = await signIn("clinic-credentials", {
+      // 1) clinic admin
+      let result = await signIn("clinic-credentials", {
         email,
         password,
         redirect: false,
+        callbackUrl: "/clinique/dashboard",
       });
 
-      if (result?.error) {
+      // 2) doctor (clinic-created or independent — dashboard handles routing)
+      if (!succeeded(result)) {
+        result = await signIn("doctor-credentials", {
+          email,
+          password,
+          redirect: false,
+          callbackUrl: "/dashboard",
+        });
+      }
+
+      // 3) lab-user (only allowed if parent lab is clinic-owned — checked client-side via session)
+      if (!succeeded(result)) {
+        result = await signIn("lab-user-credentials", {
+          email,
+          password,
+          redirect: false,
+          callbackUrl: "/laboratoire/dashboard",
+        });
+      }
+
+      // 4) legacy lab single-account (only allowed if clinic-owned)
+      if (!succeeded(result)) {
+        result = await signIn("lab-credentials", {
+          email,
+          password,
+          redirect: false,
+          callbackUrl: "/laboratoire/dashboard",
+        });
+      }
+
+      if (!succeeded(result)) {
         setError("Email ou mot de passe incorrect.");
       } else {
-        router.push("/clinique/dashboard");
+        // Hard-navigate so new session cookie is picked up by server-rendered layouts
+        const dest = result?.url
+          ? new URL(result.url, window.location.origin).pathname
+          : "/clinique/dashboard";
+        window.location.href = dest;
       }
     } catch {
       setError("Une erreur est survenue. Veuillez réessayer.");
@@ -139,7 +193,14 @@ export default function CliniqueLoginPage() {
               </h1>
               <p className="mt-2 text-sm text-muted-foreground">
                 Connectez-vous à l&apos;espace de gestion de votre établissement.
+                Médecins et laboratoires affiliés à une clinique se connectent ici aussi.
               </p>
+              {msgParam && msgText[msgParam] && (
+                <div className="mt-3 flex items-start gap-2 rounded-xl bg-blue-50 px-4 py-3 text-sm text-blue-700">
+                  <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" strokeWidth={2.5} />
+                  <span>{msgText[msgParam]}</span>
+                </div>
+              )}
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">

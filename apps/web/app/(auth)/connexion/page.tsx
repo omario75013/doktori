@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
@@ -40,6 +40,16 @@ export default function ConnexionPage() {
       if (result?.error) {
         setError(t("invalidCredentials"));
       } else {
+        // B3: block clinic-created doctors from standalone login
+        const sessionRes = await fetch("/api/auth/session");
+        if (sessionRes.ok) {
+          const sessionData = (await sessionRes.json()) as { user?: { createdByClinicId?: string | null } };
+          if (sessionData.user?.createdByClinicId) {
+            await signOut({ redirect: false });
+            router.push("/clinique-login?msg=clinic-doctor");
+            return;
+          }
+        }
         router.push("/dashboard");
       }
     } catch {

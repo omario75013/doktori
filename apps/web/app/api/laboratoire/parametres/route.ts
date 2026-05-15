@@ -16,11 +16,15 @@ const patchSchema = z.object({
 // GET — return current lab profile
 export async function GET(req: NextRequest) {
   const user = await requireAuth(req);
-  if (!user || user.role !== "lab") {
+  const role = (user as { role?: string } | undefined)?.role;
+  if (!user || (role !== "lab" && role !== "lab_user")) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+  const labId = role === "lab_user"
+    ? (user as { labId?: string }).labId!
+    : user.id;
 
-  const rows = await db.select().from(labs).where(eq(labs.id, user.id));
+  const rows = await db.select().from(labs).where(eq(labs.id, labId));
   const lab = rows[0];
   if (!lab) {
     return NextResponse.json({ error: "Laboratoire introuvable" }, { status: 404 });
@@ -34,9 +38,19 @@ export async function GET(req: NextRequest) {
 // PATCH — update lab profile fields
 export async function PATCH(req: NextRequest) {
   const user = await requireAuth(req);
-  if (!user || user.role !== "lab") {
+  const role = (user as { role?: string } | undefined)?.role;
+  if (!user || (role !== "lab" && role !== "lab_user")) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+  if (role === "lab_user") {
+    const labUserRole = (user as { labUserRole?: string }).labUserRole;
+    if (labUserRole !== "admin") {
+      return NextResponse.json({ error: "Réservé aux administrateurs du laboratoire" }, { status: 403 });
+    }
+  }
+  const labId = role === "lab_user"
+    ? (user as { labId?: string }).labId!
+    : user.id;
 
   let body: unknown;
   try {
@@ -65,7 +79,7 @@ export async function PATCH(req: NextRequest) {
       ...(data.services !== undefined && { services: data.services }),
       ...(data.accreditations !== undefined && { accreditations: data.accreditations }),
     })
-    .where(eq(labs.id, user.id))
+    .where(eq(labs.id, labId))
     .returning();
 
   const lab = updated[0];

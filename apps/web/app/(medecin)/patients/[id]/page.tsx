@@ -194,6 +194,7 @@ type Prescription = {
   createdAt: string;
   appointmentId: string;
   verificationToken: string | null;
+  sharedWithDoctorIds: string[];
 };
 
 function getStatusLabels(t: ReturnType<typeof useTranslations<"medecin.patientDetail">>): Record<string, string> {
@@ -696,7 +697,10 @@ function PatientDetail({ listPath }: { listPath: string }) {
       </div>
 
       {tab === "general" && (
-        <GeneralTab patient={patient} appointments={appointments} />
+        <>
+          <GeneralTab patient={patient} appointments={appointments} />
+          <ClinicSharingSection patientId={params.id} viewerRole={viewerRole} />
+        </>
       )}
 
       {tab === "dossier" && (
@@ -788,6 +792,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
 
       {tab === "ordonnances" && viewerRole === "doctor" && (
         <OrdonnancesSection
+          patientId={params.id}
           prescriptions={prescriptions}
           onNewPrescription={() => setPrescModalOpen(true)}
           onPrescriptionUpdated={(updated) =>
@@ -2211,6 +2216,7 @@ function DossierTab({
       {/* Ordonnances */}
       {viewerRole === "doctor" && (
         <OrdonnancesSection
+          patientId={patient.id}
           prescriptions={prescriptions}
           onNewPrescription={onNewPrescription}
           onPrescriptionUpdated={onPrescriptionUpdated}
@@ -2299,12 +2305,16 @@ function EmptyInline() {
 
 // ─── Ordonnances section ──────────────────────────────────────────────────────
 
+type Codoctor = { id: string; name: string; specialty: string | null };
+
 function OrdonnancesSection({
+  patientId,
   prescriptions,
   onNewPrescription,
   onPrescriptionUpdated,
   onPrescriptionDeleted,
 }: {
+  patientId: string;
   prescriptions: Prescription[];
   onNewPrescription: () => void;
   onPrescriptionUpdated: (updated: Prescription) => void;
@@ -2316,6 +2326,47 @@ function OrdonnancesSection({
   const [editDraft, setEditDraft] = useState("");
   const [savingEdit, setSavingEdit] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  // Share popover state
+  const [shareOpenId, setShareOpenId] = useState<string | null>(null);
+  const [codoctors, setCodoctors] = useState<Codoctor[]>([]);
+  const [codoctorsLoaded, setCodoctorsLoaded] = useState(false);
+  const [shareSelection, setShareSelection] = useState<string[]>([]);
+  const [savingShare, setSavingShare] = useState(false);
+
+  async function openSharePopover(prescId: string, alreadyShared: string[]) {
+    setShareOpenId(prescId);
+    setShareSelection(alreadyShared);
+    if (!codoctorsLoaded) {
+      try {
+        const r = await fetch(`/api/patients/${patientId}/co-doctors`);
+        if (r.ok) setCodoctors(await r.json());
+      } finally {
+        setCodoctorsLoaded(true);
+      }
+    }
+  }
+
+  async function saveShare(prescId: string) {
+    setSavingShare(true);
+    try {
+      const r = await fetch(`/api/prescriptions/${prescId}/share`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ doctorIds: shareSelection }),
+      });
+      if (r.ok) {
+        const data = await r.json() as { sharedWithDoctorIds: string[] };
+        onPrescriptionUpdated({ ...prescriptions.find((p) => p.id === prescId)!, sharedWithDoctorIds: data.sharedWithDoctorIds });
+        setShareOpenId(null);
+        toast.success("Partage mis à jour");
+      } else {
+        const data = await r.json().catch(() => ({})) as { error?: string };
+        toast.error(data.error ?? "Échec du partage");
+      }
+    } finally {
+      setSavingShare(false);
+    }
+  }
   // Strip HTML tags + decode &nbsp;/&#39; etc for the collapsed-card excerpt
   // so doctors don't see "<p><strong>Dr." in the list view.
   function plainExcerpt(html: string, max = 120): string {
@@ -2488,6 +2539,14 @@ function OrdonnancesSection({
                           </button>
                           <button
                             type="button"
+                            onClick={() => openSharePopover(p.id, p.sharedWithDoctorIds ?? [])}
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-white hover:bg-secondary text-gray-700 px-3 py-1.5 text-xs font-medium"
+                          >
+                            <Share2 className="h-3.5 w-3.5" />
+                            Partager
+                          </button>
+                          <button
+                            type="button"
                             disabled={deletingId === p.id}
                             onClick={async () => {
                               if (!confirm("Supprimer cette ordonnance ?")) return;
@@ -2514,6 +2573,49 @@ function OrdonnancesSection({
                         </>
                       )}
                     </div>
+                    {/* Share popover */}
+                    {shareOpenId === p.id && (
+                      <div className="mt-2 ml-11 rounded-xl border border-border bg-white shadow-md p-4 space-y-3 max-w-sm">
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs font-semibold text-foreground">Partager avec…</p>
+                          <button type="button" onClick={() => setShareOpenId(null)} className="text-gray-400 hover:text-gray-600">
+                            <XClose className="h-4 w-4" />
+                          </button>
+                        </div>
+                        {codoctors.length === 0 ? (
+                          <p className="text-xs text-gray-400">Aucun autre médecin n&apos;a suivi ce patient.</p>
+                        ) : (
+                          <ul className="space-y-1.5">
+                            {codoctors.map((d) => (
+                              <li key={d.id}>
+                                <label className="flex items-center gap-2 cursor-pointer text-xs">
+                                  <input
+                                    type="checkbox"
+                                    className="rounded"
+                                    checked={shareSelection.includes(d.id)}
+                                    onChange={(e) =>
+                                      setShareSelection((prev) =>
+                                        e.target.checked ? [...prev, d.id] : prev.filter((x) => x !== d.id),
+                                      )
+                                    }
+                                  />
+                                  <span className="font-medium">{d.name}</span>
+                                  {d.specialty && <span className="text-gray-400">· {d.specialty}</span>}
+                                </label>
+                              </li>
+                            ))}
+                          </ul>
+                        )}
+                        <button
+                          type="button"
+                          disabled={savingShare || codoctors.length === 0}
+                          onClick={() => saveShare(p.id)}
+                          className="w-full rounded-lg bg-primary text-white text-xs font-medium py-2 hover:opacity-90 disabled:opacity-50"
+                        >
+                          {savingShare ? "…" : "Enregistrer"}
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </li>
@@ -3216,6 +3318,120 @@ function SharedDocsSection({
           })}
         </ul>
       )}
+    </div>
+  );
+}
+
+// ── Clinic Sharing Section ────────────────────────────────────────────────────
+
+type ClinicSharingState = {
+  clinicId: string;
+  clinicName: string;
+  sections: Record<string, boolean>;
+};
+
+const SHARING_SECTIONS = [
+  { key: "profile", label: "Profil médical" },
+  { key: "allergies", label: "Allergies" },
+  { key: "vaccinations", label: "Vaccinations" },
+  { key: "analyses", label: "Analyses" },
+  { key: "prescriptions", label: "Ordonnances" },
+  { key: "certificates", label: "Certificats" },
+  { key: "documents", label: "Documents" },
+  { key: "labOrders", label: "Demandes labo" },
+] as const;
+
+function ClinicSharingSection({
+  patientId,
+  viewerRole,
+}: {
+  patientId: string;
+  viewerRole: string;
+}) {
+  const [clinics, setClinics] = useState<ClinicSharingState[]>([]);
+  const [saving, setSaving] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (viewerRole !== "doctor") return;
+    fetch(`/api/medecin/patients/${patientId}/clinic-sharing`)
+      .then((r) => r.json())
+      .then((data: { clinics?: ClinicSharingState[] }) => setClinics(data.clinics ?? []))
+      .catch(() => {});
+  }, [patientId, viewerRole]);
+
+  if (viewerRole !== "doctor" || clinics.length === 0) return null;
+
+  async function toggle(clinicId: string, section: string, currentValue: boolean) {
+    const key = `${clinicId}:${section}`;
+    setSaving(key);
+    try {
+      const res = await fetch(`/api/medecin/patients/${patientId}/clinic-sharing`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clinicId, section, value: !currentValue }),
+      });
+      if (res.ok) {
+        setClinics((prev) =>
+          prev.map((c) =>
+            c.clinicId === clinicId
+              ? { ...c, sections: { ...c.sections, [section]: !currentValue } }
+              : c
+          )
+        );
+        setSaved(key);
+        setTimeout(() => setSaved(null), 1500);
+      }
+    } finally {
+      setSaving(null);
+    }
+  }
+
+  return (
+    <div className="ds-card mt-4">
+      <div className="p-4 border-b border-border">
+        <h2 className="font-semibold text-foreground">Partage avec clinique(s)</h2>
+        <p className="text-xs text-muted-foreground mt-0.5">
+          Contrôlez quelles sections du dossier sont visibles pour chaque clinique.
+        </p>
+      </div>
+      <div className="divide-y divide-border">
+        {clinics.map((clinic) => (
+          <div key={clinic.clinicId} className="p-4 space-y-3">
+            <p className="font-semibold text-sm text-foreground">{clinic.clinicName}</p>
+            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+              {SHARING_SECTIONS.map(({ key, label }) => {
+                const value = clinic.sections[key] !== false;
+                const stateKey = `${clinic.clinicId}:${key}`;
+                const isSaving = saving === stateKey;
+                const isSaved = saved === stateKey;
+                return (
+                  <div key={key} className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={isSaving}
+                      onClick={() => toggle(clinic.clinicId, key, value)}
+                      className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none disabled:opacity-50 ${
+                        value ? "bg-cyan-500" : "bg-gray-300"
+                      }`}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                          value ? "translate-x-4" : "translate-x-0"
+                        }`}
+                      />
+                    </button>
+                    <span className={`text-xs font-medium ${value ? "text-foreground" : "text-muted-foreground"}`}>
+                      {label}
+                    </span>
+                    {isSaved && <span className="text-xs text-emerald-500">✓</span>}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }

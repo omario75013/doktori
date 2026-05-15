@@ -7,9 +7,13 @@ import { requireAuth } from "@/lib/require-auth";
 // Returns orders where lab_id = current lab OR lab_id IS NULL (walk-in / any lab).
 export async function GET(req: NextRequest) {
   const user = await requireAuth(req);
-  if (!user || user.role !== "lab") {
+  const role = (user as { role?: string } | undefined)?.role;
+  if (!user || (role !== "lab" && role !== "lab_user")) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+  const labId = role === "lab_user"
+    ? (user as { labId?: string }).labId!
+    : user.id;
 
   const rows = await db
     .select({
@@ -33,7 +37,7 @@ export async function GET(req: NextRequest) {
     .innerJoin(doctors, eq(labOrders.doctorId, doctors.id))
     .where(
       or(
-        eq(labOrders.labId, user.id),
+        eq(labOrders.labId, labId),
         isNull(labOrders.labId),
       ),
     )

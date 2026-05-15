@@ -21,11 +21,12 @@ export default async function MedecinLayout({ children }: { children: React.Reac
   )) as unknown as Array<{ verification_status: string | null }>;
 
   const verificationStatus = doctorRow?.verification_status ?? "pending";
+  const createdByClinicId = ((session.user as unknown) as Record<string, unknown>).createdByClinicId as string | null ?? null;
 
   return (
     <div className="patient-space doctor-space">
       <div className="min-h-screen flex">
-        <SidebarNav userName={session.user?.name} verificationStatus={verificationStatus} />
+        <SidebarNav userName={session.user?.name} verificationStatus={verificationStatus} createdByClinicId={createdByClinicId} />
         <div className="flex-1 flex flex-col min-w-0">
           <AppTopBar role="doctor" />
           <main className="flex-1 p-6" style={{ background: "var(--bg-cool)" }}>

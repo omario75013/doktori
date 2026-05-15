@@ -88,6 +88,7 @@ type DashboardClientProps = {
   completionRate?: number | null;
   averageRating?: number;
   recentActivity?: ActivityItem[];
+  isClinicDoctor?: boolean;
 };
 
 // ─── Status badge/border config (labels resolved at render time via t()) ───────
@@ -644,6 +645,7 @@ export function DashboardClient({
   waitingRoomCount = 0,
   waitingPatients = [],
   doctorId,
+  isClinicDoctor = false,
 }: DashboardClientProps) {
   const t = useTranslations("medecin.dashboard");
   const tStatus = useTranslations("medecin.appointments.status");
@@ -811,8 +813,8 @@ export function DashboardClient({
 
   return (
     <div className="space-y-8">
-      {/* Verification status banners */}
-      {verificationStatus === "pending" && (
+      {/* Verification status banners — clinic-created doctors are auto-verified */}
+      {!isClinicDoctor && verificationStatus === "pending" && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -833,7 +835,7 @@ export function DashboardClient({
         </motion.div>
       )}
 
-      {verificationStatus === "documents_submitted" && (
+      {!isClinicDoctor && verificationStatus === "documents_submitted" && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -846,7 +848,7 @@ export function DashboardClient({
         </motion.div>
       )}
 
-      {verificationStatus === "rejected" && (
+      {!isClinicDoctor && verificationStatus === "rejected" && (
         <motion.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -972,9 +974,10 @@ export function DashboardClient({
 
       {/* KPI panel — Aujourd'hui / À confirmer / No-shows grouped horizontally
           (same DayOverviewCard pattern). The SMS quota sits as its own card
-          beside the panel since it has different semantics (a quota, not a count). */}
+          beside the panel since it has different semantics (a quota, not a count).
+          Clinic-doctors do not have a personal SMS plan, so the smsKpi is hidden. */}
       <div data-tour="kpi-grid">
-        <KpiPanel kpis={[...kpis, smsKpi]} />
+        <KpiPanel kpis={isClinicDoctor ? kpis : [...kpis, smsKpi]} />
       </div>
 
       {/* Wallet card */}
@@ -1105,8 +1108,8 @@ export function DashboardClient({
         )}
       </motion.div>
 
-      {/* Teleconsult promo */}
-      {consultationMode === "cabinet" && (
+      {/* Teleconsult promo — hidden for clinic-doctors (no personal teleconsult subscription) */}
+      {!isClinicDoctor && consultationMode === "cabinet" && (
         <div
           className="rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-700 p-6 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4"
           style={{ animation: "fadeSlideIn 0.5s ease 0.1s both" }}
@@ -1253,8 +1256,10 @@ export function DashboardClient({
 
       </div> {/* /Row 1: RDV chart + Today + Upcoming */}
 
-      {/* Row 2: Recettes + Taux d'annulation */}
-      <DashboardCharts rangeDays={rangeDays} which="revenue" />
+      {/* Row 2: Recettes + Taux d'annulation — hidden for clinic-created doctors */}
+      {!isClinicDoctor && (
+        <DashboardCharts rangeDays={rangeDays} which="revenue" />
+      )}
 
       {/* ── Recent Activity Feed ────────────────────────────────────────────── */}
       {recentActivity.length > 0 && (

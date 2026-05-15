@@ -1,8 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/require-auth";
-import { db, secretaries } from "@doktori/db";
-import { eq } from "drizzle-orm";
+import { db, secretaries, doctorPractices } from "@doktori/db";
+import { eq, and } from "drizzle-orm";
 import { hash } from "bcryptjs";
 import { SECTIONS, DEFAULT_PERMISSIONS, parsePermissions } from "@/lib/secretary-permissions";
 
@@ -53,6 +53,8 @@ const createSchema = z.object({
   hireDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),
   monthlyDayOffAllowance: z.number().min(0).max(31).optional().nullable(),
   permissions: permissionsObject.partial().optional(),
+  // Phase 3: optional cabinet scoping — must belong to this doctor
+  practiceId: z.string().uuid().optional().nullable(),
 });
 
 export async function POST(req: NextRequest) {
@@ -79,6 +81,36 @@ export async function POST(req: NextRequest) {
   const passwordHash = await hash(parsed.data.password, 12);
   const perms = { ...DEFAULT_PERMISSIONS, ...parsePermissions(parsed.data.permissions ?? {}) };
 
+  // Phase 3: if practiceId supplied, verify it belongs to this doctor
+  let resolvedPracticeId: string | null = null;
+  if (parsed.data.practiceId) {
+    const [practice] = await db
+      .select({ id: doctorPractices.id })
+      .from(doctorPractices)
+      .where(
+        and(
+          eq(doctorPractices.id, parsed.data.practiceId),
+          eq(doctorPractices.doctorId, user.id)
+        )
+      )
+      .limit(1);
+    if (!practice) {
+      return NextResponse.json(
+        { error: "Cabinet introuvable ou n'appartient pas à ce médecin" },
+        { status: 403 }
+      );
+    }
+    resolvedPracticeId = practice.id;
+  } else {
+    // Fallback: assign to the primary practice if one exists
+    const [primary] = await db
+      .select({ id: doctorPractices.id })
+      .from(doctorPractices)
+      .where(and(eq(doctorPractices.doctorId, user.id), eq(doctorPractices.isPrimary, true)))
+      .limit(1);
+    resolvedPracticeId = primary?.id ?? null;
+  }
+
   try {
     const [secretary] = await db
       .insert(secretaries)
@@ -97,6 +129,7 @@ export async function POST(req: NextRequest) {
             ? String(parsed.data.monthlyDayOffAllowance)
             : null,
         permissions: perms,
+        practiceId: resolvedPracticeId,
       })
       .returning({
         id: secretaries.id,

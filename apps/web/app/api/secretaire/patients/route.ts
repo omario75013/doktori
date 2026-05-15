@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server";
 import { requireDoctorOrSecretaryUnified } from "@/lib/require-auth";
 import { db, patients } from "@doktori/db";
 import { assertPlanLimit, PlanLimitError } from "@/lib/plan-gates";
+import { resolveOrCreatePatient } from "@/lib/patient-identity";
 import { eq, sql } from "drizzle-orm";
 
 // GET /api/secretaire/patients
@@ -54,32 +55,31 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Le téléphone est obligatoire" }, { status: 400 });
   }
 
-  const normalizedPhone = phone.replace(/\s+/g, "").trim();
+  const cin = typeof (body as Record<string, unknown>).cin === "string"
+    ? ((body as Record<string, unknown>).cin as string).trim() || null
+    : null;
 
-  // Check for existing patient with same phone (linking doesn't count against plan limit)
-  const [existing] = await db
-    .select()
-    .from(patients)
-    .where(eq(patients.phone, normalizedPhone))
-    .limit(1);
+  // resolveOrCreatePatient handles CIN → phone → email match-or-create.
+  // Only charge the plan limit if we are actually creating a new patient.
+  const { patientId, matched } = await resolveOrCreatePatient({
+    cin,
+    phone: typeof phone === "string" ? phone : null,
+    email: typeof email === "string" ? email : null,
+    name: (name as string).trim(),
+    dateOfBirth: typeof dateOfBirth === "string" && dateOfBirth.trim() ? dateOfBirth.trim() : null,
+  });
 
-  if (existing) {
+  if (matched !== null) {
+    // Existing patient found — no plan limit charge.
+    const [existing] = await db
+      .select()
+      .from(patients)
+      .where(eq(patients.id, patientId))
+      .limit(1);
     return NextResponse.json({ ...existing, linked: true }, { status: 200 });
   }
 
-  const insertValues: typeof patients.$inferInsert = {
-    name: name.trim(),
-    phone: normalizedPhone,
-  };
-
-  if (typeof email === "string" && email.trim().length > 0) {
-    insertValues.email = email.trim().toLowerCase();
-  }
-
-  if (typeof dateOfBirth === "string" && dateOfBirth.trim().length > 0) {
-    insertValues.dateOfBirth = dateOfBirth.trim();
-  }
-
+  // New patient created — enforce plan limit.
   try {
     await assertPlanLimit(secretary.doctorId, "patients");
   } catch (e) {
@@ -92,7 +92,11 @@ export async function POST(req: NextRequest) {
     throw e;
   }
 
-  const [created] = await db.insert(patients).values(insertValues).returning();
+  const [created] = await db
+    .select()
+    .from(patients)
+    .where(eq(patients.id, patientId))
+    .limit(1);
 
   return NextResponse.json({ ...created, linked: false }, { status: 201 });
 }

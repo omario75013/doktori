@@ -1,7 +1,9 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef, Suspense } from "react";
+import { formatDoctorName } from "@/lib/format-doctor-name";
 import { useSession } from "next-auth/react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion } from "framer-motion";
@@ -13,7 +15,14 @@ import {
   Clock,
   ChevronDown,
   UserRound,
+  DoorOpen,
+  SlidersHorizontal,
+  X,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
+
+// ── Types ─────────────────────────────────────────────────────────────────────
 
 interface Appointment {
   id: string;
@@ -31,6 +40,19 @@ interface Appointment {
   checkedInAt: string | null;
   confirmedAt: string | null;
   cancelledAt: string | null;
+  clinicRoomId: string | null;
+  clinicRoomName: string | null;
+  clinicRoomColor: string | null;
+}
+
+interface ApiResponse {
+  rows?: Appointment[];
+  page?: number;
+  pageSize?: number;
+  total?: number;
+  error?: string;
+  // legacy compat — old field name was `appointments`
+  appointments?: Appointment[];
 }
 
 interface Doctor {
@@ -39,6 +61,18 @@ interface Doctor {
   specialty: string;
   role: string;
 }
+
+interface ClinicRoom {
+  id: string;
+  name: string;
+  color: string;
+  siteId: string;
+  siteName?: string;
+}
+
+// ── Constants ─────────────────────────────────────────────────────────────────
+
+const LS_KEY_PREFIX = "doktori:clinique:rdv:";
 
 const STATUS_LABELS: Record<string, { label: string; bg: string; text: string }> = {
   pending: { label: "En attente", bg: "bg-amber-50", text: "text-amber-700" },
@@ -63,6 +97,22 @@ const STATUS_FILTERS = [
   { value: "cancelled", label: "Annulé" },
 ];
 
+const PAGE_SIZES = [25, 50, 100];
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
+
+function RoomChip({ name, color }: { name: string; color: string }) {
+  return (
+    <span
+      className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-semibold text-white"
+      style={{ background: color }}
+    >
+      <DoorOpen className="h-3 w-3 shrink-0" />
+      {name}
+    </span>
+  );
+}
+
 function StatusBadge({ status }: { status: string }) {
   const cfg = STATUS_LABELS[status] ?? { label: status, bg: "bg-gray-100", text: "text-gray-600" };
   return (
@@ -72,42 +122,144 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-export default function RendezVousPage() {
-  useSession();
+// ── Inner component (uses useSearchParams — must be inside Suspense) ───────────
+
+function RendezVousInner() {
+  const { data: session } = useSession();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Clinic id from session for localStorage key
+  const clinicId = (session?.user as { id?: string } | undefined)?.id ?? "unknown";
+  const lsKey = `${LS_KEY_PREFIX}${clinicId}`;
+
+  // ── Filter state — initialise from URL, then localStorage, then defaults ──
+  const [doctorFilter, setDoctorFilter] = useState(() => searchParams.get("doctorId") ?? "");
+  const [statusFilter, setStatusFilter] = useState(() => searchParams.get("status") ?? "");
+  const [dateFilter, setDateFilter] = useState(() => searchParams.get("date") ?? "today");
+  const [roomFilter, setRoomFilter] = useState(() => searchParams.get("roomId") ?? "");
+  const [search, setSearch] = useState(() => searchParams.get("q") ?? "");
+
+  // ── Pagination state — initialise from URL ─────────────────────────────────
+  const [page, setPage] = useState(() => {
+    const p = parseInt(searchParams.get("page") ?? "1", 10);
+    return isNaN(p) || p < 1 ? 1 : p;
+  });
+  const [pageSize, setPageSize] = useState(() => {
+    const ps = parseInt(searchParams.get("pageSize") ?? "50", 10);
+    return PAGE_SIZES.includes(ps) ? ps : 50;
+  });
+  const [total, setTotal] = useState(0);
+
+  // ── Data state ─────────────────────────────────────────────────────────────
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [rooms, setRooms] = useState<ClinicRoom[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [assigningRoomFor, setAssigningRoomFor] = useState<string | null>(null);
 
-  // Filters
-  const [doctorFilter, setDoctorFilter] = useState("");
-  const [statusFilter, setStatusFilter] = useState("");
-  const [dateFilter, setDateFilter] = useState("today");
-  const [search, setSearch] = useState("");
+  // ── LocalStorage hydration — runs once clinicId is known ──────────────────
+  const hydrated = useRef(false);
+  useEffect(() => {
+    if (clinicId === "unknown" || hydrated.current) return;
+    // Only hydrate from localStorage if URL has no filter params
+    const hasUrlFilters =
+      searchParams.has("doctorId") ||
+      searchParams.has("status") ||
+      searchParams.has("date") ||
+      searchParams.has("roomId") ||
+      searchParams.has("q");
+    if (!hasUrlFilters) {
+      try {
+        const raw = localStorage.getItem(lsKey);
+        if (raw) {
+          const saved = JSON.parse(raw) as {
+            doctorFilter?: string;
+            statusFilter?: string;
+            dateFilter?: string;
+            roomFilter?: string;
+            search?: string;
+          };
+          if (saved.doctorFilter !== undefined) setDoctorFilter(saved.doctorFilter);
+          if (saved.statusFilter !== undefined) setStatusFilter(saved.statusFilter);
+          if (saved.dateFilter !== undefined) setDateFilter(saved.dateFilter);
+          if (saved.roomFilter !== undefined) setRoomFilter(saved.roomFilter);
+          if (saved.search !== undefined) setSearch(saved.search);
+        }
+      } catch {
+        // ignore malformed localStorage
+      }
+    }
+    hydrated.current = true;
+  }, [clinicId, lsKey, searchParams]);
 
+  // ── Persist filters to localStorage (debounced 200ms for search) ──────────
+  const searchDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!hydrated.current) return;
+    const persist = () => {
+      try {
+        localStorage.setItem(
+          lsKey,
+          JSON.stringify({ doctorFilter, statusFilter, dateFilter, roomFilter, search })
+        );
+      } catch {
+        // ignore quota errors
+      }
+    };
+    if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    searchDebounceRef.current = setTimeout(persist, 200);
+    return () => {
+      if (searchDebounceRef.current) clearTimeout(searchDebounceRef.current);
+    };
+  }, [lsKey, doctorFilter, statusFilter, dateFilter, roomFilter, search]);
+
+  // ── Sync URL ───────────────────────────────────────────────────────────────
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (doctorFilter) params.set("doctorId", doctorFilter);
+    if (statusFilter) params.set("status", statusFilter);
+    if (dateFilter) params.set("date", dateFilter);
+    if (roomFilter) params.set("roomId", roomFilter);
+    if (search) params.set("q", search);
+    if (page > 1) params.set("page", String(page));
+    if (pageSize !== 50) params.set("pageSize", String(pageSize));
+    router.replace(`/clinique/rendez-vous?${params.toString()}`, { scroll: false });
+  }, [router, doctorFilter, statusFilter, dateFilter, roomFilter, search, page, pageSize]);
+
+  // ── Fetch appointments ─────────────────────────────────────────────────────
   const fetchAppointments = useCallback(() => {
     const params = new URLSearchParams();
     if (doctorFilter) params.set("doctorId", doctorFilter);
     if (statusFilter) params.set("status", statusFilter);
     if (dateFilter) params.set("date", dateFilter);
+    params.set("page", String(page));
+    params.set("pageSize", String(pageSize));
 
     setLoading(true);
     fetch(`/api/clinique/appointments?${params}`)
       .then((r) => r.json())
-      .then((data: { appointments?: Appointment[]; error?: string }) => {
+      .then((data: ApiResponse) => {
         if (data.error) throw new Error(data.error);
-        setAppointments(data.appointments ?? []);
+        // Support both new `rows` shape and legacy `appointments` shape
+        setAppointments(data.rows ?? data.appointments ?? []);
+        setTotal(data.total ?? data.rows?.length ?? data.appointments?.length ?? 0);
       })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
-  }, [doctorFilter, statusFilter, dateFilter]);
+  }, [doctorFilter, statusFilter, dateFilter, page, pageSize]);
 
-  // Load doctors list once
+  // Load doctors + rooms once
   useEffect(() => {
     fetch("/api/clinique/doctors")
       .then((r) => r.json())
       .then((data: { doctors?: Doctor[] }) => setDoctors(data.doctors ?? []))
+      .catch(() => {});
+    fetch("/api/clinique/rooms")
+      .then((r) => r.json())
+      .then((data: { rooms?: ClinicRoom[] }) => setRooms(data.rooms ?? []))
       .catch(() => {});
   }, []);
 
@@ -115,6 +267,35 @@ export default function RendezVousPage() {
     fetchAppointments();
   }, [fetchAppointments]);
 
+  // ── Filter change helpers — reset to page 1 ───────────────────────────────
+  function changeDoctor(v: string) { setDoctorFilter(v); setPage(1); }
+  function changeStatus(v: string) { setStatusFilter(v); setPage(1); }
+  function changeDate(v: string) { setDateFilter(v); setPage(1); }
+  function changeRoom(v: string) { setRoomFilter(v); setPage(1); }
+  function changeSearch(v: string) { setSearch(v); setPage(1); }
+  function changePageSize(v: number) { setPageSize(v); setPage(1); }
+
+  // ── Reset all filters ─────────────────────────────────────────────────────
+  function resetFilters() {
+    setDoctorFilter("");
+    setStatusFilter("");
+    setDateFilter("today");
+    setRoomFilter("");
+    setSearch("");
+    setPage(1);
+    try { localStorage.removeItem(lsKey); } catch { /* ignore */ }
+  }
+
+  // ── Active filter count ───────────────────────────────────────────────────
+  const activeFilterCount = [
+    doctorFilter,
+    statusFilter,
+    dateFilter && dateFilter !== "today" ? dateFilter : "",
+    roomFilter,
+    search,
+  ].filter(Boolean).length;
+
+  // ── Status updates ────────────────────────────────────────────────────────
   async function updateStatus(id: string, newStatus: string) {
     setActionLoading(id);
     try {
@@ -132,8 +313,38 @@ export default function RendezVousPage() {
     }
   }
 
-  // Client-side search filter
+  // ── Room assignment ───────────────────────────────────────────────────────
+  async function assignRoom(appointmentId: string, clinicRoomId: string | null) {
+    setAssigningRoomFor(appointmentId);
+    try {
+      const res = await fetch(`/api/clinique/appointments/${appointmentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clinicRoomId }),
+      });
+      if (!res.ok) throw new Error("Erreur lors de l'affectation");
+      setAppointments((prev) =>
+        prev.map((a) => {
+          if (a.id !== appointmentId) return a;
+          const room = rooms.find((r) => r.id === clinicRoomId);
+          return {
+            ...a,
+            clinicRoomId: clinicRoomId ?? null,
+            clinicRoomName: room?.name ?? null,
+            clinicRoomColor: room?.color ?? null,
+          };
+        }),
+      );
+    } catch {
+      alert("Impossible d'affecter la salle.");
+    } finally {
+      setAssigningRoomFor(null);
+    }
+  }
+
+  // ── Client-side search + room filter (applied on top of server results) ────
   const filtered = appointments.filter((a) => {
+    if (roomFilter && a.clinicRoomId !== roomFilter) return false;
     if (!search) return true;
     const q = search.toLowerCase();
     return (
@@ -143,6 +354,10 @@ export default function RendezVousPage() {
     );
   });
 
+  // ── Pagination computed ───────────────────────────────────────────────────
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+
+  // ── Render ────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -168,8 +383,25 @@ export default function RendezVousPage() {
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.05 }}
-        className="bg-white dark:bg-gray-900 rounded-2xl border border-border p-4 shadow-sm"
+        className="bg-white dark:bg-gray-900 rounded-2xl border border-border p-4 shadow-sm space-y-3"
       >
+        {/* Active filter hint pill */}
+        {activeFilterCount > 0 && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-cyan-50 border border-cyan-200 px-3 py-1 text-xs font-semibold text-cyan-700">
+              <SlidersHorizontal className="h-3.5 w-3.5" />
+              Filtres enregistrés · {activeFilterCount} actif{activeFilterCount > 1 ? "s" : ""}
+            </span>
+            <button
+              onClick={resetFilters}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-red-500 transition-colors"
+            >
+              <X className="h-3 w-3" />
+              Réinitialiser
+            </button>
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-3">
           {/* Search */}
           <div className="relative flex-1 min-w-[200px]">
@@ -178,7 +410,7 @@ export default function RendezVousPage() {
               type="text"
               placeholder="Rechercher patient, médecin…"
               value={search}
-              onChange={(e) => setSearch(e.target.value)}
+              onChange={(e) => changeSearch(e.target.value)}
               className="w-full pl-9 pr-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
             />
           </div>
@@ -187,13 +419,13 @@ export default function RendezVousPage() {
           <div className="relative">
             <select
               value={doctorFilter}
-              onChange={(e) => setDoctorFilter(e.target.value)}
+              onChange={(e) => changeDoctor(e.target.value)}
               className="appearance-none pl-3 pr-8 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
             >
               <option value="">Tous les médecins</option>
               {doctors.map((d) => (
                 <option key={d.id} value={d.id}>
-                  Dr. {d.name}
+                  {formatDoctorName(d.name)}
                 </option>
               ))}
             </select>
@@ -204,7 +436,7 @@ export default function RendezVousPage() {
           <div className="relative">
             <select
               value={statusFilter}
-              onChange={(e) => setStatusFilter(e.target.value)}
+              onChange={(e) => changeStatus(e.target.value)}
               className="appearance-none pl-3 pr-8 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
             >
               {STATUS_FILTERS.map((f) => (
@@ -220,7 +452,7 @@ export default function RendezVousPage() {
           <div className="relative">
             <select
               value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
+              onChange={(e) => changeDate(e.target.value)}
               className="appearance-none pl-3 pr-8 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
             >
               {DATE_FILTERS.map((f) => (
@@ -231,6 +463,25 @@ export default function RendezVousPage() {
             </select>
             <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
           </div>
+
+          {/* Room filter */}
+          {rooms.length > 0 && (
+            <div className="relative">
+              <select
+                value={roomFilter}
+                onChange={(e) => changeRoom(e.target.value)}
+                className="appearance-none pl-3 pr-8 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+              >
+                <option value="">Toutes les salles</option>
+                {rooms.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            </div>
+          )}
         </div>
       </motion.div>
 
@@ -279,6 +530,9 @@ export default function RendezVousPage() {
                   <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     Statut
                   </th>
+                  <th className="text-left px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
+                    Salle
+                  </th>
                   <th className="text-right px-4 py-3 font-semibold text-muted-foreground text-xs uppercase tracking-wider">
                     Actions
                   </th>
@@ -313,7 +567,7 @@ export default function RendezVousPage() {
                       </div>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="text-foreground font-medium">Dr. {appt.doctorName}</div>
+                      <div className="text-foreground font-medium">{formatDoctorName(appt.doctorName)}</div>
                       <div className="text-xs text-muted-foreground">{appt.doctorSpecialty}</div>
                     </td>
                     <td className="px-4 py-3 text-muted-foreground max-w-[180px] truncate">
@@ -321,6 +575,41 @@ export default function RendezVousPage() {
                     </td>
                     <td className="px-4 py-3">
                       <StatusBadge status={appt.status} />
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {appt.clinicRoomId && appt.clinicRoomName && appt.clinicRoomColor ? (
+                        <div className="flex items-center gap-1 group relative">
+                          <RoomChip name={appt.clinicRoomName} color={appt.clinicRoomColor} />
+                          <select
+                            className="absolute inset-0 opacity-0 cursor-pointer w-full"
+                            value={appt.clinicRoomId}
+                            onChange={(e) => assignRoom(appt.id, e.target.value || null)}
+                            disabled={assigningRoomFor === appt.id}
+                            title="Changer de salle"
+                          >
+                            <option value="">— Aucune salle —</option>
+                            {rooms.map((r) => (
+                              <option key={r.id} value={r.id}>{r.name}</option>
+                            ))}
+                          </select>
+                        </div>
+                      ) : (
+                        rooms.length > 0 ? (
+                          <select
+                            className="appearance-none rounded-lg border border-dashed border-border bg-transparent px-2 py-1 text-xs text-muted-foreground focus:outline-none focus:border-primary cursor-pointer"
+                            value=""
+                            onChange={(e) => e.target.value && assignRoom(appt.id, e.target.value)}
+                            disabled={assigningRoomFor === appt.id}
+                          >
+                            <option value="">Affecter une salle</option>
+                            {rooms.map((r) => (
+                              <option key={r.id} value={r.id}>{r.name}</option>
+                            ))}
+                          </select>
+                        ) : (
+                          <span className="text-xs text-gray-300">—</span>
+                        )
+                      )}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-1.5">
@@ -359,14 +648,15 @@ export default function RendezVousPage() {
           </div>
         )}
 
-        {/* Footer count */}
-        {!loading && !error && filtered.length > 0 && (
-          <div className="px-4 py-3 border-t border-border flex items-center justify-between">
-            <span className="text-xs text-muted-foreground">
-              {filtered.length} rendez-vous
-              {search ? ` correspondant à "${search}"` : ""}
-            </span>
-            <div className="flex items-center gap-3 text-xs text-muted-foreground">
+        {/* Footer: count summary + pagination */}
+        {!loading && !error && (
+          <div className="px-4 py-3 border-t border-border flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            {/* Left: result counts */}
+            <div className="flex items-center gap-3 flex-wrap text-xs text-muted-foreground">
+              <span>
+                {total} rendez-vous
+                {search ? ` · filtrés par "${search}"` : ""}
+              </span>
               {Object.entries(STATUS_LABELS).map(([k, v]) => {
                 const n = filtered.filter((a) => a.status === k).length;
                 if (n === 0) return null;
@@ -376,6 +666,55 @@ export default function RendezVousPage() {
                   </span>
                 );
               })}
+            </div>
+
+            {/* Right: page-size + page controls */}
+            <div className="flex items-center gap-3 flex-wrap">
+              {/* Page size selector */}
+              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                <span>Par page :</span>
+                <div className="flex gap-1">
+                  {PAGE_SIZES.map((ps) => (
+                    <button
+                      key={ps}
+                      onClick={() => changePageSize(ps)}
+                      className={[
+                        "px-2 py-0.5 rounded text-xs font-semibold border transition-colors",
+                        pageSize === ps
+                          ? "bg-primary text-white border-primary"
+                          : "border-border text-muted-foreground hover:border-primary hover:text-primary",
+                      ].join(" ")}
+                    >
+                      {ps}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Page navigation */}
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1.5">
+                  <button
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                    className="p-1 rounded-lg border border-border hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Page précédente"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </button>
+                  <span className="text-xs text-muted-foreground px-1 tabular-nums">
+                    Page {page} sur {totalPages} ({total} résultats)
+                  </span>
+                  <button
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                    className="p-1 rounded-lg border border-border hover:border-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    aria-label="Page suivante"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -394,5 +733,15 @@ export default function RendezVousPage() {
         </motion.p>
       )}
     </div>
+  );
+}
+
+// ── Page wrapper (Suspense boundary required for useSearchParams) ──────────────
+
+export default function RendezVousPage() {
+  return (
+    <Suspense>
+      <RendezVousInner />
+    </Suspense>
   );
 }

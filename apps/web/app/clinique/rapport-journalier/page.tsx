@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import { formatDoctorName } from "@/lib/format-doctor-name";
 import {
   Printer,
   RefreshCw,
@@ -305,7 +306,7 @@ function DoctorSection({ group }: { group: DoctorGroup }) {
       <div className="flex items-center justify-between mb-3">
         <div>
           <h3 className="text-base font-bold text-foreground">
-            Dr. {group.doctorName}
+            {formatDoctorName(group.doctorName)}
           </h3>
           <p className="text-xs text-gray-500 dark:text-gray-400 dark:text-gray-500">{group.doctorSpecialty}</p>
         </div>

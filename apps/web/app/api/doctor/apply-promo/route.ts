@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { eq, and, sql } from "drizzle-orm";
 import { requireDoctor } from "@/lib/doctor-auth";
+import { rejectClinicDoctorSession } from "@/lib/clinic-doctor-guard";
 import {
   db,
   promoCodes,
@@ -16,6 +17,8 @@ export async function POST(req: Request) {
   try {
     const doctor = await requireDoctor();
     if (doctor instanceof NextResponse) return doctor;
+    const clinicRejection = rejectClinicDoctorSession(doctor);
+    if (clinicRejection) return clinicRejection;
 
     const body = (await req.json()) as Record<string, unknown>;
     const { code } = body;

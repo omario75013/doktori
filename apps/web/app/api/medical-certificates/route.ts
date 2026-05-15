@@ -7,7 +7,7 @@ import {
   prescriptionTemplates,
   patients,
 } from "@doktori/db";
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, or } from "drizzle-orm";
 import { randomBytes } from "crypto";
 import { logTemplateAudit } from "@/lib/templates/audit";
 import { renderPrescriptionContent } from "@/lib/prescription-render";
@@ -36,7 +36,10 @@ export async function GET(req: NextRequest) {
     const where = patientId
       ? and(
           eq(medicalCertificates.patientId, patientId),
-          eq(medicalCertificates.doctorId, user.id),
+          or(
+            eq(medicalCertificates.doctorId, user.id),
+            sql`${user.id}::uuid = ANY(${medicalCertificates.sharedWithDoctorIds})`,
+          )!,
         )
       : eq(medicalCertificates.doctorId, user.id);
 
@@ -51,6 +54,7 @@ export async function GET(req: NextRequest) {
         templateId: medicalCertificates.templateId,
         patientId: medicalCertificates.patientId,
         patientName: patients.name,
+        sharedWithDoctorIds: medicalCertificates.sharedWithDoctorIds,
       })
       .from(medicalCertificates)
       .leftJoin(patients, eq(medicalCertificates.patientId, patients.id))

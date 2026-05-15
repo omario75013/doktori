@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { requireDoctor } from "@/lib/doctor-auth";
+import { rejectClinicDoctor } from "@/lib/clinic-doctor-guard";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 
@@ -20,6 +22,8 @@ export async function PUT(req: Request) {
   try {
     const doctorPut = await requireDoctor();
     if (doctorPut instanceof NextResponse) return doctorPut;
+    const clinicRejection = rejectClinicDoctor(await auth());
+    if (clinicRejection) return clinicRejection;
 
     const { sosAvailable, sosRadiusKm, sosFee, latitude, longitude, availableFrom, availableTo } = await req.json();
 

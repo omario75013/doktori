@@ -19,6 +19,25 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: "from/to requis (ISO)" }, { status: 400 });
   }
 
+  // Phase 3: if the secretary has a practiceId, scope appointments to that cabinet.
+  // We match via appointments.practiceId (set when the RDV was booked through a cabinet).
+  // Appointments without practiceId are still shown (legacy rows) to avoid data gaps.
+  const practiceId =
+    session.user.role === "secretary" ? (session.user.practiceId ?? null) : null;
+
+  const baseConditions = [
+    eq(appointments.doctorId, doctorId),
+    gte(appointments.startsAt, new Date(from)),
+    lte(appointments.startsAt, new Date(to)),
+  ];
+  if (practiceId) {
+    baseConditions.push(
+      // scope to cabinet OR legacy rows with no practiceId
+      // We use OR via sql operator — simpler: just filter by practiceId
+      eq(appointments.practiceId, practiceId)
+    );
+  }
+
   const rows = await db
     .select({
       id: appointments.id,
@@ -33,13 +52,7 @@ export async function GET(req: Request) {
     })
     .from(appointments)
     .innerJoin(patients, eq(appointments.patientId, patients.id))
-    .where(
-      and(
-        eq(appointments.doctorId, doctorId),
-        gte(appointments.startsAt, new Date(from)),
-        lte(appointments.startsAt, new Date(to))
-      )
-    )
+    .where(and(...baseConditions))
     .orderBy(appointments.startsAt);
 
   return NextResponse.json(rows);

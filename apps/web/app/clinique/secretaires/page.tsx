@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { formatDoctorName } from "@/lib/format-doctor-name";
 import { useSession } from "next-auth/react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -13,6 +14,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface Secretary {
   id: string;
@@ -22,6 +24,7 @@ interface Secretary {
   createdAt: string;
   doctorId: string;
   clinicId: string | null;
+  practiceId: string | null;
   doctorName: string | null;
 }
 
@@ -31,10 +34,22 @@ interface Doctor {
   specialty: string;
 }
 
-export default function CliniqueSécrétairesPage() {
+interface Practice {
+  id: string;
+  name: string;
+  address: string;
+  city: string;
+  doctorId: string;
+  doctorName: string | null;
+}
+
+export default function CliniqueSecretairesPage() {
   useSession();
+  const t = useTranslations("clinique.secretaires");
+
   const [secretaries, setSecretaries] = useState<Secretary[]>([]);
   const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [allPractices, setAllPractices] = useState<Practice[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
@@ -46,7 +61,10 @@ export default function CliniqueSécrétairesPage() {
     email: "",
     password: "",
     doctorId: "",
+    practiceId: "",
   });
+  const [filteredPractices, setFilteredPractices] = useState<Practice[]>([]);
+  const [loadingPractices, setLoadingPractices] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
@@ -70,23 +88,66 @@ export default function CliniqueSécrétairesPage() {
       .then((r) => r.json())
       .then((data: { doctors?: Doctor[] }) => setDoctors(data.doctors ?? []))
       .catch(() => {});
+    fetch("/api/clinique/practices")
+      .then((r) => r.json())
+      .then((data: { practices?: Practice[] }) => setAllPractices(data.practices ?? []))
+      .catch(() => {});
   }, []);
+
+  // When doctor changes, filter the cabinet list
+  async function handleDoctorChange(doctorId: string) {
+    setForm((f) => ({ ...f, doctorId, practiceId: "" }));
+    if (!doctorId) {
+      setFilteredPractices([]);
+      return;
+    }
+    setLoadingPractices(true);
+    try {
+      const res = await fetch(`/api/clinique/practices?doctorId=${doctorId}`);
+      const data = (await res.json()) as { practices?: Practice[] };
+      const fp = data.practices ?? [];
+      setFilteredPractices(fp);
+      // Auto-select if exactly one clinic-scoped practice for this doctor
+      if (fp.length === 1) {
+        setForm((f) => ({ ...f, doctorId, practiceId: fp[0].id }));
+      }
+    } catch {
+      setFilteredPractices([]);
+    } finally {
+      setLoadingPractices(false);
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setFormError(null);
+    if (!form.doctorId) {
+      setFormError("Veuillez sélectionner un médecin.");
+      return;
+    }
+    if (!form.practiceId) {
+      setFormError(t("cabinetHint"));
+      return;
+    }
     setSubmitting(true);
 
     try {
       const res = await fetch("/api/clinique/secretaires", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          doctorId: form.doctorId,
+          practiceId: form.practiceId,
+        }),
       });
       const data = (await res.json()) as { error?: string };
       if (!res.ok) throw new Error(data.error ?? "Erreur inconnue");
       setFormSuccess(true);
-      setForm({ name: "", email: "", password: "", doctorId: "" });
+      setForm({ name: "", email: "", password: "", doctorId: "", practiceId: "" });
+      setFilteredPractices([]);
       fetchSecretaries();
       setTimeout(() => {
         setFormSuccess(false);
@@ -115,6 +176,13 @@ export default function CliniqueSécrétairesPage() {
     }
   }
 
+  // Find practice display name for a given practiceId
+  function getPracticeName(practiceId: string | null): string | null {
+    if (!practiceId) return null;
+    const p = allPractices.find((pr) => pr.id === practiceId);
+    return p ? `${p.name} – ${p.city}` : null;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -127,10 +195,10 @@ export default function CliniqueSécrétairesPage() {
         <div>
           <h1 className="text-2xl font-black text-foreground flex items-center gap-2">
             <UserCog className="h-6 w-6" style={{ color: "#0891B2" }} strokeWidth={2.5} />
-            Secrétaires
+            {t("title")}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Gérer les secrétaires de la clinique
+            {t("subtitle")}
           </p>
         </div>
         <button
@@ -143,7 +211,7 @@ export default function CliniqueSécrétairesPage() {
           style={{ background: "#0891B2" }}
         >
           <Plus className="h-4 w-4" />
-          Ajouter une secrétaire
+          {t("addButton")}
         </button>
       </motion.div>
 
@@ -163,7 +231,7 @@ export default function CliniqueSécrétairesPage() {
             >
               <h2 className="font-bold text-foreground flex items-center gap-2">
                 <Plus className="h-4 w-4" style={{ color: "#0891B2" }} />
-                Nouvelle secrétaire
+                {t("newTitle")}
               </h2>
               <button
                 onClick={() => setShowForm(false)}
@@ -225,33 +293,64 @@ export default function CliniqueSécrétairesPage() {
                       onClick={() => setShowPassword((v) => !v)}
                       className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4" />
-                      ) : (
-                        <Eye className="h-4 w-4" />
-                      )}
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                     </button>
                   </div>
                 </div>
 
-                {/* Doctor */}
+                {/* Doctor selector */}
                 <div>
                   <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">
                     Médecin assigné
                   </label>
                   <select
+                    required
                     value={form.doctorId}
-                    onChange={(e) => setForm((f) => ({ ...f, doctorId: e.target.value }))}
+                    onChange={(e) => handleDoctorChange(e.target.value)}
                     className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
                   >
-                    <option value="">Clinique entière</option>
+                    <option value="">— Sélectionner un médecin —</option>
                     {doctors.map((d) => (
                       <option key={d.id} value={d.id}>
-                        Dr. {d.name} — {d.specialty}
+                        {formatDoctorName(d.name)} – {d.specialty}
                       </option>
                     ))}
                   </select>
                 </div>
+
+                {/* Cabinet selector — shown once a doctor is selected */}
+                {form.doctorId && (
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold text-muted-foreground mb-1.5 uppercase tracking-wider">
+                      {t("cabinet")}
+                    </label>
+                    {loadingPractices ? (
+                      <p className="text-xs text-muted-foreground py-2">{t("selectCabinet")}…</p>
+                    ) : filteredPractices.length === 0 ? (
+                      <p className="text-xs text-orange-500 py-2">{t("noCabinets")}</p>
+                    ) : filteredPractices.length === 1 ? (
+                      /* Auto-selected — show as a read-only pill */
+                      <div className="px-3 py-2 rounded-xl border border-cyan-200 bg-cyan-50 text-sm font-medium text-cyan-800">
+                        {filteredPractices[0].name} – {filteredPractices[0].city}
+                      </div>
+                    ) : (
+                      <select
+                        required
+                        value={form.practiceId}
+                        onChange={(e) => setForm((f) => ({ ...f, practiceId: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30"
+                      >
+                        <option value="">{t("selectCabinet")}</option>
+                        {filteredPractices.map((p) => (
+                          <option key={p.id} value={p.id}>
+                            {p.name} – {p.city}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                    <p className="text-xs text-muted-foreground mt-1">{t("cabinetHint")}</p>
+                  </div>
+                )}
               </div>
 
               {formError && (
@@ -320,7 +419,7 @@ export default function CliniqueSécrétairesPage() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full text-sm min-w-[540px]">
+            <table className="w-full text-sm min-w-[620px]">
               <thead>
                 <tr className="border-b border-border bg-slate-50 dark:bg-gray-800/50">
                   <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">
@@ -328,6 +427,9 @@ export default function CliniqueSécrétairesPage() {
                   </th>
                   <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">
                     Médecin assigné
+                  </th>
+                  <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">
+                    {t("cabinet")}
                   </th>
                   <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">
                     Statut
@@ -355,20 +457,21 @@ export default function CliniqueSécrétairesPage() {
                           {sec.name.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <div className="font-semibold text-foreground">
-                            {sec.name}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {sec.email}
-                          </div>
+                          <div className="font-semibold text-foreground">{sec.name}</div>
+                          <div className="text-xs text-muted-foreground">{sec.email}</div>
                         </div>
                       </div>
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground">
                       {sec.doctorName ? (
-                        <span>Dr. {sec.doctorName}</span>
+                        <span>{formatDoctorName(sec.doctorName)}</span>
                       ) : (
-                        <span className="italic text-gray-400">Clinique entière</span>
+                        <span className="italic text-gray-400">—</span>
+                      )}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {getPracticeName(sec.practiceId) ?? (
+                        <span className="italic text-gray-400">—</span>
                       )}
                     </td>
                     <td className="px-4 py-3">

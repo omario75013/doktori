@@ -39,12 +39,15 @@ export const AUTHENTICATED_PREFIXES = [
   "/verification",
   "/reseau",
   "/modeles",
+  "/invitations",
   "/admin",
   "/admin-login",
   "/clinique",
   "/clinique-login",
   "/secretaire",
   "/secretaire-login",
+  "/laboratoire",
+  "/laboratoire-login",
   "/connexion",
   "/inscription",
   /* Patient surface — uses its own sidebar shell, hide global navbar/footer/chatbot */
@@ -106,7 +109,8 @@ export function roleFromPath(pathname: string): AuthenticatedRole | null {
     pathname.startsWith("/profil") ||
     pathname.startsWith("/verification") ||
     pathname.startsWith("/reseau") ||
-    pathname.startsWith("/modeles")
+    pathname.startsWith("/modeles") ||
+    pathname.startsWith("/invitations")
   ) {
     return "doctor";
   }

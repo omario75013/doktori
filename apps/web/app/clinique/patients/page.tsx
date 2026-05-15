@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState, useMemo } from "react";
-import { useSession } from "next-auth/react";
+import { formatDoctorName } from "@/lib/format-doctor-name";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 import {
   UserRound,
   Search,
@@ -14,6 +15,9 @@ import {
   ChevronDown,
   ChevronUp,
   X,
+  FolderOpen,
+  Plus,
+  Check,
 } from "lucide-react";
 
 interface Patient {
@@ -33,6 +37,312 @@ interface PatientHistory {
   doctorName: string;
   doctorSpecialty: string;
   reason: string | null;
+}
+
+interface ClinicDoctor {
+  id: string;
+  name: string;
+  specialty: string;
+}
+
+interface NewPatientForm {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  cin: string;
+  dateOfBirth: string;
+  gender: string;
+  doctorId: string;
+  shareDossierWithClinic: boolean;
+  firstRdvAt: string;
+}
+
+function NewPatientModal({
+  onClose,
+  onCreated,
+}: {
+  onClose: () => void;
+  onCreated: () => void;
+}) {
+  const [form, setForm] = useState<NewPatientForm>({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    cin: "",
+    dateOfBirth: "",
+    gender: "",
+    doctorId: "",
+    shareDossierWithClinic: true,
+    firstRdvAt: "",
+  });
+  const [doctors, setDoctors] = useState<ClinicDoctor[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/clinique/doctors")
+      .then((r) => r.json())
+      .then((data: { doctors?: ClinicDoctor[] }) => setDoctors(data.doctors ?? []))
+      .catch(() => {});
+  }, []);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setError(null);
+    setLoading(true);
+    try {
+      const res = await fetch("/api/clinique/patients", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          cin: form.cin || null,
+          email: form.email || null,
+          phone: form.phone,
+          dateOfBirth: form.dateOfBirth || null,
+          gender: form.gender || null,
+          doctorId: form.doctorId,
+          shareDossierWithClinic: form.shareDossierWithClinic,
+          firstRdvAt: form.firstRdvAt || null,
+        }),
+      });
+      const data = (await res.json()) as { patientId?: string; error?: string };
+      if (!res.ok) throw new Error(data.error ?? "Erreur serveur");
+      setSuccess(true);
+      setTimeout(() => {
+        onCreated();
+        onClose();
+      }, 1200);
+    } catch (err) {
+      setError((err as Error).message);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function set(field: keyof NewPatientForm, value: string | boolean) {
+    setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  const inputCls =
+    "w-full px-3 py-2 rounded-xl border border-border bg-white dark:bg-gray-900 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500/30";
+  const labelCls = "block text-xs font-semibold text-muted-foreground mb-1";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.96, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 10 }}
+        transition={{ duration: 0.2 }}
+        className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-6 py-4 border-b border-border"
+          style={{ background: "#134E4A" }}
+        >
+          <h2 className="text-white font-bold text-base flex items-center gap-2">
+            <UserRound className="h-4 w-4" />
+            Nouveau patient
+          </h2>
+          <button onClick={onClose} className="text-white/70 hover:text-white transition-colors">
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="px-6 py-5 space-y-4">
+          {success ? (
+            <div className="flex flex-col items-center justify-center py-8 gap-3">
+              <div
+                className="flex h-14 w-14 items-center justify-center rounded-full"
+                style={{ background: "#0891B2" }}
+              >
+                <Check className="h-7 w-7 text-white" />
+              </div>
+              <p className="font-bold text-foreground">Patient créé avec succès</p>
+              <p className="text-sm text-muted-foreground">Redirection en cours…</p>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelCls}>Prénom *</label>
+                  <input
+                    className={inputCls}
+                    required
+                    value={form.firstName}
+                    onChange={(e) => set("firstName", e.target.value)}
+                    placeholder="Prénom"
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Nom *</label>
+                  <input
+                    className={inputCls}
+                    required
+                    value={form.lastName}
+                    onChange={(e) => set("lastName", e.target.value)}
+                    placeholder="Nom de famille"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className={labelCls}>Téléphone *</label>
+                <input
+                  className={inputCls}
+                  required
+                  value={form.phone}
+                  onChange={(e) => set("phone", e.target.value)}
+                  placeholder="+216 XX XXX XXX"
+                  type="tel"
+                />
+              </div>
+
+              <div>
+                <label className={labelCls}>CIN (optionnel)</label>
+                <input
+                  className={inputCls}
+                  value={form.cin}
+                  onChange={(e) => set("cin", e.target.value)}
+                  placeholder="Numéro CIN"
+                  maxLength={20}
+                />
+              </div>
+
+              <div>
+                <label className={labelCls}>Email (optionnel)</label>
+                <input
+                  className={inputCls}
+                  value={form.email}
+                  onChange={(e) => set("email", e.target.value)}
+                  placeholder="patient@email.com"
+                  type="email"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className={labelCls}>Date de naissance</label>
+                  <input
+                    className={inputCls}
+                    value={form.dateOfBirth}
+                    onChange={(e) => set("dateOfBirth", e.target.value)}
+                    type="date"
+                  />
+                </div>
+                <div>
+                  <label className={labelCls}>Genre</label>
+                  <select
+                    className={inputCls}
+                    value={form.gender}
+                    onChange={(e) => set("gender", e.target.value)}
+                  >
+                    <option value="">— Choisir —</option>
+                    <option value="male">Homme</option>
+                    <option value="female">Femme</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className={labelCls}>Médecin traitant *</label>
+                <select
+                  className={inputCls}
+                  required
+                  value={form.doctorId}
+                  onChange={(e) => set("doctorId", e.target.value)}
+                >
+                  <option value="">— Sélectionner un médecin —</option>
+                  {doctors.map((d) => (
+                    <option key={d.id} value={d.id}>
+                      {formatDoctorName(d.name)} — {d.specialty}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={labelCls}>Date du premier rendez-vous (optionnel)</label>
+                <input
+                  className={inputCls}
+                  value={form.firstRdvAt}
+                  onChange={(e) => set("firstRdvAt", e.target.value)}
+                  type="datetime-local"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Si vide, le RDV sera créé pour demain à 09:00.
+                </p>
+              </div>
+
+              {/* Sharing toggle */}
+              <div className="flex items-start gap-3 p-4 rounded-xl border border-border bg-slate-50 dark:bg-gray-800/50">
+                <button
+                  type="button"
+                  onClick={() => set("shareDossierWithClinic", !form.shareDossierWithClinic)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none mt-0.5 ${
+                    form.shareDossierWithClinic ? "bg-cyan-500" : "bg-gray-300"
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      form.shareDossierWithClinic ? "translate-x-4" : "translate-x-0"
+                    }`}
+                  />
+                </button>
+                <div>
+                  <p className="text-sm font-semibold text-foreground">
+                    Partager le dossier avec la clinique
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Si activé, tous les professionnels de la clinique pourront
+                    consulter le dossier médical complet du patient.
+                  </p>
+                </div>
+              </div>
+
+              {error && (
+                <div className="px-3 py-2 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm">
+                  {error}
+                </div>
+              )}
+
+              <div className="flex gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="flex-1 px-4 py-2.5 rounded-xl border border-border text-sm font-semibold hover:bg-slate-50 transition-colors"
+                >
+                  Annuler
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="flex-1 px-4 py-2.5 rounded-xl text-white text-sm font-semibold transition-colors disabled:opacity-60"
+                  style={{ background: "#0891B2" }}
+                >
+                  {loading ? "Création…" : "Créer le patient"}
+                </button>
+              </div>
+            </>
+          )}
+        </form>
+      </motion.div>
+    </motion.div>
+  );
 }
 
 const STATUS_COLORS: Record<string, string> = {
@@ -61,9 +371,7 @@ function HistoryDrawer({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch(
-      `/api/clinique/appointments?status=&date=&doctorId=`
-    )
+    fetch(`/api/clinique/patients/${patient.id}`)
       .then((r) => r.json())
       .then(
         (data: {
@@ -71,24 +379,21 @@ function HistoryDrawer({
             id: string;
             startsAt: string;
             status: string;
-            patientId: string;
-            doctorName: string;
-            doctorSpecialty: string;
+            doctorName: string | null;
+            doctorSpecialty: string | null;
             reason: string | null;
           }>;
         }) => {
-          const filtered =
-            data.appointments
-              ?.filter((a) => a.patientId === patient.id)
-              .map((a) => ({
-                id: a.id,
-                startsAt: a.startsAt,
-                status: a.status,
-                doctorName: a.doctorName,
-                doctorSpecialty: a.doctorSpecialty,
-                reason: a.reason,
-              })) ?? [];
-          setHistory(filtered);
+          setHistory(
+            (data.appointments ?? []).map((a) => ({
+              id: a.id,
+              startsAt: a.startsAt,
+              status: a.status,
+              doctorName: a.doctorName ?? "",
+              doctorSpecialty: a.doctorSpecialty ?? "",
+              reason: a.reason,
+            }))
+          );
         }
       )
       .finally(() => setLoading(false));
@@ -119,12 +424,21 @@ function HistoryDrawer({
             <p className="text-teal-200 text-xs">{patient.phone}</p>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="text-white/70 hover:text-white transition-colors"
-        >
-          <X className="h-5 w-5" />
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href={`/clinique/patients/${patient.id}`}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-cyan-500 hover:bg-cyan-400 text-white transition-colors"
+          >
+            <FolderOpen className="h-3.5 w-3.5" />
+            Ouvrir le dossier
+          </Link>
+          <button
+            onClick={onClose}
+            className="text-white/70 hover:text-white transition-colors"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -173,7 +487,7 @@ function HistoryDrawer({
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <p className="text-sm font-semibold text-foreground">
-                      Dr. {h.doctorName}
+                      {formatDoctorName(h.doctorName)}
                     </p>
                     <p className="text-xs text-muted-foreground">{h.doctorSpecialty}</p>
                     {h.reason && (
@@ -208,7 +522,6 @@ function HistoryDrawer({
 type SortKey = "name" | "appointmentCount" | "lastVisit";
 
 export default function CliniquePatientsPage() {
-  useSession();
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -216,8 +529,10 @@ export default function CliniquePatientsPage() {
   const [sortKey, setSortKey] = useState<SortKey>("lastVisit");
   const [sortAsc, setSortAsc] = useState(false);
   const [selected, setSelected] = useState<Patient | null>(null);
+  const [showNewPatient, setShowNewPatient] = useState(false);
 
-  useEffect(() => {
+  function loadPatients() {
+    setLoading(true);
     fetch("/api/clinique/patients")
       .then((r) => r.json())
       .then((data: { patients?: Patient[]; error?: string }) => {
@@ -226,6 +541,10 @@ export default function CliniquePatientsPage() {
       })
       .catch((e: Error) => setError(e.message))
       .finally(() => setLoading(false));
+  }
+
+  useEffect(() => {
+    loadPatients();
   }, []);
 
   function toggleSort(key: SortKey) {
@@ -283,19 +602,30 @@ export default function CliniquePatientsPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.3 }}
+          className="flex items-start justify-between gap-4"
         >
-          <h1 className="text-2xl font-black text-foreground flex items-center gap-2">
-            <UserRound className="h-6 w-6" style={{ color: "#0891B2" }} strokeWidth={2.5} />
-            Patients
-          </h1>
-          <p className="text-muted-foreground text-sm mt-1">
-            Tous les patients suivis dans la clinique
-            {patients.length > 0 && (
-              <span className="ml-2 font-semibold text-foreground">
-                ({patients.length})
-              </span>
-            )}
-          </p>
+          <div>
+            <h1 className="text-2xl font-black text-foreground flex items-center gap-2">
+              <UserRound className="h-6 w-6" style={{ color: "#0891B2" }} strokeWidth={2.5} />
+              Patients
+            </h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              Tous les patients suivis dans la clinique
+              {patients.length > 0 && (
+                <span className="ml-2 font-semibold text-foreground">
+                  ({patients.length})
+                </span>
+              )}
+            </p>
+          </div>
+          <button
+            onClick={() => setShowNewPatient(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-white text-sm font-semibold transition-colors shrink-0"
+            style={{ background: "#0891B2" }}
+          >
+            <Plus className="h-4 w-4" />
+            Nouveau patient
+          </button>
         </motion.div>
 
         {/* Search */}
@@ -431,7 +761,7 @@ export default function CliniquePatientsPage() {
                         )}
                       </td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">
-                        Dr. {patient.lastDoctorName}
+                        {formatDoctorName(patient.lastDoctorName)}
                       </td>
                       <td className="px-4 py-3 text-sm text-muted-foreground">
                         {patient.lastVisit
@@ -476,6 +806,16 @@ export default function CliniquePatientsPage() {
               onClose={() => setSelected(null)}
             />
           </>
+        )}
+      </AnimatePresence>
+
+      {/* New patient modal */}
+      <AnimatePresence>
+        {showNewPatient && (
+          <NewPatientModal
+            onClose={() => setShowNewPatient(false)}
+            onCreated={() => loadPatients()}
+          />
         )}
       </AnimatePresence>
     </>

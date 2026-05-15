@@ -4,10 +4,11 @@ import {
   appointments,
   doctors,
   patients,
-  clinicDoctors,
+  clinicRooms,
 } from "@doktori/db";
-import { eq, and, gte, lte, inArray, desc } from "drizzle-orm";
+import { eq, and, gte, lte, inArray, desc, count, or, isNull } from "drizzle-orm";
 import { requireClinic } from "@/lib/clinic-auth";
+import { getClinicScope } from "@/lib/clinic-scope";
 
 export async function GET(req: NextRequest) {
   const clinic = await requireClinic();
@@ -18,16 +19,20 @@ export async function GET(req: NextRequest) {
   const statusFilter = searchParams.get("status");
   const dateFilter = searchParams.get("date"); // today | tomorrow | week
 
-  // Resolve all doctor IDs in this clinic
-  const clinicDoctorRows = await db
-    .select({ doctorId: clinicDoctors.doctorId })
-    .from(clinicDoctors)
-    .where(eq(clinicDoctors.clinicId, clinic.id));
+  // Pagination params
+  const pageParam = parseInt(searchParams.get("page") ?? "1", 10);
+  const pageSizeParam = parseInt(searchParams.get("pageSize") ?? "50", 10);
+  const page = Math.max(1, isNaN(pageParam) ? 1 : pageParam);
+  const pageSize = Math.min(200, Math.max(1, isNaN(pageSizeParam) ? 50 : pageSizeParam));
+  const offset = (page - 1) * pageSize;
 
-  const allDoctorIds = clinicDoctorRows.map((r) => r.doctorId);
+  // Resolve clinic scope (doctors + practices)
+  const scope = await getClinicScope(clinic.id);
+  const allDoctorIds = scope.doctorIds;
+  const allPracticeIds = scope.practiceIds;
 
   if (allDoctorIds.length === 0) {
-    return NextResponse.json({ appointments: [] });
+    return NextResponse.json({ rows: [], page, pageSize, total: 0 });
   }
 
   // Determine doctor scope (one specific doctor or all)
@@ -56,8 +61,17 @@ export async function GET(req: NextRequest) {
     dateTo = weekEnd;
   }
 
-  // Build where conditions
-  const conditions = [inArray(appointments.doctorId, targetDoctorIds)];
+  // Build where conditions — scope to clinic practices only
+  // Include legacy rows where practiceId is NULL (pre-migration) to avoid data gaps.
+  const practiceCondition =
+    allPracticeIds.length > 0
+      ? or(inArray(appointments.practiceId, allPracticeIds), isNull(appointments.practiceId))!
+      : isNull(appointments.practiceId);
+
+  const conditions = [
+    inArray(appointments.doctorId, targetDoctorIds),
+    practiceCondition,
+  ];
 
   if (statusFilter && statusFilter !== "all") {
     conditions.push(eq(appointments.status, statusFilter));
@@ -70,6 +84,15 @@ export async function GET(req: NextRequest) {
     conditions.push(lte(appointments.startsAt, dateTo));
   }
 
+  const whereClause = and(...conditions);
+
+  // Count total rows (same filters, no pagination)
+  const [{ total }] = await db
+    .select({ total: count() })
+    .from(appointments)
+    .where(whereClause);
+
+  // Fetch paginated rows
   const rows = await db
     .select({
       id: appointments.id,
@@ -87,13 +110,18 @@ export async function GET(req: NextRequest) {
       doctorSpecialty: doctors.specialty,
       patientName: patients.name,
       patientPhone: patients.phone,
+      clinicRoomId: appointments.clinicRoomId,
+      clinicRoomName: clinicRooms.name,
+      clinicRoomColor: clinicRooms.color,
     })
     .from(appointments)
     .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
     .innerJoin(patients, eq(appointments.patientId, patients.id))
-    .where(and(...conditions))
+    .leftJoin(clinicRooms, eq(appointments.clinicRoomId, clinicRooms.id))
+    .where(whereClause)
     .orderBy(desc(appointments.startsAt))
-    .limit(200);
+    .limit(pageSize)
+    .offset(offset);
 
-  return NextResponse.json({ appointments: rows });
+  return NextResponse.json({ rows, page, pageSize, total });
 }

@@ -28,6 +28,7 @@ export async function POST(req: Request) {
     type = "cabinet",
     reason,
     notes,
+    clinicRoomId,
   } = body as Record<string, unknown>;
 
   // Validate required fields
@@ -116,6 +117,7 @@ export async function POST(req: Request) {
       reason: typeof reason === "string" && reason.trim() ? reason.trim() : null,
       notes: typeof notes === "string" && notes.trim() ? notes.trim() : null,
       confirmedAt: new Date(),
+      clinicRoomId: typeof clinicRoomId === "string" && clinicRoomId.trim() ? clinicRoomId.trim() : null,
     })
     .returning();
 

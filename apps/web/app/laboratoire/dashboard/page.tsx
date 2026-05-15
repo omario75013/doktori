@@ -7,10 +7,13 @@ import { LayoutDashboard, ClipboardList, CheckCircle2, FileText, Users } from "l
 
 export default async function LaboratoireDashboardPage() {
   const session = await auth();
-  if (!session || (session.user as { role?: string }).role !== "lab") {
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (!session || (role !== "lab" && role !== "lab_user")) {
     redirect("/laboratoire-login");
   }
-  const labId = session.user.id;
+  const labId = role === "lab_user"
+    ? (session.user as { labId?: string }).labId!
+    : session.user.id;
   const t = await getTranslations("laboratoire.dashboard");
 
   const now = new Date();

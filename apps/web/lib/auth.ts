@@ -1,7 +1,7 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcryptjs";
-import { db, doctors, adminUsers, clinics, secretaries, labs } from "@doktori/db";
+import { db, doctors, adminUsers, clinics, secretaries, labs, labUsers } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
@@ -30,6 +30,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: doctor.email,
           image: doctor.photoUrl ?? null,
           role: "doctor" as const,
+          createdByClinicId: doctor.createdByClinicId ?? null,
         };
       },
     }),
@@ -124,6 +125,50 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           name: lab.name,
           email: lab.email,
           role: "lab" as const,
+          parentClinicId: lab.clinicId ?? null,
+        };
+      },
+    }),
+    Credentials({
+      id: "lab-user-credentials",
+      name: "Lab User Login",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Mot de passe", type: "password" },
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) return null;
+        const email = (credentials.email as string).trim().toLowerCase();
+        const [labUser] = await db
+          .select()
+          .from(labUsers)
+          .where(eq(labUsers.email, email))
+          .limit(1);
+        if (!labUser) return null;
+        if (!labUser.isActive) return null;
+        // Verify the parent lab is verified
+        const [lab] = await db
+          .select({ verificationStatus: labs.verificationStatus, clinicId: labs.clinicId })
+          .from(labs)
+          .where(eq(labs.id, labUser.labId))
+          .limit(1);
+        if (!lab) return null;
+        if (lab.verificationStatus !== "verified") return null;
+        const valid = await compare(credentials.password as string, labUser.passwordHash);
+        if (!valid) return null;
+        // Update last_login_at (fire-and-forget)
+        db.update(labUsers)
+          .set({ lastLoginAt: new Date() })
+          .where(eq(labUsers.id, labUser.id))
+          .catch((e) => console.error("[lab-user-auth] last_login_at update failed", e));
+        return {
+          id: labUser.id,
+          email: labUser.email,
+          name: `${labUser.firstName} ${labUser.lastName}`,
+          role: "lab_user" as const,
+          labId: labUser.labId,
+          labUserRole: labUser.role as "admin" | "technician",
+          parentClinicId: lab.clinicId ?? null,
         };
       },
     }),
@@ -151,7 +196,9 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
           email: secretary.email,
           role: "secretary" as const,
           doctorId: secretary.doctorId,
-          clinicId: secretary.clinicId ?? null,
+          clinicId: null, // Section D: clinicId dropped from secretaries table
+          // Phase 3: carry the cabinet scope into the session JWT
+          practiceId: secretary.practiceId ?? null,
         };
       },
     }),
@@ -164,6 +211,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (user.adminRole) token.adminRole = user.adminRole;
         if (user.doctorId) token.doctorId = user.doctorId;
         if ("clinicId" in user) token.clinicId = user.clinicId;
+        if ("practiceId" in user) token.practiceId = user.practiceId;
+        if ("labId" in user) token.labId = user.labId;
+        if ("labUserRole" in user) token.labUserRole = user.labUserRole;
+        if ("createdByClinicId" in user) token.createdByClinicId = (user as { createdByClinicId?: string | null }).createdByClinicId ?? null;
+        if ("parentClinicId" in user) token.parentClinicId = (user as { parentClinicId?: string | null }).parentClinicId ?? null;
         if ("image" in user) token.picture = user.image ?? null;
       }
       return token;
@@ -175,6 +227,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         if (token.adminRole) session.user.adminRole = token.adminRole;
         if (token.doctorId) session.user.doctorId = token.doctorId;
         if ("clinicId" in token) session.user.clinicId = token.clinicId;
+        if ("practiceId" in token) session.user.practiceId = token.practiceId;
+        if ("labId" in token) session.user.labId = token.labId as string | undefined;
+        if ("labUserRole" in token) session.user.labUserRole = token.labUserRole as "admin" | "technician" | undefined;
+        if ("createdByClinicId" in token) ((session.user as unknown) as Record<string, unknown>).createdByClinicId = token.createdByClinicId as string | null ?? null;
+        if ("parentClinicId" in token) ((session.user as unknown) as Record<string, unknown>).parentClinicId = token.parentClinicId as string | null ?? null;
         session.user.image = (token.picture as string | null) ?? null;
       }
       return session;

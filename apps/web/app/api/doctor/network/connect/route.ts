@@ -1,6 +1,8 @@
 import { NextResponse, NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/require-auth";
+import { auth } from "@/lib/auth";
+import { rejectClinicDoctor } from "@/lib/clinic-doctor-guard";
 import { db, doctorConnections, doctorNotifications } from "@doktori/db";
 import { and, eq, or } from "drizzle-orm";
 
@@ -11,7 +13,9 @@ export async function POST(req: NextRequest) {
   if (!user || user.role !== "doctor") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
-  const session = { user };
+  const session = await auth();
+  const clinicRejection = rejectClinicDoctor(session);
+  if (clinicRejection) return clinicRejection;
   let body: unknown;
   try {
     body = await req.json();
@@ -23,7 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "addresseeId requis" }, { status: 400 });
   }
   const { addresseeId } = parsed.data;
-  if (addresseeId === session.user.id) {
+  if (addresseeId === user.id) {
     return NextResponse.json(
       { error: "Impossible de se connecter à soi-même" },
       { status: 400 }
@@ -36,12 +40,12 @@ export async function POST(req: NextRequest) {
     .where(
       or(
         and(
-          eq(doctorConnections.requesterId, session.user.id),
+          eq(doctorConnections.requesterId, user.id),
           eq(doctorConnections.addresseeId, addresseeId)
         ),
         and(
           eq(doctorConnections.requesterId, addresseeId),
-          eq(doctorConnections.addresseeId, session.user.id)
+          eq(doctorConnections.addresseeId, user.id)
         )
       )
     )
@@ -54,7 +58,7 @@ export async function POST(req: NextRequest) {
   const [created] = await db
     .insert(doctorConnections)
     .values({
-      requesterId: session.user.id,
+      requesterId: user.id,
       addresseeId,
       status: "pending",
     })
@@ -63,7 +67,7 @@ export async function POST(req: NextRequest) {
   await db.insert(doctorNotifications).values({
     doctorId: addresseeId,
     type: "connection_request",
-    payload: { connectionId: created.id, requesterId: session.user.id },
+    payload: { connectionId: created.id, requesterId: user.id },
   });
 
   return NextResponse.json({ ok: true, connection: created }, { status: 201 });
@@ -81,8 +85,8 @@ export async function GET(req: NextRequest) {
     .from(doctorConnections)
     .where(
       or(
-        eq(doctorConnections.requesterId, session.user.id),
-        eq(doctorConnections.addresseeId, session.user.id)
+        eq(doctorConnections.requesterId, user.id),
+        eq(doctorConnections.addresseeId, user.id)
       )
     );
 

@@ -1,19 +1,23 @@
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { db, patientDocuments, patients } from "@doktori/db";
-import { eq, count } from "drizzle-orm";
+import { db, patientDocuments, patients, labs } from "@doktori/db";
+import { eq, count, or, sql } from "drizzle-orm";
 import { getTranslations } from "next-intl/server";
 import { Users } from "lucide-react";
+import Link from "next/link";
 
 export default async function LaboratoirePatientsPage() {
   const session = await auth();
-  if (!session || (session.user as { role?: string }).role !== "lab") {
+  const role = (session?.user as { role?: string } | undefined)?.role;
+  if (!session || (role !== "lab" && role !== "lab_user")) {
     redirect("/laboratoire-login");
   }
-  const labId = session.user.id;
+  const labId = role === "lab_user"
+    ? (session.user as { labId?: string }).labId!
+    : session.user.id;
   const t = await getTranslations("laboratoire.patients");
 
-  // Distinct patients with document count
+  // Distinct patients with document count — own uploads + received via lab sharing.
   const rows = await db
     .select({
       patientId: patientDocuments.patientId,
@@ -23,7 +27,12 @@ export default async function LaboratoirePatientsPage() {
     })
     .from(patientDocuments)
     .innerJoin(patients, eq(patientDocuments.patientId, patients.id))
-    .where(eq(patientDocuments.uploadedByLabId, labId))
+    .where(
+      or(
+        eq(patientDocuments.uploadedByLabId, labId),
+        sql`${patientDocuments.sharedWithLabIds} @> ARRAY[${labId}::uuid]`
+      )
+    )
     .groupBy(patientDocuments.patientId, patients.name, patients.phone);
 
   return (
@@ -52,9 +61,10 @@ export default async function LaboratoirePatientsPage() {
                 .toUpperCase();
 
               return (
-                <div
+                <Link
                   key={row.patientId}
-                  className="flex items-center gap-4 px-5 py-4"
+                  href={`/laboratoire/patients/${row.patientId}`}
+                  className="flex items-center gap-4 px-5 py-4 hover:bg-green-50 transition-colors cursor-pointer"
                 >
                   <div
                     className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-black text-white"
@@ -70,7 +80,7 @@ export default async function LaboratoirePatientsPage() {
                     <div className="text-xl font-black text-foreground tabular-nums">{row.docCount}</div>
                     <div className="text-xs text-muted-foreground">doc{Number(row.docCount) > 1 ? "s" : ""}</div>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

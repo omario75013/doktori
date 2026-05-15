@@ -2,6 +2,7 @@ import { NextResponse, NextRequest } from "next/server";
 import { requireDoctorOrSecretaryUnified } from "@/lib/require-auth";
 import { db, patients, appointments } from "@doktori/db";
 import { eq, sql } from "drizzle-orm";
+import { resolveOrCreatePatient } from "@/lib/patient-identity";
 
 export async function POST(req: NextRequest) {
   const actor = await requireDoctorOrSecretaryUnified(req);
@@ -14,7 +15,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Corps de requête invalide" }, { status: 400 });
   }
 
-  const { name, phone, email, dateOfBirth } = body as Record<string, unknown>;
+  const { name, phone, email, dateOfBirth, cin, gender } = body as Record<string, unknown>;
 
   if (typeof name !== "string" || name.trim().length === 0) {
     return NextResponse.json({ error: "Le nom est obligatoire" }, { status: 400 });
@@ -23,35 +24,27 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Le téléphone est obligatoire" }, { status: 400 });
   }
 
-  const normalizedPhone = phone.replace(/\s+/g, "").trim();
+  // Use identity resolver: CIN → phone → email → create
+  const { patientId, matched } = await resolveOrCreatePatient({
+    cin: typeof cin === "string" && cin.trim() ? cin.trim() : null,
+    phone: phone,
+    email: typeof email === "string" && email.trim() ? email : null,
+    name: name.trim(),
+    dateOfBirth: typeof dateOfBirth === "string" && dateOfBirth.trim() ? dateOfBirth.trim() : null,
+    gender: typeof gender === "string" && gender.trim() ? gender.trim() : null,
+  });
 
-  // Check if patient with this phone already exists — if so, link don't duplicate
-  const [existing] = await db
+  // Fetch the full patient row to return
+  const [patientRow] = await db
     .select()
     .from(patients)
-    .where(eq(patients.phone, normalizedPhone))
+    .where(eq(patients.id, patientId))
     .limit(1);
 
-  if (existing) {
-    return NextResponse.json({ ...existing, linked: true }, { status: 200 });
-  }
-
-  const insertValues: typeof patients.$inferInsert = {
-    name: name.trim(),
-    phone: normalizedPhone,
-  };
-
-  if (typeof email === "string" && email.trim().length > 0) {
-    insertValues.email = email.trim().toLowerCase();
-  }
-
-  if (typeof dateOfBirth === "string" && dateOfBirth.trim().length > 0) {
-    insertValues.dateOfBirth = dateOfBirth.trim();
-  }
-
-  const [created] = await db.insert(patients).values(insertValues).returning();
-
-  return NextResponse.json({ ...created, linked: false }, { status: 201 });
+  return NextResponse.json(
+    { ...patientRow, linked: matched !== null },
+    { status: matched !== null ? 200 : 201 }
+  );
 }
 
 // ─── GET /api/doctor/patients ─────────────────────────────────────────────────

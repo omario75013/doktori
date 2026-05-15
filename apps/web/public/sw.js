@@ -1,7 +1,9 @@
 // Doktori service worker — offline support
-// Versioned cache so we can invalidate older releases.
-const CACHE = "doktori-v1";
-const STATIC_PATTERNS = [/\/_next\/static\//, /\/icon-\d+\.png$/, /\/apple-touch-icon\.png$/, /\/favicon-\d+x\d+\.png$/];
+// Versioned cache so we can invalidate older releases. v2 (2026-05-08)
+// drops cache-first for /_next/* chunks (they hold stale code across
+// hot-reload cycles in dev and across deploys in prod).
+const CACHE = "doktori-v2";
+const STATIC_PATTERNS = [/\/icon-\d+\.png$/, /\/apple-touch-icon\.png$/, /\/favicon-\d+x\d+\.png$/];
 const OFFLINE_FALLBACK = "/";
 
 self.addEventListener("install", (event) => {

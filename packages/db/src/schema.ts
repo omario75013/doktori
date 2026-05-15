@@ -103,6 +103,10 @@ export const doctors = pgTable(
     // Doctor-level cabinet gallery (migration 0088). Array of public R2 URLs,
     // independent of per-practice photos. Max 6 photos enforced application-side.
     cabinetGalleryUrls: jsonb("cabinet_gallery_urls").$type<string[]>().notNull().default([]),
+    // Set when this doctor account was created directly by a clinic admin
+    // (POST /api/clinique/doctors). Null for self-registered doctors.
+    // Added in clinic_membership_phase1.sql.
+    createdByClinicId: uuid("created_by_clinic_id"),
   },
   (table) => [
     uniqueIndex("doctors_email_idx").on(table.email),
@@ -283,6 +287,9 @@ export const patients = pgTable(
     photoUrl: varchar("photo_url", { length: 500 }),
     cnamCardUrl: varchar("cnam_card_url", { length: 500 }),
     insuranceCardUrl: varchar("insurance_card_url", { length: 500 }),
+    // Phase 2: which clinic onboarded this patient (null for self-registered).
+    // Added in clinic_patient_phase2.sql.
+    createdByClinicId: uuid("created_by_clinic_id"),
   },
   (table) => [
     uniqueIndex("patients_phone_idx").on(table.phone),
@@ -310,6 +317,14 @@ export const patientMedicalProfile = pgTable(
     vaccinations: jsonb("vaccinations"),
     womensHealth: jsonb("womens_health"),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    // Phase 2: per-section clinic sharing flags.
+    // Shape: { "<clinicId>": { profile, allergies, vaccinations, analyses, prescriptions, certificates, documents, labOrders } }
+    // Missing key → all sections shared (backward-compat default).
+    // Added in clinic_patient_phase2.sql.
+    sharedWithClinics: jsonb("shared_with_clinics")
+      .$type<Record<string, Record<string, boolean>>>()
+      .notNull()
+      .default({}),
   },
   (table) => [uniqueIndex("patient_medical_profile_patient_uidx").on(table.patientId)]
 );
@@ -451,6 +466,10 @@ export const appointments = pgTable(
     bsSentAt: timestamp("bs_sent_at", { withTimezone: true }),
     bsReimbursedAt: timestamp("bs_reimbursed_at", { withTimezone: true }),
     bsRejectionReason: text("bs_rejection_reason"),
+    // Clinic v2 — when the appointment runs at a clinic-owned room.
+    clinicRoomId: uuid("clinic_room_id").references(() => clinicRooms.id, {
+      onDelete: "set null",
+    }),
   },
   (table) => [
     index("appointments_doctor_date_idx").on(table.doctorId, table.startsAt),
@@ -557,8 +576,8 @@ export const secretaries = pgTable("secretaries", {
   email: varchar("email", { length: 255 }).notNull(),
   passwordHash: text("password_hash").notNull(),
   isActive: boolean("is_active").default(true).notNull(),
-  // When set, this secretary manages ALL doctors in the clinic
-  clinicId: uuid("clinic_id").references(() => clinics.id, { onDelete: "set null" }),
+  // clinicId dropped in drop_secretaries_clinic_id.sql (spec Section D).
+  // Secretaries interact with doctors only, never with clinics directly.
   permissions: jsonb("permissions").notNull().default({
     agenda: true,
     patients: true,
@@ -580,11 +599,15 @@ export const secretaries = pgTable("secretaries", {
   photoUrl: text("photo_url"),
   bio: text("bio"),
   monthlyDayOffAllowance: numeric("monthly_day_off_allowance", { precision: 4, scale: 1 }),
+  // Phase 3: scopes this secretary to a specific cabinet (doctor_practices row).
+  // NULL for legacy rows that predate this column (treated as unscoped / primary cabinet).
+  practiceId: uuid("practice_id").references(() => doctorPractices.id, { onDelete: "set null" }),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   uniqueIndex("secretaries_email_idx").on(table.email),
   index("secretaries_doctor_idx").on(table.doctorId),
-  index("secretaries_clinic_idx").on(table.clinicId),
+  // secretaries_clinic_idx dropped along with the clinic_id column
+  index("secretaries_practice_idx").on(table.practiceId),
 ]);
 
 export const secretarySchedules = pgTable(
@@ -843,6 +866,9 @@ export const prescriptions = pgTable("prescriptions", {
   content: text("content").notNull(),
   verificationToken: varchar("verification_token", { length: 64 }),
   templateId: uuid("template_id").references((): any => prescriptionTemplates.id, { onDelete: "set null" }),
+  // Per-doctor sharing (added in per_doctor_sharing.sql).
+  // Empty = visible only to creator + patient. Non-empty = also visible to listed doctors.
+  sharedWithDoctorIds: uuid("shared_with_doctor_ids").array().notNull().default(sql`'{}'::uuid[]`),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("prescriptions_appointment_idx").on(table.appointmentId),
@@ -863,6 +889,8 @@ export const medicalCertificates = pgTable("medical_certificates", {
   content: text("content").notNull(),
   verificationToken: varchar("verification_token", { length: 64 }),
   templateId: uuid("template_id").references((): any => prescriptionTemplates.id, { onDelete: "set null" }),
+  // Per-doctor sharing (added in per_doctor_sharing.sql).
+  sharedWithDoctorIds: uuid("shared_with_doctor_ids").array().notNull().default(sql`'{}'::uuid[]`),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (table) => [
   index("medical_certificates_appointment_idx").on(table.appointmentId),
@@ -1023,6 +1051,8 @@ export const consultationNotes = pgTable(
     plan: text("plan"),
     vitals: jsonb("vitals").$type<ConsultationVitals>(),
     icd10Codes: jsonb("icd10_codes").$type<Icd10Entry[]>(),
+    // Per-doctor sharing (added in per_doctor_sharing.sql).
+    sharedWithDoctorIds: uuid("shared_with_doctor_ids").array().notNull().default(sql`'{}'::uuid[]`),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -1359,6 +1389,10 @@ export const patientDocuments = pgTable(
       { onDelete: "set null" }
     ),
     sharedWithDoctorIds: uuid("shared_with_doctor_ids").array().notNull().default(sql`'{}'::uuid[]`),
+    /** Clinic-to-clinic sharing: array of clinic IDs that can read this document. */
+    sharedWithClinicIds: uuid("shared_with_clinic_ids").array().notNull().default(sql`'{}'::uuid[]`),
+    /** Lab-to-lab sharing: array of lab IDs that can read this document. */
+    sharedWithLabIds: uuid("shared_with_lab_ids").array().notNull().default(sql`'{}'::uuid[]`),
     fileUrl: text("file_url").notNull(),
     fileName: varchar("file_name", { length: 255 }).notNull(),
     mimeType: varchar("mime_type", { length: 100 }),
@@ -2617,13 +2651,48 @@ export const labs = pgTable("labs", {
   services: text("services").array().notNull().default(sql`'{}'::text[]`),
   accreditations: text("accreditations").array().notNull().default(sql`'{}'::text[]`),
   openingHours: jsonb("opening_hours"),
+  /** When set, this lab belongs to the specified clinic (in-house). Null = external/public lab. */
+  clinicId: uuid("clinic_id").references(() => clinics.id, { onDelete: "set null" }),
+  /** 'lab' | 'radiology' — allows a clinic to have separate labs and radiology centers. */
+  kind: varchar("kind", { length: 20 }).notNull().default("lab"),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 }, (t) => [
   index("labs_city_idx").on(t.city),
   index("labs_verification_idx").on(t.verificationStatus),
+  index("labs_clinic_id_idx").on(t.clinicId),
 ]);
 export type Lab = typeof labs.$inferSelect;
 export type NewLab = typeof labs.$inferInsert;
+
+// ── Lab users (multi-user accounts per in-house lab) ──────────────────────────
+// Each in-house lab can have N staff accounts (admin | technician).
+// External labs (clinic_id IS NULL) keep the single-account legacy flow.
+// Added in lab_users.sql.
+export const labUsers = pgTable(
+  "lab_users",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    labId: uuid("lab_id")
+      .notNull()
+      .references(() => labs.id, { onDelete: "cascade" }),
+    email: varchar("email", { length: 255 }).notNull().unique(),
+    passwordHash: text("password_hash").notNull(),
+    firstName: varchar("first_name", { length: 100 }).notNull(),
+    lastName: varchar("last_name", { length: 100 }).notNull(),
+    /** 'admin' | 'technician' */
+    role: varchar("role", { length: 20 }).notNull().default("technician"),
+    isActive: boolean("is_active").notNull().default(true),
+    lastLoginAt: timestamp("last_login_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("lab_users_lab_idx").on(t.labId),
+    index("lab_users_email_idx").on(t.email),
+  ]
+);
+export type LabUser = typeof labUsers.$inferSelect;
+export type NewLabUser = typeof labUsers.$inferInsert;
 
 // ── Lab orders (ordonnance d'analyses) ────────────────────
 // Doctor creates an order targeting a specific lab (or null for "any
@@ -2650,6 +2719,13 @@ export const labOrders = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+    // lab_order_workflow.sql additions
+    internalRef: varchar("internal_ref", { length: 40 }),
+    specimenCollectedAt: timestamp("specimen_collected_at", { withTimezone: true }),
+    expectedResultAt: timestamp("expected_result_at", { withTimezone: true }),
+    resultUploadedAt: timestamp("result_uploaded_at", { withTimezone: true }),
+    technicianId: uuid("technician_id").references(() => labUsers.id, { onDelete: "set null" }),
+    resultSummary: text("result_summary"),
   },
   (t) => [
     index("lab_orders_doctor_idx").on(t.doctorId, t.status),
@@ -2659,3 +2735,236 @@ export const labOrders = pgTable(
 );
 export type LabOrder = typeof labOrders.$inferSelect;
 export type NewLabOrder = typeof labOrders.$inferInsert;
+
+// ── Lab conversations (messaging between labs and doctors/labs) ───────────────
+// lab_messaging.sql
+export const labConversations = pgTable(
+  "lab_conversations",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    labId: uuid("lab_id").notNull().references(() => labs.id, { onDelete: "cascade" }),
+    counterpartLabId: uuid("counterpart_lab_id").references(() => labs.id, { onDelete: "cascade" }),
+    counterpartDoctorId: uuid("counterpart_doctor_id").references(() => doctors.id, { onDelete: "cascade" }),
+    subject: varchar("subject", { length: 200 }),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
+    lastMessagePreview: text("last_message_preview"),
+    unreadCountLab: integer("unread_count_lab").notNull().default(0),
+    unreadCountCounterpart: integer("unread_count_counterpart").notNull().default(0),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("lab_conversations_lab_idx").on(t.labId),
+    index("lab_conversations_doc_idx").on(t.counterpartDoctorId),
+    index("lab_conversations_lab_lab_idx").on(t.counterpartLabId),
+  ],
+);
+export type LabConversation = typeof labConversations.$inferSelect;
+export type NewLabConversation = typeof labConversations.$inferInsert;
+
+export const labMessages = pgTable(
+  "lab_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    conversationId: uuid("conversation_id").notNull().references(() => labConversations.id, { onDelete: "cascade" }),
+    /** 'lab' | 'doctor' */
+    senderType: varchar("sender_type", { length: 15 }).notNull(),
+    senderId: uuid("sender_id").notNull(),
+    body: text("body"),
+    attachmentUrl: text("attachment_url"),
+    attachmentName: varchar("attachment_name", { length: 255 }),
+    attachmentMime: varchar("attachment_mime", { length: 100 }),
+    attachmentSize: integer("attachment_size"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("lab_messages_conv_idx").on(t.conversationId, t.createdAt),
+  ],
+);
+export type LabMessage = typeof labMessages.$inferSelect;
+export type NewLabMessage = typeof labMessages.$inferInsert;
+
+// ── Clinic sites (physical addresses owned by a clinic) ─────
+export const clinicSites = pgTable(
+  "clinic_sites",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clinicId: uuid("clinic_id").notNull().references(() => clinics.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 100 }).notNull(),
+    address: text("address").notNull(),
+    city: varchar("city", { length: 50 }).notNull(),
+    phone: varchar("phone", { length: 20 }),
+    isPrimary: boolean("is_primary").default(false).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("clinic_sites_clinic_idx").on(t.clinicId)],
+);
+export type ClinicSite = typeof clinicSites.$inferSelect;
+export type NewClinicSite = typeof clinicSites.$inferInsert;
+
+// ── Clinic rooms (under a site) ─────────────────────────────
+export const clinicRooms = pgTable(
+  "clinic_rooms",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    siteId: uuid("site_id").notNull().references(() => clinicSites.id, { onDelete: "cascade" }),
+    name: varchar("name", { length: 50 }).notNull(),
+    color: varchar("color", { length: 20 }).default("#2563eb").notNull(),
+    isActive: boolean("is_active").default(true).notNull(),
+    // Added in rooms_details.sql
+    capacity: integer("capacity").notNull().default(1),
+    floor: varchar("floor", { length: 30 }),
+    equipmentNotes: text("equipment_notes"),
+    /** 'active' | 'maintenance' | 'closed' */
+    status: varchar("status", { length: 20 }).notNull().default("active"),
+    lastCleanedAt: timestamp("last_cleaned_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [index("clinic_rooms_site_idx").on(t.siteId)],
+);
+export type ClinicRoom = typeof clinicRooms.$inferSelect;
+export type NewClinicRoom = typeof clinicRooms.$inferInsert;
+
+// ── Patient bulk-communication opt-out ──────────────────────
+export const patientCommunicationOptout = pgTable("patient_communication_optout", {
+  patientId: uuid("patient_id").primaryKey().references(() => patients.id, { onDelete: "cascade" }),
+  optedOutAt: timestamp("opted_out_at", { withTimezone: true }).defaultNow().notNull(),
+  reason: varchar("reason", { length: 100 }),
+});
+export type PatientCommunicationOptout = typeof patientCommunicationOptout.$inferSelect;
+export type NewPatientCommunicationOptout = typeof patientCommunicationOptout.$inferInsert;
+
+// ── Clinic audit log ────────────────────────────────────────
+// Append-only ledger of every clinic-side mutation. Used by
+// /clinique/audit. Compliance + investigation.
+export const clinicAuditLog = pgTable(
+  "clinic_audit_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clinicId: uuid("clinic_id").notNull().references(() => clinics.id, { onDelete: "cascade" }),
+    /** 'clinic' | 'secretary' | 'doctor' | 'admin' */
+    actorType: varchar("actor_type", { length: 16 }).notNull(),
+    actorId: uuid("actor_id"),
+    /** Dotted action key, e.g. 'doctor.invite', 'rdv.status_change', 'room.assign' */
+    action: varchar("action", { length: 64 }).notNull(),
+    targetType: varchar("target_type", { length: 32 }),
+    targetId: uuid("target_id"),
+    metadata: jsonb("metadata"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("clinic_audit_clinic_idx").on(t.clinicId, t.createdAt),
+    index("clinic_audit_action_idx").on(t.clinicId, t.action),
+  ],
+);
+export type ClinicAuditLog = typeof clinicAuditLog.$inferSelect;
+export type NewClinicAuditLog = typeof clinicAuditLog.$inferInsert;
+
+// ── Bulk SMS Campaigns ──────────────────────────────────────
+// One row per clinic broadcast. Inserted after each bulk send.
+export const bulkSmsCampaigns = pgTable(
+  "bulk_sms_campaigns",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clinicId: uuid("clinic_id").notNull().references(() => clinics.id, { onDelete: "cascade" }),
+    message: text("message").notNull(),
+    recipientCount: integer("recipient_count").notNull().default(0),
+    sentCount: integer("sent_count").notNull().default(0),
+    failedCount: integer("failed_count").notNull().default(0),
+    /** JSON snapshot of the filter used to resolve recipients */
+    filter: jsonb("filter"),
+    /** Clinic id that triggered the send (same as clinicId for self-sends) */
+    createdByClinicId: uuid("created_by_clinic_id"),
+    createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  },
+  (t) => [
+    index("bulk_sms_campaigns_clinic_idx").on(t.clinicId, t.createdAt),
+  ],
+);
+export type BulkSmsCampaign = typeof bulkSmsCampaigns.$inferSelect;
+export type NewBulkSmsCampaign = typeof bulkSmsCampaigns.$inferInsert;
+
+// ── Lab analysis types (lab's own catalog) ─────────────────────────────────
+// Each lab can publish its own catalog of analyses/exams in addition to
+// the static defaults in lib/lab-test-catalog.ts.
+// Added in lab_analysis_types.sql.
+export const labAnalysisTypes = pgTable(
+  "lab_analysis_types",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    labId: uuid("lab_id").notNull().references(() => labs.id, { onDelete: "cascade" }),
+    code: varchar("code", { length: 40 }).notNull(),
+    name: varchar("name", { length: 160 }).notNull(),
+    category: varchar("category", { length: 40 }),
+    priceMillimes: integer("price_millimes"),
+    durationHours: integer("duration_hours"),
+    isActive: boolean("is_active").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("lab_analysis_types_lab_idx").on(t.labId),
+    uniqueIndex("lab_analysis_types_lab_code_uniq").on(t.labId, t.code),
+  ]
+);
+export type LabAnalysisType = typeof labAnalysisTypes.$inferSelect;
+export type NewLabAnalysisType = typeof labAnalysisTypes.$inferInsert;
+
+// ── Lab schedules (weekly opening hours) ────────────────────────────────────
+// Added in lab_schedule.sql.
+export const labSchedules = pgTable(
+  "lab_schedules",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    labId: uuid("lab_id").notNull().references(() => labs.id, { onDelete: "cascade" }),
+    dayOfWeek: integer("day_of_week").notNull(), // 0=Sunday..6=Saturday
+    opensAt: time("opens_at"),
+    closesAt: time("closes_at"),
+    isClosed: boolean("is_closed").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("lab_schedules_lab_day_uniq").on(t.labId, t.dayOfWeek),
+  ]
+);
+export type LabSchedule = typeof labSchedules.$inferSelect;
+export type NewLabSchedule = typeof labSchedules.$inferInsert;
+
+// ── Lab closed days (exceptional closures / holidays) ───────────────────────
+// Added in lab_schedule.sql.
+export const labClosedDays = pgTable(
+  "lab_closed_days",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    labId: uuid("lab_id").notNull().references(() => labs.id, { onDelete: "cascade" }),
+    date: date("date").notNull(),
+    reason: varchar("reason", { length: 200 }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("lab_closed_days_lab_date_idx").on(t.labId, t.date),
+  ]
+);
+export type LabClosedDay = typeof labClosedDays.$inferSelect;
+export type NewLabClosedDay = typeof labClosedDays.$inferInsert;
+
+// ── Lab patient notes (internal, not visible to doctors/patients) ────────────
+// Added in lab_patient_notes.sql.
+export const labPatientNotes = pgTable(
+  "lab_patient_notes",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    labId: uuid("lab_id").notNull().references(() => labs.id, { onDelete: "cascade" }),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    authorLabUserId: uuid("author_lab_user_id").references(() => labUsers.id, { onDelete: "set null" }),
+    body: text("body").notNull(),
+    pinned: boolean("pinned").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("lab_patient_notes_lab_patient_idx").on(t.labId, t.patientId, t.createdAt),
+  ]
+);
+export type LabPatientNote = typeof labPatientNotes.$inferSelect;
+export type NewLabPatientNote = typeof labPatientNotes.$inferInsert;

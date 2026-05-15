@@ -10,11 +10,23 @@ import { signOut } from "next-auth/react";
 
 type Role = "doctor" | "admin" | "clinic" | "secretary" | "patient";
 
+function loginPathFor(role: Role, opts: { createdByClinicId?: string | null }): string {
+  if (role === "doctor" && opts.createdByClinicId) return "/clinique-login";
+  switch (role) {
+    case "doctor": return "/connexion";
+    case "admin": return "/admin-login";
+    case "clinic": return "/clinique-login";
+    case "secretary": return "/secretaire-login";
+    case "patient": return "/connexion-patient";
+  }
+}
+
 type Props = {
   name?: string | null;
   email?: string | null;
   image?: string | null;
   role: Role;
+  createdByClinicId?: string | null;
 };
 
 function profileHrefFor(role: Role): string {
@@ -47,7 +59,7 @@ function settingsHrefFor(role: Role): string {
   }
 }
 
-export function ProfileMenu({ name, email, image, role }: Props) {
+export function ProfileMenu({ name, email, image, role, createdByClinicId = null }: Props) {
   const [open, setOpen] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -165,7 +177,7 @@ export function ProfileMenu({ name, email, image, role }: Props) {
                 onClick={async () => {
                   setOpen(false);
                   await signOut({ redirect: false });
-                  window.location.href = isDesktop ? "/app-picker" : "/connexion";
+                  window.location.href = isDesktop ? "/app-picker" : loginPathFor(role, { createdByClinicId });
                 }}
                 className="flex w-full items-center gap-3 px-4 py-2 text-sm text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
               >

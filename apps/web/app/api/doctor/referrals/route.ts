@@ -3,6 +3,7 @@ import { randomBytes } from "crypto";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { requireAuth } from "@/lib/require-auth";
+import { rejectClinicDoctor } from "@/lib/clinic-doctor-guard";
 import {
   db,
   patientReferrals,
@@ -26,6 +27,8 @@ export async function POST(req: Request) {
   if (!session?.user?.id || session.user.role !== "doctor") {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+  const clinicRejection = rejectClinicDoctor(session);
+  if (clinicRejection) return clinicRejection;
   let body: unknown;
   try {
     body = await req.json();

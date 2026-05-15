@@ -18,9 +18,19 @@ import {
   BarChart3,
   StickyNote,
   Printer,
+  FlaskConical,
+  MessageSquare,
   Settings,
   LogOut,
   Building2,
+  Armchair,
+  Building,
+  DoorOpen,
+  FileText,
+  Award,
+  DollarSign,
+  ClipboardList,
+  ScanLine,
 } from "lucide-react";
 
 type LinkDef = {
@@ -38,8 +48,18 @@ const LINKS: LinkDef[] = [
   { href: "/clinique/patients", key: "patients", icon: UserRound },
   { href: "/clinique/secretaires", key: "secretaires", icon: UserCog },
   { href: "/clinique/statistiques", key: "statistiques", icon: BarChart3 },
+  { href: "/clinique/finance", key: "finance", icon: DollarSign },
+  { href: "/clinique/qualite", key: "qualite", icon: Award },
+  { href: "/clinique/salle-attente", key: "salleAttente", icon: Armchair },
+  { href: "/clinique/labos", key: "labos", icon: FlaskConical },
+  { href: "/clinique/communication", key: "communication", icon: MessageSquare },
   { href: "/clinique/notes", key: "notes", icon: StickyNote },
   { href: "/clinique/rapport-journalier", key: "rapport", icon: Printer },
+  { href: "/clinique/cnam", key: "cnam", icon: FileText },
+  { href: "/clinique/audit", key: "audit", icon: ClipboardList },
+  { href: "/clinique/parametres/labos", key: "parametresLabos", icon: ScanLine },
+  { href: "/clinique/parametres/sites", key: "sites", icon: Building },
+  { href: "/clinique/parametres/salles", key: "salles", icon: DoorOpen },
   { href: "/clinique/parametres", key: "parametres", icon: Settings },
 ];
 

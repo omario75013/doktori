@@ -476,7 +476,11 @@
       "staff": "Équipe",
       "settings": "Paramètres",
       "expandSidebar": "Étendre la barre latérale",
-      "collapseSidebar": "Réduire la barre latérale"
+      "collapseSidebar": "Réduire la barre latérale",
+      "invitations": "Invitations clinique"
+    },
+    "errors": {
+      "clinicDoctorForbidden": "Fonctionnalité réservée aux médecins indépendants"
     },
     "dashboard": {
       "title": "Tableau de bord",
@@ -623,6 +627,7 @@
       "colMotif": "Motif",
       "colStatus": "Statut",
       "colActions": "Actions",
+      "roomLabel": "Salle",
       "actionConfirm": "Confirmer",
       "actionComplete": "Terminé",
       "actionNoShow": "Absent",
@@ -1803,6 +1808,23 @@
       "fileNotUploaded": "(fichier non uploadé)",
       "notProvided": "Non renseigné"
     },
+    "patientFiche": {
+      "clinicSharing": {
+        "title": "Partage avec clinique(s)",
+        "hint": "Contrôlez quelles sections du dossier sont visibles pour chaque clinique.",
+        "sections": {
+          "profile": "Profil médical",
+          "allergies": "Allergies",
+          "vaccinations": "Vaccinations",
+          "analyses": "Analyses",
+          "prescriptions": "Ordonnances",
+          "certificates": "Certificats",
+          "documents": "Documents",
+          "labOrders": "Demandes labo"
+        },
+        "saved": "Enregistré"
+      }
+    },
     "patientDetail": {
       "statusPending": "À confirmer",
       "statusConfirmed": "Confirmé",
@@ -2098,6 +2120,16 @@
       "accepted": "Invitation acceptée",
       "declined": "Invitation refusée",
       "error": "Une erreur est survenue"
+    },
+    "invitations": {
+      "title": "Mes invitations",
+      "pending": "Invitations en attente d'acceptation",
+      "accept": "Accepter",
+      "decline": "Refuser",
+      "expiresAt": "Expire dans {days} jour(s)",
+      "accepted": "Invitation acceptée",
+      "declined": "Invitation refusée",
+      "emptyState": "Aucune invitation en attente"
     }
   },
   "patientNotifications": {
@@ -2308,6 +2340,9 @@
       "dayThu": "Jeu",
       "dayFri": "Ven",
       "daySat": "Sam",
+      "cabinet": "Cabinet",
+      "selectCabinet": "Sélectionner un cabinet",
+      "moveCabinet": "Déplacer vers ce cabinet",
       "daySun": "Dim",
       "noPatientFound": "Aucun patient trouvé",
       "closed": "Fermé",
@@ -2440,11 +2475,24 @@
       "orders": "Commandes",
       "walkIn": "Walk-in",
       "patients": "Patients",
+      "analyses": "Analyses",
+      "results": "Résultats",
+      "documents": "Documents",
+      "calendar": "Agenda",
+      "schedule": "Horaires",
+      "messages": "Messages",
+      "search": "Recherche",
       "settings": "Paramètres",
       "openMenu": "Ouvrir le menu",
       "closeMenu": "Fermer le menu",
       "logout": "Se déconnecter",
-      "loggingOut": "Déconnexion…"
+      "loggingOut": "Déconnexion…",
+      "badgeAdmin": "Admin",
+      "badgeTechnician": "Technicien"
+    },
+    "staff": {
+      "badgeAdmin": "Admin",
+      "badgeTechnician": "Technicien"
     },
     "dashboard": {
       "title": "Tableau de bord",
@@ -2477,9 +2525,257 @@
       "title": "Paramètres",
       "save": "Enregistrer",
       "saved": "Modifications enregistrées."
+    },
+    "documents": {
+      "shareInterLab": "Partager avec un autre labo",
+      "sharedByLab": "Partagé par {labName}",
+      "noOtherLabs": "Aucun autre laboratoire vérifié disponible.",
+      "shareSuccess": "Document partagé avec succès."
+    },
+    "order": {
+      "tabs": {
+        "patient": "Patient",
+        "demande": "Demande",
+        "resultats": "Résultats",
+        "echange": "Échange",
+        "historique": "Historique"
+      },
+      "internalRef": "Référence interne",
+      "specimenAt": "Date de prélèvement",
+      "expectedAt": "Date de résultat prévue",
+      "technician": "Technicien responsable",
+      "resultSummary": "Résumé du résultat",
+      "uploadResult": "Téléverser les résultats",
+      "sendToPatient": "Envoyer au patient",
+      "sendToDoctor": "Envoyer au médecin"
+    },
+    "walkin": {
+      "form": {
+        "firstName": "Prénom",
+        "lastName": "Nom",
+        "cin": "CIN",
+        "phone": "Téléphone",
+        "email": "Email",
+        "dob": "Date de naissance",
+        "gender": "Genre",
+        "submit": "Enregistrer"
+      },
+      "createOrder": "Créer une commande maintenant",
+      "selectTests": "Sélectionner les analyses",
+      "urgency": "Urgence",
+      "doctor": "Médecin prescripteur (optionnel)"
+    },
+    "search": {
+      "placeholder": "Nom patient, CIN, réf interne…",
+      "sections": {
+        "patients": "Patients",
+        "orders": "Commandes",
+        "documents": "Documents"
+      },
+      "empty": "Aucun résultat.",
+      "viewAll": "Voir tout"
+    },
+    "messages": {
+      "title": "Messages",
+      "newConversation": "Nouvelle conversation",
+      "target": {
+        "lab": "Laboratoire",
+        "doctor": "Médecin"
+      },
+      "search": "Rechercher…",
+      "composer": {
+        "placeholder": "Écrire un message…"
+      },
+      "send": "Envoyer",
+      "unread": "non lu(s)",
+      "attach": "Joindre un fichier"
+    },
+    "analyses": {
+      "title": "Catalogue d'analyses",
+      "add": "+ Nouvelle analyse",
+      "code": "Code",
+      "name": "Nom",
+      "category": "Catégorie",
+      "price": "Prix",
+      "duration": "Délai",
+      "status": "Actif",
+      "actions": "Actions",
+      "inactive": "Inactif",
+      "includeInactive": "Inclure les inactifs",
+      "empty": "Aucune analyse dans le catalogue.",
+      "edit": "Modifier",
+      "deactivate": "Désactiver",
+      "reactivate": "Réactiver",
+      "deleteConfirm": "Désactiver cette analyse ?"
+    },
+    "results": {
+      "title": "Résultats",
+      "search": "Rechercher un patient…",
+      "dateFrom": "Date de",
+      "dateTo": "Date à",
+      "empty": "Aucun résultat.",
+      "view": "Voir",
+      "share": "Commande",
+      "columns": {
+        "date": "Date"
+      },
+      "patient": "Patient",
+      "doctor": "Médecin",
+      "exams": "Examens",
+      "technician": "Technicien",
+      "ref": "Réf.",
+      "status": "Statut",
+      "filters": {
+        "status": "Statut"
+      }
+    },
+    "documents": {
+      "title": "Documents",
+      "tabs": {
+        "uploaded": "Uploadés",
+        "received": "Reçus"
+      },
+      "upload": "Téléverser",
+      "fileName": "Fichier",
+      "patient": "Rechercher patient…",
+      "category": "Catégorie",
+      "share": "Partagé",
+      "delete": "Supprimer",
+      "empty": "Aucun document."
+    },
+    "patient": {
+      "tabs": {
+        "apercu": "Aperçu",
+        "commandes": "Commandes",
+        "resultats": "Résultats",
+        "documents": "Documents",
+        "notes": "Notes"
+      },
+      "age": "ans",
+      "gender": "Genre",
+      "bloodType": "Groupe sanguin",
+      "cin": "CIN",
+      "phone": "Téléphone",
+      "email": "Email",
+      "lastVisit": "Dernière visite",
+      "totalOrders": "commandes",
+      "noOrders": "Aucune commande",
+      "noDocs": "Aucun document",
+      "noNotes": "Aucune note",
+      "notes": {
+        "title": "Notes internes",
+        "pin": "Épingler",
+        "unpin": "Désépingler",
+        "edit": "Modifier",
+        "delete": "Supprimer",
+        "save": "Sauvegarder",
+        "cancel": "Annuler",
+        "internalHint": "Note interne (non visible par le médecin ou le patient)",
+        "addNote": "Ajouter une note interne",
+        "placeholder": "Note interne…"
+      },
+      "documents": {
+        "uploaded": "Téléversés par nous",
+        "received": "Reçus d'autres labos",
+        "share": "Partager",
+        "delete": "Supprimer",
+        "addFile": "Ajouter un document",
+        "sharedByLab": "Partagé par un labo",
+        "copyLink": "Copier le lien",
+        "viewFile": "Voir le fichier"
+      },
+      "results": {
+        "title": "Résultats",
+        "addResult": "Ajouter un résultat",
+        "linkOrder": "Lier à une commande existante",
+        "summary": "Résumé",
+        "file": "Fichier",
+        "shareWithDoctor": "Partager avec le médecin prescripteur"
+      }
+    },
+    "schedule": {
+      "title": "Horaires",
+      "day": "Jour",
+      "opensAt": "Ouverture",
+      "closesAt": "Fermeture",
+      "closed": "Fermé",
+      "save": "Enregistrer",
+      "closedDays": "Fermetures exceptionnelles",
+      "addClosedDay": "Ajouter une fermeture",
+      "date": "Date",
+      "reason": "Motif",
+      "weekdays": {
+        "sun": "Dimanche",
+        "mon": "Lundi",
+        "tue": "Mardi",
+        "wed": "Mercredi",
+        "thu": "Jeudi",
+        "fri": "Vendredi",
+        "sat": "Samedi"
+      }
+    },
+    "agenda": {
+      "title": "Agenda",
+      "prevWeek": "Semaine précédente",
+      "nextWeek": "Semaine suivante",
+      "today": "Aujourd'hui",
+      "viewWeek": "Semaine",
+      "viewMonth": "Mois",
+      "legend": {
+        "specimen": "Prélèvement",
+        "expected": "Résultat prévu",
+        "uploaded": "Résultat uploadé",
+        "closed": "Fermeture"
+      }
     }
   },
   "clinique": {
+    "dossier": {
+      "openDossier": "Ouvrir le dossier",
+      "tabOverview": "Aperçu",
+      "tabAllergies": "Allergies",
+      "tabVaccins": "Vaccins",
+      "tabAnalyses": "Analyses",
+      "tabOrdonnances": "Ordonnances",
+      "tabCertificates": "Certificats",
+      "tabDocuments": "Documents",
+      "tabRdv": "Rendez-vous",
+      "tabLabOrders": "Demandes d'analyses",
+      "ageYears": "{years} ans",
+      "noData": "Aucune donnée",
+      "gender": "Sexe",
+      "bloodType": "Groupe sanguin",
+      "labBadge": "Laboratoire",
+      "suppressedSection": "Section non partagée par le médecin traitant",
+      "treatingDoctors": "Médecins traitants",
+      "documents": {
+        "shareInterClinic": "Partager avec une autre clinique",
+        "sharedByClinic": "Partagé par {name}",
+        "noOtherClinics": "Aucune autre clinique ne suit ce patient"
+      }
+    },
+    "patients": {
+      "newPatient": "Nouveau patient",
+      "form": {
+        "firstName": "Prénom",
+        "lastName": "Nom",
+        "email": "Email",
+        "phone": "Téléphone",
+        "cin": "CIN (Carte d'identité nationale)",
+        "dob": "Date de naissance",
+        "gender": "Genre",
+        "doctor": "Médecin traitant",
+        "shareDossier": "Partager le dossier avec la clinique",
+        "firstRdvAt": "Date du premier rendez-vous",
+        "submit": "Créer le patient",
+        "success": "Patient créé avec succès"
+      }
+    },
+    "login": {
+      "subtitleAffiliated": "Médecins et laboratoires affiliés à une clinique se connectent ici aussi.",
+      "msgClinicDoctor": "Médecin affilié à une clinique : connectez-vous ici avec vos identifiants.",
+      "msgClinicLab": "Laboratoire affilié à une clinique : connectez-vous ici avec vos identifiants."
+    },
     "nav": {
       "espace": "Espace Clinique",
       "dashboard": "Tableau de bord",
@@ -2490,13 +2786,388 @@
       "patients": "Patients",
       "secretaires": "Secrétaires",
       "statistiques": "Statistiques",
+      "finance": "Finance",
+      "qualite": "Qualité",
       "notes": "Notes internes",
       "rapport": "Rapport",
+      "salleAttente": "Salle d'attente",
+      "labos": "Analyses & Radio",
+      "communication": "Communication",
       "parametres": "Paramètres",
+      "sites": "Sites",
+      "salles": "Salles",
       "openMenu": "Ouvrir le menu",
       "closeMenu": "Fermer le menu",
       "logout": "Se déconnecter",
-      "loggingOut": "Déconnexion…"
+      "loggingOut": "Déconnexion…",
+      "cnam": "CNAM",
+      "audit": "Journal d'audit",
+      "parametresLabos": "Labos & Radiologie"
+    },
+    "salleAttente": {
+      "title": "Salle d'attente",
+      "subtitle": "Patients actuellement en attente",
+      "totalWaiting": "{count} patients",
+      "avgWait": "Attente moy. {min} min",
+      "empty": "Personne en attente",
+      "nav": "Salle d'attente"
+    },
+    "communication": {
+      "title": "Communication",
+      "nav": "Communication",
+      "subtitle": "Envoyer un SMS groupé à vos patients",
+      "filterDoctor": "Médecin",
+      "filterAllDoctors": "Tous les médecins",
+      "filterLastVisit": "Dernière visite",
+      "filterMotif": "Motif",
+      "filterFutureRdv": "Avec RDV futur",
+      "previewButton": "Aperçu destinataires",
+      "recipientsCount": "{count} destinataires",
+      "messageLabel": "Message",
+      "charLimit": "Caractères : {n}/160",
+      "send": "Envoyer",
+      "confirmTitle": "Confirmer l'envoi",
+      "confirmBody": "Envoyer ce message à {count} patients ?",
+      "confirmYes": "Envoyer maintenant",
+      "recentCampaigns": "Campagnes récentes",
+      "empty": "Aucune campagne envoyée",
+      "optoutLabel": "Stop: "
+    },
+    "labos": {
+      "title": "Demandes d'analyses",
+      "subtitle": "Toutes les demandes envoyées par vos médecins",
+      "nav": "Analyses & Radio",
+      "kpiPending": "En attente",
+      "kpiThisMonth": "Terminées ce mois",
+      "kpiToday": "Aujourd'hui",
+      "kpiTopDoctor": "Top médecin",
+      "filterDoctor": "Médecin",
+      "filterAll": "Tous",
+      "filterStatus": "Statut",
+      "filterUrgency": "Urgence",
+      "colPatient": "Patient",
+      "colDoctor": "Médecin",
+      "colLab": "Laboratoire",
+      "colTests": "Tests",
+      "colStatus": "Statut",
+      "colCreated": "Date",
+      "empty": "Aucune demande",
+      "status": {
+        "pending": "En attente",
+        "collected": "Prélevé",
+        "completed": "Terminé",
+        "cancelled": "Annulé"
+      },
+      "urgency": {
+        "routine": "Routine",
+        "urgent": "Urgent"
+      },
+      "tabs": {
+        "sent": "Envoyés",
+        "received": "Reçus"
+      },
+      "columns": {
+        "lab": "Labo"
+      }
+    },
+    "sites": {
+      "title": "Sites",
+      "nav": "Sites",
+      "add": "Nouveau site",
+      "name": "Nom",
+      "address": "Adresse",
+      "city": "Ville",
+      "phone": "Téléphone",
+      "isPrimary": "Site principal",
+      "save": "Enregistrer",
+      "delete": "Supprimer",
+      "empty": "Aucun site configuré."
+    },
+    "rooms": {
+      "title": "Salles",
+      "nav": "Salles",
+      "add": "Nouvelle salle",
+      "name": "Nom",
+      "color": "Couleur",
+      "active": "Actif",
+      "selectSite": "Choisir un site",
+      "empty": "Aucune salle configurée."
+    },
+    "appointments": {
+      "colRoom": "Salle",
+      "assignRoom": "Affecter une salle"
+    },
+    "planning": {
+      "filters": {
+        "saved": "Filtres enregistrés",
+        "activeFilters": "{count} actif",
+        "reset": "Réinitialiser"
+      }
+    },
+    "rdv": {
+      "pagination": {
+        "prev": "Précédent",
+        "next": "Suivant",
+        "page": "Page",
+        "of": "sur",
+        "results": "résultats",
+        "perPage": "Par page"
+      }
+    },
+    "qualite": {
+      "title": "Qualité",
+      "nav": "Qualité",
+      "subtitle": "Performance et satisfaction par médecin",
+      "kpiAvgRating": "Note moyenne",
+      "kpiNoShow": "Taux d'absentéisme",
+      "kpiTotalRdv": "Total RDV",
+      "kpiReviews": "Avis",
+      "colDoctor": "Médecin",
+      "colSpecialty": "Spécialité",
+      "colRating": "Note",
+      "colNoShow": "Absents",
+      "colCompletion": "Terminés",
+      "colCancel": "Annulés",
+      "colTotal": "RDV",
+      "colSatisfaction": "Satisfaction",
+      "topBadge": "Top",
+      "monthlyTrend": "Tendance 6 mois",
+      "print": "Imprimer",
+      "exportCsv": "CSV",
+      "exportXlsx": "Excel"
+    },
+    "cnam": {
+      "title": "CNAM",
+      "nav": "CNAM",
+      "subtitle": "Suivi des feuilles de soins",
+      "kpiSubmitted": "Soumis",
+      "kpiApproved": "Approuvés",
+      "kpiPaid": "Payés",
+      "kpiRejected": "Rejetés",
+      "kpiPending": "Montant en attente",
+      "colDate": "Date",
+      "colPatient": "Patient",
+      "colDoctor": "Médecin",
+      "colAmount": "Montant",
+      "colStatus": "Statut",
+      "colDays": "Jours",
+      "colPaidAt": "Payé le",
+      "statusSubmitted": "Soumis",
+      "statusApproved": "Approuvé",
+      "statusPaid": "Remboursé",
+      "statusRejected": "Rejeté"
+    },
+    "finance": {
+      "title": "Finance",
+      "nav": "Finance",
+      "subtitle": "Revenus, paiements et CNAM",
+      "kpiTotal": "Revenu total",
+      "kpiPaid": "Encaissé",
+      "kpiPending": "En attente",
+      "kpiCnam": "CNAM en attente",
+      "kpiRefunds": "Remboursements",
+      "vsPrev": "vs période précédente",
+      "byDoctor": "Par médecin",
+      "byMethod": "Par mode de paiement",
+      "byType": "Par type",
+      "monthlyTrend": "Tendance mensuelle",
+      "details": "Détails",
+      "presetThisMonth": "Ce mois",
+      "presetLastMonth": "Mois dernier",
+      "presetThisQuarter": "Ce trimestre",
+      "presetThisYear": "Cette année",
+      "presetCustom": "Personnalisé",
+      "print": "Imprimer",
+      "exportCsv": "Exporter CSV",
+      "exportXlsx": "Exporter XLSX"
+    },
+    "audit": {
+      "title": "Journal d'audit",
+      "nav": "Journal d'audit",
+      "subtitle": "Toutes les actions sur votre clinique",
+      "filterAction": "Action",
+      "filterActor": "Acteur",
+      "filterAll": "Tous",
+      "actorClinic": "Clinique",
+      "actorDoctor": "Médecin",
+      "actorSecretary": "Secrétaire",
+      "actorAdmin": "Admin",
+      "metadataLabel": "Détails",
+      "empty": "Aucun événement",
+      "exportCsv": "Exporter CSV",
+      "actionLabels": {
+        "doctor_invite": "Invitation médecin",
+        "doctor_remove": "Retrait médecin",
+        "note_create": "Note créée",
+        "note_update": "Note modifiée",
+        "note_delete": "Note supprimée",
+        "rdv_update": "RDV modifié",
+        "rdv_status_change": "Statut RDV changé",
+        "room_assign": "Salle assignée",
+        "sms_bulk_send": "SMS groupé envoyé",
+        "site_create": "Site créé",
+        "site_update": "Site modifié",
+        "site_delete": "Site supprimé",
+        "room_create": "Salle créée",
+        "room_update": "Salle modifiée",
+        "room_delete": "Salle supprimée"
+      }
+    },
+    "dashboard": {
+      "title": "Tableau de bord",
+      "subtitle": "Vue d'ensemble de la clinique",
+      "refresh": "Actualiser",
+      "kpi": {
+        "rdvToday": "RDV aujourd'hui",
+        "noShow": "Taux d'absence",
+        "wait": "Attente moy.",
+        "revenue": "CA du jour",
+        "cnam": "CNAM en attente",
+        "newPatients": "Nvx patients",
+        "vsLastWeek": "vs sem. passée",
+        "vsYesterday": "vs hier",
+        "target": "Cible"
+      },
+      "quickActions": {
+        "newRdv": "Nouveau RDV",
+        "newPatient": "Nouveau patient",
+        "smsRappel": "SMS rappel",
+        "internalNote": "Note interne",
+        "recallHta": "Rappel HTA"
+      },
+      "pipeline": {
+        "title": "File du jour",
+        "attendus": "Attendus",
+        "arrives": "Arrivés",
+        "enConsultation": "En consultation",
+        "termines": "Terminés"
+      },
+      "inbox": {
+        "title": "Boîte de réception",
+        "labsUnread": "Résultats labos",
+        "cnamRejected": "CNAM rejetés",
+        "pendingInvites": "Invitations en attente",
+        "docsToValidate": "Documents à valider",
+        "labsAwaitingResults": "Labos in-house en attente"
+      },
+      "alerts": {
+        "title": "Alertes",
+        "birthdays": "Anniversaires",
+        "doctorsLate": "Médecins en retard",
+        "smsCreditLow": "Crédit SMS faible",
+        "doctorsOff": "Médecins absents",
+        "none": "Aucune alerte aujourd'hui"
+      },
+      "charts": {
+        "rdv7d": "RDV — 7 derniers jours",
+        "revenue30d": "CA — 30 derniers jours",
+        "topMotifs": "Top motifs (30j)"
+      },
+      "occupancy": {
+        "title": "Occupation hebdomadaire",
+        "legend": "Occupation",
+        "days": {
+          "mon": "Lun",
+          "tue": "Mar",
+          "wed": "Mer",
+          "thu": "Jeu",
+          "fri": "Ven",
+          "sat": "Sam",
+          "sun": "Dim"
+        }
+      },
+      "forecast": {
+        "title": "Prévision 7 prochains jours",
+        "rdvConfirmed": "RDV confirmés",
+        "revenueExpected": "CA prévu"
+      },
+      "empty": {
+        "noDoctors": "Aucun médecin dans cette clinique",
+        "addFirstDoctor": "Ajouter votre premier médecin"
+      }
+    },
+    "medecins": {
+      "inviteExisting": "Inviter un médecin existant",
+      "inviteNew": "Créer un nouveau médecin",
+      "tabs": {
+        "existing": "Médecin existant",
+        "new": "Nouveau médecin"
+      },
+      "form": {
+        "firstName": "Prénom",
+        "lastName": "Nom",
+        "email": "Email",
+        "phone": "Téléphone",
+        "specialty": "Spécialité",
+        "fee": "Honoraires (DT)",
+        "send": "Envoyer l'invitation"
+      },
+      "invitationPending": "Invitation envoyée — en attente d'acceptation",
+      "accepted": "Actif",
+      "declined": "Invitation refusée"
+    },
+    "secretaires": {
+      "title": "Secrétaires",
+      "subtitle": "Gérer les secrétaires de la clinique",
+      "addButton": "Ajouter une secrétaire",
+      "newTitle": "Nouvelle secrétaire",
+      "cabinet": "Cabinet",
+      "selectCabinet": "Sélectionner un cabinet",
+      "cabinetHint": "La secrétaire sera scopée à ce cabinet uniquement.",
+      "noCabinets": "Ce médecin n'a aucun cabinet lié à cette clinique."
+    },
+    "labs": {
+      "title": "Labos & Radiologie in-house",
+      "subtitle": "Gérez les laboratoires et centres de radiologie internes à la clinique.",
+      "addButton": "Ajouter un labo / centre de radiologie",
+      "empty": "Aucun labo in-house — ajoutez votre premier laboratoire.",
+      "edit": "Modifier",
+      "delete": "Supprimer",
+      "confirmDelete": "Confirmer la suppression de",
+      "success": "Labo enregistré avec succès.",
+      "form": {
+        "name": "Nom",
+        "email": "Email",
+        "phone": "Téléphone",
+        "address": "Adresse",
+        "city": "Ville",
+        "services": "Services",
+        "kind": "Type",
+        "submit": "Enregistrer"
+      },
+      "kind": {
+        "lab": "Laboratoire",
+        "radiology": "Radiologie"
+      },
+      "users": {
+        "title": "Utilisateurs du labo",
+        "addButton": "Ajouter un utilisateur",
+        "emptyState": "Aucun utilisateur — ajoutez le premier compte staff.",
+        "deactivate": "Désactiver",
+        "reactivate": "Réactiver",
+        "deactivated": "Utilisateur désactivé",
+        "reactivated": "Utilisateur réactivé",
+        "deleteConfirm": "Supprimer l'utilisateur",
+        "role": {
+          "admin": "Admin",
+          "technician": "Technicien"
+        },
+        "columns": {
+          "name": "Nom",
+          "email": "Email",
+          "role": "Rôle",
+          "status": "Statut",
+          "lastLogin": "Dernière connexion",
+          "actions": "Actions"
+        },
+        "form": {
+          "firstName": "Prénom",
+          "lastName": "Nom",
+          "email": "Email",
+          "role": "Rôle",
+          "submit": "Créer le compte"
+        }
+      }
     }
   },
   "admin": {

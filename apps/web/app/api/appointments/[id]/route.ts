@@ -84,6 +84,7 @@ const patchSchema = z
     status: z
       .enum(["pending", "confirmed", "cancelled", "completed", "no_show"])
       .optional(),
+    clinicRoomId: z.string().uuid().optional().nullable(),
   })
   .strict()
   .refine((v) => Object.keys(v).length > 0, { message: "Aucun champ fourni" });
@@ -142,6 +143,7 @@ export async function PATCH(
   if (parsed.data.type) update.type = parsed.data.type;
   if (parsed.data.reason !== undefined) update.reason = parsed.data.reason;
   if (parsed.data.status) update.status = parsed.data.status;
+  if (parsed.data.clinicRoomId !== undefined) update.clinicRoomId = parsed.data.clinicRoomId;
 
   if (
     update.startsAt &&

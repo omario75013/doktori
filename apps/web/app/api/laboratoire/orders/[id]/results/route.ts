@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
-import { db, labOrders, patientDocuments } from "@doktori/db";
+import { db, labOrders, labs, doctors, patientDocuments } from "@doktori/db";
 import { eq } from "drizzle-orm";
 import { requireAuth } from "@/lib/require-auth";
 import { uploadToR2 } from "@/lib/r2";
@@ -19,9 +19,13 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const user = await requireAuth(req);
-  if (!user || user.role !== "lab") {
+  const role = (user as { role?: string } | undefined)?.role;
+  if (!user || (role !== "lab" && role !== "lab_user")) {
     return NextResponse.json({ error: "Non autorisé" }, { status: 401 });
   }
+  const labId = role === "lab_user"
+    ? (user as { labId?: string }).labId!
+    : user.id;
 
   const { id: orderId } = await params;
 
@@ -42,11 +46,20 @@ export async function POST(
     );
   }
   // The lab must be the assigned lab OR the order has no assigned lab (walk-in).
-  if (order.labId !== null && order.labId !== user.id) {
+  if (order.labId !== null && order.labId !== labId) {
     return NextResponse.json({ error: "Accès non autorisé" }, { status: 403 });
   }
 
-  // 2. Parse multipart form.
+  // 2. Fetch lab kind for category default
+  const [labRow] = await db
+    .select({ kind: labs.kind, clinicId: labs.clinicId })
+    .from(labs)
+    .where(eq(labs.id, labId))
+    .limit(1);
+  const labKind = labRow?.kind ?? "lab";
+  const defaultCategory = labKind === "radiology" ? "imagerie" : "analyse";
+
+  // 3. Parse multipart form.
   const form = await req.formData().catch(() => null);
   if (!form) {
     return NextResponse.json({ error: "Corps de la requête invalide" }, { status: 400 });
@@ -63,25 +76,41 @@ export async function POST(
     return NextResponse.json({ error: "Fichier trop volumineux (max 15 Mo)" }, { status: 400 });
   }
 
-  const category = (form.get("category") as string | null) ?? "analyse";
+  const category = (form.get("category") as string | null) ?? defaultCategory;
   const title = (form.get("title") as string | null) ?? file.name;
   const note = (form.get("note") as string | null) ?? null;
+  const technicianId = (form.get("technicianId") as string | null) || null;
+  const resultSummary = (form.get("resultSummary") as string | null) || null;
 
-  // 3. Upload to R2.
+  // 4. Upload to R2.
   const buf = Buffer.from(await file.arrayBuffer());
   const ext = (file.name.split(".").pop() ?? "bin").toLowerCase().slice(0, 8);
-  const key = `lab-results/${user.id}/${randomUUID()}.${ext}`;
+  const key = `lab-results/${labId}/${randomUUID()}.${ext}`;
   const fileUrl = await uploadToR2(buf, key, file.type);
 
-  // 4. Insert patient_documents row shared with the prescribing doctor.
+  // 5. Determine sharing: always share with prescribing doctor.
+  // Also share with clinic if the doctor is a clinic-doctor.
+  const sharedDoctorIds = [order.doctorId];
+  const sharedClinicIds: string[] = [];
+  const [docRow] = await db
+    .select({ createdByClinicId: doctors.createdByClinicId })
+    .from(doctors)
+    .where(eq(doctors.id, order.doctorId))
+    .limit(1);
+  if (docRow?.createdByClinicId) {
+    sharedClinicIds.push(docRow.createdByClinicId);
+  }
+
+  // 6. Insert patient_documents row.
   const [doc] = await db
     .insert(patientDocuments)
     .values({
       patientId: order.patientId,
       uploadedBy: "lab",
-      uploadedByLabId: user.id,
+      uploadedByLabId: labId,
       labOrderId: order.id,
-      sharedWithDoctorIds: [order.doctorId],
+      sharedWithDoctorIds: sharedDoctorIds,
+      sharedWithClinicIds: sharedClinicIds,
       fileUrl,
       fileName: file.name.slice(0, 255),
       mimeType: file.type,
@@ -92,13 +121,16 @@ export async function POST(
     })
     .returning();
 
-  // 5. Mark the order as completed.
+  // 7. Mark the order as completed.
   await db
     .update(labOrders)
     .set({
       status: "completed",
       completedAt: new Date(),
-      completedByLabId: user.id,
+      completedByLabId: labId,
+      resultUploadedAt: new Date(),
+      technicianId: technicianId ?? undefined,
+      resultSummary: resultSummary ?? undefined,
       updatedAt: new Date(),
     })
     .where(eq(labOrders.id, order.id));

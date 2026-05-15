@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { requireDoctor } from "@/lib/doctor-auth";
+import { rejectClinicDoctor } from "@/lib/clinic-doctor-guard";
 import { db } from "@doktori/db";
 import { sql } from "drizzle-orm";
 import { broadcastSos } from "@/lib/sos-broadcast";
@@ -10,6 +12,8 @@ import { sendPushToPatient } from "@/lib/push";
 export async function POST(req: Request) {
   const doctor = await requireDoctor();
   if (doctor instanceof NextResponse) return doctor;
+  const clinicRejection = rejectClinicDoctor(await auth());
+  if (clinicRejection) return clinicRejection;
 
   const { sessionId } = await req.json();
   if (!sessionId) return NextResponse.json({ error: "sessionId requis" }, { status: 400 });

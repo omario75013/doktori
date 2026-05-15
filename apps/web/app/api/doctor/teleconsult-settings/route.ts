@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
+import { auth } from "@/lib/auth";
 import { requireDoctor } from "@/lib/doctor-auth";
+import { rejectClinicDoctor } from "@/lib/clinic-doctor-guard";
 import { db, doctors, doctorSchedules } from "@doktori/db";
 import { eq, count } from "drizzle-orm";
 import { invalidateDoctor } from "@/lib/cache";
@@ -35,6 +37,8 @@ export async function GET() {
 export async function PUT(req: Request) {
   const doctor = await requireDoctor();
   if (doctor instanceof NextResponse) return doctor;
+  const clinicRejection = rejectClinicDoctor(await auth());
+  if (clinicRejection) return clinicRejection;
 
   let body: unknown;
   try {

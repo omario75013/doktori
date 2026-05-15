@@ -29,6 +29,7 @@ import {
   X,
   ChevronLeft,
   ChevronRight,
+  Mail,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import type { LucideIcon } from "lucide-react";
@@ -51,12 +52,31 @@ type NavGroup = {
   items: NavItem[];
 };
 
+// Items hidden for clinic-created doctors (cannot manage personal business features)
+const CLINIC_DOCTOR_HIDDEN_HREFS = new Set([
+  "/cabinets",
+  "/wallet",
+  "/factures",
+  "/abonnement",
+  "/parrainage",
+  "/conventions",
+  "/domicile",
+  "/reseau",
+  "/reseau/referencements",
+  "/invitations",
+  "/teleconsultation",
+  "/sos-medecin",
+  "/verification",
+]);
+
 export function SidebarNav({
   userName: _userName,
   verificationStatus,
+  createdByClinicId,
 }: {
   userName?: string | null;
   verificationStatus?: string;
+  createdByClinicId?: string | null;
 }) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -64,6 +84,7 @@ export function SidebarNav({
   const [unreadMsg, setUnreadMsg] = useState(0);
   const [unreadStaff, setUnreadStaff] = useState(0);
   const [pendingRefs, setPendingRefs] = useState(0);
+  const [pendingInvitations, setPendingInvitations] = useState(0);
   const t = useTranslations("medecin.nav");
   const { hasFeature } = usePlan();
 
@@ -77,15 +98,17 @@ export function SidebarNav({
       try {
         // Messagerie now hosts peer-doctor chat (the patient ↔ doctor
         // surface was retired). The badge counts unread peer messages.
-        const [r1, r2, r3] = await Promise.all([
+        const [r1, r2, r3, r4] = await Promise.all([
           fetch("/api/doctor/peer-messages/unread-count", { cache: "no-store" }),
           fetch("/api/staff/conversations/unread", { cache: "no-store" }),
           fetch("/api/doctor/referrals/pending-count", { cache: "no-store" }),
+          fetch("/api/doctor/invitations/pending-count", { cache: "no-store" }),
         ]);
         if (!cancelled) {
           if (r1.ok) setUnreadMsg((await r1.json()).count ?? 0);
           if (r2.ok) setUnreadStaff((await r2.json()).count ?? 0);
           if (r3.ok) setPendingRefs((await r3.json()).count ?? 0);
+          if (r4.ok) setPendingInvitations((await r4.json()).count ?? 0);
         }
       } catch {
         /* silent */
@@ -121,6 +144,12 @@ export function SidebarNav({
         },
         { href: "/calendrier", label: t("calendrier"), icon: CalendarDays },
         { href: "/rendez-vous", label: t("rendezVous"), icon: CalendarClock },
+        {
+          href: "/invitations",
+          label: t("invitations"),
+          icon: Mail,
+          badge: pendingInvitations,
+        },
       ],
     },
     {
@@ -238,7 +267,7 @@ export function SidebarNav({
                 </p>
               )}
               <ul className="space-y-0.5">
-                {group.items.map((item) => {
+                {group.items.filter((item) => !createdByClinicId || !CLINIC_DOCTOR_HIDDEN_HREFS.has(item.href)).map((item) => {
                   const Icon = item.icon;
                   const active =
                     pathname === item.href || pathname.startsWith(item.href + "/");

@@ -8,6 +8,8 @@ export type SecretarySession = {
   /** The doctor ID this secretary is authorized to manage */
   doctorId: string;
   clinicId: string | null;
+  /** Phase 3: the doctor_practices row this secretary is scoped to (null = legacy / primary cabinet) */
+  practiceId: string | null;
 };
 
 /**
@@ -37,6 +39,7 @@ export async function requireSecretary(): Promise<SecretarySession | NextRespons
     name: session.user.name ?? "",
     doctorId,
     clinicId: session.user.clinicId ?? null,
+    practiceId: session.user.practiceId ?? null,
   };
 }
 

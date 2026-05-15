@@ -476,7 +476,11 @@
       "staff": "الفريق",
       "settings": "الإعدادات",
       "expandSidebar": "توسيع الشريط الجانبي",
-      "collapseSidebar": "طي الشريط الجانبي"
+      "collapseSidebar": "طي الشريط الجانبي",
+      "invitations": "دعوات العيادة"
+    },
+    "errors": {
+      "clinicDoctorForbidden": "هذه الميزة محجوزة للأطباء المستقلين"
     },
     "dashboard": {
       "title": "لوحة التحكم",
@@ -623,6 +627,7 @@
       "colMotif": "السبب",
       "colStatus": "الحالة",
       "colActions": "الإجراءات",
+      "roomLabel": "الغرفة",
       "actionConfirm": "تأكيد",
       "actionComplete": "مكتمل",
       "actionNoShow": "غائب",
@@ -1803,6 +1808,23 @@
       "fileNotUploaded": "(الملف لم يُرفَع)",
       "notProvided": "غير مُدخَل"
     },
+    "patientFiche": {
+      "clinicSharing": {
+        "title": "المشاركة مع العيادة/العيادات",
+        "hint": "تحكم في الأقسام المرئية لكل عيادة.",
+        "sections": {
+          "profile": "الملف الطبي",
+          "allergies": "الحساسية",
+          "vaccinations": "التطعيمات",
+          "analyses": "التحاليل",
+          "prescriptions": "الوصفات",
+          "certificates": "الشهادات",
+          "documents": "الوثائق",
+          "labOrders": "طلبات المختبر"
+        },
+        "saved": "تم الحفظ"
+      }
+    },
     "patientDetail": {
       "statusPending": "في الانتظار",
       "statusConfirmed": "مؤكد",
@@ -2098,6 +2120,16 @@
       "accepted": "تم قبول الدعوة",
       "declined": "تم رفض الدعوة",
       "error": "حدث خطأ"
+    },
+    "invitations": {
+      "title": "دعواتي",
+      "pending": "الدعوات في انتظار القبول",
+      "accept": "قبول",
+      "decline": "رفض",
+      "expiresAt": "تنتهي خلال {days} يوم/أيام",
+      "accepted": "تم قبول الدعوة",
+      "declined": "تم رفض الدعوة",
+      "emptyState": "لا توجد دعوات معلقة"
     }
   },
   "patientNotifications": {
@@ -2308,6 +2340,9 @@
       "dayThu": "خم",
       "dayFri": "جم",
       "daySat": "سب",
+      "cabinet": "المكتب",
+      "selectCabinet": "اختر مكتباً",
+      "moveCabinet": "نقل إلى هذا المكتب",
       "daySun": "أح",
       "noPatientFound": "لم يُعثر على مريض",
       "closed": "مغلق",
@@ -2440,11 +2475,24 @@
       "orders": "الطلبيات",
       "walkIn": "استقبال مباشر",
       "patients": "المرضى",
+      "analyses": "قائمة التحاليل",
+      "results": "النتائج",
+      "documents": "الوثائق",
+      "calendar": "الأجندة",
+      "schedule": "أوقات العمل",
+      "messages": "الرسائل",
+      "search": "البحث",
       "settings": "الإعدادات",
       "openMenu": "فتح القائمة",
       "closeMenu": "إغلاق القائمة",
       "logout": "تسجيل الخروج",
-      "loggingOut": "جارٍ تسجيل الخروج…"
+      "loggingOut": "جارٍ تسجيل الخروج…",
+      "badgeAdmin": "مسؤول",
+      "badgeTechnician": "تقني"
+    },
+    "staff": {
+      "badgeAdmin": "مسؤول",
+      "badgeTechnician": "تقني"
     },
     "dashboard": {
       "title": "لوحة التحكم",
@@ -2477,9 +2525,257 @@
       "title": "الإعدادات",
       "save": "حفظ",
       "saved": "تم حفظ التعديلات."
+    },
+    "documents": {
+      "shareInterLab": "مشاركة مع مختبر آخر",
+      "sharedByLab": "مشارَك من {labName}",
+      "noOtherLabs": "لا يوجد مختبر آخر موثق متاح.",
+      "shareSuccess": "تمت مشاركة الوثيقة بنجاح."
+    },
+    "order": {
+      "tabs": {
+        "patient": "المريض",
+        "demande": "الطلب",
+        "resultats": "النتائج",
+        "echange": "التبادل",
+        "historique": "السجل"
+      },
+      "internalRef": "المرجع الداخلي",
+      "specimenAt": "تاريخ أخذ العينة",
+      "expectedAt": "تاريخ النتيجة المتوقع",
+      "technician": "التقني المسؤول",
+      "resultSummary": "ملخص النتيجة",
+      "uploadResult": "رفع النتائج",
+      "sendToPatient": "إرسال إلى المريض",
+      "sendToDoctor": "إرسال إلى الطبيب"
+    },
+    "walkin": {
+      "form": {
+        "firstName": "الاسم الأول",
+        "lastName": "اسم العائلة",
+        "cin": "رقم بطاقة الهوية",
+        "phone": "رقم الهاتف",
+        "email": "البريد الإلكتروني",
+        "dob": "تاريخ الميلاد",
+        "gender": "الجنس",
+        "submit": "تسجيل"
+      },
+      "createOrder": "إنشاء طلبية الآن",
+      "selectTests": "اختيار التحاليل",
+      "urgency": "الأولوية",
+      "doctor": "الطبيب الآمر (اختياري)"
+    },
+    "search": {
+      "placeholder": "اسم المريض، رقم الهوية، المرجع…",
+      "sections": {
+        "patients": "المرضى",
+        "orders": "الطلبيات",
+        "documents": "الوثائق"
+      },
+      "empty": "لا توجد نتائج.",
+      "viewAll": "عرض الكل"
+    },
+    "messages": {
+      "title": "الرسائل",
+      "newConversation": "محادثة جديدة",
+      "target": {
+        "lab": "مختبر",
+        "doctor": "طبيب"
+      },
+      "search": "بحث…",
+      "composer": {
+        "placeholder": "اكتب رسالة…"
+      },
+      "send": "إرسال",
+      "unread": "غير مقروء",
+      "attach": "إرفاق ملف"
+    },
+    "analyses": {
+      "title": "قائمة التحاليل",
+      "add": "+ تحليل جديد",
+      "code": "الرمز",
+      "name": "الاسم",
+      "category": "الفئة",
+      "price": "السعر",
+      "duration": "المدة",
+      "status": "نشط",
+      "actions": "الإجراءات",
+      "inactive": "غير نشط",
+      "includeInactive": "تضمين غير النشطة",
+      "empty": "لا توجد تحاليل في القائمة.",
+      "edit": "تعديل",
+      "deactivate": "تعطيل",
+      "reactivate": "تفعيل",
+      "deleteConfirm": "تعطيل هذا التحليل؟"
+    },
+    "results": {
+      "title": "النتائج",
+      "search": "البحث عن مريض…",
+      "dateFrom": "من تاريخ",
+      "dateTo": "إلى تاريخ",
+      "empty": "لا توجد نتائج.",
+      "view": "عرض",
+      "share": "الطلبية",
+      "columns": {
+        "date": "التاريخ"
+      },
+      "patient": "المريض",
+      "doctor": "الطبيب",
+      "exams": "الفحوصات",
+      "technician": "التقني",
+      "ref": "المرجع",
+      "status": "الحالة",
+      "filters": {
+        "status": "الحالة"
+      }
+    },
+    "documents": {
+      "title": "الوثائق",
+      "tabs": {
+        "uploaded": "مُرفوعة",
+        "received": "مستلمة"
+      },
+      "upload": "رفع وثيقة",
+      "fileName": "الملف",
+      "patient": "البحث عن مريض…",
+      "category": "الفئة",
+      "share": "مشاركة",
+      "delete": "حذف",
+      "empty": "لا توجد وثائق."
+    },
+    "patient": {
+      "tabs": {
+        "apercu": "نظرة عامة",
+        "commandes": "الطلبيات",
+        "resultats": "النتائج",
+        "documents": "الوثائق",
+        "notes": "الملاحظات"
+      },
+      "age": "سنة",
+      "gender": "الجنس",
+      "bloodType": "فصيلة الدم",
+      "cin": "بطاقة التعريف",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "lastVisit": "آخر زيارة",
+      "totalOrders": "طلبيات",
+      "noOrders": "لا توجد طلبيات",
+      "noDocs": "لا توجد وثائق",
+      "noNotes": "لا توجد ملاحظات",
+      "notes": {
+        "title": "ملاحظات داخلية",
+        "pin": "تثبيت",
+        "unpin": "إلغاء التثبيت",
+        "edit": "تعديل",
+        "delete": "حذف",
+        "save": "حفظ",
+        "cancel": "إلغاء",
+        "internalHint": "ملاحظة داخلية (غير مرئية للطبيب أو المريض)",
+        "addNote": "إضافة ملاحظة داخلية",
+        "placeholder": "ملاحظة داخلية…"
+      },
+      "documents": {
+        "uploaded": "مُرفوعة من طرفنا",
+        "received": "مستلمة من مختبرات أخرى",
+        "share": "مشاركة",
+        "delete": "حذف",
+        "addFile": "إضافة وثيقة",
+        "sharedByLab": "مشاركة من مختبر",
+        "copyLink": "نسخ الرابط",
+        "viewFile": "عرض الملف"
+      },
+      "results": {
+        "title": "النتائج",
+        "addResult": "إضافة نتيجة",
+        "linkOrder": "ربط بطلبية موجودة",
+        "summary": "ملخص",
+        "file": "الملف",
+        "shareWithDoctor": "مشاركة مع الطبيب المحيل"
+      }
+    },
+    "schedule": {
+      "title": "أوقات العمل",
+      "day": "اليوم",
+      "opensAt": "وقت الفتح",
+      "closesAt": "وقت الإغلاق",
+      "closed": "مغلق",
+      "save": "حفظ",
+      "closedDays": "أيام الإغلاق الاستثنائية",
+      "addClosedDay": "إضافة إغلاق",
+      "date": "التاريخ",
+      "reason": "السبب",
+      "weekdays": {
+        "sun": "الأحد",
+        "mon": "الاثنين",
+        "tue": "الثلاثاء",
+        "wed": "الأربعاء",
+        "thu": "الخميس",
+        "fri": "الجمعة",
+        "sat": "السبت"
+      }
+    },
+    "agenda": {
+      "title": "الأجندة",
+      "prevWeek": "الأسبوع السابق",
+      "nextWeek": "الأسبوع التالي",
+      "today": "اليوم",
+      "viewWeek": "أسبوع",
+      "viewMonth": "شهر",
+      "legend": {
+        "specimen": "أخذ العينة",
+        "expected": "النتيجة المتوقعة",
+        "uploaded": "النتيجة مرفوعة",
+        "closed": "مغلق"
+      }
     }
   },
   "clinique": {
+    "dossier": {
+      "openDossier": "فتح الملف",
+      "tabOverview": "نظرة عامة",
+      "tabAllergies": "الحساسية",
+      "tabVaccins": "اللقاحات",
+      "tabAnalyses": "التحاليل",
+      "tabOrdonnances": "الوصفات",
+      "tabCertificates": "الشهادات",
+      "tabDocuments": "الوثائق",
+      "tabRdv": "المواعيد",
+      "tabLabOrders": "طلبات التحاليل",
+      "ageYears": "{years} سنة",
+      "noData": "لا توجد بيانات",
+      "gender": "الجنس",
+      "bloodType": "فصيلة الدم",
+      "labBadge": "مخبر",
+      "suppressedSection": "القسم غير مشارك من قبل الطبيب المعالج",
+      "treatingDoctors": "الأطباء المعالجون",
+      "documents": {
+        "shareInterClinic": "مشاركة مع عيادة أخرى",
+        "sharedByClinic": "مشارك من {name}",
+        "noOtherClinics": "لا توجد عيادات أخرى تتابع هذا المريض"
+      }
+    },
+    "patients": {
+      "newPatient": "مريض جديد",
+      "form": {
+        "firstName": "الاسم الأول",
+        "lastName": "اللقب",
+        "email": "البريد الإلكتروني",
+        "phone": "الهاتف",
+        "cin": "رقم بطاقة الهوية الوطنية",
+        "dob": "تاريخ الميلاد",
+        "gender": "الجنس",
+        "doctor": "الطبيب المعالج",
+        "shareDossier": "مشاركة الملف مع العيادة",
+        "firstRdvAt": "تاريخ أول موعد",
+        "submit": "إنشاء المريض",
+        "success": "تم إنشاء المريض بنجاح"
+      }
+    },
+    "login": {
+      "subtitleAffiliated": "الأطباء والمختبرات المرتبطة بعيادة يتصلون من هنا أيضاً.",
+      "msgClinicDoctor": "طبيب مرتبط بعيادة: قم بتسجيل الدخول هنا ببيانات اعتمادك.",
+      "msgClinicLab": "مختبر مرتبط بعيادة: قم بتسجيل الدخول هنا ببيانات اعتمادك."
+    },
     "nav": {
       "espace": "فضاء العيادة",
       "dashboard": "لوحة التحكم",
@@ -2490,13 +2786,388 @@
       "patients": "المرضى",
       "secretaires": "السكرتيرات",
       "statistiques": "الإحصائيات",
+      "finance": "المالية",
+      "qualite": "الجودة",
       "notes": "ملاحظات داخلية",
       "rapport": "التقرير",
+      "salleAttente": "غرفة الانتظار",
+      "labos": "تحاليل وأشعة",
+      "communication": "التواصل",
       "parametres": "الإعدادات",
+      "sites": "المواقع",
+      "salles": "الغرف",
       "openMenu": "فتح القائمة",
       "closeMenu": "إغلاق القائمة",
       "logout": "تسجيل الخروج",
-      "loggingOut": "جارٍ تسجيل الخروج…"
+      "loggingOut": "جارٍ تسجيل الخروج…",
+      "cnam": "CNAM",
+      "audit": "سجل التدقيق",
+      "parametresLabos": "مختبرات وأشعة"
+    },
+    "salleAttente": {
+      "title": "غرفة الانتظار",
+      "subtitle": "المرضى في الانتظار حالياً",
+      "totalWaiting": "{count} مرضى",
+      "avgWait": "متوسط الانتظار {min} د",
+      "empty": "لا أحد في الانتظار",
+      "nav": "غرفة الانتظار"
+    },
+    "communication": {
+      "title": "التواصل",
+      "nav": "التواصل",
+      "subtitle": "إرسال رسالة جماعية لمرضاك",
+      "filterDoctor": "الطبيب",
+      "filterAllDoctors": "جميع الأطباء",
+      "filterLastVisit": "آخر زيارة",
+      "filterMotif": "السبب",
+      "filterFutureRdv": "بموعد قادم",
+      "previewButton": "معاينة المستلمين",
+      "recipientsCount": "{count} مستلم",
+      "messageLabel": "الرسالة",
+      "charLimit": "الأحرف: {n}/160",
+      "send": "إرسال",
+      "confirmTitle": "تأكيد الإرسال",
+      "confirmBody": "إرسال هذه الرسالة إلى {count} مريض؟",
+      "confirmYes": "إرسال الآن",
+      "recentCampaigns": "الحملات الأخيرة",
+      "empty": "لا توجد حملات مرسلة",
+      "optoutLabel": "إيقاف: "
+    },
+    "labos": {
+      "title": "طلبات التحاليل",
+      "subtitle": "جميع الطلبات المرسلة من قبل أطبائك",
+      "nav": "تحاليل وأشعة",
+      "kpiPending": "قيد الانتظار",
+      "kpiThisMonth": "مكتملة هذا الشهر",
+      "kpiToday": "اليوم",
+      "kpiTopDoctor": "أعلى طبيب",
+      "filterDoctor": "الطبيب",
+      "filterAll": "الكل",
+      "filterStatus": "الحالة",
+      "filterUrgency": "الاستعجال",
+      "colPatient": "المريض",
+      "colDoctor": "الطبيب",
+      "colLab": "المخبر",
+      "colTests": "التحاليل",
+      "colStatus": "الحالة",
+      "colCreated": "التاريخ",
+      "empty": "لا توجد طلبات",
+      "status": {
+        "pending": "قيد الانتظار",
+        "collected": "تم الأخذ",
+        "completed": "مكتمل",
+        "cancelled": "ملغى"
+      },
+      "urgency": {
+        "routine": "روتيني",
+        "urgent": "عاجل"
+      },
+      "tabs": {
+        "sent": "المرسلة",
+        "received": "المستلمة"
+      },
+      "columns": {
+        "lab": "المختبر"
+      }
+    },
+    "sites": {
+      "title": "المواقع",
+      "nav": "المواقع",
+      "add": "موقع جديد",
+      "name": "الاسم",
+      "address": "العنوان",
+      "city": "المدينة",
+      "phone": "الهاتف",
+      "isPrimary": "الموقع الرئيسي",
+      "save": "حفظ",
+      "delete": "حذف",
+      "empty": "لا توجد مواقع مهيأة."
+    },
+    "rooms": {
+      "title": "الغرف",
+      "nav": "الغرف",
+      "add": "غرفة جديدة",
+      "name": "الاسم",
+      "color": "اللون",
+      "active": "نشط",
+      "selectSite": "اختر موقعاً",
+      "empty": "لا توجد غرف مهيأة."
+    },
+    "appointments": {
+      "colRoom": "الغرفة",
+      "assignRoom": "تعيين غرفة"
+    },
+    "planning": {
+      "filters": {
+        "saved": "الفلاتر المحفوظة",
+        "activeFilters": "{count} نشط",
+        "reset": "إعادة تعيين"
+      }
+    },
+    "rdv": {
+      "pagination": {
+        "prev": "السابق",
+        "next": "التالي",
+        "page": "صفحة",
+        "of": "من",
+        "results": "نتائج",
+        "perPage": "لكل صفحة"
+      }
+    },
+    "qualite": {
+      "title": "الجودة",
+      "nav": "الجودة",
+      "subtitle": "الأداء والرضا حسب الطبيب",
+      "kpiAvgRating": "متوسط التقييم",
+      "kpiNoShow": "معدل الغياب",
+      "kpiTotalRdv": "إجمالي المواعيد",
+      "kpiReviews": "التقييمات",
+      "colDoctor": "الطبيب",
+      "colSpecialty": "التخصص",
+      "colRating": "التقييم",
+      "colNoShow": "الغياب",
+      "colCompletion": "مكتمل",
+      "colCancel": "ملغى",
+      "colTotal": "المواعيد",
+      "colSatisfaction": "الرضا",
+      "topBadge": "الأفضل",
+      "monthlyTrend": "الاتجاه 6 أشهر",
+      "print": "طباعة",
+      "exportCsv": "CSV",
+      "exportXlsx": "Excel"
+    },
+    "cnam": {
+      "title": "CNAM",
+      "nav": "CNAM",
+      "subtitle": "متابعة بطاقات العلاج",
+      "kpiSubmitted": "مقدّمة",
+      "kpiApproved": "موافق عليها",
+      "kpiPaid": "مدفوعة",
+      "kpiRejected": "مرفوضة",
+      "kpiPending": "المبلغ المعلّق",
+      "colDate": "التاريخ",
+      "colPatient": "المريض",
+      "colDoctor": "الطبيب",
+      "colAmount": "المبلغ",
+      "colStatus": "الحالة",
+      "colDays": "أيام",
+      "colPaidAt": "تاريخ الدفع",
+      "statusSubmitted": "مقدّمة",
+      "statusApproved": "موافق عليها",
+      "statusPaid": "مدفوعة",
+      "statusRejected": "مرفوضة"
+    },
+    "finance": {
+      "title": "المالية",
+      "nav": "المالية",
+      "subtitle": "الإيرادات والمدفوعات و CNAM",
+      "kpiTotal": "إجمالي الإيرادات",
+      "kpiPaid": "محصّل",
+      "kpiPending": "قيد الانتظار",
+      "kpiCnam": "CNAM قيد الانتظار",
+      "kpiRefunds": "المبالغ المرتجعة",
+      "vsPrev": "مقارنة بالفترة السابقة",
+      "byDoctor": "حسب الطبيب",
+      "byMethod": "حسب طريقة الدفع",
+      "byType": "حسب النوع",
+      "monthlyTrend": "الاتجاه الشهري",
+      "details": "التفاصيل",
+      "presetThisMonth": "هذا الشهر",
+      "presetLastMonth": "الشهر الماضي",
+      "presetThisQuarter": "هذا الفصل",
+      "presetThisYear": "هذه السنة",
+      "presetCustom": "مخصص",
+      "print": "طباعة",
+      "exportCsv": "تصدير CSV",
+      "exportXlsx": "تصدير XLSX"
+    },
+    "audit": {
+      "title": "سجل التدقيق",
+      "nav": "سجل التدقيق",
+      "subtitle": "جميع الإجراءات على عيادتك",
+      "filterAction": "الإجراء",
+      "filterActor": "الفاعل",
+      "filterAll": "الكل",
+      "actorClinic": "العيادة",
+      "actorDoctor": "الطبيب",
+      "actorSecretary": "السكرتير",
+      "actorAdmin": "المسؤول",
+      "metadataLabel": "التفاصيل",
+      "empty": "لا توجد أحداث",
+      "exportCsv": "تصدير CSV",
+      "actionLabels": {
+        "doctor_invite": "دعوة طبيب",
+        "doctor_remove": "إزالة طبيب",
+        "note_create": "إنشاء ملاحظة",
+        "note_update": "تعديل ملاحظة",
+        "note_delete": "حذف ملاحظة",
+        "rdv_update": "تعديل موعد",
+        "rdv_status_change": "تغيير حالة موعد",
+        "room_assign": "تعيين غرفة",
+        "sms_bulk_send": "إرسال رسائل جماعية",
+        "site_create": "إنشاء موقع",
+        "site_update": "تعديل موقع",
+        "site_delete": "حذف موقع",
+        "room_create": "إنشاء غرفة",
+        "room_update": "تعديل غرفة",
+        "room_delete": "حذف غرفة"
+      }
+    },
+    "dashboard": {
+      "title": "لوحة التحكم",
+      "subtitle": "نظرة عامة على العيادة",
+      "refresh": "تحديث",
+      "kpi": {
+        "rdvToday": "مواعيد اليوم",
+        "noShow": "نسبة الغياب",
+        "wait": "متوسط الانتظار",
+        "revenue": "إيرادات اليوم",
+        "cnam": "CNAM معلقة",
+        "newPatients": "مرضى جدد",
+        "vsLastWeek": "مقارنة بالأسبوع الماضي",
+        "vsYesterday": "مقارنة بالأمس",
+        "target": "الهدف"
+      },
+      "quickActions": {
+        "newRdv": "موعد جديد",
+        "newPatient": "مريض جديد",
+        "smsRappel": "رسالة تذكير",
+        "internalNote": "ملاحظة داخلية",
+        "recallHta": "استدعاء ضغط الدم"
+      },
+      "pipeline": {
+        "title": "قائمة اليوم",
+        "attendus": "منتظرون",
+        "arrives": "وصلوا",
+        "enConsultation": "في الاستشارة",
+        "termines": "منتهون"
+      },
+      "inbox": {
+        "title": "صندوق الوارد",
+        "labsUnread": "نتائج المختبرات",
+        "cnamRejected": "CNAM مرفوضة",
+        "pendingInvites": "دعوات معلقة",
+        "docsToValidate": "وثائق للمراجعة",
+        "labsAwaitingResults": "مختبرات داخلية بانتظار النتائج"
+      },
+      "alerts": {
+        "title": "تنبيهات",
+        "birthdays": "أعياد الميلاد",
+        "doctorsLate": "أطباء متأخرون",
+        "smsCreditLow": "رصيد SMS منخفض",
+        "doctorsOff": "أطباء في إجازة",
+        "none": "لا تنبيهات اليوم"
+      },
+      "charts": {
+        "rdv7d": "المواعيد — آخر 7 أيام",
+        "revenue30d": "الإيرادات — آخر 30 يوم",
+        "topMotifs": "أبرز الأسباب (30 يوم)"
+      },
+      "occupancy": {
+        "title": "الإشغال الأسبوعي",
+        "legend": "الإشغال",
+        "days": {
+          "mon": "الإثنين",
+          "tue": "الثلاثاء",
+          "wed": "الأربعاء",
+          "thu": "الخميس",
+          "fri": "الجمعة",
+          "sat": "السبت",
+          "sun": "الأحد"
+        }
+      },
+      "forecast": {
+        "title": "توقعات 7 أيام القادمة",
+        "rdvConfirmed": "مواعيد مؤكدة",
+        "revenueExpected": "إيرادات متوقعة"
+      },
+      "empty": {
+        "noDoctors": "لا يوجد أطباء في هذه العيادة",
+        "addFirstDoctor": "إضافة أول طبيب"
+      }
+    },
+    "medecins": {
+      "inviteExisting": "دعوة طبيب موجود",
+      "inviteNew": "إنشاء طبيب جديد",
+      "tabs": {
+        "existing": "طبيب موجود",
+        "new": "طبيب جديد"
+      },
+      "form": {
+        "firstName": "الاسم الأول",
+        "lastName": "اسم العائلة",
+        "email": "البريد الإلكتروني",
+        "phone": "الهاتف",
+        "specialty": "التخصص",
+        "fee": "أتعاب الاستشارة (دت)",
+        "send": "إرسال الدعوة"
+      },
+      "invitationPending": "تم إرسال الدعوة — في انتظار القبول",
+      "accepted": "نشط",
+      "declined": "تم رفض الدعوة"
+    },
+    "secretaires": {
+      "title": "السكرتيرات",
+      "subtitle": "إدارة سكرتيرات العيادة",
+      "addButton": "إضافة سكرتيرة",
+      "newTitle": "سكرتيرة جديدة",
+      "cabinet": "المكتب",
+      "selectCabinet": "اختر مكتباً",
+      "cabinetHint": "ستكون السكرتيرة مقيدة بهذا المكتب فقط.",
+      "noCabinets": "لا يوجد مكتب مرتبط بهذا الطبيب في العيادة."
+    },
+    "labs": {
+      "title": "مختبرات وأشعة داخلية",
+      "subtitle": "إدارة المختبرات ومراكز الأشعة الداخلية للعيادة.",
+      "addButton": "إضافة مختبر / مركز أشعة",
+      "empty": "لا يوجد مختبر داخلي — أضف أول مختبر لك.",
+      "edit": "تعديل",
+      "delete": "حذف",
+      "confirmDelete": "تأكيد حذف",
+      "success": "تم حفظ المختبر بنجاح.",
+      "kind": {
+        "lab": "مختبر",
+        "radiology": "أشعة"
+      },
+      "form": {
+        "name": "الاسم",
+        "email": "البريد الإلكتروني",
+        "phone": "الهاتف",
+        "address": "العنوان",
+        "city": "المدينة",
+        "services": "الخدمات",
+        "kind": "النوع",
+        "submit": "حفظ"
+      },
+      "users": {
+        "title": "مستخدمو المختبر",
+        "addButton": "إضافة مستخدم",
+        "emptyState": "لا يوجد مستخدمون — أضف أول حساب موظف.",
+        "deactivate": "تعطيل",
+        "reactivate": "إعادة تفعيل",
+        "deactivated": "تم تعطيل المستخدم",
+        "reactivated": "تم إعادة تفعيل المستخدم",
+        "deleteConfirm": "حذف المستخدم",
+        "role": {
+          "admin": "مسؤول",
+          "technician": "تقني"
+        },
+        "columns": {
+          "name": "الاسم",
+          "email": "البريد الإلكتروني",
+          "role": "الدور",
+          "status": "الحالة",
+          "lastLogin": "آخر تسجيل دخول",
+          "actions": "الإجراءات"
+        },
+        "form": {
+          "firstName": "الاسم الأول",
+          "lastName": "اسم العائلة",
+          "email": "البريد الإلكتروني",
+          "role": "الدور",
+          "submit": "إنشاء الحساب"
+        }
+      }
     }
   },
   "admin": {

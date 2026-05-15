@@ -7,6 +7,12 @@ const nextConfig: NextConfig = {
   output: "standalone",
   transpilePackages: ["@doktori/db", "@doktori/shared", "@doktori/validation"],
   poweredByHeader: false,
+  // Disable App Router client-side cache for dynamic segments. Without this,
+  // back-nav serves the cached pre-effect render (loading=true), leaving the
+  // page stuck on a spinner until manual refresh.
+  experimental: {
+    staleTimes: { dynamic: 0, static: 30 },
+  },
   images: {
     remotePatterns: [
       { protocol: "https", hostname: "i.pravatar.cc" },

@@ -5,6 +5,7 @@ import { getStaffFromRequest } from "@/lib/staff-auth";
 export type DoctorSession = {
   id: string;
   email: string;
+  createdByClinicId?: string | null;
 };
 
 /**
@@ -22,7 +23,11 @@ export async function requireDoctor(
   // 1. NextAuth cookie
   const session = await auth();
   if (session?.user?.id && session.user.role === "doctor") {
-    return { id: session.user.id, email: session.user.email ?? "" };
+    return {
+      id: session.user.id,
+      email: session.user.email ?? "",
+      createdByClinicId: ((session.user as unknown) as Record<string, unknown>).createdByClinicId as string | null ?? null,
+    };
   }
 
   // 2. Bearer JWT fallback

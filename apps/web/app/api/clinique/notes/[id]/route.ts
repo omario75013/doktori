@@ -3,6 +3,7 @@ import { z } from "zod";
 import { db, clinicNotes } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 import { requireClinic } from "@/lib/clinic-auth";
+import { logClinicAudit } from "@/lib/audit";
 
 const patchSchema = z.object({
   title: z.string().max(255).optional(),
@@ -46,6 +47,15 @@ export async function PATCH(
     return NextResponse.json({ error: "Note introuvable" }, { status: 404 });
   }
 
+  void logClinicAudit({
+    clinicId: clinic.id,
+    actorType: "clinic",
+    actorId: clinic.id,
+    action: "note.update",
+    targetType: "note",
+    targetId: id,
+  });
+
   return NextResponse.json({ note });
 }
 
@@ -66,6 +76,15 @@ export async function DELETE(
   if (!deleted) {
     return NextResponse.json({ error: "Note introuvable" }, { status: 404 });
   }
+
+  void logClinicAudit({
+    clinicId: clinic.id,
+    actorType: "clinic",
+    actorId: clinic.id,
+    action: "note.delete",
+    targetType: "note",
+    targetId: id,
+  });
 
   return NextResponse.json({ success: true });
 }

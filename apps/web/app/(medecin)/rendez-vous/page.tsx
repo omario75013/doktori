@@ -23,6 +23,7 @@ type Appointment = {
   patientNoShowCount: number;
   patientLastMinuteCancelCount: number;
   clinicName: string | null;
+  clinicRoomId: string | null;
 };
 
 type Practice = {
@@ -32,7 +33,16 @@ type Practice = {
   kind: "cabinet" | "clinic";
   isPrimary: boolean;
   isActive: boolean;
+  clinicId: string | null;
   clinicName: string | null;
+};
+
+type ClinicRoom = {
+  id: string;
+  name: string;
+  color: string;
+  siteId: string;
+  siteName?: string;
 };
 
 type PatientOption = {
@@ -127,6 +137,9 @@ function NewAppointmentModal({
   }>>([]);
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [customTime, setCustomTime] = useState(false);
+  const [clinicRoomId, setClinicRoomId] = useState<string>("");
+  const [clinicRooms, setClinicRooms] = useState<ClinicRoom[]>([]);
+  const [clinicRoomsLoading, setClinicRoomsLoading] = useState(false);
   useEffect(() => {
     if (!date || customTime) return;
     let cancelled = false;
@@ -158,6 +171,32 @@ function NewAppointmentModal({
     };
   }, [date, customTime]);
 
+  // Detect if selected slot belongs to a clinic practice and fetch rooms
+  useEffect(() => {
+    const slot = availableSlots.find((s) => s.startTime === startTime);
+    const practiceId = slot?.practiceId;
+    if (!practiceId) { setClinicRooms([]); return; }
+    let cancelled = false;
+    setClinicRoomsLoading(true);
+    // Get practice detail to check clinicId
+    fetch("/api/doctor/practices", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((practices: Practice[]) => {
+        if (cancelled) return;
+        const practice = practices.find((p) => p.id === practiceId);
+        if (!practice?.clinicId) { setClinicRooms([]); return; }
+        return fetch(`/api/doctor/clinic-rooms?clinicId=${practice.clinicId}`)
+          .then((r) => (r.ok ? r.json() : { rooms: [] }))
+          .then((data: { rooms: ClinicRoom[] }) => {
+            if (!cancelled) setClinicRooms(data.rooms ?? []);
+          });
+      })
+      .catch(() => setClinicRooms([]))
+      .finally(() => { if (!cancelled) setClinicRoomsLoading(false); });
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startTime, availableSlots]);
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
@@ -176,6 +215,7 @@ function NewAppointmentModal({
           startsAt: startsAt.toISOString(),
           type,
           reason: reason.trim() || undefined,
+          clinicRoomId: clinicRoomId || undefined,
         }),
       });
       // Server may return a non-JSON error page on a 500. Read as text
@@ -396,6 +436,31 @@ function NewAppointmentModal({
               className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
             />
           </div>
+
+          {/* Clinic room dropdown — only when the selected slot's practice is clinic-linked */}
+          {(clinicRoomsLoading || clinicRooms.length > 0) && (
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
+                Salle
+              </label>
+              {clinicRoomsLoading ? (
+                <p className="text-xs text-gray-400">Chargement des salles…</p>
+              ) : (
+                <select
+                  value={clinicRoomId}
+                  onChange={(e) => setClinicRoomId(e.target.value)}
+                  className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
+                >
+                  <option value="">— Aucune salle —</option>
+                  {clinicRooms.map((r) => (
+                    <option key={r.id} value={r.id}>
+                      {r.siteName ? `${r.siteName} › ${r.name}` : r.name}
+                    </option>
+                  ))}
+                </select>
+              )}
+            </div>
+          )}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 
@@ -1282,6 +1347,8 @@ function EditAppointmentModal({
     (appointment.type as "cabinet" | "teleconsult" | "domicile") ?? "cabinet"
   );
   const [reason, setReason] = useState(appointment.reason ?? "");
+  const [clinicRoomId, setClinicRoomId] = useState<string>(appointment.clinicRoomId ?? "");
+  const [clinicRooms, setClinicRooms] = useState<ClinicRoom[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -1312,6 +1379,27 @@ function EditAppointmentModal({
     }
     return out;
   }
+
+  // Load clinic rooms for the appointment's practice if it's clinic-linked
+  useEffect(() => {
+    let cancelled = false;
+    fetch("/api/doctor/practices", { credentials: "include" })
+      .then((r) => (r.ok ? r.json() : []))
+      .then((practices: Practice[]) => {
+        if (cancelled) return;
+        // Find the practice linked to this appointment
+        const clinicPractice = practices.find((p) => p.clinicId && p.isActive);
+        if (!clinicPractice?.clinicId) { setClinicRooms([]); return; }
+        return fetch(`/api/doctor/clinic-rooms?clinicId=${clinicPractice.clinicId}`)
+          .then((r) => (r.ok ? r.json() : { rooms: [] }))
+          .then((data: { rooms: ClinicRoom[] }) => {
+            if (!cancelled) setClinicRooms(data.rooms ?? []);
+          });
+      })
+      .catch(() => setClinicRooms([]));
+    return () => { cancelled = true; };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (!date) return;
@@ -1382,6 +1470,7 @@ function EditAppointmentModal({
           endsAt: newEnd.toISOString(),
           type,
           reason: reason.trim() === "" ? null : reason.trim(),
+          clinicRoomId: clinicRoomId || null,
         }),
       });
       const data = await res.json();
@@ -1541,6 +1630,26 @@ function EditAppointmentModal({
               placeholder={t("reasonFieldPlaceholder")}
             />
           </div>
+
+          {clinicRooms.length > 0 && (
+            <div>
+              <label className="block text-xs font-semibold text-gray-600 mb-1">
+                Salle
+              </label>
+              <select
+                value={clinicRoomId}
+                onChange={(e) => setClinicRoomId(e.target.value)}
+                className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              >
+                <option value="">— Aucune salle —</option>
+                {clinicRooms.map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.siteName ? `${r.siteName} › ${r.name}` : r.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
 
           {error && <p className="text-sm text-red-600">{error}</p>}
 

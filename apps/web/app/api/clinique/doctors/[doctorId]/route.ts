@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { db, clinicDoctors } from "@doktori/db";
 import { and, eq } from "drizzle-orm";
 import { requireClinic } from "@/lib/clinic-auth";
+import { logClinicAudit } from "@/lib/audit";
 
 export async function DELETE(
   _req: Request,
@@ -25,6 +26,15 @@ export async function DELETE(
     if (!result) {
       return NextResponse.json({ error: "Association introuvable" }, { status: 404 });
     }
+
+    void logClinicAudit({
+      clinicId: clinic.id,
+      actorType: "clinic",
+      actorId: clinic.id,
+      action: "doctor.remove",
+      targetType: "doctor",
+      targetId: doctorId,
+    });
 
     return NextResponse.json({ success: true });
   } catch (e) {

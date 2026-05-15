@@ -94,6 +94,7 @@ export async function AppTopBar({ role, title, showNotifications }: Props) {
           name={user?.name ?? null}
           email={user?.email ?? null}
           image={user?.image ?? null}
+          createdByClinicId={(user as { createdByClinicId?: string | null } | undefined)?.createdByClinicId ?? null}
         />
       </div>
     </header>

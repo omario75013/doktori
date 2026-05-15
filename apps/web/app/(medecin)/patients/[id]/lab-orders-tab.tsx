@@ -35,6 +35,8 @@ type Lab = {
   name: string;
   city: string;
   services: string[];
+  kind?: string;
+  clinicId?: string | null;
 };
 
 function StatusBadge({ status, t }: { status: string; t: ReturnType<typeof useTranslations> }) {
@@ -210,19 +212,26 @@ function NewOrderModal({
   onCreated: (order: LabOrder) => void;
 }) {
   const t = useTranslations("medecin.patients.labOrders");
-  const [labs, setLabs] = useState<Lab[]>([]);
+  const [inHouseLabs, setInHouseLabs] = useState<Lab[]>([]);
+  const [externalLabs, setExternalLabs] = useState<Lab[]>([]);
   const [labId, setLabId] = useState<string>("");
   const [testsRaw, setTestsRaw] = useState("");
   const [instructions, setInstructions] = useState("");
   const [urgency, setUrgency] = useState<"routine" | "urgent">("routine");
   const [saving, setSaving] = useState(false);
 
-  // Lazy-load labs list.
+  // Lazy-load labs list with in-house priority.
   useEffect(() => {
-    fetch("/api/labs/list")
+    fetch("/api/labs/list?segment=true")
       .then((r) => (r.ok ? r.json() : null))
-      .then((data: { labs: Lab[] } | null) => {
-        if (data?.labs) setLabs(data.labs);
+      .then((data: { inHouse?: Lab[]; external?: Lab[]; labs?: Lab[] } | null) => {
+        if (!data) return;
+        if (data.inHouse !== undefined || data.external !== undefined) {
+          setInHouseLabs(data.inHouse ?? []);
+          setExternalLabs(data.external ?? []);
+        } else if (data.labs) {
+          setExternalLabs(data.labs);
+        }
       })
       .catch(() => {});
   }, []);
@@ -294,11 +303,24 @@ function NewOrderModal({
               className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             >
               <option value="">{t("anyLab")}</option>
-              {labs.map((lab) => (
-                <option key={lab.id} value={lab.id}>
-                  {lab.name} — {lab.city}
-                </option>
-              ))}
+              {inHouseLabs.length > 0 && (
+                <optgroup label="— Labos de la clinique —">
+                  {inHouseLabs.map((lab) => (
+                    <option key={lab.id} value={lab.id}>
+                      {lab.name} — {lab.city}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
+              {externalLabs.length > 0 && (
+                <optgroup label={inHouseLabs.length > 0 ? "— Labos externes —" : ""}>
+                  {externalLabs.map((lab) => (
+                    <option key={lab.id} value={lab.id}>
+                      {lab.name} — {lab.city}
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
           </div>
 

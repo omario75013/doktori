@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { signIn } from "next-auth/react";
+import { signIn, signOut } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { FlaskConical, Mail, Lock, ArrowRight, AlertCircle } from "lucide-react";
@@ -18,17 +18,43 @@ export default function LaboratoireLoginPage() {
     setError(null);
     setLoading(true);
     try {
-      const result = await signIn("lab-credentials", {
+      // Try multi-user lab account first, then fall back to legacy single-account.
+      // Pass callbackUrl so a successful signIn redirects to the dashboard rather
+      // than back to /laboratoire-login (which makes the client think it failed).
+      const succeeded = (r: { error?: string | null; url?: string | null } | undefined) =>
+        !!r && !r.error && !!r.url && !r.url.includes("/laboratoire-login");
+      let result = await signIn("lab-user-credentials", {
         email,
         password,
         redirect: false,
+        callbackUrl: "/laboratoire/dashboard",
       });
-      if (result?.error) {
+      if (!succeeded(result)) {
+        result = await signIn("lab-credentials", {
+          email,
+          password,
+          redirect: false,
+          callbackUrl: "/laboratoire/dashboard",
+        });
+      }
+      if (!succeeded(result)) {
         setError(
           "Connexion refusée. Vérifiez vos identifiants — si votre compte n'a pas encore été vérifié par un administrateur, l'accès est temporairement bloqué.",
         );
       } else {
-        router.push("/laboratoire/dashboard");
+        // B4: block clinic-attached labs from standalone lab login
+        const sessionRes = await fetch("/api/auth/session");
+        if (sessionRes.ok) {
+          const sessionData = (await sessionRes.json()) as { user?: { parentClinicId?: string | null } };
+          if (sessionData.user?.parentClinicId) {
+            await signOut({ redirect: false });
+            window.location.href = "/clinique-login?msg=clinic-lab";
+            return;
+          }
+        }
+        // Hard-navigate so the new session cookie is picked up by the server-rendered
+        // layout (router.push keeps the RSC cache and the layout may still see no session).
+        window.location.href = "/laboratoire/dashboard";
       }
     } catch {
       setError("Une erreur est survenue. Veuillez réessayer.");

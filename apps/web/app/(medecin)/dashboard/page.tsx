@@ -102,7 +102,7 @@ export default async function DashboardPage({
   // Fetch doctor consultation mode, verification status + teleconsult stats + new quick stats
   const [doctorRow, teleconsultCountRow, walletRow, smsUsageData, totalPatientsRow, monthStatsRow, recentActivityRows] = await Promise.all([
     db.execute(
-      sql`SELECT consultation_mode, verification_status, verification_note, average_rating, onboarding_tour_completed_at, onboarding_tour_skipped FROM doctors WHERE id = ${doctorId} LIMIT 1`
+      sql`SELECT consultation_mode, verification_status, verification_note, average_rating, onboarding_tour_completed_at, onboarding_tour_skipped, created_by_clinic_id FROM doctors WHERE id = ${doctorId} LIMIT 1`
     ),
     db.execute(
       sql`SELECT COUNT(*) AS count FROM appointments WHERE doctor_id = ${doctorId} AND type = 'teleconsult' AND starts_at >= ${monthStart.toISOString()}`
@@ -142,9 +142,11 @@ export default async function DashboardPage({
     average_rating: number | null;
     onboarding_tour_completed_at: string | null;
     onboarding_tour_skipped: boolean | null;
+    created_by_clinic_id: string | null;
   };
   const drRow = ((doctorRow as unknown as DoctorRowType[])[0]);
   const consultationMode = drRow?.consultation_mode ?? "cabinet";
+  const isClinicDoctor = !!drRow?.created_by_clinic_id;
   const verificationStatus = drRow?.verification_status ?? "pending";
   const verificationNote = drRow?.verification_note ?? null;
   const averageRating = Number(drRow?.average_rating ?? 0);
@@ -188,10 +190,11 @@ export default async function DashboardPage({
   return (
     <>
       <OnboardingTour enabled={tourEnabled} />
-      <ClinicInvitationsBanner />
+      {!isClinicDoctor && <ClinicInvitationsBanner />}
       <DashboardClient
       rangeDays={rangeDays}
       doctorName={session.user.name ?? "Médecin"}
+      isClinicDoctor={isClinicDoctor}
       todayCount={todayAppts.length}
       toConfirm={toConfirm}
       noShowCount={monthNoShows.length}
