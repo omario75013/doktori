@@ -16,7 +16,10 @@ import {
   Plane,
   CircleDot,
   UserCog,
+  Eye,
+  EyeOff,
 } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   SECTIONS,
   DEFAULT_PERMISSIONS,
@@ -501,6 +504,7 @@ function AddSecretaryDialog({
   const [practices, setPractices] = useState<Array<{ id: string; name: string; city: string; isPrimary: boolean; clinicId: string | null; clinicName: string | null }>>([]);
   const [permissions, setPermissions] = useState<SecretaryPermissions>(DEFAULT_PERMISSIONS);
   const [submitting, setSubmitting] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     fetch("/api/doctor/practices")
@@ -566,13 +570,30 @@ function AddSecretaryDialog({
             <Input value={form.name} onChange={(v) => setForm({ ...form, name: v })} required />
           </Field>
           <Field label={t("fieldPhone")}>
-            <Input value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
+            <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
           </Field>
           <Field label={t("fieldEmail")}>
             <Input type="email" value={form.email} onChange={(v) => setForm({ ...form, email: v })} required />
           </Field>
           <Field label={t("fieldPassword")}>
-            <Input type="password" value={form.password} onChange={(v) => setForm({ ...form, password: v })} required />
+            <div className="relative">
+              <input
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                required
+                className="w-full h-10 rounded-xl border border-border px-3 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword((s) => !s)}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
+                aria-label={showPassword ? "Masquer" : "Afficher"}
+                tabIndex={-1}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
+            </div>
           </Field>
           <Field label={t("fieldDateOfBirth")}>
             <Input type="date" value={form.dateOfBirth} onChange={(v) => setForm({ ...form, dateOfBirth: v })} />

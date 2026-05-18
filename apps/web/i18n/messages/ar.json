@@ -1486,6 +1486,8 @@
       "fieldYearsExp": "سنوات الخبرة",
       "fieldSalary": "الراتب الشهري (دت)",
       "fieldDaysOff": "أيام الإجازة / الشهر",
+      "cabinet": "العيادة",
+      "selectCabinet": "اختر عيادة",
       "daySun": "أح",
       "dayMon": "إث",
       "dayTue": "ثل",

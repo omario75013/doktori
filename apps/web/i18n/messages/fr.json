@@ -1486,6 +1486,8 @@
       "fieldYearsExp": "Années d'expérience",
       "fieldSalary": "Salaire mensuel (DT)",
       "fieldDaysOff": "Jours de congé / mois",
+      "cabinet": "Cabinet",
+      "selectCabinet": "Choisir un cabinet",
       "daySun": "Dim",
       "dayMon": "Lun",
       "dayTue": "Mar",

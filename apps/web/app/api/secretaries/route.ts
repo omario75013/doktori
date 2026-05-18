@@ -1,7 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { z } from "zod";
 import { requireAuth } from "@/lib/require-auth";
-import { db, secretaries, doctorPractices } from "@doktori/db";
+import { db, secretaries, doctorPractices, patients, doctors, clinics, labs, labUsers } from "@doktori/db";
 import { eq, and } from "drizzle-orm";
 import { hash } from "bcryptjs";
 import { SECTIONS, DEFAULT_PERMISSIONS, parsePermissions } from "@/lib/secretary-permissions";
@@ -80,15 +80,22 @@ export async function POST(req: NextRequest) {
 
   const emailLower = parsed.data.email.toLowerCase().trim();
 
-  // Pre-check email uniqueness — gives a clean 409 even if the DB index name
-  // differs across environments (the catch below also handles the race).
-  const [dupe] = await db
-    .select({ id: secretaries.id })
-    .from(secretaries)
-    .where(eq(secretaries.email, emailLower))
-    .limit(1);
-  if (dupe) {
-    return NextResponse.json({ error: "Cet email est déjà utilisé" }, { status: 409 });
+  // Cross-table email uniqueness — an email used by ANY actor (patient, doctor,
+  // clinic, lab, lab_user, or another secretary) would cause login ambiguity
+  // and confusion. Reject early with a clean 409.
+  const [secDupe, patDupe, docDupe, cliDupe, labDupe, luDupe] = await Promise.all([
+    db.select({ id: secretaries.id }).from(secretaries).where(eq(secretaries.email, emailLower)).limit(1),
+    db.select({ id: patients.id }).from(patients).where(eq(patients.email, emailLower)).limit(1),
+    db.select({ id: doctors.id }).from(doctors).where(eq(doctors.email, emailLower)).limit(1),
+    db.select({ id: clinics.id }).from(clinics).where(eq(clinics.email, emailLower)).limit(1),
+    db.select({ id: labs.id }).from(labs).where(eq(labs.email, emailLower)).limit(1),
+    db.select({ id: labUsers.id }).from(labUsers).where(eq(labUsers.email, emailLower)).limit(1),
+  ]);
+  if (secDupe[0] || patDupe[0] || docDupe[0] || cliDupe[0] || labDupe[0] || luDupe[0]) {
+    return NextResponse.json(
+      { error: "Cet email est déjà utilisé par un autre compte (patient, médecin, clinique, laboratoire ou secrétaire)" },
+      { status: 409 }
+    );
   }
 
   const passwordHash = await hash(parsed.data.password, 12);
