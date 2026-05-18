@@ -5,6 +5,7 @@ import { useTranslations } from "next-intl";
 import Image from "next/image";
 import { Camera, Loader2, Save, UserCog } from "lucide-react";
 import { toast } from "sonner";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 type Profile = {
   id: string;
@@ -182,12 +183,7 @@ export default function SecretaryProfilePage() {
           </label>
           <label className="space-y-1">
             <span className="text-xs font-medium text-gray-600">{t("phone")}</span>
-            <input
-              type="tel"
-              value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
-              className="w-full h-10 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-            />
+            <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
           </label>
         </div>
         <label className="block space-y-1">

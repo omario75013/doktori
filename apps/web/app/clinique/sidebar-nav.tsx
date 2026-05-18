@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import { useTranslations } from "next-intl";
 import {
@@ -31,6 +31,7 @@ import {
   DollarSign,
   ClipboardList,
   ScanLine,
+  Inbox,
 } from "lucide-react";
 
 type LinkDef = {
@@ -44,6 +45,7 @@ const LINKS: LinkDef[] = [
   { href: "/clinique/agenda", key: "agenda", icon: CalendarDays },
   { href: "/clinique/planning", key: "planning", icon: CalendarRange },
   { href: "/clinique/rendez-vous", key: "rendezVous", icon: Calendar },
+  { href: "/clinique/rdv-requests", key: "rdvRequests", icon: Inbox },
   { href: "/clinique/medecins", key: "medecins", icon: Users },
   { href: "/clinique/patients", key: "patients", icon: UserRound },
   { href: "/clinique/secretaires", key: "secretaires", icon: UserCog },
@@ -69,6 +71,28 @@ export function CliniqueSidebarNav({ clinicName }: { clinicName: string }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [rdvRequestsCount, setRdvRequestsCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    async function poll() {
+      try {
+        const res = await fetch("/api/clinique/notifications", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!active) return;
+        setRdvRequestsCount(Number(data.counts?.rdvRequests ?? 0));
+      } catch {
+        /* silent */
+      }
+    }
+    poll();
+    const id = setInterval(poll, 30_000);
+    return () => {
+      active = false;
+      clearInterval(id);
+    };
+  }, []);
 
   async function handleLogout() {
     setLoggingOut(true);
@@ -121,6 +145,7 @@ export function CliniqueSidebarNav({ clinicName }: { clinicName: string }) {
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
           {LINKS.map(({ href, key, icon: Icon }) => {
             const active = pathname === href || pathname.startsWith(href + "/");
+            const badge = key === "rdvRequests" && rdvRequestsCount > 0 ? rdvRequestsCount : 0;
             return (
               <Link
                 key={href}
@@ -138,7 +163,16 @@ export function CliniqueSidebarNav({ clinicName }: { clinicName: string }) {
                   className={["h-4 w-4 flex-shrink-0", active ? "text-white" : "text-teal-300"].join(" ")}
                   strokeWidth={2.5}
                 />
-                {t(key as Parameters<typeof t>[0])}
+                <span className="flex-1">{t(key as Parameters<typeof t>[0])}</span>
+                {badge > 0 && (
+                  <span
+                    className="inline-flex h-5 min-w-5 px-1.5 items-center justify-center rounded-full text-[10px] font-bold text-white"
+                    style={{ background: "#EF4444" }}
+                    aria-label={`${badge} nouvelles demandes`}
+                  >
+                    {badge > 99 ? "99+" : badge}
+                  </span>
+                )}
               </Link>
             );
           })}

@@ -194,24 +194,41 @@ export default async function CentreMedicalPage({ params }: Props) {
 
       {/* ─── Body ─── */}
       <div className="mx-auto max-w-5xl px-4 py-10 sm:px-6">
-        {/* ─── "Premier créneau disponible" CTA ─── */}
+        {/* ─── CTA row: First-available slot OR ask the clinic to pick ─── */}
         {allDoctorsInClinic.length > 0 && (
-          <div className="rounded-2xl border-2 border-primary bg-gradient-to-r from-secondary to-white p-5 mb-6">
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex items-center gap-3">
+          <div className="grid gap-3 sm:grid-cols-2 mb-6">
+            <div className="rounded-2xl border-2 border-primary bg-gradient-to-r from-secondary to-white p-5">
+              <div className="flex items-center gap-3 mb-3">
                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                   <CalendarClock className="h-5 w-5" strokeWidth={2} />
                 </div>
                 <div>
                   <h3 className="font-bold text-foreground">Premier créneau disponible</h3>
-                  <p className="text-sm text-muted-foreground">Réservez avec le premier médecin disponible</p>
+                  <p className="text-xs text-muted-foreground">Avec le premier médecin libre</p>
                 </div>
               </div>
               <Link
                 href={`/rdv-clinique/${clinic.slug}`}
-                className="shrink-0 bg-primary text-white px-6 py-3 rounded-xl font-bold hover:bg-doktori-teal-dark transition-colors text-sm"
+                className="block w-full text-center bg-primary text-white px-4 py-2.5 rounded-xl font-bold hover:bg-doktori-teal-dark transition-colors text-sm"
               >
-                Réserver
+                Réserver maintenant
+              </Link>
+            </div>
+            <div className="rounded-2xl border-2 border-border bg-white p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent">
+                  <Phone className="h-5 w-5" strokeWidth={2} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-foreground">La clinique choisit pour vous</h3>
+                  <p className="text-xs text-muted-foreground">Indiquez votre disponibilité, on s&apos;occupe du reste</p>
+                </div>
+              </div>
+              <Link
+                href={`/centre-medical/${clinic.slug}/demande-rdv`}
+                className="block w-full text-center border-2 border-primary text-primary px-4 py-2.5 rounded-xl font-bold hover:bg-primary hover:text-white transition-colors text-sm"
+              >
+                Faire une demande
               </Link>
             </div>
           </div>
@@ -301,9 +318,9 @@ export default async function CentreMedicalPage({ params }: Props) {
                       </div>
                     </div>
 
-                    {/* CTA */}
+                    {/* CTA — passes clinicId so booking auto-selects the clinic cabinet */}
                     <Link
-                      href={`/medecin/${doctor.slug}`}
+                      href={`/rdv/${doctor.slug}?clinic=${clinic.id}`}
                       className="mt-4 flex h-9 w-full items-center justify-center gap-1.5 rounded-xl bg-primary text-xs font-bold text-white transition-all hover:bg-doktori-teal-dark group-hover:gap-2"
                     >
                       Prendre rendez-vous

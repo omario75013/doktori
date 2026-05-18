@@ -204,6 +204,11 @@ export default function ConnexionPage() {
                     className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none placeholder:text-muted-foreground/60"
                   />
                 </div>
+                <div className="mt-1.5 text-right">
+                  <Link href="/mot-de-passe-oublie-pro" className="text-xs font-semibold text-primary hover:underline">
+                    Mot de passe oublié ?
+                  </Link>
+                </div>
               </div>
 
               {/* Email verification banner */}

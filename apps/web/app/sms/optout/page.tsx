@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 // Public opt-out page — no auth required.
 // v1 approach: patient enters their phone number manually.
@@ -57,14 +58,7 @@ export default function SmsOptOutPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Numéro de téléphone
               </label>
-              <input
-                type="tel"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="+216 XX XXX XXX"
-                required
-                className="w-full rounded-lg border border-gray-300 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
+              <PhoneInput value={phone} onChange={setPhone} required autoComplete="tel" />
             </div>
             {error && (
               <p className="text-sm text-red-600">{error}</p>

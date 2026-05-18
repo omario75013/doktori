@@ -18,6 +18,7 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { SPECIALTIES } from "@doktori/shared";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -364,18 +365,14 @@ export default function CliniqueParametresPage() {
             <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-doktori-teal-dark">
               Téléphone
             </label>
-            <div className={`flex h-11 items-center rounded-xl border-2 px-3 focus-within:border-primary ${profileErrors.phone ? "border-red-400" : "border-border"}`}>
-              <Phone className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
-              <input
-                type="tel"
-                value={profileForm.phone}
-                onChange={(e) => {
-                  setProfileForm({ ...profileForm, phone: e.target.value });
-                  if (profileErrors.phone) setProfileErrors({ ...profileErrors, phone: undefined });
-                }}
-                className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none"
-              />
-            </div>
+            <PhoneInput
+              value={profileForm.phone}
+              onChange={(v) => {
+                setProfileForm({ ...profileForm, phone: v });
+                if (profileErrors.phone) setProfileErrors({ ...profileErrors, phone: undefined });
+              }}
+              className={profileErrors.phone ? "border-red-400" : ""}
+            />
             {profileErrors.phone && (
               <p className="mt-1 flex items-center gap-1 text-xs text-red-600">
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />

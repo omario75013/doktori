@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { format } from "date-fns";
+import { PhoneInput } from "@/components/ui/phone-input";
 import { fr } from "date-fns/locale";
 import {
   ChevronDown,
@@ -1261,12 +1262,10 @@ function PatientEditDialog({
               />
             </Field>
             <Field label={t("fieldPhone")}>
-              <input
-                type="tel"
+              <PhoneInput
                 required
                 value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                onChange={(v) => setForm({ ...form, phone: v })}
               />
             </Field>
             <Field label={t("fieldEmail")}>
@@ -1345,7 +1344,11 @@ function PatientEditDialog({
               <input
                 type="text"
                 value={form.cin}
-                onChange={(e) => setForm({ ...form, cin: e.target.value })}
+                onChange={(e) => setForm({ ...form, cin: e.target.value.replace(/\D/g, "").slice(0, 8) })}
+                placeholder="12345678"
+                inputMode="numeric"
+                pattern="\d{8}"
+                maxLength={8}
                 className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
               />
             </Field>
@@ -1443,11 +1446,9 @@ function PatientEditDialog({
               />
             </Field>
             <Field label={t("fieldEmergencyPhone")}>
-              <input
-                type="tel"
+              <PhoneInput
                 value={form.emergencyContactPhone}
-                onChange={(e) => setForm({ ...form, emergencyContactPhone: e.target.value })}
-                className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                onChange={(v) => setForm({ ...form, emergencyContactPhone: v })}
               />
             </Field>
             <Field label={t("fieldEmergencyRelation")}>

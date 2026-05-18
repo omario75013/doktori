@@ -7,6 +7,7 @@ import { format } from "date-fns";
 import { fr, ar as arLocale } from "date-fns/locale";
 import { Users, Search, UserPlus, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 type PatientRow = {
   id: string;
@@ -125,14 +126,7 @@ function AddPatientModal({
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
               {t("phone")} <span className="text-red-500">*</span>
             </label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-              placeholder="Ex : 21234567"
-              className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white"
-            />
+            <PhoneInput value={phone} onChange={setPhone} required />
           </div>
 
           <div>

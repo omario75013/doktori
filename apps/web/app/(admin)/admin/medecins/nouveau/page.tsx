@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, UserPlus, Loader2 } from "lucide-react";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 export default function NouveauMedecinPage() {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [phone, setPhone] = useState("");
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -133,15 +135,9 @@ export default function NouveauMedecinPage() {
           <label className="block text-sm font-medium text-slate-700 mb-1">
             Téléphone <span className="text-red-500">*</span>
           </label>
-          <input
-            type="tel"
-            name="phone"
-            required
-            placeholder="+216 XX XXX XXX"
-            className={`w-full px-3 py-2 text-sm border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent ${
-              fieldErrors.phone ? "border-red-400" : "border-slate-200"
-            }`}
-          />
+          <PhoneInput value={phone} onChange={setPhone} required />
+          {/* keep FormData picking up the full international number */}
+          <input type="hidden" name="phone" value={phone} />
           {fieldErrors.phone && (
             <p className="mt-1 text-xs text-red-600">{fieldErrors.phone}</p>
           )}

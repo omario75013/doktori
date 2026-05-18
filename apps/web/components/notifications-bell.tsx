@@ -53,6 +53,28 @@ export function NotificationsBell({ role }: { role?: Role }) {
         }));
         setItems(feed);
         setCount(Number(data.unreadCount ?? 0));
+      } else if (role === "clinic") {
+        const res = await fetch("/api/clinique/notifications", { cache: "no-store" });
+        if (!res.ok) return;
+        const data = await res.json();
+        type ClinicNotif = {
+          id: string;
+          title: string;
+          body: string | null;
+          createdAt: string;
+          readAt: string | null;
+          href?: string;
+        };
+        const feed: Notification[] = ((data.items ?? []) as ClinicNotif[]).map((n) => ({
+          id: n.id,
+          title: n.title,
+          body: n.body,
+          createdAt: n.createdAt,
+          readAt: n.readAt,
+          href: n.href ?? "/clinique/rdv-requests",
+        }));
+        setItems(feed);
+        setCount(Number(data.unreadCount ?? 0));
       } else if (role === "secretary") {
         const res = await fetch("/api/secretary/notifications", { cache: "no-store" });
         if (!res.ok) return;
@@ -275,7 +297,15 @@ export function NotificationsBell({ role }: { role?: Role }) {
             )}
             <div className="px-4 py-2 border-t border-gray-100 dark:border-gray-800">
               <Link
-                href={role === "secretary" ? "/secretaire/notifications" : "/rendez-vous"}
+                href={
+                  role === "secretary"
+                    ? "/secretaire/notifications"
+                    : role === "clinic"
+                      ? "/clinique/rdv-requests"
+                      : role === "admin"
+                        ? "/admin"
+                        : "/rendez-vous"
+                }
                 onClick={() => setOpen(false)}
                 className="block text-center text-xs font-semibold text-teal-600 hover:text-teal-700 py-1"
               >

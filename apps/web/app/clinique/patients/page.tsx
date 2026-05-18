@@ -19,6 +19,7 @@ import {
   Plus,
   Check,
 } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 interface Patient {
   id: string;
@@ -202,13 +203,10 @@ function NewPatientModal({
 
               <div>
                 <label className={labelCls}>Téléphone *</label>
-                <input
-                  className={inputCls}
+                <PhoneInput
                   required
                   value={form.phone}
-                  onChange={(e) => set("phone", e.target.value)}
-                  placeholder="+216 XX XXX XXX"
-                  type="tel"
+                  onChange={(v) => set("phone", v)}
                 />
               </div>
 
@@ -217,9 +215,11 @@ function NewPatientModal({
                 <input
                   className={inputCls}
                   value={form.cin}
-                  onChange={(e) => set("cin", e.target.value)}
-                  placeholder="Numéro CIN"
-                  maxLength={20}
+                  onChange={(e) => set("cin", e.target.value.replace(/\D/g, "").slice(0, 8))}
+                  placeholder="12345678"
+                  inputMode="numeric"
+                  pattern="\d{8}"
+                  maxLength={8}
                 />
               </div>
 

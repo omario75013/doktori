@@ -71,7 +71,10 @@ export default function MesRdvPage() {
   const [actionSaving, setActionSaving] = useState(false);
 
   async function reload() {
-    const a = await fetch("/api/appointments/patient", { credentials: "include" });
+    const a = await fetch("/api/appointments/patient", {
+      credentials: "include",
+      cache: "no-store",
+    });
     if (a.ok) setAppointments(await a.json());
   }
 
@@ -137,7 +140,10 @@ export default function MesRdvPage() {
       }
       try { sessionStorage.setItem("doktori_patient_session", "1"); } catch {}
       try { localStorage.removeItem("doktori_patient_token"); } catch {}
-      const a = await fetch("/api/appointments/patient", { credentials: "include" });
+      const a = await fetch("/api/appointments/patient", {
+        credentials: "include",
+        cache: "no-store",
+      });
       if (a.ok) {
         const data = await a.json();
         setAppointments(Array.isArray(data) ? data : []);
@@ -146,6 +152,20 @@ export default function MesRdvPage() {
     })().catch(() => {
       setLoading(false);
     });
+
+    // Re-fetch when the user returns to the tab — e.g. after a booking flow
+    // navigated them away. Without this the "Pour proche" badge stays missing
+    // on the new RDV until a hard refresh.
+    const onVisible = () => {
+      if (document.visibilityState === "visible") reload().catch(() => {});
+    };
+    const onFocus = () => reload().catch(() => {});
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+    };
   }, [router]);
 
   const upcoming = appointments.filter(isUpcoming);

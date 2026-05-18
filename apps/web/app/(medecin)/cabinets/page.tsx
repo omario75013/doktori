@@ -8,6 +8,7 @@ import { MapPin, Phone, Plus, Pencil, Trash2, Star, ArrowLeft, Check, X, Loader2
 import Link from "next/link";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 interface CabinetPhoto {
   url: string;
@@ -324,12 +325,10 @@ export default function CabinetsPage() {
             </div>
             <div className="space-y-1.5">
               <Label htmlFor="add-phone">Téléphone</Label>
-              <Input
+              <PhoneInput
                 id="add-phone"
-                type="tel"
-                placeholder={t("phonePlaceholder")}
                 value={addForm.phone}
-                onChange={(e) => setAddForm((f) => ({ ...f, phone: e.target.value }))}
+                onChange={(v) => setAddForm((f) => ({ ...f, phone: v }))}
               />
             </div>
             <label className="flex items-center gap-2 cursor-pointer select-none">
@@ -469,11 +468,10 @@ export default function CabinetsPage() {
                   </div>
                   <div className="space-y-1.5">
                     <Label htmlFor={`edit-phone-${p.id}`}>Téléphone</Label>
-                    <Input
+                    <PhoneInput
                       id={`edit-phone-${p.id}`}
-                      type="tel"
                       value={editForm.phone}
-                      onChange={(e) => setEditForm((f) => ({ ...f, phone: e.target.value }))}
+                      onChange={(v) => setEditForm((f) => ({ ...f, phone: v }))}
                     />
                   </div>
                   {!p.isPrimary && (

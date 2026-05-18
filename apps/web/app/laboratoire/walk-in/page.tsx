@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { Search, Upload, UserPlus, Loader2, UserCheck, Plus, ChevronDown } from "lucide-react";
 import { LAB_TESTS, RADIO_EXAMS } from "@/lib/lab-test-catalog";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 type CatalogEntry = { code: string; name: string };
 
@@ -271,13 +272,20 @@ export default function LaboratoireWalkInPage() {
               </div>
               <div>
                 <label className="mb-1 block text-xs font-bold text-muted-foreground uppercase tracking-wider">CIN</label>
-                <input type="text" value={cin} onChange={(e) => setCin(e.target.value)} placeholder="12345678"
-                  className="h-10 w-full rounded-xl border-2 border-border bg-white px-3 text-sm outline-none focus:border-green-500" />
+                <input
+                  type="text"
+                  value={cin}
+                  onChange={(e) => setCin(e.target.value.replace(/\D/g, "").slice(0, 8))}
+                  placeholder="12345678"
+                  inputMode="numeric"
+                  pattern="\d{8}"
+                  maxLength={8}
+                  className="h-10 w-full rounded-xl border-2 border-border bg-white px-3 text-sm outline-none focus:border-green-500"
+                />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-bold text-muted-foreground uppercase tracking-wider">Téléphone</label>
-                <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="+216 XX XXX XXX"
-                  className="h-10 w-full rounded-xl border-2 border-border bg-white px-3 text-sm outline-none focus:border-green-500" />
+                <PhoneInput value={phone} onChange={setPhone} />
               </div>
               <div>
                 <label className="mb-1 block text-xs font-bold text-muted-foreground uppercase tracking-wider">Email</label>

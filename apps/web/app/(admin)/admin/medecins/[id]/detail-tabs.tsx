@@ -2,6 +2,7 @@
 
 import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   User,
   Calendar,
@@ -273,12 +274,7 @@ function ProfileTab({ doctor }: { doctor: Doctor }) {
           />
         </Field>
         <Field label="Téléphone">
-          <input
-            type="tel"
-            value={form.phone}
-            onChange={(e) => setForm({ ...form, phone: e.target.value })}
-            className="input"
-          />
+          <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
         </Field>
         <Field label="Spécialité">
           <input

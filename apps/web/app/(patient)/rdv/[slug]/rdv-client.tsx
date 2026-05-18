@@ -1,6 +1,7 @@
 "use client";
 
 import { use, useState, useEffect, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import { AvailabilityCalendar } from "@/components/availability-calendar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -184,6 +185,8 @@ export default function RdvPage({
   params: Promise<{ slug: string }>;
 }) {
   const { slug } = use(params);
+  const searchParams = useSearchParams();
+  const clinicIdFromUrl = searchParams.get("clinic"); // auto-select cabinet for this clinic
 
   const [doctor, setDoctor] = useState<Doctor | null>(null);
   const [doctorError, setDoctorError] = useState(false);
@@ -274,27 +277,55 @@ export default function RdvPage({
         if (d.consultationMode === "teleconsult") {
           setSelectedMode("teleconsult");
         }
+        // When arriving from a clinic page, cabinet is implied — no mode picker.
+        if (clinicIdFromUrl) {
+          setSelectedMode("cabinet");
+        }
         // Fetch appointment types and practices in parallel
         const [typesRes, practicesRes] = await Promise.all([
           fetch(`/api/appointment-types?doctorId=${d.id}`),
           fetch(`/api/doctors/${d.id}/practices`),
         ]);
         let startStep: Step = "slots";
-        if (typesRes.ok) {
-          const list = (await typesRes.json()) as AppointmentType[];
-          setTypes(list);
-          if (list.length > 0) startStep = "type";
-        }
+        let clinicPractice: Practice | null = null;
         if (practicesRes.ok) {
           const pList = (await practicesRes.json()) as Practice[];
           setPractices(pList);
-          // Auto-select if only one practice
-          if (pList.length === 1) {
+          // Auto-select: prefer the clinic-routed practice (when arriving from
+          // /centre-medical/[slug]), otherwise auto-pick if there is only one.
+          clinicPractice = clinicIdFromUrl
+            ? pList.find((p) => p.clinicId === clinicIdFromUrl) ?? null
+            : null;
+          if (clinicPractice) {
+            setSelectedPractice(clinicPractice);
+          } else if (pList.length === 1) {
             setSelectedPractice(pList[0]);
           }
         }
-        // If doctor offers both modes, show mode selection first
-        if (d.consultationMode === "both") {
+        if (typesRes.ok) {
+          let list = (await typesRes.json()) as AppointmentType[];
+          // If arriving from a clinic, only keep motifs offered at the clinic
+          // cabinet (motifs without a practice mapping are kept as fallback).
+          if (clinicPractice) {
+            list = list.filter(
+              (t) =>
+                !t.practiceIds ||
+                t.practiceIds.length === 0 ||
+                t.practiceIds.includes(clinicPractice!.id),
+            );
+          }
+          setTypes(list);
+          if (list.length === 1) {
+            // Only one motif at this cabinet → auto-select and skip the picker
+            setSelectedType(list[0]);
+            startStep = "slots";
+          } else if (list.length > 1) {
+            startStep = "type";
+          }
+        }
+        // If doctor offers both modes AND we don't have a clinic context,
+        // show the mode picker first.
+        if (d.consultationMode === "both" && !clinicIdFromUrl) {
           startStep = "mode";
         }
         setStep(startStep);
@@ -343,7 +374,15 @@ export default function RdvPage({
       type.practiceIds && type.practiceIds.length > 0
         ? practices.filter((p) => type.practiceIds!.includes(p.id))
         : practices;
-    if (motifPractices.length === 0) {
+    // If we arrived from a clinic page, prefer the clinic-routed practice when
+    // the motif is offered there — patient should not be asked to re-pick.
+    const clinicPractice = clinicIdFromUrl
+      ? motifPractices.find((p) => p.clinicId === clinicIdFromUrl)
+      : null;
+    if (clinicPractice) {
+      setSelectedPractice(clinicPractice);
+      setStep("slots");
+    } else if (motifPractices.length === 0) {
       // Fallback: no cabinet mapped — let the server resolve to primary
       setStep("slots");
     } else if (motifPractices.length === 1) {

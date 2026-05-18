@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PhoneInput } from "@/components/ui/phone-input";
 import {
   Select,
   SelectContent,
@@ -344,15 +345,16 @@ function ClinicForm() {
                   <Label htmlFor="c-phone" className="text-foreground font-semibold">
                     {t("phone")}
                   </Label>
-                  <Input
+                  <PhoneInput
                     id="c-phone"
                     name="phone"
-                    type="tel"
-                    placeholder="+216 XX XXX XXX"
                     required
                     value={form.phone}
-                    onChange={handleChange}
-                    className="h-12 rounded-xl border-border focus-visible:ring-primary"
+                    onChange={(v) =>
+                      handleChange({
+                        target: { name: "phone", value: v },
+                      } as React.ChangeEvent<HTMLInputElement>)
+                    }
                   />
                 </div>
               </div>
@@ -1036,15 +1038,16 @@ function DoctorForm() {
                   <Label htmlFor="phone" className="text-foreground font-semibold">
                     {t("phone")}
                   </Label>
-                  <Input
+                  <PhoneInput
                     id="phone"
                     name="phone"
-                    type="tel"
-                    placeholder="+216 XX XXX XXX"
                     required
                     value={form.phone}
-                    onChange={handleChange}
-                    className="h-12 rounded-xl border-border focus-visible:ring-primary"
+                    onChange={(v) =>
+                      handleChange({
+                        target: { name: "phone", value: v },
+                      } as React.ChangeEvent<HTMLInputElement>)
+                    }
                   />
                 </div>
               </div>

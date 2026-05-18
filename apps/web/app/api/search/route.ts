@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { meili, DOCTORS_INDEX, CLINICS_INDEX } from "@/lib/meilisearch";
 import { SPECIALTIES, CITIES } from "@doktori/shared";
-import { db, doctorSchedules, appointments, doctors, labs } from "@doktori/db";
+import { db, doctorSchedules, appointments, doctors, labs, clinics } from "@doktori/db";
 import { eq, and, gte, lte, not, inArray, sql } from "drizzle-orm";
 
 // ─────────────────────────────── UTILITIES ────────────────────────────────────
@@ -411,54 +411,106 @@ export async function GET(req: Request) {
   const totalBeforeLimit = hits.length;
   hits = hits.slice(0, 20);
 
-  // ── Clinic search (run in parallel with doctor results) ──────────────────
-  let clinicHits: unknown[] = [];
-  if (q || city) {
-    try {
-      const clinicsIndex = meili.index(CLINICS_INDEX);
-      const clinicFilter = city ? `city = "${city}"` : undefined;
-      const clinicResult = await clinicsIndex.search(searchText || q, {
-        filter: clinicFilter,
-        limit: 5,
-        matchingStrategy: "last",
-      });
-      clinicHits = clinicResult.hits;
-    } catch {
-      // Clinics index may not exist yet — silently ignore
-    }
+  // ── Clinic search ───────────────────────────────────────────────────────
+  // Strategy: try Meilisearch first; fall back to DB. Always run so that the
+  // Cliniques tab is populated even without a query/city filter.
+  type ClinicHit = {
+    id: string;
+    name: string;
+    slug: string;
+    city: string;
+    cityLabel?: string;
+    address: string;
+    logoUrl: string | null;
+  };
+  let clinicHits: ClinicHit[] = [];
+  const cityLabelOf = (id: string | null) =>
+    id ? CITIES.find((c) => c.id === id)?.label ?? id : undefined;
+  try {
+    const clinicsIndex = meili.index(CLINICS_INDEX);
+    const clinicFilter = city ? `city = "${city}"` : undefined;
+    const clinicResult = await clinicsIndex.search(searchText || q || "", {
+      filter: clinicFilter,
+      limit: 20,
+      matchingStrategy: "last",
+    });
+    clinicHits = (clinicResult.hits as ClinicHit[]).map((h) => ({
+      ...h,
+      cityLabel: h.cityLabel ?? cityLabelOf(h.city) ?? h.city,
+    }));
+  } catch {
+    /* Meilisearch unavailable — fall through to DB */
   }
 
-  // ── Lab search (DB-only — labs are not in Meilisearch) ────────────────────
-  let labHits: Array<{ id: string; name: string; slug: string; city: string; address: string; services: string[]; logoUrl: string | null }> = [];
-  if (q || city) {
-    try {
-      const labClauses = [eq(labs.verificationStatus, "verified")];
-      if (city) labClauses.push(eq(labs.city, city));
-      // text filter: match name, address, or service tags
-      const searchFor = (searchText || q || "").trim();
-      if (searchFor.length > 0) {
-        const pat = `%${searchFor}%`;
-        labClauses.push(
-          sql`(${labs.name} ILIKE ${pat} OR ${labs.address} ILIKE ${pat} OR EXISTS (SELECT 1 FROM unnest(${labs.services}) s WHERE s ILIKE ${pat}))`
-        );
-      }
-      const labRows = await db
-        .select({
-          id: labs.id,
-          name: labs.name,
-          slug: labs.slug,
-          city: labs.city,
-          address: labs.address,
-          services: labs.services,
-          logoUrl: labs.logoUrl,
-        })
-        .from(labs)
-        .where(and(...labClauses))
-        .limit(50);
-      labHits = labRows;
-    } catch {
-      // ignore
+  if (clinicHits.length === 0) {
+    const clinicClauses = [];
+    if (city) clinicClauses.push(eq(clinics.city, city));
+    const searchFor = (searchText || q || "").trim();
+    if (searchFor.length > 0) {
+      const pat = `%${searchFor}%`;
+      clinicClauses.push(
+        sql`(${clinics.name} ILIKE ${pat} OR ${clinics.address} ILIKE ${pat})`
+      );
     }
+    const clinicRows = await db
+      .select({
+        id: clinics.id,
+        name: clinics.name,
+        slug: clinics.slug,
+        city: clinics.city,
+        address: clinics.address,
+        logoUrl: clinics.logoUrl,
+      })
+      .from(clinics)
+      .where(clinicClauses.length > 0 ? and(...clinicClauses) : undefined)
+      .limit(20);
+    clinicHits = clinicRows.map((r) => ({
+      ...r,
+      cityLabel: cityLabelOf(r.city) ?? r.city,
+    }));
+  }
+
+  // ── Lab search (DB-only) ────────────────────────────────────────────────
+  // Always run, even without q/city, so the Labos tab is populated.
+  let labHits: Array<{
+    id: string;
+    name: string;
+    slug: string;
+    city: string;
+    cityLabel?: string;
+    address: string;
+    services: string[];
+    logoUrl: string | null;
+  }> = [];
+  try {
+    const labClauses = [eq(labs.verificationStatus, "verified")];
+    if (city) labClauses.push(eq(labs.city, city));
+    const searchFor = (searchText || q || "").trim();
+    if (searchFor.length > 0) {
+      const pat = `%${searchFor}%`;
+      labClauses.push(
+        sql`(${labs.name} ILIKE ${pat} OR ${labs.address} ILIKE ${pat} OR EXISTS (SELECT 1 FROM unnest(${labs.services}) s WHERE s ILIKE ${pat}))`
+      );
+    }
+    const labRows = await db
+      .select({
+        id: labs.id,
+        name: labs.name,
+        slug: labs.slug,
+        city: labs.city,
+        address: labs.address,
+        services: labs.services,
+        logoUrl: labs.logoUrl,
+      })
+      .from(labs)
+      .where(and(...labClauses))
+      .limit(50);
+    labHits = labRows.map((r) => ({
+      ...r,
+      cityLabel: cityLabelOf(r.city) ?? r.city,
+    }));
+  } catch {
+    /* ignore */
   }
 
   return NextResponse.json({

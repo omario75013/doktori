@@ -11,6 +11,7 @@ import {
   AlertCircle,
   ChevronDown,
 } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -275,14 +276,7 @@ function InviteModal({
                   <label className="block text-xs font-medium text-gray-700 mb-1">
                     Téléphone <span className="text-red-500">*</span>
                   </label>
-                  <input
-                    type="tel"
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    required
-                    placeholder="+216 XX XXX XXX"
-                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
+                  <PhoneInput value={phone} onChange={setPhone} required />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-gray-700 mb-1">Genre</label>

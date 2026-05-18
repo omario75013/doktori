@@ -7,6 +7,7 @@ import { fr } from "date-fns/locale";
 import { Search, Users, ChevronLeft, ChevronRight, UserPlus, X, Columns3, Check, SlidersHorizontal, RotateCcw, Download, FileSearch } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 type PatientRow = {
   id: string;
@@ -181,14 +182,7 @@ function AddPatientModal({
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
               {t("labelPhone")} <span className="text-red-500">*</span>
             </label>
-            <input
-              type="tel"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              required
-              placeholder={t("placeholderPhone")}
-              className="w-full h-11 rounded-xl border border-border px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary bg-white dark:bg-gray-800"
-            />
+            <PhoneInput value={phone} onChange={setPhone} required />
           </div>
 
           <div>
@@ -636,8 +630,11 @@ export function PatientsClient({ patients }: { patients: PatientRow[] }) {
               <input
                 type="text"
                 value={advFilters.cin}
-                onChange={(e) => updateFilter("cin", e.target.value)}
-                placeholder="N° CIN"
+                onChange={(e) => updateFilter("cin", e.target.value.replace(/\D/g, "").slice(0, 8))}
+                placeholder="12345678"
+                inputMode="numeric"
+                pattern="\d{8}"
+                maxLength={8}
                 className="w-full px-3 py-2 text-sm rounded-xl border border-border bg-white dark:bg-gray-900"
               />
             </FilterField>

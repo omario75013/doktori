@@ -649,6 +649,31 @@ export function buildDoctorEmailVerificationEmail(p: {
   };
 }
 
+// ── Staff Password Reset (doctor | clinic | lab | lab_user | secretary) ─────
+export function buildStaffPasswordResetEmail(p: {
+  recipientName: string;
+  actorLabel: string;
+  resetUrl: string;
+}): { subject: string; html: string; text: string } {
+  return {
+    subject: "Réinitialisation de votre mot de passe — Doktori",
+    html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">
+      <div style="background:linear-gradient(135deg,#0891B2,#134E4A);padding:32px;text-align:center;border-radius:16px 16px 0 0">
+        <h1 style="color:white;margin:0;font-size:26px">Réinitialisation du mot de passe</h1>
+      </div>
+      <div style="padding:32px;background:white;border:1px solid #E6F4F1;border-radius:0 0 16px 16px">
+        <p style="font-size:16px;color:#134E4A">Bonjour ${p.recipientName},</p>
+        <p style="color:#5E7574">Vous avez demandé à réinitialiser le mot de passe de votre espace <strong>${p.actorLabel}</strong> sur Doktori.</p>
+        <div style="text-align:center;margin:32px 0">
+          <a href="${p.resetUrl}" style="display:inline-block;background:#0891B2;color:white;padding:14px 28px;border-radius:12px;text-decoration:none;font-weight:bold;font-size:16px">Réinitialiser mon mot de passe</a>
+        </div>
+        <p style="color:#94A3B8;font-size:13px">Ce lien est valable <strong>1 heure</strong>. Si vous n'avez pas demandé cette réinitialisation, ignorez cet email — votre mot de passe restera inchangé.</p>
+      </div>
+    </div>`,
+    text: `Bonjour ${p.recipientName},\n\nLien de réinitialisation (espace ${p.actorLabel}) :\n${p.resetUrl}\n\nCe lien expire dans 1 heure.`,
+  };
+}
+
 // ── Doctor Welcome (sent after registration with trial) ─────────────────────
 export function buildDoctorWelcomeEmail(p: { doctorName: string; trialEndDate: string }): string {
   return `<div style="font-family:sans-serif;max-width:600px;margin:0 auto">

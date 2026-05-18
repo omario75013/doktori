@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -438,16 +439,11 @@ export default function ParametresLabosPage() {
                 <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground block">
                   {t("form.phone")} *
                 </label>
-                <div className="flex h-11 items-center rounded-xl border-2 border-border px-3 focus-within:border-primary">
-                  <Phone className="mr-2 h-4 w-4 text-muted-foreground" strokeWidth={2} />
-                  <input
-                    required
-                    type="tel"
-                    value={form.phone}
-                    onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-                    className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none"
-                  />
-                </div>
+                <PhoneInput
+                  required
+                  value={form.phone}
+                  onChange={(v) => setForm((f) => ({ ...f, phone: v }))}
+                />
               </div>
 
               {/* Address + City */}

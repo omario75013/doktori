@@ -14,6 +14,7 @@ import {
   Star,
   AlertCircle,
 } from "lucide-react";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 interface Site {
   id: string;
@@ -199,15 +200,7 @@ function SiteModal({
             <label className="block text-xs font-bold uppercase tracking-wider text-gray-500 mb-1">
               Téléphone
             </label>
-            <div className="flex h-10 items-center rounded-xl border border-border px-3 focus-within:border-primary">
-              <Phone className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                className="h-full flex-1 border-0 bg-transparent text-sm outline-none"
-              />
-            </div>
+            <PhoneInput value={form.phone} onChange={(v) => setForm({ ...form, phone: v })} />
           </div>
 
           {/* isPrimary */}

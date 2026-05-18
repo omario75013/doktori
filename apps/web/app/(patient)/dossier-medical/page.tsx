@@ -64,11 +64,17 @@ export default function DossierMedicalPage() {
   useEffect(() => {
     let legacy: string | null = null;
     try { legacy = localStorage.getItem("doktori_patient_token"); } catch {}
-    (async () => {
-      let r = await fetch("/api/patients/me", { credentials: "include" });
+
+    // Re-usable loader so we can also re-fetch on tab focus / visibility
+    // change — without this, /dossier-medical shows stale data when the user
+    // navigates away (e.g. to /dossier-medical/traitements to add one) and
+    // comes back via client-side routing.
+    async function loadAll() {
+      let r = await fetch("/api/patients/me", { credentials: "include", cache: "no-store" });
       if (!r.ok && legacy) {
         r = await fetch("/api/patients/me", {
           credentials: "include",
+          cache: "no-store",
           headers: { Authorization: `Bearer ${legacy}` },
         });
       }
@@ -80,32 +86,44 @@ export default function DossierMedicalPage() {
       const data = await r.json();
       setProfile(data);
 
-      // Load dossier data in parallel — non-fatal if anything fails.
-      void Promise.all([
-        fetch("/api/me/dependents", { credentials: "include" })
+      const init = { credentials: "include" as const, cache: "no-store" as const };
+      await Promise.all([
+        fetch("/api/me/dependents", init)
           .then((res) => (res.ok ? res.json() : { items: [] }))
           .then((d) => setDependents(Array.isArray(d.items) ? d.items : []))
           .catch(() => {}),
-        fetch("/api/me/allergies", { credentials: "include" })
+        fetch("/api/me/allergies", init)
           .then((res) => (res.ok ? res.json() : { allergies: [] }))
           .then((d) => setAllergies(Array.isArray(d.allergies) ? d.allergies : []))
           .catch(() => {}),
-        fetch("/api/me/vaccinations", { credentials: "include" })
+        fetch("/api/me/vaccinations", init)
           .then((res) => (res.ok ? res.json() : { vaccinations: [] }))
           .then((d) => setVaccinations(Array.isArray(d.vaccinations) ? d.vaccinations : []))
           .catch(() => {}),
-        fetch("/api/me/medications", { credentials: "include" })
+        fetch("/api/me/medications", init)
           .then((res) => (res.ok ? res.json() : { medications: [] }))
           .then((d) => setMedications(Array.isArray(d.medications) ? d.medications : []))
           .catch(() => {}),
-        fetch("/api/patients/me/documents", { credentials: "include" })
+        fetch("/api/patients/me/documents", init)
           .then((res) => (res.ok ? res.json() : { consultationNotes: [] }))
           .then((d) => setConsultations(Array.isArray(d.consultationNotes) ? d.consultationNotes : []))
           .catch(() => {}),
       ]);
-
       setLoading(false);
-    })().catch(() => setLoading(false));
+    }
+
+    loadAll().catch(() => setLoading(false));
+
+    const onVisible = () => {
+      if (document.visibilityState === "visible") loadAll().catch(() => {});
+    };
+    const onFocus = () => loadAll().catch(() => {});
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onFocus);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onFocus);
+    };
   }, [router]);
 
   if (loading) {

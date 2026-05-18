@@ -11,6 +11,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { PhoneInput } from "@/components/ui/phone-input";
 
 interface LabProfile {
   id: string;
@@ -189,20 +190,14 @@ export default function LaboratoireParametresPage() {
             <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-green-800">
               Téléphone
             </label>
-            <div
-              className={`flex h-11 items-center rounded-xl border-2 px-3 focus-within:border-green-500 ${errors.phone ? "border-red-400" : "border-border"}`}
-            >
-              <Phone className="mr-2 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={2} />
-              <input
-                type="tel"
-                value={form.phone}
-                onChange={(e) => {
-                  setForm({ ...form, phone: e.target.value });
-                  if (errors.phone) setErrors({ ...errors, phone: undefined });
-                }}
-                className="h-full flex-1 border-0 bg-transparent text-sm text-foreground outline-none"
-              />
-            </div>
+            <PhoneInput
+              value={form.phone}
+              onChange={(v) => {
+                setForm({ ...form, phone: v });
+                if (errors.phone) setErrors({ ...errors, phone: undefined });
+              }}
+              className={errors.phone ? "border-red-400" : ""}
+            />
             {errors.phone && (
               <p className="mt-1 flex items-center gap-1 text-xs text-red-600">
                 <AlertCircle className="h-3.5 w-3.5 shrink-0" strokeWidth={2.5} />

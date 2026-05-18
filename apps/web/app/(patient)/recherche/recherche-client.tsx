@@ -978,8 +978,8 @@ function RechercheInner() {
               </div>
             )}
 
-            {/* Empty state */}
-            {!loading && searched && results.length === 0 && (
+            {/* Empty state — only for doctor tab */}
+            {!loading && searched && results.length === 0 && resultsTab === "doctors" && (
               <div className="rounded-2xl border border-border dark:border-gray-700 bg-white dark:bg-gray-800 py-16 text-center">
                 <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-secondary text-muted-foreground">
                   <SearchX className="h-8 w-8" strokeWidth={2} />
@@ -996,8 +996,15 @@ function RechercheInner() {
             )}
 
             {/* Clinic results tab */}
-            {resultsTab === "clinics" && clinicResults.length > 0 && (
+            {resultsTab === "clinics" && (
               <div className="mb-6">
+                {clinicResults.length === 0 && searched && !loading ? (
+                  <div className="rounded-2xl border border-border bg-white py-10 text-center">
+                    <Building2 className="mx-auto h-8 w-8 text-muted-foreground mb-3" strokeWidth={1.5} />
+                    <p className="text-sm font-semibold text-foreground">Aucune clinique trouvée</p>
+                    <p className="mt-1 text-xs text-muted-foreground">Essayez une autre ville ou un autre terme.</p>
+                  </div>
+                ) : (
                 <div className="grid gap-3 sm:grid-cols-2">
                   {clinicResults.map((clinic) => (
                     <Link
@@ -1030,6 +1037,7 @@ function RechercheInner() {
                     </Link>
                   ))}
                 </div>
+                )}
               </div>
             )}
 

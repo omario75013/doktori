@@ -569,6 +569,8 @@ export default function RendezVousPage() {
   const [smsAppt, setSmsAppt] = useState<Appointment | null>(null);
   // Edit modal state
   const [editAppt, setEditAppt] = useState<Appointment | null>(null);
+  // When set, the next save in EditAppointmentModal will also flip status → confirmed.
+  const [editConfirmAfter, setEditConfirmAfter] = useState(false);
 
   // `silent` skips the setLoading(true) flicker so the polling/focus
   // refreshes don't blank out the table every 20 seconds. The initial
@@ -1068,16 +1070,31 @@ export default function RendezVousPage() {
                               </button>
                             </>
                           ) : (
-                            ACTIONS.filter((a) => a.status !== appt.status).map((action) => (
-                              <button
-                                key={action.status}
-                                disabled={isUpdating}
-                                onClick={() => updateStatus(appt.id, action.status)}
-                                className="text-xs px-2.5 py-1.5 rounded-xl border border-border hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                              >
-                                {isUpdating ? "..." : action.label}
-                              </button>
-                            ))
+                            <>
+                              {ACTIONS.filter((a) => a.status !== appt.status).map((action) => (
+                                <button
+                                  key={action.status}
+                                  disabled={isUpdating}
+                                  onClick={() => updateStatus(appt.id, action.status)}
+                                  className="text-xs px-2.5 py-1.5 rounded-xl border border-border hover:bg-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                >
+                                  {isUpdating ? "..." : action.label}
+                                </button>
+                              ))}
+                              {appt.status === "pending" && (
+                                <button
+                                  disabled={isUpdating}
+                                  onClick={() => {
+                                    setEditConfirmAfter(true);
+                                    setEditAppt(appt);
+                                  }}
+                                  className="text-xs px-2.5 py-1.5 rounded-xl border border-primary text-primary hover:bg-primary/5 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                                  title="Confirmer en choisissant une autre date/heure"
+                                >
+                                  Confirmer (autre créneau)
+                                </button>
+                              )}
+                            </>
                           )}
                           {!isTerminal && (
                             <button
@@ -1249,9 +1266,23 @@ export default function RendezVousPage() {
       {editAppt && (
         <EditAppointmentModal
           appointment={editAppt}
-          onClose={() => setEditAppt(null)}
-          onSaved={async () => {
+          confirmAfterSave={editConfirmAfter}
+          onClose={() => {
             setEditAppt(null);
+            setEditConfirmAfter(false);
+          }}
+          onSaved={async () => {
+            const id = editAppt.id;
+            const shouldConfirm = editConfirmAfter;
+            setEditAppt(null);
+            setEditConfirmAfter(false);
+            if (shouldConfirm) {
+              await fetch(`/api/appointments/${id}/status`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ status: "confirmed" }),
+              });
+            }
             await fetchAppointments();
           }}
         />
@@ -1328,10 +1359,12 @@ function EditAppointmentModal({
   appointment,
   onClose,
   onSaved,
+  confirmAfterSave,
 }: {
   appointment: Appointment;
   onClose: () => void;
   onSaved: () => void | Promise<void>;
+  confirmAfterSave?: boolean;
 }) {
   const t = useTranslations("medecin.appointments");
   const start = new Date(appointment.startsAt);
@@ -1667,7 +1700,11 @@ function EditAppointmentModal({
               disabled={saving}
               className="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-60"
             >
-              {saving ? t("savingButton") : t("saveButton")}
+              {saving
+                ? t("savingButton")
+                : confirmAfterSave
+                  ? "Enregistrer & Confirmer"
+                  : t("saveButton")}
             </button>
           </div>
         </form>

@@ -78,6 +78,19 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  const emailLower = parsed.data.email.toLowerCase().trim();
+
+  // Pre-check email uniqueness — gives a clean 409 even if the DB index name
+  // differs across environments (the catch below also handles the race).
+  const [dupe] = await db
+    .select({ id: secretaries.id })
+    .from(secretaries)
+    .where(eq(secretaries.email, emailLower))
+    .limit(1);
+  if (dupe) {
+    return NextResponse.json({ error: "Cet email est déjà utilisé" }, { status: 409 });
+  }
+
   const passwordHash = await hash(parsed.data.password, 12);
   const perms = { ...DEFAULT_PERMISSIONS, ...parsePermissions(parsed.data.permissions ?? {}) };
 
@@ -117,7 +130,7 @@ export async function POST(req: NextRequest) {
       .values({
         doctorId: user.id,
         name: parsed.data.name.trim(),
-        email: parsed.data.email.toLowerCase().trim(),
+        email: emailLower,
         passwordHash,
         phone: parsed.data.phone ?? null,
         dateOfBirth: parsed.data.dateOfBirth ?? null,
@@ -148,8 +161,10 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(secretary, { status: 201 });
   } catch (e: unknown) {
+    // Postgres unique-violation: pg error code 23505. Robust across index names.
+    const code = (e as { code?: string }).code;
     const msg = e instanceof Error ? e.message : "";
-    if (msg.includes("secretaries_email_idx")) {
+    if (code === "23505" || /unique|duplicate.*key/i.test(msg)) {
       return NextResponse.json({ error: "Cet email est déjà utilisé" }, { status: 409 });
     }
     console.error("[POST /api/secretaries]", e);

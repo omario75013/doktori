@@ -1844,6 +1844,63 @@ export const passwordResetTokens = pgTable(
 export type PasswordResetToken = typeof passwordResetTokens.$inferSelect;
 export type NewPasswordResetToken = typeof passwordResetTokens.$inferInsert;
 
+// Polymorphic password reset tokens for staff (doctor | clinic | lab | lab_user | secretary).
+// No FK on actor_id (cross-table). Single-use + expiry-driven cleanup.
+export const staffPasswordResetTokens = pgTable(
+  "staff_password_reset_tokens",
+  {
+    tokenHash: varchar("token_hash", { length: 128 }).primaryKey(),
+    actorType: varchar("actor_type", { length: 20 }).notNull(),
+    actorId: uuid("actor_id").notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    usedAt: timestamp("used_at", { withTimezone: true }),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("staff_password_reset_tokens_actor_idx").on(table.actorType, table.actorId),
+    index("staff_password_reset_tokens_expires_idx").on(table.expiresAt),
+  ]
+);
+
+export type StaffPasswordResetToken = typeof staffPasswordResetTokens.$inferSelect;
+export type NewStaffPasswordResetToken = typeof staffPasswordResetTokens.$inferInsert;
+
+// Patient-initiated RDV requests routed to a clinic when no specific doctor
+// is picked. Clinic admin assigns a doctor + appointment afterwards.
+export const clinicRdvRequests = pgTable(
+  "clinic_rdv_requests",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    clinicId: uuid("clinic_id").notNull().references(() => clinics.id, { onDelete: "cascade" }),
+    patientId: uuid("patient_id").references(() => patients.id, { onDelete: "set null" }),
+    patientName: varchar("patient_name", { length: 255 }).notNull(),
+    patientPhone: varchar("patient_phone", { length: 30 }).notNull(),
+    patientEmail: varchar("patient_email", { length: 255 }),
+    patientCin: varchar("patient_cin", { length: 30 }),
+    motif: text("motif"),
+    specialtyHint: varchar("specialty_hint", { length: 100 }),
+    preferredDate: date("preferred_date").notNull(),
+    /** 'morning' | 'afternoon' | 'evening' | 'any' */
+    preferredTimeRange: varchar("preferred_time_range", { length: 20 }).notNull(),
+    notes: text("notes"),
+    /** 'pending' | 'assigned' | 'fulfilled' | 'cancelled' */
+    status: varchar("status", { length: 20 }).notNull().default("pending"),
+    assignedDoctorId: uuid("assigned_doctor_id").references(() => doctors.id, { onDelete: "set null" }),
+    assignedAppointmentId: uuid("assigned_appointment_id"),
+    assignedAt: timestamp("assigned_at", { withTimezone: true }),
+    assignedByUserId: uuid("assigned_by_user_id"),
+    cancelledReason: text("cancelled_reason"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("clinic_rdv_requests_clinic_idx").on(t.clinicId, t.status, t.preferredDate),
+    index("clinic_rdv_requests_patient_idx").on(t.patientId),
+  ]
+);
+export type ClinicRdvRequest = typeof clinicRdvRequests.$inferSelect;
+export type NewClinicRdvRequest = typeof clinicRdvRequests.$inferInsert;
+
 // ─── Stream 3 (UX) ───────────────────────────────────────────────────────────
 
 export const patientFavorites = pgTable("patient_favorites", {
