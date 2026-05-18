@@ -2107,6 +2107,31 @@ export const patientDossierSharing = pgTable("patient_dossier_sharing", {
 export type PatientDossierSharing = typeof patientDossierSharing.$inferSelect;
 export type NewPatientDossierSharing = typeof patientDossierSharing.$inferInsert;
 
+// Per-doctor dossier entries — each doctor stores their own data per section
+// and decides whether other doctors can see it. One row per
+// (patient_id, doctor_id, section).
+export const patientDossierEntries = pgTable(
+  "patient_dossier_entries",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    patientId: uuid("patient_id").notNull().references(() => patients.id, { onDelete: "cascade" }),
+    doctorId: uuid("doctor_id").notNull().references(() => doctors.id, { onDelete: "cascade" }),
+    /** medicalSummary | familyHistory | lifestyle | surgeries | hospitalizations | vaccinations | womensHealth */
+    section: varchar("section", { length: 40 }).notNull(),
+    data: jsonb("data").notNull().default({}),
+    shared: boolean("shared").notNull().default(true),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("patient_dossier_entries_unique").on(t.patientId, t.doctorId, t.section),
+    index("patient_dossier_entries_patient_section_idx").on(t.patientId, t.section),
+    index("patient_dossier_entries_doctor_idx").on(t.doctorId),
+  ]
+);
+export type PatientDossierEntry = typeof patientDossierEntries.$inferSelect;
+export type NewPatientDossierEntry = typeof patientDossierEntries.$inferInsert;
+
 // ─── Phase 1 — Stream A: Marketing (migration 0076) ───────────────────────────
 
 export const newsletterSubscribers = pgTable(

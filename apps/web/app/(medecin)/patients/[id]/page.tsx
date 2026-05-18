@@ -2158,57 +2158,26 @@ function DossierTab({
     <div className="space-y-4">
       {/* 2-col grid of medical sections so cards don't take full width */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {/* Medical summary */}
-      {isVisible("medicalSummary") && (
+      {/* Medical summary — per-doctor entries (each doctor has own data + share toggle) */}
       <Card
         title={t("cardMedicalSummary")}
         color="rose"
         icon={<HeartPulse className="h-4 w-4" />}
-        shared={showShareToggle ? isShared("medicalSummary") : undefined}
-        onToggleShare={showShareToggle ? () => toggleShare("medicalSummary") : undefined}
-        onAdd={viewerRole === "doctor" ? openSection("medicalSummary") : undefined}
-        addLabel="Modifier"
       >
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <MedBlock
-            title={t("fieldAllergiesDisplay")}
-            value={medical?.allergies}
-            highlight="red"
-            editable={viewerRole === "doctor"}
-            onSave={(next) => saveMedicalField("allergies", next)}
-          />
-          <MedBlock
-            title={t("fieldChronicDisplay")}
-            value={medical?.chronicConditions}
-            highlight="orange"
-            editable={viewerRole === "doctor"}
-            onSave={(next) => saveMedicalField("chronicConditions", next)}
-          />
-          <MedBlock
-            title={t("fieldCurrentMedsDisplay")}
-            value={medical?.currentMeds}
-            highlight="blue"
-            editable={viewerRole === "doctor"}
-            onSave={(next) => saveMedicalField("currentMeds", next)}
-          />
-          <MedBlock
-            title={t("fieldNotesDisplay")}
-            value={medical?.notes}
-            highlight="gray"
-            editable={viewerRole === "doctor"}
-            onSave={(next) => saveMedicalField("notes", next)}
-          />
-        </div>
+        {viewerRole === "doctor" ? (
+          <MedicalSummaryEntries patientId={patient.id} />
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+            <MedBlock title={t("fieldAllergiesDisplay")} value={medical?.allergies} highlight="red" />
+            <MedBlock title={t("fieldChronicDisplay")} value={medical?.chronicConditions} highlight="orange" />
+            <MedBlock title={t("fieldCurrentMedsDisplay")} value={medical?.currentMeds} highlight="blue" />
+            <MedBlock title={t("fieldNotesDisplay")} value={medical?.notes} highlight="gray" />
+          </div>
+        )}
         {viewerRole === "doctor" && (
           <PatientContributedItems patientId={patient.id} type="allergy" label="Allergies ajoutées par le patient" />
         )}
-        {medical?.updatedAt && (
-          <div className="text-xs text-gray-400 mt-4">
-            {t("updatedAt")} {format(new Date(medical.updatedAt), "d MMM yyyy", { locale: fr })}
-          </div>
-        )}
       </Card>
-      )}
 
       {/* Family history */}
       {isVisible("familyHistory") && (
@@ -4087,6 +4056,141 @@ function DossierItemsList({ patientId, type, label }: { patientId: string; type:
             );
           })}
         </ul>
+      )}
+    </div>
+  );
+}
+
+// ── Per-doctor entries section ────────────────────────────────────────────────
+// Each doctor stores their own copy of the section's data + a "shared" flag.
+// The viewer always sees:
+//   * Their OWN entry (editable, with a share toggle).
+//   * Other doctors' entries marked shared (read-only, attributed by name).
+// Card never hides — at minimum the viewer's own entry shows ("Aucune donnée").
+
+type EntryFieldKey = "allergies" | "chronicConditions" | "currentMeds" | "notes";
+const MEDICAL_SUMMARY_FIELDS: { key: EntryFieldKey; label: string; highlight: "red" | "orange" | "blue" | "gray" }[] = [
+  { key: "allergies", label: "Allergies", highlight: "red" },
+  { key: "chronicConditions", label: "Maladies chroniques", highlight: "orange" },
+  { key: "currentMeds", label: "Traitements en cours", highlight: "blue" },
+  { key: "notes", label: "Autres remarques", highlight: "gray" },
+];
+
+function MedicalSummaryEntries({ patientId }: { patientId: string }) {
+  type OwnEntry = { data: Record<string, string>; shared: boolean };
+  type OtherEntry = { id: string; doctorName: string; data: Record<string, string>; updatedAt: string };
+  const [own, setOwn] = useState<OwnEntry | null>(null);
+  const [others, setOthers] = useState<OtherEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await fetch(
+        `/api/medecin/patients/${patientId}/dossier-entries?section=medicalSummary`,
+        { cache: "no-store" },
+      );
+      if (r.ok) {
+        const d = await r.json();
+        setOwn(d.own ?? null);
+        setOthers(d.others ?? []);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [patientId]);
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function saveOwn(next: { data: Record<string, string>; shared: boolean }) {
+    const r = await fetch(`/api/medecin/patients/${patientId}/dossier-entries`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section: "medicalSummary", data: next.data, shared: next.shared }),
+    });
+    if (r.ok) {
+      setOwn(next);
+      toast.success("Enregistré");
+    } else {
+      toast.error("Échec de l'enregistrement");
+    }
+  }
+
+  const ownData = own?.data ?? {};
+  const ownShared = own?.shared ?? true;
+
+  return (
+    <div className="space-y-4">
+      {/* My own entry */}
+      <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+        <div className="flex items-center justify-between mb-3">
+          <span className="text-xs font-bold uppercase tracking-wide text-primary">
+            Vos notes
+          </span>
+          <button
+            onClick={() => saveOwn({ data: ownData, shared: !ownShared })}
+            className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-bold border ${
+              ownShared
+                ? "bg-emerald-100 border-emerald-200 text-emerald-700"
+                : "bg-gray-100 border-gray-200 text-gray-600"
+            }`}
+            title={ownShared ? "Vos notes sont visibles par les autres médecins" : "Privé — seuls vous voyez ces notes"}
+          >
+            {ownShared ? <Share2 className="h-3 w-3" /> : <XClose className="h-3 w-3" />}
+            {ownShared ? "Partagé" : "Privé"}
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+          {MEDICAL_SUMMARY_FIELDS.map((f) => (
+            <MedBlock
+              key={f.key}
+              title={f.label}
+              value={ownData[f.key] ?? ""}
+              highlight={f.highlight}
+              editable
+              onSave={async (next) => {
+                await saveOwn({ data: { ...ownData, [f.key]: next }, shared: ownShared });
+              }}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Other doctors' shared entries */}
+      {!loading && others.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            Notes partagées par d&apos;autres médecins ({others.length})
+          </div>
+          {others.map((o) => {
+            const hasAny = MEDICAL_SUMMARY_FIELDS.some((f) => o.data?.[f.key]?.trim());
+            if (!hasAny) return null;
+            return (
+              <div key={o.id} className="rounded-xl border border-border bg-white p-3">
+                <div className="text-[11px] text-muted-foreground mb-2">
+                  <span className="font-semibold text-foreground">{o.doctorName}</span>
+                  {" · "}
+                  {new Date(o.updatedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                  {MEDICAL_SUMMARY_FIELDS.map((f) => {
+                    const v = o.data?.[f.key]?.trim();
+                    if (!v) return null;
+                    return (
+                      <div key={f.key}>
+                        <div className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">{f.label}</div>
+                        <div className={`rounded-lg border px-3 py-2 whitespace-pre-wrap text-sm ${HIGHLIGHT_STYLES[f.highlight]}`}>
+                          {v}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
