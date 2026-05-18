@@ -1963,6 +1963,8 @@ function DossierTab({
 
   return (
     <div className="space-y-4">
+      {/* 2-col grid of medical sections so cards don't take full width */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Medical summary */}
       <Card title={t("cardMedicalSummary")} color="rose" icon={<HeartPulse className="h-4 w-4" />}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
@@ -2184,6 +2186,8 @@ function DossierTab({
           )}
         </Card>
       )}
+      </div>
+      {/* /grid */}
 
       {/* Attachments */}
       <div className="ds-card">
@@ -3327,6 +3331,54 @@ function SharedDocsSection({
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploadCategory, setUploadCategory] = useState<string | null>(null);
   const [openFolders, setOpenFolders] = useState<Set<string>>(new Set(["labo", "imagerie"]));
+  // Custom user-created folder names (persisted per patient in localStorage).
+  // Show even when empty so the doctor can "Créer un dossier" and upload into
+  // it afterwards.
+  const customKey = `doktori_doc_folders_${patientId}`;
+  const [customFolders, setCustomFolders] = useState<string[]>([]);
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(customKey);
+      if (raw) setCustomFolders(JSON.parse(raw));
+    } catch {
+      /* ignore */
+    }
+  }, [customKey]);
+  function saveCustomFolders(next: string[]) {
+    setCustomFolders(next);
+    try {
+      localStorage.setItem(customKey, JSON.stringify(next));
+    } catch {
+      /* ignore */
+    }
+  }
+  function slugifyFolder(name: string) {
+    return name
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/\p{Diacritic}/gu, "")
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "")
+      .slice(0, 40);
+  }
+  function handleCreateFolder() {
+    const name = prompt("Nom du nouveau dossier ?");
+    if (!name?.trim()) return;
+    const slug = slugifyFolder(name);
+    if (!slug) return;
+    if (customFolders.includes(slug)) {
+      toast.error("Ce dossier existe déjà");
+      return;
+    }
+    saveCustomFolders([...customFolders, slug]);
+    setOpenFolders((s) => new Set(s).add(slug));
+    toast.success(`Dossier « ${name.trim()} » créé`);
+  }
+  function handleDeleteFolder(slug: string) {
+    if (!confirm("Supprimer ce dossier ? Les documents qu'il contient ne seront pas supprimés.")) return;
+    saveCustomFolders(customFolders.filter((f) => f !== slug));
+  }
 
   const FOLDER_STYLES: Record<string, { bg: string; chip: string; emoji: string }> = {
     labo: { bg: "border-cyan-200 bg-cyan-50/40", chip: "bg-cyan-100 text-cyan-700", emoji: "🧪" },
@@ -3390,7 +3442,11 @@ function SharedDocsSection({
     grouped[cat].push(d);
   }
   const visibleCategories = CATEGORY_ORDER.filter((c) => grouped[c]?.length);
-  // Extra categories not in CATEGORY_ORDER (defensive)
+  // Custom user-created folders (shown even when empty)
+  for (const c of customFolders) {
+    if (!visibleCategories.includes(c)) visibleCategories.push(c);
+  }
+  // Extra categories present in items but unknown to us (defensive)
   for (const c of Object.keys(grouped)) {
     if (!visibleCategories.includes(c)) visibleCategories.push(c);
   }
@@ -3413,7 +3469,18 @@ function SharedDocsSection({
             className="hidden"
           />
           <button
-            onClick={() => fileRef.current?.click()}
+            onClick={handleCreateFolder}
+            type="button"
+            className="inline-flex items-center gap-2 rounded-xl border border-border bg-white text-foreground px-3 py-2 text-sm font-medium hover:bg-secondary mr-2"
+          >
+            <Plus className="h-4 w-4" />
+            Nouveau dossier
+          </button>
+          <button
+            onClick={() => {
+              setUploadCategory(null);
+              fileRef.current?.click();
+            }}
             disabled={uploading}
             className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3 py-2 text-sm font-medium hover:opacity-90 disabled:opacity-50"
           >
@@ -3422,7 +3489,7 @@ function SharedDocsSection({
           </button>
         </div>
       </div>
-      {items.length === 0 ? (
+      {items.length === 0 && customFolders.length === 0 ? (
         <div className="p-8 text-center text-sm text-gray-400">
           Aucun document partagé pour l&apos;instant.
         </div>
@@ -3467,6 +3534,16 @@ function SharedDocsSection({
                   >
                     <Plus className="h-3.5 w-3.5" />
                   </button>
+                  {customFolders.includes(cat) && docs.length === 0 && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteFolder(cat)}
+                      className="ml-1 inline-flex items-center rounded-lg border border-red-200 text-red-500 hover:bg-red-50 p-1"
+                      title="Supprimer ce dossier vide"
+                    >
+                      <Trash2 className="h-3.5 w-3.5" />
+                    </button>
+                  )}
                 </div>
                 {isOpen && (
                   <ul className="divide-y divide-border bg-white">
