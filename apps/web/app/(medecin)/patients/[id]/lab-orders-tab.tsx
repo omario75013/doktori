@@ -109,19 +109,19 @@ export function LabOrdersSection({ patientId }: { patientId: string }) {
   }
 
   return (
-    <div className="ds-card">
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <div>
-          <h2 className="font-semibold text-foreground flex items-center gap-2">
-            <FlaskConical className="h-4 w-4 text-primary" />
-            {t("tabTitle")}
-          </h2>
+    <div className="rounded-2xl border bg-white overflow-hidden ring-1 ring-cyan-100 border-cyan-200">
+      <div className="px-4 py-2.5 border-b bg-cyan-50 border-cyan-200 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg text-cyan-600 bg-cyan-100">
+            <FlaskConical className="h-4 w-4" />
+          </span>
+          <h2 className="text-sm font-bold text-foreground">{t("tabTitle")}</h2>
         </div>
         <button
           onClick={() => setModalOpen(true)}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3 py-2 text-sm font-medium hover:opacity-90"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-cyan-600 hover:bg-cyan-700 text-white px-3 py-1.5 text-xs font-bold"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
           {t("newOrder")}
         </button>
       </div>

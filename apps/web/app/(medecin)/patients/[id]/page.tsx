@@ -843,18 +843,23 @@ function PatientDetail({ listPath }: { listPath: string }) {
             onDeleted={(id) => setSharedDocs((prev) => prev.filter((d) => d.id !== id))}
           />
 
-        <div className="ds-card">
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <div>
-              <h2 className="font-semibold text-foreground">{t("docsTitle")}</h2>
-              <p className="text-xs text-gray-400 mt-0.5">{t("docsSubtitle")}</p>
+        <div className="rounded-2xl border bg-white overflow-hidden ring-1 ring-violet-100 border-violet-200">
+          <div className="px-4 py-2.5 border-b bg-violet-50 border-violet-200 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="flex h-7 w-7 items-center justify-center rounded-lg text-violet-600 bg-violet-100">
+                <FileText className="h-4 w-4" />
+              </span>
+              <div>
+                <h2 className="text-sm font-bold text-foreground">{t("docsTitle")}</h2>
+                <p className="text-[11px] text-muted-foreground">{t("docsSubtitle")}</p>
+              </div>
             </div>
             {(viewerRole === "doctor" || viewerPerms?.patientsEdit) && (
               <button
                 onClick={() => setUploadOpen(true)}
-                className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3 py-2 text-sm font-medium hover:opacity-90"
+                className="inline-flex items-center gap-1.5 rounded-lg bg-violet-600 hover:bg-violet-700 text-white px-3 py-1.5 text-xs font-bold"
               >
-                <Upload className="h-4 w-4" />
+                <Upload className="h-3.5 w-3.5" />
                 {t("addDocument")}
               </button>
             )}
@@ -2524,22 +2529,22 @@ function OrdonnancesSection({
   }
 
   return (
-    <div className="ds-card">
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <div>
-          <h2 className="font-semibold text-foreground flex items-center gap-2">
-            <FileText className="h-4 w-4 text-primary" />
-            {t("cardPrescriptions")}
-          </h2>
-          <p className="text-xs text-gray-400 mt-0.5">
-            {t("prescSubtitle")}
-          </p>
+    <div className="rounded-2xl border bg-white overflow-hidden ring-1 ring-emerald-100 border-emerald-200">
+      <div className="px-4 py-2.5 border-b bg-emerald-50 border-emerald-200 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg text-emerald-600 bg-emerald-100">
+            <Pill className="h-4 w-4" />
+          </span>
+          <div>
+            <h2 className="text-sm font-bold text-foreground">{t("cardPrescriptions")}</h2>
+            <p className="text-[11px] text-muted-foreground">{t("prescSubtitle")}</p>
+          </div>
         </div>
         <button
           onClick={onNewPrescription}
-          className="inline-flex items-center gap-2 rounded-xl bg-primary text-white px-3 py-2 text-sm font-medium hover:opacity-90"
+          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 text-xs font-bold"
         >
-          <Plus className="h-4 w-4" />
+          <Plus className="h-3.5 w-3.5" />
           {t("newPrescriptionButton")}
         </button>
       </div>
@@ -3452,15 +3457,27 @@ function SharedDocsSection({
   }
 
   return (
-    <div className="ds-card mb-4">
-      <div className="p-4 border-b border-border flex items-center justify-between">
-        <div>
-          <h2 className="font-semibold text-foreground">Documents partagés</h2>
-          <p className="text-xs text-gray-400 mt-0.5">
-            Fichiers partagés par le patient et documents que vous créez ici (visibles au patient en lecture seule).
-          </p>
+    <div className="rounded-2xl border bg-white overflow-hidden ring-1 ring-sky-100 border-sky-200 mb-4">
+      <div className="px-4 py-2.5 border-b bg-sky-50 border-sky-200 flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg text-sky-600 bg-sky-100">
+            <Share2 className="h-4 w-4" />
+          </span>
+          <div>
+            <h2 className="text-sm font-bold text-foreground">Documents partagés</h2>
+            <p className="text-[11px] text-muted-foreground">
+              Fichiers partagés par le patient et documents que vous créez ici.
+            </p>
+          </div>
         </div>
-        <div>
+        <div className="flex items-center">
+          <input
+            type="file"
+            ref={fileRef}
+            onChange={handleFile}
+            accept="application/pdf,image/*"
+            className="hidden"
+          />
           <input
             type="file"
             ref={fileRef}
