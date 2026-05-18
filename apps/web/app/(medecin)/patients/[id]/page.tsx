@@ -2117,6 +2117,19 @@ function DossierTab({
   // Helper used in JSX so the Card hides for non-owners when not shared.
   const showShareToggle = viewerRole === "doctor" && isSharingOwner;
 
+  // Per-section edit dialog: each card's "Modifier" button opens THIS section
+  // only, not the whole patient form.
+  type SectionKey =
+    | "medicalSummary"
+    | "familyHistory"
+    | "lifestyle"
+    | "surgeries"
+    | "hospitalizations"
+    | "vaccinations"
+    | "womensHealth";
+  const [editSection, setEditSection] = useState<SectionKey | null>(null);
+  const openSection = (k: SectionKey) => () => setEditSection(k);
+
   // Save helper for inline-edited fields on patient_medical_profile.
   // Sends a tiny PATCH and lets the parent refresh on next mount; we also
   // toast on success so the doctor knows it persisted.
@@ -2153,8 +2166,8 @@ function DossierTab({
         icon={<HeartPulse className="h-4 w-4" />}
         shared={showShareToggle ? isShared("medicalSummary") : undefined}
         onToggleShare={showShareToggle ? () => toggleShare("medicalSummary") : undefined}
-        onAdd={viewerRole === "doctor" ? onEdit : undefined}
-        addLabel="Tout modifier"
+        onAdd={viewerRole === "doctor" ? openSection("medicalSummary") : undefined}
+        addLabel="Modifier"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <MedBlock
@@ -2205,7 +2218,7 @@ function DossierTab({
         icon={<User className="h-4 w-4" />}
         shared={showShareToggle ? isShared("familyHistory") : undefined}
         onToggleShare={showShareToggle ? () => toggleShare("familyHistory") : undefined}
-        onAdd={viewerRole === "doctor" ? onEdit : undefined}
+        onAdd={viewerRole === "doctor" ? openSection("familyHistory") : undefined}
         addLabel="Modifier"
       >
         {fam && Object.values(fam).some(Boolean) ? (
@@ -2234,7 +2247,7 @@ function DossierTab({
         icon={<Activity className="h-4 w-4" />}
         shared={showShareToggle ? isShared("lifestyle") : undefined}
         onToggleShare={showShareToggle ? () => toggleShare("lifestyle") : undefined}
-        onAdd={viewerRole === "doctor" ? onEdit : undefined}
+        onAdd={viewerRole === "doctor" ? openSection("lifestyle") : undefined}
         addLabel="Modifier"
       >
         {lifestyle && Object.values(lifestyle).some((v) => v != null) ? (
@@ -2295,7 +2308,7 @@ function DossierTab({
         icon={<Pill className="h-4 w-4" />}
         shared={showShareToggle ? isShared("surgeries") : undefined}
         onToggleShare={showShareToggle ? () => toggleShare("surgeries") : undefined}
-        onAdd={viewerRole === "doctor" ? onEdit : undefined}
+        onAdd={viewerRole === "doctor" ? openSection("surgeries") : undefined}
         addLabel="Modifier"
       >
         {medical?.pastSurgeries && medical.pastSurgeries.length > 0 ? (
@@ -2329,7 +2342,7 @@ function DossierTab({
         icon={<History className="h-4 w-4" />}
         shared={showShareToggle ? isShared("hospitalizations") : undefined}
         onToggleShare={showShareToggle ? () => toggleShare("hospitalizations") : undefined}
-        onAdd={viewerRole === "doctor" ? onEdit : undefined}
+        onAdd={viewerRole === "doctor" ? openSection("hospitalizations") : undefined}
         addLabel="Modifier"
       >
         {medical?.pastHospitalizations && medical.pastHospitalizations.length > 0 ? (
@@ -2363,7 +2376,7 @@ function DossierTab({
         icon={<Award className="h-4 w-4" />}
         shared={showShareToggle ? isShared("vaccinations") : undefined}
         onToggleShare={showShareToggle ? () => toggleShare("vaccinations") : undefined}
-        onAdd={viewerRole === "doctor" ? onEdit : undefined}
+        onAdd={viewerRole === "doctor" ? openSection("vaccinations") : undefined}
         addLabel="Modifier"
       >
         {medical?.vaccinations && medical.vaccinations.length > 0 ? (
@@ -2408,7 +2421,7 @@ function DossierTab({
           icon={<HeartPulse className="h-4 w-4" />}
           shared={showShareToggle ? isShared("womensHealth") : undefined}
           onToggleShare={showShareToggle ? () => toggleShare("womensHealth") : undefined}
-          onAdd={viewerRole === "doctor" ? onEdit : undefined}
+          onAdd={viewerRole === "doctor" ? openSection("womensHealth") : undefined}
           addLabel="Modifier"
         >
           {medical?.womensHealth && Object.values(medical.womensHealth).some((v) => v != null) ? (
@@ -2683,6 +2696,19 @@ function DossierTab({
           </div>
         )}
       </div>
+
+      {editSection && (
+        <SectionEditDialog
+          patientId={patient.id}
+          section={editSection}
+          medical={medical}
+          onClose={() => setEditSection(null)}
+          onSaved={() => {
+            setEditSection(null);
+            window.dispatchEvent(new CustomEvent("patient-medical-updated"));
+          }}
+        />
+      )}
     </div>
   );
 }
@@ -4062,6 +4088,288 @@ function DossierItemsList({ patientId, type, label }: { patientId: string; type:
           })}
         </ul>
       )}
+    </div>
+  );
+}
+
+// ── Per-section edit dialog (Modifier on each Dossier card) ───────────────────
+// Renders ONLY the fields of the chosen section so the doctor isn't dropped
+// into the whole patient form. Saves a partial { medical: { …subset } } PATCH.
+
+type SectionEditDialogProps = {
+  patientId: string;
+  section:
+    | "medicalSummary"
+    | "familyHistory"
+    | "lifestyle"
+    | "surgeries"
+    | "hospitalizations"
+    | "vaccinations"
+    | "womensHealth";
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  medical: any;
+  onClose: () => void;
+  onSaved: () => void;
+};
+
+function SectionEditDialog({ patientId, section, medical, onClose, onSaved }: SectionEditDialogProps) {
+  const t = useTranslations("medecin.patientDetail");
+  const [saving, setSaving] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [form, setForm] = useState<any>(() => {
+    if (section === "medicalSummary") {
+      return {
+        allergies: medical?.allergies ?? "",
+        chronicConditions: medical?.chronicConditions ?? "",
+        currentMeds: medical?.currentMeds ?? "",
+        notes: medical?.notes ?? "",
+      };
+    }
+    if (section === "familyHistory") return { ...(medical?.familyHistory ?? {}) };
+    if (section === "lifestyle") return { ...(medical?.lifestyle ?? {}) };
+    if (section === "surgeries") return { pastSurgeries: [...(medical?.pastSurgeries ?? [])] };
+    if (section === "hospitalizations") return { pastHospitalizations: [...(medical?.pastHospitalizations ?? [])] };
+    if (section === "vaccinations") return { vaccinations: [...(medical?.vaccinations ?? [])] };
+    if (section === "womensHealth") return { ...(medical?.womensHealth ?? {}) };
+    return {};
+  });
+
+  async function save() {
+    setSaving(true);
+    let payload: Record<string, unknown> = {};
+    if (section === "medicalSummary") {
+      payload = {
+        allergies: form.allergies || null,
+        chronicConditions: form.chronicConditions || null,
+        currentMeds: form.currentMeds || null,
+        notes: form.notes || null,
+      };
+    } else if (section === "familyHistory") {
+      payload = { familyHistory: form };
+    } else if (section === "lifestyle") {
+      payload = { lifestyle: form };
+    } else if (section === "surgeries") {
+      payload = { pastSurgeries: form.pastSurgeries };
+    } else if (section === "hospitalizations") {
+      payload = { pastHospitalizations: form.pastHospitalizations };
+    } else if (section === "vaccinations") {
+      payload = { vaccinations: form.vaccinations };
+    } else if (section === "womensHealth") {
+      payload = { womensHealth: form };
+    }
+    try {
+      const r = await fetch(`/api/patients/${patientId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ medical: payload }),
+      });
+      if (r.ok) {
+        toast.success("Section mise à jour");
+        onSaved();
+      } else {
+        toast.error("Échec de l'enregistrement");
+      }
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const titleByKey: Record<SectionEditDialogProps["section"], string> = {
+    medicalSummary: t("cardMedicalSummary"),
+    familyHistory: t("cardFamilyHistory"),
+    lifestyle: t("cardLifestyle"),
+    surgeries: t("cardSurgeries"),
+    hospitalizations: t("cardHospitalizations"),
+    vaccinations: t("cardVaccinations"),
+    womensHealth: t("cardWomensHealth"),
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div
+        className="w-full max-w-xl max-h-[85vh] overflow-y-auto rounded-2xl bg-white shadow-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between border-b border-border px-5 py-3">
+          <h2 className="text-base font-bold text-foreground">{titleByKey[section]}</h2>
+          <button onClick={onClose} className="p-1 rounded-lg hover:bg-secondary" aria-label="Fermer">
+            <XIcon className="h-4 w-4" />
+          </button>
+        </div>
+        <div className="p-5 space-y-3">
+          {section === "medicalSummary" && (
+            <>
+              <Field label="Allergies"><textarea rows={2} value={form.allergies} onChange={(e)=>setForm({...form, allergies: e.target.value})} className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" /></Field>
+              <Field label="Maladies chroniques"><textarea rows={2} value={form.chronicConditions} onChange={(e)=>setForm({...form, chronicConditions: e.target.value})} className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" /></Field>
+              <Field label="Traitements en cours"><textarea rows={2} value={form.currentMeds} onChange={(e)=>setForm({...form, currentMeds: e.target.value})} className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" /></Field>
+              <Field label="Autres remarques"><textarea rows={2} value={form.notes} onChange={(e)=>setForm({...form, notes: e.target.value})} className="w-full rounded-xl border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary" /></Field>
+            </>
+          )}
+          {section === "familyHistory" && (
+            <>
+              <div className="grid grid-cols-2 gap-2">
+                {(["heart","diabetes","cancer","hypertension","stroke","other"] as const).map((k) => (
+                  <label key={k} className="inline-flex items-center gap-2 text-sm">
+                    <input type="checkbox" checked={!!form[k]} onChange={(e)=>setForm({...form, [k]: e.target.checked})} />
+                    {k === "heart" ? "Maladie cardiaque" : k === "diabetes" ? "Diabète" : k === "cancer" ? "Cancer" : k === "hypertension" ? "Hypertension" : k === "stroke" ? "AVC" : "Autre"}
+                  </label>
+                ))}
+              </div>
+              <Field label="Notes"><textarea rows={2} value={form.notes ?? ""} onChange={(e)=>setForm({...form, notes: e.target.value})} className="w-full rounded-xl border border-border px-3 py-2 text-sm" /></Field>
+            </>
+          )}
+          {section === "lifestyle" && (
+            <>
+              <Field label="Tabac">
+                <select value={form.smoking ?? ""} onChange={(e)=>setForm({...form, smoking: e.target.value || null})} className="w-full h-10 rounded-xl border border-border bg-white px-3 text-sm">
+                  <option value="">—</option>
+                  <option value="never">Jamais</option>
+                  <option value="former">Ancien fumeur</option>
+                  <option value="current">Fumeur actuel</option>
+                </select>
+              </Field>
+              {form.smoking === "current" && (
+                <Field label="Paquets/jour">
+                  <input type="number" step="0.1" min="0" value={form.smokingPacksPerDay ?? ""} onChange={(e)=>setForm({...form, smokingPacksPerDay: e.target.value ? Number(e.target.value) : null})} className="w-full h-10 rounded-xl border border-border px-3 text-sm" />
+                </Field>
+              )}
+              <Field label="Alcool">
+                <select value={form.alcohol ?? ""} onChange={(e)=>setForm({...form, alcohol: e.target.value || null})} className="w-full h-10 rounded-xl border border-border bg-white px-3 text-sm">
+                  <option value="">—</option>
+                  <option value="none">Aucun</option>
+                  <option value="occasional">Occasionnel</option>
+                  <option value="moderate">Modéré</option>
+                  <option value="heavy">Important</option>
+                </select>
+              </Field>
+              <Field label="Activité physique">
+                <select value={form.activity ?? ""} onChange={(e)=>setForm({...form, activity: e.target.value || null})} className="w-full h-10 rounded-xl border border-border bg-white px-3 text-sm">
+                  <option value="">—</option>
+                  <option value="sedentary">Sédentaire</option>
+                  <option value="moderate">Modérée</option>
+                  <option value="active">Active</option>
+                </select>
+              </Field>
+            </>
+          )}
+          {section === "surgeries" && (
+            <ArrayEditor
+              items={form.pastSurgeries ?? []}
+              onChange={(next) => setForm({ ...form, pastSurgeries: next })}
+              fields={[
+                { key: "label", label: "Intervention", required: true },
+                { key: "year", label: "Année" },
+                { key: "hospital", label: "Établissement" },
+              ]}
+            />
+          )}
+          {section === "hospitalizations" && (
+            <ArrayEditor
+              items={form.pastHospitalizations ?? []}
+              onChange={(next) => setForm({ ...form, pastHospitalizations: next })}
+              fields={[
+                { key: "reason", label: "Motif", required: true },
+                { key: "year", label: "Année" },
+                { key: "days", label: "Durée (jours)", type: "number" },
+              ]}
+            />
+          )}
+          {section === "vaccinations" && (
+            <ArrayEditor
+              items={form.vaccinations ?? []}
+              onChange={(next) => setForm({ ...form, vaccinations: next })}
+              fields={[
+                { key: "vaccine", label: "Vaccin", required: true },
+                { key: "date", label: "Date", type: "date" },
+                { key: "lotNumber", label: "Lot" },
+              ]}
+            />
+          )}
+          {section === "womensHealth" && (
+            <>
+              <Field label="Grossesses"><input type="number" min="0" value={form.pregnancies ?? ""} onChange={(e)=>setForm({...form, pregnancies: e.target.value ? Number(e.target.value) : null})} className="w-full h-10 rounded-xl border border-border px-3 text-sm" /></Field>
+              <Field label="Enfants vivants"><input type="number" min="0" value={form.livingChildren ?? ""} onChange={(e)=>setForm({...form, livingChildren: e.target.value ? Number(e.target.value) : null})} className="w-full h-10 rounded-xl border border-border px-3 text-sm" /></Field>
+              <Field label="Dernières règles"><input type="date" value={form.lastMenstruation ?? ""} onChange={(e)=>setForm({...form, lastMenstruation: e.target.value || null})} className="w-full h-10 rounded-xl border border-border px-3 text-sm" /></Field>
+              <Field label="Contraception"><input type="text" value={form.contraception ?? ""} onChange={(e)=>setForm({...form, contraception: e.target.value || null})} className="w-full h-10 rounded-xl border border-border px-3 text-sm" /></Field>
+              <label className="inline-flex items-center gap-2 text-sm"><input type="checkbox" checked={!!form.menopause} onChange={(e)=>setForm({...form, menopause: e.target.checked})} /> Ménopause</label>
+              <Field label="Notes"><textarea rows={2} value={form.notes ?? ""} onChange={(e)=>setForm({...form, notes: e.target.value})} className="w-full rounded-xl border border-border px-3 py-2 text-sm" /></Field>
+            </>
+          )}
+        </div>
+        <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
+          <button onClick={onClose} className="px-3 py-1.5 rounded-lg border border-border text-sm hover:bg-secondary">Annuler</button>
+          <button onClick={save} disabled={saving} className="px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-bold hover:bg-doktori-teal-dark disabled:opacity-50">
+            {saving ? "Enregistrement…" : "Enregistrer"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ArrayEditor({
+  items,
+  onChange,
+  fields,
+}: {
+  items: Record<string, unknown>[];
+  onChange: (next: Record<string, unknown>[]) => void;
+  fields: { key: string; label: string; required?: boolean; type?: "text" | "number" | "date" }[];
+}) {
+  const [draft, setDraft] = useState<Record<string, unknown>>({});
+
+  function add() {
+    const req = fields.find((f) => f.required);
+    if (req && !draft[req.key]) {
+      toast.error(`${req.label} est requis`);
+      return;
+    }
+    onChange([...items, draft]);
+    setDraft({});
+  }
+  function remove(i: number) {
+    onChange(items.filter((_, idx) => idx !== i));
+  }
+
+  return (
+    <div className="space-y-2">
+      {items.length > 0 && (
+        <ul className="space-y-1.5">
+          {items.map((it, i) => (
+            <li key={i} className="flex items-center gap-2 rounded-lg border border-border bg-secondary p-2 text-sm">
+              <span className="flex-1 min-w-0 truncate">
+                {fields.map((f, idx) => (
+                  <span key={f.key}>
+                    {idx > 0 && it[f.key] != null && it[f.key] !== "" ? " · " : ""}
+                    {it[f.key] != null && it[f.key] !== "" ? String(it[f.key]) : ""}
+                  </span>
+                ))}
+              </span>
+              <button onClick={() => remove(i)} className="text-red-500 hover:bg-red-50 rounded p-1" title="Retirer">
+                <Trash2 className="h-3.5 w-3.5" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div className="grid grid-cols-3 gap-1.5 items-end pt-1 border-t border-border">
+        {fields.map((f) => (
+          <label key={f.key} className="text-xs">
+            <span className="block text-[10px] uppercase tracking-wide text-muted-foreground mb-0.5">
+              {f.label}{f.required ? " *" : ""}
+            </span>
+            <input
+              type={f.type ?? "text"}
+              value={(draft[f.key] as string | number | undefined) ?? ""}
+              onChange={(e) => setDraft({ ...draft, [f.key]: f.type === "number" ? (e.target.value ? Number(e.target.value) : "") : e.target.value })}
+              className="w-full h-9 rounded-lg border border-border px-2 text-sm"
+            />
+          </label>
+        ))}
+        <button onClick={add} className="col-span-3 inline-flex items-center justify-center gap-1 h-9 rounded-lg bg-primary text-white text-xs font-bold">
+          <Plus className="h-3.5 w-3.5" /> Ajouter
+        </button>
+      </div>
     </div>
   );
 }
