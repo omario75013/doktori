@@ -2186,6 +2186,9 @@ function DossierTab({
             onSave={(next) => saveMedicalField("notes", next)}
           />
         </div>
+        {viewerRole === "doctor" && (
+          <PatientContributedItems patientId={patient.id} type="allergy" label="Allergies ajoutées par le patient" />
+        )}
         {medical?.updatedAt && (
           <div className="text-xs text-gray-400 mt-4">
             {t("updatedAt")} {format(new Date(medical.updatedAt), "d MMM yyyy", { locale: fr })}
@@ -2390,6 +2393,9 @@ function DossierTab({
           </div>
         ) : (
           <EmptyInline />
+        )}
+        {viewerRole === "doctor" && (
+          <PatientContributedItems patientId={patient.id} type="vaccination" label="Vaccins ajoutés par le patient" />
         )}
       </Card>
       )}
@@ -4055,6 +4061,109 @@ function DossierItemsList({ patientId, type, label }: { patientId: string; type:
             );
           })}
         </ul>
+      )}
+    </div>
+  );
+}
+
+// ── Patient-contributed items strip (chips for approved, inline approve/reject for pending) ──
+// Reads patient_allergies / patient_vaccinations / patient_analyses (where
+// createdBy='patient'). Approved entries appear as chips so the doctor sees
+// what the patient self-reported without it overlapping the doctor's
+// narrative text on patient_medical_profile.
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function PatientContributedItems({ patientId, type, label }: { patientId: string; type: DossierItemType; label: string }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [items, setItems] = useState<any[]>([]);
+  const load = useCallback(async () => {
+    const r = await fetch(`/api/doctor/patients/${patientId}/dossier-items?type=${type}`, { cache: "no-store" });
+    if (r.ok) {
+      const d = await r.json();
+      // Show patient-created entries only (doctor's freeform narrative covers
+      // the rest). Hide rejected — the rejection is recorded server-side.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const filtered = (d.items ?? []).filter((it: any) =>
+        it.createdBy === "patient" && it.approvalStatus !== "rejected",
+      );
+      setItems(filtered);
+    }
+  }, [patientId, type]);
+  useEffect(() => {
+    void load();
+    // Refresh when approvals are made elsewhere
+    const onApproved = () => void load();
+    window.addEventListener("patient-approval-changed", onApproved);
+    return () => window.removeEventListener("patient-approval-changed", onApproved);
+  }, [load]);
+
+  async function approve(itemId: string, action: "approve" | "reject") {
+    let reason: string | null = null;
+    if (action === "reject") reason = prompt("Motif (optionnel) :") ?? null;
+    const r = await fetch("/api/doctor/patient-approvals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, itemId, action, reason }),
+    });
+    if (r.ok) {
+      toast.success(action === "approve" ? "Validé" : "Rejeté");
+      window.dispatchEvent(new CustomEvent("patient-approval-changed"));
+    }
+  }
+
+  if (items.length === 0) return null;
+
+  function primaryOf(it: { allergen?: string; vaccineName?: string; dateReceived?: string; title?: string }): string {
+    if (type === "allergy") return it.allergen ?? "";
+    if (type === "vaccination") return `${it.vaccineName} · ${it.dateReceived}`;
+    return it.title ?? "";
+  }
+
+  const approved = items.filter((it) => it.approvalStatus === "approved");
+  const pending = items.filter((it) => it.approvalStatus === "pending");
+
+  return (
+    <div className="mt-4 pt-3 border-t border-border/60">
+      <div className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground mb-1.5">{label}</div>
+      {approved.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mb-2">
+          {approved.map((it) => (
+            <span
+              key={it.id}
+              className="inline-flex items-center gap-1 rounded-full bg-emerald-50 border border-emerald-200 px-2 py-0.5 text-[11px] font-semibold text-emerald-800"
+            >
+              <Check className="h-3 w-3" />
+              {primaryOf(it)}
+            </span>
+          ))}
+        </div>
+      )}
+      {pending.length > 0 && (
+        <div className="space-y-1">
+          {pending.map((it) => (
+            <div
+              key={it.id}
+              className="flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 p-1.5 text-xs"
+            >
+              <span className="text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-100 text-amber-800 px-1.5 py-0.5">
+                À valider
+              </span>
+              <span className="flex-1 min-w-0 truncate text-foreground">{primaryOf(it)}</span>
+              <button
+                onClick={() => approve(it.id, "approve")}
+                className="inline-flex items-center gap-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white px-1.5 py-0.5 text-[10px] font-bold"
+              >
+                <Check className="h-3 w-3" /> Valider
+              </button>
+              <button
+                onClick={() => approve(it.id, "reject")}
+                className="inline-flex items-center gap-0.5 rounded border border-red-200 text-red-600 hover:bg-red-50 px-1.5 py-0.5 text-[10px] font-bold"
+              >
+                <XIcon className="h-3 w-3" /> Rejeter
+              </button>
+            </div>
+          ))}
+        </div>
       )}
     </div>
   );
