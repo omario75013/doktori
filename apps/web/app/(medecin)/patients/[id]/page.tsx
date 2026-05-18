@@ -2054,6 +2054,9 @@ function DossierTab({
           />
           <MedBlock title={t("fieldNotesDisplay")} value={medical?.notes} highlight="gray" />
         </div>
+        {viewerRole === "doctor" && (
+          <DossierItemsList patientId={patient.id} type="allergy" label="Allergies enregistrées" />
+        )}
         {medical?.updatedAt && (
           <div className="text-xs text-gray-400 mt-4">
             {t("updatedAt")} {format(new Date(medical.updatedAt), "d MMM yyyy", { locale: fr })}
@@ -2248,6 +2251,9 @@ function DossierTab({
           </div>
         ) : (
           <EmptyInline />
+        )}
+        {viewerRole === "doctor" && (
+          <DossierItemsList patientId={patient.id} type="vaccination" label="Carnet de vaccination" />
         )}
       </Card>
       )}
@@ -3753,6 +3759,164 @@ function SharedDocsSection({
             );
           })}
         </div>
+      )}
+    </div>
+  );
+}
+
+// ── Dossier Items list (per-section: allergies / vaccinations / analyses) ─────
+// Renders the structured rows (patient_allergies / patient_vaccinations /
+// patient_analyses) inside a colored card with inline approve/reject for
+// pending items, plus a "+ Ajouter" prompt for the doctor.
+
+type DossierItemType = "allergy" | "vaccination" | "analysis";
+
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function DossierItemsList({ patientId, type, label }: { patientId: string; type: DossierItemType; label: string }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [items, setItems] = useState<any[]>([]);
+
+  const load = useCallback(async () => {
+    const r = await fetch(`/api/doctor/patients/${patientId}/dossier-items?type=${type}`, { cache: "no-store" });
+    if (r.ok) {
+      const d = await r.json();
+      setItems(d.items ?? []);
+    }
+  }, [patientId, type]);
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function approve(itemId: string, action: "approve" | "reject") {
+    let reason: string | null = null;
+    if (action === "reject") reason = prompt("Motif (optionnel) :") ?? null;
+    const r = await fetch("/api/doctor/patient-approvals", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type, itemId, action, reason }),
+    });
+    if (r.ok) {
+      toast.success(action === "approve" ? "Validé" : "Rejeté");
+      void load();
+    }
+  }
+  async function remove(itemId: string) {
+    if (!confirm("Supprimer cet élément ?")) return;
+    const r = await fetch(`/api/doctor/patients/${patientId}/dossier-items/${itemId}?type=${type}`, {
+      method: "DELETE",
+    });
+    if (r.ok) {
+      toast.success("Supprimé");
+      void load();
+    }
+  }
+  async function addQuick() {
+    if (type === "allergy") {
+      const allergen = prompt("Nom de l'allergène :");
+      if (!allergen?.trim()) return;
+      const r = await fetch(`/api/doctor/patients/${patientId}/dossier-items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, allergen: allergen.trim() }),
+      });
+      if (r.ok) {
+        toast.success("Ajouté");
+        void load();
+      }
+    } else if (type === "vaccination") {
+      const vaccineName = prompt("Nom du vaccin :");
+      if (!vaccineName?.trim()) return;
+      const dateReceived = prompt("Date (YYYY-MM-DD) :");
+      if (!dateReceived || !/^\d{4}-\d{2}-\d{2}$/.test(dateReceived)) return;
+      const r = await fetch(`/api/doctor/patients/${patientId}/dossier-items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, vaccineName: vaccineName.trim(), dateReceived }),
+      });
+      if (r.ok) {
+        toast.success("Ajouté");
+        void load();
+      }
+    } else if (type === "analysis") {
+      const title = prompt("Titre de l'analyse :");
+      if (!title?.trim()) return;
+      const r = await fetch(`/api/doctor/patients/${patientId}/dossier-items`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, title: title.trim() }),
+      });
+      if (r.ok) {
+        toast.success("Ajouté");
+        void load();
+      }
+    }
+  }
+
+  return (
+    <div className="mt-3">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs font-bold uppercase tracking-wide text-foreground">{label}</span>
+        <button
+          onClick={addQuick}
+          className="inline-flex items-center gap-1 text-[11px] font-semibold rounded-lg border border-border bg-white px-2 py-1 hover:bg-secondary"
+        >
+          <Plus className="h-3 w-3" /> Ajouter
+        </button>
+      </div>
+      {items.length === 0 ? (
+        <p className="text-xs text-muted-foreground italic">Aucun élément.</p>
+      ) : (
+        <ul className="space-y-1.5">
+          {items.map((it) => {
+            const pending = it.approvalStatus === "pending";
+            const rejected = it.approvalStatus === "rejected";
+            const primary =
+              type === "allergy"
+                ? it.allergen
+                : type === "vaccination"
+                  ? `${it.vaccineName} · ${it.dateReceived}`
+                  : it.title;
+            return (
+              <li
+                key={it.id}
+                className={`flex items-center gap-2 rounded-lg border p-2 text-xs ${
+                  pending
+                    ? "border-amber-200 bg-amber-50"
+                    : rejected
+                      ? "border-gray-200 bg-gray-50 opacity-70"
+                      : "border-border bg-white"
+                }`}
+              >
+                <span className="flex-1 min-w-0 truncate font-medium text-foreground">{primary}</span>
+                {pending && (
+                  <>
+                    <button
+                      onClick={() => approve(it.id, "approve")}
+                      className="inline-flex items-center gap-0.5 rounded bg-emerald-600 hover:bg-emerald-700 text-white px-1.5 py-0.5 text-[10px] font-bold"
+                    >
+                      <Check className="h-3 w-3" /> Valider
+                    </button>
+                    <button
+                      onClick={() => approve(it.id, "reject")}
+                      className="inline-flex items-center gap-0.5 rounded border border-red-200 text-red-600 hover:bg-red-50 px-1.5 py-0.5 text-[10px] font-bold"
+                    >
+                      <XIcon className="h-3 w-3" /> Rejeter
+                    </button>
+                  </>
+                )}
+                {!pending && (
+                  <button
+                    onClick={() => remove(it.id)}
+                    className="text-red-500 hover:bg-red-50 rounded p-0.5"
+                    title="Supprimer"
+                  >
+                    <Trash2 className="h-3 w-3" />
+                  </button>
+                )}
+              </li>
+            );
+          })}
+        </ul>
       )}
     </div>
   );
