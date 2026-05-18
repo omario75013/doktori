@@ -18,6 +18,8 @@ interface Allergy {
   reaction: string | null;
   diagnosedAt: string | null;
   createdAt: string;
+  approvalStatus?: "pending" | "approved" | "rejected";
+  rejectionReason?: string | null;
 }
 
 const SEVERITY_STYLES: Record<string, string> = {
@@ -201,7 +203,20 @@ export default function AllergiesPage() {
                         <span className={`text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 ${SEVERITY_BADGES[sev]}`}>
                           {SEVERITY_LABELS[sev]}
                         </span>
+                        {a.approvalStatus === "pending" && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-amber-100 text-amber-800">
+                            En attente de validation
+                          </span>
+                        )}
+                        {a.approvalStatus === "rejected" && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-red-100 text-red-800">
+                            Rejeté par le médecin
+                          </span>
+                        )}
                       </div>
+                      {a.approvalStatus === "rejected" && a.rejectionReason && (
+                        <p className="text-xs text-red-700 mt-1 italic">Motif : {a.rejectionReason}</p>
+                      )}
                       {a.reaction && <p className="text-xs text-foreground/70 mt-2 whitespace-pre-line">{a.reaction}</p>}
                       {a.diagnosedAt && (
                         <p className="text-xs text-muted-foreground mt-1">

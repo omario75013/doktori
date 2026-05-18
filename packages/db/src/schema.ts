@@ -2002,9 +2002,19 @@ export const patientVaccinations = pgTable(
     batchNumber: varchar("batch_number", { length: 60 }),
     givenBy: varchar("given_by", { length: 120 }),
     notes: text("notes"),
+    /** 'patient' | 'doctor' — who added the entry. */
+    createdBy: varchar("created_by", { length: 10 }).notNull().default("patient"),
+    /** 'pending' | 'approved' | 'rejected' — patient-added entries need doctor validation. */
+    approvalStatus: varchar("approval_status", { length: 20 }).notNull().default("pending"),
+    approvedByDoctorId: uuid("approved_by_doctor_id").references(() => doctors.id, { onDelete: "set null" }),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    rejectionReason: text("rejection_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index("patient_vaccinations_patient_idx").on(table.patientId, table.dateReceived)]
+  (table) => [
+    index("patient_vaccinations_patient_idx").on(table.patientId, table.dateReceived),
+    index("patient_vaccinations_approval_idx").on(table.patientId, table.approvalStatus),
+  ]
 );
 
 export type PatientVaccination = typeof patientVaccinations.$inferSelect;
@@ -2042,9 +2052,17 @@ export const patientAllergies = pgTable(
     severity: varchar("severity", { length: 20 }),
     reaction: text("reaction"),
     diagnosedAt: date("diagnosed_at"),
+    createdBy: varchar("created_by", { length: 10 }).notNull().default("patient"),
+    approvalStatus: varchar("approval_status", { length: 20 }).notNull().default("pending"),
+    approvedByDoctorId: uuid("approved_by_doctor_id").references(() => doctors.id, { onDelete: "set null" }),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    rejectionReason: text("rejection_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index("patient_allergies_patient_idx").on(table.patientId)]
+  (table) => [
+    index("patient_allergies_patient_idx").on(table.patientId),
+    index("patient_allergies_approval_idx").on(table.patientId, table.approvalStatus),
+  ]
 );
 
 export type PatientAllergy = typeof patientAllergies.$inferSelect;
@@ -2060,9 +2078,17 @@ export const patientAnalyses = pgTable(
     testDate: date("test_date"),
     fileUrl: varchar("file_url", { length: 500 }),
     notes: text("notes"),
+    createdBy: varchar("created_by", { length: 10 }).notNull().default("patient"),
+    approvalStatus: varchar("approval_status", { length: 20 }).notNull().default("pending"),
+    approvedByDoctorId: uuid("approved_by_doctor_id").references(() => doctors.id, { onDelete: "set null" }),
+    approvedAt: timestamp("approved_at", { withTimezone: true }),
+    rejectionReason: text("rejection_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index("patient_analyses_patient_idx").on(table.patientId, table.testDate)]
+  (table) => [
+    index("patient_analyses_patient_idx").on(table.patientId, table.testDate),
+    index("patient_analyses_approval_idx").on(table.patientId, table.approvalStatus),
+  ]
 );
 
 export type PatientAnalysis = typeof patientAnalyses.$inferSelect;

@@ -18,6 +18,8 @@ interface Analysis {
   fileUrl: string | null;
   notes: string | null;
   createdAt: string;
+  approvalStatus?: "pending" | "approved" | "rejected";
+  rejectionReason?: string | null;
 }
 
 export default function AnalysesPage() {
@@ -179,7 +181,22 @@ export default function AnalysesPage() {
                   <div className="rounded-2xl border border-border bg-white shadow-sm p-4">
                     <div className="flex items-start justify-between gap-2">
                       <div className="min-w-0 flex-1">
-                        <p className="text-sm font-bold text-foreground">{a.title}</p>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <p className="text-sm font-bold text-foreground">{a.title}</p>
+                          {a.approvalStatus === "pending" && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-amber-100 text-amber-800">
+                              En attente de validation
+                            </span>
+                          )}
+                          {a.approvalStatus === "rejected" && (
+                            <span className="text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 bg-red-100 text-red-800">
+                              Rejeté
+                            </span>
+                          )}
+                        </div>
+                        {a.approvalStatus === "rejected" && a.rejectionReason && (
+                          <p className="text-xs text-red-700 mt-0.5 italic">Motif : {a.rejectionReason}</p>
+                        )}
                         {a.labName && <p className="text-xs text-primary font-semibold mt-0.5">{a.labName}</p>}
                         {a.testDate && (
                           <p className="text-xs text-muted-foreground mt-1">

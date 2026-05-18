@@ -44,6 +44,7 @@ import {
   ContactRound,
   MapPin,
   Languages,
+  Check,
 } from "lucide-react";
 import { ReferPatientModal } from "./refer-patient-modal";
 import { CertificatesSection } from "./certificates-tab";
@@ -706,6 +707,9 @@ function PatientDetail({ listPath }: { listPath: string }) {
       {tab === "general" && (
         <>
           <GeneralTab patient={patient} appointments={appointments} onEdit={() => setEditOpen(true)} />
+          {viewerRole === "doctor" && (
+            <PendingApprovalsSection patientId={params.id} />
+          )}
           <ClinicSharingSection patientId={params.id} viewerRole={viewerRole} />
         </>
       )}
@@ -3639,6 +3643,170 @@ function SharedDocsSection({
           })}
         </div>
       )}
+    </div>
+  );
+}
+
+// ── Pending Approvals Section (doctor reviews patient-added items) ────────────
+
+type PendingItem = { id: string; createdAt: string };
+type PendingPayload = {
+  allergies: (PendingItem & { allergen: string; severity: string | null; reaction: string | null })[];
+  vaccinations: (PendingItem & { vaccineName: string; dateReceived: string })[];
+  analyses: (PendingItem & { title: string; labName: string | null; testDate: string | null })[];
+};
+
+function PendingApprovalsSection({ patientId }: { patientId: string }) {
+  const [data, setData] = useState<PendingPayload>({ allergies: [], vaccinations: [], analyses: [] });
+  const [loading, setLoading] = useState(true);
+  const [acting, setActing] = useState<string | null>(null);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await fetch(`/api/doctor/patient-approvals?patientId=${patientId}`, { cache: "no-store" });
+      if (r.ok) setData(await r.json());
+    } finally {
+      setLoading(false);
+    }
+  }, [patientId]);
+
+  useEffect(() => {
+    void load();
+  }, [load]);
+
+  async function act(type: "allergy" | "vaccination" | "analysis", itemId: string, action: "approve" | "reject") {
+    let reason: string | null = null;
+    if (action === "reject") {
+      reason = prompt("Motif du rejet (optionnel) :") ?? null;
+    }
+    setActing(itemId);
+    try {
+      const r = await fetch("/api/doctor/patient-approvals", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ type, itemId, action, reason }),
+      });
+      if (r.ok) {
+        toast.success(action === "approve" ? "Validé" : "Rejeté");
+        void load();
+      } else {
+        const d = await r.json().catch(() => ({}));
+        toast.error(d.error ?? "Erreur");
+      }
+    } finally {
+      setActing(null);
+    }
+  }
+
+  const total = data.allergies.length + data.vaccinations.length + data.analyses.length;
+  if (loading || total === 0) return null;
+
+  return (
+    <div className="rounded-2xl border bg-white overflow-hidden ring-1 ring-amber-100 border-amber-200 mt-4">
+      <div className="px-4 py-2.5 border-b bg-amber-50 border-amber-200 flex items-center gap-2">
+        <span className="flex h-7 w-7 items-center justify-center rounded-lg text-amber-600 bg-amber-100">
+          <ClipboardList className="h-4 w-4" />
+        </span>
+        <div>
+          <h2 className="text-sm font-bold text-foreground">
+            Validations en attente · {total}
+          </h2>
+          <p className="text-[11px] text-muted-foreground">
+            Le patient a ajouté ces éléments — confirmez ou rejetez.
+          </p>
+        </div>
+      </div>
+      <div className="p-3 space-y-2">
+        {data.allergies.map((a) => (
+          <ApprovalRow
+            key={`a-${a.id}`}
+            label="Allergie"
+            color="rose"
+            primary={a.allergen}
+            secondary={a.reaction ?? a.severity}
+            acting={acting === a.id}
+            onApprove={() => act("allergy", a.id, "approve")}
+            onReject={() => act("allergy", a.id, "reject")}
+          />
+        ))}
+        {data.vaccinations.map((v) => (
+          <ApprovalRow
+            key={`v-${v.id}`}
+            label="Vaccin"
+            color="amber"
+            primary={v.vaccineName}
+            secondary={new Date(v.dateReceived).toLocaleDateString("fr-FR")}
+            acting={acting === v.id}
+            onApprove={() => act("vaccination", v.id, "approve")}
+            onReject={() => act("vaccination", v.id, "reject")}
+          />
+        ))}
+        {data.analyses.map((an) => (
+          <ApprovalRow
+            key={`an-${an.id}`}
+            label="Analyse"
+            color="sky"
+            primary={an.title}
+            secondary={[an.labName, an.testDate && new Date(an.testDate).toLocaleDateString("fr-FR")].filter(Boolean).join(" · ") || null}
+            acting={acting === an.id}
+            onApprove={() => act("analysis", an.id, "approve")}
+            onReject={() => act("analysis", an.id, "reject")}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function ApprovalRow({
+  label,
+  color,
+  primary,
+  secondary,
+  acting,
+  onApprove,
+  onReject,
+}: {
+  label: string;
+  color: "rose" | "amber" | "sky";
+  primary: string;
+  secondary: string | null;
+  acting: boolean;
+  onApprove: () => void;
+  onReject: () => void;
+}) {
+  const chip =
+    color === "rose"
+      ? "bg-rose-100 text-rose-700"
+      : color === "amber"
+        ? "bg-amber-100 text-amber-700"
+        : "bg-sky-100 text-sky-700";
+  return (
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-white p-3">
+      <span className={`text-[10px] font-bold uppercase tracking-wider rounded-full px-2 py-0.5 ${chip}`}>
+        {label}
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className="text-sm font-semibold text-foreground truncate">{primary}</div>
+        {secondary && <div className="text-xs text-muted-foreground truncate">{secondary}</div>}
+      </div>
+      <div className="flex gap-1.5 shrink-0">
+        <button
+          disabled={acting}
+          onClick={onApprove}
+          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold disabled:opacity-50"
+        >
+          <Check className="h-3.5 w-3.5" /> Valider
+        </button>
+        <button
+          disabled={acting}
+          onClick={onReject}
+          className="inline-flex items-center gap-1 px-2 py-1 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 text-xs font-bold disabled:opacity-50"
+        >
+          <XIcon className="h-3.5 w-3.5" /> Rejeter
+        </button>
+      </div>
     </div>
   );
 }
