@@ -234,22 +234,104 @@ function MedBlock({
   title,
   value,
   highlight,
+  editable,
+  onSave,
 }: {
   title: string;
   value?: string | null;
   highlight: "red" | "orange" | "blue" | "gray";
+  editable?: boolean;
+  onSave?: (next: string) => void | Promise<void>;
 }) {
   const tCommon = useTranslations("medecin.common");
   const hasValue = value && value.trim().length > 0;
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value ?? "");
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    if (!editing) setDraft(value ?? "");
+  }, [value, editing]);
+
+  async function commit() {
+    if (!onSave) {
+      setEditing(false);
+      return;
+    }
+    const next = draft.trim();
+    if (next === (value ?? "").trim()) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      await onSave(next);
+    } finally {
+      setSaving(false);
+      setEditing(false);
+    }
+  }
+
+  if (editing && editable) {
+    return (
+      <div>
+        <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">{title}</div>
+        <textarea
+          autoFocus
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          onBlur={commit}
+          onKeyDown={(e) => {
+            if (e.key === "Escape") {
+              setDraft(value ?? "");
+              setEditing(false);
+            }
+            if ((e.metaKey || e.ctrlKey) && e.key === "Enter") void commit();
+          }}
+          disabled={saving}
+          className="w-full min-h-[64px] rounded-xl border border-primary/40 ring-2 ring-primary/20 bg-white px-3 py-2 text-sm focus:outline-none"
+          placeholder={`Ajouter ${title.toLowerCase()}…`}
+        />
+        <p className="text-[10px] text-muted-foreground mt-1">
+          Échap pour annuler · Ctrl/⌘ + Entrée pour enregistrer
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div>
-      <div className="text-xs text-gray-500 uppercase tracking-wide mb-1">{title}</div>
+      <div className="flex items-center justify-between gap-2 mb-1">
+        <div className="text-xs text-gray-500 uppercase tracking-wide">{title}</div>
+        {editable && (
+          <button
+            onClick={() => setEditing(true)}
+            className="text-[10px] font-bold text-primary hover:underline"
+          >
+            {hasValue ? "Modifier" : "Ajouter"}
+          </button>
+        )}
+      </div>
       {hasValue ? (
-        <div className={`rounded-xl border px-3 py-2 whitespace-pre-wrap text-sm ${HIGHLIGHT_STYLES[highlight]}`}>
+        <div
+          className={`rounded-xl border px-3 py-2 whitespace-pre-wrap text-sm ${HIGHLIGHT_STYLES[highlight]} ${editable ? "cursor-text" : ""}`}
+          onClick={editable ? () => setEditing(true) : undefined}
+        >
           {value}
         </div>
       ) : (
-        <div className="text-gray-300 italic text-sm">{tCommon("notProvided")}</div>
+        <button
+          type="button"
+          disabled={!editable}
+          onClick={editable ? () => setEditing(true) : undefined}
+          className={`block w-full text-left rounded-xl border border-dashed border-border px-3 py-2 text-sm italic ${
+            editable
+              ? "text-muted-foreground hover:border-primary hover:text-primary"
+              : "text-gray-300 cursor-default"
+          }`}
+        >
+          {editable ? `+ Ajouter ${title.toLowerCase()}` : tCommon("notProvided")}
+        </button>
       )}
     </div>
   );
@@ -389,7 +471,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
       setLoading(true);
       setError(null);
       try {
-        const res = await fetch(`/api/patients/${params.id}`);
+        const res = await fetch(`/api/patients/${params.id}`, { cache: "no-store" });
         if (res.status === 404) {
           setError(t("patientNotFound"));
           return;
@@ -409,6 +491,11 @@ function PatientDetail({ listPath }: { listPath: string }) {
     };
 
     fetchPatient();
+    // Re-fetch when any descendant signals a medical-record change (inline
+    // MedBlock edits dispatch this event).
+    const onChanged = () => fetchPatient();
+    window.addEventListener("patient-medical-updated", onChanged);
+    return () => window.removeEventListener("patient-medical-updated", onChanged);
   }, [params.id]);
 
   useEffect(() => {
@@ -718,6 +805,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
         <DossierTab
           patient={patient}
           medical={medical}
+          onEdit={() => setEditOpen(true)}
           attachments={attachments}
           consultNotes={consultNotes}
           expandedNotes={expandedNotes}
@@ -1965,6 +2053,7 @@ function DossierTab({
   onNewPrescription,
   onPrescriptionUpdated,
   onPrescriptionDeleted,
+  onEdit,
 }: {
   patient: Patient;
   medical: MedicalProfile;
@@ -1981,6 +2070,7 @@ function DossierTab({
   onNewPrescription: () => void;
   onPrescriptionUpdated: (updated: Prescription) => void;
   onPrescriptionDeleted: (id: string) => void;
+  onEdit?: () => void;
 }) {
   const t = useTranslations("medecin.patientDetail");
   const tCommon = useTranslations("medecin.common");
@@ -2027,6 +2117,30 @@ function DossierTab({
   // Helper used in JSX so the Card hides for non-owners when not shared.
   const showShareToggle = viewerRole === "doctor" && isSharingOwner;
 
+  // Save helper for inline-edited fields on patient_medical_profile.
+  // Sends a tiny PATCH and lets the parent refresh on next mount; we also
+  // toast on success so the doctor knows it persisted.
+  async function saveMedicalField(key: string, next: string) {
+    if (viewerRole !== "doctor") return;
+    try {
+      const r = await fetch(`/api/patients/${patient.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ medical: { [key]: next || null } }),
+      });
+      if (r.ok) {
+        toast.success("Enregistré");
+        // Soft refresh by reloading the page-level medical state via window
+        // event — the parent listens to `patient-medical-updated`.
+        window.dispatchEvent(new CustomEvent("patient-medical-updated"));
+      } else {
+        toast.error("Échec de l'enregistrement");
+      }
+    } catch {
+      toast.error("Erreur réseau");
+    }
+  }
+
   return (
     <div className="space-y-4">
       {/* 2-col grid of medical sections so cards don't take full width */}
@@ -2039,24 +2153,39 @@ function DossierTab({
         icon={<HeartPulse className="h-4 w-4" />}
         shared={showShareToggle ? isShared("medicalSummary") : undefined}
         onToggleShare={showShareToggle ? () => toggleShare("medicalSummary") : undefined}
+        onAdd={viewerRole === "doctor" ? onEdit : undefined}
+        addLabel="Tout modifier"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <MedBlock title={t("fieldAllergiesDisplay")} value={medical?.allergies} highlight="red" />
+          <MedBlock
+            title={t("fieldAllergiesDisplay")}
+            value={medical?.allergies}
+            highlight="red"
+            editable={viewerRole === "doctor"}
+            onSave={(next) => saveMedicalField("allergies", next)}
+          />
           <MedBlock
             title={t("fieldChronicDisplay")}
             value={medical?.chronicConditions}
             highlight="orange"
+            editable={viewerRole === "doctor"}
+            onSave={(next) => saveMedicalField("chronicConditions", next)}
           />
           <MedBlock
             title={t("fieldCurrentMedsDisplay")}
             value={medical?.currentMeds}
             highlight="blue"
+            editable={viewerRole === "doctor"}
+            onSave={(next) => saveMedicalField("currentMeds", next)}
           />
-          <MedBlock title={t("fieldNotesDisplay")} value={medical?.notes} highlight="gray" />
+          <MedBlock
+            title={t("fieldNotesDisplay")}
+            value={medical?.notes}
+            highlight="gray"
+            editable={viewerRole === "doctor"}
+            onSave={(next) => saveMedicalField("notes", next)}
+          />
         </div>
-        {viewerRole === "doctor" && (
-          <DossierItemsList patientId={patient.id} type="allergy" label="Allergies enregistrées" />
-        )}
         {medical?.updatedAt && (
           <div className="text-xs text-gray-400 mt-4">
             {t("updatedAt")} {format(new Date(medical.updatedAt), "d MMM yyyy", { locale: fr })}
@@ -2073,6 +2202,8 @@ function DossierTab({
         icon={<User className="h-4 w-4" />}
         shared={showShareToggle ? isShared("familyHistory") : undefined}
         onToggleShare={showShareToggle ? () => toggleShare("familyHistory") : undefined}
+        onAdd={viewerRole === "doctor" ? onEdit : undefined}
+        addLabel="Modifier"
       >
         {fam && Object.values(fam).some(Boolean) ? (
           <div className="flex flex-wrap gap-2 text-sm">
@@ -2100,6 +2231,8 @@ function DossierTab({
         icon={<Activity className="h-4 w-4" />}
         shared={showShareToggle ? isShared("lifestyle") : undefined}
         onToggleShare={showShareToggle ? () => toggleShare("lifestyle") : undefined}
+        onAdd={viewerRole === "doctor" ? onEdit : undefined}
+        addLabel="Modifier"
       >
         {lifestyle && Object.values(lifestyle).some((v) => v != null) ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
@@ -2159,6 +2292,8 @@ function DossierTab({
         icon={<Pill className="h-4 w-4" />}
         shared={showShareToggle ? isShared("surgeries") : undefined}
         onToggleShare={showShareToggle ? () => toggleShare("surgeries") : undefined}
+        onAdd={viewerRole === "doctor" ? onEdit : undefined}
+        addLabel="Modifier"
       >
         {medical?.pastSurgeries && medical.pastSurgeries.length > 0 ? (
           <ul className="space-y-2 text-sm">
@@ -2191,6 +2326,8 @@ function DossierTab({
         icon={<History className="h-4 w-4" />}
         shared={showShareToggle ? isShared("hospitalizations") : undefined}
         onToggleShare={showShareToggle ? () => toggleShare("hospitalizations") : undefined}
+        onAdd={viewerRole === "doctor" ? onEdit : undefined}
+        addLabel="Modifier"
       >
         {medical?.pastHospitalizations && medical.pastHospitalizations.length > 0 ? (
           <ul className="space-y-2 text-sm">
@@ -2223,6 +2360,8 @@ function DossierTab({
         icon={<Award className="h-4 w-4" />}
         shared={showShareToggle ? isShared("vaccinations") : undefined}
         onToggleShare={showShareToggle ? () => toggleShare("vaccinations") : undefined}
+        onAdd={viewerRole === "doctor" ? onEdit : undefined}
+        addLabel="Modifier"
       >
         {medical?.vaccinations && medical.vaccinations.length > 0 ? (
           <div className="overflow-x-auto">
@@ -2252,9 +2391,6 @@ function DossierTab({
         ) : (
           <EmptyInline />
         )}
-        {viewerRole === "doctor" && (
-          <DossierItemsList patientId={patient.id} type="vaccination" label="Carnet de vaccination" />
-        )}
       </Card>
       )}
 
@@ -2266,6 +2402,8 @@ function DossierTab({
           icon={<HeartPulse className="h-4 w-4" />}
           shared={showShareToggle ? isShared("womensHealth") : undefined}
           onToggleShare={showShareToggle ? () => toggleShare("womensHealth") : undefined}
+          onAdd={viewerRole === "doctor" ? onEdit : undefined}
+          addLabel="Modifier"
         >
           {medical?.womensHealth && Object.values(medical.womensHealth).some((v) => v != null) ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
