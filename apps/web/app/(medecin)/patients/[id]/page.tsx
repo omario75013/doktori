@@ -749,52 +749,57 @@ function PatientDetail({ listPath }: { listPath: string }) {
       )}
 
       {tab === "rdv" && (
-        <div className="ds-card">
-          <div className="p-4 border-b border-border">
-            <h2 className="font-semibold text-foreground">{t("rdvHistoryTitle")}</h2>
-            <p className="text-xs text-gray-400 mt-0.5">{t("rdvHistorySubtitle")}</p>
-          </div>
+        <Card title={t("rdvHistoryTitle")} color="sky" icon={<Calendar className="h-4 w-4" />}>
           {appointments.length === 0 ? (
-            <p className="p-6 text-gray-400 text-center text-sm">{t("rdvEmpty")}</p>
+            <p className="text-gray-400 text-center text-sm py-6">{t("rdvEmpty")}</p>
           ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border bg-secondary text-start">
-                    <th className="px-4 py-3 font-medium text-foreground">{t("colDate")}</th>
-                    <th className="px-4 py-3 font-medium text-foreground">{t("colStatus")}</th>
-                    <th className="px-4 py-3 font-medium text-foreground">{t("colReason")}</th>
-                    <th className="px-4 py-3 font-medium text-foreground w-64">{t("colPrivateNotes")}</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {appointments.map((appt) => (
-                    <tr key={appt.id} className="hover:bg-secondary transition-colors align-top">
-                      <td className="px-4 py-3 whitespace-nowrap text-gray-700">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {appointments.map((appt) => {
+                const isPast = new Date(appt.startsAt) < new Date();
+                const accent = appt.status === "confirmed"
+                  ? "border-emerald-200 bg-emerald-50/40"
+                  : appt.status === "completed"
+                    ? "border-sky-200 bg-sky-50/40"
+                    : appt.status === "cancelled"
+                      ? "border-gray-200 bg-gray-50/40"
+                      : appt.status === "no_show"
+                        ? "border-rose-200 bg-rose-50/40"
+                        : "border-amber-200 bg-amber-50/40";
+                return (
+                  <div
+                    key={appt.id}
+                    className={`rounded-2xl border ${accent} p-4 ${isPast ? "opacity-90" : ""}`}
+                  >
+                    <div className="flex items-center justify-between gap-2 mb-2">
+                      <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+                        <Calendar className="h-4 w-4 text-muted-foreground" />
                         {format(new Date(appt.startsAt), "d MMM yyyy HH:mm", { locale: fr })}
-                      </td>
-                      <td className="px-4 py-3">
-                        <span
-                          className={`text-xs px-2.5 py-1 rounded-full font-medium ${
-                            STATUS_STYLES[appt.status] ?? "bg-gray-100"
-                          }`}
-                        >
-                          {STATUS_LABELS[appt.status] ?? appt.status}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3 text-gray-500">
-                        {appt.reason ?? <span className="text-gray-300">—</span>}
-                      </td>
-                      <td className="px-4 py-3">
-                        <NotesCell appointment={appt} />
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                      <span
+                        className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+                          STATUS_STYLES[appt.status] ?? "bg-gray-100"
+                        }`}
+                      >
+                        {STATUS_LABELS[appt.status] ?? appt.status}
+                      </span>
+                    </div>
+                    {appt.reason && (
+                      <div className="text-xs text-foreground/80 mb-2">
+                        <span className="font-semibold">{t("colReason")} :</span> {appt.reason}
+                      </div>
+                    )}
+                    <div className="rounded-lg bg-white/60 p-2 border border-border/40">
+                      <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                        {t("colPrivateNotes")}
+                      </div>
+                      <NotesCell appointment={appt} />
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
-        </div>
+        </Card>
       )}
 
       {tab === "ordonnances" && viewerRole === "doctor" && (
@@ -1822,11 +1827,62 @@ function Kpi({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Card({ title, children }: { title: string; children: React.ReactNode }) {
+function Card({
+  title,
+  children,
+  color,
+  icon,
+  onAdd,
+  addLabel = "Ajouter",
+}: {
+  title: string;
+  children: React.ReactNode;
+  color?: CardColor;
+  icon?: React.ReactNode;
+  onAdd?: () => void;
+  addLabel?: string;
+}) {
+  if (color) {
+    const c = COLOR_MAP[color];
+    return (
+      <div className={`rounded-2xl border bg-white overflow-hidden ring-1 ${c.ring}`}>
+        <div className={`flex items-center justify-between px-4 py-2.5 border-b ${c.header}`}>
+          <div className="flex items-center gap-2">
+            {icon && (
+              <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${c.icon}`}>
+                {icon}
+              </span>
+            )}
+            <h2 className="text-sm font-bold text-foreground">{title}</h2>
+          </div>
+          {onAdd && (
+            <button
+              onClick={onAdd}
+              className="inline-flex items-center gap-1 rounded-lg bg-white/70 hover:bg-white px-2 py-1 text-xs font-semibold text-foreground border border-border"
+            >
+              <Plus className="h-3.5 w-3.5" />
+              {addLabel}
+            </button>
+          )}
+        </div>
+        <div className="p-5">{children}</div>
+      </div>
+    );
+  }
+  // Legacy plain card (no color = old call sites stay unchanged)
   return (
     <div className="ds-card">
-      <div className="p-4 border-b border-border">
+      <div className="p-4 border-b border-border flex items-center justify-between">
         <h2 className="font-semibold text-foreground">{title}</h2>
+        {onAdd && (
+          <button
+            onClick={onAdd}
+            className="inline-flex items-center gap-1 rounded-lg bg-secondary hover:bg-border px-2 py-1 text-xs font-semibold text-foreground"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            {addLabel}
+          </button>
+        )}
       </div>
       <div className="p-5">{children}</div>
     </div>
@@ -1908,7 +1964,7 @@ function DossierTab({
   return (
     <div className="space-y-4">
       {/* Medical summary */}
-      <Card title={t("cardMedicalSummary")}>
+      <Card title={t("cardMedicalSummary")} color="rose" icon={<HeartPulse className="h-4 w-4" />}>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <MedBlock title={t("fieldAllergiesDisplay")} value={medical?.allergies} highlight="red" />
           <MedBlock
@@ -1931,7 +1987,7 @@ function DossierTab({
       </Card>
 
       {/* Family history */}
-      <Card title={t("cardFamilyHistory")}>
+      <Card title={t("cardFamilyHistory")} color="violet" icon={<User className="h-4 w-4" />}>
         {fam && Object.values(fam).some(Boolean) ? (
           <div className="flex flex-wrap gap-2 text-sm">
             {fam.heart && <Tag label={t("famHeart")} tone="red" />}
@@ -1950,7 +2006,7 @@ function DossierTab({
       </Card>
 
       {/* Lifestyle */}
-      <Card title={t("cardLifestyle")}>
+      <Card title={t("cardLifestyle")} color="emerald" icon={<Activity className="h-4 w-4" />}>
         {lifestyle && Object.values(lifestyle).some((v) => v != null) ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <Info
@@ -2001,7 +2057,7 @@ function DossierTab({
       </Card>
 
       {/* Past surgeries */}
-      <Card title={t("cardSurgeries")}>
+      <Card title={t("cardSurgeries")} color="indigo" icon={<Pill className="h-4 w-4" />}>
         {medical?.pastSurgeries && medical.pastSurgeries.length > 0 ? (
           <ul className="space-y-2 text-sm">
             {medical.pastSurgeries.map((s, i) => (
@@ -2025,7 +2081,7 @@ function DossierTab({
       </Card>
 
       {/* Past hospitalizations */}
-      <Card title={t("cardHospitalizations")}>
+      <Card title={t("cardHospitalizations")} color="sky" icon={<History className="h-4 w-4" />}>
         {medical?.pastHospitalizations && medical.pastHospitalizations.length > 0 ? (
           <ul className="space-y-2 text-sm">
             {medical.pastHospitalizations.map((h, i) => (
@@ -2049,7 +2105,7 @@ function DossierTab({
       </Card>
 
       {/* Vaccinations */}
-      <Card title={t("cardVaccinations")}>
+      <Card title={t("cardVaccinations")} color="amber" icon={<Award className="h-4 w-4" />}>
         {medical?.vaccinations && medical.vaccinations.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -2082,7 +2138,7 @@ function DossierTab({
 
       {/* Women's health (only if gender=F) */}
       {patient.gender === "F" && (
-        <Card title={t("cardWomensHealth")}>
+        <Card title={t("cardWomensHealth")} color="rose" icon={<HeartPulse className="h-4 w-4" />}>
           {medical?.womensHealth && Object.values(medical.womensHealth).some((v) => v != null) ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <Info
