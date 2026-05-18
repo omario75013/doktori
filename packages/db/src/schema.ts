@@ -2094,6 +2094,19 @@ export const patientAnalyses = pgTable(
 export type PatientAnalysis = typeof patientAnalyses.$inferSelect;
 export type NewPatientAnalysis = typeof patientAnalyses.$inferInsert;
 
+// Per-patient dossier visibility — owning doctor (set_by_doctor_id) decides
+// which sections of the dossier are exposed to other doctors viewing the
+// same patient. Default (no row) = everything shared.
+export const patientDossierSharing = pgTable("patient_dossier_sharing", {
+  patientId: uuid("patient_id").primaryKey().references(() => patients.id, { onDelete: "cascade" }),
+  /** Keys: medicalSummary | familyHistory | lifestyle | surgeries | hospitalizations | vaccinations | womensHealth */
+  sharing: jsonb("sharing").$type<Record<string, boolean>>().notNull().default({}),
+  setByDoctorId: uuid("set_by_doctor_id").references(() => doctors.id, { onDelete: "set null" }),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+export type PatientDossierSharing = typeof patientDossierSharing.$inferSelect;
+export type NewPatientDossierSharing = typeof patientDossierSharing.$inferInsert;
+
 // ─── Phase 1 — Stream A: Marketing (migration 0076) ───────────────────────────
 
 export const newsletterSubscribers = pgTable(

@@ -1843,6 +1843,8 @@ function Card({
   icon,
   onAdd,
   addLabel = "Ajouter",
+  shared,
+  onToggleShare,
 }: {
   title: string;
   children: React.ReactNode;
@@ -1850,6 +1852,8 @@ function Card({
   icon?: React.ReactNode;
   onAdd?: () => void;
   addLabel?: string;
+  shared?: boolean;
+  onToggleShare?: () => void;
 }) {
   if (color) {
     const c = COLOR_MAP[color];
@@ -1864,15 +1868,31 @@ function Card({
             )}
             <h2 className="text-sm font-bold text-foreground">{title}</h2>
           </div>
-          {onAdd && (
-            <button
-              onClick={onAdd}
-              className="inline-flex items-center gap-1 rounded-lg bg-white/70 hover:bg-white px-2 py-1 text-xs font-semibold text-foreground border border-border"
-            >
-              <Plus className="h-3.5 w-3.5" />
-              {addLabel}
-            </button>
-          )}
+          <div className="flex items-center gap-1.5">
+            {onToggleShare && (
+              <button
+                onClick={onToggleShare}
+                title={shared ? "Partagé avec les autres médecins" : "Non partagé"}
+                className={`inline-flex items-center gap-1 rounded-lg px-2 py-1 text-[11px] font-bold border ${
+                  shared
+                    ? "bg-emerald-100 border-emerald-200 text-emerald-700 hover:bg-emerald-200"
+                    : "bg-gray-100 border-gray-200 text-gray-600 hover:bg-gray-200"
+                }`}
+              >
+                {shared ? <Share2 className="h-3 w-3" /> : <XClose className="h-3 w-3" />}
+                {shared ? "Partagé" : "Privé"}
+              </button>
+            )}
+            {onAdd && (
+              <button
+                onClick={onAdd}
+                className="inline-flex items-center gap-1 rounded-lg bg-white/70 hover:bg-white px-2 py-1 text-xs font-semibold text-foreground border border-border"
+              >
+                <Plus className="h-3.5 w-3.5" />
+                {addLabel}
+              </button>
+            )}
+          </div>
         </div>
         <div className="p-5">{children}</div>
       </div>
@@ -1970,12 +1990,56 @@ function DossierTab({
   const fam = medical?.familyHistory;
   const lifestyle = medical?.lifestyle;
 
+  // Per-section sharing prefs (doctor-controlled).
+  const [sharing, setSharing] = useState<Record<string, boolean>>({});
+  const [isSharingOwner, setIsSharingOwner] = useState(true);
+  useEffect(() => {
+    if (viewerRole !== "doctor") return;
+    fetch(`/api/medecin/patients/${patient.id}/dossier-sharing`, { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { sharing?: Record<string, boolean>; isOwner?: boolean } | null) => {
+        if (!d) return;
+        setSharing(d.sharing ?? {});
+        setIsSharingOwner(d.isOwner ?? true);
+      })
+      .catch(() => {});
+  }, [patient.id, viewerRole]);
+
+  // shared = true unless explicitly false in prefs
+  function isShared(key: string): boolean {
+    return sharing[key] !== false;
+  }
+  // visible: owner sees everything; others see only shared
+  function isVisible(key: string): boolean {
+    if (isSharingOwner) return true;
+    return isShared(key);
+  }
+  async function toggleShare(key: string) {
+    const next = { ...sharing, [key]: !isShared(key) };
+    setSharing(next);
+    setIsSharingOwner(true);
+    await fetch(`/api/medecin/patients/${patient.id}/dossier-sharing`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sharing: next }),
+    });
+  }
+  // Helper used in JSX so the Card hides for non-owners when not shared.
+  const showShareToggle = viewerRole === "doctor" && isSharingOwner;
+
   return (
     <div className="space-y-4">
       {/* 2-col grid of medical sections so cards don't take full width */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
       {/* Medical summary */}
-      <Card title={t("cardMedicalSummary")} color="rose" icon={<HeartPulse className="h-4 w-4" />}>
+      {isVisible("medicalSummary") && (
+      <Card
+        title={t("cardMedicalSummary")}
+        color="rose"
+        icon={<HeartPulse className="h-4 w-4" />}
+        shared={showShareToggle ? isShared("medicalSummary") : undefined}
+        onToggleShare={showShareToggle ? () => toggleShare("medicalSummary") : undefined}
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <MedBlock title={t("fieldAllergiesDisplay")} value={medical?.allergies} highlight="red" />
           <MedBlock
@@ -1996,9 +2060,17 @@ function DossierTab({
           </div>
         )}
       </Card>
+      )}
 
       {/* Family history */}
-      <Card title={t("cardFamilyHistory")} color="violet" icon={<User className="h-4 w-4" />}>
+      {isVisible("familyHistory") && (
+      <Card
+        title={t("cardFamilyHistory")}
+        color="violet"
+        icon={<User className="h-4 w-4" />}
+        shared={showShareToggle ? isShared("familyHistory") : undefined}
+        onToggleShare={showShareToggle ? () => toggleShare("familyHistory") : undefined}
+      >
         {fam && Object.values(fam).some(Boolean) ? (
           <div className="flex flex-wrap gap-2 text-sm">
             {fam.heart && <Tag label={t("famHeart")} tone="red" />}
@@ -2015,9 +2087,17 @@ function DossierTab({
           <EmptyInline />
         )}
       </Card>
+      )}
 
       {/* Lifestyle */}
-      <Card title={t("cardLifestyle")} color="emerald" icon={<Activity className="h-4 w-4" />}>
+      {isVisible("lifestyle") && (
+      <Card
+        title={t("cardLifestyle")}
+        color="emerald"
+        icon={<Activity className="h-4 w-4" />}
+        shared={showShareToggle ? isShared("lifestyle") : undefined}
+        onToggleShare={showShareToggle ? () => toggleShare("lifestyle") : undefined}
+      >
         {lifestyle && Object.values(lifestyle).some((v) => v != null) ? (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <Info
@@ -2066,9 +2146,17 @@ function DossierTab({
           <EmptyInline />
         )}
       </Card>
+      )}
 
       {/* Past surgeries */}
-      <Card title={t("cardSurgeries")} color="indigo" icon={<Pill className="h-4 w-4" />}>
+      {isVisible("surgeries") && (
+      <Card
+        title={t("cardSurgeries")}
+        color="indigo"
+        icon={<Pill className="h-4 w-4" />}
+        shared={showShareToggle ? isShared("surgeries") : undefined}
+        onToggleShare={showShareToggle ? () => toggleShare("surgeries") : undefined}
+      >
         {medical?.pastSurgeries && medical.pastSurgeries.length > 0 ? (
           <ul className="space-y-2 text-sm">
             {medical.pastSurgeries.map((s, i) => (
@@ -2090,9 +2178,17 @@ function DossierTab({
           <EmptyInline />
         )}
       </Card>
+      )}
 
       {/* Past hospitalizations */}
-      <Card title={t("cardHospitalizations")} color="sky" icon={<History className="h-4 w-4" />}>
+      {isVisible("hospitalizations") && (
+      <Card
+        title={t("cardHospitalizations")}
+        color="sky"
+        icon={<History className="h-4 w-4" />}
+        shared={showShareToggle ? isShared("hospitalizations") : undefined}
+        onToggleShare={showShareToggle ? () => toggleShare("hospitalizations") : undefined}
+      >
         {medical?.pastHospitalizations && medical.pastHospitalizations.length > 0 ? (
           <ul className="space-y-2 text-sm">
             {medical.pastHospitalizations.map((h, i) => (
@@ -2114,9 +2210,17 @@ function DossierTab({
           <EmptyInline />
         )}
       </Card>
+      )}
 
       {/* Vaccinations */}
-      <Card title={t("cardVaccinations")} color="amber" icon={<Award className="h-4 w-4" />}>
+      {isVisible("vaccinations") && (
+      <Card
+        title={t("cardVaccinations")}
+        color="amber"
+        icon={<Award className="h-4 w-4" />}
+        shared={showShareToggle ? isShared("vaccinations") : undefined}
+        onToggleShare={showShareToggle ? () => toggleShare("vaccinations") : undefined}
+      >
         {medical?.vaccinations && medical.vaccinations.length > 0 ? (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
@@ -2146,10 +2250,17 @@ function DossierTab({
           <EmptyInline />
         )}
       </Card>
+      )}
 
       {/* Women's health (only if gender=F) */}
-      {patient.gender === "F" && (
-        <Card title={t("cardWomensHealth")} color="rose" icon={<HeartPulse className="h-4 w-4" />}>
+      {patient.gender === "F" && isVisible("womensHealth") && (
+        <Card
+          title={t("cardWomensHealth")}
+          color="rose"
+          icon={<HeartPulse className="h-4 w-4" />}
+          shared={showShareToggle ? isShared("womensHealth") : undefined}
+          onToggleShare={showShareToggle ? () => toggleShare("womensHealth") : undefined}
+        >
           {medical?.womensHealth && Object.values(medical.womensHealth).some((v) => v != null) ? (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <Info
