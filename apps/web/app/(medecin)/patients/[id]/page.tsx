@@ -38,6 +38,12 @@ import {
   Send,
   X as XClose,
   FlaskConical,
+  Briefcase,
+  HeartPulse,
+  Shield,
+  ContactRound,
+  MapPin,
+  Languages,
 } from "lucide-react";
 import { ReferPatientModal } from "./refer-patient-modal";
 import { CertificatesSection } from "./certificates-tab";
@@ -699,7 +705,7 @@ function PatientDetail({ listPath }: { listPath: string }) {
 
       {tab === "general" && (
         <>
-          <GeneralTab patient={patient} appointments={appointments} />
+          <GeneralTab patient={patient} appointments={appointments} onEdit={() => setEditOpen(true)} />
           <ClinicSharingSection patientId={params.id} viewerRole={viewerRole} />
         </>
       )}
@@ -1581,14 +1587,16 @@ function DeleteDialog({
 function GeneralTab({
   patient,
   appointments,
+  onEdit,
 }: {
   patient: Patient;
   appointments: Appointment[];
+  onEdit?: () => void;
 }) {
   const t = useTranslations("medecin.patientDetail");
   const lastVisit = appointments.find((a) => a.status === "completed");
   const upcomingVisit = appointments.find(
-    (a) => new Date(a.startsAt) > new Date() && (a.status === "confirmed" || a.status === "pending")
+    (a) => new Date(a.startsAt) > new Date() && (a.status === "confirmed" || a.status === "pending"),
   );
   const heightM = patient.heightCm ? patient.heightCm / 100 : null;
   const weightKg = patient.weightKg ? Number(patient.weightKg) : null;
@@ -1605,136 +1613,202 @@ function GeneralTab({
         />
         <Kpi
           label={t("kpiLastVisit")}
-          value={
-            lastVisit
-              ? format(new Date(lastVisit.startsAt), "d MMM yyyy", { locale: fr })
-              : "—"
-          }
+          value={lastVisit ? format(new Date(lastVisit.startsAt), "d MMM yyyy", { locale: fr }) : "—"}
         />
         <Kpi
           label={t("kpiNextAppt")}
-          value={
-            upcomingVisit
-              ? format(new Date(upcomingVisit.startsAt), "d MMM HH:mm", { locale: fr })
-              : "—"
-          }
+          value={upcomingVisit ? format(new Date(upcomingVisit.startsAt), "d MMM HH:mm", { locale: fr }) : "—"}
         />
       </div>
 
-      {/* Identity */}
-      <Card title={t("cardIdentity")}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <Info label={t("fieldFullNameDisplay")} value={patient.name} />
-          <Info
-            label={t("fieldDateOfBirthDisplay")}
-            value={
-              patient.dateOfBirth
-                ? format(new Date(patient.dateOfBirth), "d MMM yyyy", { locale: fr })
-                : null
-            }
-          />
-          <Info
-            label={t("fieldGenderDisplay")}
-            value={patient.gender === "M" ? t("genderMale") : patient.gender === "F" ? t("genderFemale") : null}
-          />
-          <Info label={t("fieldCINDisplay")} value={patient.cin} mono />
-          <Info label={t("fieldNationality")} value={patient.nationality} />
-          <Info
-            label={t("fieldMaritalStatusDisplay")}
-            value={
-              patient.maritalStatus === "single"
-                ? t("maritalSingle")
-                : patient.maritalStatus === "married"
-                ? t("maritalMarried")
-                : patient.maritalStatus === "divorced"
-                ? t("maritalDivorced")
-                : patient.maritalStatus === "widowed"
-                ? t("maritalWidowedDisplay")
-                : null
-            }
-          />
-        </div>
-      </Card>
+      {/* 2-column responsive grid of colored cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ColorCard
+          title={t("cardIdentity")}
+          icon={<IdCard className="h-4 w-4" />}
+          color="violet"
+          onAdd={onEdit}
+        >
+          <CardGrid cols={2}>
+            <Info label={t("fieldFullNameDisplay")} value={patient.name} />
+            <Info
+              label={t("fieldDateOfBirthDisplay")}
+              value={patient.dateOfBirth ? format(new Date(patient.dateOfBirth), "d MMM yyyy", { locale: fr }) : null}
+            />
+            <Info
+              label={t("fieldGenderDisplay")}
+              value={patient.gender === "M" ? t("genderMale") : patient.gender === "F" ? t("genderFemale") : null}
+            />
+            <Info label={t("fieldCINDisplay")} value={patient.cin} mono />
+            <Info label={t("fieldNationality")} value={patient.nationality} />
+            <Info
+              label={t("fieldMaritalStatusDisplay")}
+              value={
+                patient.maritalStatus === "single"
+                  ? t("maritalSingle")
+                  : patient.maritalStatus === "married"
+                    ? t("maritalMarried")
+                    : patient.maritalStatus === "divorced"
+                      ? t("maritalDivorced")
+                      : patient.maritalStatus === "widowed"
+                        ? t("maritalWidowedDisplay")
+                        : null
+              }
+            />
+          </CardGrid>
+        </ColorCard>
 
-      {/* Contact */}
-      <Card title={t("cardContact")}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <Info label={t("fieldPhoneDisplay")} value={patient.phone} mono />
-          <Info label={t("fieldEmailDisplay")} value={patient.email} />
-          <Info
-            label={t("fieldAddress")}
-            value={
-              [patient.addressStreet, patient.addressPostalCode, patient.addressCity]
-                .filter(Boolean)
-                .join(", ") || null
-            }
-          />
-          <Info
-            label={t("fieldPrefLang")}
-            value={
-              patient.preferredLanguage === "ar"
-                ? t("langArDisplay")
-                : patient.preferredLanguage === "en"
-                ? t("langEnDisplay")
-                : t("langFrDisplay")
-            }
-          />
-        </div>
-      </Card>
+        <ColorCard
+          title={t("cardContact")}
+          icon={<ContactRound className="h-4 w-4" />}
+          color="sky"
+          onAdd={onEdit}
+        >
+          <CardGrid cols={1}>
+            <Info label={t("fieldPhoneDisplay")} value={patient.phone} mono icon={<Phone className="h-3.5 w-3.5" />} />
+            <Info label={t("fieldEmailDisplay")} value={patient.email} icon={<Mail className="h-3.5 w-3.5" />} />
+            <Info
+              label={t("fieldAddress")}
+              value={[patient.addressStreet, patient.addressPostalCode, patient.addressCity].filter(Boolean).join(", ") || null}
+              icon={<MapPin className="h-3.5 w-3.5" />}
+            />
+            <Info
+              label={t("fieldPrefLang")}
+              value={
+                patient.preferredLanguage === "ar"
+                  ? t("langArDisplay")
+                  : patient.preferredLanguage === "en"
+                    ? t("langEnDisplay")
+                    : t("langFrDisplay")
+              }
+              icon={<Languages className="h-3.5 w-3.5" />}
+            />
+          </CardGrid>
+        </ColorCard>
 
-      {/* Insurance */}
-      <Card title={t("cardInsurance")}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <Info label={t("fieldCNAMDisplay")} value={patient.cnamNumber} mono />
-          <Info label="N° CNSS" value={patient.cnssNumber} mono />
-          <Info
-            label="Régime CNAM"
-            value={
-              patient.cnamRegime === "cnss"
-                ? "CNSS"
-                : patient.cnamRegime === "cnrps"
-                  ? "CNRPS"
-                  : patient.cnamRegime === "convention_etudiant"
-                    ? "Convention étudiant"
-                    : patient.cnamRegime === "convention_alaaliyah"
-                      ? "Convention Al Aaliyah"
-                      : null
-            }
-          />
-          <Info label={t("fieldInsurer")} value={patient.insuranceProvider} />
-          <Info label={t("fieldInsuranceNumDisplay")} value={patient.insuranceNumber} mono />
-        </div>
-      </Card>
+        <ColorCard
+          title={t("cardInsurance")}
+          icon={<Shield className="h-4 w-4" />}
+          color="emerald"
+          onAdd={onEdit}
+        >
+          <CardGrid cols={2}>
+            <Info label={t("fieldCNAMDisplay")} value={patient.cnamNumber} mono />
+            <Info label="N° CNSS" value={patient.cnssNumber} mono />
+            <Info
+              label="Régime CNAM"
+              value={
+                patient.cnamRegime === "cnss"
+                  ? "CNSS"
+                  : patient.cnamRegime === "cnrps"
+                    ? "CNRPS"
+                    : patient.cnamRegime === "convention_etudiant"
+                      ? "Convention étudiant"
+                      : patient.cnamRegime === "convention_alaaliyah"
+                        ? "Convention Al Aaliyah"
+                        : null
+              }
+            />
+            <Info label={t("fieldInsurer")} value={patient.insuranceProvider} />
+            <Info label={t("fieldInsuranceNumDisplay")} value={patient.insuranceNumber} mono />
+          </CardGrid>
+        </ColorCard>
 
-      {/* Emergency contact */}
-      <Card title={t("cardEmergency")}>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-          <Info label={t("fieldEmergencyName")} value={patient.emergencyContactName} />
-          <Info label={t("fieldEmergencyPhone")} value={patient.emergencyContactPhone} mono />
-          <Info label={t("fieldEmergencyRelation")} value={patient.emergencyContactRelation} />
-        </div>
-      </Card>
+        <ColorCard
+          title={t("cardEmergency")}
+          icon={<Phone className="h-4 w-4" />}
+          color="rose"
+          onAdd={onEdit}
+        >
+          <CardGrid cols={1}>
+            <Info label={t("fieldEmergencyName")} value={patient.emergencyContactName} />
+            <Info label={t("fieldEmergencyPhone")} value={patient.emergencyContactPhone} mono />
+            <Info label={t("fieldEmergencyRelation")} value={patient.emergencyContactRelation} />
+          </CardGrid>
+        </ColorCard>
 
-      {/* Biometrics */}
-      <Card title={t("cardMorphology")}>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-          <Info label={t("fieldBloodTypeDisplay")} value={patient.bloodType} />
-          <Info label={t("fieldHeightDisplay")} value={patient.heightCm ? `${patient.heightCm} cm` : null} />
-          <Info
-            label={t("fieldWeightDisplay")}
-            value={weightKg ? `${weightKg} kg` : null}
-          />
-          <Info label={t("fieldBMI")} value={bmi ? bmi : null} />
-        </div>
-      </Card>
+        <ColorCard
+          title={t("cardMorphology")}
+          icon={<HeartPulse className="h-4 w-4" />}
+          color="amber"
+          onAdd={onEdit}
+        >
+          <CardGrid cols={2}>
+            <Info label={t("fieldBloodTypeDisplay")} value={patient.bloodType} />
+            <Info label={t("fieldHeightDisplay")} value={patient.heightCm ? `${patient.heightCm} cm` : null} />
+            <Info label={t("fieldWeightDisplay")} value={weightKg ? `${weightKg} kg` : null} />
+            <Info label={t("fieldBMI")} value={bmi ? bmi : null} />
+          </CardGrid>
+        </ColorCard>
 
-      {/* Profession */}
-      <Card title={t("cardOccupation")}>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-          <Info label={t("fieldOccupation")} value={patient.occupation} />
-          <Info label={t("fieldProfessionNotes")} value={patient.professionNotes} />
+        <ColorCard
+          title={t("cardOccupation")}
+          icon={<Briefcase className="h-4 w-4" />}
+          color="indigo"
+          onAdd={onEdit}
+        >
+          <CardGrid cols={1}>
+            <Info label={t("fieldOccupation")} value={patient.occupation} />
+            <Info label={t("fieldProfessionNotes")} value={patient.professionNotes} />
+          </CardGrid>
+        </ColorCard>
+      </div>
+    </div>
+  );
+}
+
+// ── Colored card primitives ────────────────────────────────────────────────
+type CardColor = "violet" | "sky" | "emerald" | "rose" | "amber" | "indigo";
+const COLOR_MAP: Record<CardColor, { header: string; ring: string; icon: string }> = {
+  violet: { header: "bg-violet-50 border-violet-200", ring: "ring-violet-100", icon: "text-violet-600 bg-violet-100" },
+  sky: { header: "bg-sky-50 border-sky-200", ring: "ring-sky-100", icon: "text-sky-600 bg-sky-100" },
+  emerald: { header: "bg-emerald-50 border-emerald-200", ring: "ring-emerald-100", icon: "text-emerald-600 bg-emerald-100" },
+  rose: { header: "bg-rose-50 border-rose-200", ring: "ring-rose-100", icon: "text-rose-600 bg-rose-100" },
+  amber: { header: "bg-amber-50 border-amber-200", ring: "ring-amber-100", icon: "text-amber-600 bg-amber-100" },
+  indigo: { header: "bg-indigo-50 border-indigo-200", ring: "ring-indigo-100", icon: "text-indigo-600 bg-indigo-100" },
+};
+
+function ColorCard({
+  title,
+  icon,
+  color,
+  onAdd,
+  children,
+}: {
+  title: string;
+  icon: React.ReactNode;
+  color: CardColor;
+  onAdd?: () => void;
+  children: React.ReactNode;
+}) {
+  const c = COLOR_MAP[color];
+  return (
+    <div className={`rounded-2xl border bg-white overflow-hidden ring-1 ${c.ring}`}>
+      <div className={`flex items-center justify-between px-4 py-2.5 border-b ${c.header}`}>
+        <div className="flex items-center gap-2">
+          <span className={`flex h-7 w-7 items-center justify-center rounded-lg ${c.icon}`}>{icon}</span>
+          <h3 className="text-sm font-bold text-foreground">{title}</h3>
         </div>
-      </Card>
+        {onAdd && (
+          <button
+            onClick={onAdd}
+            className="inline-flex items-center gap-1 rounded-lg bg-white/70 hover:bg-white px-2 py-1 text-xs font-semibold text-foreground border border-border"
+            title="Modifier / ajouter"
+          >
+            <Plus className="h-3.5 w-3.5" />
+            Modifier
+          </button>
+        )}
+      </div>
+      <div className="p-4">{children}</div>
+    </div>
+  );
+}
+
+function CardGrid({ cols, children }: { cols: 1 | 2; children: React.ReactNode }) {
+  return (
+    <div className={`grid gap-x-4 gap-y-3 text-sm ${cols === 2 ? "grid-cols-2" : "grid-cols-1"}`}>
+      {children}
     </div>
   );
 }
@@ -1763,15 +1837,20 @@ function Info({
   label,
   value,
   mono,
+  icon,
 }: {
   label: string;
   value: string | null | undefined;
   mono?: boolean;
+  icon?: React.ReactNode;
 }) {
   const tCommon = useTranslations("medecin.common");
   return (
     <div>
-      <div className="text-xs text-gray-500 uppercase tracking-wide">{label}</div>
+      <div className="flex items-center gap-1 text-[11px] text-gray-500 uppercase tracking-wide">
+        {icon && <span className="text-gray-400">{icon}</span>}
+        {label}
+      </div>
       <div
         className={`mt-0.5 ${value ? "text-foreground font-medium" : "text-gray-300 italic"} ${
           mono ? "font-mono" : ""
@@ -3190,6 +3269,35 @@ function SharedDocsSection({
 }) {
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const [uploadCategory, setUploadCategory] = useState<string | null>(null);
+  const [openFolders, setOpenFolders] = useState<Set<string>>(new Set(["labo", "imagerie"]));
+
+  const FOLDER_STYLES: Record<string, { bg: string; chip: string; emoji: string }> = {
+    labo: { bg: "border-cyan-200 bg-cyan-50/40", chip: "bg-cyan-100 text-cyan-700", emoji: "🧪" },
+    imagerie: { bg: "border-violet-200 bg-violet-50/40", chip: "bg-violet-100 text-violet-700", emoji: "🩻" },
+    ordonnance: { bg: "border-emerald-200 bg-emerald-50/40", chip: "bg-emerald-100 text-emerald-700", emoji: "💊" },
+    certificat: { bg: "border-amber-200 bg-amber-50/40", chip: "bg-amber-100 text-amber-700", emoji: "📜" },
+    lettre: { bg: "border-sky-200 bg-sky-50/40", chip: "bg-sky-100 text-sky-700", emoji: "✉️" },
+    autre: { bg: "border-gray-200 bg-gray-50/40", chip: "bg-gray-100 text-gray-700", emoji: "📁" },
+  };
+  const CATEGORY_ORDER = ["labo", "imagerie", "ordonnance", "certificat", "lettre", "autre"];
+  const CATEGORY_LABELS: Record<string, string> = {
+    labo: "Analyses",
+    imagerie: "Imagerie",
+    ordonnance: "Ordonnances",
+    certificat: "Certificats",
+    lettre: "Lettres",
+    autre: "Autres",
+  };
+
+  function toggleFolder(cat: string) {
+    setOpenFolders((s) => {
+      const next = new Set(s);
+      if (next.has(cat)) next.delete(cat);
+      else next.add(cat);
+      return next;
+    });
+  }
 
   async function handleFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
@@ -3201,6 +3309,7 @@ function SharedDocsSection({
       fd.append("patientId", patientId);
       fd.append("file", file);
       fd.append("title", file.name.replace(/\.[^.]+$/, ""));
+      if (uploadCategory) fd.append("category", uploadCategory);
       const res = await fetch("/api/doctor/patient-documents", { method: "POST", body: fd });
       const data = await res.json();
       if (res.ok && data.item) {
@@ -3213,7 +3322,21 @@ function SharedDocsSection({
       toast.error("Échec de l'envoi");
     } finally {
       setUploading(false);
+      setUploadCategory(null);
     }
+  }
+
+  // Group items by category for folder view
+  const grouped: Record<string, SharedDoc[]> = {};
+  for (const d of items) {
+    const cat = d.category || "autre";
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(d);
+  }
+  const visibleCategories = CATEGORY_ORDER.filter((c) => grouped[c]?.length);
+  // Extra categories not in CATEGORY_ORDER (defensive)
+  for (const c of Object.keys(grouped)) {
+    if (!visibleCategories.includes(c)) visibleCategories.push(c);
   }
 
   return (
@@ -3248,8 +3371,50 @@ function SharedDocsSection({
           Aucun document partagé pour l&apos;instant.
         </div>
       ) : (
-        <ul className="divide-y divide-border">
-          {items.map((d) => {
+        <div className="p-4 space-y-3">
+          {visibleCategories.map((cat) => {
+            const docs = grouped[cat] ?? [];
+            const style = FOLDER_STYLES[cat] ?? FOLDER_STYLES.autre;
+            const isOpen = openFolders.has(cat);
+            return (
+              <div key={cat} className={`rounded-2xl border ${style.bg} overflow-hidden`}>
+                <div className="flex items-center justify-between px-4 py-2.5">
+                  <button
+                    type="button"
+                    onClick={() => toggleFolder(cat)}
+                    className="flex items-center gap-2 flex-1 text-left"
+                  >
+                    <span className="text-xl">{style.emoji}</span>
+                    <div>
+                      <div className="font-bold text-foreground text-sm">
+                        {CATEGORY_LABELS[cat] ?? cat}
+                      </div>
+                      <div className="text-[11px] text-muted-foreground">
+                        {docs.length} document{docs.length > 1 ? "s" : ""}
+                      </div>
+                    </div>
+                    <ChevronDown
+                      className={`ml-auto h-4 w-4 text-muted-foreground transition-transform ${
+                        isOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUploadCategory(cat);
+                      fileRef.current?.click();
+                    }}
+                    disabled={uploading}
+                    className={`ml-2 inline-flex items-center gap-1 rounded-lg px-2 py-1 text-xs font-semibold ${style.chip} hover:opacity-80 disabled:opacity-50`}
+                    title={`Ajouter dans ${CATEGORY_LABELS[cat] ?? cat}`}
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                {isOpen && (
+                  <ul className="divide-y divide-border bg-white">
+                    {docs.map((d) => {
             const byPatient = d.uploadedBy === "patient";
             return (
               <li key={d.id} className="p-4 flex items-center gap-3">
@@ -3317,7 +3482,12 @@ function SharedDocsSection({
               </li>
             );
           })}
-        </ul>
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+        </div>
       )}
     </div>
   );
