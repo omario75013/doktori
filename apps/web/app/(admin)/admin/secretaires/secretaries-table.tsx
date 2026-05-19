@@ -3,6 +3,7 @@
 import { useState, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Search, CheckCircle2, XCircle, Trash2 } from "lucide-react";
+import { ResetPasswordButton } from "@/components/admin/reset-password-button";
 
 interface Secretary {
   id: string;
@@ -142,6 +143,11 @@ export function SecretariesTable({ secretaries }: { secretaries: Secretary[] }) 
                         <CheckCircle2 className="w-4 h-4" />
                       )}
                     </button>
+                    <ResetPasswordButton
+                      actorType="secretary"
+                      actorId={s.id}
+                      actorName={s.name}
+                    />
                     <button
                       onClick={() => deleteSecretary(s.id, s.name)}
                       disabled={busy}
