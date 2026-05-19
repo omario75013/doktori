@@ -733,7 +733,20 @@ export function DashboardClient({
       });
       sock.on("connect", () => sock?.emit("join-waiting-room", doctorId));
       sock.on("waiting:update", (payload: { count?: number }) => {
-        if (typeof payload?.count === "number") setLiveWaitingCount(payload.count);
+        if (typeof payload?.count === "number") {
+          setLiveWaitingCount(payload.count);
+          return;
+        }
+        // No explicit count → an appointment check-in/uncheck event. Refresh
+        // from the server so the derived count is picked up immediately.
+        void fetch("/api/doctor/waiting-room", { cache: "no-store" })
+          .then((r) => (r.ok ? r.json() : null))
+          .then((d) => {
+            if (d && typeof d.count === "number") setLiveWaitingCount(d.count);
+          })
+          .catch(() => {
+            /* ignore */
+          });
       });
     })().catch(() => {
       /* socket server unreachable — poll fallback covers this */

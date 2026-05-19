@@ -1,18 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
-import { db, doctorWaitingRoom } from "@doktori/db";
-import { eq, sql } from "drizzle-orm";
+import { db, doctorWaitingRoom, appointments } from "@doktori/db";
+import { and, eq, gte, isNotNull, lte, sql } from "drizzle-orm";
 import { requireStaff } from "@/lib/staff-context";
 import { broadcastSos } from "@/lib/sos-broadcast";
 
 // Waiting-room counter — shared between the doctor and their
 // secretary. Both web (NextAuth cookie) and mobile (Bearer JWT) callers
-// are accepted via requireStaff(). Absence of a row counts as 0.
+// are accepted via requireStaff().
+//
+// The exposed count is the MAX of two signals so we never under-report:
+//   - manual: doctor_waiting_room.count, written via +/- buttons or "set"
+//     (used for walk-ins with no appointment).
+//   - derived: today's confirmed appointments where checked_in_at is set
+//     (a patient was checked in via the appointment flow).
+//
+// Without this, a secretary who checks patients in via the RDV "Check-in"
+// action without also tapping the +/- buttons would see the KPI stuck at 0.
 
 export async function GET(req: NextRequest) {
   const ctx = await requireStaff(req);
   if ("err" in ctx) return ctx.err;
 
-  const [row] = await db
+  const todayStart = new Date();
+  todayStart.setHours(0, 0, 0, 0);
+  const todayEnd = new Date(todayStart);
+  todayEnd.setDate(todayEnd.getDate() + 1);
+
+  const [manualRow] = await db
     .select({
       count: doctorWaitingRoom.count,
       updatedAt: doctorWaitingRoom.updatedAt,
@@ -22,10 +36,29 @@ export async function GET(req: NextRequest) {
     .where(eq(doctorWaitingRoom.doctorId, ctx.doctorId))
     .limit(1);
 
+  const [derivedRow] = await db
+    .select({ cnt: sql<number>`count(*)::int` })
+    .from(appointments)
+    .where(
+      and(
+        eq(appointments.doctorId, ctx.doctorId),
+        gte(appointments.startsAt, todayStart),
+        lte(appointments.startsAt, todayEnd),
+        isNotNull(appointments.checkedInAt),
+        eq(appointments.status, "confirmed"),
+      ),
+    );
+
+  const manualCount = manualRow?.count ?? 0;
+  const derivedCount = Number(derivedRow?.cnt ?? 0);
+  const count = Math.max(manualCount, derivedCount);
+
   return NextResponse.json({
-    count: row?.count ?? 0,
-    updatedAt: row?.updatedAt ?? null,
-    updatedByType: row?.updatedByType ?? null,
+    count,
+    manualCount,
+    derivedCount,
+    updatedAt: manualRow?.updatedAt ?? null,
+    updatedByType: manualRow?.updatedByType ?? null,
   });
 }
 
