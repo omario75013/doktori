@@ -1,16 +1,31 @@
 import { db, appointments, doctors, patients } from "@doktori/db";
-import { and, gte, lte, eq } from "drizzle-orm";
+import { and, gte, lte, eq, sql } from "drizzle-orm";
 import { AppointmentsTable } from "./appointments-table";
 import Link from "next/link";
 import { AlertTriangle, Trash2 } from "lucide-react";
+import { AdminPagination } from "@/components/admin/pagination";
+import { parsePageParams } from "@/lib/admin-pagination";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminAppointmentsPage() {
-  // Default: today and tomorrow
+export default async function AdminAppointmentsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const { page, pageSize, offset } = parsePageParams(sp, { pageSize: 50 });
+
+  // Default window: today and tomorrow
   const now = new Date();
   const from = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0);
   const to = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 2, 0, 0, 0);
+  const where = and(gte(appointments.startsAt, from), lte(appointments.startsAt, to));
+
+  const [{ count: total }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(appointments)
+    .where(where);
 
   const list = await db
     .select({
@@ -30,9 +45,10 @@ export default async function AdminAppointmentsPage() {
     .from(appointments)
     .innerJoin(doctors, eq(appointments.doctorId, doctors.id))
     .innerJoin(patients, eq(appointments.patientId, patients.id))
-    .where(and(gte(appointments.startsAt, from), lte(appointments.startsAt, to)))
+    .where(where)
     .orderBy(appointments.startsAt)
-    .limit(500);
+    .limit(pageSize)
+    .offset(offset);
 
   return (
     <div className="p-8 max-w-[1600px] mx-auto">
@@ -40,7 +56,7 @@ export default async function AdminAppointmentsPage() {
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Rendez-vous</h1>
           <p className="text-slate-500 mt-1">
-            Aujourd&apos;hui et demain · {list.length} rendez-vous
+            Aujourd&apos;hui et demain · {total} rendez-vous
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -78,6 +94,9 @@ export default async function AdminAppointmentsPage() {
           patientPhone: a.patientPhone as string,
         }))}
       />
+      <div className="bg-white rounded-b-xl border-x border-b border-slate-200 -mt-px">
+        <AdminPagination page={page} pageSize={pageSize} total={Number(total ?? 0)} />
+      </div>
     </div>
   );
 }

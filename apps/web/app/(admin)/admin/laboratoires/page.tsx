@@ -1,10 +1,12 @@
 import { db, labs } from "@doktori/db";
-import { desc, eq } from "drizzle-orm";
+import { desc, eq, sql } from "drizzle-orm";
 import { getAdminSession } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
 import { FlaskConical } from "lucide-react";
 import Link from "next/link";
 import { LabTableActions } from "./labs-table-actions";
+import { AdminPagination } from "@/components/admin/pagination";
+import { parsePageParams } from "@/lib/admin-pagination";
 
 export const dynamic = "force-dynamic";
 
@@ -30,26 +32,42 @@ const FILTER_STATUSES = ["all", "pending", "verified", "rejected"] as const;
 type FilterStatus = (typeof FILTER_STATUSES)[number];
 
 interface PageProps {
-  searchParams: Promise<{ status?: string }>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }
 
 export default async function AdminLaboratoiresPage({ searchParams }: PageProps) {
   const admin = await getAdminSession();
   if (!admin) redirect("/admin/login");
 
-  const { status: statusParam } = await searchParams;
+  const sp = await searchParams;
+  const statusParam = Array.isArray(sp.status) ? sp.status[0] : sp.status;
   const activeFilter: FilterStatus =
     FILTER_STATUSES.includes(statusParam as FilterStatus) && statusParam !== undefined
       ? (statusParam as FilterStatus)
       : "all";
 
-  const query = db.select().from(labs).orderBy(desc(labs.createdAt));
-  const allRows = await query;
+  const { page, pageSize, offset } = parsePageParams(sp);
 
-  const rows =
-    activeFilter === "all"
-      ? allRows
-      : allRows.filter((r) => r.verificationStatus === activeFilter);
+  // Counts per status (for chip badges + active filter total)
+  const counts = await db
+    .select({
+      status: labs.verificationStatus,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(labs)
+    .groupBy(labs.verificationStatus);
+  const countByStatus = new Map(counts.map((c) => [c.status, Number(c.count)]));
+  const totalAll = counts.reduce((s, c) => s + Number(c.count), 0);
+  const totalFiltered =
+    activeFilter === "all" ? totalAll : countByStatus.get(activeFilter) ?? 0;
+
+  const baseQuery = db.select().from(labs);
+  const rows = await (activeFilter === "all"
+    ? baseQuery
+    : baseQuery.where(eq(labs.verificationStatus, activeFilter)))
+    .orderBy(desc(labs.createdAt))
+    .limit(pageSize)
+    .offset(offset);
 
   return (
     <div className="p-4 sm:p-8 max-w-[1600px] mx-auto">
@@ -68,10 +86,7 @@ export default async function AdminLaboratoiresPage({ searchParams }: PageProps)
       {/* Filter chips */}
       <div className="flex flex-wrap gap-2 mb-6">
         {FILTER_STATUSES.map((s) => {
-          const count =
-            s === "all"
-              ? allRows.length
-              : allRows.filter((r) => r.verificationStatus === s).length;
+          const c = s === "all" ? totalAll : countByStatus.get(s) ?? 0;
           const isActive = activeFilter === s;
           return (
             <Link
@@ -90,7 +105,7 @@ export default async function AdminLaboratoiresPage({ searchParams }: PageProps)
               <span
                 className={`ml-1.5 text-xs ${isActive ? "text-teal-100" : "text-slate-400"}`}
               >
-                {count}
+                {c}
               </span>
             </Link>
           );
@@ -169,6 +184,11 @@ export default async function AdminLaboratoiresPage({ searchParams }: PageProps)
                 })}
               </tbody>
             </table>
+            <AdminPagination
+              page={page}
+              pageSize={pageSize}
+              total={totalFiltered}
+            />
           </div>
         )}
       </div>

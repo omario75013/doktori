@@ -1,10 +1,23 @@
 import { db, doctors, appointments, reviews } from "@doktori/db";
-import { desc, eq, count, avg, sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import { DoctorsTable } from "./doctors-table";
+import { AdminPagination } from "@/components/admin/pagination";
+import { parsePageParams } from "@/lib/admin-pagination";
 
 export const dynamic = "force-dynamic";
 
-export default async function AdminDoctorsPage() {
+export default async function AdminDoctorsPage({
+  searchParams,
+}: {
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
+}) {
+  const sp = await searchParams;
+  const { page, pageSize, offset } = parsePageParams(sp);
+
+  const [{ count: total }] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(doctors);
+
   const list = await db
     .select({
       id: doctors.id,
@@ -23,18 +36,24 @@ export default async function AdminDoctorsPage() {
       avgRating: sql<number | null>`(select avg(${reviews.rating}) from ${reviews} where ${reviews.doctorId} = ${doctors.id})`,
     })
     .from(doctors)
-    .orderBy(desc(doctors.createdAt));
+    .orderBy(desc(doctors.createdAt))
+    .limit(pageSize)
+    .offset(offset);
 
-  // Unique specialties and cities for filters
-  const specialties = Array.from(new Set(list.map((d) => d.specialty))).sort();
-  const cities = Array.from(new Set(list.map((d) => d.city))).sort();
+  // Distinct specialties / cities pulled from the full table so filters don't
+  // shrink to the current page only.
+  const distinct = await db
+    .selectDistinct({ specialty: doctors.specialty, city: doctors.city })
+    .from(doctors);
+  const specialties = Array.from(new Set(distinct.map((d) => d.specialty))).sort();
+  const cities = Array.from(new Set(distinct.map((d) => d.city))).sort();
 
   return (
     <div className="p-4 sm:p-8 max-w-[1600px] mx-auto overflow-x-hidden">
       <div className="mb-6">
         <h1 className="text-3xl font-bold text-slate-900">Médecins</h1>
         <p className="text-slate-500 mt-1">
-          {list.length} médecin{list.length > 1 ? "s" : ""} sur la plateforme
+          {total} médecin{total > 1 ? "s" : ""} sur la plateforme
         </p>
       </div>
       <DoctorsTable
@@ -51,6 +70,9 @@ export default async function AdminDoctorsPage() {
         specialties={specialties}
         cities={cities}
       />
+      <div className="bg-white rounded-b-xl border-x border-b border-slate-200 -mt-px">
+        <AdminPagination page={page} pageSize={pageSize} total={Number(total ?? 0)} />
+      </div>
     </div>
   );
 }
