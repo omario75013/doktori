@@ -980,6 +980,48 @@ export const subscriptions = pgTable("subscriptions", {
 // ── Subscription Plans catalog ───────────────────────────
 // Polymorphic subscription assignment — one row per (actor_type, actor_id).
 // Admin manages these via /admin/medecins/[id], /admin/cliniques/[id], etc.
+// Support tickets — opened by any actor (patient / doctor / clinic / lab /
+// secretary). Each ticket has a thread of messages.
+export const supportTickets = pgTable(
+  "support_tickets",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    requesterType: varchar("requester_type", { length: 20 }).notNull(),
+    requesterId: uuid("requester_id").notNull(),
+    requesterEmail: varchar("requester_email", { length: 255 }),
+    requesterName: varchar("requester_name", { length: 255 }),
+    subject: varchar("subject", { length: 255 }).notNull(),
+    category: varchar("category", { length: 40 }).notNull().default("general"),
+    priority: varchar("priority", { length: 20 }).notNull().default("normal"),
+    status: varchar("status", { length: 20 }).notNull().default("open"),
+    assignedAdminId: uuid("assigned_admin_id"),
+    lastMessageAt: timestamp("last_message_at", { withTimezone: true }).notNull().defaultNow(),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("support_tickets_status_idx").on(table.status),
+    index("support_tickets_requester_idx").on(table.requesterType, table.requesterId),
+    index("support_tickets_last_msg_idx").on(table.lastMessageAt),
+  ]
+);
+
+export const supportTicketMessages = pgTable(
+  "support_ticket_messages",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    ticketId: uuid("ticket_id").notNull().references(() => supportTickets.id, { onDelete: "cascade" }),
+    authorType: varchar("author_type", { length: 20 }).notNull(),
+    authorId: uuid("author_id"),
+    body: text("body").notNull(),
+    isInternal: boolean("is_internal").notNull().default(false),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("support_ticket_messages_ticket_idx").on(table.ticketId, table.createdAt),
+  ]
+);
+
 export const actorSubscriptions = pgTable(
   "actor_subscriptions",
   {

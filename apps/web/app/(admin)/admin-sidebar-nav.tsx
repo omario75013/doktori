@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   LayoutDashboard,
+  LifeBuoy,
   Stethoscope,
   UserCheck,
   BarChart3,
@@ -61,6 +62,7 @@ const orgLinks: NavLink[] = [
   { href: "/admin/promotions", key: "promotions", icon: Tag },
   { href: "/admin/communications", key: "communications", icon: Phone },
   { href: "/admin/sms", key: "sms", icon: MessageSquare },
+  { href: "/admin/support", key: "support", icon: LifeBuoy },
   { href: "/admin/cliniques", key: "cliniques", icon: Building2 },
   { href: "/admin/laboratoires", key: "labs", icon: FlaskConical },
   { href: "/admin/secretaires", key: "secretaires", icon: UserCog },
