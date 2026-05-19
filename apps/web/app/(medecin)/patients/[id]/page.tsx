@@ -314,10 +314,12 @@ function MedBlock({
       </div>
       {hasValue ? (
         <div
-          className={`rounded-xl border px-3 py-2 whitespace-pre-wrap text-sm ${HIGHLIGHT_STYLES[highlight]} ${editable ? "cursor-text" : ""}`}
+          className={`rounded-xl border px-3 py-2 text-sm ${HIGHLIGHT_STYLES[highlight]} ${editable ? "cursor-text" : ""}`}
           onClick={editable ? () => setEditing(true) : undefined}
         >
-          {value}
+          <Clamp>
+            <div className="whitespace-pre-wrap">{value}</div>
+          </Clamp>
         </div>
       ) : (
         <button
@@ -2024,13 +2026,15 @@ function Info({
         {icon && <span className="text-gray-400">{icon}</span>}
         {label}
       </div>
-      <div
-        className={`mt-0.5 ${value ? "text-foreground font-medium" : "text-gray-300 italic"} ${
-          mono ? "font-mono" : ""
-        }`}
-      >
-        {value ?? tCommon("notProvided")}
-      </div>
+      <Clamp>
+        <div
+          className={`mt-0.5 whitespace-pre-wrap ${value ? "text-foreground font-medium" : "text-gray-300 italic"} ${
+            mono ? "font-mono" : ""
+          }`}
+        >
+          {value ?? tCommon("notProvided")}
+        </div>
+      </Clamp>
     </div>
   );
 }
@@ -2127,8 +2131,22 @@ function DossierTab({
     | "hospitalizations"
     | "vaccinations"
     | "womensHealth";
-  const [editSection, setEditSection] = useState<SectionKey | null>(null);
-  const openSection = (k: SectionKey) => () => setEditSection(k);
+  const [editSection, setEditSection] = useState<{
+    section: SectionKey;
+    initial: Record<string, unknown> | null;
+    initialShared: boolean;
+  } | null>(null);
+  // Open the per-doctor edit dialog. `own` is the viewer's existing entry if any.
+  const openSectionEdit = (section: SectionKey, own: DoctorEntryOwn | null) =>
+    setEditSection({
+      section,
+      initial: own?.data ?? null,
+      initialShared: own?.shared ?? true,
+    });
+  // Convenience: opens with no preloaded own (used by Card "Modifier" buttons
+  // that don't have the own data in scope — the dialog still saves into the
+  // viewer's own row).
+  const openSection = (k: SectionKey) => () => openSectionEdit(k, null);
 
   // Save helper for inline-edited fields on patient_medical_profile.
   // Sends a tiny PATCH and lets the parent refresh on next mount; we also
@@ -2180,17 +2198,39 @@ function DossierTab({
       </Card>
 
       {/* Family history */}
-      {isVisible("familyHistory") && (
       <Card
         title={t("cardFamilyHistory")}
         color="violet"
         icon={<User className="h-4 w-4" />}
-        shared={showShareToggle ? isShared("familyHistory") : undefined}
-        onToggleShare={showShareToggle ? () => toggleShare("familyHistory") : undefined}
-        onAdd={viewerRole === "doctor" ? openSection("familyHistory") : undefined}
-        addLabel="Modifier"
       >
-        {fam && Object.values(fam).some(Boolean) ? (
+        {viewerRole === "doctor" ? (
+          <DoctorOwnedSection
+            patientId={patient.id}
+            section="familyHistory"
+            emptyHint="Aucun antécédent familial noté."
+            hasContent={(d) => {
+              const f = d as FamilyHistory;
+              return Object.values(f ?? {}).some((v) => v === true || (typeof v === "string" && v.trim().length > 0));
+            }}
+            renderData={(d) => {
+              const f = d as FamilyHistory;
+              return (
+                <div className="flex flex-wrap gap-2 text-sm">
+                  {f.heart && <Tag label={t("famHeart")} tone="red" />}
+                  {f.diabetes && <Tag label={t("famDiabetes")} tone="blue" />}
+                  {f.cancer && <Tag label={t("famCancer")} tone="purple" />}
+                  {f.hypertension && <Tag label={t("famHypertension")} tone="orange" />}
+                  {f.stroke && <Tag label={t("famStroke")} tone="red" />}
+                  {f.mentalHealth && <Tag label={t("famMentalHealth")} tone="teal" />}
+                  {f.notes && (
+                    <div className="w-full mt-2 text-gray-700 whitespace-pre-wrap">{f.notes}</div>
+                  )}
+                </div>
+              );
+            }}
+            openEdit={(own) => openSectionEdit("familyHistory", own)}
+          />
+        ) : fam && Object.values(fam).some(Boolean) ? (
           <div className="flex flex-wrap gap-2 text-sm">
             {fam.heart && <Tag label={t("famHeart")} tone="red" />}
             {fam.diabetes && <Tag label={t("famDiabetes")} tone="blue" />}
@@ -2206,236 +2246,279 @@ function DossierTab({
           <EmptyInline />
         )}
       </Card>
-      )}
 
       {/* Lifestyle */}
-      {isVisible("lifestyle") && (
       <Card
         title={t("cardLifestyle")}
         color="emerald"
         icon={<Activity className="h-4 w-4" />}
-        shared={showShareToggle ? isShared("lifestyle") : undefined}
-        onToggleShare={showShareToggle ? () => toggleShare("lifestyle") : undefined}
-        onAdd={viewerRole === "doctor" ? openSection("lifestyle") : undefined}
-        addLabel="Modifier"
       >
-        {lifestyle && Object.values(lifestyle).some((v) => v != null) ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <Info
-              label={t("fieldSmoking")}
-              value={
-                lifestyle.smoking === "never"
-                  ? t("smokingNever")
-                  : lifestyle.smoking === "former"
-                  ? t("smokingFormer")
-                  : lifestyle.smoking === "current"
-                  ? lifestyle.smokingPacksPerDay
-                    ? t("smokingCurrent", { packs: lifestyle.smokingPacksPerDay })
-                    : t("smokingCurrentNoCount")
-                  : null
-              }
+        {(() => {
+          const renderLifestyle = (l: Lifestyle) => (
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+              <Info
+                label={t("fieldSmoking")}
+                value={
+                  l.smoking === "never"
+                    ? t("smokingNever")
+                    : l.smoking === "former"
+                    ? t("smokingFormer")
+                    : l.smoking === "current"
+                    ? l.smokingPacksPerDay
+                      ? t("smokingCurrent", { packs: l.smokingPacksPerDay })
+                      : t("smokingCurrentNoCount")
+                    : null
+                }
+              />
+              <Info
+                label={t("fieldAlcohol")}
+                value={
+                  l.alcohol === "none"
+                    ? t("alcoholNone")
+                    : l.alcohol === "occasional"
+                    ? t("alcoholOccasional")
+                    : l.alcohol === "moderate"
+                    ? t("alcoholModerate")
+                    : l.alcohol === "heavy"
+                    ? t("alcoholHeavy")
+                    : null
+                }
+              />
+              <Info
+                label={t("fieldActivity")}
+                value={
+                  l.activity === "sedentary"
+                    ? t("activitySedentary")
+                    : l.activity === "moderate"
+                    ? t("activityModerate")
+                    : l.activity === "active"
+                    ? t("activityActive")
+                    : null
+                }
+              />
+              <Info label={t("fieldDiet")} value={l.diet ?? null} />
+            </div>
+          );
+          return viewerRole === "doctor" ? (
+            <DoctorOwnedSection
+              patientId={patient.id}
+              section="lifestyle"
+              emptyHint="Mode de vie non renseigné."
+              hasContent={(d) => Object.values(d ?? {}).some((v) => v != null && v !== "")}
+              renderData={(d) => renderLifestyle(d as Lifestyle)}
+              openEdit={(own) => openSectionEdit("lifestyle", own)}
             />
-            <Info
-              label={t("fieldAlcohol")}
-              value={
-                lifestyle.alcohol === "none"
-                  ? t("alcoholNone")
-                  : lifestyle.alcohol === "occasional"
-                  ? t("alcoholOccasional")
-                  : lifestyle.alcohol === "moderate"
-                  ? t("alcoholModerate")
-                  : lifestyle.alcohol === "heavy"
-                  ? t("alcoholHeavy")
-                  : null
-              }
-            />
-            <Info
-              label={t("fieldActivity")}
-              value={
-                lifestyle.activity === "sedentary"
-                  ? t("activitySedentary")
-                  : lifestyle.activity === "moderate"
-                  ? t("activityModerate")
-                  : lifestyle.activity === "active"
-                  ? t("activityActive")
-                  : null
-              }
-            />
-            <Info label={t("fieldDiet")} value={lifestyle.diet ?? null} />
-          </div>
-        ) : (
-          <EmptyInline />
-        )}
+          ) : lifestyle && Object.values(lifestyle).some((v) => v != null) ? (
+            renderLifestyle(lifestyle)
+          ) : (
+            <EmptyInline />
+          );
+        })()}
       </Card>
-      )}
 
       {/* Past surgeries */}
-      {isVisible("surgeries") && (
       <Card
         title={t("cardSurgeries")}
         color="indigo"
         icon={<Pill className="h-4 w-4" />}
-        shared={showShareToggle ? isShared("surgeries") : undefined}
-        onToggleShare={showShareToggle ? () => toggleShare("surgeries") : undefined}
-        onAdd={viewerRole === "doctor" ? openSection("surgeries") : undefined}
-        addLabel="Modifier"
       >
-        {medical?.pastSurgeries && medical.pastSurgeries.length > 0 ? (
-          <ul className="space-y-2 text-sm">
-            {medical.pastSurgeries.map((s, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-2 rounded-xl border border-border bg-secondary/50 px-3 py-2"
-              >
-                {s.year && (
-                  <span className="font-mono text-xs text-gray-500 pt-0.5">{s.year}</span>
-                )}
-                <div className="flex-1">
-                  <div className="font-medium text-foreground">{s.label}</div>
-                  {s.hospital && <div className="text-xs text-gray-500">{s.hospital}</div>}
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <EmptyInline />
-        )}
+        {(() => {
+          const renderSurgeries = (items: SurgeryEntry[]) => (
+            <ul className="space-y-2 text-sm">
+              {items.map((s, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-2 rounded-xl border border-border bg-secondary/50 px-3 py-2"
+                >
+                  {s.year && (
+                    <span className="font-mono text-xs text-gray-500 pt-0.5">{s.year}</span>
+                  )}
+                  <div className="flex-1">
+                    <div className="font-medium text-foreground">{s.label}</div>
+                    {s.hospital && <div className="text-xs text-gray-500">{s.hospital}</div>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          );
+          return viewerRole === "doctor" ? (
+            <DoctorOwnedSection
+              patientId={patient.id}
+              section="surgeries"
+              emptyHint="Aucun antécédent chirurgical noté."
+              hasContent={(d) => Array.isArray((d as { pastSurgeries?: SurgeryEntry[] }).pastSurgeries) && ((d as { pastSurgeries?: SurgeryEntry[] }).pastSurgeries?.length ?? 0) > 0}
+              renderData={(d) => renderSurgeries(((d as { pastSurgeries?: SurgeryEntry[] }).pastSurgeries) ?? [])}
+              openEdit={(own) => openSectionEdit("surgeries", own)}
+            />
+          ) : medical?.pastSurgeries && medical.pastSurgeries.length > 0 ? (
+            renderSurgeries(medical.pastSurgeries)
+          ) : (
+            <EmptyInline />
+          );
+        })()}
       </Card>
-      )}
 
       {/* Past hospitalizations */}
-      {isVisible("hospitalizations") && (
       <Card
         title={t("cardHospitalizations")}
         color="sky"
         icon={<History className="h-4 w-4" />}
-        shared={showShareToggle ? isShared("hospitalizations") : undefined}
-        onToggleShare={showShareToggle ? () => toggleShare("hospitalizations") : undefined}
-        onAdd={viewerRole === "doctor" ? openSection("hospitalizations") : undefined}
-        addLabel="Modifier"
       >
-        {medical?.pastHospitalizations && medical.pastHospitalizations.length > 0 ? (
-          <ul className="space-y-2 text-sm">
-            {medical.pastHospitalizations.map((h, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-2 rounded-xl border border-border bg-secondary/50 px-3 py-2"
-              >
-                {h.year && (
-                  <span className="font-mono text-xs text-gray-500 pt-0.5">{h.year}</span>
-                )}
-                <div className="flex-1">
-                  <div className="font-medium text-foreground">{h.reason}</div>
-                  {h.days && <div className="text-xs text-gray-500">{t("hospitalizationDays", { count: h.days })}</div>}
-                </div>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <EmptyInline />
-        )}
+        {(() => {
+          const renderHosp = (items: HospitalEntry[]) => (
+            <ul className="space-y-2 text-sm">
+              {items.map((h, i) => (
+                <li
+                  key={i}
+                  className="flex items-start gap-2 rounded-xl border border-border bg-secondary/50 px-3 py-2"
+                >
+                  {h.year && (
+                    <span className="font-mono text-xs text-gray-500 pt-0.5">{h.year}</span>
+                  )}
+                  <div className="flex-1">
+                    <div className="font-medium text-foreground">{h.reason}</div>
+                    {h.days && <div className="text-xs text-gray-500">{t("hospitalizationDays", { count: h.days })}</div>}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          );
+          return viewerRole === "doctor" ? (
+            <DoctorOwnedSection
+              patientId={patient.id}
+              section="hospitalizations"
+              emptyHint="Aucune hospitalisation antérieure notée."
+              hasContent={(d) => Array.isArray((d as { pastHospitalizations?: HospitalEntry[] }).pastHospitalizations) && ((d as { pastHospitalizations?: HospitalEntry[] }).pastHospitalizations?.length ?? 0) > 0}
+              renderData={(d) => renderHosp(((d as { pastHospitalizations?: HospitalEntry[] }).pastHospitalizations) ?? [])}
+              openEdit={(own) => openSectionEdit("hospitalizations", own)}
+            />
+          ) : medical?.pastHospitalizations && medical.pastHospitalizations.length > 0 ? (
+            renderHosp(medical.pastHospitalizations)
+          ) : (
+            <EmptyInline />
+          );
+        })()}
       </Card>
-      )}
 
       {/* Vaccinations */}
-      {isVisible("vaccinations") && (
       <Card
         title={t("cardVaccinations")}
         color="amber"
         icon={<Award className="h-4 w-4" />}
-        shared={showShareToggle ? isShared("vaccinations") : undefined}
-        onToggleShare={showShareToggle ? () => toggleShare("vaccinations") : undefined}
-        onAdd={viewerRole === "doctor" ? openSection("vaccinations") : undefined}
-        addLabel="Modifier"
       >
-        {medical?.vaccinations && medical.vaccinations.length > 0 ? (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase text-gray-500 border-b border-border">
-                  <th className="pb-2 pr-4 font-medium">{t("vaccineHeader")}</th>
-                  <th className="pb-2 pr-4 font-medium">{tCommon("date")}</th>
-                  <th className="pb-2 font-medium">{t("lotHeader")}</th>
-                </tr>
-              </thead>
-              <tbody>
-                {medical.vaccinations.map((v, i) => (
-                  <tr key={i} className="border-b border-border last:border-0">
-                    <td className="py-2 pr-4 font-medium text-foreground">{v.vaccine}</td>
-                    <td className="py-2 pr-4 text-gray-600">
-                      {v.date
-                        ? format(new Date(v.date), "d MMM yyyy", { locale: fr })
-                        : "—"}
-                    </td>
-                    <td className="py-2 text-gray-600 font-mono text-xs">{v.lotNumber ?? "—"}</td>
+        {(() => {
+          const renderVaccs = (items: VaccineEntry[]) => (
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="text-left text-xs uppercase text-gray-500 border-b border-border">
+                    <th className="pb-2 pr-4 font-medium">{t("vaccineHeader")}</th>
+                    <th className="pb-2 pr-4 font-medium">{tCommon("date")}</th>
+                    <th className="pb-2 font-medium">{t("lotHeader")}</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        ) : (
-          <EmptyInline />
-        )}
-        {viewerRole === "doctor" && (
-          <PatientContributedItems patientId={patient.id} type="vaccination" label="Vaccins ajoutés par le patient" />
-        )}
+                </thead>
+                <tbody>
+                  {items.map((v, i) => (
+                    <tr key={i} className="border-b border-border last:border-0">
+                      <td className="py-2 pr-4 font-medium text-foreground">{v.vaccine}</td>
+                      <td className="py-2 pr-4 text-gray-600">
+                        {v.date
+                          ? format(new Date(v.date), "d MMM yyyy", { locale: fr })
+                          : "—"}
+                      </td>
+                      <td className="py-2 text-gray-600 font-mono text-xs">{v.lotNumber ?? "—"}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+          return viewerRole === "doctor" ? (
+            <>
+              <DoctorOwnedSection
+                patientId={patient.id}
+                section="vaccinations"
+                emptyHint="Aucun vaccin enregistré."
+                hasContent={(d) => Array.isArray((d as { vaccinations?: VaccineEntry[] }).vaccinations) && ((d as { vaccinations?: VaccineEntry[] }).vaccinations?.length ?? 0) > 0}
+                renderData={(d) => renderVaccs(((d as { vaccinations?: VaccineEntry[] }).vaccinations) ?? [])}
+                openEdit={(own) => openSectionEdit("vaccinations", own)}
+              />
+              <div className="mt-3">
+                <PatientContributedItems patientId={patient.id} type="vaccination" label="Vaccins ajoutés par le patient" />
+              </div>
+            </>
+          ) : medical?.vaccinations && medical.vaccinations.length > 0 ? (
+            renderVaccs(medical.vaccinations)
+          ) : (
+            <EmptyInline />
+          );
+        })()}
       </Card>
-      )}
 
       {/* Women's health (only if gender=F) */}
-      {patient.gender === "F" && isVisible("womensHealth") && (
+      {patient.gender === "F" && (
         <Card
           title={t("cardWomensHealth")}
           color="rose"
           icon={<HeartPulse className="h-4 w-4" />}
-          shared={showShareToggle ? isShared("womensHealth") : undefined}
-          onToggleShare={showShareToggle ? () => toggleShare("womensHealth") : undefined}
-          onAdd={viewerRole === "doctor" ? openSection("womensHealth") : undefined}
-          addLabel="Modifier"
         >
-          {medical?.womensHealth && Object.values(medical.womensHealth).some((v) => v != null) ? (
+          {(() => {
+            const renderWH = (w: WomensHealth) => (
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <Info
                 label={t("fieldPregnancies")}
                 value={
-                  medical.womensHealth.pregnancies != null
-                    ? String(medical.womensHealth.pregnancies)
+                  w.pregnancies != null
+                    ? String(w.pregnancies)
                     : null
                 }
               />
               <Info
                 label={t("fieldLivingChildren")}
                 value={
-                  medical.womensHealth.livingChildren != null
-                    ? String(medical.womensHealth.livingChildren)
+                  w.livingChildren != null
+                    ? String(w.livingChildren)
                     : null
                 }
               />
               <Info
                 label={t("fieldLastMenstruation")}
                 value={
-                  medical.womensHealth.lastMenstruation
-                    ? format(new Date(medical.womensHealth.lastMenstruation), "d MMM yyyy", {
+                  w.lastMenstruation
+                    ? format(new Date(w.lastMenstruation), "d MMM yyyy", {
                         locale: fr,
                       })
                     : null
                 }
               />
-              <Info label={t("fieldContraception")} value={medical.womensHealth.contraception ?? null} />
-              {medical.womensHealth.menopause && (
+              <Info label={t("fieldContraception")} value={w.contraception ?? null} />
+              {w.menopause && (
                 <div className="md:col-span-4">
                   <Tag label={t("tagMenopause")} tone="orange" />
                 </div>
               )}
-              {medical.womensHealth.notes && (
+              {w.notes && (
                 <div className="md:col-span-4 text-gray-700 whitespace-pre-wrap">
-                  {medical.womensHealth.notes}
+                  {w.notes}
                 </div>
               )}
             </div>
+          );
+          return viewerRole === "doctor" ? (
+            <DoctorOwnedSection
+              patientId={patient.id}
+              section="womensHealth"
+              emptyHint="Aucune information de santé féminine notée."
+              hasContent={(d) => Object.values((d as WomensHealth) ?? {}).some((v) => v != null && v !== "" && v !== false)}
+              renderData={(d) => renderWH(d as WomensHealth)}
+              openEdit={(own) => openSectionEdit("womensHealth", own)}
+            />
+          ) : medical?.womensHealth && Object.values(medical.womensHealth).some((v) => v != null) ? (
+            renderWH(medical.womensHealth)
           ) : (
             <EmptyInline />
-          )}
+          );
+          })()}
         </Card>
       )}
       </div>
@@ -2669,11 +2752,18 @@ function DossierTab({
       {editSection && (
         <SectionEditDialog
           patientId={patient.id}
-          section={editSection}
+          section={editSection.section}
           medical={medical}
+          perDoctor
+          initial={editSection.initial}
+          initialShared={editSection.initialShared}
           onClose={() => setEditSection(null)}
           onSaved={() => {
+            const sec = editSection.section;
             setEditSection(null);
+            window.dispatchEvent(
+              new CustomEvent("dossier-entries-changed", { detail: { section: sec } }),
+            );
             window.dispatchEvent(new CustomEvent("patient-medical-updated"));
           }}
         />
@@ -2700,6 +2790,59 @@ function Tag({
     <span className={`inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full ${tones[tone]}`}>
       {label}
     </span>
+  );
+}
+
+/**
+ * Collapses content taller than `lines * lineHeightPx` and shows a "Voir plus"
+ * toggle. Works with any children (text, lists, tables, grids).
+ */
+function Clamp({
+  children,
+  lines = 5,
+  lineHeightPx = 24,
+}: {
+  children: React.ReactNode;
+  lines?: number;
+  lineHeightPx?: number;
+}) {
+  const ref = useRef<HTMLDivElement | null>(null);
+  const [expanded, setExpanded] = useState(false);
+  const [overflows, setOverflows] = useState(false);
+  const maxH = lines * lineHeightPx;
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const check = () => setOverflows(el.scrollHeight > maxH + 2);
+    check();
+    const ro = new ResizeObserver(check);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [maxH, children]);
+
+  return (
+    <div>
+      <div
+        ref={ref}
+        style={{ maxHeight: expanded ? undefined : `${maxH}px` }}
+        className={`relative overflow-hidden ${!expanded && overflows ? "[mask-image:linear-gradient(to_bottom,black_70%,transparent)]" : ""}`}
+      >
+        {children}
+      </div>
+      {overflows && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpanded((v) => !v);
+          }}
+          className="mt-1 text-xs font-semibold text-primary hover:underline"
+        >
+          {expanded ? "Voir moins" : "Voir plus"}
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -4180,13 +4323,147 @@ function MedicalSummaryEntries({ patientId }: { patientId: string }) {
                     return (
                       <div key={f.key}>
                         <div className="text-[10px] uppercase tracking-wide text-gray-500 mb-1">{f.label}</div>
-                        <div className={`rounded-lg border px-3 py-2 whitespace-pre-wrap text-sm ${HIGHLIGHT_STYLES[f.highlight]}`}>
-                          {v}
+                        <div className={`rounded-lg border px-3 py-2 text-sm ${HIGHLIGHT_STYLES[f.highlight]}`}>
+                          <Clamp>
+                            <div className="whitespace-pre-wrap">{v}</div>
+                          </Clamp>
                         </div>
                       </div>
                     );
                   })}
                 </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Generic per-doctor owned section ─────────────────────────────────────────
+// Each doctor keeps their own copy + a shared flag. Card body uses this so
+// every section (familyHistory, lifestyle, surgeries, hospitalizations,
+// vaccinations, womensHealth) gets the same model as medicalSummary.
+
+type DoctorEntryOwn = { data: Record<string, unknown>; shared: boolean };
+type DoctorEntryOther = { id: string; doctorName: string; data: Record<string, unknown>; updatedAt: string };
+
+function DoctorOwnedSection({
+  patientId,
+  section,
+  hasContent,
+  renderData,
+  openEdit,
+  emptyHint,
+}: {
+  patientId: string;
+  section: SectionEditDialogProps["section"];
+  hasContent: (data: Record<string, unknown>) => boolean;
+  renderData: (data: Record<string, unknown>) => React.ReactNode;
+  openEdit: (own: DoctorEntryOwn | null) => void;
+  emptyHint: string;
+}) {
+  const [own, setOwn] = useState<DoctorEntryOwn | null>(null);
+  const [others, setOthers] = useState<DoctorEntryOther[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    try {
+      const r = await fetch(
+        `/api/medecin/patients/${patientId}/dossier-entries?section=${section}`,
+        { cache: "no-store" },
+      );
+      if (r.ok) {
+        const d = await r.json();
+        setOwn(d.own ?? null);
+        setOthers(d.others ?? []);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [patientId, section]);
+  useEffect(() => {
+    void load();
+    const onChanged = (e: Event) => {
+      const detail = (e as CustomEvent<{ section?: string }>).detail;
+      if (!detail?.section || detail.section === section) void load();
+    };
+    window.addEventListener("dossier-entries-changed", onChanged);
+    return () => window.removeEventListener("dossier-entries-changed", onChanged);
+  }, [load, section]);
+
+  async function toggleShare() {
+    if (!own) return;
+    const r = await fetch(`/api/medecin/patients/${patientId}/dossier-entries`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ section, data: own.data, shared: !own.shared }),
+    });
+    if (r.ok) {
+      setOwn({ ...own, shared: !own.shared });
+      toast.success(!own.shared ? "Partagé" : "Privé");
+    }
+  }
+
+  const ownHas = own && hasContent(own.data);
+
+  return (
+    <div className="space-y-4">
+      {/* My own entry */}
+      <div className="rounded-xl border border-primary/30 bg-primary/5 p-3">
+        <div className="flex items-center justify-between mb-2 gap-2">
+          <span className="text-xs font-bold uppercase tracking-wide text-primary">Vos notes</span>
+          <div className="flex items-center gap-1.5">
+            {own && (
+              <button
+                onClick={toggleShare}
+                title={own.shared ? "Partagé avec les autres médecins" : "Privé"}
+                className={`inline-flex items-center gap-1 rounded-lg px-2 py-0.5 text-[11px] font-bold border ${
+                  own.shared
+                    ? "bg-emerald-100 border-emerald-200 text-emerald-700"
+                    : "bg-gray-100 border-gray-200 text-gray-600"
+                }`}
+              >
+                {own.shared ? <Share2 className="h-3 w-3" /> : <XClose className="h-3 w-3" />}
+                {own.shared ? "Partagé" : "Privé"}
+              </button>
+            )}
+            <button
+              onClick={() => openEdit(own)}
+              className="inline-flex items-center gap-1 rounded-lg bg-white hover:bg-secondary px-2 py-0.5 text-[11px] font-semibold border border-border"
+            >
+              <Plus className="h-3 w-3" />
+              {ownHas ? "Modifier" : "Ajouter"}
+            </button>
+          </div>
+        </div>
+        {loading ? (
+          <p className="text-xs text-muted-foreground italic">Chargement…</p>
+        ) : ownHas ? (
+          <Clamp>{renderData(own!.data)}</Clamp>
+        ) : (
+          <p className="text-xs text-muted-foreground italic">{emptyHint}</p>
+        )}
+      </div>
+
+      {/* Other doctors' shared entries */}
+      {others.length > 0 && (
+        <div className="space-y-2">
+          <div className="text-xs font-bold uppercase tracking-wide text-muted-foreground">
+            Notes partagées par d&apos;autres médecins ({others.length})
+          </div>
+          {others.map((o) => {
+            if (!hasContent(o.data)) return null;
+            return (
+              <div key={o.id} className="rounded-xl border border-border bg-white p-3">
+                <div className="text-[11px] text-muted-foreground mb-2">
+                  <span className="font-semibold text-foreground">{o.doctorName}</span>
+                  {" · "}
+                  {new Date(o.updatedAt).toLocaleDateString("fr-FR", { day: "numeric", month: "long", year: "numeric" })}
+                </div>
+                <Clamp>{renderData(o.data)}</Clamp>
               </div>
             );
           })}
@@ -4212,15 +4489,38 @@ type SectionEditDialogProps = {
     | "womensHealth";
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   medical: any;
+  /** When true, persist via /dossier-entries (own per-doctor row) instead of patching patient_medical_profile. */
+  perDoctor?: boolean;
+  /** Optional initial data when in perDoctor mode (the viewer's own entry). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  initial?: any;
+  /** Initial shared flag for perDoctor mode (defaults to true). */
+  initialShared?: boolean;
   onClose: () => void;
   onSaved: () => void;
 };
 
-function SectionEditDialog({ patientId, section, medical, onClose, onSaved }: SectionEditDialogProps) {
+function SectionEditDialog({
+  patientId,
+  section,
+  medical,
+  perDoctor,
+  initial,
+  initialShared,
+  onClose,
+  onSaved,
+}: SectionEditDialogProps) {
   const t = useTranslations("medecin.patientDetail");
   const [saving, setSaving] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [form, setForm] = useState<any>(() => {
+    if (perDoctor && initial) {
+      // per-doctor entries store the section's payload directly under `data`
+      if (section === "surgeries") return { pastSurgeries: initial.pastSurgeries ?? [] };
+      if (section === "hospitalizations") return { pastHospitalizations: initial.pastHospitalizations ?? [] };
+      if (section === "vaccinations") return { vaccinations: initial.vaccinations ?? [] };
+      return { ...initial };
+    }
     if (section === "medicalSummary") {
       return {
         allergies: medical?.allergies ?? "",
@@ -4237,31 +4537,49 @@ function SectionEditDialog({ patientId, section, medical, onClose, onSaved }: Se
     if (section === "womensHealth") return { ...(medical?.womensHealth ?? {}) };
     return {};
   });
+  const [shared, setShared] = useState<boolean>(initialShared ?? true);
 
   async function save() {
     setSaving(true);
-    let payload: Record<string, unknown> = {};
-    if (section === "medicalSummary") {
-      payload = {
-        allergies: form.allergies || null,
-        chronicConditions: form.chronicConditions || null,
-        currentMeds: form.currentMeds || null,
-        notes: form.notes || null,
-      };
-    } else if (section === "familyHistory") {
-      payload = { familyHistory: form };
-    } else if (section === "lifestyle") {
-      payload = { lifestyle: form };
-    } else if (section === "surgeries") {
-      payload = { pastSurgeries: form.pastSurgeries };
-    } else if (section === "hospitalizations") {
-      payload = { pastHospitalizations: form.pastHospitalizations };
-    } else if (section === "vaccinations") {
-      payload = { vaccinations: form.vaccinations };
-    } else if (section === "womensHealth") {
-      payload = { womensHealth: form };
-    }
     try {
+      if (perDoctor) {
+        // Per-doctor mode: save into the viewer's own dossier-entries row
+        // with section-keyed data + shared flag.
+        const r = await fetch(`/api/medecin/patients/${patientId}/dossier-entries`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ section, data: form, shared }),
+        });
+        if (r.ok) {
+          toast.success("Section mise à jour");
+          onSaved();
+        } else {
+          toast.error("Échec de l'enregistrement");
+        }
+        return;
+      }
+      // Legacy: patch the shared patient_medical_profile row
+      let payload: Record<string, unknown> = {};
+      if (section === "medicalSummary") {
+        payload = {
+          allergies: form.allergies || null,
+          chronicConditions: form.chronicConditions || null,
+          currentMeds: form.currentMeds || null,
+          notes: form.notes || null,
+        };
+      } else if (section === "familyHistory") {
+        payload = { familyHistory: form };
+      } else if (section === "lifestyle") {
+        payload = { lifestyle: form };
+      } else if (section === "surgeries") {
+        payload = { pastSurgeries: form.pastSurgeries };
+      } else if (section === "hospitalizations") {
+        payload = { pastHospitalizations: form.pastHospitalizations };
+      } else if (section === "vaccinations") {
+        payload = { vaccinations: form.vaccinations };
+      } else if (section === "womensHealth") {
+        payload = { womensHealth: form };
+      }
       const r = await fetch(`/api/patients/${patientId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
@@ -4400,11 +4718,23 @@ function SectionEditDialog({ patientId, section, medical, onClose, onSaved }: Se
             </>
           )}
         </div>
-        <div className="flex justify-end gap-2 border-t border-border px-5 py-3">
-          <button onClick={onClose} className="px-3 py-1.5 rounded-lg border border-border text-sm hover:bg-secondary">Annuler</button>
-          <button onClick={save} disabled={saving} className="px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-bold hover:bg-doktori-teal-dark disabled:opacity-50">
-            {saving ? "Enregistrement…" : "Enregistrer"}
-          </button>
+        <div className="flex items-center justify-between gap-2 border-t border-border px-5 py-3">
+          {perDoctor ? (
+            <label className="inline-flex items-center gap-2 text-sm">
+              <input type="checkbox" checked={shared} onChange={(e) => setShared(e.target.checked)} />
+              <span className="text-foreground">
+                Partager avec les autres médecins
+              </span>
+            </label>
+          ) : (
+            <span />
+          )}
+          <div className="flex gap-2">
+            <button onClick={onClose} className="px-3 py-1.5 rounded-lg border border-border text-sm hover:bg-secondary">Annuler</button>
+            <button onClick={save} disabled={saving} className="px-4 py-1.5 rounded-lg bg-primary text-white text-sm font-bold hover:bg-doktori-teal-dark disabled:opacity-50">
+              {saving ? "Enregistrement…" : "Enregistrer"}
+            </button>
+          </div>
         </div>
       </div>
     </div>

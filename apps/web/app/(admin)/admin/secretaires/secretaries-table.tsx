@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { Search, CheckCircle2, XCircle } from "lucide-react";
+import { Search, CheckCircle2, XCircle, Trash2 } from "lucide-react";
 
 interface Secretary {
   id: string;
@@ -42,6 +42,26 @@ export function SecretariesTable({ secretaries }: { secretaries: Secretary[] }) 
       });
       if (res.ok) startTransition(() => router.refresh());
       else setError("Erreur lors de la mise à jour de la secrétaire.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function deleteSecretary(id: string, name: string) {
+    if (
+      !window.confirm(
+        `Supprimer définitivement la secrétaire "${name}" ?\n\nCette action est irréversible. Le compte sera retiré de la base de données.`,
+      )
+    )
+      return;
+    setBusy(true);
+    try {
+      const res = await fetch(`/api/admin/secretaries/${id}`, { method: "DELETE" });
+      if (res.ok) startTransition(() => router.refresh());
+      else {
+        const data = await res.json().catch(() => null);
+        setError(data?.error ?? "Erreur lors de la suppression.");
+      }
     } finally {
       setBusy(false);
     }
@@ -105,13 +125,13 @@ export function SecretariesTable({ secretaries }: { secretaries: Secretary[] }) 
                   {new Date(s.createdAt).toLocaleDateString("fr-FR")}
                 </td>
                 <td className="px-4 py-3">
-                  <div className="flex items-center justify-end">
+                  <div className="flex items-center justify-end gap-1">
                     <button
                       onClick={() => toggleActive(s.id, !s.isActive)}
                       disabled={busy}
                       className={`p-1.5 rounded-md transition-colors disabled:opacity-50 ${
                         s.isActive
-                          ? "text-red-500 hover:bg-red-50"
+                          ? "text-orange-500 hover:bg-orange-50"
                           : "text-green-600 hover:bg-green-50"
                       }`}
                       title={s.isActive ? "Suspendre" : "Réactiver"}
@@ -121,6 +141,14 @@ export function SecretariesTable({ secretaries }: { secretaries: Secretary[] }) 
                       ) : (
                         <CheckCircle2 className="w-4 h-4" />
                       )}
+                    </button>
+                    <button
+                      onClick={() => deleteSecretary(s.id, s.name)}
+                      disabled={busy}
+                      className="p-1.5 rounded-md text-red-600 hover:bg-red-50 transition-colors disabled:opacity-50"
+                      title="Supprimer définitivement"
+                    >
+                      <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </td>

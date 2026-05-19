@@ -5,6 +5,39 @@ import { secretaries } from "@doktori/db";
 
 type RouteContext = { params: Promise<{ id: string }> };
 
+export const DELETE = withAdminAudit<{ ok: true }, RouteContext>({
+  action: "secretaries.delete",
+  resourceType: "secretaries",
+  allowedRoles: ["super_admin"],
+  getResourceId: async (_req, ctx) => (await ctx.params).id,
+  getBefore: async ({ tx, resourceId }) => {
+    const [row] = await tx
+      .select()
+      .from(secretaries)
+      .where(eq(secretaries.id, resourceId))
+      .limit(1);
+    if (!row) return null;
+    return {
+      name: row.name,
+      email: row.email,
+      doctorId: row.doctorId,
+      isActive: row.isActive,
+    };
+  },
+  handler: async ({ tx, resourceId }) => {
+    const [exists] = await tx
+      .select({ id: secretaries.id })
+      .from(secretaries)
+      .where(eq(secretaries.id, resourceId))
+      .limit(1);
+    if (!exists) {
+      return NextResponse.json({ error: "Secrétaire introuvable" }, { status: 404 });
+    }
+    await tx.delete(secretaries).where(eq(secretaries.id, resourceId));
+    return { ok: true } as const;
+  },
+});
+
 export const PATCH = withAdminAudit<
   {
     secretary: Omit<typeof secretaries.$inferSelect, "createdAt"> & { createdAt: string };
