@@ -993,6 +993,11 @@ export const subscriptionPlans = pgTable("subscription_plans", {
   maxPatientsTotal: integer("max_patients_total"),
   // Feature keys enabled on this plan e.g. ["teleconsult","stats","wallet"]
   enabledFeatures: jsonb("enabled_features").$type<string[]>().notNull().default([]),
+  // Which actor a plan applies to: "doctor" | "clinic" | "lab" | "all"
+  targetType: varchar("target_type", { length: 20 }).notNull().default("doctor"),
+  description: text("description"),
+  // Extensible per-plan numeric/boolean rules (e.g. {maxRoomsPerSite: 5})
+  extraRules: jsonb("extra_rules").$type<Record<string, number | boolean | string>>().notNull().default({}),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
 });
 

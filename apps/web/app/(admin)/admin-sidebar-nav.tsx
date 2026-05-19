@@ -54,6 +54,7 @@ const contentLinks: NavLink[] = [
 ];
 
 const orgLinks: NavLink[] = [
+  { href: "/admin/plans", key: "plans", icon: CreditCard },
   { href: "/admin/finance", key: "finance", icon: CreditCard, exact: true },
   { href: "/admin/finance/revenue", key: "revenus", icon: TrendingUp },
   { href: "/admin/finance/doctors", key: "facturations", icon: Receipt },
