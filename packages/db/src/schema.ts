@@ -978,6 +978,30 @@ export const subscriptions = pgTable("subscriptions", {
 ]);
 
 // ── Subscription Plans catalog ───────────────────────────
+// Polymorphic subscription assignment — one row per (actor_type, actor_id).
+// Admin manages these via /admin/medecins/[id], /admin/cliniques/[id], etc.
+export const actorSubscriptions = pgTable(
+  "actor_subscriptions",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    actorType: varchar("actor_type", { length: 20 }).notNull(),
+    actorId: uuid("actor_id").notNull(),
+    planCode: varchar("plan_code", { length: 20 }).notNull(),
+    status: varchar("status", { length: 20 }).notNull().default("active"),
+    currentPeriodStart: timestamp("current_period_start", { withTimezone: true }).notNull().defaultNow(),
+    currentPeriodEnd: timestamp("current_period_end", { withTimezone: true }),
+    assignedByAdminId: uuid("assigned_by_admin_id"),
+    notes: text("notes"),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex("actor_subscriptions_unique").on(table.actorType, table.actorId),
+    index("actor_subscriptions_actor_idx").on(table.actorType, table.actorId),
+    index("actor_subscriptions_plan_idx").on(table.planCode),
+  ]
+);
+
 export const subscriptionPlans = pgTable("subscription_plans", {
   id: uuid("id").primaryKey().defaultRandom(),
   code: varchar("code", { length: 20 }).notNull().unique(),

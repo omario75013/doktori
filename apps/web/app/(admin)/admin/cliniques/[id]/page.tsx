@@ -4,6 +4,8 @@ import { db, clinics, clinicDoctors, doctors, appointments } from "@doktori/db";
 import { eq, sql } from "drizzle-orm";
 import { ArrowLeft, Building2 } from "lucide-react";
 import { ClinicDetailClient } from "./clinic-detail-client";
+import { SubscriptionPanel } from "@/components/admin/subscription-panel";
+import { ResetPasswordButton } from "@/components/admin/reset-password-button";
 
 export const dynamic = "force-dynamic";
 
@@ -84,6 +86,19 @@ export default async function AdminClinicDetailPage({
             <div className="text-2xl font-bold text-slate-900">{Number(apptCount ?? 0)}</div>
             <div className="text-xs text-slate-500">RDV ce mois</div>
           </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <SubscriptionPanel actorType="clinic" actorId={id} />
+        <div className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col gap-3">
+          <h3 className="font-semibold text-slate-900">Sécurité</h3>
+          <ResetPasswordButton
+            actorType="clinic"
+            actorId={id}
+            actorName={clinic.name}
+            variant="button"
+          />
         </div>
       </div>
 

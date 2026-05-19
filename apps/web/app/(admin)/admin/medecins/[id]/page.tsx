@@ -15,6 +15,8 @@ import {
 import { eq, desc, and, count, avg } from "drizzle-orm";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { DoctorDetailTabs } from "./detail-tabs";
+import { SubscriptionPanel } from "@/components/admin/subscription-panel";
+import { ResetPasswordButton } from "@/components/admin/reset-password-button";
 
 export const dynamic = "force-dynamic";
 
@@ -152,6 +154,19 @@ export default async function AdminDoctorDetailPage({
             <ExternalLink className="w-4 h-4" />
             Profil public
           </Link>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <SubscriptionPanel actorType="doctor" actorId={doctor.id} />
+        <div className="rounded-xl border border-slate-200 bg-white p-5 flex flex-col gap-3">
+          <h3 className="font-semibold text-slate-900">Sécurité</h3>
+          <ResetPasswordButton
+            actorType="doctor"
+            actorId={doctor.id}
+            actorName={doctor.name}
+            variant="button"
+          />
         </div>
       </div>
 
